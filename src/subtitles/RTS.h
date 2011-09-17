@@ -126,7 +126,7 @@ public:
 class OverlayKey: public CWordCacheKey
 {
 public:
-    const static int SUB_PIXEL = 0x100; //7;
+    const static unsigned SUB_PIXEL = 0; //0 4 6 7; 0 means disable sub-pixel
     OverlayKey(const CWord& word, POINT p):CWordCacheKey(word) { m_p.x=p.x&SUB_PIXEL; m_p.y=p.y&SUB_PIXEL; }
     OverlayKey(const OverlayKey& key):CWordCacheKey(key) { m_p.x=key.m_p.x; m_p.y=key.m_p.y; }
     OverlayKey(const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend,POINT p):

@@ -54,10 +54,10 @@
 class ass_synth_priv 
 {
 public:
-    ass_synth_priv(const double radius);
+    ass_synth_priv(const double sigma);
     ass_synth_priv(const ass_synth_priv& priv);
     ~ass_synth_priv();
-    int generate_tables(double radius);
+    int generate_tables(double sigma);
     
     int g_r;
     int g_w;
@@ -83,7 +83,7 @@ public:
     ass_tmp_buf(const ass_tmp_buf& buf);
     ~ass_tmp_buf();
     int size;
-    unsigned short *tmp;
+    unsigned *tmp;
 };
 
 struct ass_tmp_buf_get_size
@@ -124,16 +124,18 @@ ass_synth_priv::ass_synth_priv(const ass_synth_priv& priv):g_r(priv.g_r),g_w(pri
 
 ass_synth_priv::~ass_synth_priv()
 {
-    free(g);
-    free(gt2);
+    free(g); g=NULL;
+    free(gt2); gt2=NULL;
 }
 
 int ass_synth_priv::generate_tables(double sigma)
 {
-    double a = log(1.0 / base) / (sigma * sigma * 2);
+    double a = -1 / (sigma * sigma * 2);
     int mx, i;
     double volume_diff, volume_factor = 0;
     unsigned volume;
+    double * gaussian_kernel = NULL;
+    double volume_db;
 
     if (this->sigma == sigma)
         return 0;
@@ -146,31 +148,33 @@ int ass_synth_priv::generate_tables(double sigma)
     if (this->g_r) {
         this->g = (unsigned*)realloc(this->g, this->g_w * sizeof(unsigned));
         this->gt2 = (unsigned*)realloc(this->gt2, 256 * this->g_w * sizeof(unsigned));
-        if (this->g == NULL || this->gt2 == NULL) {
+        gaussian_kernel = (double*)malloc(this->g_w * sizeof(double));
+        if (this->g == NULL || this->gt2 == NULL || gaussian_kernel == NULL) {          
+            free(gaussian_kernel);
             return -1;
-        }
+        }        
     }
 
     if (this->g_r) {
+        for (i = 0; i < this->g_w; ++i) {
+            gaussian_kernel[i] = exp(a * (i - this->g_r) * (i - this->g_r));
+        }
+
         // gaussian curve with volume = 256
         for (volume_diff = 10000000; volume_diff > 0.0000001;
             volume_diff *= 0.5) {
                 volume_factor += volume_diff;
                 volume = 0;
                 for (i = 0; i < this->g_w; ++i) {
-                    this->g[i] =
-                        (unsigned) (exp(a * (i - this->g_r) * (i - this->g_r)) *
-                        volume_factor + .5);
-                    volume += this->g[i];
+                    this->g[i] = (unsigned) (gaussian_kernel[i] * volume_factor + .5);
+                    volume += this->g[i];                    
                 }
-                if (volume > 256)
+                if (volume > 0x10000)
                     volume_factor -= volume_diff;
         }
         volume = 0;
         for (i = 0; i < this->g_w; ++i) {
-            this->g[i] =
-                (unsigned) (exp(a * (i - this->g_r) * (i - this->g_r)) *
-                volume_factor + .5);
+            this->g[i] = (unsigned) (gaussian_kernel[i] * volume_factor + .5);
             volume += this->g[i];
         }
 
@@ -181,20 +185,20 @@ int ass_synth_priv::generate_tables(double sigma)
             }
         }
     }
-
+    free(gaussian_kernel);
     return 0;
 }
 
 ass_tmp_buf::ass_tmp_buf(int size)
 {
-    tmp = (unsigned short*)malloc(size * sizeof(short));
+    tmp = (unsigned *)malloc(size * sizeof(unsigned));
     this->size = size;
 }
 
 ass_tmp_buf::ass_tmp_buf(const ass_tmp_buf& buf)
     :size(buf.size)
 {
-    tmp = (unsigned short*)malloc(size * sizeof(short));
+    tmp = (unsigned *)malloc(size * sizeof(unsigned));
 }
 
 ass_tmp_buf::~ass_tmp_buf()
@@ -205,7 +209,7 @@ ass_tmp_buf::~ass_tmp_buf()
 /*
  * \brief gaussian blur.  an fast pure c implementation from libass.
  */
-static void ass_gauss_blur(unsigned char *buffer, unsigned short *tmp2,
+static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
                            int width, int height, int stride, const unsigned *m2,
                            int r, int mwidth)
 {
@@ -213,14 +217,28 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned short *tmp2,
     int x, y;
 
     unsigned char *s = buffer;
-    unsigned short *t = tmp2 + 1;
+    unsigned *t = tmp2 + 1;
     for (y = 0; y < height; y++) {
-        memset(t - 1, 0, (width + 1) * sizeof(short));
-
-        for (x = 0; x < r; x++) {
+        memset(t - 1, 0, (width + 1) * sizeof(*t));
+        {
+            x = 0;
             const int src = s[x];
             if (src) {
-                register unsigned short *dstp = t + x - r;
+                register unsigned *dstp = t + x - r;
+                int mx;
+                const unsigned *m3 = m2 + src * mwidth;
+                unsigned sum = 0;
+                for (mx = mwidth-1; mx >= r - x ; mx--) {                
+                    sum += m3[mx];
+                    dstp[mx] += sum;
+                }
+            }
+        }
+
+        for (x = 1; x < r; x++) {
+            const int src = s[x];
+            if (src) {
+                register unsigned *dstp = t + x - r;
                 int mx;
                 const unsigned *m3 = m2 + src * mwidth;
                 for (mx = r - x; mx < mwidth; mx++) {
@@ -232,7 +250,7 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned short *tmp2,
         for (; x < width - r; x++) {
             const int src = s[x];
             if (src) {
-                register unsigned short *dstp = t + x - r;
+                register unsigned *dstp = t + x - r;
                 int mx;
                 const unsigned *m3 = m2 + src * mwidth;
                 for (mx = 0; mx < mwidth; mx++) {
@@ -241,15 +259,31 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned short *tmp2,
             }
         }
 
-        for (; x < width; x++) {
+        for (; x < width-1; x++) {
             const int src = s[x];
             if (src) {
-                register unsigned short *dstp = t + x - r;
+                register unsigned *dstp = t + x - r;
                 int mx;
                 const int x2 = r + width - x;
                 const unsigned *m3 = m2 + src * mwidth;
                 for (mx = 0; mx < x2; mx++) {
                     dstp[mx] += m3[mx];
+                }
+            }
+        }
+        
+        {
+            x = width - 1;
+            const int src = s[x];
+            if (src) {
+                register unsigned *dstp = t + x - r;
+                int mx;
+                const int x2 = r + width - x;
+                const unsigned *m3 = m2 + src * mwidth;
+                unsigned sum = 0;
+                for (mx = 0; mx < x2; mx++) {
+                    sum += m3[mx];
+                    dstp[mx] += sum;
                 }
             }
         }
@@ -260,51 +294,88 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned short *tmp2,
 
     t = tmp2;
     for (x = 0; x < width; x++) {
-        for (y = 0; y < r; y++) {
-            unsigned short *srcp = t + y * (width + 1) + 1;
+        {
+            y = 0;
+            unsigned *srcp = t + y * (width + 1) + 1;
             int src = *srcp;
             if (src) {
-                register unsigned short *dstp = srcp - 1 + width + 1;
-                const int src2 = (src + 128) >> 8;
+                register unsigned *dstp = srcp - 1 + (mwidth -r +y)*(width + 1);
+                const int src2 = (src + (1<<15)) >> 16;
+                const unsigned *m3 = m2 + src2 * mwidth;
+                unsigned sum = 0;
+                int mx;
+                *srcp = (1<<15);
+                for (mx = mwidth-1; mx >=r - y ; mx--) {
+                    sum += m3[mx];
+                    *dstp += sum;
+                    dstp -= width + 1;
+                }
+            }
+        }
+        for (y = 1; y < r; y++) {
+            unsigned *srcp = t + y * (width + 1) + 1;
+            int src = *srcp;
+            if (src) {
+                register unsigned *dstp = srcp - 1 + width + 1;
+                const int src2 = (src + (1<<15)) >> 16;
                 const unsigned *m3 = m2 + src2 * mwidth;
 
                 int mx;
-                *srcp = 128;
-                for (mx = r - 1; mx < mwidth; mx++) {
+                *srcp = (1<<15);
+                for (mx = r - y; mx < mwidth; mx++) {
                     *dstp += m3[mx];
                     dstp += width + 1;
                 }
             }
         }
         for (; y < height - r; y++) {
-            unsigned short *srcp = t + y * (width + 1) + 1;
+            unsigned *srcp = t + y * (width + 1) + 1;
             int src = *srcp;
             if (src) {
-                register unsigned short *dstp = srcp - 1 - r * (width + 1);
-                const int src2 = (src + 128) >> 8;
+                register unsigned *dstp = srcp - 1 - r * (width + 1);
+                const int src2 = (src + (1<<15)) >> 16;
                 const unsigned *m3 = m2 + src2 * mwidth;
 
                 int mx;
-                *srcp = 128;
+                *srcp = (1<<15);
                 for (mx = 0; mx < mwidth; mx++) {
                     *dstp += m3[mx];
                     dstp += width + 1;
                 }
             }
         }
-        for (; y < height; y++) {
-            unsigned short *srcp = t + y * (width + 1) + 1;
+        for (; y < height-1; y++) {
+            unsigned *srcp = t + y * (width + 1) + 1;
             int src = *srcp;
             if (src) {
                 const int y2 = r + height - y;
-                register unsigned short *dstp = srcp - 1 - r * (width + 1);
-                const int src2 = (src + 128) >> 8;
+                register unsigned *dstp = srcp - 1 - r * (width + 1);
+                const int src2 = (src + (1<<15)) >> 16;
                 const unsigned *m3 = m2 + src2 * mwidth;
 
                 int mx;
-                *srcp = 128;
+                *srcp = (1<<15);
                 for (mx = 0; mx < y2; mx++) {
                     *dstp += m3[mx];
+                    dstp += width + 1;
+                }
+            }
+        }
+        {
+            y = height - 1;
+            unsigned *srcp = t + y * (width + 1) + 1;
+            int src = *srcp;
+            if (src) {
+                const int y2 = r + height - y;
+                register unsigned *dstp = srcp - 1 - r * (width + 1);
+                const int src2 = (src + (1<<15)) >> 16;
+                const unsigned *m3 = m2 + src2 * mwidth;
+                unsigned sum = 0;
+                int mx;
+                *srcp = (1<<15);
+                for (mx = 0; mx < y2; mx++) {
+                    sum += m3[mx];
+                    *dstp += sum;
                     dstp += width + 1;
                 }
             }
@@ -316,7 +387,7 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned short *tmp2,
     s = buffer;
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
-            s[x] = t[x] >> 8;
+            s[x] = t[x] >> 16;
         }
         s += stride;
         t += width + 1;
@@ -947,15 +1018,35 @@ bool Rasterizer::Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, 
                 priv_blur.gt2, priv_blur.g_r, priv_blur.g_w);
         }
     }
-    // If we're blurring, do a 3x3 box blur
-    // Can't do it on subpictures smaller than 3x3 pixels
+    
+    //if (fGaussianBlur > 0) {
+    //    GaussianKernel filter(fGaussianBlur);
+    //    if (overlay->mOverlayWidth >= filter.width && overlay->mOverlayHeight >= filter.width) {
+    //        int pitch = overlay->mOverlayPitch;
+
+    //        byte *tmp = DNew byte[pitch*overlay->mOverlayHeight];
+    //        if(!tmp) {
+    //            return false;
+    //        }
+
+    //        int border = !mWideOutline.empty() ? 1 : 0;
+
+    //        byte* plan_selected= mWideOutline.empty() ? overlay->mpOverlayBuffer.body : overlay->mpOverlayBuffer.border;
+
+    //        SeparableFilterX<1>(plan_selected, tmp, overlay->mOverlayWidth, overlay->mOverlayHeight, pitch, filter.kernel, filter.width, filter.divisor);
+    //        SeparableFilterY<1>(tmp, plan_selected, overlay->mOverlayWidth, overlay->mOverlayHeight, pitch, filter.kernel, filter.width, filter.divisor);
+
+    //        delete[] tmp;
+    //    }
+    //}
+
     for (int pass = 0; pass < fBlur; pass++)
     {
         if(overlay->mOverlayWidth >= 3 && overlay->mOverlayHeight >= 3)
         {
             int pitch = overlay->mOverlayPitch;
             byte* plan_selected= mWideOutline.empty() ? overlay->mpOverlayBuffer.body : overlay->mpOverlayBuffer.border;
-            be_blur(plan_selected, overlay->mOverlayWidth, overlay->mOverlayHeight, pitch);
+            be_blur(plan_selected+1+pitch, overlay->mOverlayWidth-2, overlay->mOverlayHeight-2, pitch);
         }
     }
     return true;
