@@ -1,0 +1,428 @@
+Version 1.0.4
+
+  - Fixed bug #3101459 - TTCCLayout time is not in milliseconds since
+    process start by default.
+  - Fixed compilation of Non-Windows builds.
+  - Fixed various compilation and linking issues on SunOS.
+
+Version 1.0.4-RC11
+
+  - Fixed bug #3083313, deadlock because of double locking when using
+    ConfigurationWatchDogThread.
+  - Improved portability to HP-UX and aCC compiler.
+  - Added %b PatternLayout format specifier; it expands to file
+    component of file path.
+  - Fixed bug #3058706, compilation error on AIX in socket-unix.cxx.
+  - Added %b pattern layout specifier. It expands to file name
+    component of path name.
+  - Fixed bug #3034758. Fixed infinite loop in
+    Hierarchy::updateParents() when logger hierarchy name starts with
+    a dot.
+  - Fixed bug #3034748. Fixed infinite loop in
+    PatternParser::extractOption() on missing '}'.
+
+Version 1.0.4-RC10
+
+  - Fixed bug #3030133. Make Autoconf/Automake build system to respect
+    provided --includedir= value.
+  - Removed %X{N} PatternLayout format specifier for NDC with limited
+    depth. Replaced it with NDCMaxDepth property.
+  - Improved compatibility with Windows CE.
+  - Fixed memory leak when using POSIX threads.
+  - Fixed leak of mutex used to synchronize gethostbyname() calls.
+  - Fixed problem with how std::toupper(), std::tolower() and
+    std::isspace() are used in non-Unicode builds.
+
+Version 1.0.4-RC9
+
+  - Fixed compilation problem in timehelper.cxx.
+  - Added %X{N} PatternLayout format specifier for NDC with limited
+    depth.
+  - Added facility property to SysLogAppender.
+
+Version 1.0.4-RC8
+
+  - Always handle %s time format specifier (seconds since epoch) in
+    log4cplus. Detect and use clock_gettime() when available.
+  - Fixed compilation on OpenSolaris with Sun C++.
+  - Fixed compilation on OpenBSD.
+  - Fixed use of operator delete/delete[] in FileAppender (Patch
+    #3005234).
+  - Updated config.guess and config.sub to latest Git repository
+    versions.
+  - Added BufferSize property to FileAppender to allow control of the
+    appender's output buffer.
+  - Removed -fkeep-inline-functions from GCC flags for non-debugging
+    build.
+
+Version 1.0.4-RC7
+
+  - Fixed thread safety issues with gethostbyname() by using
+    getaddrinfo() instead, where available.
+  - Fixed bug #2965390 - Minor internal debugging output issue.
+  - Added --enable-warnings (--disable-warnings) switches to the
+    configure script.
+  - Added ReopenDelay property to FileAppender, allowing the appender
+    to reopen output stream after write failure. (Patch #2971315)
+
+Version 1.0.4-RC6
+
+  - Fixed bug #2945335 - MinGW/MSYS build problems. For Windows builds
+    the source now defaults to static library/empty LOG4CPLUS_EXPORT
+    macro.
+  - Fixed a security problem in SyslogAppender.
+  - Fixed bug #2955058 - Looping over properties during variables
+    expansion.
+  - Added missing dependency on log4cplus_dll project to filter_test
+    project.
+  - Added a constructor with Properties parameter to DenyAllFilter.
+  - Reworked Layout, Appender and Filter factories registration.
+
+Version 1.0.4-RC5
+
+  - Implemented feature request #2927416 "Add a native Win32 Console
+    Appender".
+  - Loggingserver now exits with value 2 when it cannot open
+    listening socket.
+  - Improved Doxygen documentation.
+  - Added PropertyConfigurator::getProperties() and
+    PropertyConfigurator::getPropertyFilename() functions.
+  - Removed LOG4CPLUS_EXPORT on SharedObjectPtr<>.
+  - Turned on linker optimizations for MSVC8 builds to make resulting
+    binaries slightly smaller.
+  - Added --enable-runtime-pseudo-reloc linker option for Cygwin and
+    Mingw. Enable --enable-auto-import linker flag also for Mingw.
+
+Version 1.0.4-RC4
+
+  - Fixed bug #2875993 - Implement connector thread for
+    SocketAppender.
+  - Improved documentation of Appenders' properties.
+  - Improved behaviour of DailyRollingFileAppender.
+  - Added x64 (AMD64) build configuration to MSVC8 project files.
+  - Reworked MSVC8 project files to use .vsprops files to share
+    project settings.
+  - Moved all tests into Tests project folder.
+  - Improved behaviour of ConfigurationWatchDogThread.
+  - Fixed bug #2890819 - Handle empty input in towstring_internal()
+    and tostring_internal().
+  - Corrected VERSION and SOVERSION in CMakeLists.txt.
+  - Fixed thread_test compilation on AIX.
+  - Added missing syncprims.cxx file in log4cplus_static.vcproj.
+
+Version 1.0.4-RC3
+
+  IMPORTANT: Majority of log4cplus' source code is now licensed using
+  the Apache Software License 2.0. The rest is covered by two clause
+  BSD license.
+
+  - Fixed bug #2747435. Implement handling of log4cplus.configDebug
+    configuration property.
+  - Fixed variables shadowing.
+  - Doxygen documentation improvements and fixes.
+  - Add %i PatternLayout format. It expands to process ID.
+  - Fix logging macros compilation for LOG4CPLUS_SINGLE_THREADED case.
+  - Fix Logger log level configuration and root Logger handling log
+    level handling.
+
+Version 1.0.4-RC2
+
+  - Fixed bug #2834811. Accessing index 0 of empty strings.
+  - Fixed bug #2834808. Memory leak in thread local storage code.
+  - Removed MSVC6 directory and project files.
+  - Update to libtool-2.2.6.
+
+Version 1.0.4-RC1
+
+  - Fixed compilation with Borland C++ Builder compiler.
+  - Improved CMake build system to also build tests.
+  - Fixed compilation and improved support for Windows CE.
+  - Fixed compilation and improved support for Sun Studio 11 compiler.
+  - Fixed use after free and improved shutdown handling in
+    ConfigurationWatchDogThread.
+  - Implement %H (FQDN) and %h (host name) PatternLayout format
+    specifiers.
+  - Fixed bug #2829604. Environment variables substitution.
+
+Version 1.0.3
+
+  - List of bugs fixed or otherwise dealt with:
+    <https://sourceforge.net/tracker/?func=browse&group_id=40830&atid=429073&artgroup=877523>
+
+Version 1.0.3-RC9
+
+  - Tweaked Doxygen docs in comments for more recent Doxygen versions.
+  - Fix bug #2632087. Reworked WinSock initialization to fix deadlock
+    in WSAStartup() on Windows Vista.
+  - Fixed excessive errors reported in RollingFileAppender when
+    renaming non-existing files.
+  - Fall back to DAILY schedule in DailyRollingFileAppender for
+    invalid schedule specification.
+  - Added Debug_Unicode and Release_Unicode targets to MSVC8 test
+    cases builds.
+
+Version 1.0.3-RC8
+
+  - Fixed SysLogAppender not being exported out of shared library
+    because of missing LOG4CPLUS_EXPORT.
+  - Fix bug #1168433. RollingFileAppender does a rename() to rename
+    logfile to logfile.1 etc. rename() on Windows will not overwrite
+    an existing file so only the first rename works. On Windows
+    (only), try to remove existing file first before calling rename().
+  - Fix bug #2573222. License issues. Most of log4cplus is covered by
+    ASL 1.1. The bits that are not covered by ASL 1.1 are covered by
+    two clause BSD licence. Texts of both licences are in LICENCE
+    file.
+  - Fix bug #2580037. Trim leading white space before comment
+    character '#' and both leading and trailing white space around
+    both key and value (e.g. " key = value ") in property files.
+  - Fix bug #2594345. Loggingserver and SocketAppender message format
+    mismatch.
+  - Fixed CMake builds.
+
+Version 1.0.3-RC7
+
+  - Fix Bug #894464. Really only consider prefixes when searching for
+    matching properties.
+  - Fix compilation for combination of non-threaded and UNICODE
+    settings.
+
+Version 1.0.3-RC6
+
+  - Fix Bug #852513 - Reconfiguring a logger does not remove old
+    appenders.
+  - Changed log4cplus thread helpers to block all signals on POSIX
+    platforms to enable their handling in a dedicated thread. (See
+    README, chapter Notes for explanation.)
+  - Changed thread creation from using CreateThread() to using
+    _beginthreadex() to avoid leaking C and C++ runtime memory.
+  - Fixed convertIntegerToString() to for negative numbers.
+  - Fixed wrong name used in BasicConfigurator for the
+    ConsoleAppender.
+
+Version 1.0.3-RC5
+
+  - Add CMakeLists.txt to facilitate compilation of log4cplus on
+    Windows with different compilers than just the MSVC8.
+  - Fix compilation of Unicode enabled build without working locale.
+    (Patch #2429185)
+
+Version 1.0.3-RC4
+
+  - IMPORTANT: log4cplus shared library version has been bumped to
+    3. The interfaces have slightly changed and 1.0.3 is not binary
+    compatible with 1.0.2.
+
+  - Fix more MSVC compilation problems.
+  - Changed log4cplus_static.vcproj to link with DLL C/C++ run time
+    (MSVCR80.dll and MSVCP80.dll).
+  - Implemented environment variables shadowing by properties and
+    recursive properties expansion.
+  - Reworked output directories layout of MSVC8 project. Now it
+    produces directories of the form
+    "log4cplus_{static,dll}.{Release,Debug}{_Unicode,}" and
+    "loggingserver.{Release,Debug}{_Unicode,}". The tests directory
+    projects still only compile using non-Unicode release and debug
+    version of the library.
+  - For single-threaded builds, re-use single tostringstream instead
+    of using a new one for each LOG4CPLUS_DEBUG() etc. macros.
+  - Merge Win32DebugAppender from trunk. (Patches #834925 and #858128)
+  - Make configuration of local server for NTEventLogAppender easier
+    by allowing empty server parameter string. (Feature Request
+    #875935)
+
+Version 1.0.3-RC3
+
+  - Fix Bug #2268760 - Trailing garbage in strings produced by
+    Time::getFormattedTime().
+  - Fixed compilation of MSVC builds.
+
+Version 1.0.3-RC2
+
+  - Fix Bug #2106949 - Compilation problem with Borland's compiler.
+  - Fix Bug #1717320, #1040902, #1040676 - strftime() complains about
+    our custom %q and %Q format specifiers with "Invalid format
+    directive".
+  - Removed safe_auto_ptr.
+  - Added --enable-debugging switch to configure script. It disables
+    optimization and turns on debugging info generation.
+  - Use locale and its codecvt facet in towstring()/tostring()
+    implementations when --with-working-locale is defined.
+  - Added support for GCC's -fvisibility=hidden flag where available
+    together with __attribute__ ((visibility("default"))).
+
+Version 1.0.3-RC1
+  - IMPORTANT: VC6 users, VC6 is unsupported. Its standard C++ library
+    is too broken. The work around for VC6's std::string has been
+    removed from log4cplus code; it actually does not fix the problem,
+    it only makes it a little bit less likely to manifest. VC6 project
+    files are still distributed with the source but they are broken as
+    we have no means to update them. We strongly suggest that you
+    either move away from VC6 to some more modern and standard
+    conforming compiler (like VC8) or that you use the STLport
+    standard C++ library implementation instead of VC6's own.
+
+  - Fixed various compilation issues with MSVC8.
+  - Added MSVC8 project files.
+  - Fixed compilation with GCC 4.3.
+  - Fixed autoconf/automake build machinery so that it is possible to
+    build log4cplus in separate directory.
+  - Updated used autoconf and automake to version 2.62 and 1.10
+    respectively.
+  - Enabled DLL building on Cygwin.
+  - Fixed Bug #894623, #1178841 - Various compilation issues on
+    Cygwin.
+  - Fixed Bug #2017876 - Destruction synchronization issue.
+  - Fixed Bug #1831238 - Unintentional sign extension in char ->
+    wchar_t conversion.
+  - Fixed Bug #1548998 - config.h is exporting symbols that conflict
+    with other applications/libraries.
+  - Fixed Bug #898646 - Ambiguity between ::yield() and
+    thread::yeild() on Solaris.
+  - Fixed Bug #954455 - LOG4CPLUS_ macros semicolon problem.
+
+Version 1.0.2 (February 10, 2004)
+  - Added "ImmediateFlush" configuration option to log4cplus::ConsoleAppender.
+  - Added do while loops around the logging statements in the macros.
+  - Fixed Bug #875960 - "log4cplus::ConfigureAndWatchThread crash"
+  - Fixed Bug #992034 - "rpm[build] -ta log4cplus-1.0.1.tar.gz doesn't work"
+  - Fixed Bug #875724 - "ConfigureAndWatchThread and mounted file systems"
+  - Fixed Bug #842280 - "'Append' mode when using FileAppended from cfg file."
+    All FileAppenders now have the "Append" configuration option.  If this is
+    "true" any existing files will be opened with ios::append, otherwise they
+    will be opened with ios::trunc.
+  - Fixed Bug #805203 - "%q ConversionFormat does not accept modifiers"
+
+
+Version 1.0.1 (December 18, 2003)
+  - Fixed Bug #831311 - "loggingserver.cxx clientsock.read()"
+  - Fixed Bug #851074 - "build problem HPUX 11, gcc 3.3"
+  - Fixed Bug #805242 - "Crash in log4cplus::helpers::SocketBuffer::appendSize_t"
+  - Fixed Bug #808119 - "TRACE_METHOD not displaying file name in log"
+  - Fixed Bug #827804 - "UMR in ConfigurationWatchdogThread"
+  - Fixed Bug #851116 - "Can not build"
+  - Added the OFF_LOG_LEVEL and the ALL_LOG_LEVEL LogLevels.
+
+
+Version 1.0 (September 6 2003)
+  - Fix Bug #96934.  (fileappender.cxx would not compile in a UNICODE build)
+  - Fixed compilation warning in MSVC for pointer.h
+
+
+Version 0.9.10 (August 27 2003)
+  - Fixed singled-threaded build compilation issues
+  - The DailyRollingFileAppender no longer truncates files
+  - The DailyRollingFileAppender now performs a "rollover" on close().  If the
+    "rollover file" exists, then it will be renamed according to the pattern
+    that is used by the RollingFileAppender class.  (Thanks Philip Green for
+    the suggestion.)
+  - Some socket-unix.cxx corrections.
+  - Fixed the *Factory initialization so that it compile with the HP aCC
+    compiler.
+  - Corrected the getCurrentThreadName() for MacOS X and DEC.
+  - "make install" now installs the header files.
+
+
+Version 0.9.9 (August 9 2003)
+  - Fixed many MSVC++ compilation errors (6 and 7).
+  - Updated the MSVC++ projects
+  - Modified the Time::getFormattedTime() method to increase performance
+  - Modified Hierarcy::getInstanceImpl() to "deep copy" Logger names.
+  - Corrected some of the PatternLayout documentation to work better with
+    doxygen.
+  - Some Borland C++ Builder 6 fixes.
+
+
+Version 0.9.8 (August 3 2003)
+  - Changed the LogLog class so that it is now reference counted.
+  - Restored the LOG4CPLUS_*_STR logging macros.
+  - Added support to disable the ERROR and FATAL macros by defining
+    LOG4CPLUS_DISABLE_*
+  - API Change:  The LOG4CPLUS_TRACE macro now has behavior similar to all of
+    the other logging macros.  If the old behavior is desired, then the new
+    LOG4CPLUS_TRACE_METHOD macro should be used.
+  - Modified Appender class to support the "Threshold" property.
+  - "localtime" is now the default time in log4cplus.
+  - The FileAppender no longer prints out the "header" when it opens a file.
+  - Added the "immediateFlush" field to the FileAppender class.
+  - Changed the API of the LogLevelManager class.
+  - Initial port work done to run on MacOS X.
+  - Added the HierarchyLocker class
+  - Added the ConfigureAndWatchThread class for runtime dynamic reconfiguration.
+  - Added several performance enhancements to the InternalLoggingEvent class.
+  - Renamed the PatternLayout "Pattern" configuration option to
+    "ConversionPattern".
+  - Added 3 new tests: configandwatch_test, customloglevel_test, and
+    performance_test.  (No MSVC projects created for these tests, yet.)
+
+
+Version 0.9.7 (June 28 2003)
+  - Added the log4cplus::DailyRollingFileAppender class.
+  - Added the log4cplus::helper::Time class.  Now log with millisecond
+    granularity. (microsecond granularity if the gettimeofday() function is
+    available.)
+  - Changed log4cplus::spi::InternalLoggingEvent from a POD to a class and
+    introduced several performance ehancements to that class.  This class
+    can now be extended to introduce "customized" logging.
+  - Fixed Bug #757989 - "TraceLogger should not hold a Logger reference"
+  - Added TYPE_SOCKLEN_T to configure.in (checking for whether <sys/socket.h>
+    defines `socklen_t').
+  - Added the "operator!=" to log4cplus::helpers::SharedObjectPtr.
+  - Made changes to make the DEC CXX 6.1 compiler happy.
+  - Renamed the tolower and toupper methods to avoid a name collision with a
+    macro with the DEC CXX compiler.
+  - Removed "-lstdc++" from the list of libraries in all Makefiles.
+
+
+Version 0.9.6 (June 10 2003)
+  - Fixed multiple compiler warnings for the MSVC++ 7 compiler
+  - Modified configure.in so that it can now build on Solaris.
+  - Modified the configure script so that it can build a single-threaded
+    library (--enable-threads=no)
+  - Added "Filtering" to Appenders.
+  - Fixed Bug #741515 - "LogLog is causing a core on HP".
+  - Fixed Bug #733944 - "logging in system/local time"
+  - Fixed Bug #749040 - "Use of gmtime and localtime not thread-safe"
+  - Fixed Bug #750232 - "Copying of Hierarchy should not be allowed"
+  - Added an MSVC++ project to build log4cplus as a static library.
+
+
+Version 0.9.5 (May 19 2003)
+  - Removed the LOG4CPLUS_*_STR logging macros.
+  - Added support to disable the TRACE, DEBUG, and INFO macros by defining
+    LOG4CPLUS_DISABLE_*
+  - Added a static doConfigure() method to PropertyConfigurator and
+    BasicConfigurator.
+  - Fixed problems with the configure script on several platforms.
+  - Optimized single-threaded mode.
+  - Fixed some problems with the MSVC++ 7 compiler.
+
+
+Version 0.9.4 (May-5-2003)
+  Added SocketAppender class.
+  Now builds loggingserver to act as a source of logging messages from a
+  SocketAppender.
+  Numerous fixes needed for various compilers.
+
+
+Version 0.9.3 (Apr-19-2003)
+  Added preliminary UNICODE support. (Little testing.)  Thanks Michael CATANZARITI
+  Now built as a shared library instead of a static library.
+  Add support for Microsoft Visual C++ 6.0 back in.  (Multi-threaded DLL)
+  Added SysLogAppender class.
+  Added NTEventLogAppender class.  (Thanks Michael CATANZARITI)
+
+
+Version 0.9.2 (Apr-5-2003)
+  Major API change:  Changed the name of the Category class to Logger and
+	     replaced the Priority class with LogLevel.
+  Added PropertyConfigurator class.
+  Added BasicConfigurator class.
+
+
+Version 0.9.1 (Mar-22-2003)
+  Added PatternLayout class.
+
+
+Version 0.9.0
+  Initial beta release.

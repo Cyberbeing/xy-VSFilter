@@ -1,0 +1,5 @@
+* stop sending ec_ole_event for external subs
+* special sub file for redirecting to others, make it the only choice for web
+* fix pitch probs with 180x... divx clip
+- dragndrop subs to tray icon if possible
++ allow wildcards in search path, e.g. .\default.*.srt

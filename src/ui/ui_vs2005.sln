@@ -1,0 +1,55 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CmdUI", "CmdUI\CmdUI_vs2005.vcproj", "{03208025-D5C2-426A-B0FA-251D4338F30C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ResizableLib", "ResizableLib\ResizableLib_vs2005.vcproj", "{4CC7AE86-3E0A-430A-BFF4-BF00204CAFB0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sizecbar", "sizecbar\sizecbar_vs2005.vcproj", "{61E6EB4D-2F1A-443B-94B0-E8200B26E99F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TreePropSheet", "TreePropSheet\TreePropSheet_vs2005.vcproj", "{AB494732-EF6D-44D0-BCF8-80FF04858D10}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Unicode|Win32 = Debug Unicode|Win32
+		Debug|Win32 = Debug|Win32
+		Release Unicode|Win32 = Release Unicode|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{03208025-D5C2-426A-B0FA-251D4338F30C}.Debug Unicode|Win32.ActiveCfg = Debug Unicode|Win32
+		{03208025-D5C2-426A-B0FA-251D4338F30C}.Debug Unicode|Win32.Build.0 = Debug Unicode|Win32
+		{03208025-D5C2-426A-B0FA-251D4338F30C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{03208025-D5C2-426A-B0FA-251D4338F30C}.Debug|Win32.Build.0 = Debug|Win32
+		{03208025-D5C2-426A-B0FA-251D4338F30C}.Release Unicode|Win32.ActiveCfg = Release Unicode|Win32
+		{03208025-D5C2-426A-B0FA-251D4338F30C}.Release Unicode|Win32.Build.0 = Release Unicode|Win32
+		{03208025-D5C2-426A-B0FA-251D4338F30C}.Release|Win32.ActiveCfg = Release|Win32
+		{03208025-D5C2-426A-B0FA-251D4338F30C}.Release|Win32.Build.0 = Release|Win32
+		{4CC7AE86-3E0A-430A-BFF4-BF00204CAFB0}.Debug Unicode|Win32.ActiveCfg = Debug Unicode|Win32
+		{4CC7AE86-3E0A-430A-BFF4-BF00204CAFB0}.Debug Unicode|Win32.Build.0 = Debug Unicode|Win32
+		{4CC7AE86-3E0A-430A-BFF4-BF00204CAFB0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4CC7AE86-3E0A-430A-BFF4-BF00204CAFB0}.Debug|Win32.Build.0 = Debug|Win32
+		{4CC7AE86-3E0A-430A-BFF4-BF00204CAFB0}.Release Unicode|Win32.ActiveCfg = Release Unicode|Win32
+		{4CC7AE86-3E0A-430A-BFF4-BF00204CAFB0}.Release Unicode|Win32.Build.0 = Release Unicode|Win32
+		{4CC7AE86-3E0A-430A-BFF4-BF00204CAFB0}.Release|Win32.ActiveCfg = Release|Win32
+		{4CC7AE86-3E0A-430A-BFF4-BF00204CAFB0}.Release|Win32.Build.0 = Release|Win32
+		{61E6EB4D-2F1A-443B-94B0-E8200B26E99F}.Debug Unicode|Win32.ActiveCfg = Debug Unicode|Win32
+		{61E6EB4D-2F1A-443B-94B0-E8200B26E99F}.Debug Unicode|Win32.Build.0 = Debug Unicode|Win32
+		{61E6EB4D-2F1A-443B-94B0-E8200B26E99F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{61E6EB4D-2F1A-443B-94B0-E8200B26E99F}.Debug|Win32.Build.0 = Debug|Win32
+		{61E6EB4D-2F1A-443B-94B0-E8200B26E99F}.Release Unicode|Win32.ActiveCfg = Release Unicode|Win32
+		{61E6EB4D-2F1A-443B-94B0-E8200B26E99F}.Release Unicode|Win32.Build.0 = Release Unicode|Win32
+		{61E6EB4D-2F1A-443B-94B0-E8200B26E99F}.Release|Win32.ActiveCfg = Release|Win32
+		{61E6EB4D-2F1A-443B-94B0-E8200B26E99F}.Release|Win32.Build.0 = Release|Win32
+		{AB494732-EF6D-44D0-BCF8-80FF04858D10}.Debug Unicode|Win32.ActiveCfg = Debug Unicode|Win32
+		{AB494732-EF6D-44D0-BCF8-80FF04858D10}.Debug Unicode|Win32.Build.0 = Debug Unicode|Win32
+		{AB494732-EF6D-44D0-BCF8-80FF04858D10}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AB494732-EF6D-44D0-BCF8-80FF04858D10}.Debug|Win32.Build.0 = Debug|Win32
+		{AB494732-EF6D-44D0-BCF8-80FF04858D10}.Release Unicode|Win32.ActiveCfg = Release Unicode|Win32
+		{AB494732-EF6D-44D0-BCF8-80FF04858D10}.Release Unicode|Win32.Build.0 = Release Unicode|Win32
+		{AB494732-EF6D-44D0-BCF8-80FF04858D10}.Release|Win32.ActiveCfg = Release|Win32
+		{AB494732-EF6D-44D0-BCF8-80FF04858D10}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

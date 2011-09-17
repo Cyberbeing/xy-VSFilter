@@ -1,0 +1,27 @@
+Because Visual Studio becomes a turtle when there are many little projects, I didn't set up dependencies between them and didn't put them all into one workspace per application. These are more or less the base of everything, build them in this order first:
+1. deccs
+2. dsutil
+3. ui
+4. subpic
+5. subtitles
+6. filters (for mpc only build those configurations which output a lib, the rest outputs stand-alone filters)
+
+Required SDKs:
+- DirectX 9 SDK (you may need to add "Debug Unicode" and "Release Unicode" configs to the project file of the directshow baseclasses)
+- Platform SDK
+- Windows Media Format SDK 9
+
+It is recommended that you add DX9's include and lib paths to Visual Studio before the others:
+
+- include:
+<DXSDK>\Samples\C++\DirectShow\BaseClasses
+<DXSDK>\Include
+...
+
+- lib:
+<DXSDK>\lib
+...
+
+Other external header files are included directly, modify the path in the sources if your installation differs. (but don't COMMIT it to the SVN!)
+
+Debug builds use dynamic, Release builds use static linking to standard C/C++ and MFC libs. Don't forget to change this in the baseclasses. Also IMPORTANT: add winmm.lib to the baseclasses or else you will get a few unresolved externals later.

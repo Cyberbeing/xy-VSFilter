@@ -1,0 +1,18 @@
+0000 02 00 00 00|01 00 80 00 
+DWORD: format version? | DWORD: merit
+0008 01 00 00 00|00 00 00 00
+DWORD: pin count | DWORD: ?
+0010 3n|70 69|33|xx|00 00 00
+BYTE: 0x30+n, pin idx | WORD: 70 69, "pi" | BYTE: 0x33 (always?) | BYTE: (bit flags) 0 input, 8 output, 2 rendered, 1 allow none (unconfirmed), 4 allow many
+0018 00 00 00 00|02 00 00 00
+DWORD: 0 | DWORD: type count
+0020 00 00 00 00 00 00 00 00
+QWORD: 0
+0028 3n|74 79|33|00 00 00 00
+BYTE: 0x30+n, type idx | WORD: 74 79, "ty" | BYTE: 0x33 (always?) | DWORD: 0
+0030 38 00 00 00|48 00 00 00
+DWORD: major type offset | DWORD: subtype offset
+0038 major type GUID ...
+0040 ... major type GUID
+0048 sub type GUID ...
+0050 ... sub type GUID

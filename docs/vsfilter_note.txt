@@ -1,0 +1,190 @@
+vsfilter笔记
+1.CSimpleTextSubtitle读取文本文件并对其做简单分析。读取ssa/ass时，对除写在text中的特效之外的tag进行分析，会处理内嵌字体，不处理内嵌图片。
+读取分析文本文件的调用顺序
+	CSimpleTextSubtitle.open
+	通过函数指针数组OpenFuncts调用函数OpenSubStationAlpha
+	OpenSubStationAlpha对ssa/ass进行分析
+
+2.CRenderedTextSubtitle继承CSimpleTextSubtitle，CRenderedTextSubtitle.ParseSSATag对ass特效进行分析
+3.分析ass特效的调用顺序
+	CRenderedTextSubtitle::Render调用
+	CRenderedTextSubtitle::GetSubtitle调用
+	CRenderedTextSubtitle.ParseSSATag
+CRenderedTextSubtitle::ParseSSATag仅被其自身及函数CRenderedTextSubtitle::GetSubtitle调用
+CRenderedTextSubtitle::GetSubtitle仅被CRenderedTextSubtitle::Render调用
+4.渲染字幕的调用顺序
+	CRenderedTextSubtitle::Render调用
+	CRect CLine::PaintBody、CRect CLine::PaintOutline、CLine::PaintShadow调用
+	CWord::Draw或CWord.m_pOpaqueBox::Draw
+5.ass字幕特效之外的分析在open时一次做完，效率不重要。特效分析每一次一行(?)，分析代码复杂，可能是效率的瓶颈。
+6.无头骑士op特效为例，两行字幕，一行在左上，一行在右下，同时显示（若不缓冲字幕图像），vsfilter处理效率很低（比起将两行和为一行），可能是分成两次渲染，此处肯定有得改进。
+7.CTextFile用于处理文本文件，CWebTextFile在CTextFile基础上增加了处理Web文本的功能
+8.CVobSubFile处理.idx、.ifo、.sub文件，open的时候一次将所有内容读入内存。CVobSubFile.Render调用StretchBlt将m_img中的图像输出，StretchBlt标识符意义“copies a bitmap from a source rectangle into a destination rectangle”。
+------------------------------------
+CHtmlColorMap 只 是 继承CAtlMap<CString, DWORD, CStringElementTraits<CString>>并提供构造函数
+STSStyle保存字体style，并提供将STSStyle转化为LOGFONT(A/W)的操作符函数<<=
+
+LOGFONTA、LOGFONTW（=LOGFONT）:LOGical FONT, defined in wingdi.h. The two is differed for one use a ansi facename(fontname) string while the other use a widechar version.
+in wingdi.h, LOGFONTW=LOGFONT. Similarly TEXTMETRIC=TEXTMETRICW.
+
+----------------------
+CMyFont inherits from CFont and privids a constructor which has a parameter of type STSStyle&.
+	ascent: units above the baseline
+	descent: units below the baseline
+	当应用程序要求将字符放置在 (x, y) 位置时，放置字符的方式是使其引用点（附图中显示的点）放置在该位置。引用点指定一条水平线，称为字符的基线 (baseline)。在正常的打印中，字符的基线应该对齐。
+
+此外，字体中的每个字符都具有 ascent、descent 和 advance width 属性。ascent 是字符超出基线之上的距离。descent 是字符超出基线以下的距离。advance width 指示 AWT 应该放置下一个字符的位置。
+
+字符数组或字符串也可以具有 ascent、descent 和 advance width 属性。数组的 ascent 是数组中所有字符的最大 ascent。descent 是数组中所有字符的最大 descent。advance width 是字符数组中每个字符的 advance width 之和。String 的 advance 是 String 沿基线的距离。此距离是 String 居中或右对齐应该使用的 width。 
+----------------------
+enum eftype: effect type, 定义了几种特效，对应ass字幕特效域的几个选项。
+CWord inherits Rasterizer
+CLine inherits CAtlList<CWord*>
+CSubtitile inherits CAtlList<CLine*>
+这几类应该是用渲染用的
+----------------------
+STSStyle样式
+CSTStypleMap 样式表
+STSEntry 对应ass字幕里的一行字幕
+STSSegment 指定一个(时)段[start,end],STSSegment存储了所有开始到结束包含了[start,end](时)段的字幕
+CSimpleTextSubtitle 对应一个文本字幕
+CSimpleTextSubtitle继承CAtlArray<STSEntry>
+CSimpleTextSubtitle.CreateSegments()根据所有STSEntry创建STSegment，根据STSEntry将时间分段，每段需要显示的STSEntry用一个STSSegment存储（事实上此函数实现的功能与所有STSEntry的顺序无关）
+CSimpleTextSubtitle.Sort(bool)对所有STSEntry排序，根据参数选择排序方式，默认参数false:依STSEntry的(start,layer,reorder)升序排序;参数true:依reorder排序。排序后调用CreateSegments函数更新m_segments（其实并无必要，因不修改STSEntry，只改变其顺序的话，对应的STSSegment并无须更新）
+void CSimpleTextSubtitle::Append(CSimpleTextSubtitle& sts, int timeoff) 删去所有的STSEntry中start大于timeoff的，将sts中所有的STSEntry平移timeoff个单位后拷贝。timeoff小于0，将设为所有STSEntry的结束时间。
+void CSimpleTextSubtitle::TranslateStart(i,fps) 将第i个STSEntry的start换算（如果需要的话）成时间输出
+void CSimpleTextSubtitle::TranslateEnd(i,fps)   同上
+void CSimpleTextSubtitle::TranslateSegmentStart(i,fps) 同上
+void CSimpleTextSubtitle::TranslateSegmentStart(i,fps) 同上
+
+int CSimpleTextSubtitle::SearchSub(int t, double fps) 
+    若t大于或等于所有STSEntry的start，返回最后一个STSEntry
+    否则二分定位到第一个start==t的STSEntry
+    若未找到start==t的STSEntry，返回-1
+const STSSegment* CSimpleTextSubtitle::SearchSubs(int t, double fps, /*[out]*/ int* iSegment, int* nSegments)
+    搜索使t处于start和end之间的STSSegment，保存于iSegment返回，nSegments保存所有Segments个数，返回值为STSSegment数组
+
+全屏变量数组CharSetList、CharSetNames、CharSetLen: 字符集
+
+问题：
+1.CSimpleTextSubtitle继承CAtlArray<STSEntry>，其实不妥，特别是当一个字幕被当作一个CAltArray对象处理时，可能导致很多问题。
+2.sort中不必调用createSegment
+3.open中遍历几种openUSF等几种函数的做法有待商榷，根据文件后缀直接选相应的函数如何？
+4.append小有效率问题
+5.SearchSub二分定位实现得很烂...且返回值意义不一致，bug？
+6.CharSetList、CharSetNames、CharSetLen能改成常量(?)
+
+-----------------------------------
+This is indeed the problem. The DirectX Include directory contains an early version of BaseTsd.h which does not include the definition for POINTER_64. You should instead use the version of BaseTsd.h in the Platform SDK, either the one that ships with Visual Studio 2005 (C:\Program Files\Microsoft Visual Studio 8\VC\PlatformSDK\Include\BaseTsd.h) or in an updated Microsoft SDK installation. In order to get the compiler to use the right file, just remove BaseTsd.h from the DirectX Include directory.
+
+Simple enough?
+-----------------------------------
+CDirectVobSubFilter->CBaseVideoFilter->CTransformFilter，CTransformFilter "uses separate allocators for the input pin and the output pin. To create a filter that processes data in place, use the CTransInPlaceFilter class". 这是vsfilter效率低的原因(?)
+-----------------------------------
+DirectShow baseclass中CTransformInputPin.Receive调用CTransformFiler.Receive调用CTransformFile.Transform(pIn,pOut)完成转换数据任务
+vsfilter中CBaseVideoFilter重写了receive，在receive中调用了另一个Transform(pIn)，CDirectVobSubFilter重写了Transform(pIn)，字幕写入到视频的步骤由ISubPic.AlphaBlt函数完成(Blt意为bit-block transform，参见wiki的bit blit词条)
+CAMThread： The CAMThread class is an abstract class for managing worker threads.
+------------------------------------
+CBasePin::CurrentRate()返回值的意义？
+------------------------------------
+CheckInputType
+CDirectVobSubFilter未重写CheckInputType
+CDirectVobSubFilter2重写CheckInputType，但只增加了auto loading的测试
+CDirectVobSubFilter、CDirectVobSubFilter2的基类CBaseVideoFilter重写CheckInputType为
+
+HRESULT CBaseVideoFilter::CheckInputType(const CMediaType* mtIn)
+{
+	BITMAPINFOHEADER bih;
+	ExtractBIH(mtIn, &bih);
+
+	return mtIn->majortype == MEDIATYPE_Video 
+		&& (mtIn->subtype == MEDIASUBTYPE_YV12 
+		 || mtIn->subtype == MEDIASUBTYPE_I420 
+		 || mtIn->subtype == MEDIASUBTYPE_IYUV
+		 || mtIn->subtype == MEDIASUBTYPE_YUY2
+		 || mtIn->subtype == MEDIASUBTYPE_ARGB32
+		 || mtIn->subtype == MEDIASUBTYPE_RGB32
+		 || mtIn->subtype == MEDIASUBTYPE_RGB24
+ 		 || mtIn->subtype == MEDIASUBTYPE_RGB565)
+		&& (mtIn->formattype == FORMAT_VideoInfo 
+		 || mtIn->formattype == FORMAT_VideoInfo2)
+		&& bih.biHeight > 0
+		? S_OK
+		: VFW_E_TYPE_NOT_ACCEPTED;
+}
+
+------------------------------------
+InitSubPicQueue
+对字幕图片队列进行初始化，令m_spd.bits = (void*)m_pTempPicBuff
+为m_pSubPicQueue设置了一个CMemSubPicAllocator
+------------------------------------
+CComPtr的赋值操作符调用了AddRef，Attach不调用AddRef
+---------------
+ATLINLINE ATLAPI_(IUnknown*) AtlComPtrAssign(IUnknown** pp, IUnknown* lp)
+{
+        if (lp != NULL)
+                lp->AddRef();
+        if (*pp)
+                (*pp)->Release();
+        *pp = lp;
+        return lp;
+}
+---------------
+template <class T>
+class CComPtr
+{
+public:
+        ...
+
+        T* operator=(T* lp)
+        {
+                return (T*)AtlComPtrAssign((IUnknown**)&p, lp);
+        }
+---------------
+void Attach(T* p2)
+        {
+                if (p)
+                        p->Release();
+                p = p2;
+        }
+------------------------------------
+bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, int& arx, int& ary)
+input pmt：media type;
+output:
+	w：the width of the video, in pixels;
+	h: the height of the video, in pixels;
+	arx, ary: the aspect ratio of the video.
+	@return: true if succeed.
+其中代码片段：
+……
+    DWORD a = arx, b = ary;
+    while(a) {int tmp = a; a = b % tmp; b = tmp;}
+……
+为辗转相除法求最大公约数
+------------------------------------
+class CBaseVideoFilter : public CTransformFilter
+{
+……
+protected:
+int m_w, 		//the width of the video, in pixels;
+    m_h, 		//the height of the video, in pixels;
+    m_arx, m_ary;	//the aspect ratio of the video.
+……
+}
+------------------------------------
+CSubPicQueue不能表现动画特效的原因：
+缓存的字幕图片时间为对应的STSEntry的开始、结束时间。对有动画特效的STSEntry，第一次生成此STSEntry对应的字幕图片存入队列后，每次再生成字幕图片，都会跳过此STSEntry对应的时间段，直接生成后面的时间对应的字幕图片，从而一个STSEntry只会对应一个字幕图片，也就不会有动画特效。
+------------------------------------
+线程：
+主要的线程包括了：
+主线程：		负责视频的播放；
+生成字幕图片的线程：	生成字幕图片加入队列；
+界面响应的线程：	创建窗口，响应界面事件。
+CDirectVobSubFilter重写了CTransformFilter::CompleteConnect方法，在此方法中创建界面响应的线程，线程执行代码为SystrayThreadProc，此线程中创建了vsfilter的systray窗口(创建了一个CSystrayWindow的对象)，并开始了主消息循环。界面响应的线程的销毁由CDirectVobSubFilter::JoinFilterGraph函数触发，当filter离开graph时，CDirectVobSubFilter::JoinFilterGraph向界面响应的线程的窗口发送WM_CLOSE消息，使得界面响应的线程退出。
+------------------------------------
+默认样式
+CDirectVobSubFilter的函数
+	put_AspectRatioSettings
+	put_TextSettings
+	put_Placement
+在成功对参数做了修改后，会将字幕文件里的default样式改为vsfilter设定的默认样式。其中put_TextSettingsput_Placement都有恰当的判断保证当参数没有发生变化时返回一个S_FALSE值；但put_AspectRatioSettings每次都返回S_OK，即使参数未发生变化，从而导致打开vsfilter的property page设置参数后，字幕文件指定的default样式必定会被vsfilter的默认样式替代。

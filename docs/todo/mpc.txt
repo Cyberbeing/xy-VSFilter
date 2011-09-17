@@ -1,0 +1,71 @@
+* accel table
+* menu width
+* new font chooser
+* fix bbb.rm
+* add cd/dvd loader to command line
+* add functions for alt/ctrl/shift+wheel (alt:prev/next,ctrl:seekback/forw,shift:zoom in/out)
+* shift+click seekbar seeks to keyframes
+* save playlist
+* enum audio outputs
+* zoom presets
+* toolbar presets
+* dragndrop open video_ts.ifo as dvd
+* also display frame size when displaying pannscan settings on status
+* construct full path for playlist items
+* menu/view/video frame/+50%,+200%
+* open reg keys as readonly when possible for limited user accounts
+* save capture bar/output to wav setting
+* hide logo when going from one playlist item to another
+* /add or /add /play to add to playlist
+* vts*.ifo opening
+* fullscreen resolution switch
+* open whole dir with /cd too
+* winlirc
+* add more commands (e.g. dvd menu nav) and presets according to open *... modes
+* add autolaunch handlers to reg
+* open whole directory
+* minimize to tray
+* fix open dialog's filter
+* avisynth's coinit workaround
+* some mmx code in Rasterizer
+* add secondary fullscreen to normal mode when resolution switching is enabled
+* playlist/.. pos saving
+* report media type when can't render pin
+* calc autozoom window size incl.ing the sizing toolbars
+* skip playlist items marked as invalid
+* fix playlist playback order after dragndrop
+* mark not openable files on the playlist (e.g. grayed out) after an error and do not open the again unless the user clicks them himself
+* fix wm_appcommand for "usb soundcard speakers"
+* menu/file/saveas... (cdda,cdxa,vts,other)
+* dts reader reads ac3 too
+* quicktime w/o activex
+* audio switcher blocking OR returning error based on the stream
+* offscreen rendering for quicktime
+* remember last visited page in the options
+* center window around the last center point when opening a new file with autozoom
+* add dlg template to save subs in 8/16le/16be/utf8 encoding
+* "ctrl+arrow" jump times in the options (for flash in frames), more levels, different commands for all of them
+- activex
+- seamless looping
+- manually load filter when there are not rendered pins in the graph
+- numpad +/- to ajdust audio timing
+- open next/prev file in a directory when only one is on the playlist
++ right click menu on toolbars
++ tuner channel presets
++ rm/qt ripper
++ use playlist in dvd and capture mode
++ prebufferer reader filter
++ remember MRU sub/dub selection
++ open next file after "invalid" (done)  and respect loop settings at the same time (not yet)
++ delete files from the playlist phisically (with yesno dialog)
+* hook CreateFile to remove the share deny write flag with clsid_avidoc
++ hook dvd nav's reading and filter out all copy protection
+* fix macrovision errors with the new detonators and the video renderers
++ replace the filters list box with treeview and list detailed info as the sub items
++ cue points, also modify the seekbar for it
++ make a subtitler filter for dvd subs and integrate it with the subtitle renderers
+* search avi keyframes on a worker thread
++ auto-hide control bars in minimal mode
++ load winamp dsp plugins with the audio switcher
++ hook CreateFile and prebuffer files opened through (wireless) network using a worker thread for each.
++ "menu/play/goto last" AND/OR bookmarks to position only

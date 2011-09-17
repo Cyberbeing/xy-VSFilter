@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="common"
+	OutputDirectory="$(ConfigurationName)"
+	IntermediateDirectory="$(OutDir)"
+	>
+	<Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="..\..\BaseClasses"
+		PreprocessorDefinitions="_WIN32_WINNT=0x0501;NTDDI_VERSION=NTDDI_WINXPSP2"
+		EnableFunctionLevelLinking="true"
+		WarningLevel="3"
+		DisableSpecificWarnings="4995;4996"
+	/>
+</VisualStudioPropertySheet>

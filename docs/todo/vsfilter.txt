@@ -1,0 +1,2 @@
+* special command for avisynth plugin to swap i420 and yv12
+* mod subpic to use bitsU/bitsV
