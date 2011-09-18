@@ -3,5 +3,5 @@ test file: 1.ass
 incorrect pos of "Ñ£" and "¤·" of line 2 of 1.ass after seeking back (fixed)
 incorrect result of "¤¢" at line "¤¢{\kf35}¤Î{\kf62}øB{\kf24}¤Ï{\kf49}¤Þ{\kf49}¤À{\kf49}¤¦{\kf27}¤Þ{\kf38}¤¯{\kf33}ïw{\kf41}¤Ù{\kf35}¤Ê{\kf146}¤¤{\kf48}¤±{\kf117}¤É" (fixed)
 ==============================================================
-gaussian blur unlike origin vsfilter
+gaussian blur unlike origin vsfilter (fixed)
 ==============================================================
