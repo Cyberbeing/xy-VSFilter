@@ -32,7 +32,7 @@
 
 #define STRICT
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501 //为 Windows98 和 Windows 2000 及更新版本改变为适当的值。
+#define _WIN32_WINNT 0x0501 
 #endif
 #define _ATL_APARTMENT_THREADED
 

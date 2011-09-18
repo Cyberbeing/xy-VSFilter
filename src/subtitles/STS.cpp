@@ -2691,29 +2691,16 @@ void CSimpleTextSubtitle::CreateSegments()
         int i, start, mid, end, segmentCount;
         CAtlArray<STSSegment> tempSegments;//if add to m_segments directly, then remove empty entities can be a
                                            //complex operation when having large segmentCount and lots of empty entities
-    //  CAtlArray<int> breakpoints;
         std::vector<int> breakpoints(2*GetCount());
         for(int i = 0; i < GetCount(); i++)
         {
             STSEntry& stse = GetAt(i);
-    //      breakpoints.Add(stse.start);
-    //      breakpoints.Add(stse.end);
             breakpoints[2*i]=stse.start;
             breakpoints[2*i+1]=stse.end;
         }
 
-    //  qsort(breakpoints.GetData(), breakpoints.GetCount(), sizeof(int), intcomp);
         std::sort(breakpoints.begin(), breakpoints.end());
 
-    //  int* ptr = breakpoints.GetData(), prev = ptr ? *ptr : NULL;
-    //  for(i = breakpoints.GetCount(); i > 0; i--, ptr++)
-    //  {
-    //      if(*ptr != prev)
-    //      {
-    //          tempSegments.Add(STSSegment(prev, *ptr));
-    //          prev = *ptr;
-    //      }
-    //  }
         int ptr = 1, prev = breakpoints[0];
         for(i = breakpoints.size()-1; i > 0; i--, ptr++)
         {
@@ -2749,13 +2736,6 @@ void CSimpleTextSubtitle::CreateSegments()
         for(i = 0; i < segmentCount; i++)
             if(tempSegments[i].subs.GetCount()>0)
                 m_segments.Add(tempSegments[i]);
-
-//  for(i = 0; i < segmentCount; i++)
-//      if(m_segments[i].subs.GetCount()<=0)
-//      {
-//          m_segments.RemoveAt(i);
-//          segmentCount--;
-//      }
     }
     OnChanged();
 /*

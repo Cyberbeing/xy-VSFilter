@@ -135,7 +135,6 @@ int ass_synth_priv::generate_tables(double sigma)
     double volume_diff, volume_factor = 0;
     unsigned volume;
     double * gaussian_kernel = NULL;
-    double volume_db;
 
     if (this->sigma == sigma)
         return 0;
@@ -1018,27 +1017,6 @@ bool Rasterizer::Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, 
                 priv_blur.gt2, priv_blur.g_r, priv_blur.g_w);
         }
     }
-    
-    //if (fGaussianBlur > 0) {
-    //    GaussianKernel filter(fGaussianBlur);
-    //    if (overlay->mOverlayWidth >= filter.width && overlay->mOverlayHeight >= filter.width) {
-    //        int pitch = overlay->mOverlayPitch;
-
-    //        byte *tmp = DNew byte[pitch*overlay->mOverlayHeight];
-    //        if(!tmp) {
-    //            return false;
-    //        }
-
-    //        int border = !mWideOutline.empty() ? 1 : 0;
-
-    //        byte* plan_selected= mWideOutline.empty() ? overlay->mpOverlayBuffer.body : overlay->mpOverlayBuffer.border;
-
-    //        SeparableFilterX<1>(plan_selected, tmp, overlay->mOverlayWidth, overlay->mOverlayHeight, pitch, filter.kernel, filter.width, filter.divisor);
-    //        SeparableFilterY<1>(tmp, plan_selected, overlay->mOverlayWidth, overlay->mOverlayHeight, pitch, filter.kernel, filter.width, filter.divisor);
-
-    //        delete[] tmp;
-    //    }
-    //}
 
     for (int pass = 0; pass < fBlur; pass++)
     {
@@ -1194,8 +1172,11 @@ CRect Rasterizer::Draw(SubPicDesc& spd, Overlay* overlay, CRect& clipRect, byte*
     // draw
     // Grab the first colour
     DWORD color = switchpts[0];
-    const byte* s = overlay->_GetAlphaMash1(fBody, fBorder, xo, yo, w, h, pAlphaMask==NULL ? NULL : pAlphaMask + spd.w * y + x, spd.w,
-                                    fSingleColor?(color>>24):0xff );
+    byte* s_base = (byte*)xy_malloc(overlay->mOverlayPitch * overlay->mOverlayHeight);
+    overlay->FillAlphaMash(s_base, fBody, fBorder, xo, yo, w, h, pAlphaMask==NULL ? NULL : pAlphaMask + spd.w * y + x, spd.w,
+        fSingleColor?(color>>24):0xff );
+    const byte* s = s_base + overlay->mOverlayPitch*yo + xo;
+
     // How would this differ from src?
     unsigned long* dst = (unsigned long *)(((char *)spd.bits + spd.pitch * y) + ((x*spd.bpp)>>3));
 
@@ -1203,6 +1184,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, Overlay* overlay, CRect& clipRect, byte*
     switch(draw_method)
     {
     case   DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::YV12 :
+    {
         while(h--)
         {
             for(int wt=0; wt<w; ++wt)
@@ -1213,8 +1195,10 @@ CRect Rasterizer::Draw(SubPicDesc& spd, Overlay* overlay, CRect& clipRect, byte*
             s += overlayPitch;
             dst = (unsigned long *)((char *)dst + spd.pitch);
         }
-        break;
+    }
+    break;
     case   DM::SINGLE_COLOR | 0*DM::SSE2 | 0*DM::YV12 :
+    {
         while(h--)
         {
             for(int wt=0; wt<w; ++wt)
@@ -1222,8 +1206,10 @@ CRect Rasterizer::Draw(SubPicDesc& spd, Overlay* overlay, CRect& clipRect, byte*
             s += overlayPitch;
             dst = (unsigned long *)((char *)dst + spd.pitch);
         }
-        break;
+    }
+    break;
     case 0*DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::YV12 :
+    {
         while(h--)
         {
             const DWORD *sw = switchpts;
@@ -1238,8 +1224,10 @@ CRect Rasterizer::Draw(SubPicDesc& spd, Overlay* overlay, CRect& clipRect, byte*
             s += overlayPitch;
             dst = (unsigned long *)((char *)dst + spd.pitch);
         }
-        break;
+    }
+    break;
     case 0*DM::SINGLE_COLOR | 0*DM::SSE2 | 0*DM::YV12 :
+    {
         while(h--)
         {
             const DWORD *sw = switchpts;
@@ -1251,7 +1239,8 @@ CRect Rasterizer::Draw(SubPicDesc& spd, Overlay* overlay, CRect& clipRect, byte*
             s += overlayPitch;
             dst = (unsigned long *)((char *)dst + spd.pitch);
         }
-        break;
+    }
+    break;
     case   DM::SINGLE_COLOR |   DM::SSE2 |   DM::YV12 :
     {
         unsigned char* dst_A = (unsigned char*)dst;
@@ -1370,12 +1359,11 @@ CRect Rasterizer::Draw(SubPicDesc& spd, Overlay* overlay, CRect& clipRect, byte*
     // Remember to EMMS!
     // Rendering fails in funny ways if we don't do this.
     _mm_empty();
-    xy_free(overlay->mpOverlayBuffer.draw);
-    overlay->mpOverlayBuffer.draw=NULL;
+    xy_free(s_base);
     return bbox;
 }
 
-void Overlay::_Init_mpOverlayDraw( const byte* pBody, const byte* pBorder, int x, int y, int w, int h, const byte* pAlphaMask, int pitch, DWORD color_alpha )
+void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const byte* pBorder, int x, int y, int w, int h, const byte* pAlphaMask, int pitch, DWORD color_alpha )
 {
     //    int planSize = mOverlayWidth*mOverlayHeight;
     int x00 = x&~15;
@@ -1384,7 +1372,7 @@ void Overlay::_Init_mpOverlayDraw( const byte* pBody, const byte* pBorder, int x
     //    int w00 = w;
     pBody = pBody!=NULL ? pBody + y*mOverlayPitch + x00 : NULL;
     pBorder = pBorder!=NULL ? pBorder + y*mOverlayPitch + x00 : NULL;
-    byte* dst =mpOverlayBuffer.draw + y*mOverlayPitch + x00;
+    byte* dst = outputAlphaMask + y*mOverlayPitch + x00;
 
     if(pAlphaMask==NULL && pBody!=NULL && pBorder!=NULL)
     {
@@ -1485,6 +1473,35 @@ void Overlay::_Init_mpOverlayDraw( const byte* pBody, const byte* pBorder, int x
     else
     {
         //should NOT happen!
+        ASSERT(0);
+    }
+}
+
+void Overlay::FillAlphaMash( byte* outputAlphaMask, bool fBody, bool fBorder, int x, int y, int w, int h, const byte* pAlphaMask, int pitch, DWORD color_alpha)
+{
+    if(!fBorder && fBody && pAlphaMask==NULL)
+    {
+        _DoFillAlphaMash(outputAlphaMask, mpOverlayBuffer.body, NULL, x, y, w, h, pAlphaMask, pitch, color_alpha);        
+    }
+    else if(/*fBorder &&*/ fBody && pAlphaMask==NULL)
+    {
+        _DoFillAlphaMash(outputAlphaMask, NULL, mpOverlayBuffer.border, x, y, w, h, pAlphaMask, pitch, color_alpha);        
+    }
+    else if(!fBody && fBorder /* pAlphaMask==NULL or not*/)
+    {
+        _DoFillAlphaMash(outputAlphaMask, mpOverlayBuffer.body, mpOverlayBuffer.border, x, y, w, h, pAlphaMask, pitch, color_alpha);        
+    }
+    else if(!fBorder && fBody && pAlphaMask!=NULL)
+    {
+        _DoFillAlphaMash(outputAlphaMask, mpOverlayBuffer.body, NULL, x, y, w, h, pAlphaMask, pitch, color_alpha);        
+    }
+    else if(fBorder && fBody && pAlphaMask!=NULL)
+    {
+        _DoFillAlphaMash(outputAlphaMask, NULL, mpOverlayBuffer.border, x, y, w, h, pAlphaMask, pitch, color_alpha);        
+    }
+    else
+    {
+        //should NOT happen
         ASSERT(0);
     }
 }

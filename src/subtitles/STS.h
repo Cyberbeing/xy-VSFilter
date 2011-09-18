@@ -71,7 +71,7 @@ public:
 
 typedef ::boost::flyweights::flyweight<STSStyle, ::boost::flyweights::no_locking> FwSTSStyle;
 //for FwSTSStyle
-inline std::size_t hash_value(const STSStyle& s)
+static inline std::size_t hash_value(const STSStyle& s)
 {
     return CStringElementTraits<CString>::Hash(s.fontName.get()) ^ s.colors[0] ^ s.colors[2]; //fix me
 }

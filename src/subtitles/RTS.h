@@ -26,6 +26,7 @@
 #include "..\SubPic\ISubPic.h"
 #include <atlcoll.h>
 #include <boost/flyweight/key_value.hpp>
+#include "mru_cache.h"
 
 #define RTS_POS_SEGMENT_INDEX_BITS  16
 #define RTS_POS_SUB_INDEX_MASK      ((1<<RTS_POS_SEGMENT_INDEX_BITS)-1)
@@ -42,7 +43,6 @@ public:
 typedef ::boost::flyweights::flyweight<::boost::flyweights::key_value<FwSTSStyle, CMyFont>, ::boost::flyweights::no_locking> FwCMyFont;
 
 class CPolygon;
-//class CWordCache;
 
 struct OverlayList
 {
@@ -65,6 +65,7 @@ class CWord : public Rasterizer
     bool m_fDrawn;
     CPoint m_p;
 
+    bool NeedTransform();
     void Transform(CPoint org);
 
 	void Transform_C( CPoint &org );
@@ -94,10 +95,11 @@ public:
     virtual bool Append(CWord* w);
 
     void Paint(CPoint p, CPoint org, OverlayList* overlay_list);
-    static bool IsPaintResultEqual(const CWord& a, const CWord& b);
+    
     
     //friend class CWordCache;
     friend class CWordCacheKey;
+    friend std::size_t hash_value(const CWord& key); 
 };
 
 class CWordCacheKey
@@ -114,34 +116,39 @@ public:
     int m_ktype, m_kstart, m_kend;
 };
 
-class CWordCacheKeyTraits:public CElementTraits<CWordCacheKey>
-{
-public:
-    static ULONG Hash(_In_ const CWordCacheKey& element) throw()
-    {
-        return( CStringElementTraits<CString>::Hash(element.m_str.get()) );
-    }
-};
-
 class OverlayKey: public CWordCacheKey
 {
 public:
-    const static unsigned SUB_PIXEL = 0; //0 4 6 7; 0 means disable sub-pixel
-    OverlayKey(const CWord& word, POINT p):CWordCacheKey(word) { m_p.x=p.x&SUB_PIXEL; m_p.y=p.y&SUB_PIXEL; }
+    OverlayKey(const CWord& word, const POINT& p):CWordCacheKey(word),m_p(p) { }
     OverlayKey(const OverlayKey& key):CWordCacheKey(key) { m_p.x=key.m_p.x; m_p.y=key.m_p.y; }
     OverlayKey(const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend,POINT p):
-            CWordCacheKey(style, str, ktype, kstart, kend) { m_p.x=p.x&SUB_PIXEL; m_p.y=p.y&SUB_PIXEL; }
+            CWordCacheKey(style, str, ktype, kstart, kend),m_p(p) { }
     bool operator==(const OverlayKey& key)const { return (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) && ((CWordCacheKey)(*this)==(CWordCacheKey)key); }    
+    bool CompareTo(const CWord& word, const POINT& p)const { return (m_p.x==p.x) && (m_p.y==p.y) && ((CWordCacheKey)(*this)==word); }
 
     POINT m_p;
 };
 
-class OverlayKeyTraits:public CElementTraits<OverlayKey>
+struct OverlayCompatibleKey
 {
-public:
-    static ULONG Hash(_In_ const OverlayKey& element) throw()
+    struct CompKey
     {
-        return( CStringElementTraits<CString>::Hash(element.m_str.get()) ^ element.m_p.x ^ element.m_p.y );
+        CompKey(const CWord* word_, const CPoint& p_):word(word_),p(p_){}
+
+        const CWord* word;
+        CPoint p;
+    };
+    bool operator()(const CompKey& comp_key, const OverlayKey& key )const
+    {
+        return key.CompareTo(*comp_key.word,comp_key.p);
+    }
+    bool operator()(const OverlayKey& key, const CompKey& comp_key )const
+    {
+        return key.CompareTo(*comp_key.word,comp_key.p);
+    }
+    std::size_t operator()(const CompKey& comp_key)const
+    {
+        return hash_value(*comp_key.word) ^ comp_key.p.x ^ comp_key.p.y;
     }
 };
 
@@ -173,7 +180,7 @@ protected:
     virtual bool CreatePath();
 
 public:
-    CPolygon(STSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline);
+    CPolygon(const FwSTSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline);
 	CPolygon(CPolygon&); // can't use a const reference because we need to use CAtlArray::Copy which expects a non-const reference
     virtual ~CPolygon();
 
@@ -264,19 +271,57 @@ public:
     void MakeLines(CSize size, CRect marginRect);
 };
 
-//class CWordCache
-//{
-//public:
-//    CWordCache();
-//    ~CWordCache();
-//    CWord* lookup(const CWordCacheKey& key);
-//    CWord* add(CWord* key);
-//    void clear();
-//private:
-//    CAtlMap<CStringW, CAtlList<CWord*>*, CStringElementTraits<CStringW>> m_innerCache;
-//};
-typedef CAtlMap<CWordCacheKey, CWord*, CWordCacheKeyTraits> CWordCache;
-typedef CAtlMap<OverlayKey, Overlay*, OverlayKeyTraits> OverLayCache;
+std::size_t hash_value(const CWord& key);
+std::size_t hash_value(const OverlayKey& key);
+std::size_t hash_value(const CWordCacheKey& key);
+
+//shouldn't use std::pair, or else VC complaining error C2440
+//typedef std::pair<OverlayKey, Overlay*> OverlayMruItem; 
+struct OverlayMruItem
+{
+    OverlayMruItem(const OverlayCompatibleKey::CompKey& comp_key, Overlay* overlay_):
+        overlay_key(*comp_key.word, comp_key.p),overlay(overlay_){}
+    OverlayMruItem(const OverlayKey& overlay_key_, Overlay* overlay_):overlay_key(overlay_key_),overlay(overlay_){}
+
+    OverlayKey overlay_key;
+    Overlay* overlay;
+};
+
+struct CWordMruItem
+{
+    CWordMruItem(const CWordCacheKey& word_key_, CWord* word_):word_key(word_key_),word(word_){}
+
+    CWordCacheKey word_key;
+    CWord* word;
+};
+
+class OverlayMruCache:public mru_list<
+                                 OverlayMruItem, 
+                                 boost::multi_index::member<OverlayMruItem, 
+                                     OverlayKey, 
+                                     &OverlayMruItem::overlay_key
+                                 >
+                             >
+{
+public:
+    OverlayMruCache(std::size_t max_num_items_):mru_list(max_num_items_){}
+    void update_cache(const OverlayMruItem& item);
+    void clear();
+};
+
+class CWordMruCache:public mru_list<
+                               CWordMruItem, 
+                               boost::multi_index::member<CWordMruItem, 
+                                   CWordCacheKey, 
+                                   &CWordMruItem::word_key
+                               >
+                           >
+{
+public:
+    CWordMruCache(std::size_t max_num_items_):mru_list(max_num_items_){}
+    void update_cache(const CWordMruItem& item);
+    void clear();
+};
 
 class CScreenLayoutAllocator
 {
@@ -298,8 +343,7 @@ public:
 [uuid("537DCACA-2812-4a4f-B2C6-1A34C17ADEB0")]
 class CRenderedTextSubtitle : public CSimpleTextSubtitle, public ISubPicProviderImpl, public ISubStream
 {
-    CAtlMap<int, CSubtitle*> m_subtitleCache;
-    CWordCache m_wordCache;    
+    CAtlMap<int, CSubtitle*> m_subtitleCache;   
 
     CScreenLayoutAllocator m_sla;
 
@@ -379,8 +423,8 @@ class CRenderedTextSubtitle : public CSimpleTextSubtitle, public ISubPicProvider
     double m_fps;
 
     void ParseEffect(CSubtitle* sub, CString str);
-    void ParseString(CSubtitle* sub, CStringW str, STSStyle& style);
-    void ParsePolygon(CSubtitle* sub, CStringW str, STSStyle& style);
+    void ParseString(CSubtitle* sub, CStringW str, const FwSTSStyle& style);
+    void ParsePolygon(CSubtitle* sub, CStringW str, const FwSTSStyle& style);
     bool ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& style, const STSStyle& org, bool fAnimate = false);
     bool ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle& style, STSStyle& org);
 

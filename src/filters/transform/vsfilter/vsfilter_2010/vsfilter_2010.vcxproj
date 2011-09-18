@@ -97,13 +97,15 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OpenMPSupport>true</OpenMPSupport>
       <RuntimeTypeInfo>
       </RuntimeTypeInfo>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -143,20 +145,28 @@
     <ResourceCompile Include="..\VSFilter.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Copy.cpp" />
+    <ClCompile Include="..\Copy.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\csriapi.cpp" />
     <ClCompile Include="..\DirectVobSub.cpp" />
     <ClCompile Include="..\DirectVobSubFilter.cpp" />
     <ClCompile Include="..\DirectVobSubPropPage.cpp" />
-    <ClCompile Include="..\once_logger.cpp" />
+    <ClCompile Include="..\once_logger.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\plugins.cpp" />
-    <ClCompile Include="..\StdAfx.cpp" />
+    <ClCompile Include="..\StdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\StyleEditorDialog.cpp" />
     <ClCompile Include="..\Systray.cpp" />
     <ClCompile Include="..\TextInputPin.cpp" />
     <ClCompile Include="..\vfr.cpp" />
     <ClCompile Include="..\VSFilter.cpp" />
-    <ClCompile Include="..\xy_logger.cpp" />
+    <ClCompile Include="..\xy_logger.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\CAutoTiming.h" />

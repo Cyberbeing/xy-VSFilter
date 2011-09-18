@@ -23,7 +23,7 @@
     IRC: jfs in #aegisub on irc.rizon.net
 
  */
-
+#include "StdAfx.h"
 #include "vfr.h"
 #include <stdio.h>
 #include <string.h>

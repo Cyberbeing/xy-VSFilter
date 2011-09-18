@@ -30,16 +30,26 @@
 static HDC g_hDC;
 static int g_hDC_refcnt = 0;
 
-static OverLayCache g_overlay_cache;//fix me: leak
+//static OverlayCache g_overlay_cache;
+const int OVERLAY_CACHE_ITEM_NUM = 512;
+const int WORD_CACHE_ITEM_NUM = 1024;
+static OverlayMruCache g_overlay_cache(OVERLAY_CACHE_ITEM_NUM);
+static CWordMruCache g_word_cache(WORD_CACHE_ITEM_NUM);
 
-static void ClearOverlayCache()
+
+std::size_t hash_value(const CWord& key)
 {
-    POSITION pos = g_overlay_cache.GetStartPosition();
-    while(pos)
-    {
-        delete g_overlay_cache.GetNextValue(pos);        
-    }
-    g_overlay_cache.RemoveAll();
+    return( CStringElementTraits<CString>::Hash(key.m_str.get()) );
+}
+
+std::size_t hash_value(const CWordCacheKey& key)
+{
+    return( CStringElementTraits<CString>::Hash(key.m_str.get()) );
+}
+
+std::size_t hash_value(const OverlayKey& key)
+{
+    return( CStringElementTraits<CString>::Hash(key.m_str.get()) ^ key.m_p.x ^ key.m_p.y );
 }
 
 enum XY_MSP_SUBTYPE {XY_AYUV, XY_AUYV};
@@ -143,15 +153,23 @@ bool CWord::Append(CWord* w)
 void CWord::Paint(CPoint p, CPoint org, OverlayList* overlay_list)
 {
     if(!m_str.get() || overlay_list==NULL) return;
-
-    OverlayKey key(*this,p);
-    if( !g_overlay_cache.Lookup(key, overlay_list->overlay) )
+        
+    OverlayCompatibleKey::CompKey comp_key(this, org-p);
+    bool need_transform = NeedTransform();
+    if(!need_transform)
+    {
+        comp_key.p.SetPoint(0,0);
+    }
+    const OverlayMruCache::hashed_cache& overlay_cache = g_overlay_cache.get_hashed_cache();    
+    const OverlayMruCache::hashed_cache::iterator iter = overlay_cache.find(comp_key,OverlayCompatibleKey(),OverlayCompatibleKey());
+    if(iter==overlay_cache.end())    
     {
         overlay_list->overlay = new Overlay();
-        if(!m_fDrawn)
-        {
+        //if(!m_fDrawn)
+        //{
             if(!CreatePath()) return;
-            Transform(CPoint((org.x-p.x)*8, (org.y-p.y)*8));
+            if(need_transform)
+                Transform(CPoint((org.x-p.x)*8, (org.y-p.y)*8));
             if(!ScanConvert()) return;
             if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
             {
@@ -162,13 +180,20 @@ void CWord::Paint(CPoint p, CPoint org, OverlayList* overlay_list)
                 if(!CreateOpaqueBox()) return;
             }
             m_fDrawn = true;
-            if(!Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay)) return;
-        }
-        else
-        {
-            Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
-        }
-        g_overlay_cache[key] = overlay_list->overlay;
+            //if(!Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay)) return;
+            if(!Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay)) return;
+        //}
+        //else
+        //{
+        //    //Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
+        //    Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
+        //}
+        OverlayMruItem item(comp_key, overlay_list->overlay);
+        g_overlay_cache.update_cache(item);
+    }
+    else
+    {
+        overlay_list->overlay = iter->overlay;
     }
     m_p = p;
     if(m_pOpaqueBox)
@@ -176,6 +201,17 @@ void CWord::Paint(CPoint p, CPoint org, OverlayList* overlay_list)
         overlay_list->next = new OverlayList();
         m_pOpaqueBox->Paint(p, org, overlay_list->next);
     }
+}
+
+bool CWord::NeedTransform()
+{
+    return (m_style.get().fontScaleX - 100 > 0.000001) ||
+           (m_style.get().fontScaleY - 100 > 0.000001) ||
+           (m_style.get().fontAngleX > 0.000001) ||
+           (m_style.get().fontAngleY > 0.000001) ||
+           (m_style.get().fontAngleZ > 0.000001) ||
+           (m_style.get().fontShiftX > 0.000001) ||
+           (m_style.get().fontShiftY > 0.000001);
 }
 
 void CWord::Transform(CPoint org)
@@ -575,23 +611,8 @@ bool CWord::CreateOpaqueBox()
                m_width+w, -h,
                m_width+w, m_ascent+m_descent+h,
                -w, m_ascent+m_descent+h);
-    m_pOpaqueBox = new CPolygon(style, str, 0, 0, 0, 1.0/8, 1.0/8, 0);
+    m_pOpaqueBox = new CPolygon(FwSTSStyle(style), str, 0, 0, 0, 1.0/8, 1.0/8, 0);
     return(!!m_pOpaqueBox);
-}
-
-bool CWord::IsPaintResultEqual(const CWord& a, const CWord& b)
-{
-    return a.m_style == b.m_style &&
-           a.m_str == b.m_str &&
-           a.m_fWhiteSpaceChar == b.m_fWhiteSpaceChar &&
-           a.m_fLineBreak == b.m_fLineBreak &&
-//         a.m_pOpaqueBox == b.m_pOpaqueBox &&
-           a.m_ktype == b.m_ktype &&
-           a.m_kstart == b.m_kstart &&
-           a.m_kend == b.m_kend &&
-           a.m_width == b.m_width &&
-           a.m_ascent == b.m_ascent &&
-           a.m_descent == b.m_descent;
 }
 
 // CText
@@ -669,8 +690,8 @@ bool CText::CreatePath()
 
 // CPolygon
 
-CPolygon::CPolygon(STSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline)
-    : CWord(style, str, ktype, kstart, kend)
+CPolygon::CPolygon(const FwSTSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline)
+    : CWord(style.get(), str, ktype, kstart, kend)
     , m_scalex(scalex), m_scaley(scaley), m_baseline(baseline)
 {
     ParseStr();
@@ -890,7 +911,7 @@ bool CPolygon::CreatePath()
 // CClipper
 
 CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse)
-    : CPolygon(STSStyle(), str, 0, 0, 0, scalex, scaley, 0)
+    : CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0)
 {
     m_size.cx = m_size.cy = 0;
     m_pAlphaMask = NULL;
@@ -946,8 +967,8 @@ bool CClipper::Append(CWord* w)
 
 CLine::~CLine()
 {
-    POSITION pos = GetHeadPosition();
-    while(pos) delete GetNext(pos);
+    //POSITION pos = GetHeadPosition();
+    //while(pos) delete GetNext(pos);
 }
 
 void CLine::Compact()
@@ -1606,13 +1627,8 @@ void CRenderedTextSubtitle::Deinit()
     m_size = CSize(0, 0);
     m_vidrect.SetRectEmpty();
 
-    // cword cache is managed by CSubtitle
-    //pos = m_wordCache.GetStartPosition();
-    //while(pos)
-    //{
-    //    delete m_wordCache.GetValueAt(pos);
-    //}
-    ClearOverlayCache();
+    g_word_cache.clear();
+    g_overlay_cache.clear();
 }
 
 void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, CString str)
@@ -1651,30 +1667,31 @@ void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, CString str)
     }
 }
 
-void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, STSStyle& style)
+void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwSTSStyle& style)
 {
     if(!sub) return;
     str.Replace(L"\\N", L"\n");
     str.Replace(L"\\n", (sub->m_wrapStyle < 2 || sub->m_wrapStyle == 3) ? L" " : L"\n");
     str.Replace(L"\\h", L"\x00A0");
-    for(int i = 0, j = 0, len = str.GetLength(); j <= len; j++)
+    for(int ite = 0, j = 0, len = str.GetLength(); j <= len; j++)
     {
         WCHAR c = str[j];
         if(c != L'\n' && c != L' ' && c != L'\x00A0' && c != 0)
             continue;
-        if(i < j)
+        if(ite < j)
         {
-            CWordCacheKey word_cache_key(style, str.Mid(i, j-i), m_ktype, m_kstart, m_kend);
-            CWord* w_cache;
-            if( m_wordCache.Lookup(word_cache_key, w_cache) )
+            CWordCacheKey word_cache_key(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend);            
+            const CWordMruCache::hashed_cache& word_cache = g_word_cache.get_hashed_cache();
+            const CWordMruCache::hashed_cache::iterator iter = word_cache.find(word_cache_key);
+            if( iter != word_cache.end() )            
             {
-                sub->m_words.AddTail(w_cache);
+                sub->m_words.AddTail(iter->word);
             }
-            else if(CWord* w = new CText(style, str.Mid(i, j-i), m_ktype, m_kstart, m_kend))
+            else if(CWord* w = new CText(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend))
             {
-
                 sub->m_words.AddTail(w);
-                m_wordCache[word_cache_key]=w;
+                CWordMruItem item(word_cache_key, w);
+                g_word_cache.update_cache(item);
             }
             else
             {
@@ -1685,15 +1702,17 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, STSStyle& 
         if(c == L'\n')
         {
             CWordCacheKey word_cache_key(style, CStringW(), m_ktype, m_kstart, m_kend);
-            CWord* w_cache;
-            if( m_wordCache.Lookup(word_cache_key, w_cache) )
+            const CWordMruCache::hashed_cache& word_cache = g_word_cache.get_hashed_cache();
+            const CWordMruCache::hashed_cache::iterator iter = word_cache.find(word_cache_key);
+            if( iter != word_cache.end() )            
             {
-                sub->m_words.AddTail(w_cache);
+                sub->m_words.AddTail(iter->word);
             }
             else if(CWord* w = new CText(style, CStringW(), m_ktype, m_kstart, m_kend))
             {
                 sub->m_words.AddTail(w);
-                m_wordCache[word_cache_key] = w;
+                CWordMruItem item(word_cache_key, w);
+                g_word_cache.update_cache(item);
             }
             else
             {
@@ -1704,15 +1723,17 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, STSStyle& 
         else if(c == L' ' || c == L'\x00A0')
         {
             CWordCacheKey word_cache_key(style, CStringW(c), m_ktype, m_kstart, m_kend);
-            CWord* w_cache;
-            if( m_wordCache.Lookup(word_cache_key, w_cache) )
+            const CWordMruCache::hashed_cache& word_cache = g_word_cache.get_hashed_cache();
+            const CWordMruCache::hashed_cache::iterator iter = word_cache.find(word_cache_key);
+            if( iter != word_cache.end() ) 
             {
-                sub->m_words.AddTail(w_cache);
+                sub->m_words.AddTail(iter->word);
             }
             else if(CWord* w = new CText(style, CStringW(c), m_ktype, m_kstart, m_kend))
             {
                 sub->m_words.AddTail(w);
-                m_wordCache[word_cache_key] = w;
+                CWordMruItem item(word_cache_key, w);
+                g_word_cache.update_cache(item);
             }
             else
             {
@@ -1720,12 +1741,12 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, STSStyle& 
             }
             m_kstart = m_kend;
         }
-        i = j+1;
+        ite = j+1;
     }
     return;
 }
 
-void CRenderedTextSubtitle::ParsePolygon(CSubtitle* sub, CStringW str, STSStyle& style)
+void CRenderedTextSubtitle::ParsePolygon(CSubtitle* sub, CStringW str, const FwSTSStyle& style)
 {
     if(!sub || !str.GetLength() || !m_nPolygon) return;
 
@@ -2544,13 +2565,14 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
         tmp.outlineWidthY *= (m_fScaledBAS ? sub->m_scaley : 1) * 8;
         tmp.shadowDepthX *= (m_fScaledBAS ? sub->m_scalex : 1) * 8;
         tmp.shadowDepthY *= (m_fScaledBAS ? sub->m_scaley : 1) * 8;
+        FwSTSStyle fw_tmp(tmp);
         if(m_nPolygon)
         {
-            ParsePolygon(sub, str.Left(i), tmp);
+            ParsePolygon(sub, str.Left(i), fw_tmp);
         }
         else
         {
-            ParseString(sub, str.Left(i), tmp);
+            ParseString(sub, str.Left(i), fw_tmp);
         }
         str = str.Mid(i);
     }
@@ -2985,234 +3007,16 @@ STDMETHODIMP CRenderedTextSubtitle::Render(SubPicDesc& spd, REFERENCE_TIME rt, d
 
 STDMETHODIMP CRenderedTextSubtitle::Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox)
 {
+    CAtlList<CRect> rectList;
+    HRESULT result = Render(spd, rt, fps, rectList);
+    POSITION pos = rectList.GetHeadPosition();
     CRect bbox2(0,0,0,0);
-    if(m_size != CSize(spd.w*8, spd.h*8) || m_vidrect != CRect(spd.vidrect.left*8, spd.vidrect.top*8, spd.vidrect.right*8, spd.vidrect.bottom*8))
-        Init(CSize(spd.w, spd.h), spd.vidrect);
-    int t = (int)(rt / 10000);
-    int segment;
-    //const
-    STSSegment* stss = SearchSubs2(t, fps, &segment);
-    if(!stss) return S_FALSE;
-    // clear any cached subs not in the range of +/-30secs measured from the segment's bounds
+    while(pos!=NULL)
     {
-        POSITION pos = m_subtitleCache.GetStartPosition();
-        while(pos)
-        {
-            int key;
-            CSubtitle* value;
-            m_subtitleCache.GetNextAssoc(pos, key, value);
-            STSEntry& stse = GetAt(key);
-            if(stse.end <= (t-30000) || stse.start > (t+30000))
-            {
-                delete value;
-                m_subtitleCache.RemoveKey(key);
-                pos = m_subtitleCache.GetStartPosition();
-            }
-        }
-    }
-    m_sla.AdvanceToSegment(segment, stss->subs);
-    CAtlArray<LSub> subs;
-    for(int i = 0, j = stss->subs.GetCount(); i < j; i++)
-    {
-        LSub ls;
-        ls.idx = stss->subs[i];
-        ls.layer = GetAt(stss->subs[i]).layer;
-        ls.readorder = GetAt(stss->subs[i]).readorder;
-        subs.Add(ls);
-    }
-    qsort(subs.GetData(), subs.GetCount(), sizeof(LSub), lscomp);
-    for(int i = 0, j = subs.GetCount(); i < j; i++)
-    {
-        int entry = subs[i].idx;
-        STSEntry stse = GetAt(entry);
-        {
-            int start = TranslateStart(entry, fps);
-            m_time = t - start;
-            m_delay = TranslateEnd(entry, fps) - start;
-        }
-        CSubtitle* s = GetSubtitle(entry);
-        if(!s) continue;
-        stss->animated |= s->m_fAnimated2;
-        CRect clipRect = s->m_clip;
-        CRect r = s->m_rect;
-        CSize spaceNeeded = r.Size();
-        // apply the effects
-        bool fPosOverride = false, fOrgOverride = false;
-        int alpha = 0x00;
-        CPoint org2;
-        for(int k = 0; k < EF_NUMBEROFEFFECTS; k++)
-        {
-            if(!s->m_effects[k]) continue;
-            switch(k)
-            {
-            case EF_MOVE: // {\move(x1=param[0], y1=param[1], x2=param[2], y2=param[3], t1=t[0], t2=t[1])}
-                {
-                    CPoint p;
-                    CPoint p1(s->m_effects[k]->param[0], s->m_effects[k]->param[1]);
-                    CPoint p2(s->m_effects[k]->param[2], s->m_effects[k]->param[3]);
-                    int t1 = s->m_effects[k]->t[0];
-                    int t2 = s->m_effects[k]->t[1];
-                    if(t2 < t1) {int t = t1; t1 = t2; t2 = t;}
-                    if(t1 <= 0 && t2 <= 0) {t1 = 0; t2 = m_delay;}
-                    if(m_time <= t1) p = p1;
-                    else if (p1 == p2) p = p1;
-                    else if(t1 < m_time && m_time < t2)
-                    {
-                        double t = 1.0*(m_time-t1)/(t2-t1);
-                        p.x = (int)((1-t)*p1.x + t*p2.x);
-                        p.y = (int)((1-t)*p1.y + t*p2.y);
-                    }
-                    else p = p2;
-                    r = CRect(
-                            CPoint((s->m_scrAlignment%3) == 1 ? p.x : (s->m_scrAlignment%3) == 0 ? p.x - spaceNeeded.cx : p.x - (spaceNeeded.cx+1)/2,
-                                   s->m_scrAlignment <= 3 ? p.y - spaceNeeded.cy : s->m_scrAlignment <= 6 ? p.y - (spaceNeeded.cy+1)/2 : p.y),
-                            spaceNeeded);
-                    if(s->m_relativeTo == 1)
-                        r.OffsetRect(m_vidrect.TopLeft());
-                    fPosOverride = true;
-                }
-                break;
-            case EF_ORG: // {\org(x=param[0], y=param[1])}
-                {
-                    org2 = CPoint(s->m_effects[k]->param[0], s->m_effects[k]->param[1]);
-                    fOrgOverride = true;
-                }
-                break;
-            case EF_FADE: // {\fade(a1=param[0], a2=param[1], a3=param[2], t1=t[0], t2=t[1], t3=t[2], t4=t[3]) or {\fad(t1=t[1], t2=t[2])
-                {
-                    int t1 = s->m_effects[k]->t[0];
-                    int t2 = s->m_effects[k]->t[1];
-                    int t3 = s->m_effects[k]->t[2];
-                    int t4 = s->m_effects[k]->t[3];
-                    if(t1 == -1 && t4 == -1) {t1 = 0; t3 = m_delay-t3; t4 = m_delay;}
-                    if(m_time < t1) alpha = s->m_effects[k]->param[0];
-                    else if(m_time >= t1 && m_time < t2)
-                    {
-                        double t = 1.0 * (m_time - t1) / (t2 - t1);
-                        alpha = (int)(s->m_effects[k]->param[0]*(1-t) + s->m_effects[k]->param[1]*t);
-                    }
-                    else if(m_time >= t2 && m_time < t3) alpha = s->m_effects[k]->param[1];
-                    else if(m_time >= t3 && m_time < t4)
-                    {
-                        double t = 1.0 * (m_time - t3) / (t4 - t3);
-                        alpha = (int)(s->m_effects[k]->param[1]*(1-t) + s->m_effects[k]->param[2]*t);
-                    }
-                    else if(m_time >= t4) alpha = s->m_effects[k]->param[2];
-                }
-                break;
-            case EF_BANNER: // Banner;delay=param[0][;leftoright=param[1];fadeawaywidth=param[2]]
-                {
-                    int left = s->m_relativeTo == 1 ? m_vidrect.left : 0,
-                        right = s->m_relativeTo == 1 ? m_vidrect.right : m_size.cx;
-                    r.left = !!s->m_effects[k]->param[1]
-                             ? (left/*marginRect.left*/ - spaceNeeded.cx) + (int)(m_time*8.0/s->m_effects[k]->param[0])
-                             : (right /*- marginRect.right*/) - (int)(m_time*8.0/s->m_effects[k]->param[0]);
-                    r.right = r.left + spaceNeeded.cx;
-                    clipRect &= CRect(left>>3, clipRect.top, right>>3, clipRect.bottom);
-                    fPosOverride = true;
-                }
-                break;
-            case EF_SCROLL: // Scroll up/down(toptobottom=param[3]);top=param[0];bottom=param[1];delay=param[2][;fadeawayheight=param[4]]
-                {
-                    r.top = !!s->m_effects[k]->param[3]
-                            ? s->m_effects[k]->param[0] + (int)(m_time*8.0/s->m_effects[k]->param[2]) - spaceNeeded.cy
-                            : s->m_effects[k]->param[1] - (int)(m_time*8.0/s->m_effects[k]->param[2]);
-                    r.bottom = r.top + spaceNeeded.cy;
-                    CRect cr(0, (s->m_effects[k]->param[0] + 4) >> 3, spd.w, (s->m_effects[k]->param[1] + 4) >> 3);
-                    if(s->m_relativeTo == 1)
-                        r.top += m_vidrect.top,
-                                 r.bottom += m_vidrect.top,
-                                             cr.top += m_vidrect.top>>3,
-                                                       cr.bottom += m_vidrect.top>>3;
-                    clipRect &= cr;
-                    fPosOverride = true;
-                }
-                break;
-            default:
-                break;
-            }
-        }
-        if(!fPosOverride && !fOrgOverride && !s->m_fAnimated)
-            r = m_sla.AllocRect(s, segment, entry, stse.layer, m_collisions);
-        CPoint org;
-        org.x = (s->m_scrAlignment%3) == 1 ? r.left : (s->m_scrAlignment%3) == 2 ? r.CenterPoint().x : r.right;
-        org.y = s->m_scrAlignment <= 3 ? r.bottom : s->m_scrAlignment <= 6 ? r.CenterPoint().y : r.top;
-        if(!fOrgOverride) org2 = org;
-        BYTE* pAlphaMask = s->m_pClipper?s->m_pClipper->m_pAlphaMask:NULL;
-        CPoint p, p2(0, r.top);
-        POSITION pos;
-        p = p2;
-        // Rectangles for inverse clip
-        CRect iclipRect[4];
-        iclipRect[0] = CRect(0, 0, spd.w, clipRect.top);
-        iclipRect[1] = CRect(0, clipRect.top, clipRect.left, clipRect.bottom);
-        iclipRect[2] = CRect(clipRect.right, clipRect.top, spd.w, clipRect.bottom);
-        iclipRect[3] = CRect(0, clipRect.bottom, spd.w, spd.h);
-        pos = s->GetHeadPosition();
-        while(pos)
-        {
-            CLine* l = s->GetNext(pos);
-            p.x = (s->m_scrAlignment%3) == 1 ? org.x
-                  : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
-                  :                            org.x - (l->m_width/2);
-            if (s->m_clipInverse)
-            {
-                bbox2 |= l->PaintShadow(spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
-            }
-            else
-            {
-                bbox2 |= l->PaintShadow(spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
-            }
-            p.y += l->m_ascent + l->m_descent;
-        }
-        p = p2;
-        pos = s->GetHeadPosition();
-        while(pos)
-        {
-            CLine* l = s->GetNext(pos);
-            p.x = (s->m_scrAlignment%3) == 1 ? org.x
-                  : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
-                  :                            org.x - (l->m_width/2);
-            if (s->m_clipInverse)
-            {
-                bbox2 |= l->PaintOutline(spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
-            }
-            else
-            {
-                bbox2 |= l->PaintOutline(spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
-            }
-            p.y += l->m_ascent + l->m_descent;
-        }
-        p = p2;
-        pos = s->GetHeadPosition();
-        while(pos)
-        {
-            CLine* l = s->GetNext(pos);
-            p.x = (s->m_scrAlignment%3) == 1 ? org.x
-                  : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
-                  :                            org.x - (l->m_width/2);
-            if (s->m_clipInverse)
-            {
-                bbox2 |= l->PaintBody(spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
-            }
-            else
-            {
-                bbox2 |= l->PaintBody(spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
-            }
-            p.y += l->m_ascent + l->m_descent;
-        }
+        bbox2 |= rectList.GetNext(pos);
     }
     bbox = bbox2;
-    return (subs.GetCount() && !bbox2.IsRectEmpty()) ? S_OK : S_FALSE;
+    return result;
 }
 
 // IPersist
@@ -3262,56 +3066,6 @@ STDMETHODIMP CRenderedTextSubtitle::Reload()
     return !m_path.IsEmpty() && Open(m_path, DEFAULT_CHARSET) ? S_OK : E_FAIL;
 }
 
-//
-//CWordCache::CWordCache()
-//{
-//
-//}
-//
-//CWordCache::~CWordCache()
-//{
-//    clear();
-//}
-//
-//CWord* CWordCache::lookup( const CWordCacheKey& key )
-//{
-//    CAtlList<CWord*> * list = NULL;
-//    if( m_innerCache.Lookup(key.m_str, list) )
-//    {
-//        POSITION pos = list->GetHeadPosition();
-//        while(pos)
-//        {
-//            CWord* w=list->GetNext(pos);
-//            //if( CWord::IsPaintResultEqual(*w, key) )
-//            if( key==*w )
-//                return w;
-//        }
-//    }
-//    return NULL;
-//}
-//
-//CWord* CWordCache::add( CWord* key )
-//{
-//    CAtlList<CWord*> * list = NULL;
-//    if( !m_innerCache.Lookup(key->m_str, list) )
-//    {
-//        list = new CAtlList<CWord*>();
-//        m_innerCache[key->m_str] = list;
-//    }
-//    list->AddTail(key);
-//    return key;
-//}
-//
-//void CWordCache::clear()
-//{
-////    POSITION pos = m_innerCache.GetStartPosition();
-////    while(pos)
-////    {
-////        CAltList<CWord*>* list = m_innerCache.GetNextValue(pos);
-////        delete m_innerCache.GetNextValue(pos);
-////    }
-//}
-
 CWordCacheKey::CWordCacheKey( const CWord& word )
 {
     m_str = word.m_str;
@@ -3352,4 +3106,48 @@ bool CWordCacheKey::operator==(const CWord& key)const
         m_ktype == key.m_ktype &&
         m_kstart == key.m_kstart &&
         m_kend == key.m_kend);
+}
+
+void OverlayMruCache::update_cache( const OverlayMruItem& item )
+{
+    std::pair<iterator,bool> p=il.push_front(item);
+    
+    if(!p.second){                     /* duplicate item */
+        il.relocate(il.begin(),p.first); /* put in front */            
+    }
+    else if(il.size()>max_num_items){  /* keep the length <= max_num_items */        
+        delete il.rbegin()->overlay;
+        il.pop_back();
+    }
+}
+
+void OverlayMruCache::clear()
+{
+    for(OverlayMruCache::iterator iter=begin();iter!=end();iter++)
+    {
+        delete iter->overlay;
+    }
+    __super::clear();
+}
+
+void CWordMruCache::update_cache( const CWordMruItem& item )
+{
+    std::pair<iterator,bool> p=il.push_front(item);
+
+    if(!p.second){                     /* duplicate item */
+        il.relocate(il.begin(),p.first); /* put in front */            
+    }
+    else if(il.size()>max_num_items){  /* keep the length <= max_num_items */        
+        delete il.rbegin()->word;
+        il.pop_back();
+    }
+}
+
+void CWordMruCache::clear()
+{
+    for(CWordMruCache::iterator iter=begin();iter!=end();iter++)
+    {
+        delete iter->word;
+    }
+    __super::clear();
 }
