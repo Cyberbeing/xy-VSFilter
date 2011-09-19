@@ -90,6 +90,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <RuntimeTypeInfo>
       </RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
@@ -100,7 +101,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AlignedBuffer.cpp" />
     <ClCompile Include="CCDecoder.cpp" />
     <ClCompile Include="GFN.cpp" />
     <ClCompile Include="Rasterizer.cpp">
@@ -134,10 +134,11 @@
     </ClCompile>
     <ClCompile Include="VobSubFileRipper.cpp" />
     <ClCompile Include="VobSubImage.cpp" />
-    <ClCompile Include="xy_malloc.cpp" />
+    <ClCompile Include="xy_malloc.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AlignedBuffer.h" />
     <ClInclude Include="CCDecoder.h" />
     <ClInclude Include="flyweight_base_types.h" />
     <ClInclude Include="GFN.h" />

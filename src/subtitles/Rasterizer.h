@@ -48,8 +48,7 @@ public:
     }
     ~Overlay()
     {
-        xy_free(mpOverlayBuffer.base);
-        memset(&mpOverlayBuffer, 0, sizeof(mpOverlayBuffer));        
+        CleanUp();       
     }
 
     void CleanUp()
@@ -59,59 +58,25 @@ public:
         mOverlayWidth=mOverlayHeight=mOverlayPitch=0;
     }
 
-    void _Init_mpOverlayDraw(const byte* pBody, const byte* pBorder,
+    void FillAlphaMash(byte* outputAlphaMask, bool fBody, bool fBorder, 
         int x, int y, int w, int h,
-        const byte* pAlphaMask, int pitch,
-        DWORD color_alpha);
-    byte*_GetAlphaMash1( bool fBody, bool fBorder, int x, int y, int w, int h, const byte* pAlphaMask, int pitch, DWORD color_alpha)
-    {
-        mpOverlayBuffer.draw = (byte*)xy_malloc(mOverlayPitch * mOverlayHeight);
-        byte* result = NULL;
-        if(!fBorder && fBody && pAlphaMask==NULL)
-        {
+        const byte* pAlphaMask, int pitch, DWORD color_alpha);
             //        result = mpOverlayBuffer.body + mOverlayPitch*y + x;
-            _Init_mpOverlayDraw(mpOverlayBuffer.body, NULL, x, y, w, h, pAlphaMask, pitch, color_alpha);
-            result = mpOverlayBuffer.draw + mOverlayPitch*y + x;
-        }
-        else if(/*fBorder &&*/ fBody && pAlphaMask==NULL)
-        {
             //        result = mpOverlayBuffer.border + mOverlayPitch*y + x;
-            _Init_mpOverlayDraw(NULL, mpOverlayBuffer.border, x, y, w, h, pAlphaMask, pitch, color_alpha);
-            result = mpOverlayBuffer.draw + mOverlayPitch*y + x;
-        }
-        else if(!fBody && fBorder /* pAlphaMask==NULL or not*/)
-        {
-            int offset = mOverlayPitch*y + x;
-            _Init_mpOverlayDraw(mpOverlayBuffer.body, mpOverlayBuffer.border, x, y, w, h, pAlphaMask, pitch, color_alpha);
-            result = mpOverlayBuffer.draw + offset;
-        }
-        else if(!fBorder && fBody && pAlphaMask!=NULL)
-        {
-            _Init_mpOverlayDraw(mpOverlayBuffer.body, NULL, x, y, w, h, pAlphaMask, pitch, color_alpha);
-            result = mpOverlayBuffer.draw + mOverlayPitch*y + x;
-        }
-        else if(fBorder && fBody && pAlphaMask!=NULL)
-        {
-            _Init_mpOverlayDraw(NULL, mpOverlayBuffer.border, x, y, w, h, pAlphaMask, pitch, color_alpha);
-            result = mpOverlayBuffer.draw + mOverlayPitch*y + x;
-        }
-        else
-        {
             //should NOT happen
-            ASSERT(0);
-        }
-        return result;
-    }
 
     struct {
         byte *base;
         byte *body;
         byte *border;
-        byte *draw;
     } mpOverlayBuffer;
     int mOffsetX, mOffsetY;
         
     int mOverlayWidth, mOverlayHeight,mOverlayPitch;
+private:
+    void _DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const byte* pBorder,
+        int x, int y, int w, int h,
+        const byte* pAlphaMask, int pitch, DWORD color_alpha);
 };
 
 

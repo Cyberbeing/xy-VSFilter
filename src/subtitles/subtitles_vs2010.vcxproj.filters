@@ -57,9 +57,6 @@
     <ClCompile Include="VobSubImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AlignedBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="xy_malloc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -110,22 +107,19 @@
     <ClInclude Include="VobSubImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AlignedBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="xy_sse_api.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="xy_buffered_reader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="text_reader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="xy_malloc.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="flyweight_base_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xy_malloc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xy_sse_api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

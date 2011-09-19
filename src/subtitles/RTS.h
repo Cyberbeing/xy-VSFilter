@@ -65,6 +65,7 @@ class CWord : public Rasterizer
     bool m_fDrawn;
     CPoint m_p;
 
+    bool NeedTransform();
     void Transform(CPoint org);
 
 	void Transform_C( CPoint &org );
@@ -94,7 +95,7 @@ public:
     virtual bool Append(CWord* w);
 
     void Paint(CPoint p, CPoint org, OverlayList* overlay_list);
-    static bool IsPaintResultEqual(const CWord& a, const CWord& b);
+    
     
     //friend class CWordCache;
     friend class CWordCacheKey;
@@ -126,12 +127,12 @@ public:
 class OverlayKey: public CWordCacheKey
 {
 public:
-    const static unsigned SUB_PIXEL = 0; //0 4 6 7; 0 means disable sub-pixel
-    OverlayKey(const CWord& word, POINT p):CWordCacheKey(word) { m_p.x=p.x&SUB_PIXEL; m_p.y=p.y&SUB_PIXEL; }
+    OverlayKey(const CWord& word, const POINT& p):CWordCacheKey(word),m_p(p) { }
     OverlayKey(const OverlayKey& key):CWordCacheKey(key) { m_p.x=key.m_p.x; m_p.y=key.m_p.y; }
     OverlayKey(const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend,POINT p):
-            CWordCacheKey(style, str, ktype, kstart, kend) { m_p.x=p.x&SUB_PIXEL; m_p.y=p.y&SUB_PIXEL; }
+            CWordCacheKey(style, str, ktype, kstart, kend),m_p(p) { }
     bool operator==(const OverlayKey& key)const { return (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) && ((CWordCacheKey)(*this)==(CWordCacheKey)key); }    
+    bool CompareTo(const CWord& word, const POINT& p)const { return (m_p.x==p.x) && (m_p.y==p.y) && ((CWordCacheKey)(*this)==word); }
 
     POINT m_p;
 };
@@ -173,7 +174,7 @@ protected:
     virtual bool CreatePath();
 
 public:
-    CPolygon(STSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline);
+    CPolygon(const FwSTSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline);
 	CPolygon(CPolygon&); // can't use a const reference because we need to use CAtlArray::Copy which expects a non-const reference
     virtual ~CPolygon();
 
@@ -379,8 +380,8 @@ class CRenderedTextSubtitle : public CSimpleTextSubtitle, public ISubPicProvider
     double m_fps;
 
     void ParseEffect(CSubtitle* sub, CString str);
-    void ParseString(CSubtitle* sub, CStringW str, STSStyle& style);
-    void ParsePolygon(CSubtitle* sub, CStringW str, STSStyle& style);
+    void ParseString(CSubtitle* sub, CStringW str, const FwSTSStyle& style);
+    void ParsePolygon(CSubtitle* sub, CStringW str, const FwSTSStyle& style);
     bool ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& style, const STSStyle& org, bool fAnimate = false);
     bool ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle& style, STSStyle& org);
 
