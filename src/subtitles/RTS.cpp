@@ -202,16 +202,15 @@ void CWord::Paint(CPoint p, CPoint org, OverlayList* overlay_list)
         m_pOpaqueBox->Paint(p, org, overlay_list->next);
     }
 }
-
 bool CWord::NeedTransform()
 {
-    return (m_style.get().fontScaleX - 100 > 0.000001) ||
-           (m_style.get().fontScaleY - 100 > 0.000001) ||
-           (m_style.get().fontAngleX > 0.000001) ||
-           (m_style.get().fontAngleY > 0.000001) ||
-           (m_style.get().fontAngleZ > 0.000001) ||
-           (m_style.get().fontShiftX > 0.000001) ||
-           (m_style.get().fontShiftY > 0.000001);
+    return (fabs(m_style.get().fontScaleX - 100) > 0.000001) ||
+           (fabs(m_style.get().fontScaleY - 100) > 0.000001) ||
+           (fabs(m_style.get().fontAngleX) > 0.000001) ||
+           (fabs(m_style.get().fontAngleY) > 0.000001) ||
+           (fabs(m_style.get().fontAngleZ) > 0.000001) ||
+           (fabs(m_style.get().fontShiftX) > 0.000001) ||
+           (fabs(m_style.get().fontShiftY) > 0.000001);
 }
 
 void CWord::Transform(CPoint org)

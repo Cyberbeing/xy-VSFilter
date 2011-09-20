@@ -65,7 +65,7 @@ public:
     struct {
         byte *base;
         byte *body;
-        byte *border;        
+        byte *border;
     } mpOverlayBuffer;
     int mOffsetX, mOffsetY;
         
