@@ -165,8 +165,8 @@ void CWord::Paint(CPoint p, CPoint org, OverlayList* overlay_list)
     if(iter==overlay_cache.end())    
     {
         overlay_list->overlay = new Overlay();
-        //if(!m_fDrawn)
-        //{
+        if(!m_fDrawn)
+        {
             if(!CreatePath()) return;
             if(need_transform)
                 Transform(CPoint((org.x-p.x)*8, (org.y-p.y)*8));
@@ -182,12 +182,12 @@ void CWord::Paint(CPoint p, CPoint org, OverlayList* overlay_list)
             m_fDrawn = true;
             //if(!Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay)) return;
             if(!Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay)) return;
-        //}
-        //else
-        //{
-        //    //Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
-        //    Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
-        //}
+        }
+        else
+        {
+            //Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
+            Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
+        }
         OverlayMruItem item(comp_key, overlay_list->overlay);
         g_overlay_cache.update_cache(item);
     }
@@ -2156,6 +2156,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& 
                            : 0;
                 m_kend = m_kstart;
                 break;
+                sub->m_fAnimated = true;//fix me: define m_fAnimated m_fAnimated2 strictly
             }
         case CMD_kf:
         case CMD_K:
@@ -2165,6 +2166,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& 
                 m_kend += !p.IsEmpty()
                           ? wcstol(p, NULL, 10)*10
                           : 1000;
+                sub->m_fAnimated = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
             }
         case CMD_ko:
@@ -2174,6 +2176,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& 
                 m_kend += !p.IsEmpty()
                           ? wcstol(p, NULL, 10)*10
                           : 1000;
+                sub->m_fAnimated = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
             }
         case CMD_k:
@@ -2183,6 +2186,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& 
                 m_kend += !p.IsEmpty()
                           ? wcstol(p, NULL, 10)*10
                           : 1000;
+                sub->m_fAnimated = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
             }
         case CMD_move: // {\move(x1=param[0], y1=param[1], x2=param[2], y2=param[3][, t1=t[0], t2=t[1]])}
