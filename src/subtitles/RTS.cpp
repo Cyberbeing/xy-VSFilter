@@ -31,8 +31,8 @@ static HDC g_hDC;
 static int g_hDC_refcnt = 0;
 
 //static OverlayCache g_overlay_cache;
-const int OVERLAY_CACHE_ITEM_NUM = 512;
-const int WORD_CACHE_ITEM_NUM = 1024;
+const int OVERLAY_CACHE_ITEM_NUM = 256;
+const int WORD_CACHE_ITEM_NUM = 512;
 static OverlayMruCache g_overlay_cache(OVERLAY_CACHE_ITEM_NUM);
 static CWordMruCache g_word_cache(WORD_CACHE_ITEM_NUM);
 
