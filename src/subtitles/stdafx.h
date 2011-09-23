@@ -39,7 +39,8 @@
 // TODO: reference additional headers your program requires here
 
 #include <streams.h>
-#include "..\DSUtil\DSUtil.h"
+#include "../DSUtil/DSUtil.h"
 #include "../DSUtil/SharedInclude.h"
 #include "xy_malloc.h"
 #include "flyweight_base_types.h"
+#include "RTS.h"

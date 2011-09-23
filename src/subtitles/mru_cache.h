@@ -47,16 +47,16 @@ public:
   typedef typename item_list::iterator iterator;
   typedef typename item_list::nth_index<1>::type hashed_cache;
 
-  mru_list(std::size_t max_num_items_):max_num_items(max_num_items_){}
+  mru_list(std::size_t max_num_items):_max_num_items(max_num_items){}
 
-  iterator begin(){return il.begin();}
-  iterator end(){return il.end();}
-  void clear() { il.clear();}
-  const hashed_cache& get_hashed_cache() {return il.get<1>();} 
+  iterator begin(){return _il.begin();}
+  iterator end(){return _il.end();}
+  void clear() { _il.clear();}
+  const hashed_cache& get_hashed_cache() {return _il.get<1>();} 
 
 protected:
-  item_list   il;
-  std::size_t max_num_items;
+  item_list   _il;
+  std::size_t _max_num_items;
 };
 
 #endif // end of __MRU_CACHE_H_256FCF72_8663_41DC_B98A_B822F6007912__

@@ -304,7 +304,8 @@ class OverlayMruCache:public mru_list<
                              >
 {
 public:
-    OverlayMruCache(std::size_t max_num_items_):mru_list(max_num_items_){}
+    OverlayMruCache(std::size_t max_num_items):mru_list(max_num_items){}
+    std::size_t set_max_num_items(std::size_t max_num_items);
     void update_cache(const OverlayMruItem& item);
     void clear();
 };
@@ -318,9 +319,23 @@ class CWordMruCache:public mru_list<
                            >
 {
 public:
-    CWordMruCache(std::size_t max_num_items_):mru_list(max_num_items_){}
+    CWordMruCache(std::size_t max_num_items):mru_list(max_num_items){}
+    std::size_t set_max_num_items(std::size_t max_num_items);
     void update_cache(const CWordMruItem& item);
     void clear();
+};
+
+class CacheManager
+{
+public:
+    static const int OVERLAY_CACHE_ITEM_NUM = 256;
+    static const int WORD_CACHE_ITEM_NUM = 512;
+
+    static OverlayMruCache* GetOverlayMruCache();
+    static CWordMruCache* GetCWordMruCache();
+private:
+    static OverlayMruCache* s_overlay_mru_cache;
+    static CWordMruCache* s_word_mru_cache;
 };
 
 class CScreenLayoutAllocator

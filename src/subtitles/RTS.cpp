@@ -30,12 +30,8 @@
 static HDC g_hDC;
 static int g_hDC_refcnt = 0;
 
-//static OverlayCache g_overlay_cache;
-const int OVERLAY_CACHE_ITEM_NUM = 256;
-const int WORD_CACHE_ITEM_NUM = 512;
-static OverlayMruCache g_overlay_cache(OVERLAY_CACHE_ITEM_NUM);
-static CWordMruCache g_word_cache(WORD_CACHE_ITEM_NUM);
-
+CWordMruCache* CacheManager::s_word_mru_cache = NULL;
+OverlayMruCache* CacheManager::s_overlay_mru_cache = NULL;
 
 std::size_t hash_value(const CWord& key)
 {
@@ -160,7 +156,7 @@ void CWord::Paint(CPoint p, CPoint org, OverlayList* overlay_list)
     {
         comp_key.p.SetPoint(0,0);
     }
-    const OverlayMruCache::hashed_cache& overlay_cache = g_overlay_cache.get_hashed_cache();    
+    const OverlayMruCache::hashed_cache& overlay_cache = CacheManager::GetOverlayMruCache()->get_hashed_cache();    
     const OverlayMruCache::hashed_cache::iterator iter = overlay_cache.find(comp_key,OverlayCompatibleKey(),OverlayCompatibleKey());
     if(iter==overlay_cache.end())    
     {
@@ -189,7 +185,7 @@ void CWord::Paint(CPoint p, CPoint org, OverlayList* overlay_list)
             Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
         }
         OverlayMruItem item(comp_key, overlay_list->overlay);
-        g_overlay_cache.update_cache(item);
+        CacheManager::GetOverlayMruCache()->update_cache(item);
     }
     else
     {
@@ -1626,8 +1622,8 @@ void CRenderedTextSubtitle::Deinit()
     m_size = CSize(0, 0);
     m_vidrect.SetRectEmpty();
 
-    g_word_cache.clear();
-    g_overlay_cache.clear();
+    CacheManager::GetCWordMruCache()->clear();
+    CacheManager::GetOverlayMruCache()->clear();
 }
 
 void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, CString str)
@@ -1672,6 +1668,8 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
     str.Replace(L"\\N", L"\n");
     str.Replace(L"\\n", (sub->m_wrapStyle < 2 || sub->m_wrapStyle == 3) ? L" " : L"\n");
     str.Replace(L"\\h", L"\x00A0");
+    CWordMruCache* word_mru_cache=CacheManager::GetCWordMruCache();
+    const CWordMruCache::hashed_cache& word_cache = word_mru_cache->get_hashed_cache();
     for(int ite = 0, j = 0, len = str.GetLength(); j <= len; j++)
     {
         WCHAR c = str[j];
@@ -1679,8 +1677,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             continue;
         if(ite < j)
         {
-            CWordCacheKey word_cache_key(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend);            
-            const CWordMruCache::hashed_cache& word_cache = g_word_cache.get_hashed_cache();
+            CWordCacheKey word_cache_key(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend);                        
             const CWordMruCache::hashed_cache::iterator iter = word_cache.find(word_cache_key);
             if( iter != word_cache.end() )            
             {
@@ -1690,7 +1687,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             {
                 sub->m_words.AddTail(w);
                 CWordMruItem item(word_cache_key, w);
-                g_word_cache.update_cache(item);
+                word_mru_cache->update_cache(item);
             }
             else
             {
@@ -1701,7 +1698,6 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
         if(c == L'\n')
         {
             CWordCacheKey word_cache_key(style, CStringW(), m_ktype, m_kstart, m_kend);
-            const CWordMruCache::hashed_cache& word_cache = g_word_cache.get_hashed_cache();
             const CWordMruCache::hashed_cache::iterator iter = word_cache.find(word_cache_key);
             if( iter != word_cache.end() )            
             {
@@ -1711,7 +1707,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             {
                 sub->m_words.AddTail(w);
                 CWordMruItem item(word_cache_key, w);
-                g_word_cache.update_cache(item);
+                word_mru_cache->update_cache(item);
             }
             else
             {
@@ -1721,8 +1717,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
         }
         else if(c == L' ' || c == L'\x00A0')
         {
-            CWordCacheKey word_cache_key(style, CStringW(c), m_ktype, m_kstart, m_kend);
-            const CWordMruCache::hashed_cache& word_cache = g_word_cache.get_hashed_cache();
+            CWordCacheKey word_cache_key(style, CStringW(c), m_ktype, m_kstart, m_kend);            
             const CWordMruCache::hashed_cache::iterator iter = word_cache.find(word_cache_key);
             if( iter != word_cache.end() ) 
             {
@@ -1732,7 +1727,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             {
                 sub->m_words.AddTail(w);
                 CWordMruItem item(word_cache_key, w);
-                g_word_cache.update_cache(item);
+                word_mru_cache->update_cache(item);
             }
             else
             {
@@ -3113,14 +3108,14 @@ bool CWordCacheKey::operator==(const CWord& key)const
 
 void OverlayMruCache::update_cache( const OverlayMruItem& item )
 {
-    std::pair<iterator,bool> p=il.push_front(item);
+    std::pair<iterator,bool> p=_il.push_front(item);
     
     if(!p.second){                     /* duplicate item */
-        il.relocate(il.begin(),p.first); /* put in front */            
+        _il.relocate(_il.begin(),p.first); /* put in front */            
     }
-    else if(il.size()>max_num_items){  /* keep the length <= max_num_items */        
-        delete il.rbegin()->overlay;
-        il.pop_back();
+    else if(_il.size()>_max_num_items){  /* keep the length <= max_num_items */        
+        delete _il.rbegin()->overlay;
+        _il.pop_back();
     }
 }
 
@@ -3133,16 +3128,27 @@ void OverlayMruCache::clear()
     __super::clear();
 }
 
+std::size_t OverlayMruCache::set_max_num_items( std::size_t max_num_items )
+{
+    _max_num_items = max_num_items;
+    while(_il.size()>_max_num_items)
+    {
+        delete _il.rbegin()->overlay;
+        _il.pop_back();
+    }
+    return _max_num_items;
+}
+
 void CWordMruCache::update_cache( const CWordMruItem& item )
 {
-    std::pair<iterator,bool> p=il.push_front(item);
+    std::pair<iterator,bool> p=_il.push_front(item);
 
     if(!p.second){                     /* duplicate item */
-        il.relocate(il.begin(),p.first); /* put in front */            
+        _il.relocate(_il.begin(),p.first); /* put in front */            
     }
-    else if(il.size()>max_num_items){  /* keep the length <= max_num_items */        
-        delete il.rbegin()->word;
-        il.pop_back();
+    else if(_il.size()>_max_num_items){  /* keep the length <= max_num_items */        
+        delete _il.rbegin()->word;
+        _il.pop_back();
     }
 }
 
@@ -3153,4 +3159,33 @@ void CWordMruCache::clear()
         delete iter->word;
     }
     __super::clear();
+}
+
+std::size_t CWordMruCache::set_max_num_items( std::size_t max_num_items )
+{
+    _max_num_items = max_num_items;
+    while(_il.size()>_max_num_items)
+    {
+        delete _il.rbegin()->word;
+        _il.pop_back();
+    }
+    return _max_num_items;
+}
+
+OverlayMruCache* CacheManager::GetOverlayMruCache()
+{
+    if(s_overlay_mru_cache==NULL)
+    {
+        s_overlay_mru_cache = new OverlayMruCache(OVERLAY_CACHE_ITEM_NUM);
+    }
+    return s_overlay_mru_cache;
+}
+
+CWordMruCache* CacheManager::GetCWordMruCache()
+{
+    if(s_word_mru_cache==NULL)
+    {
+        s_word_mru_cache = new CWordMruCache(OVERLAY_CACHE_ITEM_NUM);
+    }
+    return s_word_mru_cache;
 }
