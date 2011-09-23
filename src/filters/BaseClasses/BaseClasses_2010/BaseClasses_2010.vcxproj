@@ -83,6 +83,7 @@
       <CallingConvention>StdCall</CallingConvention>
       <RuntimeTypeInfo>
       </RuntimeTypeInfo>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

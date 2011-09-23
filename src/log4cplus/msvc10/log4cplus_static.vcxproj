@@ -319,6 +319,7 @@
       <XMLDocumentationFileName>$(IntDir)</XMLDocumentationFileName>
       <RuntimeTypeInfo>
       </RuntimeTypeInfo>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

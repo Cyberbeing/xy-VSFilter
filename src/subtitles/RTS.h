@@ -72,6 +72,8 @@ class CWord : public Rasterizer
 	void Transform_SSE2( CPoint &org );
     bool CreateOpaqueBox();
 
+    CWord(const CWord&);//disable default copy constructor
+
 protected:
     FwStringW m_str;
 
@@ -88,7 +90,7 @@ public:
 
     int m_width, m_ascent, m_descent;
 
-    CWord(const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend); // str[0] = 0 -> m_fLineBreak = true (in this case we only need and use the height of m_font from the whole class)
+    CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend); // str[0] = 0 -> m_fLineBreak = true (in this case we only need and use the height of m_font from the whole class)
     virtual ~CWord();
 
     virtual CWord* Copy() = 0;
@@ -158,7 +160,8 @@ protected:
     virtual bool CreatePath();
 
 public:
-    CText(const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend);
+    CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend);
+    CText(const CText& src);
 
     virtual CWord* Copy();
     virtual bool Append(CWord* w);

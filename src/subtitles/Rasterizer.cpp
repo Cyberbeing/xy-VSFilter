@@ -144,7 +144,7 @@ int ass_synth_priv::generate_tables(double sigma)
     this->g_w = (int)ceil(sigma*3) | 1;
     this->g_r = this->g_w / 2;
 
-    if (this->g_r) {
+    if (this->g_w) {
         this->g = (unsigned*)realloc(this->g, this->g_w * sizeof(unsigned));
         this->gt2 = (unsigned*)realloc(this->gt2, 256 * this->g_w * sizeof(unsigned));
         gaussian_kernel = (double*)malloc(this->g_w * sizeof(double));
@@ -154,7 +154,7 @@ int ass_synth_priv::generate_tables(double sigma)
         }        
     }
 
-    if (this->g_r) {
+    if (this->g_w) {
         for (i = 0; i < this->g_w; ++i) {
             gaussian_kernel[i] = exp(a * (i - this->g_r) * (i - this->g_r));
         }
@@ -219,8 +219,9 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
     unsigned *t = tmp2 + 1;
     for (y = 0; y < height; y++) {
         memset(t - 1, 0, (width + 1) * sizeof(*t));
-        {
-            x = 0;
+        x = 0;
+        if(x < r)//in case that r < 0
+        {            
             const int src = s[x];
             if (src) {
                 register unsigned *dstp = t + x - r;
@@ -270,9 +271,8 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
                 }
             }
         }
-        
+        if(x==width-1) //important: x==width-1 failed, if r==0
         {
-            x = width - 1;
             const int src = s[x];
             if (src) {
                 register unsigned *dstp = t + x - r;
@@ -293,8 +293,9 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
 
     t = tmp2;
     for (x = 0; x < width; x++) {
-        {
-            y = 0;
+        y = 0;
+        if(y < r)//in case that r<0
+        {            
             unsigned *srcp = t + y * (width + 1) + 1;
             int src = *srcp;
             if (src) {
@@ -360,8 +361,8 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
                 }
             }
         }
+        if(y == height - 1)//important: y == height - 1 failed if r==0
         {
-            y = height - 1;
             unsigned *srcp = t + y * (width + 1) + 1;
             int src = *srcp;
             if (src) {
@@ -1004,8 +1005,8 @@ bool Rasterizer::Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, 
             }
         }
     }
-    // Do some gaussian blur magic
-    if (fGaussianBlur > 0)
+    // Do some gaussian blur magic    
+    if (fGaussianBlur > 0.1)//(fGaussianBlur > 0) return true even if fGaussianBlur very small
     {
         byte* plan_selected= mWideOutline.empty() ? overlay->mpOverlayBuffer.body : overlay->mpOverlayBuffer.border;
         flyweight<key_value<double, ass_synth_priv, ass_synth_priv_key>, no_locking> fw_priv_blur(fGaussianBlur);

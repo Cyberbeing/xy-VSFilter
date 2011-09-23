@@ -108,7 +108,7 @@ CMyFont::CMyFont(const FwSTSStyle& style)
 
 // CWord
 
-CWord::CWord(const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend)
+CWord::CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend)
     : m_style(style), m_str(str)
     , m_width(0), m_ascent(0), m_descent(0)
     , m_ktype(ktype), m_kstart(kstart), m_kend(kend)
@@ -192,8 +192,9 @@ void CWord::Paint(CPoint p, CPoint org, OverlayList* overlay_list)
         overlay_list->overlay = iter->overlay;
     }
     m_p = p;
-    if(m_pOpaqueBox)
+    if(m_style.get().borderStyle == 1)
     {
+        if(!CreateOpaqueBox()) return;
         overlay_list->next = new OverlayList();
         m_pOpaqueBox->Paint(p, org, overlay_list->next);
     }
@@ -612,7 +613,7 @@ bool CWord::CreateOpaqueBox()
 
 // CText
 
-CText::CText(const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend)
+CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend)
     : CWord(style, str, ktype, kstart, kend)
 {
     if(m_str == L" ")
@@ -640,6 +641,11 @@ CText::CText(const STSStyle& style, const CStringW& str, int ktype, int kstart, 
     }
     m_width = (int)(m_style.get().fontScaleX/100*m_width + 4) >> 3;
     SelectFont(g_hDC, hOldFont);
+}
+
+CText::CText( const CText& src ):CWord(src.m_style, src.m_str, src.m_ktype, src.m_kstart, src.m_kend)
+{
+    m_width = src.m_width;
 }
 
 CWord* CText::Copy()
@@ -686,7 +692,7 @@ bool CText::CreatePath()
 // CPolygon
 
 CPolygon::CPolygon(const FwSTSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline)
-    : CWord(style.get(), str, ktype, kstart, kend)
+    : CWord(style, str, ktype, kstart, kend)
     , m_scalex(scalex), m_scaley(scaley), m_baseline(baseline)
 {
     ParseStr();
