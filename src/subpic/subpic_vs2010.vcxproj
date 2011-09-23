@@ -110,6 +110,7 @@
       <OpenMPSupport>true</OpenMPSupport>
       <RuntimeTypeInfo>
       </RuntimeTypeInfo>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Lib>
       <AdditionalDependencies>d3d9.lib;ddraw.lib;%(AdditionalDependencies)</AdditionalDependencies>

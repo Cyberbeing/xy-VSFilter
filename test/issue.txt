@@ -7,5 +7,5 @@ gaussian blur unlike origin vsfilter (fixed)
 ==============================================================
 crashed with 5.ass(fixed)
 ==============================================================
-incorrect result with 6.ass
+incorrect result with 6.ass(fixed)
 ==============================================================
