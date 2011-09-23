@@ -874,7 +874,7 @@ STDMETHODIMP CDirectVobSubFilter::GetPages(CAUUID* pPages)
 {
     CheckPointer(pPages, E_POINTER);
 
-	pPages->cElems = 7;
+	pPages->cElems = 8;
     pPages->pElems = (GUID*)CoTaskMemAlloc(sizeof(GUID)*pPages->cElems);
 
 	if(pPages->pElems == NULL) return E_OUTOFMEMORY;
@@ -883,6 +883,7 @@ STDMETHODIMP CDirectVobSubFilter::GetPages(CAUUID* pPages)
     pPages->pElems[i++] = __uuidof(CDVSMainPPage);
     pPages->pElems[i++] = __uuidof(CDVSGeneralPPage);
     pPages->pElems[i++] = __uuidof(CDVSMiscPPage);
+    pPages->pElems[i++] = __uuidof(CDVSMorePPage);
     pPages->pElems[i++] = __uuidof(CDVSTimingPPage);
     pPages->pElems[i++] = __uuidof(CDVSColorPPage);
     pPages->pElems[i++] = __uuidof(CDVSPathsPPage);
@@ -995,11 +996,12 @@ STDMETHODIMP CDirectVobSubFilter::put_PreBuffering(bool fDoPreBuffering)
 
 STDMETHODIMP CDirectVobSubFilter::put_UseBT709(bool fUseBT709)
 {
+    CAutoLock cAutolock(&m_csQueueLock);
     HRESULT hr = CDirectVobSub::put_UseBT709(fUseBT709);
 
     if(hr == NOERROR)
     {
-        ColorConvTable::SetDefaultYUVType( fUseBT709?ColorConvTable::BT709:ColorConvTable::BT601 );
+        ColorConvTable::SetDefaultYUVType( m_fUseBT709?ColorConvTable::BT709:ColorConvTable::BT601 );
     }
 
     return hr;
@@ -1056,6 +1058,32 @@ STDMETHODIMP CDirectVobSubFilter::put_SubtitleTiming(int delay, int speedmul, in
 	}
 
 	return hr;
+}
+
+STDMETHODIMP CDirectVobSubFilter::put_OverlayCacheMaxItemNum( int overlay_cache_max_item_num )
+{
+    CAutoLock cAutolock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::put_OverlayCacheMaxItemNum(overlay_cache_max_item_num);
+
+    if(hr == NOERROR)
+    {
+        CacheManager::GetOverlayMruCache()->set_max_num_items(m_overlay_cache_max_item_num);
+    }
+
+    return hr;
+}
+
+STDMETHODIMP CDirectVobSubFilter::put_CWordCacheMaxItemNum( int word_cache_max_item_num )
+{
+    CAutoLock cAutolock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::put_CWordCacheMaxItemNum(word_cache_max_item_num);
+
+    if(hr == NOERROR)
+    {
+        CacheManager::GetCWordMruCache()->set_max_num_items(m_word_cache_max_item_num);
+    }
+
+    return hr;
 }
 
 STDMETHODIMP CDirectVobSubFilter::get_MediaFPS(bool* fEnabled, double* fps)
@@ -1835,4 +1863,5 @@ DWORD CDirectVobSubFilter::ThreadProc()
 
 	return 0;
 }
+
 

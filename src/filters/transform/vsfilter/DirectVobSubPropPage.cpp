@@ -27,8 +27,8 @@
 #include "VSFilter.h"
 #include "StyleEditorDialog.h"
 
-#include "..\..\..\DSUtil\DSUtil.h"
-#include "..\..\..\DSUtil\MediaTypes.h"
+#include "../../../DSUtil/DSUtil.h"
+#include "../../../DSUtil/MediaTypes.h"
 
 BOOL WINAPI MyGetDialogSize(int iResourceID, DLGPROC pDlgProc, LPARAM lParam, SIZE* pResult)
 {
@@ -764,6 +764,50 @@ void CDVSTimingPPage::UpdateControlData(bool fSave)
 		SendMessage(GetDlgItem(m_Dlg, IDC_SPIN9), UDM_SETPOS32, 0, (LPARAM)m_SubtitleSpeedDiv);
 #endif
 	}
+}
+
+/* CDVSMorePPage */
+CDVSMorePPage::CDVSMorePPage(LPUNKNOWN pUnk, HRESULT* phr) :
+CDVSBasePPage(NAME("DirectVobSub More Property Page"), pUnk, IDD_DVSMOREPAGE, IDD_DVSMOREPAGE)
+{
+    BindControl(IDC_SPINPathCache, m_path_cache);
+    BindControl(IDC_SPINOverlayCache, m_overlay_cache);
+}
+
+bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return(false);
+}
+
+void CDVSMorePPage::UpdateObjectData(bool fSave)
+{
+    if(fSave)
+    {
+        m_pDirectVobSub->put_OverlayCacheMaxItemNum(m_overlay_cache_max_item_num);
+        m_pDirectVobSub->put_CWordCacheMaxItemNum(m_word_cache_max_item_num);
+    }
+    else
+    {
+        m_pDirectVobSub->get_OverlayCacheMaxItemNum(&m_overlay_cache_max_item_num);
+        m_pDirectVobSub->get_CWordCacheMaxItemNum(&m_word_cache_max_item_num);
+    }
+}
+
+void CDVSMorePPage::UpdateControlData(bool fSave)
+{
+    if(fSave)
+    {
+        m_overlay_cache_max_item_num = m_overlay_cache.GetPos32();
+        m_word_cache_max_item_num = m_path_cache.GetPos32();
+    }
+    else
+    {
+        m_overlay_cache.SetRange32(0, 2048);
+        m_path_cache.SetRange32(0, 2048);
+
+        m_overlay_cache.SetPos32(m_overlay_cache_max_item_num);
+        m_path_cache.SetPos32(m_word_cache_max_item_num);
+    }
 }
 
 /* CDVSAboutPPage */

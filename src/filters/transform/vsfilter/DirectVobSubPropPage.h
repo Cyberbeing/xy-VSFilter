@@ -139,7 +139,7 @@ class CDVSTimingPPage : public CDVSBasePPage
 
 	CButton m_modfps;
 	CEdit m_fps;
-	CSpinButtonCtrl m_subdelay, m_subspeedmul, m_subspeeddiv;
+	CSpinButtonCtrl m_subdelay, m_subspeedmul, m_subspeeddiv;    
 
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -148,6 +148,22 @@ protected:
 
 public:
     CDVSTimingPPage(LPUNKNOWN lpunk, HRESULT* phr);
+};
+
+[uuid("69CE757B-E8C0-4B0A-9EA0-CEA284096F98")]
+class CDVSMorePPage : public CDVSBasePPage
+{
+    int m_overlay_cache_max_item_num, m_word_cache_max_item_num;
+
+    CSpinButtonCtrl m_path_cache, m_overlay_cache;
+
+protected:
+    virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    virtual void UpdateControlData(bool fSave);
+    virtual void UpdateObjectData(bool fSave);
+
+public:
+    CDVSMorePPage(LPUNKNOWN lpunk, HRESULT* phr);
 };
 
 [uuid("F544E0F5-CA3C-47ea-A64D-35FCF1602396")]

@@ -51,7 +51,12 @@ CDirectVobSub::CDirectVobSub()
 	m_SubtitleSpeedDiv = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), 1000);
 	m_fMediaFPSEnabled = !!theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), 0);
 	m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), 0));
-	pData = NULL;
+
+    m_overlay_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), 256);
+    if(m_overlay_cache_max_item_num<0) m_overlay_cache_max_item_num = 0;
+    m_word_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_WORD_CAHCHE_MAX_ITEM_NUM), 512);
+	if(m_word_cache_max_item_num<0) m_word_cache_max_item_num = 0;
+    pData = NULL;
 	if(theApp.GetProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), &pData, &nSize) && pData)
 	{
 		if(nSize != sizeof(m_MediaFPS)) m_MediaFPS = 25.0;
@@ -440,6 +445,45 @@ STDMETHODIMP CDirectVobSub::put_ZoomRect(NORMALIZEDRECT* rect)
 	return S_OK;
 }
 
+STDMETHODIMP CDirectVobSub::get_OverlayCacheMaxItemNum(int* overlay_cache_max_item_num)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(overlay_cache_max_item_num) *overlay_cache_max_item_num = m_overlay_cache_max_item_num;
+
+    return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::put_OverlayCacheMaxItemNum(int overlay_cache_max_item_num)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(m_overlay_cache_max_item_num == overlay_cache_max_item_num || overlay_cache_max_item_num<0) return S_FALSE;
+
+    m_overlay_cache_max_item_num = overlay_cache_max_item_num;
+
+    return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::get_CWordCacheMaxItemNum(int* word_cache_max_item_num)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(word_cache_max_item_num) *word_cache_max_item_num = m_word_cache_max_item_num;
+
+    return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::put_CWordCacheMaxItemNum(int word_cache_max_item_num)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(m_word_cache_max_item_num == word_cache_max_item_num || word_cache_max_item_num<0) return S_FALSE;
+    m_word_cache_max_item_num = word_cache_max_item_num;
+
+    return S_OK;
+}
+
 STDMETHODIMP CDirectVobSub::UpdateRegistry()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
@@ -468,6 +512,8 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 	theApp.WriteProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), (BYTE*)&m_MediaFPS, sizeof(m_MediaFPS));
 	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), m_ePARCompensationType);
 
+    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), m_overlay_cache_max_item_num);
+    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_WORD_CAHCHE_MAX_ITEM_NUM), m_word_cache_max_item_num);
 	return S_OK;
 }
 

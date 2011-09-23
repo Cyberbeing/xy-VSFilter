@@ -97,6 +97,11 @@ public:
     STDMETHODIMP put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fPolygonize);
     STDMETHODIMP put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer);
     STDMETHODIMP put_SubtitleTiming(int delay, int speedmul, int speeddiv);
+
+    STDMETHODIMP put_OverlayCacheMaxItemNum(int overlay_cache_max_item_num);
+    STDMETHODIMP put_CWordCacheMaxItemNum(int word_cache_max_item_num);
+
+
     STDMETHODIMP get_MediaFPS(bool* fEnabled, double* fps);
     STDMETHODIMP put_MediaFPS(bool fEnabled, double fps);
     STDMETHODIMP get_ZoomRect(NORMALIZEDRECT* rect);

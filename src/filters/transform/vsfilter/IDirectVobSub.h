@@ -254,6 +254,22 @@ extern "C" {
 					bool fWebLoad, 
 					bool fEmbeddedLoad
 				) PURE;
+
+        STDMETHOD(get_OverlayCacheMaxItemNum) (THIS_
+            int* overlay_cache_max_item_num
+            ) PURE;
+
+        STDMETHOD(put_OverlayCacheMaxItemNum) (THIS_
+            int overlay_cache_max_item_num
+            ) PURE;
+
+        STDMETHOD(get_CWordCacheMaxItemNum) (THIS_
+            int* word_cache_max_item_num
+            ) PURE;
+
+        STDMETHOD(put_CWordCacheMaxItemNum) (THIS_
+            int word_cache_max_item_num
+            ) PURE;
 	};
 
     [uuid("FE6EC6A0-21CA-4970-9EF0-B296F7F38AF0")]

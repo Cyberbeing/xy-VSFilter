@@ -45,6 +45,7 @@
 #define IDS_RG_WEBLOAD                  140
 #define IDS_RG_EMBEDDEDLOAD             141
 #define IDS_RG_USE_BT709                142
+#define IDS_R_PERFORMANCE               143
 #define IDS_R_TIMING                    144
 #define IDS_RTM_SUBTITLEDELAY           145
 #define IDS_RTM_SUBTITLESPEEDMUL        146
@@ -76,6 +77,8 @@
 #define IDS_RT_PAR_UPSCALE              172
 #define IDS_RT_PAR_DOWNSCALE            173
 #define IDS_RT_PAR_ACCURATE_SIZE        174
+#define IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM 175
+#define IDS_RP_WORD_CAHCHE_MAX_ITEM_NUM 176
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
@@ -123,6 +126,7 @@
 #define IDC_EDIT4                       240
 #define IDD_STYLEDIALOG                 240
 #define IDC_SPIN4                       241
+#define IDD_DVSMOREPAGE                 241
 #define IDC_EDIT5                       242
 #define IDC_SPIN5                       243
 #define IDC_EDIT6                       244
@@ -150,6 +154,14 @@
 #define IDC_PATHEDIT                    311
 #define IDC_COMBO1                      312
 #define IDC_PARCOMBO                    314
+#define IDC_EDITPathCache               315
+#define IDC_EDITOverlayCache            316
+#define IDC_SPINPathCache               317
+#define IDC_SPINOverlayCache            318
+#define IDC_SPLIT1                      319
+#define IDC_CACHE_OPTIONS               401
+#define IDC_LABLE_PATH_CACHE            402
+#define IDC_LABLE_OVERLAY_CACHE         403
 #define IDC_SLIDER2                     1020
 #define IDC_SLIDER3                     1021
 #define IDC_RADIO1                      1022
@@ -181,7 +193,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        231
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         315
+#define _APS_NEXT_CONTROL_VALUE         320
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif

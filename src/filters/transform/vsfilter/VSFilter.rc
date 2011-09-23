@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Hungarian resources
+// –Ÿ—¿¿˚”Ô(–Ÿ—¿¿˚) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_HUN)
-#ifdef _WIN32
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 #pragma code_page(1250)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -34,18 +32,16 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Hungarian resources
+#endif    // –Ÿ—¿¿˚”Ô(–Ÿ—¿¿˚) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// ”¢”Ô(√¿π˙) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -280,7 +276,7 @@ BEGIN
     LTEXT           "Spacing",IDC_STATIC,21,60,26,8
     EDITTEXT        IDC_EDIT3,64,58,34,14,ES_RIGHT | ES_AUTOHSCROLL
     CONTROL         "",IDC_SPIN3,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,97,58,11,14
-    LTEXT           "Angle (z,∞)",IDC_STATIC,21,79,36,8
+    LTEXT           "Angle (z,?",IDC_STATIC,21,79,36,8
     EDITTEXT        IDC_EDIT11,64,77,34,14,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "",IDC_SPIN10,"msctls_updown32",UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,97,77,11,14
     LTEXT           "Scale (x,%)",IDC_STATIC,21,98,39,8
@@ -338,6 +334,19 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,265,197,50,14
     LTEXT           "100%",IDC_STATIC,289,76,20,8
     LTEXT           "0%",IDC_STATIC,200,76,12,8
+END
+
+IDD_DVSMOREPAGE DIALOGEX 0, 0, 247, 188
+STYLE DS_SETFONT | WS_CHILD
+FONT 8, "MS Sans Serif", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDITPathCache,90,18,48,12,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_SPINPathCache,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,137,17,10,14
+    EDITTEXT        IDC_EDITOverlayCache,90,40,48,12,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_SPINOverlayCache,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,137,39,10,14
+    RTEXT           "Overlay Cache",IDC_LABLE_OVERLAY_CACHE,29,41,55,8
+    RTEXT           "Path Cache",IDC_LABLE_PATH_CACHE,29,20,55,8
+    GROUPBOX        "Cache Options",IDC_STATIC,7,3,233,61
 END
 
 
@@ -466,6 +475,16 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 212
     END
+
+    IDD_DVSMOREPAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 240
+        VERTGUIDE, 20
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 181
+        HORZGUIDE, 127
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -528,6 +547,7 @@ BEGIN
     IDS_RG_WEBLOAD          "WebLoad"
     IDS_RG_EMBEDDEDLOAD     "EmbLoad"
     IDS_RG_USE_BT709        "Use BT709"
+    IDS_R_PERFORMANCE       "Performance"
 END
 
 STRINGTABLE
@@ -581,6 +601,7 @@ BEGIN
     IDS_RT_PAR_UPSCALE      "Upscale"
     IDS_RT_PAR_DOWNSCALE    "Downscale"
     IDS_RT_PAR_ACCURATE_SIZE "Accurate size"
+    IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM "Overlay_cache_max_item_num"
 END
 
 STRINGTABLE
@@ -588,7 +609,17 @@ BEGIN
     IDS_RT_STYLE            "Style2"
 END
 
-#endif    // English (U.S.) resources
+STRINGTABLE
+BEGIN
+    IDS_RP_WORD_CAHCHE_MAX_ITEM_NUM "Word_cache_max_item_num"
+END
+
+STRINGTABLE
+BEGIN
+    IDD_DVSMOREPAGE         "M&ore"
+END
+
+#endif    // ”¢”Ô(√¿π˙) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

@@ -43,6 +43,9 @@ protected:
 	bool m_fBufferVobSub, m_fOnlyShowForcedVobSubs, m_fPolygonize;
 	CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;
 
+    int m_overlay_cache_max_item_num;
+    int m_word_cache_max_item_num;
+
 	STSStyle m_defStyle;
 
 	bool m_fAdvancedRenderer;
@@ -95,6 +98,12 @@ public:
 	STDMETHODIMP get_ColorFormat(int* iPosition) {return E_NOTIMPL;}
     STDMETHODIMP put_ColorFormat(int iPosition) {return E_NOTIMPL;}
 
+    STDMETHODIMP get_OverlayCacheMaxItemNum(int* overlay_cache_max_item_num);
+    STDMETHODIMP put_OverlayCacheMaxItemNum(int overlay_cache_max_item_num);
+
+    STDMETHODIMP get_CWordCacheMaxItemNum(int* word_cache_max_item_num);
+    STDMETHODIMP put_CWordCacheMaxItemNum(int word_cache_max_item_num);
+
 	STDMETHODIMP UpdateRegistry();
 
 	STDMETHODIMP HasConfigDialog(int iSelected);
@@ -113,7 +122,7 @@ public:
 	STDMETHODIMP put_ExtendPicture(int horizontal, int vertical, int resx2, int resx2minw, int resx2minh);
 	STDMETHODIMP get_LoadSettings(int* level, bool* fExternalLoad, bool* fWebLoad, bool* fEmbeddedLoad);
 	STDMETHODIMP put_LoadSettings(int level, bool fExternalLoad, bool fWebLoad, bool fEmbeddedLoad);
-
+        
 	// IDirectVobSub2
 
 	STDMETHODIMP AdviseSubClock(ISubClock* pSubClock);
