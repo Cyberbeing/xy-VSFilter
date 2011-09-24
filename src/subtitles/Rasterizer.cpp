@@ -80,16 +80,16 @@ struct ass_synth_priv_key
 struct ass_tmp_buf
 {
 public:
-    ass_tmp_buf(int size);
+    ass_tmp_buf(size_t size);
     ass_tmp_buf(const ass_tmp_buf& buf);
     ~ass_tmp_buf();
-    int size;
+    size_t size;
     unsigned *tmp;
 };
 
 struct ass_tmp_buf_get_size
 {
-    const int& operator()(const ass_tmp_buf& buf)const
+    const size_t& operator()(const ass_tmp_buf& buf)const
     {                                              
         return buf.size;
     }
@@ -110,9 +110,9 @@ ass_synth_priv::ass_synth_priv(const double sigma)
     generate_tables(sigma);
 }
 
-ass_synth_priv::ass_synth_priv(const ass_synth_priv& priv):g_r(priv.g_r),g_w(priv.g_w)
+ass_synth_priv::ass_synth_priv(const ass_synth_priv& priv):g_r(priv.g_r),g_w(priv.g_w),sigma(priv.sigma)
 {
-    if (this->g_r) {
+    if (this->g_w > 0 && this != &priv) {
         this->g = (unsigned*)realloc(this->g, this->g_w * sizeof(unsigned));
         this->gt2 = (unsigned*)realloc(this->gt2, 256 * this->g_w * sizeof(unsigned));
         //if (this->g == null || this->gt2 == null) {
@@ -145,7 +145,7 @@ int ass_synth_priv::generate_tables(double sigma)
     this->g_w = (int)ceil(sigma*3) | 1;
     this->g_r = this->g_w / 2;
 
-    if (this->g_w) {
+    if (this->g_w > 0) {
         this->g = (unsigned*)realloc(this->g, this->g_w * sizeof(unsigned));
         this->gt2 = (unsigned*)realloc(this->gt2, 256 * this->g_w * sizeof(unsigned));
         gaussian_kernel = (double*)malloc(this->g_w * sizeof(double));
@@ -155,7 +155,7 @@ int ass_synth_priv::generate_tables(double sigma)
         }        
     }
 
-    if (this->g_w) {
+    if (this->g_w > 0) {
         for (i = 0; i < this->g_w; ++i) {
             gaussian_kernel[i] = exp(a * (i - this->g_r) * (i - this->g_r));
         }
@@ -189,7 +189,7 @@ int ass_synth_priv::generate_tables(double sigma)
     return 0;
 }
 
-ass_tmp_buf::ass_tmp_buf(int size)
+ass_tmp_buf::ass_tmp_buf(size_t size)
 {
     tmp = (unsigned *)malloc(size * sizeof(unsigned));
     this->size = size;
@@ -1010,7 +1010,7 @@ bool Rasterizer::Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, 
         }
     }
 
-    ass_tmp_buf tmp_buf( max((overlay->mOverlayWidth+1)*(overlay->mOverlayPitch+1),0) );    
+    ass_tmp_buf tmp_buf( max((overlay->mOverlayPitch+1)*(overlay->mOverlayHeight+1),0) );        
     //flyweight<key_value<int, ass_tmp_buf, ass_tmp_buf_get_size>, no_locking> tmp_buf((overlay->mOverlayWidth+1)*(overlay->mOverlayPitch+1));
     // Do some gaussian blur magic    
     if (fGaussianBlur > 0.1)//(fGaussianBlur > 0) return true even if fGaussianBlur very small

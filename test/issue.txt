@@ -12,4 +12,4 @@ issue 4: incorrect result with 6.ass(fixed)
 ==============================================================
 issue 5: incorrect \be effect with 7.ass.(fixed)
 ==============================================================
-issue 6: crashed with 8.ass.
+issue 6: crashed with 8.ass.(fixed)
