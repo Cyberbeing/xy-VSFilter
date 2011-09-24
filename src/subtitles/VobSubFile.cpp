@@ -231,7 +231,7 @@ bool CVobSubFile::Copy(CVobSubFile& vsf)
 		dst.name = src.name;
 		dst.alt = src.alt;
 
-		for(int j = 0; j < src.subpos.GetCount(); j++)
+		for(size_t j = 0; j < src.subpos.GetCount(); j++)
 		{
 			SubPos& sp = src.subpos[j];
 			if(!sp.fValid) continue;
@@ -960,7 +960,7 @@ bool CVobSubFile::WriteIdx(CString fn)
 
 		char vobid = -1, cellid = -1;
 
-		for(int j = 0; j < sp.GetCount(); j++) 
+		for(size_t j = 0; j < sp.GetCount(); j++) 
 		{
 			if(!sp[j].fValid) continue;
 

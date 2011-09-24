@@ -277,7 +277,7 @@ void CWord::Transform_C( CPoint &org )
 	}
 #endif
 
-	for (size_t i = 0; i < mPathPoints; i++) {
+	for (int i = 0; i < mPathPoints; i++) {
 		double x, y, z, xx, yy, zz;
 
 		x = mpPathPoints[i].x;
@@ -745,7 +745,7 @@ bool CPolygon::ParseStr()
 {
     if(m_pathTypesOrg.GetCount() > 0) return(true);
     CPoint p;
-    int i, j, lastsplinestart = -1, firstmoveto = -1, lastmoveto = -1;
+    int j, lastsplinestart = -1, firstmoveto = -1, lastmoveto = -1;
     CStringW str = m_str.get();
     str.SpanIncluding(L"mnlbspc 0123456789");
     str.Replace(L"m", L"*m");
@@ -781,10 +781,12 @@ bool CPolygon::ParseStr()
             m_pathPointsOrg.SetCount(j);
             break;
         case 's':
-            j = lastsplinestart = m_pathTypesOrg.GetCount();
-            i = 3;
-            while(i-- && GetPOINT(s, p)) {m_pathTypesOrg.Add(PT_BSPLINETO); m_pathPointsOrg.Add(p); j++;}
-            if(m_pathTypesOrg.GetCount()-lastsplinestart < 3) {m_pathTypesOrg.SetCount(lastsplinestart); m_pathPointsOrg.SetCount(lastsplinestart); lastsplinestart = -1;}
+            {
+                j = lastsplinestart = m_pathTypesOrg.GetCount();
+                int i = 3;
+                while(i-- && GetPOINT(s, p)) {m_pathTypesOrg.Add(PT_BSPLINETO); m_pathPointsOrg.Add(p); j++;}
+                if(m_pathTypesOrg.GetCount()-lastsplinestart < 3) {m_pathTypesOrg.SetCount(lastsplinestart); m_pathPointsOrg.SetCount(lastsplinestart); lastsplinestart = -1;}
+            }            
             // no break here
         case 'p':
             while(GetPOINT(s, p)) {m_pathTypesOrg.Add(PT_BSPLINEPATCHTO); m_pathPointsOrg.Add(p); j++;}
@@ -873,7 +875,7 @@ bool CPolygon::ParseStr()
         return(false);
     }
     int minx = INT_MAX, miny = INT_MAX, maxx = -INT_MAX, maxy = -INT_MAX;
-    for(i = 0; i < m_pathTypesOrg.GetCount(); i++)
+    for(size_t i = 0; i < m_pathTypesOrg.GetCount(); i++)
     {
         m_pathPointsOrg[i].x = (int)(64 * m_scalex * m_pathPointsOrg[i].x);
         m_pathPointsOrg[i].y = (int)(64 * m_scaley * m_pathPointsOrg[i].y);
@@ -1422,7 +1424,7 @@ void CScreenLayoutAllocator::AdvanceToSegment(int segment, const CAtlArray<int>&
         bool fFound = false;
         if(abs(sr.segment - segment) <= 1) // using abs() makes it possible to play the subs backwards, too :)
         {
-            for(int i = 0; i < sa.GetCount() && !fFound; i++)
+            for(size_t i = 0; i < sa.GetCount() && !fFound; i++)
             {
                 if(sa[i] == sr.entry)
                 {
@@ -2404,7 +2406,7 @@ bool CRenderedTextSubtitle::ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle&
     {
         if(!fClosing)
         {
-            for(i = 0; i < attribs.GetCount(); i++)
+            for(size_t i = 0; i < attribs.GetCount(); i++)
             {
                 if(params[i].IsEmpty()) continue;
                 int nColor = -1;

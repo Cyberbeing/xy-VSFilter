@@ -2063,7 +2063,7 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, F
             m_segments.InsertAt(0, stss);
         }
 
-        for(int i = 0; i < m_segments.GetCount(); i++)
+        for(size_t i = 0; i < m_segments.GetCount(); i++)
         {
             STSSegment& s = m_segments[i];
 
@@ -2213,7 +2213,7 @@ void CSimpleTextSubtitle::ChangeUnknownStylesToDefault()
     CAtlMap<FwString, STSStyle*, CFwStringTraits > unknown;
     bool fReport = true;
 
-    for(int i = 0; i < GetCount(); i++)
+    for(size_t i = 0; i < GetCount(); i++)
     {
         STSEntry& stse = GetAt(i);
 
@@ -2688,11 +2688,11 @@ void CSimpleTextSubtitle::CreateSegments()
 
     if(GetCount()>0)
     {
-        int i, start, mid, end, segmentCount;
+        size_t start, mid, end;
         CAtlArray<STSSegment> tempSegments;//if add to m_segments directly, then remove empty entities can be a
                                            //complex operation when having large segmentCount and lots of empty entities
         std::vector<int> breakpoints(2*GetCount());
-        for(int i = 0; i < GetCount(); i++)
+        for(size_t i = 0; i < GetCount(); i++)
         {
             STSEntry& stse = GetAt(i);
             breakpoints[2*i]=stse.start;
@@ -2702,7 +2702,7 @@ void CSimpleTextSubtitle::CreateSegments()
         std::sort(breakpoints.begin(), breakpoints.end());
 
         int ptr = 1, prev = breakpoints[0];
-        for(i = breakpoints.size()-1; i > 0; i--, ptr++)
+        for(size_t i = breakpoints.size()-1; i > 0; i--, ptr++)
         {
             if(breakpoints[ptr] != prev)
             {
@@ -2711,9 +2711,9 @@ void CSimpleTextSubtitle::CreateSegments()
             }
         }
 
-        segmentCount = tempSegments.GetCount();
+        size_t segmentCount = tempSegments.GetCount();
 
-        for(i = 0; i < GetCount(); i++)
+        for(size_t i = 0; i < GetCount(); i++)
         {
             STSEntry& stse = GetAt(i);
             start = 0;
@@ -2733,7 +2733,7 @@ void CSimpleTextSubtitle::CreateSegments()
             for(; start < tempSegments.GetCount() && tempSegments[start].end <= stse.end; start++)
                 tempSegments[start].subs.Add(i);
         }
-        for(i = 0; i < segmentCount; i++)
+        for(size_t i = 0; i < segmentCount; i++)
             if(tempSegments[i].subs.GetCount()>0)
                 m_segments.Add(tempSegments[i]);
     }

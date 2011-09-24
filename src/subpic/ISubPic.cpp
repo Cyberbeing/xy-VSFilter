@@ -527,10 +527,7 @@ STDMETHODIMP CSubPicQueue::Invalidate(REFERENCE_TIME rtInvalidate)
 
 STDMETHODIMP_(bool) CSubPicQueue::LookupSubPic(REFERENCE_TIME rtNow, ISubPic** ppSubPic)
 {
-
-
-	CComPtr<ISubPicProvider> pSubPicProvider;
-	POSITION pos;
+	CComPtr<ISubPicProvider> pSubPicProvider;	
 	double fps = m_fps;
 	*ppSubPic = NULL;
 	//if(SUCCEEDED(GetSubPicProvider(&pSubPicProvider)) && pSubPicProvider)

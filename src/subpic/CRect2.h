@@ -23,7 +23,7 @@ public:
 	inline static bool IsIntersect(LPCRECT lpRect1, LPCRECT lpRect2)
 	{
 		CRect r;
-		return ::IntersectRect(r, lpRect1, lpRect2);
+		return ::IntersectRect(r, lpRect1, lpRect2) == TRUE;
 	}
 	inline static int Area(LPCRECT lpRect)
 	{
