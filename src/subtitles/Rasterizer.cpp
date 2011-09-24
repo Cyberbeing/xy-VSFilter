@@ -26,7 +26,7 @@
 #include <algorithm>
 #include "Rasterizer.h"
 #include "SeparableFilter.h"
-#include "..\SubPic\MemSubPic.h"
+#include "../SubPic/MemSubPic.h"
 #include "xy_logger.h"
 #include <boost/flyweight/key_value.hpp>
 
@@ -56,6 +56,7 @@ class ass_synth_priv
 public:
     ass_synth_priv(const double sigma);
     ass_synth_priv(const ass_synth_priv& priv);
+
     ~ass_synth_priv();
     int generate_tables(double sigma);
     
@@ -125,7 +126,7 @@ ass_synth_priv::ass_synth_priv(const ass_synth_priv& priv):g_r(priv.g_r),g_w(pri
 ass_synth_priv::~ass_synth_priv()
 {
     free(g); g=NULL;
-    free(gt2); gt2=NULL;
+    free(gt2); gt2=NULL;    
 }
 
 int ass_synth_priv::generate_tables(double sigma)
@@ -397,30 +398,33 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
 /**
  * \brief blur with [[1,2,1]. [2,4,2], [1,2,1]] kernel.
  */
-static void be_blur(unsigned char *buf, int w, int h, int stride)
-{    
+static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int stride)
+{   
 #pragma omp parallel for    
     for (int y = 0; y < h; y++) {
-        unsigned char *temp_buf=buf+y*stride;
-        int old_sum = 2 * temp_buf[0];
+        unsigned char *src=buf+y*stride;
+        unsigned *dst=tmp_base+y*stride;
+        int old_sum = src[0]+src[1];
         int new_sum = 0;
-        for (int x = 0; x < w - 1; x++) {
-            new_sum = temp_buf[x] + temp_buf[x+1];
-            temp_buf[x] = (old_sum + new_sum) >> 2;
+        for (int x = 1; x < w-1; x++) {
+            new_sum = src[x] + src[x+1];
+            dst[x] = (old_sum + new_sum);
             old_sum = new_sum;
         }
     }
 
 #pragma omp parallel for
-    for (int x = 0; x < w; x++) {
-        unsigned char *temp_buf = buf + x;
-        int old_sum = 2 * temp_buf[0];
+    for (int x = 1; x < w-1; x++) {
+        unsigned *src = tmp_base + x + stride;
+        unsigned char *dst = buf + x + stride;
+        int old_sum = src[-stride] + src[0];
         int new_sum = 0;
-        for (int y = 0; y < h - 1; y++) {
-            new_sum = temp_buf[0] + temp_buf[stride];
-            temp_buf[0] = (old_sum + new_sum) >> 2;
+        for (int y = 1; y < h-1; y++) {
+            new_sum = src[0] + src[stride];
+            dst[0] = (old_sum + new_sum) >> 4;
             old_sum = new_sum;
-            temp_buf += stride;
+            src += stride;
+            dst += stride;
         }
     }
 }
@@ -1005,6 +1009,9 @@ bool Rasterizer::Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, 
             }
         }
     }
+
+    ass_tmp_buf tmp_buf( max((overlay->mOverlayWidth+1)*(overlay->mOverlayPitch+1),0) );    
+    //flyweight<key_value<int, ass_tmp_buf, ass_tmp_buf_get_size>, no_locking> tmp_buf((overlay->mOverlayWidth+1)*(overlay->mOverlayPitch+1));
     // Do some gaussian blur magic    
     if (fGaussianBlur > 0.1)//(fGaussianBlur > 0) return true even if fGaussianBlur very small
     {
@@ -1012,9 +1019,8 @@ bool Rasterizer::Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, 
         flyweight<key_value<double, ass_synth_priv, ass_synth_priv_key>, no_locking> fw_priv_blur(fGaussianBlur);
         const ass_synth_priv& priv_blur = fw_priv_blur.get();
         if (overlay->mOverlayWidth>=priv_blur.g_w && overlay->mOverlayHeight>=priv_blur.g_w)
-        {                             
-            flyweight<key_value<int, ass_tmp_buf, ass_tmp_buf_get_size>, no_locking> tmp_buf((overlay->mOverlayWidth+1)*(overlay->mOverlayHeight+1));
-            ass_gauss_blur(plan_selected, tmp_buf.get().tmp, overlay->mOverlayWidth, overlay->mOverlayHeight, overlay->mOverlayPitch, 
+        {   
+            ass_gauss_blur(plan_selected, tmp_buf.tmp, overlay->mOverlayWidth, overlay->mOverlayHeight, overlay->mOverlayPitch, 
                 priv_blur.gt2, priv_blur.g_r, priv_blur.g_w);
         }
     }
@@ -1022,10 +1028,10 @@ bool Rasterizer::Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, 
     for (int pass = 0; pass < fBlur; pass++)
     {
         if(overlay->mOverlayWidth >= 3 && overlay->mOverlayHeight >= 3)
-        {
+        {            
             int pitch = overlay->mOverlayPitch;
             byte* plan_selected= mWideOutline.empty() ? overlay->mpOverlayBuffer.body : overlay->mpOverlayBuffer.border;
-            be_blur(plan_selected+1+pitch, overlay->mOverlayWidth-2, overlay->mOverlayHeight-2, pitch);
+            be_blur(plan_selected, tmp_buf.tmp, overlay->mOverlayWidth, overlay->mOverlayHeight, pitch);
         }
     }
     return true;
