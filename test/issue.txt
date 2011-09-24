@@ -13,3 +13,11 @@ issue 4: incorrect result with 6.ass(fixed)
 issue 5: incorrect \be effect with 7.ass.(fixed)
 ==============================================================
 issue 6: crashed with 8.ass.(fixed)
+==============================================================
+issue 7: incorrect result, missing shapes produced by \clip, with 9.ass
+==============================================================
+issue 8: incorrect result, false text layout, with 10.ass
+==============================================================
+issue 9: crash. Steps to crash: 1. play any simple subtitle until a line of sub appear with cache options bigger than 0; 2.pause the player and set cache options down to 0.
+==============================================================
+issue 10: incorrect result with 11.ass. \move dosenot work with out-of-range position and \q2 tag.
