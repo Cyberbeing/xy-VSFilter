@@ -21,8 +21,9 @@
 
 #pragma once
 
+#include <boost/smart_ptr.hpp>
 #include <vector>
-#include "..\SubPic\ISubPic.h"
+#include "../SubPic/ISubPic.h"
 #include "xy_malloc.h"
 
 #ifdef _OPENMP
@@ -76,6 +77,7 @@ private:
         const byte* pAlphaMask, int pitch, DWORD color_alpha);
 };
 
+typedef ::boost::shared_ptr<Overlay> SharedPtrOverlay;
 
 class Rasterizer
 {
@@ -130,7 +132,7 @@ public:
 	bool ScanConvert();
 	bool CreateWidenedRegion(int borderX, int borderY);
 	void DeleteOutlines();
-	bool Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, Overlay* overlay);
-	CRect Draw(SubPicDesc& spd, Overlay* overlay, CRect& clipRect, byte* pAlphaMask, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder);
+	bool Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, SharedPtrOverlay overlay);
+	CRect Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRect, byte* pAlphaMask, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder);
 };
 

@@ -928,7 +928,7 @@ void Rasterizer::DeleteOutlines()
     mOutline.clear();
 }
 
-bool Rasterizer::Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, Overlay* overlay)
+bool Rasterizer::Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, SharedPtrOverlay overlay)
 {
     using namespace ::boost::flyweights;
         
@@ -1123,7 +1123,7 @@ static const __int64 _00ff00ff00ff00ff = 0x00ff00ff00ff00ffi64;
 //    switchpts[i*2] contains a colour and switchpts[i*2+1] contains the coordinate to use that colour from
 // fBody tells whether to render the body of the subs.
 // fBorder tells whether to render the border of the subs.
-CRect Rasterizer::Draw(SubPicDesc& spd, Overlay* overlay, CRect& clipRect, byte* pAlphaMask, 
+CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRect, byte* pAlphaMask, 
     int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder)
 {
     CRect bbox(0, 0, 0, 0);

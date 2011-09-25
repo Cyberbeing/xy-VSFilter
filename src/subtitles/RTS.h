@@ -23,9 +23,10 @@
 
 #include "STS.h"
 #include "Rasterizer.h"
-#include "..\SubPic\ISubPic.h"
+#include "../SubPic/ISubPic.h"
 #include <atlcoll.h>
 #include <boost/flyweight/key_value.hpp>
+#include <boost/smart_ptr.hpp>
 #include "mru_cache.h"
 
 #define RTS_POS_SEGMENT_INDEX_BITS  16
@@ -46,12 +47,11 @@ class CPolygon;
 
 struct OverlayList
 {
-    Overlay* overlay;
+    SharedPtrOverlay overlay;
     OverlayList* next;
 
     OverlayList()
     {
-        overlay = NULL;
         next = NULL;
     }
     ~OverlayList()
@@ -60,7 +60,11 @@ struct OverlayList
     }
 };
 
-class CWord : public Rasterizer
+class CWord;
+typedef CWord* PCWord;
+typedef ::boost::shared_ptr<CWord> SharedPtrCWord;
+typedef ::boost::shared_ptr<CPolygon> SharedPtrCPolygon;
+class CWord : public Rasterizer, public ::boost::enable_shared_from_this<CWord>
 {
     bool m_fDrawn;
     CPoint m_p;
@@ -79,12 +83,13 @@ protected:
 
     virtual bool CreatePath() = 0;
 
+    void DoPaint(CPoint p, CPoint org, SharedPtrOverlay overlay);
 public:
     bool m_fWhiteSpaceChar, m_fLineBreak;
 
     FwSTSStyle m_style;
 
-    CPolygon* m_pOpaqueBox;
+    SharedPtrCPolygon m_pOpaqueBox;
 
     int m_ktype, m_kstart, m_kend;
 
@@ -93,11 +98,12 @@ public:
     CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend); // str[0] = 0 -> m_fLineBreak = true (in this case we only need and use the height of m_font from the whole class)
     virtual ~CWord();
 
-    virtual CWord* Copy() = 0;
-    virtual bool Append(CWord* w);
-
-    void Paint(CPoint p, CPoint org, OverlayList* overlay_list);
+    virtual SharedPtrCWord Copy() = 0;
+    virtual bool Append(const SharedPtrCWord& w);
     
+    //use static func instead of obj member to avoid constructing a shared_ptr from this 
+    //shared_from_this may cause a exception if the obj is not owned by a shared_ptr
+    static void Paint(SharedPtrCWord word, CPoint p, CPoint org, OverlayList* overlay_list);    
     
     //friend class CWordCache;
     friend class CWordCacheKey;
@@ -135,9 +141,9 @@ struct OverlayCompatibleKey
 {
     struct CompKey
     {
-        CompKey(const CWord* word_, const CPoint& p_):word(word_),p(p_){}
+        CompKey(const SharedPtrCWord& word_, const CPoint& p_):word(word_),p(p_){}
 
-        const CWord* word;
+        const SharedPtrCWord word;
         CPoint p;
     };
     bool operator()(const CompKey& comp_key, const OverlayKey& key )const
@@ -163,8 +169,8 @@ public:
     CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend);
     CText(const CText& src);
 
-    virtual CWord* Copy();
-    virtual bool Append(CWord* w);
+    virtual SharedPtrCWord Copy();
+    virtual bool Append(const SharedPtrCWord& w);
 };
 
 class CPolygon : public CWord
@@ -187,15 +193,14 @@ public:
 	CPolygon(CPolygon&); // can't use a const reference because we need to use CAtlArray::Copy which expects a non-const reference
     virtual ~CPolygon();
 
-    virtual CWord* Copy();
-    virtual bool Append(CWord* w);
+    virtual SharedPtrCWord Copy();
+    virtual bool Append(const SharedPtrCWord& w);
 };
 
-class CClipper:CPolygon
+class CClipper
 {
 private:
-    CWord* Copy();
-    virtual bool Append(CWord* w);
+    SharedPtrCPolygon m_polygon;
 public:
     CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse);
     virtual ~CClipper();
@@ -205,7 +210,7 @@ public:
     BYTE* m_pAlphaMask;
 };
 
-class CLine : public CAtlList<CWord*>
+class CLine : public CAtlList<SharedPtrCWord>
 {
 public:
     int m_width, m_ascent, m_descent, m_borderX, m_borderY;
@@ -254,7 +259,7 @@ public:
 
     Effect* m_effects[EF_NUMBEROFEFFECTS];
 
-    CAtlList<CWord*> m_words;
+    CAtlList<SharedPtrCWord> m_words;
 
     CClipper* m_pClipper;
 
@@ -279,54 +284,40 @@ std::size_t hash_value(const OverlayKey& key);
 std::size_t hash_value(const CWordCacheKey& key);
 
 //shouldn't use std::pair, or else VC complaining error C2440
-//typedef std::pair<OverlayKey, Overlay*> OverlayMruItem; 
+//typedef std::pair<OverlayKey, SharedPtrOverlay> OverlayMruItem; 
 struct OverlayMruItem
 {
-    OverlayMruItem(const OverlayCompatibleKey::CompKey& comp_key, Overlay* overlay_):
+    OverlayMruItem(const OverlayCompatibleKey::CompKey& comp_key, const SharedPtrOverlay& overlay_):
         overlay_key(*comp_key.word, comp_key.p),overlay(overlay_){}
-    OverlayMruItem(const OverlayKey& overlay_key_, Overlay* overlay_):overlay_key(overlay_key_),overlay(overlay_){}
+    OverlayMruItem(const OverlayKey& overlay_key_, const SharedPtrOverlay& overlay_):overlay_key(overlay_key_),overlay(overlay_){}
 
     OverlayKey overlay_key;
-    Overlay* overlay;
+    SharedPtrOverlay overlay;
 };
 
 struct CWordMruItem
 {
-    CWordMruItem(const CWordCacheKey& word_key_, CWord* word_):word_key(word_key_),word(word_){}
+    CWordMruItem(const CWordCacheKey& word_key_, const SharedPtrCWord& word_):word_key(word_key_),word(word_){}
 
     CWordCacheKey word_key;
-    CWord* word;
+    SharedPtrCWord word;
 };
 
-class OverlayMruCache:public mru_list<
-                                 OverlayMruItem, 
-                                 boost::multi_index::member<OverlayMruItem, 
-                                     OverlayKey, 
-                                     &OverlayMruItem::overlay_key
-                                 >
-                             >
-{
-public:
-    OverlayMruCache(std::size_t max_num_items):mru_list(max_num_items){}
-    std::size_t set_max_num_items(std::size_t max_num_items);
-    void update_cache(const OverlayMruItem& item);
-    void clear();
-};
+typedef mru_list<
+    OverlayMruItem, 
+        boost::multi_index::member<OverlayMruItem, 
+        OverlayKey, 
+        &OverlayMruItem::overlay_key
+    >
+> OverlayMruCache;
 
-class CWordMruCache:public mru_list<
-                               CWordMruItem, 
-                               boost::multi_index::member<CWordMruItem, 
-                                   CWordCacheKey, 
-                                   &CWordMruItem::word_key
-                               >
-                           >
-{
-public:
-    CWordMruCache(std::size_t max_num_items):mru_list(max_num_items){}
-    std::size_t set_max_num_items(std::size_t max_num_items);
-    void update_cache(const CWordMruItem& item);
-    void clear();
-};
+typedef mru_list<
+        CWordMruItem, 
+        boost::multi_index::member<CWordMruItem, 
+        CWordCacheKey, 
+        &CWordMruItem::word_key
+    >
+> CWordMruCache;
 
 class CacheManager
 {

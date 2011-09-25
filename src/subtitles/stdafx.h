@@ -44,3 +44,4 @@
 #include "xy_malloc.h"
 #include "flyweight_base_types.h"
 #include "RTS.h"
+#include "Rasterizer.h"

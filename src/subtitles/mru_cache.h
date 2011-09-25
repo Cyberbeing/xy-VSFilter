@@ -49,6 +49,29 @@ public:
 
   mru_list(std::size_t max_num_items):_max_num_items(max_num_items){}
 
+  void update_cache(const Item& item)
+  {
+      std::pair<iterator,bool> p=_il.push_front(item);
+
+      if(!p.second){                     /* duplicate item */
+          _il.relocate(_il.begin(),p.first); /* put in front */            
+      }
+      else if(_il.size()>_max_num_items){  /* keep the length <= max_num_items */        
+          _il.pop_back();
+      }
+  }
+
+  std::size_t set_max_num_items( std::size_t max_num_items )
+  {
+      _max_num_items = max_num_items;
+      while(_il.size()>_max_num_items)
+      {
+          _il.pop_back();
+      }
+      return _max_num_items;
+  }
+  inline std::size_t get_max_num_items() const { return _max_num_items; }
+
   iterator begin(){return _il.begin();}
   iterator end(){return _il.end();}
   void clear() { _il.clear();}

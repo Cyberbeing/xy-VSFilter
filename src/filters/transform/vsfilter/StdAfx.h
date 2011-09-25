@@ -52,6 +52,7 @@ extern CComModule _Module;
 #include "../../../DSUtil/DSUtil.h"
 #include "../../../DSUtil/SharedInclude.h"
 #include "../../../subtitles/flyweight_base_types.h"
+#include "../../../subtitles/RTS.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

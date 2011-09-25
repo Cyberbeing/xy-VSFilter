@@ -114,7 +114,7 @@ CWord::CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     , m_ktype(ktype), m_kstart(kstart), m_kend(kend)
     , m_fDrawn(false), m_p(INT_MAX, INT_MAX)
     , m_fLineBreak(false), m_fWhiteSpaceChar(false)
-    , m_pOpaqueBox(NULL)
+    //, m_pOpaqueBox(NULL)
 {
     if(m_str.get().IsEmpty())
     {
@@ -128,10 +128,10 @@ CWord::CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
 
 CWord::~CWord()
 {
-    if(m_pOpaqueBox) delete m_pOpaqueBox;
+    //if(m_pOpaqueBox) delete m_pOpaqueBox;
 }
 
-bool CWord::Append(CWord* w)
+bool CWord::Append(const SharedPtrCWord& w)
 {
     if(!(m_style == w->m_style)
             || m_fLineBreak || w->m_fLineBreak
@@ -146,12 +146,12 @@ bool CWord::Append(CWord* w)
     return(true);
 }
 
-void CWord::Paint(CPoint p, CPoint org, OverlayList* overlay_list)
+void CWord::Paint( SharedPtrCWord word, CPoint p, CPoint org, OverlayList* overlay_list )
 {
-    if(!m_str.get() || overlay_list==NULL) return;
-        
-    OverlayCompatibleKey::CompKey comp_key(this, org-p);
-    bool need_transform = NeedTransform();
+    if(!word->m_str.get() || overlay_list==NULL) return;
+
+    OverlayCompatibleKey::CompKey comp_key(word, org-p);
+    bool need_transform = word->NeedTransform();
     if(!need_transform)
     {
         comp_key.p.SetPoint(0,0);
@@ -160,45 +160,52 @@ void CWord::Paint(CPoint p, CPoint org, OverlayList* overlay_list)
     const OverlayMruCache::hashed_cache::iterator iter = overlay_cache.find(comp_key,OverlayCompatibleKey(),OverlayCompatibleKey());
     if(iter==overlay_cache.end())    
     {
-        overlay_list->overlay = new Overlay();
-        if(!m_fDrawn)
-        {
-            if(!CreatePath()) return;
-            if(need_transform)
-                Transform(CPoint((org.x-p.x)*8, (org.y-p.y)*8));
-            if(!ScanConvert()) return;
-            if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
-            {
-                if(!CreateWidenedRegion((int)(m_style.get().outlineWidthX+0.5), (int)(m_style.get().outlineWidthY+0.5))) return;
-            }
-            else if(m_style.get().borderStyle == 1)
-            {
-                if(!CreateOpaqueBox()) return;
-            }
-            m_fDrawn = true;
-            //if(!Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay)) return;
-            if(!Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay)) return;
-        }
-        else
-        {
-            //Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
-            Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
-        }
+        overlay_list->overlay.reset(new Overlay());
+        word->DoPaint(p, org, overlay_list->overlay);
         OverlayMruItem item(comp_key, overlay_list->overlay);
         CacheManager::GetOverlayMruCache()->update_cache(item);
     }
     else
     {
         overlay_list->overlay = iter->overlay;
-    }
-    m_p = p;
-    if(m_style.get().borderStyle == 1)
+    }    
+    if(word->m_style.get().borderStyle == 1)
     {
-        if(!CreateOpaqueBox()) return;
+        if(!word->CreateOpaqueBox()) return;
         overlay_list->next = new OverlayList();
-        m_pOpaqueBox->Paint(p, org, overlay_list->next);
+        Paint(word->m_pOpaqueBox, p, org, overlay_list->next);
     }
 }
+
+void CWord::DoPaint(CPoint p, CPoint org, SharedPtrOverlay overlay)
+{
+    bool need_transform = NeedTransform();
+    if(!m_fDrawn)
+    {
+        if(!CreatePath()) return;
+        if(need_transform)
+            Transform(CPoint((org.x-p.x)*8, (org.y-p.y)*8));
+        if(!ScanConvert()) return;
+        if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
+        {
+            if(!CreateWidenedRegion((int)(m_style.get().outlineWidthX+0.5), (int)(m_style.get().outlineWidthY+0.5))) return;
+        }
+        else if(m_style.get().borderStyle == 1)
+        {
+            if(!CreateOpaqueBox()) return;
+        }
+        m_fDrawn = true;
+        //if(!Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay)) return;
+        if(!Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay)) return;
+    }
+    else
+    {
+        //Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
+        Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay);
+    }
+    m_p = p;
+}
+
 bool CWord::NeedTransform()
 {
     return (fabs(m_style.get().fontScaleX - 100) > 0.000001) ||
@@ -607,7 +614,7 @@ bool CWord::CreateOpaqueBox()
                m_width+w, -h,
                m_width+w, m_ascent+m_descent+h,
                -w, m_ascent+m_descent+h);
-    m_pOpaqueBox = new CPolygon(FwSTSStyle(style), str, 0, 0, 0, 1.0/8, 1.0/8, 0);
+    m_pOpaqueBox.reset( new CPolygon(FwSTSStyle(style), str, 0, 0, 0, 1.0/8, 1.0/8, 0) );
     return(!!m_pOpaqueBox);
 }
 
@@ -648,14 +655,16 @@ CText::CText( const CText& src ):CWord(src.m_style, src.m_str, src.m_ktype, src.
     m_width = src.m_width;
 }
 
-CWord* CText::Copy()
+SharedPtrCWord CText::Copy()
 {
-	return new CText(*this);
+    SharedPtrCWord result(new CText(*this));
+	return result;
 }
 
-bool CText::Append(CWord* w)
+bool CText::Append(const SharedPtrCWord& w)
 {
-    return(dynamic_cast<CText*>(w) && CWord::Append(w));
+    boost::shared_ptr<CText> p = boost::dynamic_pointer_cast<CText>(w);
+    return (p && CWord::Append(w));
 }
 
 bool CText::CreatePath()
@@ -713,15 +722,16 @@ CPolygon::~CPolygon()
 {
 }
 
-CWord* CPolygon::Copy()
+SharedPtrCWord CPolygon::Copy()
 {
-	return(DNew CPolygon(*this));
+    SharedPtrCWord result(DNew CPolygon(*this));
+	return result;
 }
 
-bool CPolygon::Append(CWord* w)
+bool CPolygon::Append(const SharedPtrCWord& w)
 {
     int width = m_width;
-    CPolygon* p = dynamic_cast<CPolygon*>(w);
+    boost::shared_ptr<CPolygon> p = boost::dynamic_pointer_cast<CPolygon>(w);
     if(!p) return(false);
     // TODO
     return(false);
@@ -914,8 +924,8 @@ bool CPolygon::CreatePath()
 // CClipper
 
 CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse)
-    : CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0)
-{
+    : m_polygon( new CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0) )
+{    
     m_size.cx = m_size.cy = 0;
     m_pAlphaMask = NULL;
     if(size.cx < 0 || size.cy < 0 || !(m_pAlphaMask = new BYTE[size.cx*size.cy])) return;
@@ -923,7 +933,7 @@ CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool 
     m_inverse = inverse;
     memset(m_pAlphaMask, 0, size.cx*size.cy);
     OverlayList overlay_list;
-    Paint(CPoint(0, 0), CPoint(0, 0), &overlay_list);
+    CWord::Paint( m_polygon, CPoint(0, 0), CPoint(0, 0), &overlay_list );
     int w = overlay_list.overlay->mOverlayWidth, h = overlay_list.overlay->mOverlayHeight;
     int x = (overlay_list.overlay->mOffsetX+4)>>3, y = (overlay_list.overlay->mOffsetY+4)>>3;
     int xo = 0, yo = 0;
@@ -956,16 +966,6 @@ CClipper::~CClipper()
     m_pAlphaMask = NULL;
 }
 
-CWord* CClipper::Copy()
-{
-    return(new CClipper(m_str.get(), m_size, m_scalex, m_scaley, m_inverse));
-}
-
-bool CClipper::Append(CWord* w)
-{
-    return(false);
-}
-
 // CLine
 
 CLine::~CLine()
@@ -979,30 +979,30 @@ void CLine::Compact()
     POSITION pos = GetHeadPosition();
     while(pos)
     {
-        CWord* w = GetNext(pos);
+        SharedPtrCWord w = GetNext(pos);
         if(!w->m_fWhiteSpaceChar) break;
         m_width -= w->m_width;
-        delete w;
+//        delete w;
         RemoveHead();
     }
     pos = GetTailPosition();
     while(pos)
     {
-        CWord* w = GetPrev(pos);
+        SharedPtrCWord w = GetPrev(pos);
         if(!w->m_fWhiteSpaceChar) break;
         m_width -= w->m_width;
-        delete w;
+//        delete w;
         RemoveTail();
     }
     if(IsEmpty()) return;
     CLine l;
     l.AddTailList(this);
     RemoveAll();
-    CWord* last = NULL;
+    SharedPtrCWord last;
     pos = l.GetHeadPosition();
     while(pos)
     {
-        CWord* w = l.GetNext(pos);
+        SharedPtrCWord w = l.GetNext(pos);
         if(!last || !last->Append(w))
             AddTail(last = w->Copy());
     }
@@ -1010,7 +1010,7 @@ void CLine::Compact()
     pos = GetHeadPosition();
     while(pos)
     {
-        CWord* w = GetNext(pos);
+        SharedPtrCWord w = GetNext(pos);
         if(m_ascent < w->m_ascent) m_ascent = w->m_ascent;
         if(m_descent < w->m_descent) m_descent = w->m_descent;
         if(m_borderX < w->m_style.get().outlineWidthX) m_borderX = (int)(w->m_style.get().outlineWidthX+0.5);
@@ -1024,7 +1024,7 @@ CRect CLine::PaintShadow(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPo
     POSITION pos = GetHeadPosition();
     while(pos)
     {
-        CWord* w = GetNext(pos);
+        SharedPtrCWord w = GetNext(pos);
         if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
         if(w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0)
         {
@@ -1044,7 +1044,7 @@ CRect CLine::PaintShadow(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPo
                 sw[0] =rgb2yuv(sw[0], XY_AYUV);
             }
             OverlayList overlay_list;
-            w->Paint(CPoint(x, y), org, &overlay_list);
+            CWord::Paint(w, CPoint(x, y), org, &overlay_list);
             if(w->m_style.get().borderStyle == 0)
             {
                 bbox |= w->Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw,
@@ -1067,7 +1067,7 @@ CRect CLine::PaintOutline(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CP
     POSITION pos = GetHeadPosition();
     while(pos)
     {
-        CWord* w = GetNext(pos);
+        SharedPtrCWord w = GetNext(pos);
         if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
         if(w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0 && !(w->m_ktype == 2 && time < w->m_kstart))
         {
@@ -1087,7 +1087,7 @@ CRect CLine::PaintOutline(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CP
                 sw[0] =rgb2yuv(sw[0], XY_AYUV);
             }
             OverlayList overlay_list;
-            w->Paint(CPoint(x, y), org, &overlay_list);
+            CWord::Paint(w, CPoint(x, y), org, &overlay_list);
             if(w->m_style.get().borderStyle == 0)
             {
                 bbox |= w->Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true);
@@ -1108,7 +1108,7 @@ CRect CLine::PaintBody(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoin
     POSITION pos = GetHeadPosition();
     while(pos)
     {
-        CWord* w = GetNext(pos);
+        SharedPtrCWord w = GetNext(pos);
         if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
         int x = p.x;
         int y = p.y + m_ascent - w->m_ascent;
@@ -1164,7 +1164,7 @@ CRect CLine::PaintBody(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoin
             sw[4] =rgb2yuv(sw[4], XY_AYUV);
         }
         OverlayList overlay_list;
-        w->Paint(CPoint(x, y), org, &overlay_list);
+        CWord::Paint(w, CPoint(x, y), org, &overlay_list);
         bbox |= w->Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, true, false);
         p.x += w->m_width;
     }
@@ -1212,7 +1212,7 @@ int CSubtitle::GetFullLineWidth(POSITION pos)
     int width = 0;
     while(pos)
     {
-        CWord* w = m_words.GetNext(pos);
+        SharedPtrCWord w = m_words.GetNext(pos);
         if(w->m_fLineBreak) break;
         width += w->m_width;
     }
@@ -1231,7 +1231,7 @@ int CSubtitle::GetWrapWidth(POSITION pos, int maxwidth)
             int width = 0, wordwidth = 0;
             while(pos && width < minwidth)
             {
-                CWord* w = m_words.GetNext(pos);
+                SharedPtrCWord w = m_words.GetNext(pos);
                 wordwidth = w->m_width;
                 if(abs(width + wordwidth) < abs(maxwidth)) width += wordwidth;
             }
@@ -1260,7 +1260,7 @@ CLine* CSubtitle::GetNextLine(POSITION& pos, int maxwidth)
     bool fEmptyLine = true;
     while(pos)
     {
-        CWord* w = m_words.GetNext(pos);
+        SharedPtrCWord w = m_words.GetNext(pos);
         if(ret->m_ascent < w->m_ascent) ret->m_ascent = w->m_ascent;
         if(ret->m_descent < w->m_descent) ret->m_descent = w->m_descent;
         if(ret->m_borderX < w->m_style.get().outlineWidthX) ret->m_borderX = (int)(w->m_style.get().outlineWidthX+0.5);
@@ -1279,7 +1279,7 @@ CLine* CSubtitle::GetNextLine(POSITION& pos, int maxwidth)
         {
             if(m_words.GetAt(pos2)->m_fWhiteSpaceChar != fWSC
                     || m_words.GetAt(pos2)->m_fLineBreak) break;
-            CWord* w2 = m_words.GetNext(pos2);
+            SharedPtrCWord w2 = m_words.GetNext(pos2);
             width += w2->m_width;
         }
         if((ret->m_width += width) <= maxwidth || ret->IsEmpty())
@@ -1691,8 +1691,9 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             {
                 sub->m_words.AddTail(iter->word);
             }
-            else if(CWord* w = new CText(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend))
+            else if(PCWord tmp_ptr = new CText(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend))
             {
+                SharedPtrCWord w(tmp_ptr);
                 sub->m_words.AddTail(w);
                 CWordMruItem item(word_cache_key, w);
                 word_mru_cache->update_cache(item);
@@ -1711,8 +1712,9 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             {
                 sub->m_words.AddTail(iter->word);
             }
-            else if(CWord* w = new CText(style, CStringW(), m_ktype, m_kstart, m_kend))
+            else if(PCWord tmp_ptr = new CText(style, CStringW(), m_ktype, m_kstart, m_kend))
             {
+                SharedPtrCWord w(tmp_ptr);
                 sub->m_words.AddTail(w);
                 CWordMruItem item(word_cache_key, w);
                 word_mru_cache->update_cache(item);
@@ -1731,8 +1733,9 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             {
                 sub->m_words.AddTail(iter->word);
             }
-            else if(CWord* w = new CText(style, CStringW(c), m_ktype, m_kstart, m_kend))
+            else if(PCWord tmp_ptr = new CText(style, CStringW(c), m_ktype, m_kstart, m_kend))
             {
+                SharedPtrCWord w(tmp_ptr);
                 sub->m_words.AddTail(w);
                 CWordMruItem item(word_cache_key, w);
                 word_mru_cache->update_cache(item);
@@ -1752,10 +1755,11 @@ void CRenderedTextSubtitle::ParsePolygon(CSubtitle* sub, CStringW str, const FwS
 {
     if(!sub || !str.GetLength() || !m_nPolygon) return;
 
-    if(CWord* w = new CPolygon(style, str, m_ktype, m_kstart, m_kend, sub->m_scalex/(1<<(m_nPolygon-1)), sub->m_scaley/(1<<(m_nPolygon-1)), m_polygonBaselineOffset))
+    if(PCWord tmp_ptr = new CPolygon(style, str, m_ktype, m_kstart, m_kend, sub->m_scalex/(1<<(m_nPolygon-1)), sub->m_scaley/(1<<(m_nPolygon-1)), m_polygonBaselineOffset))
     {
+        SharedPtrCWord w(tmp_ptr);
         ///Todo: fix me
-        //if( CWord* w_cache = m_wordCache.lookup(*w) )
+        //if( PCWord w_cache = m_wordCache.lookup(*w) )
         //{
         //    sub->m_words.AddTail(w_cache);
         //    delete w;
@@ -3112,72 +3116,6 @@ bool CWordCacheKey::operator==(const CWord& key)const
         m_ktype == key.m_ktype &&
         m_kstart == key.m_kstart &&
         m_kend == key.m_kend);
-}
-
-void OverlayMruCache::update_cache( const OverlayMruItem& item )
-{
-    std::pair<iterator,bool> p=_il.push_front(item);
-    
-    if(!p.second){                     /* duplicate item */
-        _il.relocate(_il.begin(),p.first); /* put in front */            
-    }
-    else if(_il.size()>_max_num_items){  /* keep the length <= max_num_items */        
-        delete _il.rbegin()->overlay;
-        _il.pop_back();
-    }
-}
-
-void OverlayMruCache::clear()
-{
-    for(OverlayMruCache::iterator iter=begin();iter!=end();iter++)
-    {
-        delete iter->overlay;
-    }
-    __super::clear();
-}
-
-std::size_t OverlayMruCache::set_max_num_items( std::size_t max_num_items )
-{
-    _max_num_items = max_num_items;
-    while(_il.size()>_max_num_items)
-    {
-        delete _il.rbegin()->overlay;
-        _il.pop_back();
-    }
-    return _max_num_items;
-}
-
-void CWordMruCache::update_cache( const CWordMruItem& item )
-{
-    std::pair<iterator,bool> p=_il.push_front(item);
-
-    if(!p.second){                     /* duplicate item */
-        _il.relocate(_il.begin(),p.first); /* put in front */            
-    }
-    else if(_il.size()>_max_num_items){  /* keep the length <= max_num_items */        
-        delete _il.rbegin()->word;
-        _il.pop_back();
-    }
-}
-
-void CWordMruCache::clear()
-{
-    for(CWordMruCache::iterator iter=begin();iter!=end();iter++)
-    {
-        delete iter->word;
-    }
-    __super::clear();
-}
-
-std::size_t CWordMruCache::set_max_num_items( std::size_t max_num_items )
-{
-    _max_num_items = max_num_items;
-    while(_il.size()>_max_num_items)
-    {
-        delete _il.rbegin()->word;
-        _il.pop_back();
-    }
-    return _max_num_items;
 }
 
 OverlayMruCache* CacheManager::GetOverlayMruCache()
