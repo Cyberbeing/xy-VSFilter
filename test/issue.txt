@@ -16,7 +16,7 @@ issue 6: crashed with 8.ass.(fixed)
 ==============================================================
 issue 7: incorrect result, missing shapes produced by \clip, with 9.ass; introduced since Commit 43207694492d3793a47432b8e24785bca594b9e7(including it)
 ==============================================================
-issue 8: incorrect result, false text layout, with 10.ass; introduced since Commit 43207694492d3793a47432b8e24785bca594b9e7 (including it)
+issue 8: incorrect result, false text layout, with 10.ass; introduced since Commit 43207694492d3793a47432b8e24785bca594b9e7 (including it)(fixed)
 ==============================================================
 issue 9: crash. Steps to crash: 1. play any simple subtitle until a line of sub appear with cache options bigger than 0; 2.pause the player and set cache options down to 0.(fixed)
 ==============================================================

@@ -1180,6 +1180,7 @@ CSubtitle::CSubtitle()
     m_pClipper = NULL;
     m_clipInverse = false;
     m_scalex = m_scaley = 1;
+    m_fAnimated2 = false;
 }
 
 CSubtitle::~CSubtitle()
@@ -2163,7 +2164,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& 
                            : 0;
                 m_kend = m_kstart;
                 break;
-                sub->m_fAnimated = true;//fix me: define m_fAnimated m_fAnimated2 strictly
+                sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
             }
         case CMD_kf:
         case CMD_K:
@@ -2173,7 +2174,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& 
                 m_kend += !p.IsEmpty()
                           ? wcstol(p, NULL, 10)*10
                           : 1000;
-                sub->m_fAnimated = true;//fix me: define m_fAnimated m_fAnimated2 strictly
+                sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
             }
         case CMD_ko:
@@ -2183,7 +2184,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& 
                 m_kend += !p.IsEmpty()
                           ? wcstol(p, NULL, 10)*10
                           : 1000;
-                sub->m_fAnimated = true;//fix me: define m_fAnimated m_fAnimated2 strictly
+                sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
             }
         case CMD_k:
@@ -2193,7 +2194,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& 
                 m_kend += !p.IsEmpty()
                           ? wcstol(p, NULL, 10)*10
                           : 1000;
-                sub->m_fAnimated = true;//fix me: define m_fAnimated m_fAnimated2 strictly
+                sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
             }
         case CMD_move: // {\move(x1=param[0], y1=param[1], x2=param[2], y2=param[3][, t1=t[0], t2=t[1]])}
@@ -2586,7 +2587,7 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
         }
         str = str.Mid(i);
     }
-    sub->m_fAnimated2 = sub->m_fAnimated;
+    sub->m_fAnimated2 |= sub->m_fAnimated;
     if(sub->m_effects[EF_FADE] || sub->m_effects[EF_BANNER] || sub->m_effects[EF_SCROLL]
             || (sub->m_effects[EF_MOVE] && (sub->m_effects[EF_MOVE]->t[1]!=sub->m_effects[EF_MOVE]->t[0])))
         sub->m_fAnimated2 = true;
