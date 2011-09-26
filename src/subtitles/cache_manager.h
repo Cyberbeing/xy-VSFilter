@@ -12,7 +12,7 @@ class CWordCacheKey
 public:
     CWordCacheKey(const CWord& word);
     CWordCacheKey(const CWordCacheKey& key);
-    CWordCacheKey(const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend);
+    CWordCacheKey(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend);
     bool operator==(const CWordCacheKey& key)const;
     bool operator==(const CWord& key)const;
 
@@ -26,7 +26,7 @@ class OverlayKey: public CWordCacheKey
 public:
     OverlayKey(const CWord& word, const POINT& p, const POINT& org):CWordCacheKey(word),m_p(p),m_org(org) { }
     OverlayKey(const OverlayKey& key):CWordCacheKey(key),m_p(key.m_p),m_org(key.m_org) { }
-    OverlayKey(const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend, const POINT& p, const POINT& org)
+    OverlayKey(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend, const POINT& p, const POINT& org)
         :CWordCacheKey(style, str, ktype, kstart, kend),m_p(p), m_org(org) { }
     bool operator==(const OverlayKey& key)const 
     { 

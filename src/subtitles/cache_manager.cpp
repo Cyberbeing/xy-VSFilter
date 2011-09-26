@@ -38,7 +38,7 @@ CWordCacheKey::CWordCacheKey( const CWordCacheKey& key )
     m_kend = key.m_kend;
 }
 
-CWordCacheKey::CWordCacheKey( const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend )
+CWordCacheKey::CWordCacheKey( const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend )
     :m_style(style),m_str(str),m_ktype(ktype),m_kstart(kstart),m_kend(m_kend)
 {
 
