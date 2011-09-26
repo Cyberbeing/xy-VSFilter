@@ -24,37 +24,21 @@ public:
 class OverlayKey: public CWordCacheKey
 {
 public:
-    OverlayKey(const CWord& word, const POINT& p):CWordCacheKey(word),m_p(p) { }
-    OverlayKey(const OverlayKey& key):CWordCacheKey(key) { m_p.x=key.m_p.x; m_p.y=key.m_p.y; }
-    OverlayKey(const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend,POINT p):
-    CWordCacheKey(style, str, ktype, kstart, kend),m_p(p) { }
-    bool operator==(const OverlayKey& key)const { return (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) && ((CWordCacheKey)(*this)==(CWordCacheKey)key); }    
-    bool CompareTo(const CWord& word, const POINT& p)const { return (m_p.x==p.x) && (m_p.y==p.y) && ((CWordCacheKey)(*this)==word); }
-
-    POINT m_p;
-};
-
-struct OverlayCompatibleKey
-{
-    struct CompKey
-    {
-        CompKey(const SharedPtrCWord& word_, const CPoint& p_):word(word_),p(p_){}
-
-        const SharedPtrCWord word;
-        CPoint p;
-    };
-    bool operator()(const CompKey& comp_key, const OverlayKey& key )const
-    {
-        return key.CompareTo(*comp_key.word,comp_key.p);
+    OverlayKey(const CWord& word, const POINT& p, const POINT& org):CWordCacheKey(word),m_p(p),m_org(org) { }
+    OverlayKey(const OverlayKey& key):CWordCacheKey(key),m_p(key.m_p),m_org(key.m_org) { }
+    OverlayKey(const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend, const POINT& p, const POINT& org)
+        :CWordCacheKey(style, str, ktype, kstart, kend),m_p(p), m_org(org) { }
+    bool operator==(const OverlayKey& key)const 
+    { 
+        return ((CWordCacheKey)(*this)==(CWordCacheKey)key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
+          && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y); 
+    }    
+    bool CompareTo(const CWord& word, const POINT& p, const POINT& org)const 
+    { 
+        return ((CWordCacheKey)(*this)==word) && (m_p.x==p.x) && (m_p.y==p.y) && (m_org.x==org.x) && (m_org.y==org.y);
     }
-    bool operator()(const OverlayKey& key, const CompKey& comp_key )const
-    {
-        return key.CompareTo(*comp_key.word,comp_key.p);
-    }
-    std::size_t operator()(const CompKey& comp_key)const
-    {
-        return hash_value(*comp_key.word) ^ comp_key.p.x ^ comp_key.p.y;
-    }
+
+    POINT m_p, m_org;    
 };
 
 std::size_t hash_value(const CWord& key);
@@ -65,12 +49,10 @@ std::size_t hash_value(const CWordCacheKey& key);
 //typedef std::pair<OverlayKey, SharedPtrOverlay> OverlayMruItem; 
 struct OverlayMruItem
 {
-    OverlayMruItem(const OverlayCompatibleKey::CompKey& comp_key, const SharedPtrOverlay& overlay_):
-overlay_key(*comp_key.word, comp_key.p),overlay(overlay_){}
-OverlayMruItem(const OverlayKey& overlay_key_, const SharedPtrOverlay& overlay_):overlay_key(overlay_key_),overlay(overlay_){}
+    OverlayMruItem(const OverlayKey& overlay_key_, const SharedPtrOverlay& overlay_):overlay_key(overlay_key_),overlay(overlay_){}
 
-OverlayKey overlay_key;
-SharedPtrOverlay overlay;
+    OverlayKey overlay_key;
+    SharedPtrOverlay overlay;
 };
 
 struct CWordMruItem

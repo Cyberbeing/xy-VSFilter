@@ -133,19 +133,20 @@ void CWord::Paint( SharedPtrCWord word, CPoint p, CPoint org, OverlayList* overl
 {
     if(!word->m_str.get() || overlay_list==NULL) return;
 
-    OverlayCompatibleKey::CompKey comp_key(word, org-p);
+    OverlayKey overlay_key(*word, CPoint(0,0), CPoint(org-p));
     bool need_transform = word->NeedTransform();
     if(!need_transform)
     {
-        comp_key.p.SetPoint(0,0);
+        overlay_key.m_org.x=0;
+        overlay_key.m_org.y=0;
     }
     const OverlayMruCache::hashed_cache& overlay_cache = CacheManager::GetOverlayMruCache()->get_hashed_cache();    
-    const OverlayMruCache::hashed_cache::iterator iter = overlay_cache.find(comp_key,OverlayCompatibleKey(),OverlayCompatibleKey());
+    const OverlayMruCache::hashed_cache::iterator iter = overlay_cache.find(overlay_key);
     if(iter==overlay_cache.end())    
     {
         overlay_list->overlay.reset(new Overlay());
         word->DoPaint(p, org, overlay_list->overlay);
-        OverlayMruItem item(comp_key, overlay_list->overlay);
+        OverlayMruItem item(overlay_key, overlay_list->overlay);
         CacheManager::GetOverlayMruCache()->update_cache(item);
     }
     else
