@@ -60,6 +60,9 @@
     <ClCompile Include="xy_malloc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cache_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCDecoder.h">
@@ -123,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mru_cache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cache_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

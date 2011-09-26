@@ -23,30 +23,13 @@
 #include <math.h>
 #include <time.h>
 #include "RTS.h"
+#include "cache_manager.h"
 #include "../SubPic/MemSubPic.h"
 #include "../subpic/color_conv_table.h"
 
 // WARNING: this isn't very thread safe, use only one RTS a time.
 static HDC g_hDC;
 static int g_hDC_refcnt = 0;
-
-CWordMruCache* CacheManager::s_word_mru_cache = NULL;
-OverlayMruCache* CacheManager::s_overlay_mru_cache = NULL;
-
-std::size_t hash_value(const CWord& key)
-{
-    return( CStringElementTraits<CString>::Hash(key.m_str.get()) );
-}
-
-std::size_t hash_value(const CWordCacheKey& key)
-{
-    return( CStringElementTraits<CString>::Hash(key.m_str.get()) );
-}
-
-std::size_t hash_value(const OverlayKey& key)
-{
-    return( CStringElementTraits<CString>::Hash(key.m_str.get()) ^ key.m_p.x ^ key.m_p.y );
-}
 
 enum XY_MSP_SUBTYPE {XY_AYUV, XY_AUYV};
 static inline DWORD rgb2yuv(DWORD argb, XY_MSP_SUBTYPE type)
@@ -3075,64 +3058,4 @@ STDMETHODIMP CRenderedTextSubtitle::Reload()
     CFileStatus s;
     if(!CFile::GetStatus(m_path, s)) return E_FAIL;
     return !m_path.IsEmpty() && Open(m_path, DEFAULT_CHARSET) ? S_OK : E_FAIL;
-}
-
-CWordCacheKey::CWordCacheKey( const CWord& word )
-{
-    m_str = word.m_str;
-    m_style = word.m_style;
-    m_ktype = word.m_ktype;
-    m_kstart = word.m_kstart;
-    m_kend = word.m_kend;
-}
-
-CWordCacheKey::CWordCacheKey( const CWordCacheKey& key )
-{
-    m_str = key.m_str;
-    m_style = key.m_style;
-    m_ktype = key.m_ktype;
-    m_kstart = key.m_kstart;
-    m_kend = key.m_kend;
-}
-
-CWordCacheKey::CWordCacheKey( const STSStyle& style, const CStringW& str, int ktype, int kstart, int kend )
-    :m_style(style),m_str(str),m_ktype(ktype),m_kstart(kstart),m_kend(m_kend)
-{
-
-}
-
-bool CWordCacheKey::operator==( const CWordCacheKey& key ) const
-{
-    return (m_str == key.m_str &&
-            m_style == key.m_style &&
-            m_ktype == key.m_ktype &&
-            m_kstart == key.m_kstart &&
-            m_kend == key.m_kend);
-}
-
-bool CWordCacheKey::operator==(const CWord& key)const
-{
-    return (m_str == key.m_str &&
-        m_style == key.m_style &&
-        m_ktype == key.m_ktype &&
-        m_kstart == key.m_kstart &&
-        m_kend == key.m_kend);
-}
-
-OverlayMruCache* CacheManager::GetOverlayMruCache()
-{
-    if(s_overlay_mru_cache==NULL)
-    {
-        s_overlay_mru_cache = new OverlayMruCache(OVERLAY_CACHE_ITEM_NUM);
-    }
-    return s_overlay_mru_cache;
-}
-
-CWordMruCache* CacheManager::GetCWordMruCache()
-{
-    if(s_word_mru_cache==NULL)
-    {
-        s_word_mru_cache = new CWordMruCache(OVERLAY_CACHE_ITEM_NUM);
-    }
-    return s_word_mru_cache;
 }

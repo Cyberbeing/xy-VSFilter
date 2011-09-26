@@ -101,6 +101,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="cache_manager.cpp" />
     <ClCompile Include="CCDecoder.cpp" />
     <ClCompile Include="GFN.cpp" />
     <ClCompile Include="Rasterizer.cpp">
@@ -141,6 +142,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cache_manager.h" />
     <ClInclude Include="CCDecoder.h" />
     <ClInclude Include="flyweight_base_types.h" />
     <ClInclude Include="GFN.h" />
