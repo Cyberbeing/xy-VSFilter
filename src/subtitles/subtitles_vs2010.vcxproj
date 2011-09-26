@@ -126,6 +126,9 @@
     <ClCompile Include="STS.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">Use</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="subpixel_position_controler.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">Use</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SubtitleInputPin.cpp" />
     <ClCompile Include="TextFile.cpp" />
     <ClCompile Include="USFSubtitles.cpp" />
@@ -154,6 +157,7 @@
     <ClInclude Include="SSF.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="STS.h" />
+    <ClInclude Include="subpixel_position_controler.h" />
     <ClInclude Include="SubtitleInputPin.h" />
     <ClInclude Include="TextFile.h" />
     <ClInclude Include="text_reader.h" />

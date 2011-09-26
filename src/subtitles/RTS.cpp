@@ -26,6 +26,7 @@
 #include "cache_manager.h"
 #include "../SubPic/MemSubPic.h"
 #include "../subpic/color_conv_table.h"
+#include "subpixel_position_controler.h"
 
 // WARNING: this isn't very thread safe, use only one RTS a time.
 static HDC g_hDC;
@@ -129,11 +130,13 @@ bool CWord::Append(const SharedPtrCWord& w)
     return(true);
 }
 
-void CWord::Paint( SharedPtrCWord word, CPoint p, CPoint org, OverlayList* overlay_list )
+void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, OverlayList* overlay_list )
 {
     if(!word->m_str.get() || overlay_list==NULL) return;
 
-    OverlayKey overlay_key(*word, CPoint(0,0), CPoint(org-p));
+    CPoint psub = SubpixelPositionControler::GetGlobalControler().GetSubpixel(p);
+    CPoint trans_org = org - p;
+    OverlayKey overlay_key(*word, psub, trans_org);
     bool need_transform = word->NeedTransform();
     if(!need_transform)
     {
@@ -145,7 +148,7 @@ void CWord::Paint( SharedPtrCWord word, CPoint p, CPoint org, OverlayList* overl
     if(iter==overlay_cache.end())    
     {
         overlay_list->overlay.reset(new Overlay());
-        word->DoPaint(p, org, overlay_list->overlay);
+        word->DoPaint(psub, trans_org, overlay_list->overlay);
         OverlayMruItem item(overlay_key, overlay_list->overlay);
         CacheManager::GetOverlayMruCache()->update_cache(item);
     }
@@ -161,14 +164,14 @@ void CWord::Paint( SharedPtrCWord word, CPoint p, CPoint org, OverlayList* overl
     }
 }
 
-void CWord::DoPaint(CPoint p, CPoint org, SharedPtrOverlay overlay)
+void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay overlay)
 {
     bool need_transform = NeedTransform();
     if(!m_fDrawn)
     {
         if(!CreatePath()) return;
         if(need_transform)
-            Transform(CPoint((org.x-p.x)*8, (org.y-p.y)*8));
+            Transform(CPoint(trans_org.x*8, trans_org.y*8));
         if(!ScanConvert()) return;
         if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
         {
@@ -178,16 +181,14 @@ void CWord::DoPaint(CPoint p, CPoint org, SharedPtrOverlay overlay)
         {
             if(!CreateOpaqueBox()) return;
         }
-        m_fDrawn = true;
-        //if(!Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay)) return;
-        if(!Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay)) return;
+        m_fDrawn = true;        
+        if(!Rasterize(psub.x, psub.y, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay)) return;
     }
     else
     {
-        //Rasterize(p.x&7, p.y&7, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay_list->overlay);
-        Rasterize(0, 0, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay);
+        Rasterize(psub.x, psub.y, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay);
     }
-    m_p = p;
+    m_p = psub;
 }
 
 bool CWord::NeedTransform()
