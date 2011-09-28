@@ -54,8 +54,14 @@ CDirectVobSub::CDirectVobSub()
 
     m_overlay_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), 256);
     if(m_overlay_cache_max_item_num<0) m_overlay_cache_max_item_num = 0;
+    
     m_word_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_WORD_CAHCHE_MAX_ITEM_NUM), 512);
 	if(m_word_cache_max_item_num<0) m_word_cache_max_item_num = 0;
+    
+    m_subpixel_pos_level = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), SubpixelPositionControler::FOUR_X_FOUR);
+    if(m_subpixel_pos_level<0) m_subpixel_pos_level=0;
+    else if(m_subpixel_pos_level>=SubpixelPositionControler::MAX_COUNT) m_subpixel_pos_level=SubpixelPositionControler::EIGHT_X_EIGHT;
+
     pData = NULL;
 	if(theApp.GetProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), &pData, &nSize) && pData)
 	{
@@ -484,6 +490,25 @@ STDMETHODIMP CDirectVobSub::put_CWordCacheMaxItemNum(int word_cache_max_item_num
     return S_OK;
 }
 
+STDMETHODIMP CDirectVobSub::get_SubpixelPositionLevel(int* subpixel_pos_level)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(subpixel_pos_level) *subpixel_pos_level = m_subpixel_pos_level;
+
+    return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::put_SubpixelPositionLevel(int subpixel_pos_level)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(m_subpixel_pos_level == subpixel_pos_level || subpixel_pos_level<0 || subpixel_pos_level>=SubpixelPositionControler::MAX_COUNT) return S_FALSE;
+    m_subpixel_pos_level = subpixel_pos_level;
+
+    return S_OK;
+}
+
 STDMETHODIMP CDirectVobSub::UpdateRegistry()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
@@ -514,6 +539,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), m_overlay_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_WORD_CAHCHE_MAX_ITEM_NUM), m_word_cache_max_item_num);
+    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), m_subpixel_pos_level);
 	return S_OK;
 }
 

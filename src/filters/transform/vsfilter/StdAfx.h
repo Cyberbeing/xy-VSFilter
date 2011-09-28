@@ -54,6 +54,7 @@ extern CComModule _Module;
 #include "../../../subtitles/flyweight_base_types.h"
 #include "../../../subtitles/RTS.h"
 #include "../../../subtitles/cache_manager.h"
+#include "../../../subtitles/subpixel_position_controler.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

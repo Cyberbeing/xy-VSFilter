@@ -79,6 +79,7 @@
 #define IDS_RT_PAR_ACCURATE_SIZE        174
 #define IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM 175
 #define IDS_RP_WORD_CAHCHE_MAX_ITEM_NUM 176
+#define IDS_RP_SUBPIXEL_POS_LEVEL       177
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
@@ -159,6 +160,7 @@
 #define IDC_SPINPathCache               317
 #define IDC_SPINOverlayCache            318
 #define IDC_SPLIT1                      319
+#define IDC_COMBO_SUBPIXEL_POS          320
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
 #define IDC_LABLE_OVERLAY_CACHE         403
@@ -191,9 +193,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        231
+#define _APS_NEXT_RESOURCE_VALUE        232
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         320
+#define _APS_NEXT_CONTROL_VALUE         321
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif

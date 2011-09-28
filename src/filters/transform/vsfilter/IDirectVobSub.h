@@ -270,6 +270,14 @@ extern "C" {
         STDMETHOD(put_CWordCacheMaxItemNum) (THIS_
             int word_cache_max_item_num
             ) PURE;
+
+        STDMETHOD(get_SubpixelPositionLevel) (THIS_
+            int* subpixel_pos_level
+            ) PURE;
+
+        STDMETHOD(put_SubpixelPositionLevel) (THIS_
+            int subpixel_pos_level
+            ) PURE;
 	};
 
     [uuid("FE6EC6A0-21CA-4970-9EF0-B296F7F38AF0")]

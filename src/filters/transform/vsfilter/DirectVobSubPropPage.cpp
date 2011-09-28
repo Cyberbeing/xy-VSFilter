@@ -772,6 +772,7 @@ CDVSBasePPage(NAME("DirectVobSub More Property Page"), pUnk, IDD_DVSMOREPAGE, ID
 {
     BindControl(IDC_SPINPathCache, m_path_cache);
     BindControl(IDC_SPINOverlayCache, m_overlay_cache);
+    BindControl(IDC_COMBO_SUBPIXEL_POS, m_combo_subpixel_pos);
 }
 
 bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -785,11 +786,13 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
     {
         m_pDirectVobSub->put_OverlayCacheMaxItemNum(m_overlay_cache_max_item_num);
         m_pDirectVobSub->put_CWordCacheMaxItemNum(m_word_cache_max_item_num);
+        m_pDirectVobSub->put_SubpixelPositionLevel(m_subpixel_pos_level);
     }
     else
     {
         m_pDirectVobSub->get_OverlayCacheMaxItemNum(&m_overlay_cache_max_item_num);
         m_pDirectVobSub->get_CWordCacheMaxItemNum(&m_word_cache_max_item_num);
+        m_pDirectVobSub->get_SubpixelPositionLevel(&m_subpixel_pos_level);
     }
 }
 
@@ -799,6 +802,14 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
     {
         m_overlay_cache_max_item_num = m_overlay_cache.GetPos32();
         m_word_cache_max_item_num = m_path_cache.GetPos32();
+        if (m_combo_subpixel_pos.GetCurSel() != CB_ERR)
+        {
+            m_subpixel_pos_level = m_combo_subpixel_pos.GetCurSel();
+        }
+        else
+        {
+            m_subpixel_pos_level = 0;
+        }
     }
     else
     {
@@ -807,6 +818,19 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
 
         m_overlay_cache.SetPos32(m_overlay_cache_max_item_num);
         m_path_cache.SetPos32(m_word_cache_max_item_num);
+        int temp = m_subpixel_pos_level;
+        if(m_subpixel_pos_level < 0)
+            temp = 0;
+        else if ( m_subpixel_pos_level >= 4 )
+            temp = 3;
+
+        m_combo_subpixel_pos.ResetContent();
+        m_combo_subpixel_pos.AddString( CString(_T("NONE(fastest)")) );m_combo_subpixel_pos.SetItemData(0, 0);
+        m_combo_subpixel_pos.AddString( CString(_T("2x2")) );m_combo_subpixel_pos.SetItemData(1, 1);
+        m_combo_subpixel_pos.AddString( CString(_T("4x4")) );m_combo_subpixel_pos.SetItemData(2, 2);
+        m_combo_subpixel_pos.AddString( CString(_T("8x8(vsfiler2.39 default)")) );m_combo_subpixel_pos.SetItemData(3, 3);
+
+        m_combo_subpixel_pos.SetCurSel( temp );        
     }
 }
 

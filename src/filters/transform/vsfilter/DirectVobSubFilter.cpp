@@ -1086,6 +1086,19 @@ STDMETHODIMP CDirectVobSubFilter::put_CWordCacheMaxItemNum( int word_cache_max_i
     return hr;
 }
 
+STDMETHODIMP CDirectVobSubFilter::put_SubpixelPositionLevel(int subpixel_pos_level)
+{
+    CAutoLock cAutolock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::put_SubpixelPositionLevel(subpixel_pos_level);
+
+    if(hr == NOERROR)
+    {
+        SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(subpixel_pos_level) );
+    }
+
+    return hr;
+}
+
 STDMETHODIMP CDirectVobSubFilter::get_MediaFPS(bool* fEnabled, double* fps)
 {
 	HRESULT hr = CDirectVobSub::get_MediaFPS(fEnabled, fps);
