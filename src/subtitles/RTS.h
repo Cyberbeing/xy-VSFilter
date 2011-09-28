@@ -70,10 +70,10 @@ class CWord : public Rasterizer, public ::boost::enable_shared_from_this<CWord>
     CPoint m_p;
 
     bool NeedTransform();
-    void Transform(CPoint org);
+    void Transform(const CPoint& org);
 
-	void Transform_C( CPoint &org );
-	void Transform_SSE2( CPoint &org );
+	void Transform_C(const CPoint &org );
+	void Transform_SSE2(const CPoint &org );
     bool CreateOpaqueBox();
 
     CWord(const CWord&);//disable default copy constructor

@@ -202,7 +202,7 @@ bool CWord::NeedTransform()
            (fabs(m_style.get().fontShiftY) > 0.000001);
 }
 
-void CWord::Transform(CPoint org)
+void CWord::Transform(const CPoint& org)
 {
 #ifdef _VSMOD
 	// CPUID from VDub
@@ -215,7 +215,7 @@ void CWord::Transform(CPoint org)
 		Transform_C(org);
 }
 
-void CWord::Transform_C( CPoint &org )
+void CWord::Transform_C(const CPoint &org )
 {
 	double scalex = m_style.get().fontScaleX/100;
 	double scaley = m_style.get().fontScaleY/100;
@@ -321,7 +321,7 @@ void CWord::Transform_C( CPoint &org )
 	}
 }
 
-void CWord::Transform_SSE2( CPoint &org )
+void CWord::Transform_SSE2(const CPoint &org )
 {
 	// __m128 union data type currently not supported with Intel C++ Compiler, so just call C version
 #ifdef __ICL
