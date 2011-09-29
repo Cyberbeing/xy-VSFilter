@@ -24,6 +24,6 @@ issue 9: crash. Steps to crash: 1. play any simple subtitle until a line of sub 
 issue 10: incorrect result with 11.ass. \move dosenot work with out-of-range position and \q2 tag.
 ==============================================================
 issue 11: incorrect result, improper cliper position with 12.ass.
-more: on videos with 720 x 400 resolution, the result is correct, but on 1280 x 720, the result is wrong. Turn off compiler option /arch:SSE2, both resolutions above get the right result. It also applies to Issue 9. Maybe /arch:SSE2 option affects some internal floating point caculation such that an overflow occur. 
+more: on videos with 720 x 400 resolution, the result is correct, but on 1280 x 720, the result is wrong. Turn off compiler option /arch:SSE2, both resolutions above get the right result. It also applies to Issue 7. Maybe /arch:SSE2 option affects some internal floating point caculation such that an overflow occur. 
 ==============================================================
 issue 12: lags when scripts have blur tags, due to the complex gaussian table generation.(fixed)
