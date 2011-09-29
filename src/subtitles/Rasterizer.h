@@ -40,6 +40,25 @@ typedef struct {
     unsigned char *buffer;      // w x h buffer
 } Bitmap;
 
+struct PathData
+{
+public:
+    PathData();
+    ~PathData();
+
+    void _TrashPath();
+    bool BeginPath(HDC hdc);
+    bool EndPath(HDC hdc);
+    bool PartialBeginPath(HDC hdc, bool bClearPath);
+    bool PartialEndPath(HDC hdc, long dx, long dy);
+
+    BYTE* mpPathTypes;
+    POINT* mpPathPoints;
+    int mPathPoints;
+};
+
+typedef ::boost::shared_ptr<PathData> SharedPtrPathData;
+
 struct Overlay
 {
 public:
@@ -83,12 +102,7 @@ class Rasterizer
 {
 	bool fFirstSet;
 	CPoint firstp, lastp;
-
-protected:
-	BYTE* mpPathTypes;
-	POINT* mpPathPoints;
-	int mPathPoints;
-
+    
 private:
 	int mWidth, mHeight;
 
@@ -114,22 +128,17 @@ protected:
 	int mPathOffsetX, mPathOffsetY;	
 
 private:
-	void _TrashPath();
 	void _ReallocEdgeBuffer(int edges);
-	void _EvaluateBezier(int ptbase, bool fBSpline);
-	void _EvaluateLine(int pt1idx, int pt2idx);
+	void _EvaluateBezier(const PathData& path_data, int ptbase, bool fBSpline);
+	void _EvaluateLine(const PathData& path_data, int pt1idx, int pt2idx);
 	void _EvaluateLine(int x0, int y0, int x1, int y1);	
 	static void _OverlapRegion(tSpanBuffer& dst, tSpanBuffer& src, int dx, int dy);
 
 public:
 	Rasterizer();
 	virtual ~Rasterizer();
-
-	bool BeginPath(HDC hdc);
-	bool EndPath(HDC hdc);
-	bool PartialBeginPath(HDC hdc, bool bClearPath);
-	bool PartialEndPath(HDC hdc, long dx, long dy);
-	bool ScanConvert();
+    
+	bool ScanConvert(SharedPtrPathData path_data);
 	bool CreateWidenedRegion(int borderX, int borderY);
 	void DeleteOutlines();
 	bool Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, SharedPtrOverlay overlay);

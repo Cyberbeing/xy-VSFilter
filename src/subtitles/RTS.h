@@ -70,10 +70,10 @@ class CWord : public Rasterizer, public ::boost::enable_shared_from_this<CWord>
     CPoint m_p;
 
     bool NeedTransform();
-    void Transform(const CPoint& org);
+    void Transform(SharedPtrPathData path_data, const CPoint& org);
 
-	void Transform_C(const CPoint &org );
-	void Transform_SSE2(const CPoint &org );
+	void Transform_C(SharedPtrPathData path_data, const CPoint &org );
+	void Transform_SSE2(SharedPtrPathData path_data, const CPoint &org );
     bool CreateOpaqueBox();
 
     CWord(const CWord&);//disable default copy constructor
@@ -81,7 +81,7 @@ class CWord : public Rasterizer, public ::boost::enable_shared_from_this<CWord>
 protected:
     FwStringW m_str;
 
-    virtual bool CreatePath() = 0;
+    virtual bool CreatePath(SharedPtrPathData path_data) = 0;
 
     void DoPaint(const CPoint& p, const CPoint& org, SharedPtrOverlay overlay);
 public:
@@ -113,7 +113,7 @@ public:
 class CText : public CWord
 {
 protected:
-    virtual bool CreatePath();
+    virtual bool CreatePath(SharedPtrPathData path_data);
 
 public:
     CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend);
@@ -136,7 +136,7 @@ protected:
     CAtlArray<BYTE> m_pathTypesOrg;
     CAtlArray<CPoint> m_pathPointsOrg;
 
-    virtual bool CreatePath();
+    virtual bool CreatePath(SharedPtrPathData path_data);
 
 public:
     CPolygon(const FwSTSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline);

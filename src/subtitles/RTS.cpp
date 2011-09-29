@@ -169,10 +169,11 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     bool need_transform = NeedTransform();
     if(!m_fDrawn)
     {
-        if(!CreatePath()) return;
+        SharedPtrPathData path_data(new PathData());
+        if(!CreatePath(path_data)) return;
         if(need_transform)
-            Transform(CPoint(trans_org.x*8, trans_org.y*8));
-        if(!ScanConvert()) return;
+            Transform(path_data, CPoint(trans_org.x*8, trans_org.y*8));
+        if(!ScanConvert(path_data)) return;
         if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
         {
             if(!CreateWidenedRegion((int)(m_style.get().outlineWidthX+0.5), (int)(m_style.get().outlineWidthY+0.5))) return;
@@ -202,20 +203,20 @@ bool CWord::NeedTransform()
            (fabs(m_style.get().fontShiftY) > 0.000001);
 }
 
-void CWord::Transform(const CPoint& org)
+void CWord::Transform(SharedPtrPathData path_data, const CPoint& org)
 {
 #ifdef _VSMOD
 	// CPUID from VDub
 	bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
 
 	if(fSSE2) {	// SSE code
-		Transform_SSE2(org);
+		Transform_SSE2(path_data, org);
 	} else		// C-code
 #endif
-		Transform_C(org);
+		Transform_C(path_data, org);
 }
 
-void CWord::Transform_C(const CPoint &org )
+void CWord::Transform_C(SharedPtrPathData path_data, const CPoint &org )
 {
 	double scalex = m_style.get().fontScaleX/100;
 	double scaley = m_style.get().fontScaleY/100;
@@ -242,18 +243,18 @@ void CWord::Transform_C(const CPoint &org )
 
 	bool is_dist = m_style.get().mod_distort.enabled;
 	if (is_dist) {
-		for(int i = 0; i < mPathPoints; i++) {
-			if(minx > mpPathPoints[i].x) {
-				minx = mpPathPoints[i].x;
+		for(int i = 0; i < path_data->mPathPoints; i++) {
+			if(minx > path_data->mpPathPoints[i].x) {
+				minx = path_data->mpPathPoints[i].x;
 			}
-			if(miny > mpPathPoints[i].y) {
-				miny = mpPathPoints[i].y;
+			if(miny > path_data->mpPathPoints[i].y) {
+				miny = path_data->mpPathPoints[i].y;
 			}
-			if(maxx < mpPathPoints[i].x) {
-				maxx = mpPathPoints[i].x;
+			if(maxx < path_data->mpPathPoints[i].x) {
+				maxx = path_data->mpPathPoints[i].x;
 			}
-			if(maxy < mpPathPoints[i].y) {
-				maxy = mpPathPoints[i].y;
+			if(maxy < path_data->mpPathPoints[i].y) {
+				maxy = path_data->mpPathPoints[i].y;
 			}
 		}
 
@@ -269,11 +270,11 @@ void CWord::Transform_C(const CPoint &org )
 	}
 #endif
 
-	for (int i = 0; i < mPathPoints; i++) {
+	for (int i = 0; i < path_data->mPathPoints; i++) {
 		double x, y, z, xx, yy, zz;
 
-		x = mpPathPoints[i].x;
-		y = mpPathPoints[i].y;
+		x = path_data->mpPathPoints[i].x;
+		y = path_data->mpPathPoints[i].y;
 #ifdef _VSMOD
 		// patch m002. Z-coord
 		z = m_style.get().mod_z;
@@ -316,12 +317,12 @@ void CWord::Transform_C(const CPoint &org )
 		x = (xx * 20000) / (zz + 20000);
 		y = (yy * 20000) / (zz + 20000);
 
-		mpPathPoints[i].x = (LONG)(x + org.x + 0.5);
-		mpPathPoints[i].y = (LONG)(y + org.y + 0.5);
+		path_data->mpPathPoints[i].x = (LONG)(x + org.x + 0.5);
+		path_data->mpPathPoints[i].y = (LONG)(y + org.y + 0.5);
 	}
 }
 
-void CWord::Transform_SSE2(const CPoint &org )
+void CWord::Transform_SSE2(SharedPtrPathData path_data, const CPoint &org )
 {
 	// __m128 union data type currently not supported with Intel C++ Compiler, so just call C version
 #ifdef __ICL
@@ -367,8 +368,8 @@ void CWord::Transform_SSE2(const CPoint &org )
 
 	bool is_dist = m_style.get().mod_distort.enabled;
 	if(is_dist) {
-		for(int i = 0; i < mPathPoints; i++) {
-			__m128 __point = _mm_set_ps(mpPathPoints[i].x, mpPathPoints[i].y, 0, 0);
+		for(int i = 0; i < path_data->mPathPoints; i++) {
+			__m128 __point = _mm_set_ps(path_data->mpPathPoints[i].x, path_data->mpPathPoints[i].y, 0, 0);
 			__minx = _mm_min_ps(__minx, __point);
 			__max = _mm_max_ps(__max, __point);
 		}
@@ -405,31 +406,33 @@ void CWord::Transform_SSE2(const CPoint &org )
 	__m128 __say = _mm_set_ps1(say);
 
 	// this can be paralleled for openmp
-	int mPathPointsD4 = mPathPoints / 4;
-	int mPathPointsM4 = mPathPoints % 4;
-
+	int mPathPointsD4 = path_data->mPathPoints / 4;
+	int mPathPointsM4 = path_data->mPathPoints % 4;
+        
 	for(ptrdiff_t i = 0; i < mPathPointsD4 + 1; i++) {
+        POINT* const temp_points = path_data->mpPathPoints + 4 * i;
+
 		__m128 __pointx, __pointy;
 		// we can't use load .-.
 		if(i != mPathPointsD4) {
-			__pointx = _mm_set_ps(mpPathPoints[4 * i + 0].x, mpPathPoints[4 * i + 1].x, mpPathPoints[4 * i + 2].x, mpPathPoints[4 * i + 3].x);
-			__pointy = _mm_set_ps(mpPathPoints[4 * i + 0].y, mpPathPoints[4 * i + 1].y, mpPathPoints[4 * i + 2].y, mpPathPoints[4 * i + 3].y);
+			__pointx = _mm_set_ps(temp_points[0].x, temp_points[1].x, temp_points[2].x, temp_points[3].x);
+			__pointy = _mm_set_ps(temp_points[0].y, temp_points[1].y, temp_points[2].y, temp_points[3].y);
 		} else { // last cycle
 			switch(mPathPointsM4) {
 				default:
 				case 0:
 					continue;
 				case 1:
-					__pointx = _mm_set_ps(mpPathPoints[4 * i + 0].x, 0, 0, 0);
-					__pointy = _mm_set_ps(mpPathPoints[4 * i + 0].y, 0, 0, 0);
+					__pointx = _mm_set_ps(temp_points[0].x, 0, 0, 0);
+					__pointy = _mm_set_ps(temp_points[0].y, 0, 0, 0);
 					break;
 				case 2:
-					__pointx = _mm_set_ps(mpPathPoints[4 * i + 0].x, mpPathPoints[4 * i + 1].x, 0, 0);
-					__pointy = _mm_set_ps(mpPathPoints[4 * i + 0].y, mpPathPoints[4 * i + 1].y, 0, 0);
+					__pointx = _mm_set_ps(temp_points[0].x, temp_points[1].x, 0, 0);
+					__pointy = _mm_set_ps(temp_points[0].y, temp_points[1].y, 0, 0);
 					break;
 				case 3:
-					__pointx = _mm_set_ps(mpPathPoints[4 * i + 0].x, mpPathPoints[4 * i + 1].x, mpPathPoints[4 * i + 2].x, 0);
-					__pointy = _mm_set_ps(mpPathPoints[4 * i + 0].y, mpPathPoints[4 * i + 1].y, mpPathPoints[4 * i + 2].y, 0);
+					__pointx = _mm_set_ps(temp_points[0].x, temp_points[1].x, temp_points[2].x, 0);
+					__pointy = _mm_set_ps(temp_points[0].y, temp_points[1].y, temp_points[2].y, 0);
 					break;
 			}
 		}
@@ -570,13 +573,13 @@ void CWord::Transform_SSE2(const CPoint &org )
 
 		if(i == mPathPointsD4) { // last cycle
 			for(int k=0; k<mPathPointsM4; k++) {
-				mpPathPoints[i*4+k].x = static_cast<LONG>(__pointx.m128_f32[3-k]);
-				mpPathPoints[i*4+k].y = static_cast<LONG>(__pointy.m128_f32[3-k]);
+				temp_points[k].x = static_cast<LONG>(__pointx.m128_f32[3-k]);
+				temp_points[k].y = static_cast<LONG>(__pointy.m128_f32[3-k]);
 			}
 		} else {
 			for(int k=0; k<4; k++) {
-				mpPathPoints[i*4+k].x = static_cast<LONG>(__pointx.m128_f32[3-k]);
-				mpPathPoints[i*4+k].y = static_cast<LONG>(__pointy.m128_f32[3-k]);
+				temp_points[k].x = static_cast<LONG>(__pointx.m128_f32[3-k]);
+				temp_points[k].y = static_cast<LONG>(__pointy.m128_f32[3-k]);
 			}
 		}
 	}
@@ -652,7 +655,7 @@ bool CText::Append(const SharedPtrCWord& w)
     return (p && CWord::Append(w));
 }
 
-bool CText::CreatePath()
+bool CText::CreatePath(SharedPtrPathData path_data)
 {
     FwCMyFont font(m_style);
     HFONT hOldFont = SelectFont(g_hDC, font.get());
@@ -664,10 +667,10 @@ bool CText::CreatePath()
         {
             CSize extent;
             if(!GetTextExtentPoint32W(g_hDC, s, 1, &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);}
-            PartialBeginPath(g_hDC, bFirstPath);
+            path_data->PartialBeginPath(g_hDC, bFirstPath);
             bFirstPath = false;
             TextOutW(g_hDC, 0, 0, s, 1);
-            PartialEndPath(g_hDC, width, 0);
+            path_data->PartialEndPath(g_hDC, width, 0);
             width += extent.cx + (int)m_style.get().fontSpacing;
         }
     }
@@ -675,9 +678,9 @@ bool CText::CreatePath()
     {
         CSize extent;
         if(!GetTextExtentPoint32W(g_hDC, m_str.get(), m_str.get().GetLength(), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);}
-        BeginPath(g_hDC);
+        path_data->BeginPath(g_hDC);
         TextOutW(g_hDC, 0, 0, m_str.get(), m_str.get().GetLength());
-        EndPath(g_hDC);
+        path_data->EndPath(g_hDC);
     }
     SelectFont(g_hDC, hOldFont);
     return(true);
@@ -890,19 +893,19 @@ bool CPolygon::ParseStr()
     return(true);
 }
 
-bool CPolygon::CreatePath()
+bool CPolygon::CreatePath(SharedPtrPathData path_data)
 {
     int len = m_pathTypesOrg.GetCount();
     if(len == 0) return(false);
-    if(mPathPoints != len)
+    if(path_data->mPathPoints != len)
     {
-        mpPathTypes = (BYTE*)realloc(mpPathTypes, len*sizeof(BYTE));
-        mpPathPoints = (POINT*)realloc(mpPathPoints, len*sizeof(POINT));
-        if(!mpPathTypes || !mpPathPoints) return(false);
-        mPathPoints = len;
+        path_data->mpPathTypes = (BYTE*)realloc(path_data->mpPathTypes, len*sizeof(BYTE));
+        path_data->mpPathPoints = (POINT*)realloc(path_data->mpPathPoints, len*sizeof(POINT));
+        if(!path_data->mpPathTypes || !path_data->mpPathPoints) return(false);
+        path_data->mPathPoints = len;
     }
-    memcpy(mpPathTypes, m_pathTypesOrg.GetData(), len*sizeof(BYTE));
-    memcpy(mpPathPoints, m_pathPointsOrg.GetData(), len*sizeof(POINT));
+    memcpy(path_data->mpPathTypes, m_pathTypesOrg.GetData(), len*sizeof(BYTE));
+    memcpy(path_data->mpPathPoints, m_pathPointsOrg.GetData(), len*sizeof(POINT));
     return(true);
 }
 

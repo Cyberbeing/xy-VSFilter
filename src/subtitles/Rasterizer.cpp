@@ -515,23 +515,12 @@ static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int st
     }
 }
 
-Rasterizer::Rasterizer() : mpPathTypes(NULL), mpPathPoints(NULL), mPathPoints(0)
+Rasterizer::Rasterizer():mPathOffsetX(0),mPathOffsetY(0)
 {
-    mPathOffsetX = mPathOffsetY = 0;
 }
 
 Rasterizer::~Rasterizer()
-{
-    _TrashPath();
-}
-
-void Rasterizer::_TrashPath()
-{
-    delete [] mpPathTypes;
-    delete [] mpPathPoints;
-    mpPathTypes = NULL;
-    mpPathPoints = NULL;
-    mPathPoints = 0;
+{    
 }
 
 void Rasterizer::_ReallocEdgeBuffer(int edges)
@@ -540,12 +529,12 @@ void Rasterizer::_ReallocEdgeBuffer(int edges)
     mpEdgeBuffer = (Edge*)realloc(mpEdgeBuffer, sizeof(Edge)*edges);
 }
 
-void Rasterizer::_EvaluateBezier(int ptbase, bool fBSpline)
+void Rasterizer::_EvaluateBezier(const PathData& path_data, int ptbase, bool fBSpline)
 {
-    const POINT* pt0 = mpPathPoints + ptbase;
-    const POINT* pt1 = mpPathPoints + ptbase + 1;
-    const POINT* pt2 = mpPathPoints + ptbase + 2;
-    const POINT* pt3 = mpPathPoints + ptbase + 3;
+    const POINT* pt0 = path_data.mpPathPoints + ptbase;
+    const POINT* pt1 = path_data.mpPathPoints + ptbase + 1;
+    const POINT* pt2 = path_data.mpPathPoints + ptbase + 2;
+    const POINT* pt3 = path_data.mpPathPoints + ptbase + 3;
     double x0 = pt0->x;
     double x1 = pt1->x;
     double x2 = pt2->x;
@@ -618,10 +607,10 @@ void Rasterizer::_EvaluateBezier(int ptbase, bool fBSpline)
     _EvaluateLine(lastp.x, lastp.y, (int)x, (int)y);
 }
 
-void Rasterizer::_EvaluateLine(int pt1idx, int pt2idx)
+void Rasterizer::_EvaluateLine(const PathData& path_data, int pt1idx, int pt2idx)
 {
-    const POINT* pt1 = mpPathPoints + pt1idx;
-    const POINT* pt2 = mpPathPoints + pt2idx;
+    const POINT* pt1 = path_data.mpPathPoints + pt1idx;
+    const POINT* pt2 = path_data.mpPathPoints + pt2idx;
     _EvaluateLine(pt1->x, pt1->y, pt2->x, pt2->y);
 }
 
@@ -686,78 +675,7 @@ void Rasterizer::_EvaluateLine(int x0, int y0, int x1, int y1)
     }
 }
 
-bool Rasterizer::BeginPath(HDC hdc)
-{
-    _TrashPath();
-    return !!::BeginPath(hdc);
-}
-
-bool Rasterizer::EndPath(HDC hdc)
-{
-    ::CloseFigure(hdc);
-    if(::EndPath(hdc))
-    {
-        mPathPoints = GetPath(hdc, NULL, NULL, 0);
-        if(!mPathPoints)
-            return true;
-        mpPathTypes = (BYTE*)malloc(sizeof(BYTE) * mPathPoints);
-        mpPathPoints = (POINT*)malloc(sizeof(POINT) * mPathPoints);
-        if(mPathPoints == GetPath(hdc, mpPathPoints, mpPathTypes, mPathPoints))
-            return true;
-    }
-    ::AbortPath(hdc);
-    return false;
-}
-
-bool Rasterizer::PartialBeginPath(HDC hdc, bool bClearPath)
-{
-    if(bClearPath)
-        _TrashPath();
-    return !!::BeginPath(hdc);
-}
-
-bool Rasterizer::PartialEndPath(HDC hdc, long dx, long dy)
-{
-    ::CloseFigure(hdc);
-    if(::EndPath(hdc))
-    {
-        int nPoints;
-        BYTE* pNewTypes;
-        POINT* pNewPoints;
-        nPoints = GetPath(hdc, NULL, NULL, 0);
-        if(!nPoints)
-            return true;
-        pNewTypes = (BYTE*)realloc(mpPathTypes, (mPathPoints + nPoints) * sizeof(BYTE));
-        pNewPoints = (POINT*)realloc(mpPathPoints, (mPathPoints + nPoints) * sizeof(POINT));
-        if(pNewTypes)
-            mpPathTypes = pNewTypes;
-        if(pNewPoints)
-            mpPathPoints = pNewPoints;
-        BYTE* pTypes = new BYTE[nPoints];
-        POINT* pPoints = new POINT[nPoints];
-        if(pNewTypes && pNewPoints && nPoints == GetPath(hdc, pPoints, pTypes, nPoints))
-        {
-            for(int i = 0; i < nPoints; ++i)
-            {
-                mpPathPoints[mPathPoints + i].x = pPoints[i].x + dx;
-                mpPathPoints[mPathPoints + i].y = pPoints[i].y + dy;
-                mpPathTypes[mPathPoints + i] = pTypes[i];
-            }
-            mPathPoints += nPoints;
-            delete[] pTypes;
-            delete[] pPoints;
-            return true;
-        }
-        else
-            DebugBreak();
-        delete[] pTypes;
-        delete[] pPoints;
-    }
-    ::AbortPath(hdc);
-    return false;
-}
-
-bool Rasterizer::ScanConvert()
+bool Rasterizer::ScanConvert(SharedPtrPathData path_data)
 {
     int lastmoveto = -1;
     int i;
@@ -766,7 +684,7 @@ bool Rasterizer::ScanConvert()
     mWideOutline.clear();
     mWideBorder = 0;
     // Determine bounding box
-    if(!mPathPoints)
+    if(!path_data->mPathPoints)
     {
         mPathOffsetX = mPathOffsetY = 0;
         mWidth = mHeight = 0;
@@ -776,10 +694,10 @@ bool Rasterizer::ScanConvert()
     int miny = INT_MAX;
     int maxx = INT_MIN;
     int maxy = INT_MIN;
-    for(i=0; i<mPathPoints; ++i)
+    for(i=0; i<path_data->mPathPoints; ++i)
     {
-        int ix = mpPathPoints[i].x;
-        int iy = mpPathPoints[i].y;
+        int ix = path_data->mpPathPoints[i].x;
+        int iy = path_data->mpPathPoints[i].y;
         if(ix < minx) minx = ix;
         if(ix > maxx) maxx = ix;
         if(iy < miny) miny = iy;
@@ -789,16 +707,16 @@ bool Rasterizer::ScanConvert()
     miny = (miny >> 3) & ~7;
     maxx = (maxx + 7) >> 3;
     maxy = (maxy + 7) >> 3;
-    for(i=0; i<mPathPoints; ++i)
+    for(i=0; i<path_data->mPathPoints; ++i)
     {
-        mpPathPoints[i].x -= minx*8;
-        mpPathPoints[i].y -= miny*8;
+        path_data->mpPathPoints[i].x -= minx*8;
+        path_data->mpPathPoints[i].y -= miny*8;
     }
     if(minx > maxx || miny > maxy)
     {
         mWidth = mHeight = 0;
         mPathOffsetX = mPathOffsetY = 0;
-        _TrashPath();
+        path_data->_TrashPath();
         return true;
     }
     mWidth = maxx + 1 - minx;
@@ -819,9 +737,9 @@ bool Rasterizer::ScanConvert()
     fFirstSet = false;
     firstp.x = firstp.y = 0;
     lastp.x = lastp.y = 0;
-    for(i=0; i<mPathPoints; ++i)
+    for(i=0; i<path_data->mPathPoints; ++i)
     {
-        BYTE t = mpPathTypes[i] & ~PT_CLOSEFIGURE;
+        BYTE t = path_data->mpPathTypes[i] & ~PT_CLOSEFIGURE;
         switch(t)
         {
         case PT_MOVETO:
@@ -829,30 +747,30 @@ bool Rasterizer::ScanConvert()
                 _EvaluateLine(lastp.x, lastp.y, firstp.x, firstp.y);
             lastmoveto = i;
             fFirstSet = false;
-            lastp = mpPathPoints[i];
+            lastp = path_data->mpPathPoints[i];
             break;
         case PT_MOVETONC:
             break;
         case PT_LINETO:
-            if(mPathPoints - (i-1) >= 2) _EvaluateLine(i-1, i);
+            if(path_data->mPathPoints - (i-1) >= 2) _EvaluateLine(*path_data, i-1, i);
             break;
         case PT_BEZIERTO:
-            if(mPathPoints - (i-1) >= 4) _EvaluateBezier(i-1, false);
+            if(path_data->mPathPoints - (i-1) >= 4) _EvaluateBezier(*path_data, i-1, false);
             i += 2;
             break;
         case PT_BSPLINETO:
-            if(mPathPoints - (i-1) >= 4) _EvaluateBezier(i-1, true);
+            if(path_data->mPathPoints - (i-1) >= 4) _EvaluateBezier(*path_data, i-1, true);
             i += 2;
             break;
         case PT_BSPLINEPATCHTO:
-            if(mPathPoints - (i-3) >= 4) _EvaluateBezier(i-3, true);
+            if(path_data->mPathPoints - (i-3) >= 4) _EvaluateBezier(*path_data, i-3, true);
             break;
         }
     }
     if(lastmoveto >= 0 && firstp != lastp)
         _EvaluateLine(lastp.x, lastp.y, firstp.x, firstp.y);
     // Free the path since we don't need it anymore.
-    _TrashPath();
+    path_data->_TrashPath();
     // Convert the edges to spans.  We couldn't do this before because some of
     // the regions may have winding numbers >+1 and it would have been a pain
     // to try to adjust the spans on the fly.  We use one heap to detangle
@@ -1456,6 +1374,10 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRec
     return bbox;
 }
 
+///////////////////////////////////////////////////////////////
+
+// Overlay
+
 void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const byte* pBorder, int x, int y, int w, int h, const byte* pAlphaMask, int pitch, DWORD color_alpha )
 {
     //    int planSize = mOverlayWidth*mOverlayHeight;
@@ -1597,4 +1519,97 @@ void Overlay::FillAlphaMash( byte* outputAlphaMask, bool fBody, bool fBorder, in
         //should NOT happen
         ASSERT(0);
     }
+}
+
+///////////////////////////////////////////////////////////////
+
+// PathData
+
+PathData::PathData():mpPathTypes(NULL), mpPathPoints(NULL), mPathPoints(0)
+{
+}
+
+PathData::~PathData()
+{
+    _TrashPath();
+}
+
+void PathData::_TrashPath()
+{
+    delete [] mpPathTypes;
+    delete [] mpPathPoints;
+    mpPathTypes = NULL;
+    mpPathPoints = NULL;
+    mPathPoints = 0;
+}
+
+bool PathData::BeginPath(HDC hdc)
+{
+    _TrashPath();
+    return !!::BeginPath(hdc);
+}
+
+bool PathData::EndPath(HDC hdc)
+{
+    ::CloseFigure(hdc);
+    if(::EndPath(hdc))
+    {
+        mPathPoints = GetPath(hdc, NULL, NULL, 0);
+        if(!mPathPoints)
+            return true;
+        mpPathTypes = (BYTE*)malloc(sizeof(BYTE) * mPathPoints);
+        mpPathPoints = (POINT*)malloc(sizeof(POINT) * mPathPoints);
+        if(mPathPoints == GetPath(hdc, mpPathPoints, mpPathTypes, mPathPoints))
+            return true;
+    }
+    ::AbortPath(hdc);
+    return false;
+}
+
+bool PathData::PartialBeginPath(HDC hdc, bool bClearPath)
+{
+    if(bClearPath)
+        _TrashPath();
+    return !!::BeginPath(hdc);
+}
+
+bool PathData::PartialEndPath(HDC hdc, long dx, long dy)
+{
+    ::CloseFigure(hdc);
+    if(::EndPath(hdc))
+    {
+        int nPoints;
+        BYTE* pNewTypes;
+        POINT* pNewPoints;
+        nPoints = GetPath(hdc, NULL, NULL, 0);
+        if(!nPoints)
+            return true;
+        pNewTypes = (BYTE*)realloc(mpPathTypes, (mPathPoints + nPoints) * sizeof(BYTE));
+        pNewPoints = (POINT*)realloc(mpPathPoints, (mPathPoints + nPoints) * sizeof(POINT));
+        if(pNewTypes)
+            mpPathTypes = pNewTypes;
+        if(pNewPoints)
+            mpPathPoints = pNewPoints;
+        BYTE* pTypes = new BYTE[nPoints];
+        POINT* pPoints = new POINT[nPoints];
+        if(pNewTypes && pNewPoints && nPoints == GetPath(hdc, pPoints, pTypes, nPoints))
+        {
+            for(int i = 0; i < nPoints; ++i)
+            {
+                mpPathPoints[mPathPoints + i].x = pPoints[i].x + dx;
+                mpPathPoints[mPathPoints + i].y = pPoints[i].y + dy;
+                mpPathTypes[mPathPoints + i] = pTypes[i];
+            }
+            mPathPoints += nPoints;
+            delete[] pTypes;
+            delete[] pPoints;
+            return true;
+        }
+        else
+            DebugBreak();
+        delete[] pTypes;
+        delete[] pPoints;
+    }
+    ::AbortPath(hdc);
+    return false;
 }
