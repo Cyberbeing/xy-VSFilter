@@ -54,6 +54,8 @@
 class ass_synth_priv 
 {
 public:
+    static const int VOLUME_BITS = 22;//should not exceed 32-8, and better not exceed 31-8
+
     ass_synth_priv(const double sigma);
     ass_synth_priv(const ass_synth_priv& priv);
 
@@ -131,11 +133,15 @@ ass_synth_priv::~ass_synth_priv()
 
 int ass_synth_priv::generate_tables(double sigma)
 {
+    const int TARGET_VOLUME = 1<<VOLUME_BITS;
+    const int MAX_VOLUME_ERROR = VOLUME_BITS>=22 ? 16 : 1;
+
     double a = -1 / (sigma * sigma * 2);
-    int mx, i;
-    double volume_diff, volume_factor = 0;
+    double exp_a = exp(a);
+    
+    double volume_factor = 0;
+    double volume_start =  0, volume_end = 0;
     unsigned volume;
-    double * gaussian_kernel = NULL;
 
     if (this->sigma == sigma)
         return 0;
@@ -147,45 +153,125 @@ int ass_synth_priv::generate_tables(double sigma)
 
     if (this->g_w > 0) {
         this->g = (unsigned*)realloc(this->g, this->g_w * sizeof(unsigned));
-        this->gt2 = (unsigned*)realloc(this->gt2, 256 * this->g_w * sizeof(unsigned));
-        gaussian_kernel = (double*)malloc(this->g_w * sizeof(double));
-        if (this->g == NULL || this->gt2 == NULL || gaussian_kernel == NULL) {          
-            free(gaussian_kernel);
+        this->gt2 = (unsigned*)realloc(this->gt2, 256 * this->g_w * sizeof(unsigned));        
+        if (this->g == NULL || this->gt2 == NULL) {                      
             return -1;
         }        
     }
 
     if (this->g_w > 0) {
-        for (i = 0; i < this->g_w; ++i) {
-            gaussian_kernel[i] = exp(a * (i - this->g_r) * (i - this->g_r));
-        }
+        volume_start = 0;        
 
-        // gaussian curve with volume = 256
-        for (volume_diff = 10000000; volume_diff > 0.0000001;
-            volume_diff *= 0.5) {
-                volume_factor += volume_diff;
-                volume = 0;
-                for (i = 0; i < this->g_w; ++i) {
-                    this->g[i] = (unsigned) (gaussian_kernel[i] * volume_factor + .5);
-                    volume += this->g[i];                    
-                }
-                if (volume > 0x10000)
-                    volume_factor -= volume_diff;
+        double exp_0 = 1.0;
+        double exp_1 = exp_a;
+        double exp_2 = exp_1 * exp_1;
+        volume_start += exp_0;
+        for(int i=0;i<this->g_r;++i)
+        {
+            exp_0 *= exp_1;
+            exp_1 *= exp_2;
+            volume_start += exp_0;
+            volume_start += exp_0;
         }
+        //euqivalent:
+        //  for (i = 0; i < this->g_w; ++i) {
+        //      volume_start += exp(a * (i - this->g_r) * (i - this->g_r));
+        //  }
+        
+        volume_end = (TARGET_VOLUME+g_w)/volume_start; 
+        volume_start = (TARGET_VOLUME-g_w)/volume_start;
+
         volume = 0;
-        for (i = 0; i < this->g_w; ++i) {
-            this->g[i] = (unsigned) (gaussian_kernel[i] * volume_factor + .5);
-            volume += this->g[i];
+        while( volume_start+0.000001<volume_end )
+        {
+            volume_factor = (volume_start+volume_end)*0.5;  
+            volume = 0;
+
+            exp_0 = volume_factor;
+            exp_1 = exp_a;
+            exp_2 = exp_1 * exp_1;
+
+            volume = static_cast<int>(exp_0+.5);
+            this->g[this->g_r] = volume;
+
+            unsigned* p_left = this->g+this->g_r-1;
+            unsigned* p_right= this->g+this->g_r+1;
+            for(int i=0; i<this->g_r;++i,p_left--,p_right++)
+            {
+                exp_0 *= exp_1;
+                exp_1 *= exp_2;
+                *p_left = static_cast<int>(exp_0+.5);
+                *p_right = *p_left;
+                volume += (*p_left<<1);
+            }
+            //equivalent:
+            //    for (i = 0; i < this->g_w; ++i) {    
+            //        this->g[i] = (unsigned) ( exp(a * (i - this->g_r) * (i - this->g_r))* volume_factor + .5 );
+            //        volume += this->g[i];
+            //    }
+
+            // volume don't have to be equal to TARGET_VOLUME,
+            // even if volume=TARGET_VOLUME+MAX_VOLUME_ERROR,
+            // max error introducing in later blur operation,
+            // which is (dot_product(g_w, pixel))/TARGET_VOLUME with pixel<256,
+            // would not exceed (MAX_VOLUME_ERROR*256)/TARGET_VOLUME,
+            // as long as MAX_VOLUME_ERROR/TARGET_VOLUME is small enough, error introduced would be kept in safe range
+            // 
+            // NOTE: when it comes to rounding, no matter how small the error is, 
+            // it may result a different rounding output
+            if( volume>=TARGET_VOLUME && volume< (TARGET_VOLUME+MAX_VOLUME_ERROR) )
+                break;
+            else if(volume < TARGET_VOLUME)
+            {
+                volume_start = volume_factor;                
+            }
+            else if(volume >= TARGET_VOLUME+MAX_VOLUME_ERROR)
+            {
+                volume_end = volume_factor;
+            }
+        }
+        if(volume==0)
+        {
+            volume_factor = volume_end;
+
+            exp_0 = volume_factor;
+            exp_1 = exp_a;
+            exp_2 = exp_1 * exp_1;
+
+            volume = static_cast<int>(exp_0+.5);
+            this->g[this->g_r] = volume;
+
+            unsigned* p_left = this->g+this->g_r-1;
+            unsigned* p_right= this->g+this->g_r+1;
+            for(int i=0; i<this->g_r;++i,p_left--,p_right++)
+            {
+                exp_0 *= exp_1;
+                exp_1 *= exp_2;
+                *p_left = static_cast<int>(exp_0+.5);
+                *p_right = *p_left;
+                volume += (*p_left<<1);
+            }
+            //equivalent:
+            //    for (i = 0; i < this->g_w; ++i) {    
+            //        this->g[i] = (unsigned) ( exp(a * (i - this->g_r) * (i - this->g_r))* volume_factor + .5 );
+            //        volume += this->g[i];
+            //    }
         }
 
         // gauss table:
-        for (mx = 0; mx < this->g_w; mx++) {
-            for (i = 0; i < 256; i++) {
-                this->gt2[mx + i * this->g_w] = i * this->g[mx];
+        for (int mx = 0; mx < this->g_w; mx++) {
+            int last_mul = 0;
+            unsigned *p_gt2 = this->gt2 + mx;
+            *p_gt2 = 0;
+            for (int i = 1; i < 256; i++) {                
+                last_mul = last_mul+this->g[mx];
+                p_gt2 += this->g_w;
+                *p_gt2 = last_mul;                
+                //equivalent:
+                //    this->gt2[this->g_w * i+ mx] = this->g[mx] * i;
             }
-        }
+        }        
     }
-    free(gaussian_kernel);
     return 0;
 }
 
@@ -301,11 +387,11 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
             int src = *srcp;
             if (src) {
                 register unsigned *dstp = srcp - 1 + (mwidth -r +y)*(width + 1);
-                const int src2 = (src + (1<<15)) >> 16;
+                const int src2 = (src + (1<<(ass_synth_priv::VOLUME_BITS-1))) >> ass_synth_priv::VOLUME_BITS;
                 const unsigned *m3 = m2 + src2 * mwidth;
                 unsigned sum = 0;
                 int mx;
-                *srcp = (1<<15);
+                *srcp = (1<<(ass_synth_priv::VOLUME_BITS-1));
                 for (mx = mwidth-1; mx >=r - y ; mx--) {
                     sum += m3[mx];
                     *dstp += sum;
@@ -318,11 +404,11 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
             int src = *srcp;
             if (src) {
                 register unsigned *dstp = srcp - 1 + width + 1;
-                const int src2 = (src + (1<<15)) >> 16;
+                const int src2 = (src + (1<<(ass_synth_priv::VOLUME_BITS-1))) >> ass_synth_priv::VOLUME_BITS;
                 const unsigned *m3 = m2 + src2 * mwidth;
 
                 int mx;
-                *srcp = (1<<15);
+                *srcp = (1<<(ass_synth_priv::VOLUME_BITS-1));
                 for (mx = r - y; mx < mwidth; mx++) {
                     *dstp += m3[mx];
                     dstp += width + 1;
@@ -334,11 +420,11 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
             int src = *srcp;
             if (src) {
                 register unsigned *dstp = srcp - 1 - r * (width + 1);
-                const int src2 = (src + (1<<15)) >> 16;
+                const int src2 = (src + (1<<(ass_synth_priv::VOLUME_BITS-1))) >> ass_synth_priv::VOLUME_BITS;
                 const unsigned *m3 = m2 + src2 * mwidth;
 
                 int mx;
-                *srcp = (1<<15);
+                *srcp = (1<<(ass_synth_priv::VOLUME_BITS-1));
                 for (mx = 0; mx < mwidth; mx++) {
                     *dstp += m3[mx];
                     dstp += width + 1;
@@ -351,11 +437,11 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
             if (src) {
                 const int y2 = r + height - y;
                 register unsigned *dstp = srcp - 1 - r * (width + 1);
-                const int src2 = (src + (1<<15)) >> 16;
+                const int src2 = (src + (1<<(ass_synth_priv::VOLUME_BITS-1))) >> ass_synth_priv::VOLUME_BITS;
                 const unsigned *m3 = m2 + src2 * mwidth;
 
                 int mx;
-                *srcp = (1<<15);
+                *srcp = (1<<(ass_synth_priv::VOLUME_BITS-1));
                 for (mx = 0; mx < y2; mx++) {
                     *dstp += m3[mx];
                     dstp += width + 1;
@@ -369,11 +455,11 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
             if (src) {
                 const int y2 = r + height - y;
                 register unsigned *dstp = srcp - 1 - r * (width + 1);
-                const int src2 = (src + (1<<15)) >> 16;
+                const int src2 = (src + (1<<(ass_synth_priv::VOLUME_BITS-1))) >> ass_synth_priv::VOLUME_BITS;
                 const unsigned *m3 = m2 + src2 * mwidth;
                 unsigned sum = 0;
                 int mx;
-                *srcp = (1<<15);
+                *srcp = (1<<(ass_synth_priv::VOLUME_BITS-1));
                 for (mx = 0; mx < y2; mx++) {
                     sum += m3[mx];
                     *dstp += sum;
@@ -388,7 +474,7 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
     s = buffer;
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
-            s[x] = t[x] >> 16;
+            s[x] = t[x] >> ass_synth_priv::VOLUME_BITS;
         }
         s += stride;
         t += width + 1;

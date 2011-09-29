@@ -26,4 +26,4 @@ issue 10: incorrect result with 11.ass. \move dosenot work with out-of-range pos
 issue 11: incorrect result, improper cliper position with 12.ass.
 more: on videos with 720 x 400 resolution, the result is correct, but on 1280 x 720, the result is wrong. Turn off compiler option /arch:SSE2, both resolutions above get the right result. It also applies to Issue 9. Maybe /arch:SSE2 option affects some internal floating point caculation such that an overflow occur. 
 ==============================================================
-issue 12: lags when scripts have blur tags, due to the complex gaussian table generation.
+issue 12: lags when scripts have blur tags, due to the complex gaussian table generation.(fixed)
