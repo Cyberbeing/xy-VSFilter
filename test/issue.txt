@@ -15,6 +15,7 @@ issue 5: incorrect \be effect with 7.ass.(fixed)
 issue 6: crashed with 8.ass.(fixed)
 ==============================================================
 issue 7: incorrect result, missing shapes produced by \clip, with 9.ass; introduced since Commit 43207694492d3793a47432b8e24785bca594b9e7(including it)
+more: see issue 11.
 ==============================================================
 issue 8: incorrect result, false text layout, with 10.ass; introduced since Commit 43207694492d3793a47432b8e24785bca594b9e7 (including it)(fixed)
 ==============================================================
@@ -22,3 +23,7 @@ issue 9: crash. Steps to crash: 1. play any simple subtitle until a line of sub 
 ==============================================================
 issue 10: incorrect result with 11.ass. \move dosenot work with out-of-range position and \q2 tag.
 ==============================================================
+issue 11: incorrect result, improper cliper position with 12.ass.
+more: on videos with 720 x 400 resolution, the result is correct, but on 1280 x 720, the result is wrong. Turn off compiler option /arch:SSE2, both resolutions above get the right result. It also applies to Issue 9. Maybe /arch:SSE2 option affects some internal floating point caculation such that an overflow occur. 
+==============================================================
+issue 12: lags when scripts have blur tags, due to the complex gaussian table generation.
