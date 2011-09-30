@@ -169,10 +169,28 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     bool need_transform = NeedTransform();
     if(!m_fDrawn)
     {
-        SharedPtrPathData path_data(new PathData());
-        if(!CreatePath(path_data)) return;
+        //get outline path, if not cached, create it and cache a copy, else copy from cache
+        SharedPtrPathData path_data(new PathData());        
+        PathDataCacheKey path_data_key(*this);
+        const PathDataMruCache::hashed_cache& path_data_cache = CacheManager::GetPathDataMruCache()->get_hashed_cache();    
+        const PathDataMruCache::hashed_cache::iterator iter = path_data_cache.find(path_data_key);
+        if(iter==path_data_cache.end())    
+        {
+            if(!CreatePath(path_data)) return;
+
+            SharedPtrPathData data(new PathData());
+            *data = *path_data;//important! copy not ref
+            PathDataMruItem item(path_data_key, data);
+            CacheManager::GetPathDataMruCache()->update_cache(item);
+        }
+        else
+        {
+            *path_data = *(iter->path_data); //important! copy not ref
+        } 
+        
         if(need_transform)
             Transform(path_data, CPoint(trans_org.x*8, trans_org.y*8));
+
         if(!ScanConvert(path_data)) return;
         if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
         {

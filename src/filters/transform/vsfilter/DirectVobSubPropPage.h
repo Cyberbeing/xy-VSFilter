@@ -153,9 +153,9 @@ public:
 [uuid("69CE757B-E8C0-4B0A-9EA0-CEA284096F98")]
 class CDVSMorePPage : public CDVSBasePPage
 {
-    int m_overlay_cache_max_item_num, m_word_cache_max_item_num, m_subpixel_pos_level;
+    int m_overlay_cache_max_item_num, m_path_cache_max_item_num, m_word_cache_max_item_num, m_subpixel_pos_level;
 
-    CSpinButtonCtrl m_path_cache, m_overlay_cache;
+    CSpinButtonCtrl m_path_cache, m_scanline_cache, m_overlay_cache;
     CComboBox m_combo_subpixel_pos;
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);

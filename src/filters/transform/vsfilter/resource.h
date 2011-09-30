@@ -78,8 +78,9 @@
 #define IDS_RT_PAR_DOWNSCALE            173
 #define IDS_RT_PAR_ACCURATE_SIZE        174
 #define IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM 175
-#define IDS_RP_WORD_CAHCHE_MAX_ITEM_NUM 176
+#define IDS_RP_WORD_CACHE_MAX_ITEM_NUM 176
 #define IDS_RP_SUBPIXEL_POS_LEVEL       177
+#define IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM 178
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
@@ -161,6 +162,9 @@
 #define IDC_SPINOverlayCache            318
 #define IDC_SPLIT1                      319
 #define IDC_COMBO_SUBPIXEL_POS          320
+#define IDC_LABEL_SCAN_LINE_CACHE       321
+#define IDC_EDITScanlineCache           322
+#define IDC_SPINScanlineCache           323
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
 #define IDC_LABLE_OVERLAY_CACHE         403
@@ -195,7 +199,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        232
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         321
+#define _APS_NEXT_CONTROL_VALUE         324
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif

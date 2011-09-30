@@ -46,6 +46,9 @@ public:
     PathData();
     ~PathData();
 
+    PathData(const PathData&);//important! disable default copy constructor
+    const PathData& operator=(const PathData&);
+
     void _TrashPath();
     bool BeginPath(HDC hdc);
     bool EndPath(HDC hdc);

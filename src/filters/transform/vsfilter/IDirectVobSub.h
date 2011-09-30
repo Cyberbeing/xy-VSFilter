@@ -271,6 +271,14 @@ extern "C" {
             int word_cache_max_item_num
             ) PURE;
 
+        STDMETHOD(get_PathDataCacheMaxItemNum) (THIS_
+            int* path_data_cache_max_item_num
+            ) PURE;
+
+        STDMETHOD(put_PathDataCacheMaxItemNum) (THIS_
+            int path_data_cache_max_item_num
+            ) PURE;
+
         STDMETHOD(get_SubpixelPositionLevel) (THIS_
             int* subpixel_pos_level
             ) PURE;

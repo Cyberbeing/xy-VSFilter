@@ -55,9 +55,12 @@ CDirectVobSub::CDirectVobSub()
     m_overlay_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), 256);
     if(m_overlay_cache_max_item_num<0) m_overlay_cache_max_item_num = 0;
     
-    m_word_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_WORD_CAHCHE_MAX_ITEM_NUM), 512);
+    m_word_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_WORD_CACHE_MAX_ITEM_NUM), 512);
 	if(m_word_cache_max_item_num<0) m_word_cache_max_item_num = 0;
     
+    m_path_data_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), 512);
+    if(m_path_data_cache_max_item_num<0) m_path_data_cache_max_item_num = 0;
+
     m_subpixel_pos_level = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), SubpixelPositionControler::FOUR_X_FOUR);
     if(m_subpixel_pos_level<0) m_subpixel_pos_level=0;
     else if(m_subpixel_pos_level>=SubpixelPositionControler::MAX_COUNT) m_subpixel_pos_level=SubpixelPositionControler::EIGHT_X_EIGHT;
@@ -490,6 +493,25 @@ STDMETHODIMP CDirectVobSub::put_CWordCacheMaxItemNum(int word_cache_max_item_num
     return S_OK;
 }
 
+STDMETHODIMP CDirectVobSub::get_PathDataCacheMaxItemNum(int* path_data_cache_max_item_num)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(path_data_cache_max_item_num) *path_data_cache_max_item_num = m_path_data_cache_max_item_num;
+
+    return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::put_PathDataCacheMaxItemNum(int path_data_cache_max_item_num)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(m_path_data_cache_max_item_num == path_data_cache_max_item_num || path_data_cache_max_item_num<0) return S_FALSE;
+    m_path_data_cache_max_item_num = path_data_cache_max_item_num;
+
+    return S_OK;
+}
+
 STDMETHODIMP CDirectVobSub::get_SubpixelPositionLevel(int* subpixel_pos_level)
 {
     CAutoLock cAutoLock(&m_propsLock);
@@ -538,7 +560,8 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), m_ePARCompensationType);
 
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), m_overlay_cache_max_item_num);
-    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_WORD_CAHCHE_MAX_ITEM_NUM), m_word_cache_max_item_num);
+    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_WORD_CACHE_MAX_ITEM_NUM), m_word_cache_max_item_num);
+    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), m_path_data_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), m_subpixel_pos_level);
 	return S_OK;
 }

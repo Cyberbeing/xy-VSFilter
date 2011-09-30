@@ -20,6 +20,11 @@ std::size_t hash_value(const OverlayKey& key)
     return( CStringElementTraits<CString>::Hash(key.m_str.get()) ^ key.m_p.x ^ key.m_p.y );
 }
 
+std::size_t hash_value( const PathDataCacheKey& key )
+{
+    return( CStringElementTraits<CString>::Hash(key.m_str.get()) ); 
+}
+
 CWordCacheKey::CWordCacheKey( const CWord& word )
 {
     m_str = word.m_str;
@@ -64,9 +69,26 @@ bool CWordCacheKey::operator==(const CWord& key)const
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+// PathDataCacheKey
+
+bool PathDataCacheKey::CompareSTSStyle( const STSStyle& lhs, const STSStyle& rhs )
+{
+    return lhs.charSet==rhs.charSet &&
+        lhs.fontName==rhs.fontName &&
+        lhs.fontSize==rhs.fontSize &&
+        lhs.fontWeight==rhs.fontWeight &&
+        lhs.fItalic==rhs.fItalic &&
+        lhs.fUnderline==rhs.fUnderline &&
+        lhs.fStrikeOut==rhs.fStrikeOut;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 // CacheManager
 
 CWordMruCache* CacheManager::s_word_mru_cache = NULL;
+PathDataMruCache* CacheManager::s_path_data_mru_cache = NULL;
 OverlayMruCache* CacheManager::s_overlay_mru_cache = NULL;
 
 OverlayMruCache* CacheManager::GetOverlayMruCache()
@@ -78,6 +100,15 @@ OverlayMruCache* CacheManager::GetOverlayMruCache()
     return s_overlay_mru_cache;
 }
 
+PathDataMruCache* CacheManager::GetPathDataMruCache()
+{
+    if (s_path_data_mru_cache==NULL)
+    {
+        s_path_data_mru_cache = new PathDataMruCache(PATH_CACHE_ITEM_NUM);
+    }
+    return s_path_data_mru_cache;
+}
+
 CWordMruCache* CacheManager::GetCWordMruCache()
 {
     if(s_word_mru_cache==NULL)
@@ -86,3 +117,4 @@ CWordMruCache* CacheManager::GetCWordMruCache()
     }
     return s_word_mru_cache;
 }
+

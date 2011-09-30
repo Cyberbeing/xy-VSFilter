@@ -107,6 +107,7 @@ public:
     
     //friend class CWordCache;
     friend class CWordCacheKey;
+    friend class PathDataCacheKey;
     friend std::size_t hash_value(const CWord& key); 
 };
 

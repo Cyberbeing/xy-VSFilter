@@ -1086,6 +1086,19 @@ STDMETHODIMP CDirectVobSubFilter::put_CWordCacheMaxItemNum( int word_cache_max_i
     return hr;
 }
 
+STDMETHODIMP CDirectVobSubFilter::put_PathDataCacheMaxItemNum(int path_data_cache_max_item_num)
+{
+    CAutoLock cAutolock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::put_PathDataCacheMaxItemNum(path_data_cache_max_item_num);
+
+    if(hr == NOERROR)
+    {
+        CacheManager::GetPathDataMruCache()->set_max_num_items(m_path_data_cache_max_item_num);
+    }
+
+    return hr;
+}
+
 STDMETHODIMP CDirectVobSubFilter::put_SubpixelPositionLevel(int subpixel_pos_level)
 {
     CAutoLock cAutolock(&m_csQueueLock);

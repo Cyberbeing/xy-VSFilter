@@ -21,6 +21,29 @@ public:
     int m_ktype, m_kstart, m_kend;
 };
 
+class PathDataCacheKey
+{
+public:
+    PathDataCacheKey(const CWord& word):m_str(word.m_str),m_style(word.m_style){}
+    PathDataCacheKey(const PathDataCacheKey& key):m_str(key.m_str),m_style(key.m_style){}
+    PathDataCacheKey(const FwSTSStyle& style, const CStringW& str):m_str(str),m_style(style){}
+    bool operator==(const PathDataCacheKey& key)const
+    {
+        return m_str==key.m_str && ( m_style==key.m_style || CompareSTSStyle(m_style.get(), key.m_style.get()) );
+    }
+    bool operator==(const CWord& key)const
+    {
+        return m_str==key.m_str && ( m_style==key.m_style || CompareSTSStyle(m_style.get(), key.m_style.get()) );
+    }
+
+    static bool CompareSTSStyle(const STSStyle& lhs, const STSStyle& rhs);
+private:
+    FwStringW m_str;
+    FwSTSStyle m_style;
+
+    friend std::size_t hash_value(const PathDataCacheKey& key);
+};
+
 class OverlayKey: public CWordCacheKey
 {
 public:
@@ -42,6 +65,7 @@ public:
 };
 
 std::size_t hash_value(const CWord& key);
+std::size_t hash_value(const PathDataCacheKey& key);
 std::size_t hash_value(const OverlayKey& key);
 std::size_t hash_value(const CWordCacheKey& key);
 
@@ -63,6 +87,15 @@ struct CWordMruItem
     SharedPtrCWord word;
 };
 
+struct PathDataMruItem
+{
+    PathDataMruItem(const PathDataCacheKey& path_data_key_, const SharedPtrPathData& path_data_):
+        path_data_key(path_data_key_),path_data(path_data_){}
+
+    PathDataCacheKey path_data_key;
+    SharedPtrPathData path_data;
+};
+
 typedef mru_list<
     OverlayMruItem, 
     boost::multi_index::member<OverlayMruItem, 
@@ -79,16 +112,27 @@ typedef mru_list<
     >
 > CWordMruCache;
 
+typedef mru_list<
+    PathDataMruItem, 
+    boost::multi_index::member<PathDataMruItem, 
+    PathDataCacheKey, 
+    &PathDataMruItem::path_data_key
+    >
+> PathDataMruCache;
+
 class CacheManager
 {
 public:
     static const int OVERLAY_CACHE_ITEM_NUM = 256;
+    static const int PATH_CACHE_ITEM_NUM = 256;
     static const int WORD_CACHE_ITEM_NUM = 512;
 
     static OverlayMruCache* GetOverlayMruCache();
+    static PathDataMruCache* GetPathDataMruCache();
     static CWordMruCache* GetCWordMruCache();
 private:
     static OverlayMruCache* s_overlay_mru_cache;
+    static PathDataMruCache* s_path_data_mru_cache;
     static CWordMruCache* s_word_mru_cache;
 };
 
