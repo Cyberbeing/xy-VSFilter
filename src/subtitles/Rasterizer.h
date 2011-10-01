@@ -67,7 +67,7 @@ struct Overlay
 public:
     Overlay()
     {
-        memset(this, 0, sizeof(*this));
+        memset(this, 0, sizeof(*this));//todo: fix me. not safe.
     }
     ~Overlay()
     {
@@ -79,6 +79,7 @@ public:
         xy_free(mpOverlayBuffer.base);
         memset(&mpOverlayBuffer, 0, sizeof(mpOverlayBuffer));        
         mOverlayWidth=mOverlayHeight=mOverlayPitch=0;
+        mfWideOutlineEmpty = false;
     }
 
     void FillAlphaMash(byte* outputAlphaMask, bool fBody, bool fBorder, 
@@ -92,7 +93,9 @@ public:
     } mpOverlayBuffer;
     int mOffsetX, mOffsetY;
         
-    int mOverlayWidth, mOverlayHeight,mOverlayPitch;
+    int mOverlayWidth, mOverlayHeight, mOverlayPitch;
+
+    bool mfWideOutlineEmpty;//specially for blur
 private:
     void _DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const byte* pBorder,
         int x, int y, int w, int h,
@@ -145,6 +148,9 @@ public:
 	bool CreateWidenedRegion(int borderX, int borderY);
 	void DeleteOutlines();
 	bool Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, SharedPtrOverlay overlay);
-	CRect Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRect, byte* pAlphaMask, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder);
+    bool Rasterize(int xsub, int ysub, SharedPtrOverlay overlay);
+    static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);
+
+    CRect Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRect, byte* pAlphaMask, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder);    
 };
 

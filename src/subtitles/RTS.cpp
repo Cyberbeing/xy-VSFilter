@@ -147,8 +147,7 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
     const OverlayMruCache::hashed_cache::iterator iter = overlay_cache.find(overlay_key);
     if(iter==overlay_cache.end())    
     {
-        overlay_list->overlay.reset(new Overlay());
-        word->DoPaint(psub, trans_org, overlay_list->overlay);
+        word->DoPaint(psub, trans_org, &(overlay_list->overlay));
         OverlayMruItem item(overlay_key, overlay_list->overlay);
         CacheManager::GetOverlayMruCache()->update_cache(item);
     }
@@ -164,7 +163,7 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
     }
 }
 
-void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay overlay)
+void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay)
 {
     bool need_transform = NeedTransform();
     if(!m_fDrawn)
@@ -201,11 +200,24 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             if(!CreateOpaqueBox()) return;
         }
         m_fDrawn = true;        
-        if(!Rasterize(psub.x, psub.y, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay)) return;
+        SharedPtrOverlay tmp(new Overlay());
+        if(!Rasterize(psub.x, psub.y, tmp)) return;
+
+        overlay->reset(new Overlay());
+        if(!Blur(*tmp, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
+        {
+            *overlay = tmp;
+        }
     }
     else
     {
-        Rasterize(psub.x, psub.y, m_style.get().fBlur, m_style.get().fGaussianBlur, overlay);
+        SharedPtrOverlay tmp(new Overlay());
+        if(!Rasterize(psub.x, psub.y, tmp)) return;
+        overlay->reset(new Overlay());
+        if(!Blur(*tmp, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
+        {
+            *overlay = tmp;
+        }
     }
     m_p = psub;
 }

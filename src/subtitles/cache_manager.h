@@ -44,6 +44,22 @@ private:
     friend std::size_t hash_value(const PathDataCacheKey& key);
 };
 
+class OverlayNoBlurKey: public PathDataCacheKey
+{
+public:
+    OverlayNoBlurKey(const CWord& word, const POINT& p, const POINT& org):PathDataCacheKey(word),m_p(p),m_org(org) { }
+    OverlayNoBlurKey(const OverlayNoBlurKey& key):PathDataCacheKey(key),m_p(key.m_p),m_org(key.m_org) { }
+    OverlayNoBlurKey(const FwSTSStyle& style, const CStringW& str, const POINT& p, const POINT& org)
+        :PathDataCacheKey(style, str),m_p(p), m_org(org) { }
+    bool operator==(const OverlayNoBlurKey& key)const 
+    { 
+        return (static_cast<PathDataCacheKey>(*this)==static_cast<PathDataCacheKey>(key)) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
+            && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y); 
+    }
+
+    POINT m_p, m_org;    
+};
+
 class OverlayKey: public CWordCacheKey
 {
 public:
@@ -66,6 +82,7 @@ public:
 
 std::size_t hash_value(const CWord& key);
 std::size_t hash_value(const PathDataCacheKey& key);
+std::size_t hash_value(const OverlayNoBlurKey& key);
 std::size_t hash_value(const OverlayKey& key);
 std::size_t hash_value(const CWordCacheKey& key);
 
@@ -96,6 +113,15 @@ struct PathDataMruItem
     SharedPtrPathData path_data;
 };
 
+struct OverlayNoBlurMruItem
+{
+    OverlayNoBlurMruItem(const OverlayNoBlurKey& key_, const SharedPtrOverlay& overlay_)
+        :key(key_),overlay(overlay_){}
+
+    OverlayNoBlurKey key;
+    SharedPtrOverlay overlay;
+};
+
 typedef mru_list<
     OverlayMruItem, 
     boost::multi_index::member<OverlayMruItem, 
@@ -120,18 +146,29 @@ typedef mru_list<
     >
 > PathDataMruCache;
 
+typedef mru_list<
+    OverlayNoBlurMruItem, 
+    boost::multi_index::member<OverlayNoBlurMruItem, 
+    OverlayNoBlurKey, 
+    &OverlayNoBlurMruItem::key
+    >
+> OverlayNoBlurMruCache;
+
 class CacheManager
 {
 public:
     static const int OVERLAY_CACHE_ITEM_NUM = 256;
+    static const int OVERLAY_NO_BLUR_CACHE_ITEM_NUM = 256;
     static const int PATH_CACHE_ITEM_NUM = 256;
     static const int WORD_CACHE_ITEM_NUM = 512;
 
     static OverlayMruCache* GetOverlayMruCache();
+    static OverlayNoBlurMruCache* GetOverlayNoBlurMruCache();
     static PathDataMruCache* GetPathDataMruCache();
     static CWordMruCache* GetCWordMruCache();
 private:
     static OverlayMruCache* s_overlay_mru_cache;
+    static OverlayNoBlurMruCache* s_overlay_no_blur_mru_cache;
     static PathDataMruCache* s_path_data_mru_cache;
     static CWordMruCache* s_word_mru_cache;
 };

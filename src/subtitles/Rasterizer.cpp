@@ -674,7 +674,7 @@ void Rasterizer::_EvaluateLine(int x0, int y0, int x1, int y1)
         }
     }
 }
-
+ 
 bool Rasterizer::ScanConvert(SharedPtrPathData path_data)
 {
     int lastmoveto = -1;
@@ -954,6 +954,7 @@ bool Rasterizer::Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, 
     overlay->mOffsetX = mPathOffsetX - xsub;
     overlay->mOffsetY = mPathOffsetY - ysub;
     mWideBorder = (mWideBorder+7)&~7;
+
     if(!mWideOutline.empty() || fBlur || fGaussianBlur > 0)
     {
         int bluradjust = 0;
@@ -1036,6 +1037,174 @@ bool Rasterizer::Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, 
             int pitch = overlay->mOverlayPitch;
             byte* plan_selected= mWideOutline.empty() ? overlay->mpOverlayBuffer.body : overlay->mpOverlayBuffer.border;
             be_blur(plan_selected, tmp_buf.tmp, overlay->mOverlayWidth, overlay->mOverlayHeight, pitch);
+        }
+    }
+    return true;
+}
+
+bool Rasterizer::Rasterize(int xsub, int ysub, SharedPtrOverlay overlay)
+{
+    using namespace ::boost::flyweights;
+
+    if(!overlay)
+    {
+        return false;
+    }
+    overlay->CleanUp();
+
+    if(!mWidth || !mHeight)
+    {
+        return true;
+    }
+    xsub &= 7;
+    ysub &= 7;
+    //xsub = ysub = 0;
+    int width = mWidth + xsub;
+    int height = mHeight + ysub;
+    overlay->mOffsetX = mPathOffsetX - xsub;
+    overlay->mOffsetY = mPathOffsetY - ysub;
+    mWideBorder = (mWideBorder+7)&~7;
+    overlay->mfWideOutlineEmpty = mWideOutline.empty();
+    if(!mWideOutline.empty())
+    {
+        width += 2*mWideBorder;
+        height += 2*mWideBorder;
+        xsub += mWideBorder;
+        ysub += mWideBorder;
+        overlay->mOffsetX -= mWideBorder;
+        overlay->mOffsetY -= mWideBorder;
+    }
+
+    overlay->mOverlayWidth = ((width+7)>>3) + 1;
+    overlay->mOverlayHeight = ((height+7)>>3) + 1;
+    overlay->mOverlayPitch = (overlay->mOverlayWidth+15)&~15;
+
+    overlay->mpOverlayBuffer.base = (byte*)xy_malloc(2 * overlay->mOverlayPitch * overlay->mOverlayHeight);
+    memset(overlay->mpOverlayBuffer.base, 0, 2 * overlay->mOverlayPitch * overlay->mOverlayHeight);
+    overlay->mpOverlayBuffer.body = overlay->mpOverlayBuffer.base;
+    overlay->mpOverlayBuffer.border = overlay->mpOverlayBuffer.base + overlay->mOverlayPitch * overlay->mOverlayHeight;        
+
+    // Are we doing a border?
+    tSpanBuffer* pOutline[2] = {&mOutline, &mWideOutline};
+    for(int i = countof(pOutline)-1; i >= 0; i--)
+    {
+        tSpanBuffer::iterator it = pOutline[i]->begin();
+        tSpanBuffer::iterator itEnd = pOutline[i]->end();
+        byte* plan_selected = i==0 ? overlay->mpOverlayBuffer.body : overlay->mpOverlayBuffer.border;
+        int pitch = overlay->mOverlayPitch;
+        for(; it!=itEnd; ++it)
+        {
+            int y = (int)(((*it).first >> 32) - 0x40000000 + ysub);
+            int x1 = (int)(((*it).first & 0xffffffff) - 0x40000000 + xsub);
+            int x2 = (int)(((*it).second & 0xffffffff) - 0x40000000 + xsub);
+            if(x2 > x1)
+            {
+                int first = x1>>3;
+                int last = (x2-1)>>3;
+                byte* dst = plan_selected + (pitch*(y>>3) + first);
+                if(first == last)
+                    *dst += x2-x1;
+                else
+                {
+                    *dst += ((first+1)<<3) - x1;
+                    dst += 1;
+                    while(++first < last)
+                    {
+                        *dst += 0x08;
+                        dst += 1;
+                    }
+                    *dst += x2 - (last<<3);
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+
+// @return: true if actually a blur operation has done, or else false and output is leave unset.
+bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, 
+    SharedPtrOverlay output_overlay)
+{
+    using namespace ::boost::flyweights;
+
+    if(!output_overlay)
+    {
+        return false;
+    }
+    output_overlay->CleanUp();
+
+    output_overlay->mOffsetX = input_overlay.mOffsetX;
+    output_overlay->mOffsetY = input_overlay.mOffsetY;
+    output_overlay->mOverlayWidth = input_overlay.mOverlayWidth;
+    output_overlay->mOverlayHeight = input_overlay.mOverlayHeight;
+    output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
+
+    int bluradjust = 0;
+    if(fBlur || fGaussianBlur > 0.1)
+    {
+        if (fGaussianBlur > 0)
+            bluradjust += (int)(fGaussianBlur*3*8 + 0.5) | 1;
+        if (fBlur)
+            bluradjust += 8;
+        // Expand the buffer a bit when we're blurring, since that can also widen the borders a bit
+        bluradjust = (bluradjust+7)&~7;
+
+        output_overlay->mOffsetX -= bluradjust;
+        output_overlay->mOffsetY -= bluradjust;
+        output_overlay->mOverlayWidth += (bluradjust>>2);
+        output_overlay->mOverlayHeight += (bluradjust>>2);
+    }
+    else
+    {
+        return false;
+    }
+
+    output_overlay->mOverlayPitch = (output_overlay->mOverlayWidth+15)&~15;
+
+    output_overlay->mpOverlayBuffer.base = (byte*)xy_malloc(2 * output_overlay->mOverlayPitch * output_overlay->mOverlayHeight);
+    memset(output_overlay->mpOverlayBuffer.base, 0, 2 * output_overlay->mOverlayPitch * output_overlay->mOverlayHeight);
+    output_overlay->mpOverlayBuffer.body = output_overlay->mpOverlayBuffer.base;
+    output_overlay->mpOverlayBuffer.border = output_overlay->mpOverlayBuffer.base + output_overlay->mOverlayPitch * output_overlay->mOverlayHeight;        
+
+    //copy buffer
+    for(int i = 1; i >= 0; i--)
+    {
+        byte* plan_selected = i==0 ? output_overlay->mpOverlayBuffer.body : output_overlay->mpOverlayBuffer.border;
+        const byte* plan_input = i==0 ? input_overlay.mpOverlayBuffer.body : input_overlay.mpOverlayBuffer.border;
+
+        plan_selected += (bluradjust>>3) + (bluradjust>>3)*output_overlay->mOverlayPitch;
+        for (int j=0;j<input_overlay.mOverlayHeight;j++)
+        {
+            memcpy(plan_selected, plan_input, input_overlay.mOverlayPitch);
+            plan_selected += output_overlay->mOverlayPitch;
+            plan_input += input_overlay.mOverlayPitch;
+        }
+    }
+
+    ass_tmp_buf tmp_buf( max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0) );        
+    //flyweight<key_value<int, ass_tmp_buf, ass_tmp_buf_get_size>, no_locking> tmp_buf((overlay->mOverlayWidth+1)*(overlay->mOverlayPitch+1));
+    // Do some gaussian blur magic    
+    if (fGaussianBlur > 0.1)//(fGaussianBlur > 0) return true even if fGaussianBlur very small
+    {
+        byte* plan_selected= output_overlay->mfWideOutlineEmpty ? output_overlay->mpOverlayBuffer.body : output_overlay->mpOverlayBuffer.border;
+        flyweight<key_value<double, ass_synth_priv, ass_synth_priv_key>, no_locking> fw_priv_blur(fGaussianBlur);
+        const ass_synth_priv& priv_blur = fw_priv_blur.get();
+        if (output_overlay->mOverlayWidth>=priv_blur.g_w && output_overlay->mOverlayHeight>=priv_blur.g_w)
+        {   
+            ass_gauss_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, output_overlay->mOverlayPitch, 
+                priv_blur.gt2, priv_blur.g_r, priv_blur.g_w);
+        }
+    }
+
+    for (int pass = 0; pass < fBlur; pass++)
+    {
+        if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
+        {            
+            int pitch = output_overlay->mOverlayPitch;
+            byte* plan_selected= output_overlay->mfWideOutlineEmpty ? output_overlay->mpOverlayBuffer.body : output_overlay->mpOverlayBuffer.border;
+            be_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
         }
     }
     return true;
