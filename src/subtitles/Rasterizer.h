@@ -147,7 +147,6 @@ public:
 	bool ScanConvert(SharedPtrPathData path_data);
 	bool CreateWidenedRegion(int borderX, int borderY);
 	void DeleteOutlines();
-	bool Rasterize(int xsub, int ysub, int fBlur, double fGaussianBlur, SharedPtrOverlay overlay);
     bool Rasterize(int xsub, int ysub, SharedPtrOverlay overlay);
     static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);
 

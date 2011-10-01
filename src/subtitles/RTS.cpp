@@ -165,59 +165,64 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
 
 void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay)
 {
-    bool need_transform = NeedTransform();
-    if(!m_fDrawn)
+    SharedPtrOverlay raterize_result;
+
+    OverlayNoBlurKey overlay_no_blur_key(*this, psub, trans_org);
+    const OverlayNoBlurMruCache::hashed_cache& overlay_no_blur_cache = CacheManager::GetOverlayNoBlurMruCache()->get_hashed_cache();
+    const OverlayNoBlurMruCache::hashed_cache::iterator iter = overlay_no_blur_cache.find(overlay_no_blur_key);
+
+    if(iter==overlay_no_blur_cache.end())
     {
-        //get outline path, if not cached, create it and cache a copy, else copy from cache
-        SharedPtrPathData path_data(new PathData());        
-        PathDataCacheKey path_data_key(*this);
-        const PathDataMruCache::hashed_cache& path_data_cache = CacheManager::GetPathDataMruCache()->get_hashed_cache();    
-        const PathDataMruCache::hashed_cache::iterator iter = path_data_cache.find(path_data_key);
-        if(iter==path_data_cache.end())    
+        raterize_result.reset(new Overlay());
+        if(!m_fDrawn)
         {
-            if(!CreatePath(path_data)) return;
+            //get outline path, if not cached, create it and cache a copy, else copy from cache
+            SharedPtrPathData path_data(new PathData());        
+            PathDataCacheKey path_data_key(*this);
+            const PathDataMruCache::hashed_cache& path_data_cache = CacheManager::GetPathDataMruCache()->get_hashed_cache();    
+            const PathDataMruCache::hashed_cache::iterator iter = path_data_cache.find(path_data_key);
+            if(iter==path_data_cache.end())    
+            {
+                if(!CreatePath(path_data)) return;
 
-            SharedPtrPathData data(new PathData());
-            *data = *path_data;//important! copy not ref
-            PathDataMruItem item(path_data_key, data);
-            CacheManager::GetPathDataMruCache()->update_cache(item);
-        }
-        else
-        {
-            *path_data = *(iter->path_data); //important! copy not ref
-        } 
-        
-        if(need_transform)
-            Transform(path_data, CPoint(trans_org.x*8, trans_org.y*8));
+                SharedPtrPathData data(new PathData());
+                *data = *path_data;//important! copy not ref
+                PathDataMruItem item(path_data_key, data);
+                CacheManager::GetPathDataMruCache()->update_cache(item);
+            }
+            else
+            {
+                *path_data = *(iter->path_data); //important! copy not ref
+            } 
 
-        if(!ScanConvert(path_data)) return;
-        if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
+            bool need_transform = NeedTransform();
+            if(need_transform)
+                Transform(path_data, CPoint(trans_org.x*8, trans_org.y*8));
+
+            if(!ScanConvert(path_data)) return;
+                        if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
         {
             if(!CreateWidenedRegion((int)(m_style.get().outlineWidthX+0.5), (int)(m_style.get().outlineWidthY+0.5))) return;
         }
-        else if(m_style.get().borderStyle == 1)
+                        else if(m_style.get().borderStyle == 1)
         {
             if(!CreateOpaqueBox()) return;
         }
-        m_fDrawn = true;        
-        SharedPtrOverlay tmp(new Overlay());
-        if(!Rasterize(psub.x, psub.y, tmp)) return;
-
-        overlay->reset(new Overlay());
-        if(!Blur(*tmp, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
-        {
-            *overlay = tmp;
+            m_fDrawn = true;      
         }
+        if(!Rasterize(psub.x, psub.y, raterize_result)) return;
+
+        OverlayNoBlurMruItem item(overlay_no_blur_key, raterize_result);
+        CacheManager::GetOverlayNoBlurMruCache()->update_cache(item);
     }
     else
     {
-        SharedPtrOverlay tmp(new Overlay());
-        if(!Rasterize(psub.x, psub.y, tmp)) return;
-        overlay->reset(new Overlay());
-        if(!Blur(*tmp, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
-        {
-            *overlay = tmp;
-        }
+        raterize_result = iter->overlay;
+    }
+    overlay->reset(new Overlay());
+    if(!Blur(*raterize_result, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
+    {
+        *overlay = raterize_result;
     }
     m_p = psub;
 }
