@@ -279,6 +279,14 @@ extern "C" {
             int path_data_cache_max_item_num
             ) PURE;
 
+        STDMETHOD(get_OverlayNoBlurCacheMaxItemNum) (THIS_
+            int* overlay_no_blur_cache_max_item_num
+            ) PURE;
+
+        STDMETHOD(put_OverlayNoBlurCacheMaxItemNum) (THIS_
+            int overlay_no_blur_cache_max_item_num
+            ) PURE;
+
         STDMETHOD(get_SubpixelPositionLevel) (THIS_
             int* subpixel_pos_level
             ) PURE;

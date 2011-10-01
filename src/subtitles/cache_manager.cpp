@@ -87,7 +87,6 @@ bool PathDataCacheKey::CompareSTSStyle( const STSStyle& lhs, const STSStyle& rhs
         lhs.fStrikeOut==rhs.fStrikeOut;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // CacheManager
@@ -95,6 +94,7 @@ bool PathDataCacheKey::CompareSTSStyle( const STSStyle& lhs, const STSStyle& rhs
 CWordMruCache* CacheManager::s_word_mru_cache = NULL;
 PathDataMruCache* CacheManager::s_path_data_mru_cache = NULL;
 OverlayNoBlurMruCache* CacheManager::s_overlay_no_blur_mru_cache = NULL;
+
 OverlayMruCache* CacheManager::s_overlay_mru_cache = NULL;
 
 OverlayMruCache* CacheManager::GetOverlayMruCache()
@@ -132,4 +132,3 @@ OverlayNoBlurMruCache* CacheManager::GetOverlayNoBlurMruCache()
     }
     return s_overlay_no_blur_mru_cache;
 }
-

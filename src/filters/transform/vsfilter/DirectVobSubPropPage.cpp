@@ -772,6 +772,7 @@ CDVSBasePPage(NAME("DirectVobSub More Property Page"), pUnk, IDD_DVSMOREPAGE, ID
 {
     BindControl(IDC_SPINPathCache, m_path_cache);
     BindControl(IDC_SPINScanlineCache, m_scanline_cache);
+    BindControl(IDC_SPINOverlayNoBlurCache, m_overlay_no_blur_cache);
     BindControl(IDC_SPINOverlayCache, m_overlay_cache);
     BindControl(IDC_COMBO_SUBPIXEL_POS, m_combo_subpixel_pos);
 }
@@ -786,6 +787,7 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
     if(fSave)
     {
         m_pDirectVobSub->put_OverlayCacheMaxItemNum(m_overlay_cache_max_item_num);
+        m_pDirectVobSub->put_OverlayNoBlurCacheMaxItemNum(m_overlay_no_blur_cache_max_item_num);
         m_pDirectVobSub->put_CWordCacheMaxItemNum(m_word_cache_max_item_num);
         m_pDirectVobSub->put_PathDataCacheMaxItemNum(m_path_cache_max_item_num);
         m_pDirectVobSub->put_SubpixelPositionLevel(m_subpixel_pos_level);
@@ -793,6 +795,7 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
     else
     {
         m_pDirectVobSub->get_OverlayCacheMaxItemNum(&m_overlay_cache_max_item_num);
+        m_pDirectVobSub->get_OverlayNoBlurCacheMaxItemNum(&m_overlay_no_blur_cache_max_item_num);
         m_pDirectVobSub->get_CWordCacheMaxItemNum(&m_word_cache_max_item_num);
         m_pDirectVobSub->get_PathDataCacheMaxItemNum(&m_path_cache_max_item_num);
         m_pDirectVobSub->get_SubpixelPositionLevel(&m_subpixel_pos_level);
@@ -803,9 +806,11 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
 {
     if(fSave)
     {
-        m_overlay_cache_max_item_num = m_overlay_cache.GetPos32();        
+        m_overlay_cache_max_item_num = m_overlay_cache.GetPos32();
+        m_overlay_no_blur_cache_max_item_num = m_overlay_no_blur_cache.GetPos32();
         m_word_cache_max_item_num = m_scanline_cache.GetPos32();
         m_path_cache_max_item_num = m_path_cache.GetPos32();
+
         if (m_combo_subpixel_pos.GetCurSel() != CB_ERR)
         {
             m_subpixel_pos_level = m_combo_subpixel_pos.GetCurSel();
@@ -818,10 +823,12 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
     else
     {
         m_overlay_cache.SetRange32(0, 2048);
+        m_overlay_no_blur_cache.SetRange32(0, 2048);
         m_scanline_cache.SetRange32(0, 2048);
         m_path_cache.SetRange32(0, 2048);
 
         m_overlay_cache.SetPos32(m_overlay_cache_max_item_num);
+        m_overlay_no_blur_cache.SetPos32(m_overlay_no_blur_cache_max_item_num);
         m_scanline_cache.SetPos32(m_word_cache_max_item_num);
         m_path_cache.SetPos32(m_path_cache_max_item_num);
 

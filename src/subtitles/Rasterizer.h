@@ -48,7 +48,6 @@ public:
 
     PathData(const PathData&);//important! disable default copy constructor
     const PathData& operator=(const PathData&);
-
     void _TrashPath();
     bool BeginPath(HDC hdc);
     bool EndPath(HDC hdc);
@@ -147,6 +146,7 @@ public:
 	bool ScanConvert(SharedPtrPathData path_data);
 	bool CreateWidenedRegion(int borderX, int borderY);
 	void DeleteOutlines();
+
     bool Rasterize(int xsub, int ysub, SharedPtrOverlay overlay);
     static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);
 

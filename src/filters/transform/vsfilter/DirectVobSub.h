@@ -46,6 +46,8 @@ protected:
     int m_overlay_cache_max_item_num;
     int m_word_cache_max_item_num;
     int m_path_data_cache_max_item_num;
+    int m_overlay_no_blur_cache_max_item_num;
+
     int m_subpixel_pos_level;
 
 	STSStyle m_defStyle;
@@ -108,6 +110,9 @@ public:
 
     STDMETHODIMP get_PathDataCacheMaxItemNum(int* path_data_cache_max_item_num);
     STDMETHODIMP put_PathDataCacheMaxItemNum(int path_data_cache_max_item_num);
+    
+    STDMETHODIMP get_OverlayNoBlurCacheMaxItemNum(int* overlay_no_blur_cache_max_item_num);
+    STDMETHODIMP put_OverlayNoBlurCacheMaxItemNum(int overlay_no_blur_cache_max_item_num);
 
     STDMETHODIMP get_SubpixelPositionLevel(int* subpixel_pos_level);
     STDMETHODIMP put_SubpixelPositionLevel(int subpixel_pos_level);

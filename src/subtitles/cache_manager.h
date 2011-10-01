@@ -158,6 +158,7 @@ class CacheManager
 {
 public:
     static const int OVERLAY_CACHE_ITEM_NUM = 256;
+
     static const int OVERLAY_NO_BLUR_CACHE_ITEM_NUM = 256;
     static const int PATH_CACHE_ITEM_NUM = 256;
     static const int WORD_CACHE_ITEM_NUM = 512;

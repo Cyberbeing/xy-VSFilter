@@ -200,14 +200,14 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
                 Transform(path_data, CPoint(trans_org.x*8, trans_org.y*8));
 
             if(!ScanConvert(path_data)) return;
-                        if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
-        {
-            if(!CreateWidenedRegion((int)(m_style.get().outlineWidthX+0.5), (int)(m_style.get().outlineWidthY+0.5))) return;
-        }
-                        else if(m_style.get().borderStyle == 1)
-        {
-            if(!CreateOpaqueBox()) return;
-        }
+            if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
+            {
+                if(!CreateWidenedRegion((int)(m_style.get().outlineWidthX+0.5), (int)(m_style.get().outlineWidthY+0.5))) return;
+            }
+            else if(m_style.get().borderStyle == 1)
+            {
+                if(!CreateOpaqueBox()) return;
+            }
             m_fDrawn = true;      
         }
         if(!Rasterize(psub.x, psub.y, raterize_result)) return;

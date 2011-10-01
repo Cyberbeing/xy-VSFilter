@@ -674,7 +674,7 @@ void Rasterizer::_EvaluateLine(int x0, int y0, int x1, int y1)
         }
     }
 }
- 
+
 bool Rasterizer::ScanConvert(SharedPtrPathData path_data)
 {
     int lastmoveto = -1;

@@ -1099,6 +1099,19 @@ STDMETHODIMP CDirectVobSubFilter::put_PathDataCacheMaxItemNum(int path_data_cach
     return hr;
 }
 
+STDMETHODIMP CDirectVobSubFilter::put_OverlayNoBlurCacheMaxItemNum(int overlay_no_blur_cache_max_item_num)
+{
+    CAutoLock cAutolock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::put_OverlayNoBlurCacheMaxItemNum(overlay_no_blur_cache_max_item_num);
+
+    if(hr == NOERROR)
+    {
+        CacheManager::GetOverlayNoBlurMruCache()->set_max_num_items(m_overlay_no_blur_cache_max_item_num);
+    }
+
+    return hr;
+}
+
 STDMETHODIMP CDirectVobSubFilter::put_SubpixelPositionLevel(int subpixel_pos_level)
 {
     CAutoLock cAutolock(&m_csQueueLock);
