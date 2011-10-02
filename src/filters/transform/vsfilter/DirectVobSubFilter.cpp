@@ -556,9 +556,6 @@ void CDirectVobSubFilter::InitSubPicQueue()
 
 	m_pSubPicQueue = NULL;
 
-	m_pTempPicBuff.Free();
-	m_pTempPicBuff.Allocate(4*m_w*m_h);
-
 	const GUID& subtype = m_pInput->CurrentMediaType().subtype;
 
 	BITMAPINFOHEADER bihIn;
@@ -578,6 +575,12 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	m_spd.h = m_h;
 	m_spd.bpp = (m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV) ? 8 : bihIn.biBitCount;
 	m_spd.pitch = m_spd.w*m_spd.bpp>>3;
+
+    m_pTempPicBuff.Free();
+    if(m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV)
+        m_pTempPicBuff.Allocate(4*m_spd.pitch*m_spd.h);
+    else
+        m_pTempPicBuff.Allocate(m_spd.pitch*m_spd.h);
 	m_spd.bits = (void*)m_pTempPicBuff;
 
 	//CComPtr<ISubPicAllocator> pSubPicAllocator = new CMemSubPicAllocator(m_spd.type, CSize(m_w, m_h));

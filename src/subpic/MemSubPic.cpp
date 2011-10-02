@@ -471,81 +471,140 @@ STDMETHODIMP CMemSubPic::AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc
             ss[0] = src_origin + src.pitch*src.h*2;//U
             ss[1] = src_origin + src.pitch*src.h*3;//V
 
-            for(int i=0; i<h; i++, s += src.pitch, d += dst.pitch)
+            // equivalent:                
+            //   if( (reinterpret_cast<intptr_t>(s2)&15)==0 && (reinterpret_cast<intptr_t>(sa)&15)==0 
+            //     && (reinterpret_cast<intptr_t>(d2)&15)==0 )
+            if( ((reinterpret_cast<intptr_t>(s) | static_cast<intptr_t>(src.pitch) |
+                reinterpret_cast<intptr_t>(d) | static_cast<intptr_t>(dst.pitch) ) & 15 )==0 )
             {
-                BYTE* sa = s;
-                BYTE* s2 = s + src.pitch*src.h;
-                BYTE* s2end = s2 + w;
-                BYTE* d2 = d;
-//                for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
-//                {
-//                //if(s2[3] < 0xff)
-//                    {
-//                        //					d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];
-//                        d2[0] = (((d2[0])*sa[0])>>8) + s2[0];
-//                    }
-//                }
-                for(; s2 < s2end; s2+=16, sa+=16, d2+=16)
+                for(int i=0; i<h; i++, s += src.pitch, d += dst.pitch)
                 {
-                    __asm
+                    BYTE* sa = s;
+                    BYTE* s2 = s + src.pitch*src.h;
+                    BYTE* s2end_mod16 = s2 + (w&~15);
+                    BYTE* s2end = s2 + w;
+                    BYTE* d2 = d;
+
+                    for(; s2 < s2end_mod16; s2+=16, sa+=16, d2+=16)
                     {
-                        //important!
-                        mov			edi, d2
-                        mov         esi, sa
+                        __asm
+                        {
+                            //important!
+                            mov			edi, d2
+                                mov         esi, sa
 
-                        movaps      XMM3,[edi]
-                        xorps       XMM0,XMM0
-                        movaps      XMM4,XMM3
-                        punpcklbw   XMM4,XMM0
+                                movaps      XMM3,[edi]
+                            xorps       XMM0,XMM0
+                                movaps      XMM4,XMM3
+                                punpcklbw   XMM4,XMM0
 
-                        movaps      XMM1,[esi]
-                        movaps      XMM5,XMM1
-                        punpcklbw   XMM5,XMM0
-                        pmullw      XMM4,XMM5
-                        psrlw       XMM4,8
+                                movaps      XMM1,[esi]
+                            movaps      XMM5,XMM1
+                                punpcklbw   XMM5,XMM0
+                                pmullw      XMM4,XMM5
+                                psrlw       XMM4,8
 
-                        punpckhbw   XMM1,XMM0
-                        punpckhbw   XMM3,XMM0
-                        pmullw      XMM1,XMM3
-                        psrlw       XMM1,8
+                                punpckhbw   XMM1,XMM0
+                                punpckhbw   XMM3,XMM0
+                                pmullw      XMM1,XMM3
+                                psrlw       XMM1,8
 
-                        packuswb    XMM4,XMM1
-                        mov         esi, s2
-                        movaps      XMM3,[esi]
-                        paddusb     XMM4,XMM3
-                        movntps     [edi],XMM4
+                                packuswb    XMM4,XMM1
+                                mov         esi, s2
+                                movaps      XMM3,[esi]
+                            paddusb     XMM4,XMM3
+                                movntps     [edi],XMM4
+                        }
+                    }
+                    for(; s2 < s2end; s2++, sa++, d2++)
+                    {
+                        d2[0] = (((d2[0])*sa[0])>>8) + s2[0];
+                    }
+               }
+            }
+            else //fix me: only a workaround for non-mod-16 size video
+            {
+                for(int i=0; i<h; i++, s += src.pitch, d += dst.pitch)
+                {
+                    BYTE* sa = s;
+                    BYTE* s2 = s + src.pitch*src.h;
+                    BYTE* s2end_mod16 = s2 + (w&~15);
+                    BYTE* s2end = s2 + w;
+                    BYTE* d2 = d;
+                    for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
+                    {
+                        //if(s2[3] < 0xff)
+                        {
+                            //					d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];
+                            d2[0] = (((d2[0])*sa[0])>>8) + s2[0];
+                        }
                     }
                 }
             }
-            for(int i = 0; i < 2; i++)
+            // equivalent:
+            //   if( (reinterpret_cast<intptr_t>(s2)&15)==0 && (reinterpret_cast<intptr_t>(sa2)&15)==0 
+            //       && (reinterpret_cast<intptr_t>(d2)&7)==0 )
+            if( ((reinterpret_cast<intptr_t>(ss[0]) | reinterpret_cast<intptr_t>(ss[1]) | 
+                  reinterpret_cast<intptr_t>(dd[0]) | reinterpret_cast<intptr_t>(dd[1]) | 
+                  reinterpret_cast<intptr_t>(src_origin) | static_cast<intptr_t>(src.pitch) |
+                  (static_cast<intptr_t>(dst.pitchUV)&7) ) & 15 )==0 )
             {
-                BYTE* s_uv = ss[i];
-                BYTE* sa = src_origin;
-                d = dd[i];
-                int pitch = src.pitch;
-                for(int j = 0; j < h2; j++, s_uv += src.pitch*2, sa += src.pitch*2, d += dst.pitchUV)
+                for(int i = 0; i < 2; i++)
                 {
-                    BYTE* s2 = s_uv;
-                    BYTE* sa2 = sa;
-                    BYTE* s2end = s2 + w;
-                    BYTE* d2 = d;
-//                    for(; s2 < s2end; s2 += 2, sa2 += 2, d2++)
-//                    {
-//                        unsigned int ia = (sa2[0]+         +sa2[1]+
-//                                           sa2[0+src.pitch]+sa2[1+src.pitch])>>2;
-//                      //if(ia < 0xff)
-//                        {
-//                            //                        *d2 = (((*d2-0x80)*ia)>>8) + ((s2[0]        +s2[1]
-//                            //                                                       s2[src.pitch]+s2[1+src.pitch] )>>2);
-//                            *d2 = (((*d2)*ia)>>8) + ((s2[0]        +s2[1]+
-//                                                      s2[src.pitch]+s2[1+src.pitch] )>>2);
-//                        }
-//                    }
-                    for(; s2 < s2end; s2 += 16, sa2 += 16, d2+=8)
+                    BYTE* s_uv = ss[i];
+                    BYTE* sa = src_origin;
+                    d = dd[i];
+                    int pitch = src.pitch;
+                    for(int j = 0; j < h2; j++, s_uv += src.pitch*2, sa += src.pitch*2, d += dst.pitchUV)
                     {
-                        SSE2_ALPHA_BLT_UV(d2, sa2, s2, pitch)
-                    }
+                        BYTE* s2 = s_uv;
+                        BYTE* sa2 = sa;
+                        BYTE* s2end_mod16 = s2 + (w&~15);
+                        BYTE* s2end = s2 + w;
+                        BYTE* d2 = d;
 
+                        for(; s2 < s2end_mod16; s2 += 16, sa2 += 16, d2+=8)
+                        {
+                            SSE2_ALPHA_BLT_UV(d2, sa2, s2, pitch)
+                        }
+                        for(; s2 < s2end; s2+=2, sa2+=2, d2++)
+                        {
+                            unsigned int ia = (sa2[0]+         +sa2[1]+
+                                               sa2[0+src.pitch]+sa2[1+src.pitch])>>2;
+                            *d2 = (((*d2)*ia)>>8) + ((s2[0]        +s2[1]+
+                                                      s2[src.pitch]+s2[1+src.pitch] )>>2);
+                        }
+                    }
+                }
+            }
+            else//fix me: only a workaround for non-mod-16 size video
+            {
+                for(int i = 0; i < 2; i++)
+                {
+                    BYTE* s_uv = ss[i];
+                    BYTE* sa = src_origin;
+                    d = dd[i];
+                    int pitch = src.pitch;
+                    for(int j = 0; j < h2; j++, s_uv += src.pitch*2, sa += src.pitch*2, d += dst.pitchUV)
+                    {
+                        BYTE* s2 = s_uv;
+                        BYTE* sa2 = sa;
+                        BYTE* s2end_mod16 = s2 + (w&~15);
+                        BYTE* s2end = s2 + w;
+                        BYTE* d2 = d;
+                        for(; s2 < s2end; s2 += 2, sa2 += 2, d2++)
+                        {
+                            unsigned int ia = (sa2[0]+         +sa2[1]+
+                                sa2[0+src.pitch]+sa2[1+src.pitch])>>2;
+                            //if(ia < 0xff)
+                            {
+                                //                        *d2 = (((*d2-0x80)*ia)>>8) + ((s2[0]        +s2[1]
+                                //                                                       s2[src.pitch]+s2[1+src.pitch] )>>2);
+                                *d2 = (((*d2)*ia)>>8) + ((s2[0]        +s2[1]+
+                                    s2[src.pitch]+s2[1+src.pitch] )>>2);
+                            }
+                        }
+                    }
                 }
             }
             __asm emms;
