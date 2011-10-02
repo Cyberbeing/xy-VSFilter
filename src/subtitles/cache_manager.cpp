@@ -89,6 +89,20 @@ bool PathDataCacheKey::CompareSTSStyle( const STSStyle& lhs, const STSStyle& rhs
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+// OverlayNoBlurKey
+
+bool OverlayNoBlurKey::operator==( const OverlayNoBlurKey& key ) const
+{ 
+    return (static_cast<PathDataCacheKey>(*this)==static_cast<PathDataCacheKey>(key)) 
+        && this->m_style.get().borderStyle == key.m_style.get().borderStyle
+        && this->m_style.get().outlineWidthX == key.m_style.get().outlineWidthX
+        && this->m_style.get().outlineWidthY == key.m_style.get().outlineWidthY
+        && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
+        && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y); 
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 // CacheManager
 
 CWordMruCache* CacheManager::s_word_mru_cache = NULL;
@@ -132,3 +146,4 @@ OverlayNoBlurMruCache* CacheManager::GetOverlayNoBlurMruCache()
     }
     return s_overlay_no_blur_mru_cache;
 }
+

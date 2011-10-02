@@ -37,7 +37,7 @@ public:
     }
 
     static bool CompareSTSStyle(const STSStyle& lhs, const STSStyle& rhs);
-private:
+protected:
     FwStringW m_str;
     FwSTSStyle m_style;
 
@@ -51,11 +51,7 @@ public:
     OverlayNoBlurKey(const OverlayNoBlurKey& key):PathDataCacheKey(key),m_p(key.m_p),m_org(key.m_org) { }
     OverlayNoBlurKey(const FwSTSStyle& style, const CStringW& str, const POINT& p, const POINT& org)
         :PathDataCacheKey(style, str),m_p(p), m_org(org) { }
-    bool operator==(const OverlayNoBlurKey& key)const 
-    { 
-        return (static_cast<PathDataCacheKey>(*this)==static_cast<PathDataCacheKey>(key)) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
-            && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y); 
-    }
+    bool operator==(const OverlayNoBlurKey& key)const;
 
     POINT m_p, m_org;    
 };
