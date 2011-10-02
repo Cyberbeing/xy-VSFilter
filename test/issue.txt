@@ -28,3 +28,6 @@ issue 11: incorrect result, improper cliper position with 12.ass.
 more: on videos with 720 x 400 resolution, the result is correct, but on 1280 x 720, the result is wrong. Turn off compiler option /arch:SSE2, both resolutions above get the right result. It also applies to Issue 7. Maybe /arch:SSE2 option affects some internal floating point caculation such that an overflow occur. (fixed)
 ==============================================================
 issue 12: lags when scripts have blur tags, due to the complex gaussian table generation.(fixed)
+==============================================================
+issue 13: crash with 13.ass. Introduced since Commit:49399231bb7a8167d9451ccc1e2ef076fa7b8195.
+==============================================================
