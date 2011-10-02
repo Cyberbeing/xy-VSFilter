@@ -165,12 +165,13 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
 
 void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay)
 {
-    SharedPtrOverlay raterize_result;
+    overlay->reset(new Overlay());
 
     OverlayNoBlurKey overlay_no_blur_key(*this, psub, trans_org);
     const OverlayNoBlurMruCache::hashed_cache& overlay_no_blur_cache = CacheManager::GetOverlayNoBlurMruCache()->get_hashed_cache();
     const OverlayNoBlurMruCache::hashed_cache::iterator iter = overlay_no_blur_cache.find(overlay_no_blur_key);
-
+    
+    SharedPtrOverlay raterize_result;
     if(iter==overlay_no_blur_cache.end())
     {
         raterize_result.reset(new Overlay());
@@ -218,8 +219,7 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     else
     {
         raterize_result = iter->overlay;
-    }
-    overlay->reset(new Overlay());
+    }    
     if(!Blur(*raterize_result, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
     {
         *overlay = raterize_result;
