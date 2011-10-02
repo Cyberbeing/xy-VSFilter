@@ -548,6 +548,11 @@ void CDirectVobSubFilter::InitSubPicQueue()
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
     ColorConvTable::SetDefaultYUVType(m_fUseBT709?ColorConvTable::BT709:ColorConvTable::BT601);
+    CacheManager::GetPathDataMruCache()->set_max_num_items(m_path_data_cache_max_item_num);
+    CacheManager::GetCWordMruCache()->set_max_num_items(m_word_cache_max_item_num);
+    CacheManager::GetOverlayNoBlurMruCache()->set_max_num_items(m_overlay_no_blur_cache_max_item_num);
+    CacheManager::GetOverlayMruCache()->set_max_num_items(m_overlay_cache_max_item_num);
+    SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_subpixel_pos_level) );
 
 	m_pSubPicQueue = NULL;
 
