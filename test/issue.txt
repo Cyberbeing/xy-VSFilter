@@ -34,3 +34,5 @@ issue 13: crash with 13.ass. Introduced since Commit:49399231bb7a8167d9451ccc1e2
 issue 14: incorrect result, random corruption at subtitle's right border with 14.ass. Introduced before Commit:f5c96b88a74ef156cef7c4bdb5bc512ec52f8a58
 .(fixed)
 ==============================================================
+issue 15: incorrect result, fax/fay effects not working with 15.ass. Introduced before Commit:ce0314dce9552f62ed07b51ae5d11010e0bfb65e.
+==============================================================
