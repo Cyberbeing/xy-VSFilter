@@ -95,8 +95,15 @@ bool OverlayNoBlurKey::operator==( const OverlayNoBlurKey& key ) const
 { 
     return (static_cast<PathDataCacheKey>(*this)==static_cast<PathDataCacheKey>(key)) 
         && this->m_style.get().borderStyle == key.m_style.get().borderStyle
-        && this->m_style.get().outlineWidthX == key.m_style.get().outlineWidthX
-        && this->m_style.get().outlineWidthY == key.m_style.get().outlineWidthY
+        && fabs(this->m_style.get().outlineWidthX - key.m_style.get().outlineWidthX) < 0.000001
+        && fabs(this->m_style.get().outlineWidthY - key.m_style.get().outlineWidthY) < 0.000001
+        && fabs(this->m_style.get().fontScaleX - key.m_style.get().fontScaleX) < 0.000001
+        && fabs(this->m_style.get().fontScaleY - key.m_style.get().fontScaleY) < 0.000001
+        && fabs(this->m_style.get().fontAngleX - key.m_style.get().fontAngleX) < 0.000001
+        && fabs(this->m_style.get().fontAngleY - key.m_style.get().fontAngleY) < 0.000001
+        && fabs(this->m_style.get().fontAngleZ - key.m_style.get().fontAngleZ) < 0.000001
+        && fabs(this->m_style.get().fontShiftX - key.m_style.get().fontShiftX) < 0.000001
+        && fabs(this->m_style.get().fontShiftY - key.m_style.get().fontShiftY) < 0.000001
         && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
         && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y); 
 }

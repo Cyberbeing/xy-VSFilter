@@ -3196,7 +3196,9 @@ bool STSStyle::IsFontStyleEqual(const STSStyle& s) const
         && fStrikeOut == s.fStrikeOut
         && fontAngleZ == s.fontAngleZ
         && fontAngleX == s.fontAngleX
-        && fontAngleY == s.fontAngleY);
+        && fontAngleY == s.fontAngleY
+        && fontShiftX == s.fontShiftX
+        && fontShiftY == s.fontShiftY);
 }
 
 void STSStyle::operator = (const LOGFONT& lf)
