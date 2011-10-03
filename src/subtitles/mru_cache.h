@@ -82,4 +82,38 @@ protected:
   std::size_t _max_num_items;
 };
 
+template <typename Item, typename KeyExtractor>
+class enhanced_mru_list:public mru_list<Item, KeyExtractor>
+{
+public:
+    typedef typename hashed_cache::const_iterator hashed_cache_const_iterator;
+
+    enhanced_mru_list(std::size_t max_num_items):mru_list(max_num_items),_cache_hit(0){}
+
+    std::size_t set_max_num_items( std::size_t max_num_items )
+    {
+        _cache_hit=0;
+        return __super::set_max_num_items(max_num_items);
+    }
+    void clear() { __super::clear(); _cache_hit=0; }
+
+    template< typename CompatibleKey >
+    hashed_cache_const_iterator hash_find(const CompatibleKey & k)
+    {
+        hashed_cache_const_iterator& iter = _il.get<1>().find(k);
+        if(iter!=_il.get<1>().end())
+        {
+            _cache_hit++;
+        }
+        return iter;
+    }
+
+    hashed_cache_const_iterator hash_end() const
+    {
+        return _il.get<1>().end();
+    }
+protected:
+      std::size_t _cache_hit;
+};
+
 #endif // end of __MRU_CACHE_H_256FCF72_8663_41DC_B98A_B822F6007912__

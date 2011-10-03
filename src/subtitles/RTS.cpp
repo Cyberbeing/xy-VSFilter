@@ -142,10 +142,10 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
     {
         overlay_key.m_org.x=0;
         overlay_key.m_org.y=0;
-    }
-    const OverlayMruCache::hashed_cache& overlay_cache = CacheManager::GetOverlayMruCache()->get_hashed_cache();    
-    const OverlayMruCache::hashed_cache::iterator iter = overlay_cache.find(overlay_key);
-    if(iter==overlay_cache.end())    
+    }   
+    OverlayMruCache* overlay_cache = CacheManager::GetOverlayMruCache();
+    OverlayMruCache::hashed_cache_const_iterator iter = overlay_cache->hash_find(overlay_key);
+    if(iter==overlay_cache->hash_end())    
     {
         word->DoPaint(psub, trans_org, &(overlay_list->overlay));
         OverlayMruItem item(overlay_key, overlay_list->overlay);
@@ -168,11 +168,12 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     overlay->reset(new Overlay());
 
     OverlayNoBlurKey overlay_no_blur_key(*this, psub, trans_org);
-    const OverlayNoBlurMruCache::hashed_cache& overlay_no_blur_cache = CacheManager::GetOverlayNoBlurMruCache()->get_hashed_cache();
-    const OverlayNoBlurMruCache::hashed_cache::iterator iter = overlay_no_blur_cache.find(overlay_no_blur_key);
+
+    OverlayNoBlurMruCache* overlay_no_blur_cache = CacheManager::GetOverlayNoBlurMruCache();
+    OverlayNoBlurMruCache::hashed_cache_const_iterator iter = overlay_no_blur_cache->hash_find(overlay_no_blur_key);
     
     SharedPtrOverlay raterize_result;
-    if(iter==overlay_no_blur_cache.end())
+    if(iter==overlay_no_blur_cache->hash_end())
     {
         raterize_result.reset(new Overlay());
         if(!m_fDrawn)
@@ -180,9 +181,9 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             //get outline path, if not cached, create it and cache a copy, else copy from cache
             SharedPtrPathData path_data(new PathData());        
             PathDataCacheKey path_data_key(*this);
-            const PathDataMruCache::hashed_cache& path_data_cache = CacheManager::GetPathDataMruCache()->get_hashed_cache();    
-            const PathDataMruCache::hashed_cache::iterator iter = path_data_cache.find(path_data_key);
-            if(iter==path_data_cache.end())    
+            PathDataMruCache* path_data_cache = CacheManager::GetPathDataMruCache();
+            PathDataMruCache::hashed_cache_const_iterator iter = path_data_cache->hash_find(path_data_key);
+            if(iter==path_data_cache->hash_end())    
             {
                 if(!CreatePath(path_data)) return;
 
@@ -1701,7 +1702,6 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
     str.Replace(L"\\n", (sub->m_wrapStyle < 2 || sub->m_wrapStyle == 3) ? L" " : L"\n");
     str.Replace(L"\\h", L"\x00A0");
     CWordMruCache* word_mru_cache=CacheManager::GetCWordMruCache();
-    const CWordMruCache::hashed_cache& word_cache = word_mru_cache->get_hashed_cache();
     for(int ite = 0, j = 0, len = str.GetLength(); j <= len; j++)
     {
         WCHAR c = str[j];
@@ -1710,8 +1710,8 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
         if(ite < j)
         {
             CWordCacheKey word_cache_key(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend);                        
-            const CWordMruCache::hashed_cache::iterator iter = word_cache.find(word_cache_key);
-            if( iter != word_cache.end() )            
+            CWordMruCache::hashed_cache_const_iterator iter = word_mru_cache->hash_find(word_cache_key);
+            if( iter != word_mru_cache->hash_end() )            
             {
                 sub->m_words.AddTail(iter->word);
             }
@@ -1731,8 +1731,8 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
         if(c == L'\n')
         {
             CWordCacheKey word_cache_key(style, CStringW(), m_ktype, m_kstart, m_kend);
-            const CWordMruCache::hashed_cache::iterator iter = word_cache.find(word_cache_key);
-            if( iter != word_cache.end() )            
+            CWordMruCache::hashed_cache_const_iterator iter = word_mru_cache->hash_find(word_cache_key);
+            if( iter != word_mru_cache->hash_end() )            
             {
                 sub->m_words.AddTail(iter->word);
             }
@@ -1752,8 +1752,8 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
         else if(c == L' ' || c == L'\x00A0')
         {
             CWordCacheKey word_cache_key(style, CStringW(c), m_ktype, m_kstart, m_kend);            
-            const CWordMruCache::hashed_cache::iterator iter = word_cache.find(word_cache_key);
-            if( iter != word_cache.end() ) 
+            CWordMruCache::hashed_cache_const_iterator iter = word_mru_cache->hash_find(word_cache_key);
+            if( iter != word_mru_cache->hash_end() ) 
             {
                 sub->m_words.AddTail(iter->word);
             }

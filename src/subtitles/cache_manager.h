@@ -118,7 +118,7 @@ struct OverlayNoBlurMruItem
     SharedPtrOverlay overlay;
 };
 
-typedef mru_list<
+typedef enhanced_mru_list<
     OverlayMruItem, 
     boost::multi_index::member<OverlayMruItem, 
     OverlayKey, 
@@ -126,7 +126,7 @@ typedef mru_list<
     >
 > OverlayMruCache;
 
-typedef mru_list<
+typedef enhanced_mru_list<
     CWordMruItem, 
     boost::multi_index::member<CWordMruItem, 
     CWordCacheKey, 
@@ -134,7 +134,7 @@ typedef mru_list<
     >
 > CWordMruCache;
 
-typedef mru_list<
+typedef enhanced_mru_list<
     PathDataMruItem, 
     boost::multi_index::member<PathDataMruItem, 
     PathDataCacheKey, 
@@ -142,7 +142,7 @@ typedef mru_list<
     >
 > PathDataMruCache;
 
-typedef mru_list<
+typedef enhanced_mru_list<
     OverlayNoBlurMruItem, 
     boost::multi_index::member<OverlayNoBlurMruItem, 
     OverlayNoBlurKey, 
