@@ -31,3 +31,6 @@ issue 12: lags when scripts have blur tags, due to the complex gaussian table ge
 ==============================================================
 issue 13: crash with 13.ass. Introduced since Commit:49399231bb7a8167d9451ccc1e2ef076fa7b8195.(fixed)
 ==============================================================
+issue 14: incorrect result, random corruption at subtitle's right border with 14.ass. Introduced before Commit:f5c96b88a74ef156cef7c4bdb5bc512ec52f8a58
+.
+==============================================================
