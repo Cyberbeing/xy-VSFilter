@@ -23,6 +23,8 @@ issue 8: incorrect result, false text layout, with 10.ass; introduced since Comm
 issue 9: crash. Steps to crash: 1. play any simple subtitle until a line of sub appear with cache options bigger than 0; 2.pause the player and set cache options down to 0.(fixed)
 ==============================================================
 issue 10: incorrect result with 11.ass. \move dosenot work with out-of-range position and \q2 tag.
+Edit1: indeed, it is the 4 params \move tag form trigger the bug. \q2 tag has nothing to do with this issue.
+(fixed)
 ==============================================================
 issue 11: incorrect result, improper cliper position with 12.ass.
 more: on videos with 720 x 400 resolution, the result is correct, but on 1280 x 720, the result is wrong. Turn off compiler option /arch:SSE2, both resolutions above get the right result. It also applies to Issue 7. Maybe /arch:SSE2 option affects some internal floating point caculation such that an overflow occur. (fixed)

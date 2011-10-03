@@ -2611,8 +2611,8 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
         str = str.Mid(i);
     }
     sub->m_fAnimated2 |= sub->m_fAnimated;
-    if(sub->m_effects[EF_FADE] || sub->m_effects[EF_BANNER] || sub->m_effects[EF_SCROLL]
-            || (sub->m_effects[EF_MOVE] && (sub->m_effects[EF_MOVE]->t[1]!=sub->m_effects[EF_MOVE]->t[0])))
+    if( sub->m_effects[EF_FADE] || sub->m_effects[EF_BANNER] || sub->m_effects[EF_SCROLL]
+            || sub->m_effects[EF_MOVE] )
         sub->m_fAnimated2 = true;
     // just a "work-around" solution... in most cases nobody will want to use \org together with moving but without rotating the subs
     if(sub->m_effects[EF_ORG] && (sub->m_effects[EF_MOVE] || sub->m_effects[EF_BANNER] || sub->m_effects[EF_SCROLL]))
