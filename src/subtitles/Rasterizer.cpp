@@ -1440,7 +1440,7 @@ void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const b
 {
     //    int planSize = mOverlayWidth*mOverlayHeight;
     int x00 = x&~15;
-    int w00 = (w+15)&~15;
+    int w00 = ((w+x+15)&~15)-x00;
     //    int x00 = x;
     //    int w00 = w;
     pBody = pBody!=NULL ? pBody + y*mOverlayPitch + x00 : NULL;
