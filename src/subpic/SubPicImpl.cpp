@@ -31,7 +31,7 @@
 //
 
 CSubPicImpl::CSubPicImpl()
-    : CUnknown(NAME("ISubPicImpl"), NULL)
+    : CUnknown(NAME("CSubPicImpl"), NULL)
     , m_rtStart(0), m_rtStop(0)
     , m_maxsize(0, 0), m_size(0, 0), m_vidrect(0, 0, 0, 0)
 {

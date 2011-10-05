@@ -27,11 +27,11 @@
 
 
 //
-// ISubPicAllocatorPresenterImpl
+// CSubPicAllocatorPresenterImpl
 //
 
 CSubPicAllocatorPresenterImpl::CSubPicAllocatorPresenterImpl(HWND hWnd, HRESULT& hr)
-	: CUnknown(NAME("ISubPicAllocatorPresenterImpl"), NULL)
+	: CUnknown(NAME("CSubPicAllocatorPresenterImpl"), NULL)
 	, m_hWnd(hWnd)
 	, m_NativeVideoSize(0, 0), m_AspectRatio(0, 0)
 	, m_VideoRect(0, 0, 0, 0), m_WindowRect(0, 0, 0, 0)

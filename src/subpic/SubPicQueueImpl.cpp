@@ -30,11 +30,11 @@
 #define CSUBPICQUEUE_UPDATEQUEUE_WAIT_TIMEOUT	100
 
 //
-// ISubPicQueueImpl
+// CSubPicQueueImpl
 //
 
 CSubPicQueueImpl::CSubPicQueueImpl(ISubPicAllocator* pAllocator, HRESULT* phr)
-	: CUnknown(NAME("ISubPicQueueImpl"), NULL)
+	: CUnknown(NAME("CSubPicQueueImpl"), NULL)
 	, m_pAllocator(pAllocator)
 	, m_rtNow(0)
 	, m_fps(25.0)
@@ -140,10 +140,10 @@ HRESULT CSubPicQueueImpl::RenderTo(ISubPic* pSubPic, REFERENCE_TIME rtStart, REF
 
 			hr = pSubPicProvider->Render(spd, rtStart, fps, rectList);
 
-			DbgLog((LOG_TRACE, 3, "ISubPicQueueImpl::RenderTo => GetStartPosition"));
+			DbgLog((LOG_TRACE, 3, "CSubPicQueueImpl::RenderTo => GetStartPosition"));
 			POSITION pos = pSubPicProvider->GetStartPosition(rtStart, fps);
 
-			DbgLog((LOG_TRACE, 3, "ISubPicQueueImpl::RenderTo => GetStartStop rtStart:%lu", (ULONG)rtStart/10000));
+			DbgLog((LOG_TRACE, 3, "CSubPicQueueImpl::RenderTo => GetStartStop rtStart:%lu", (ULONG)rtStart/10000));
 			pSubPicProvider->GetStartStop(pos, fps, rtStart, rtStop);
 			DbgLog((LOG_TRACE, 3, "rtStart:%lu", (ULONG)rtStart/10000));
 
