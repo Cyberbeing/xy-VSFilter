@@ -21,7 +21,8 @@
 
 #pragma once
 
-#include "ISubPic.h"
+#include "SubPicImpl.h"
+#include "SubPicAllocatorPresenterImpl.h"
 
 // CDX9SubPic
 
