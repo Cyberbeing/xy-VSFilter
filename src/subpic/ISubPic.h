@@ -111,34 +111,6 @@ interface ISubPicProvider : public IUnknown
 	STDMETHOD (Render) (SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList) PURE;
 };
 
-class CSubPicProviderImpl : public CUnknown, public ISubPicProvider
-{
-protected:
-	CCritSec* m_pLock;
-
-public:
-	CSubPicProviderImpl(CCritSec* pLock);
-	virtual ~CSubPicProviderImpl();
-
-	DECLARE_IUNKNOWN;
-	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
-
-	// ISubPicProvider
-
-	STDMETHODIMP Lock();
-	STDMETHODIMP Unlock();
-
-	STDMETHODIMP_(POSITION) GetStartPosition(REFERENCE_TIME rt, double fps) = 0;
-	STDMETHODIMP_(POSITION) GetNext(POSITION pos) = 0;
-
-	STDMETHODIMP_(REFERENCE_TIME) GetStart(POSITION pos, double fps) = 0;
-	STDMETHODIMP_(REFERENCE_TIME) GetStop(POSITION pos, double fps) = 0;
-	STDMETHODIMP_(VOID) GetStartStop(POSITION pos, double fps, /*out*/REFERENCE_TIME& start, /*out*/REFERENCE_TIME& stop);
-
-	STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox) = 0;
-	STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
-};
-
 //
 // ISubPicQueue
 //

@@ -140,6 +140,7 @@
     </ClCompile>
     <ClCompile Include="SubPicAllocatorPresenterImpl.cpp" />
     <ClCompile Include="SubPicImpl.cpp" />
+    <ClCompile Include="SubPicProviderImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="color_conv_table.h" />
@@ -154,6 +155,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SubPicAllocatorPresenterImpl.h" />
     <ClInclude Include="SubPicImpl.h" />
+    <ClInclude Include="SubPicProviderImpl.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
