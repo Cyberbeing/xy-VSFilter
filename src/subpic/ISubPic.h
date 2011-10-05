@@ -26,8 +26,7 @@
 #include "CoordGeom.h"
 
 #pragma pack(push, 1)
-struct SubPicDesc
-{
+struct SubPicDesc {
 	int type;
 	int w, h, bpp, pitch, pitchUV;
 	void* bits;
@@ -35,7 +34,12 @@ struct SubPicDesc
 	BYTE* bitsV;
 	RECT vidrect; // video rectangle
 
-	struct SubPicDesc() {type = 0; w = h = bpp = pitch = pitchUV = 0; bits = NULL; bitsU = bitsV = NULL;}
+	struct SubPicDesc() {
+		type = 0;
+		w = h = bpp = pitch = pitchUV = 0;
+		bits = NULL;
+		bitsU = bitsV = NULL;
+	}
 };
 #pragma pack(pop)
 
@@ -43,9 +47,9 @@ struct SubPicDesc
 // ISubPic
 //
 
-[uuid("449E11F3-52D1-4a27-AA61-E2733AC92CC0")]
-interface ISubPic : public IUnknown
-{
+interface __declspec(uuid("449E11F3-52D1-4a27-AA61-E2733AC92CC0"))
+ISubPic :
+public IUnknown {
 	STDMETHOD_(void*, GetObject) () const PURE;
 
 	STDMETHOD_(REFERENCE_TIME, GetStart) () const PURE;
@@ -81,9 +85,9 @@ interface ISubPic : public IUnknown
 // ISubPicAllocator
 //
 
-[uuid("CF7C3C23-6392-4a42-9E72-0736CFF793CB")]
-interface ISubPicAllocator : public IUnknown
-{
+interface __declspec(uuid("CF7C3C23-6392-4a42-9E72-0736CFF793CB"))
+ISubPicAllocator :
+public IUnknown {
 	STDMETHOD (SetCurSize) (SIZE size /*[in]*/) PURE;
 	STDMETHOD (SetCurVidRect) (RECT curvidrect) PURE;
 
@@ -99,9 +103,9 @@ interface ISubPicAllocator : public IUnknown
 // ISubPicProvider
 //
 
-[uuid("D62B9A1A-879A-42db-AB04-88AA8F243CFD")]
-interface ISubPicProvider : public IUnknown
-{
+interface __declspec(uuid("D62B9A1A-879A-42db-AB04-88AA8F243CFD"))
+ISubPicProvider :
+public IUnknown {
 	STDMETHOD (Lock) () PURE;
 	STDMETHOD (Unlock) () PURE;
 
@@ -122,9 +126,9 @@ interface ISubPicProvider : public IUnknown
 // ISubPicQueue
 //
 
-[uuid("C8334466-CD1E-4ad1-9D2D-8EE8519BD180")]
-interface ISubPicQueue : public IUnknown
-{
+interface __declspec(uuid("C8334466-CD1E-4ad1-9D2D-8EE8519BD180"))
+ISubPicQueue :
+public IUnknown {
 	STDMETHOD (SetSubPicProvider) (ISubPicProvider* pSubPicProvider /*[in]*/) PURE;
 	STDMETHOD (GetSubPicProvider) (ISubPicProvider** pSubPicProvider /*[out]*/) PURE;
 
@@ -142,9 +146,9 @@ interface ISubPicQueue : public IUnknown
 // ISubPicAllocatorPresenter
 //
 
-[uuid("CF75B1F0-535C-4074-8869-B15F177F944E")]
-interface ISubPicAllocatorPresenter : public IUnknown
-{
+interface __declspec(uuid("CF75B1F0-535C-4074-8869-B15F177F944E"))
+ISubPicAllocatorPresenter :
+public IUnknown {
 	STDMETHOD (CreateRenderer) (IUnknown** ppRenderer) PURE;
 
 	STDMETHOD_(SIZE, GetVideoSize) (bool fCorrectAR = true) PURE;
@@ -169,9 +173,9 @@ interface ISubPicAllocatorPresenter : public IUnknown
 // ISubStream
 //
 
-[uuid("DE11E2FB-02D3-45e4-A174-6B7CE2783BDB")]
-interface ISubStream : public IPersist
-{
+interface __declspec(uuid("DE11E2FB-02D3-45e4-A174-6B7CE2783BDB"))
+ISubStream :
+public IPersist {
 	STDMETHOD_(int, GetStreamCount) () PURE;
 	STDMETHOD (GetStreamInfo) (int i, WCHAR** ppName, LCID* pLCID) PURE;
 	STDMETHOD_(int, GetStream) () PURE;
