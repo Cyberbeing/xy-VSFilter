@@ -137,5 +137,8 @@ public:
     STDMETHODIMP AllocDynamic(ISubPic** ppSubPic);
     STDMETHODIMP_(bool) IsDynamicWriteOnly();
     STDMETHODIMP ChangeDevice(IUnknown* pDev);
+    STDMETHODIMP SetMaxTextureSize(SIZE MaxTextureSize) {
+        return E_NOTIMPL;
+    };
 };
 

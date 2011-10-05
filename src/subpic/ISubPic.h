@@ -97,6 +97,7 @@ public IUnknown {
 	STDMETHOD_(bool, IsDynamicWriteOnly) () PURE;
 
 	STDMETHOD (ChangeDevice) (IUnknown* pDev) PURE;
+	STDMETHOD (SetMaxTextureSize) (SIZE MaxTextureSize) PURE;
 };
 
 //
@@ -120,6 +121,7 @@ public IUnknown {
 
 	STDMETHOD (Render) (SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox) PURE;
 	STDMETHOD (Render) (SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList) PURE;
+    STDMETHOD (GetTextureSize) (POSITION pos, SIZE& MaxTextureSize, SIZE& VirtualSize, POINT& VirtualTopLeft) PURE;
 };
 
 //
