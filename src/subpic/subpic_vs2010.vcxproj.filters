@@ -71,5 +71,8 @@
     <ClInclude Include="color_conv_table.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ISubRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

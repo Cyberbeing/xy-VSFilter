@@ -146,6 +146,7 @@
     <ClInclude Include="DX7SubPic.h" />
     <ClInclude Include="DX9SubPic.h" />
     <ClInclude Include="ISubPic.h" />
+    <ClInclude Include="ISubRender.h" />
     <ClInclude Include="MemSubPic.h" />
     <ClInclude Include="PooledSubPic.h" />
     <ClInclude Include="stdafx.h" />
