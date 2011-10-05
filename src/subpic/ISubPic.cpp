@@ -32,14 +32,14 @@
 // ISubPicImpl
 //
 
-ISubPicImpl::ISubPicImpl()
+CSubPicImpl::CSubPicImpl()
 	: CUnknown(NAME("ISubPicImpl"), NULL)
 	, m_rtStart(0), m_rtStop(0)
 	, m_maxsize(0, 0), m_size(0, 0), m_vidrect(0, 0, 0, 0)
 {
 }
 
-STDMETHODIMP ISubPicImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP CSubPicImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
 	return
 		QI(ISubPic)
@@ -48,27 +48,27 @@ STDMETHODIMP ISubPicImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 
 // ISubPic
 
-STDMETHODIMP_(REFERENCE_TIME) ISubPicImpl::GetStart() const
+STDMETHODIMP_(REFERENCE_TIME) CSubPicImpl::GetStart() const
 {
 	return(m_rtStart);
 }
 
-STDMETHODIMP_(REFERENCE_TIME) ISubPicImpl::GetStop() const
+STDMETHODIMP_(REFERENCE_TIME) CSubPicImpl::GetStop() const
 {
 	return(m_rtStop);
 }
 
-STDMETHODIMP_(void) ISubPicImpl::SetStart(REFERENCE_TIME rtStart)
+STDMETHODIMP_(void) CSubPicImpl::SetStart(REFERENCE_TIME rtStart)
 {
 	m_rtStart = rtStart;
 }
 
-STDMETHODIMP_(void) ISubPicImpl::SetStop(REFERENCE_TIME rtStop)
+STDMETHODIMP_(void) CSubPicImpl::SetStop(REFERENCE_TIME rtStop)
 {
 	m_rtStop = rtStop;
 }
 
-STDMETHODIMP ISubPicImpl::CopyTo(ISubPic* pSubPic)
+STDMETHODIMP CSubPicImpl::CopyTo(ISubPic* pSubPic)
 {
 	if(!pSubPic)
 		return E_POINTER;
@@ -81,7 +81,7 @@ STDMETHODIMP ISubPicImpl::CopyTo(ISubPic* pSubPic)
 	return S_OK;
 }
 
-STDMETHODIMP ISubPicImpl::GetDirtyRect(RECT* pDirtyRect) const
+STDMETHODIMP CSubPicImpl::GetDirtyRect(RECT* pDirtyRect) const
 {
 	if(pDirtyRect!=NULL)
 	{
@@ -97,7 +97,7 @@ STDMETHODIMP ISubPicImpl::GetDirtyRect(RECT* pDirtyRect) const
 	return E_POINTER;
 }
 
-STDMETHODIMP ISubPicImpl::SetDirtyRect(CAtlList<CRect>* dirtyRectList)
+STDMETHODIMP CSubPicImpl::SetDirtyRect(CAtlList<CRect>* dirtyRectList)
 {
     m_rectListDirty.RemoveAll();
 	if(dirtyRectList!=NULL)
@@ -139,12 +139,12 @@ STDMETHODIMP ISubPicImpl::SetDirtyRect(CAtlList<CRect>* dirtyRectList)
 	return S_OK;
 }
 
-STDMETHODIMP ISubPicImpl::GetMaxSize(SIZE* pMaxSize) const
+STDMETHODIMP CSubPicImpl::GetMaxSize(SIZE* pMaxSize) const
 {
 	return pMaxSize ? *pMaxSize = m_maxsize, S_OK : E_POINTER;
 }
 
-STDMETHODIMP ISubPicImpl::SetSize(SIZE size, RECT vidrect)
+STDMETHODIMP CSubPicImpl::SetSize(SIZE size, RECT vidrect)
 {
 	m_size = size;
 	m_vidrect = vidrect;
@@ -172,7 +172,7 @@ STDMETHODIMP ISubPicImpl::SetSize(SIZE size, RECT vidrect)
 	return S_OK;
 }
 
-STDMETHODIMP ISubPicImpl::GetDirtyRects( CAtlList<const CRect>& dirtyRectList /*[out]*/ ) const
+STDMETHODIMP CSubPicImpl::GetDirtyRects( CAtlList<const CRect>& dirtyRectList /*[out]*/ ) const
 {
 	POSITION pos = m_rectListDirty.GetHeadPosition();
 	while(pos!=NULL)
@@ -185,7 +185,7 @@ STDMETHODIMP ISubPicImpl::GetDirtyRects( CAtlList<const CRect>& dirtyRectList /*
 // ISubPicAllocatorImpl
 //
 
-ISubPicAllocatorImpl::ISubPicAllocatorImpl(SIZE cursize, bool fDynamicWriteOnly, bool fPow2Textures)
+CSubPicAllocatorImpl::CSubPicAllocatorImpl(SIZE cursize, bool fDynamicWriteOnly, bool fPow2Textures)
 	: CUnknown(NAME("ISubPicAllocatorImpl"), NULL)
 	, m_cursize(cursize)
 	, m_fDynamicWriteOnly(fDynamicWriteOnly)
@@ -194,7 +194,7 @@ ISubPicAllocatorImpl::ISubPicAllocatorImpl(SIZE cursize, bool fDynamicWriteOnly,
 	m_curvidrect = CRect(CPoint(0,0), m_cursize);
 }
 
-STDMETHODIMP ISubPicAllocatorImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP CSubPicAllocatorImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
 	return
 		QI(ISubPicAllocator)
@@ -203,19 +203,19 @@ STDMETHODIMP ISubPicAllocatorImpl::NonDelegatingQueryInterface(REFIID riid, void
 
 // ISubPicAllocator
 
-STDMETHODIMP ISubPicAllocatorImpl::SetCurSize(SIZE cursize)
+STDMETHODIMP CSubPicAllocatorImpl::SetCurSize(SIZE cursize)
 {
 	m_cursize = cursize;
 	return S_OK;
 }
 
-STDMETHODIMP ISubPicAllocatorImpl::SetCurVidRect(RECT curvidrect)
+STDMETHODIMP CSubPicAllocatorImpl::SetCurVidRect(RECT curvidrect)
 {
 	m_curvidrect = curvidrect;
 	return S_OK;
 }
 
-STDMETHODIMP ISubPicAllocatorImpl::GetStatic(ISubPic** ppSubPic)
+STDMETHODIMP CSubPicAllocatorImpl::GetStatic(ISubPic** ppSubPic)
 {
 	if(!ppSubPic)
 		return E_POINTER;
@@ -233,7 +233,7 @@ STDMETHODIMP ISubPicAllocatorImpl::GetStatic(ISubPic** ppSubPic)
 	return S_OK;
 }
 
-STDMETHODIMP ISubPicAllocatorImpl::AllocDynamic(ISubPic** ppSubPic)
+STDMETHODIMP CSubPicAllocatorImpl::AllocDynamic(ISubPic** ppSubPic)
 {
 	if(!ppSubPic)
 		return E_POINTER;
@@ -246,12 +246,12 @@ STDMETHODIMP ISubPicAllocatorImpl::AllocDynamic(ISubPic** ppSubPic)
 	return S_OK;
 }
 
-STDMETHODIMP_(bool) ISubPicAllocatorImpl::IsDynamicWriteOnly()
+STDMETHODIMP_(bool) CSubPicAllocatorImpl::IsDynamicWriteOnly()
 {
 	return(m_fDynamicWriteOnly);
 }
 
-STDMETHODIMP ISubPicAllocatorImpl::ChangeDevice(IUnknown* pDev)
+STDMETHODIMP CSubPicAllocatorImpl::ChangeDevice(IUnknown* pDev)
 {
 	m_pStatic = NULL;
 	return S_OK;
@@ -261,17 +261,17 @@ STDMETHODIMP ISubPicAllocatorImpl::ChangeDevice(IUnknown* pDev)
 // ISubPicProviderImpl
 //
 
-ISubPicProviderImpl::ISubPicProviderImpl(CCritSec* pLock)
+CSubPicProviderImpl::CSubPicProviderImpl(CCritSec* pLock)
 	: CUnknown(NAME("ISubPicProviderImpl"), NULL)
 	, m_pLock(pLock)
 {
 }
 
-ISubPicProviderImpl::~ISubPicProviderImpl()
+CSubPicProviderImpl::~CSubPicProviderImpl()
 {
 }
 
-STDMETHODIMP ISubPicProviderImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP CSubPicProviderImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
 	return
 		QI(ISubPicProvider)
@@ -280,22 +280,22 @@ STDMETHODIMP ISubPicProviderImpl::NonDelegatingQueryInterface(REFIID riid, void*
 
 // ISubPicProvider
 
-STDMETHODIMP ISubPicProviderImpl::Lock()
+STDMETHODIMP CSubPicProviderImpl::Lock()
 {
 	return m_pLock ? m_pLock->Lock(), S_OK : E_FAIL;
 }
 
-STDMETHODIMP ISubPicProviderImpl::Unlock()
+STDMETHODIMP CSubPicProviderImpl::Unlock()
 {
 	return m_pLock ? m_pLock->Unlock(), S_OK : E_FAIL;
 }
 
-STDMETHODIMP_(VOID) ISubPicProviderImpl::GetStartStop( POSITION pos, double fps, /*out*/REFERENCE_TIME& start, /*out*/REFERENCE_TIME& stop )
+STDMETHODIMP_(VOID) CSubPicProviderImpl::GetStartStop( POSITION pos, double fps, /*out*/REFERENCE_TIME& start, /*out*/REFERENCE_TIME& stop )
 {
 	start = GetStart(pos, fps);
 	stop = GetStop(pos, fps);
 }
-STDMETHODIMP ISubPicProviderImpl::Render( SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList )
+STDMETHODIMP CSubPicProviderImpl::Render( SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList )
 {
 	CRect cRect = new CRect(0,0,0,0);
 	HRESULT hr = Render(spd, rt, fps, cRect);
@@ -307,7 +307,7 @@ STDMETHODIMP ISubPicProviderImpl::Render( SubPicDesc& spd, REFERENCE_TIME rt, do
 // ISubPicQueueImpl
 //
 
-ISubPicQueueImpl::ISubPicQueueImpl(ISubPicAllocator* pAllocator, HRESULT* phr)
+CSubPicQueueImpl::CSubPicQueueImpl(ISubPicAllocator* pAllocator, HRESULT* phr)
 	: CUnknown(NAME("ISubPicQueueImpl"), NULL)
 	, m_pAllocator(pAllocator)
 	, m_rtNow(0)
@@ -322,11 +322,11 @@ ISubPicQueueImpl::ISubPicQueueImpl(ISubPicAllocator* pAllocator, HRESULT* phr)
 	}
 }
 
-ISubPicQueueImpl::~ISubPicQueueImpl()
+CSubPicQueueImpl::~CSubPicQueueImpl()
 {
 }
 
-STDMETHODIMP ISubPicQueueImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP CSubPicQueueImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
 	return
 		QI(ISubPicQueue)
@@ -335,7 +335,7 @@ STDMETHODIMP ISubPicQueueImpl::NonDelegatingQueryInterface(REFIID riid, void** p
 
 // ISubPicQueue
 
-STDMETHODIMP ISubPicQueueImpl::SetSubPicProvider(ISubPicProvider* pSubPicProvider)
+STDMETHODIMP CSubPicQueueImpl::SetSubPicProvider(ISubPicProvider* pSubPicProvider)
 {
 	DbgLog((LOG_TRACE, 3, "%s(%d), %s", __FILE__, __LINE__, __FUNCTION__));
 //	if(m_pSubPicProvider != pSubPicProvider)
@@ -348,7 +348,7 @@ STDMETHODIMP ISubPicQueueImpl::SetSubPicProvider(ISubPicProvider* pSubPicProvide
 	return S_OK;
 }
 
-STDMETHODIMP ISubPicQueueImpl::GetSubPicProvider(ISubPicProvider** pSubPicProvider)
+STDMETHODIMP CSubPicQueueImpl::GetSubPicProvider(ISubPicProvider** pSubPicProvider)
 {
 	if(!pSubPicProvider)
 		return E_POINTER;
@@ -361,14 +361,14 @@ STDMETHODIMP ISubPicQueueImpl::GetSubPicProvider(ISubPicProvider** pSubPicProvid
 	return !!*pSubPicProvider ? S_OK : E_FAIL;
 }
 
-STDMETHODIMP ISubPicQueueImpl::SetFPS(double fps)
+STDMETHODIMP CSubPicQueueImpl::SetFPS(double fps)
 {
 	m_fps = fps;
 
 	return S_OK;
 }
 
-STDMETHODIMP ISubPicQueueImpl::SetTime(REFERENCE_TIME rtNow)
+STDMETHODIMP CSubPicQueueImpl::SetTime(REFERENCE_TIME rtNow)
 {
 	m_rtNow = rtNow;
 
@@ -377,7 +377,7 @@ STDMETHODIMP ISubPicQueueImpl::SetTime(REFERENCE_TIME rtNow)
 
 // private
 
-HRESULT ISubPicQueueImpl::RenderTo(ISubPic* pSubPic, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, double fps)
+HRESULT CSubPicQueueImpl::RenderTo(ISubPic* pSubPic, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, double fps)
 {
 	HRESULT hr = E_FAIL;
 
@@ -440,7 +440,7 @@ HRESULT ISubPicQueueImpl::RenderTo(ISubPic* pSubPic, REFERENCE_TIME rtStart, REF
 //
 
 CSubPicQueue::CSubPicQueue(int nMaxSubPic, ISubPicAllocator* pAllocator, HRESULT* phr)
-	: ISubPicQueueImpl(pAllocator, phr)
+	: CSubPicQueueImpl(pAllocator, phr)
 	, m_nMaxSubPic(nMaxSubPic)
 	, m_rtQueueStart(0)
 {
@@ -798,7 +798,7 @@ DWORD CSubPicQueue::ThreadProc()
 //
 
 CSubPicQueueNoThread::CSubPicQueueNoThread(ISubPicAllocator* pAllocator, HRESULT* phr)
-	: ISubPicQueueImpl(pAllocator, phr)
+	: CSubPicQueueImpl(pAllocator, phr)
 {
 }
 
@@ -928,7 +928,7 @@ STDMETHODIMP CSubPicQueueNoThread::GetStats(int nSubPic, REFERENCE_TIME& rtStart
 // ISubPicAllocatorPresenterImpl
 //
 
-ISubPicAllocatorPresenterImpl::ISubPicAllocatorPresenterImpl(HWND hWnd, HRESULT& hr)
+CSubPicAllocatorPresenterImpl::CSubPicAllocatorPresenterImpl(HWND hWnd, HRESULT& hr)
 	: CUnknown(NAME("ISubPicAllocatorPresenterImpl"), NULL)
 	, m_hWnd(hWnd)
 	, m_NativeVideoSize(0, 0), m_AspectRatio(0, 0)
@@ -942,18 +942,18 @@ ISubPicAllocatorPresenterImpl::ISubPicAllocatorPresenterImpl(HWND hWnd, HRESULT&
 	hr = S_OK;
 }
 
-ISubPicAllocatorPresenterImpl::~ISubPicAllocatorPresenterImpl()
+CSubPicAllocatorPresenterImpl::~CSubPicAllocatorPresenterImpl()
 {
 }
 
-STDMETHODIMP ISubPicAllocatorPresenterImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP CSubPicAllocatorPresenterImpl::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
 	return
 		QI(ISubPicAllocatorPresenter)
 		__super::NonDelegatingQueryInterface(riid, ppv);
 }
 
-void ISubPicAllocatorPresenterImpl::AlphaBltSubPic(CSize size, SubPicDesc* pTarget)
+void CSubPicAllocatorPresenterImpl::AlphaBltSubPic(CSize size, SubPicDesc* pTarget)
 {
 	CComPtr<ISubPic> pSubPic;
 	if(m_pSubPicQueue->LookupSubPic(m_rtNow, &pSubPic))
@@ -982,7 +982,7 @@ void ISubPicAllocatorPresenterImpl::AlphaBltSubPic(CSize size, SubPicDesc* pTarg
 
 // ISubPicAllocatorPresenter
 
-STDMETHODIMP_(SIZE) ISubPicAllocatorPresenterImpl::GetVideoSize(bool fCorrectAR)
+STDMETHODIMP_(SIZE) CSubPicAllocatorPresenterImpl::GetVideoSize(bool fCorrectAR)
 {
 	CSize VideoSize(m_NativeVideoSize);
 
@@ -992,7 +992,7 @@ STDMETHODIMP_(SIZE) ISubPicAllocatorPresenterImpl::GetVideoSize(bool fCorrectAR)
 	return(VideoSize);
 }
 
-STDMETHODIMP_(void) ISubPicAllocatorPresenterImpl::SetPosition(RECT w, RECT v)
+STDMETHODIMP_(void) CSubPicAllocatorPresenterImpl::SetPosition(RECT w, RECT v)
 {
 	bool fWindowPosChanged = !!(m_WindowRect != w);
 	bool fWindowSizeChanged = !!(m_WindowRect.Size() != CRect(w).Size());
@@ -1021,7 +1021,7 @@ STDMETHODIMP_(void) ISubPicAllocatorPresenterImpl::SetPosition(RECT w, RECT v)
 		Paint(fWindowSizeChanged || fVideoRectChanged);
 }
 
-STDMETHODIMP_(void) ISubPicAllocatorPresenterImpl::SetTime(REFERENCE_TIME rtNow)
+STDMETHODIMP_(void) CSubPicAllocatorPresenterImpl::SetTime(REFERENCE_TIME rtNow)
 {
 /*
 	if(m_rtNow <= rtNow && rtNow <= m_rtNow + 1000000)
@@ -1035,22 +1035,22 @@ STDMETHODIMP_(void) ISubPicAllocatorPresenterImpl::SetTime(REFERENCE_TIME rtNow)
 	}
 }
 
-STDMETHODIMP_(void) ISubPicAllocatorPresenterImpl::SetSubtitleDelay(int delay_ms)
+STDMETHODIMP_(void) CSubPicAllocatorPresenterImpl::SetSubtitleDelay(int delay_ms)
 {
 	m_lSubtitleDelay = delay_ms*10000;
 }
 
-STDMETHODIMP_(int) ISubPicAllocatorPresenterImpl::GetSubtitleDelay()
+STDMETHODIMP_(int) CSubPicAllocatorPresenterImpl::GetSubtitleDelay()
 {
 	return (m_lSubtitleDelay/10000);
 }
 
-STDMETHODIMP_(double) ISubPicAllocatorPresenterImpl::GetFPS()
+STDMETHODIMP_(double) CSubPicAllocatorPresenterImpl::GetFPS()
 {
 	return(m_fps);
 }
 
-STDMETHODIMP_(void) ISubPicAllocatorPresenterImpl::SetSubPicProvider(ISubPicProvider* pSubPicProvider)
+STDMETHODIMP_(void) CSubPicAllocatorPresenterImpl::SetSubPicProvider(ISubPicProvider* pSubPicProvider)
 {
 	m_SubPicProvider = pSubPicProvider;
 
@@ -1058,7 +1058,7 @@ STDMETHODIMP_(void) ISubPicAllocatorPresenterImpl::SetSubPicProvider(ISubPicProv
 		m_pSubPicQueue->SetSubPicProvider(pSubPicProvider);
 }
 
-STDMETHODIMP_(void) ISubPicAllocatorPresenterImpl::Invalidate(REFERENCE_TIME rtInvalidate)
+STDMETHODIMP_(void) CSubPicAllocatorPresenterImpl::Invalidate(REFERENCE_TIME rtInvalidate)
 {
 	if(m_pSubPicQueue)
 		m_pSubPicQueue->Invalidate(rtInvalidate);
@@ -1066,7 +1066,7 @@ STDMETHODIMP_(void) ISubPicAllocatorPresenterImpl::Invalidate(REFERENCE_TIME rtI
 
 #include <math.h>
 
-void ISubPicAllocatorPresenterImpl::Transform(CRect r, Vector v[4])
+void CSubPicAllocatorPresenterImpl::Transform(CRect r, Vector v[4])
 {
 	v[0] = Vector(r.left, r.top, 0);
 	v[1] = Vector(r.right, r.top, 0);
@@ -1086,7 +1086,7 @@ void ISubPicAllocatorPresenterImpl::Transform(CRect r, Vector v[4])
 	}
 }
 
-STDMETHODIMP ISubPicAllocatorPresenterImpl::SetVideoAngle(Vector v, bool fRepaint)
+STDMETHODIMP CSubPicAllocatorPresenterImpl::SetVideoAngle(Vector v, bool fRepaint)
 {
 	m_xform = XForm(Ray(Vector(0, 0, 0), v), Vector(1, 1, 1), false);
 	if(fRepaint) Paint(true);

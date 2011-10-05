@@ -25,7 +25,7 @@
 
 // CDX9SubPic
 
-class CDX9SubPic : public ISubPicImpl
+class CDX9SubPic : public CSubPicImpl
 {
 	CComPtr<IDirect3DSurface9> m_pSurface;
 
@@ -47,7 +47,7 @@ public:
 
 // CDX9SubPicAllocator
 
-class CDX9SubPicAllocator : public ISubPicAllocatorImpl, public CCritSec
+class CDX9SubPicAllocator : public CSubPicAllocatorImpl, public CCritSec
 {
 	CComPtr<IDirect3DDevice9> m_pD3DDev;
 	CSize m_maxsize;

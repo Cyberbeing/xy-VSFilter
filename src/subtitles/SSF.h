@@ -30,7 +30,7 @@
 namespace ssf
 {
     [uuid("E0593632-0AB7-47CA-8BE1-E9D2A6A4825E")]
-    class CRenderer : public ISubPicProviderImpl, public ISubStream
+    class CRenderer : public CSubPicProviderImpl, public ISubStream
     {
         CString m_fn, m_name;
         CAutoPtr<SubtitleFile> m_file;

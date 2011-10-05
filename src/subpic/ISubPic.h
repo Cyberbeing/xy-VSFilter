@@ -71,7 +71,7 @@ interface ISubPic : public IUnknown
 };
 
 
-class ISubPicImpl : public CUnknown, public ISubPic
+class CSubPicImpl : public CUnknown, public ISubPic
 {
 protected:
 	REFERENCE_TIME m_rtStart, m_rtStop;
@@ -84,7 +84,7 @@ protected:
 public:
 	static const int DIRTY_RECT_MERGE_EMPTY_AREA = 100;
 
-	ISubPicImpl();
+	CSubPicImpl();
 
 	DECLARE_IUNKNOWN;
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
@@ -133,7 +133,7 @@ interface ISubPicAllocator : public IUnknown
 };
 
 
-class ISubPicAllocatorImpl : public CUnknown, public ISubPicAllocator
+class CSubPicAllocatorImpl : public CUnknown, public ISubPicAllocator
 {
 	CComPtr<ISubPic> m_pStatic;
 
@@ -148,7 +148,7 @@ protected:
 	bool m_fPow2Textures;
 
 public:
-	ISubPicAllocatorImpl(SIZE cursize, bool fDynamicWriteOnly, bool fPow2Textures);
+	CSubPicAllocatorImpl(SIZE cursize, bool fDynamicWriteOnly, bool fPow2Textures);
 
 	DECLARE_IUNKNOWN;
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
@@ -186,14 +186,14 @@ interface ISubPicProvider : public IUnknown
 	STDMETHOD (Render) (SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList) PURE;
 };
 
-class ISubPicProviderImpl : public CUnknown, public ISubPicProvider
+class CSubPicProviderImpl : public CUnknown, public ISubPicProvider
 {
 protected:
 	CCritSec* m_pLock;
 
 public:
-	ISubPicProviderImpl(CCritSec* pLock);
-	virtual ~ISubPicProviderImpl();
+	CSubPicProviderImpl(CCritSec* pLock);
+	virtual ~CSubPicProviderImpl();
 
 	DECLARE_IUNKNOWN;
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
@@ -234,7 +234,7 @@ interface ISubPicQueue : public IUnknown
 	STDMETHOD (GetStats) (int nSubPic /*[in]*/, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
 };
 
-class ISubPicQueueImpl : public CUnknown, public ISubPicQueue
+class CSubPicQueueImpl : public CUnknown, public ISubPicQueue
 {
 	CCritSec m_csSubPicProvider;
 	CComPtr<ISubPicProvider> m_pSubPicProvider;
@@ -248,8 +248,8 @@ protected:
 	HRESULT RenderTo(ISubPic* pSubPic, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, double fps);
 
 public:
-	ISubPicQueueImpl(ISubPicAllocator* pAllocator, HRESULT* phr);
-	virtual ~ISubPicQueueImpl();
+	CSubPicQueueImpl(ISubPicAllocator* pAllocator, HRESULT* phr);
+	virtual ~CSubPicQueueImpl();
 
 	DECLARE_IUNKNOWN;
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
@@ -270,7 +270,7 @@ public:
 */
 };
 
-class CSubPicQueue : public ISubPicQueueImpl, private CInterfaceList<ISubPic>, private CAMThread
+class CSubPicQueue : public CSubPicQueueImpl, private CInterfaceList<ISubPic>, private CAMThread
 {
 	int m_nMaxSubPic;
 
@@ -309,7 +309,7 @@ public:
 	STDMETHODIMP GetStats(int nSubPic, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop);
 };
 
-class CSubPicQueueNoThread : public ISubPicQueueImpl
+class CSubPicQueueNoThread : public CSubPicQueueImpl
 {
 	CCritSec m_csLock;
 	CComPtr<ISubPic> m_pSubPic;
@@ -354,7 +354,7 @@ interface ISubPicAllocatorPresenter : public IUnknown
 	STDMETHOD (SetPixelShader) (LPCSTR pSrcData, LPCSTR pTarget) PURE;
 };
 
-class ISubPicAllocatorPresenterImpl
+class CSubPicAllocatorPresenterImpl
 	: public CUnknown
 	, public CCritSec
 	, public ISubPicAllocatorPresenter
@@ -381,8 +381,8 @@ protected:
 	void Transform(CRect r, Vector v[4]);
 
 public:
-	ISubPicAllocatorPresenterImpl(HWND hWnd, HRESULT& hr);
-	virtual ~ISubPicAllocatorPresenterImpl();
+	CSubPicAllocatorPresenterImpl(HWND hWnd, HRESULT& hr);
+	virtual ~CSubPicAllocatorPresenterImpl();
 
 	DECLARE_IUNKNOWN;
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);

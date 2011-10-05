@@ -65,7 +65,7 @@ public:
 };
 
 [uuid("998D4C9A-460F-4de6-BDCD-35AB24F94ADF")]
-class CVobSubFile : public CVobSubSettings, public ISubStream, public ISubPicProviderImpl
+class CVobSubFile : public CVobSubSettings, public ISubStream, public CSubPicProviderImpl
 {
 protected:
 	CString m_title;
@@ -144,7 +144,7 @@ public:
 };
 
 [uuid("D7FBFB45-2D13-494F-9B3D-FFC9557D5C45")]
-class CVobSubStream : public CVobSubSettings, public ISubStream, public ISubPicProviderImpl
+class CVobSubStream : public CVobSubSettings, public ISubStream, public CSubPicProviderImpl
 {
 	CString m_name;
 

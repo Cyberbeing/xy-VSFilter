@@ -245,7 +245,7 @@ STDMETHODIMP CDX7SubPic::SetDirtyRect( CAtlList<CRect>* dirtyRectList )
 //
 
 CDX7SubPicAllocator::CDX7SubPicAllocator(IDirect3DDevice7* pD3DDev, SIZE maxsize, bool fPow2Textures)
-	: ISubPicAllocatorImpl(maxsize, true, fPow2Textures)
+	: CSubPicAllocatorImpl(maxsize, true, fPow2Textures)
 	, m_pD3DDev(pD3DDev)
 	, m_maxsize(maxsize)
 {

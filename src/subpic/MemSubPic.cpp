@@ -654,7 +654,7 @@ STDMETHODIMP CMemSubPic::SetDirtyRect(CAtlList<CRect>* dirtyRectList )
 //
 
 CMemSubPicAllocator::CMemSubPicAllocator(int type, SIZE maxsize)
-    : ISubPicAllocatorImpl(maxsize, false, false)
+    : CSubPicAllocatorImpl(maxsize, false, false)
     , m_type(type)
     , m_maxsize(maxsize)
 {

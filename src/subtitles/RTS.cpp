@@ -1513,7 +1513,7 @@ CRect CScreenLayoutAllocator::AllocRect(CSubtitle* s, int segment, int entry, in
 CAtlMap<CStringW, CRenderedTextSubtitle::AssCmdType, CStringElementTraits<CStringW>> CRenderedTextSubtitle::m_cmdMap;
 
 CRenderedTextSubtitle::CRenderedTextSubtitle(CCritSec* pLock)
-    : ISubPicProviderImpl(pLock)
+    : CSubPicProviderImpl(pLock)
 {
     if( m_cmdMap.IsEmpty() )
     {

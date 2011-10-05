@@ -27,7 +27,7 @@ enum {MSP_RGB32,MSP_RGB24,MSP_RGB16,MSP_RGB15,MSP_YUY2,MSP_YV12,MSP_IYUV,MSP_AYU
 
 // CMemSubPic
 
-class CMemSubPic : public ISubPicImpl
+class CMemSubPic : public CSubPicImpl
 {
 protected:
 	SubPicDesc m_spd;
@@ -53,7 +53,7 @@ public:
 
 // CMemSubPicAllocator
 
-class CMemSubPicAllocator : public ISubPicAllocatorImpl
+class CMemSubPicAllocator : public CSubPicAllocatorImpl
 {
 	int m_type;
 	CSize m_maxsize;

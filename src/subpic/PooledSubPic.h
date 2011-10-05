@@ -13,7 +13,7 @@ interface IPooledAllocator
 	STDMETHOD_(void, OnItemDestruct)(void* Item) PURE;
 };
 
-class CPooledSubPicAllocator : public ISubPicAllocatorImpl, public IPooledAllocator
+class CPooledSubPicAllocator : public CSubPicAllocatorImpl, public IPooledAllocator
 {
 public:
 	STDMETHODIMP_(void) ReleaseItem(void* Item);
