@@ -25,20 +25,23 @@
 #include "SubPicAllocatorPresenterImpl.h"
 #include "../DSUtil/DSUtil.h"
 
-
-//
-// CSubPicAllocatorPresenterImpl
-//
-
-CSubPicAllocatorPresenterImpl::CSubPicAllocatorPresenterImpl(HWND hWnd, HRESULT& hr)
+CSubPicAllocatorPresenterImpl::CSubPicAllocatorPresenterImpl(HWND hWnd, HRESULT& hr, CString *_pError)
 	: CUnknown(NAME("CSubPicAllocatorPresenterImpl"), NULL)
 	, m_hWnd(hWnd)
 	, m_NativeVideoSize(0, 0), m_AspectRatio(0, 0)
 	, m_VideoRect(0, 0, 0, 0), m_WindowRect(0, 0, 0, 0)
 	, m_fps(25.0)
-	, m_lSubtitleDelay(0)
+	, m_rtSubtitleDelay(0)
+	, m_bDeviceResetRequested(false)
+	, m_bPendingResetDevice(false)
 {
-    if(!IsWindow(m_hWnd)) {hr = E_INVALIDARG; return;}
+	if(!IsWindow(m_hWnd)) {
+		hr = E_INVALIDARG;
+		if (_pError) {
+			*_pError += "Invalid window handle in ISubPicAllocatorPresenterImpl\n";
+		}
+		return;
+	}
 	GetWindowRect(m_hWnd, &m_WindowRect);
 	SetVideoAngle(Vector(), false);
 	hr = S_OK;
@@ -52,33 +55,38 @@ STDMETHODIMP CSubPicAllocatorPresenterImpl::NonDelegatingQueryInterface(REFIID r
 {
 	return
 		QI(ISubPicAllocatorPresenter)
+		QI(ISubPicAllocatorPresenter2)
 		__super::NonDelegatingQueryInterface(riid, ppv);
 }
 
 void CSubPicAllocatorPresenterImpl::AlphaBltSubPic(CSize size, SubPicDesc* pTarget)
 {
 	CComPtr<ISubPic> pSubPic;
-	if(m_pSubPicQueue->LookupSubPic(m_rtNow, &pSubPic))
-	{
-		SubPicDesc spd;
-		pSubPic->GetDesc(spd);
-
-		if(spd.w > 0 && spd.h > 0)
-		{
-			CRect r;
-			pSubPic->GetDirtyRect(r);
-
-			// FIXME
-			r.DeflateRect(1, 1);
-
-			CRect rDstText(
-				r.left * size.cx / spd.w,
-				r.top * size.cy / spd.h,
-				r.right * size.cx / spd.w,
-				r.bottom * size.cy / spd.h);
-
-			pSubPic->AlphaBlt(r, rDstText, pTarget);
+	if(m_pSubPicQueue->LookupSubPic(m_rtNow, &pSubPic)) {
+		CRect rcSource, rcDest;
+		if (SUCCEEDED (pSubPic->GetSourceAndDest(&size, rcSource, rcDest))) {
+			pSubPic->AlphaBlt(rcSource, rcDest, pTarget);
 		}
+		/*		SubPicDesc spd;
+				pSubPic->GetDesc(spd);
+
+				if(spd.w > 0 && spd.h > 0)
+				{
+					CRect r;
+					pSubPic->GetDirtyRect(r);
+
+					// FIXME
+					r.DeflateRect(1, 1);
+
+					CRect rDstText(
+						r.left * size.cx / spd.w,
+						r.top * size.cy / spd.h,
+						r.right * size.cx / spd.w,
+						r.bottom * size.cy / spd.h);
+
+					pSubPic->AlphaBlt(r, rDstText, pTarget);
+				}
+		*/
 	}
 }
 
@@ -86,10 +94,11 @@ void CSubPicAllocatorPresenterImpl::AlphaBltSubPic(CSize size, SubPicDesc* pTarg
 
 STDMETHODIMP_(SIZE) CSubPicAllocatorPresenterImpl::GetVideoSize(bool fCorrectAR)
 {
-	CSize VideoSize(m_NativeVideoSize);
+	CSize VideoSize(GetVisibleVideoSize());
 
-	if(fCorrectAR && m_AspectRatio.cx > 0 && m_AspectRatio.cy > 0)
-		VideoSize.cx = VideoSize.cy*m_AspectRatio.cx/m_AspectRatio.cy;
+	if(fCorrectAR && m_AspectRatio.cx > 0 && m_AspectRatio.cy > 0) {
+		VideoSize.cx = (LONGLONG(VideoSize.cy)*LONGLONG(m_AspectRatio.cx))/LONGLONG(m_AspectRatio.cy);
+	}
 
 	return(VideoSize);
 }
@@ -105,46 +114,43 @@ STDMETHODIMP_(void) CSubPicAllocatorPresenterImpl::SetPosition(RECT w, RECT v)
 
 	m_VideoRect = v;
 
-	if(fWindowSizeChanged || fVideoRectChanged)
-	{
-		if(m_pAllocator)
-		{
+	if(fWindowSizeChanged || fVideoRectChanged) {
+		if(m_pAllocator) {
 			m_pAllocator->SetCurSize(m_WindowRect.Size());
 			m_pAllocator->SetCurVidRect(m_VideoRect);
 		}
 
-		if(m_pSubPicQueue)
-		{
+		if(m_pSubPicQueue) {
 			m_pSubPicQueue->Invalidate();
 		}
 	}
 
-	if(fWindowPosChanged || fVideoRectChanged)
+	if(fWindowPosChanged || fVideoRectChanged) {
 		Paint(fWindowSizeChanged || fVideoRectChanged);
+	}
 }
 
 STDMETHODIMP_(void) CSubPicAllocatorPresenterImpl::SetTime(REFERENCE_TIME rtNow)
 {
-/*
-	if(m_rtNow <= rtNow && rtNow <= m_rtNow + 1000000)
-		return;
-*/
-	m_rtNow = rtNow - m_lSubtitleDelay;
+	/*
+		if(m_rtNow <= rtNow && rtNow <= m_rtNow + 1000000)
+			return;
+	*/
+	m_rtNow = rtNow - m_rtSubtitleDelay;
 
-	if(m_pSubPicQueue)
-	{
+	if(m_pSubPicQueue) {
 		m_pSubPicQueue->SetTime(m_rtNow);
 	}
 }
 
 STDMETHODIMP_(void) CSubPicAllocatorPresenterImpl::SetSubtitleDelay(int delay_ms)
 {
-	m_lSubtitleDelay = delay_ms*10000;
+	m_rtSubtitleDelay = delay_ms*10000i64;
 }
 
 STDMETHODIMP_(int) CSubPicAllocatorPresenterImpl::GetSubtitleDelay()
 {
-	return (m_lSubtitleDelay/10000);
+	return (m_rtSubtitleDelay/10000);
 }
 
 STDMETHODIMP_(double) CSubPicAllocatorPresenterImpl::GetFPS()
@@ -156,14 +162,16 @@ STDMETHODIMP_(void) CSubPicAllocatorPresenterImpl::SetSubPicProvider(ISubPicProv
 {
 	m_SubPicProvider = pSubPicProvider;
 
-	if(m_pSubPicQueue)
+	if(m_pSubPicQueue) {
 		m_pSubPicQueue->SetSubPicProvider(pSubPicProvider);
+	}
 }
 
 STDMETHODIMP_(void) CSubPicAllocatorPresenterImpl::Invalidate(REFERENCE_TIME rtInvalidate)
 {
-	if(m_pSubPicQueue)
+	if(m_pSubPicQueue) {
 		m_pSubPicQueue->Invalidate(rtInvalidate);
+	}
 }
 
 #include <math.h>
@@ -191,6 +199,8 @@ void CSubPicAllocatorPresenterImpl::Transform(CRect r, Vector v[4])
 STDMETHODIMP CSubPicAllocatorPresenterImpl::SetVideoAngle(Vector v, bool fRepaint)
 {
 	m_xform = XForm(Ray(Vector(0, 0, 0), v), Vector(1, 1, 1), false);
-	if(fRepaint) Paint(true);
+	if(fRepaint) {
+		Paint(true);
+	}
 	return S_OK;
 }
