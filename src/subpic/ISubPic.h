@@ -354,61 +354,6 @@ interface ISubPicAllocatorPresenter : public IUnknown
 	STDMETHOD (SetPixelShader) (LPCSTR pSrcData, LPCSTR pTarget) PURE;
 };
 
-class CSubPicAllocatorPresenterImpl
-	: public CUnknown
-	, public CCritSec
-	, public ISubPicAllocatorPresenter
-{
-protected:
-	HWND m_hWnd;
-	CSize m_spMaxSize; // TODO:
-	int m_spMaxQueued; // TODO:
-	REFERENCE_TIME m_lSubtitleDelay;
-
-	CSize m_NativeVideoSize, m_AspectRatio;
-	CRect m_VideoRect, m_WindowRect;
-
-	REFERENCE_TIME m_rtNow;
-	double m_fps;
-
-	CComPtr<ISubPicProvider> m_SubPicProvider;
-	CComPtr<ISubPicAllocator> m_pAllocator;
-	CComPtr<ISubPicQueue> m_pSubPicQueue;
-
-	void AlphaBltSubPic(CSize size, SubPicDesc* pTarget = NULL);
-
-    XForm m_xform;
-	void Transform(CRect r, Vector v[4]);
-
-public:
-	CSubPicAllocatorPresenterImpl(HWND hWnd, HRESULT& hr);
-	virtual ~CSubPicAllocatorPresenterImpl();
-
-	DECLARE_IUNKNOWN;
-	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
-
-	// ISubPicAllocatorPresenter
-
-	STDMETHODIMP CreateRenderer(IUnknown** ppRenderer) = 0;
-
-	STDMETHODIMP_(SIZE) GetVideoSize(bool fCorrectAR = true);
-	STDMETHODIMP_(void) SetPosition(RECT w, RECT v);
-	STDMETHODIMP_(bool) Paint(bool fAll) = 0;
-
-	STDMETHODIMP_(void) SetTime(REFERENCE_TIME rtNow);
-	STDMETHODIMP_(void) SetSubtitleDelay(int delay_ms);
-	STDMETHODIMP_(int) GetSubtitleDelay();
-	STDMETHODIMP_(double) GetFPS();
-
-	STDMETHODIMP_(void) SetSubPicProvider(ISubPicProvider* pSubPicProvider);
-	STDMETHODIMP_(void) Invalidate(REFERENCE_TIME rtInvalidate = -1);
-
-	STDMETHODIMP GetDIB(BYTE* lpDib, DWORD* size) {return E_NOTIMPL;}
-
-	STDMETHODIMP SetVideoAngle(Vector v, bool fRepaint = true);
-	STDMETHODIMP SetPixelShader(LPCSTR pSrcData, LPCSTR pTarget) {return E_NOTIMPL;}
-};
-
 //
 // ISubStream
 //

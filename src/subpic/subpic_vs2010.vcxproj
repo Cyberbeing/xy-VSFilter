@@ -138,6 +138,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SubPicAllocatorPresenterImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="color_conv_table.h" />
@@ -150,6 +151,7 @@
     <ClInclude Include="MemSubPic.h" />
     <ClInclude Include="PooledSubPic.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="SubPicAllocatorPresenterImpl.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

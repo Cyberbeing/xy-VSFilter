@@ -42,6 +42,9 @@
     <ClCompile Include="color_conv_table.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SubPicAllocatorPresenterImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CoordGeom.h">
@@ -72,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ISubRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SubPicAllocatorPresenterImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
