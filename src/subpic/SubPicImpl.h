@@ -29,11 +29,43 @@ class CSubPicImpl : public CUnknown, public ISubPic
 {
 protected:
     REFERENCE_TIME m_rtStart, m_rtStop;
-
+    REFERENCE_TIME m_rtSegmentStart, m_rtSegmentStop;
     CAtlList<CRect> m_rectListDirty;
 
     CSize m_maxsize, m_size;
     CRect m_vidrect;
+	CSize	m_VirtualTextureSize;
+	CPoint	m_VirtualTextureTopLeft;
+
+	/*
+
+	                          Texture
+	        +-------+---------------------------------+
+	        |       .                                 |   .
+	        |       .             m_maxsize           |       .
+	 TextureTopLeft .<=============================== |======>    .           Video
+	        | . . . +-------------------------------- | -----+       +-----------------------------------+
+	        |       |                         .       |      |       |  m_vidrect                        |
+	        |       |                         .       |      |       |                                   |
+	        |       |                         .       |      |       |                                   |
+	        |       |        +-----------+    .       |      |       |                                   |
+	        |       |        | m_rcDirty |    .       |      |       |                                   |
+	        |       |        |           |    .       |      |       |                                   |
+	        |       |        +-----------+    .       |      |       |                                   |
+	        |       +-------------------------------- | -----+       |                                   |
+	        |                    m_size               |              |                                   |
+	        |       <=========================>       |              |                                   |
+	        |                                         |              |                                   |
+	        |                                         |              +-----------------------------------+
+	        |                                         |          .
+	        |                                         |      .
+	        |                                         |   .
+	        +-----------------------------------------+
+	                   m_VirtualTextureSize
+	        <=========================================>
+
+	*/
+
 
 public:
     static const int DIRTY_RECT_MERGE_EMPTY_AREA = 100;
@@ -65,6 +97,15 @@ public:
     STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList /*[in]*/) = 0;
 
     STDMETHODIMP AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget) = 0;
+
+	STDMETHODIMP SetVirtualTextureSize (const SIZE pSize, const POINT pTopLeft);
+	STDMETHODIMP GetSourceAndDest(SIZE* pSize, RECT* pRcSource, RECT* pRcDest);
+
+	STDMETHODIMP_(REFERENCE_TIME) GetSegmentStart();
+	STDMETHODIMP_(REFERENCE_TIME) GetSegmentStop();
+	STDMETHODIMP_(void) SetSegmentStart(REFERENCE_TIME rtStart);
+	STDMETHODIMP_(void) SetSegmentStop(REFERENCE_TIME rtStop);
+
 };
 
 

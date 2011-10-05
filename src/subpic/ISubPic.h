@@ -68,6 +68,13 @@ interface ISubPic : public IUnknown
 	STDMETHOD (Unlock) (CAtlList<CRect>* dirtyRectList /*[in]*/) PURE;
 
 	STDMETHOD (AlphaBlt) (const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget = NULL /*[in]*/) PURE;
+	STDMETHOD (GetSourceAndDest) (SIZE* pSize /*[in]*/, RECT* pRcSource /*[out]*/, RECT* pRcDest /*[out]*/) PURE;
+	STDMETHOD (SetVirtualTextureSize) (const SIZE pSize, const POINT pTopLeft) PURE;
+
+	STDMETHOD_(REFERENCE_TIME, GetSegmentStart) () PURE;
+	STDMETHOD_(REFERENCE_TIME, GetSegmentStop) () PURE;
+	STDMETHOD_(void, SetSegmentStart) (REFERENCE_TIME rtStart) PURE;
+	STDMETHOD_(void, SetSegmentStop) (REFERENCE_TIME rtStop) PURE;
 };
 
 //

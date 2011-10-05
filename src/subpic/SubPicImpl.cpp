@@ -33,7 +33,9 @@
 CSubPicImpl::CSubPicImpl()
     : CUnknown(NAME("CSubPicImpl"), NULL)
     , m_rtStart(0), m_rtStop(0)
-    , m_maxsize(0, 0), m_size(0, 0), m_vidrect(0, 0, 0, 0)
+	, m_rtSegmentStart(0), m_rtSegmentStop(0)
+	, m_maxsize(0, 0), m_size(0, 0), m_vidrect(0, 0, 0, 0)
+	, m_VirtualTextureSize(0, 0), m_VirtualTextureTopLeft (0, 0)
 {
 }
 
@@ -56,6 +58,32 @@ STDMETHODIMP_(REFERENCE_TIME) CSubPicImpl::GetStop() const
     return(m_rtStop);
 }
 
+STDMETHODIMP_(REFERENCE_TIME) CSubPicImpl::GetSegmentStart()
+{
+	if (m_rtSegmentStart) {
+		return(m_rtSegmentStart);
+	}
+	return(m_rtStart);
+}
+
+STDMETHODIMP_(REFERENCE_TIME) CSubPicImpl::GetSegmentStop()
+{
+	if (m_rtSegmentStop) {
+		return(m_rtSegmentStop);
+	}
+	return(m_rtStop);
+}
+
+STDMETHODIMP_(void) CSubPicImpl::SetSegmentStart(REFERENCE_TIME rtStart)
+{
+	m_rtSegmentStart = rtStart;
+}
+
+STDMETHODIMP_(void) CSubPicImpl::SetSegmentStop(REFERENCE_TIME rtStop)
+{
+	m_rtSegmentStop = rtStop;
+}
+
 STDMETHODIMP_(void) CSubPicImpl::SetStart(REFERENCE_TIME rtStart)
 {
     m_rtStart = rtStart;
@@ -73,8 +101,11 @@ STDMETHODIMP CSubPicImpl::CopyTo(ISubPic* pSubPic)
 
     pSubPic->SetStart(m_rtStart);
     pSubPic->SetStop(m_rtStop);
+	pSubPic->SetSegmentStart(m_rtSegmentStart);
+	pSubPic->SetSegmentStop(m_rtSegmentStop);
     pSubPic->SetDirtyRect(&m_rectListDirty);
     pSubPic->SetSize(m_size, m_vidrect);
+	pSubPic->SetVirtualTextureSize(m_VirtualTextureSize, m_VirtualTextureTopLeft);
 
     return S_OK;
 }
@@ -93,6 +124,32 @@ STDMETHODIMP CSubPicImpl::GetDirtyRect(RECT* pDirtyRect) const
         return S_OK;
     }
     return E_POINTER;
+}
+
+STDMETHODIMP CSubPicImpl::GetSourceAndDest(SIZE* pSize, RECT* pRcSource, RECT* pRcDest)
+{
+	CheckPointer (pRcSource, E_POINTER);
+	CheckPointer (pRcDest,	 E_POINTER);
+
+	if(m_size.cx > 0 && m_size.cy > 0) {
+		CRect		rcTemp;
+        GetDirtyRect(&rcTemp);
+
+		// FIXME
+		rcTemp.DeflateRect(1, 1);
+
+		*pRcSource = rcTemp;
+
+		rcTemp.OffsetRect (m_VirtualTextureTopLeft);
+		*pRcDest = CRect (rcTemp.left   * pSize->cx / m_VirtualTextureSize.cx,
+						  rcTemp.top    * pSize->cy / m_VirtualTextureSize.cy,
+						  rcTemp.right  * pSize->cx / m_VirtualTextureSize.cx,
+						  rcTemp.bottom * pSize->cy / m_VirtualTextureSize.cy);
+
+		return S_OK;
+	} else {
+		return E_INVALIDARG;
+	}
 }
 
 STDMETHODIMP CSubPicImpl::SetDirtyRect(CAtlList<CRect>* dirtyRectList)
@@ -144,30 +201,28 @@ STDMETHODIMP CSubPicImpl::GetMaxSize(SIZE* pMaxSize) const
 
 STDMETHODIMP CSubPicImpl::SetSize(SIZE size, RECT vidrect)
 {
-    m_size = size;
-    m_vidrect = vidrect;
+	m_size = size;
+	m_vidrect = vidrect;
 
-    if(m_size.cx > m_maxsize.cx)
-    {
-        m_size.cy = MulDiv(m_size.cy, m_maxsize.cx, m_size.cx);
-        m_size.cx = m_maxsize.cx;
-    }
+	if(m_size.cx > m_maxsize.cx) {
+		m_size.cy = MulDiv(m_size.cy, m_maxsize.cx, m_size.cx);
+		m_size.cx = m_maxsize.cx;
+	}
 
-    if(m_size.cy > m_maxsize.cy)
-    {
-        m_size.cx = MulDiv(m_size.cx, m_maxsize.cy, m_size.cy);
-        m_size.cy = m_maxsize.cy;
-    }
+	if(m_size.cy > m_maxsize.cy) {
+		m_size.cx = MulDiv(m_size.cx, m_maxsize.cy, m_size.cy);
+		m_size.cy = m_maxsize.cy;
+	}
 
-    if(m_size.cx != size.cx || m_size.cy != size.cy)
-    {
-        m_vidrect.top = MulDiv(m_vidrect.top, m_size.cx, size.cx);
-        m_vidrect.bottom = MulDiv(m_vidrect.bottom, m_size.cx, size.cx);
-        m_vidrect.left = MulDiv(m_vidrect.left, m_size.cy, size.cy);
-        m_vidrect.right = MulDiv(m_vidrect.right, m_size.cy, size.cy);
-    }
+	if(m_size.cx != size.cx || m_size.cy != size.cy) {
+		m_vidrect.top = MulDiv(m_vidrect.top, m_size.cx, size.cx);
+		m_vidrect.bottom = MulDiv(m_vidrect.bottom, m_size.cx, size.cx);
+		m_vidrect.left = MulDiv(m_vidrect.left, m_size.cy, size.cy);
+		m_vidrect.right = MulDiv(m_vidrect.right, m_size.cy, size.cy);
+	}
+	m_VirtualTextureSize = m_size;
 
-    return S_OK;
+	return S_OK;
 }
 
 STDMETHODIMP CSubPicImpl::GetDirtyRects( CAtlList<const CRect>& dirtyRectList /*[out]*/ ) const
@@ -180,6 +235,13 @@ STDMETHODIMP CSubPicImpl::GetDirtyRects( CAtlList<const CRect>& dirtyRectList /*
     return S_OK;
 }
 
+STDMETHODIMP CSubPicImpl::SetVirtualTextureSize (const SIZE pSize, const POINT pTopLeft)
+{
+	m_VirtualTextureSize.SetSize (pSize.cx, pSize.cy);
+	m_VirtualTextureTopLeft.SetPoint (pTopLeft.x, pTopLeft.y);
+
+	return S_OK;
+}
 
 //
 // CSubPicAllocatorImpl
@@ -217,33 +279,36 @@ STDMETHODIMP CSubPicAllocatorImpl::SetCurVidRect(RECT curvidrect)
 
 STDMETHODIMP CSubPicAllocatorImpl::GetStatic(ISubPic** ppSubPic)
 {
-    if(!ppSubPic)
-        return E_POINTER;
+	if(!ppSubPic) {
+		return E_POINTER;
+	}
 
-    if(!m_pStatic)
-    {
-        if(!Alloc(true, &m_pStatic) || !m_pStatic)
-            return E_OUTOFMEMORY;
-    }
+	if(!m_pStatic) {
+		if(!Alloc(true, &m_pStatic) || !m_pStatic) {
+			return E_OUTOFMEMORY;
+		}
+	}
 
-    m_pStatic->SetSize(m_cursize, m_curvidrect);
+	m_pStatic->SetSize(m_cursize, m_curvidrect);
 
-    (*ppSubPic = m_pStatic)->AddRef();
+	(*ppSubPic = m_pStatic)->AddRef();
 
-    return S_OK;
+	return S_OK;
 }
 
 STDMETHODIMP CSubPicAllocatorImpl::AllocDynamic(ISubPic** ppSubPic)
 {
-    if(!ppSubPic)
-        return E_POINTER;
+	if(!ppSubPic) {
+		return E_POINTER;
+	}
 
-    if(!Alloc(false, ppSubPic) || !*ppSubPic)
-        return E_OUTOFMEMORY;
+	if(!Alloc(false, ppSubPic) || !*ppSubPic) {
+		return E_OUTOFMEMORY;
+	}
 
-    (*ppSubPic)->SetSize(m_cursize, m_curvidrect);
+	(*ppSubPic)->SetSize(m_cursize, m_curvidrect);
 
-    return S_OK;
+	return S_OK;
 }
 
 STDMETHODIMP_(bool) CSubPicAllocatorImpl::IsDynamicWriteOnly()
