@@ -23,10 +23,11 @@
 #include <afxdlgs.h>
 #include <atlpath.h>
 #include "resource.h"
-#include "..\..\..\subtitles\VobSubFile.h"
-#include "..\..\..\subtitles\RTS.h"
-#include "..\..\..\subtitles\SSF.h"
-#include "..\..\..\SubPic\MemSubPic.h"
+#include "../../../Subtitles/VobSubFile.h"
+#include "../../../Subtitles/RTS.h"
+#include "../../../Subtitles/SSF.h"
+#include "../../../SubPic/MemSubPic.h"
+#include "../../../SubPic/SubPicQueueImpl.h"
 #include "vfr.h"
 
 //

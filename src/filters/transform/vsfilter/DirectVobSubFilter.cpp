@@ -27,9 +27,10 @@
 #include "DirectVobSubPropPage.h"
 #include "VSFilter.h"
 #include "systray.h"
-#include "..\..\..\DSUtil\MediaTypes.h"
-#include "..\..\..\SubPic\MemSubPic.h"
-#include "..\..\..\SubPic\PooledSubPic.h"
+#include "../../../DSUtil/MediaTypes.h"
+#include "../../../SubPic/MemSubPic.h"
+#include "../../../SubPic/SubPicQueueImpl.h"
+#include "../../../SubPic/PooledSubPic.h"
 #include "../../../subpic/color_conv_table.h"
 
 #include <initguid.h>

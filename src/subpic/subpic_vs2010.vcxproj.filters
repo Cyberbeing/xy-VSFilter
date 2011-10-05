@@ -24,9 +24,6 @@
     <ClCompile Include="DX9SubPic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ISubPic.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MemSubPic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -49,6 +46,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SubPicProviderImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SubPicQueueImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -90,6 +90,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SubPicProviderImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SubPicQueueImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
