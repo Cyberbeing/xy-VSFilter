@@ -117,11 +117,14 @@ STDMETHODIMP CMemSubPic::GetDesc(SubPicDesc& spd) const
 STDMETHODIMP CMemSubPic::CopyTo(ISubPic* pSubPic)
 {
     HRESULT hr;
-    if(FAILED(hr = __super::CopyTo(pSubPic)))
+	if(FAILED(hr = __super::CopyTo(pSubPic))) {
         return hr;
-    SubPicDesc src, dst;
-    if(FAILED(GetDesc(src)) || FAILED(pSubPic->GetDesc(dst)))
+	}
+
+	SubPicDesc src, dst;
+	if(FAILED(GetDesc(src)) || FAILED(pSubPic->GetDesc(dst))) {
         return E_FAIL;
+    }
     while(!m_rectListDirty.IsEmpty())
     {
         CRect& cRect = m_rectListDirty.GetHead();
@@ -136,8 +139,9 @@ STDMETHODIMP CMemSubPic::CopyTo(ISubPic* pSubPic)
 
 STDMETHODIMP CMemSubPic::ClearDirtyRect(DWORD color)
 {
-    if(m_rectListDirty.IsEmpty())
+    if(m_rectListDirty.IsEmpty()) {
         return S_FALSE;
+	}
     while(!m_rectListDirty.IsEmpty())
     {
         //pDirtyRect = m_rectListDirty.RemoveHead();
@@ -148,9 +152,9 @@ STDMETHODIMP CMemSubPic::ClearDirtyRect(DWORD color)
         {
             for(int j = 0, h = dirtyRect.Height(); j < h; j++, p += m_spd.pitch)
             {
-                //        memsetd(p, 0, m_rcDirty.Width());
-                //DbgLog((LOG_TRACE, 3, "w:%d", w));
-                //w = pDirtyRect->Width();
+#ifdef _WIN64
+				memsetd(p, color, w*4); // nya
+#else
                 __asm
                 {
                         mov eax, color
@@ -159,6 +163,8 @@ STDMETHODIMP CMemSubPic::ClearDirtyRect(DWORD color)
                         cld
                         rep stosd
                 }
+				
+#endif
             }
         }
         else
@@ -177,6 +183,7 @@ STDMETHODIMP CMemSubPic::ClearDirtyRect(DWORD color)
             }
         }
     }
+	m_rectListDirty.RemoveAll();
     return S_OK;
 }
 
@@ -189,8 +196,9 @@ STDMETHODIMP CMemSubPic::Unlock(CAtlList<CRect>* dirtyRectList)
 {
     POSITION pos;
     SetDirtyRect(dirtyRectList);
-    if(m_rectListDirty.IsEmpty())
+    if(m_rectListDirty.IsEmpty()) {
         return S_OK;
+    }
 
     pos = m_rectListDirty.GetHeadPosition();
     while(pos!=NULL)
@@ -253,12 +261,14 @@ STDMETHODIMP CMemSubPic::Unlock(CAtlList<CRect>* dirtyRectList)
 STDMETHODIMP CMemSubPic::AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
 {
     ASSERT(pTarget);
-    if(!pSrc || !pDst || !pTarget)
+	if(!pSrc || !pDst || !pTarget) {
         return E_POINTER;
+	}
     const SubPicDesc& src = m_spd;
     SubPicDesc dst = *pTarget; // copy, because we might modify it
-    if(src.type != dst.type)
+	if(src.type != dst.type) {
         return E_INVALIDARG;
+	}
     CRect rs(*pSrc), rd(*pDst);
     if(dst.h < 0)
     {
@@ -266,8 +276,9 @@ STDMETHODIMP CMemSubPic::AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc
         rd.bottom = dst.h - rd.bottom;
         rd.top = dst.h - rd.top;
     }
-    if(rs.Width() != rd.Width() || rs.Height() != abs(rd.Height()))
+	if(rs.Width() != rd.Width() || rs.Height() != abs(rd.Height())) {
         return E_INVALIDARG;
+	}
     int w = rs.Width(), h = rs.Height();
     BYTE* s = (BYTE*)src.bits + src.pitch*rs.top + ((rs.left*src.bpp)>>3);//rs.left*4
     BYTE* d = (BYTE*)dst.bits + dst.pitch*rd.top + ((rd.left*dst.bpp)>>3);
@@ -321,11 +332,19 @@ STDMETHODIMP CMemSubPic::AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc
             DWORD* d2 = (DWORD*)d;
             for(; s2 < s2end; s2 += 4, d2++)
             {
+#ifdef _WIN64
+							DWORD ia = 256-s2[3];
+							if(s2[3] < 0xff) {
+								*d2 = ((((*d2&0x00ff00ff)*s2[3])>>8) + (((*((DWORD*)s2)&0x00ff00ff)*ia)>>8)&0x00ff00ff)
+									  | ((((*d2&0x0000ff00)*s2[3])>>8) + (((*((DWORD*)s2)&0x0000ff00)*ia)>>8)&0x0000ff00);
+							}
+#else
                 if(s2[3] < 0xff)
                 {
                     *d2 = (((((*d2&0x00ff00ff)*s2[3])>>8) + (*((DWORD*)s2)&0x00ff00ff))&0x00ff00ff)
                         | (((((*d2&0x0000ff00)*s2[3])>>8) + (*((DWORD*)s2)&0x0000ff00))&0x0000ff00);
                 }
+#endif
             }
         }
         break;
@@ -664,20 +683,25 @@ CMemSubPicAllocator::CMemSubPicAllocator(int type, SIZE maxsize)
 
 bool CMemSubPicAllocator::Alloc(bool fStatic, ISubPic** ppSubPic)
 {
-    if(!ppSubPic)
-        return(false);
+	if(!ppSubPic) {
+		return false;
+	}
     SubPicDesc spd;
     spd.w = m_maxsize.cx;
     spd.h = m_maxsize.cy;
     spd.bpp = 32;
     spd.pitch = (spd.w*spd.bpp)>>3;
     spd.type = m_type;
-    if(!(spd.bits = new BYTE[spd.pitch*spd.h]))
-        return(false);
-    if(!(*ppSubPic = new CMemSubPic(spd)))
-        return(false);
+	spd.bits = DNew BYTE[spd.pitch*spd.h];
+	if(!spd.bits) {
+		return false;
+	}
+	*ppSubPic = DNew CMemSubPic(spd);
+	if(!(*ppSubPic)) {
+		return false;
+	}
     (*ppSubPic)->AddRef();
-    return(true);
+	return true;
 }
 
 
