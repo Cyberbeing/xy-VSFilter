@@ -33,10 +33,11 @@ class CSubPicQueueImpl : public CUnknown, public ISubPicQueue
 protected:
 	double m_fps;
 	REFERENCE_TIME m_rtNow;
+	REFERENCE_TIME m_rtNowLast;
 
 	CComPtr<ISubPicAllocator> m_pAllocator;
 
-	HRESULT RenderTo(ISubPic* pSubPic, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, double fps);
+	HRESULT RenderTo(ISubPic* pSubPic, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, double fps, BOOL bIsAnimated);
 
 public:
 	CSubPicQueueImpl(ISubPicAllocator* pAllocator, HRESULT* phr);
@@ -61,9 +62,12 @@ public:
 */
 };
 
-class CSubPicQueue : public CSubPicQueueImpl, private CInterfaceList<ISubPic>, private CAMThread
+class CSubPicQueue : public CSubPicQueueImpl, private CAMThread
 {
 	int m_nMaxSubPic;
+	BOOL m_bDisableAnim;
+
+	CInterfaceList<ISubPic> m_Queue;
 
 	CCritSec m_csQueueLock; // for protecting CInterfaceList<ISubPic>
 
@@ -72,7 +76,10 @@ class CSubPicQueue : public CSubPicQueueImpl, private CInterfaceList<ISubPic>, p
 
 	REFERENCE_TIME UpdateQueue();
 	void AppendQueue(ISubPic* pSubPic);
+	int GetQueueCount();
 
+	REFERENCE_TIME m_rtQueueMin;
+	REFERENCE_TIME m_rtQueueMax;
 	REFERENCE_TIME m_rtQueueStart, m_rtInvalidate;
 
 	// CAMThread
@@ -85,7 +92,7 @@ class CSubPicQueue : public CSubPicQueueImpl, private CInterfaceList<ISubPic>, p
     DWORD ThreadProc();
 
 public:
-	CSubPicQueue(int nMaxSubPic, ISubPicAllocator* pAllocator, HRESULT* phr);
+	CSubPicQueue(int nMaxSubPic, BOOL bDisableAnim, ISubPicAllocator* pAllocator, HRESULT* phr);
 	virtual ~CSubPicQueue();
 
 	// ISubPicQueue

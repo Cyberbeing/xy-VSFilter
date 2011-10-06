@@ -28,7 +28,6 @@
 #include "ISubPic.h"
 #include "CoordGeom.h"
 
-
 class CSubPicAllocatorPresenterImpl
     : public CUnknown
     , public CCritSec
