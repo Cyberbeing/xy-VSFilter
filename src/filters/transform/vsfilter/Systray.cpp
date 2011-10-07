@@ -22,7 +22,7 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "DirectVobSubFilter.h"
-#include "..\..\..\DSUtil\DSUtil.h"
+#include "../../../DSUtil/DSUtil.h"
 
 // hWnd == INVALID_HANDLE_VALUE - get name, hWnd != INVALID_HANDLE_VALUE - show ppage
 static TCHAR* CallPPage(IFilterGraph* pGraph, int idx, HWND hWnd);
@@ -142,6 +142,7 @@ void CSystrayWindow::OnClose()
 void CSystrayWindow::OnDestroy()
 {
 	NOTIFYICONDATA tnid; 
+    ZeroMemory(&tnid, sizeof(NOTIFYICONDATA));
 	tnid.cbSize = sizeof(NOTIFYICONDATA); 
 	tnid.hWnd = m_hWnd;
 	tnid.uID = IDI_ICON1; 
@@ -189,6 +190,7 @@ LRESULT CSystrayWindow::OnTaskBarRestart(WPARAM, LPARAM)
 	if(m_tbid->fShowIcon)
 	{
 		NOTIFYICONDATA tnid; 
+        ZeroMemory(&tnid, sizeof(NOTIFYICONDATA));
 		tnid.cbSize = sizeof(NOTIFYICONDATA); 
 		tnid.hWnd = m_hWnd; 
 		tnid.uID = IDI_ICON1; 
@@ -375,7 +377,7 @@ DWORD CALLBACK SystrayThreadProc(void* pParam)
 static TCHAR* CallPPage(IFilterGraph* pGraph, int idx, HWND hWnd)
 {
 	int i = 0;
-	bool fFound = false;
+	//bool fFound = false;
 
 	WCHAR* wstr = NULL;
 	CComPtr<IBaseFilter> pFilter;
