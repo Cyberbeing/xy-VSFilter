@@ -295,24 +295,24 @@ STDMETHODIMP CDirectVobSub::get_TextSettings(void* lf, int lflen, COLORREF* colo
 STDMETHODIMP CDirectVobSub::put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer)
 {
 	CAutoLock cAutoLock(&m_propsLock);
-
+    STSStyle tmp = m_defStyle;
 	if(lf)
 	{
 		if(lflen == sizeof(LOGFONTA))
-			m_defStyle.fontName = ((LOGFONTA*)lf)->lfFaceName;
+			tmp.fontName = ((LOGFONTA*)lf)->lfFaceName;
 		else if(lflen == sizeof(LOGFONTW))
-			m_defStyle.fontName = ((LOGFONTW*)lf)->lfFaceName;
+			tmp.fontName = ((LOGFONTW*)lf)->lfFaceName;
 		else
 			return E_INVALIDARG;
 
-		m_defStyle.charSet = ((LOGFONT*)lf)->lfCharSet;
-		m_defStyle.fItalic = !!((LOGFONT*)lf)->lfItalic;
-		m_defStyle.fontSize = ((LOGFONT*)lf)->lfHeight;
-		m_defStyle.fontWeight = ((LOGFONT*)lf)->lfWeight;
-		m_defStyle.fStrikeOut = !!((LOGFONT*)lf)->lfStrikeOut;
-		m_defStyle.fUnderline = !!((LOGFONT*)lf)->lfUnderline;
+		tmp.charSet = ((LOGFONT*)lf)->lfCharSet;
+		tmp.fItalic = !!((LOGFONT*)lf)->lfItalic;
+		tmp.fontSize = ((LOGFONT*)lf)->lfHeight;
+		tmp.fontWeight = ((LOGFONT*)lf)->lfWeight;
+		tmp.fStrikeOut = !!((LOGFONT*)lf)->lfStrikeOut;
+		tmp.fUnderline = !!((LOGFONT*)lf)->lfUnderline;
 
-		if(m_defStyle.fontSize < 0)
+		if(tmp.fontSize < 0)
 		{
 			HDC hdc = ::GetDC(0);
 			m_defStyle.fontSize = -m_defStyle.fontSize * 72 / GetDeviceCaps(hdc, LOGPIXELSY);
@@ -321,11 +321,19 @@ STDMETHODIMP CDirectVobSub::put_TextSettings(void* lf, int lflen, COLORREF color
 
 	}
 
-	m_defStyle.colors[0] = color;
-	m_defStyle.shadowDepthX = m_defStyle.shadowDepthY = fShadow?2:0;
-	m_defStyle.outlineWidthX = m_defStyle.outlineWidthY = fOutline?2:0;
+	tmp.colors[0] = color;
+	tmp.shadowDepthX = tmp.shadowDepthY = fShadow?2:0;
+	tmp.outlineWidthX = tmp.outlineWidthY = fOutline?2:0;
 
-	return S_OK;
+    if(tmp==m_defStyle) 
+    {
+        return S_FALSE;//Important! Avoid unnecessary deinit
+    }
+    else 
+    {
+        m_defStyle = tmp;
+        return S_OK;
+    }
 
 }
 
@@ -734,6 +742,9 @@ STDMETHODIMP_(bool) CDirectVobSub::get_Forced()
 
 STDMETHODIMP CDirectVobSub::put_Forced(bool fForced)
 {
+    if(m_fForced==fForced)
+        return S_FALSE;
+
 	m_fForced = fForced;
 	return S_OK;
 }
@@ -755,6 +766,8 @@ STDMETHODIMP CDirectVobSub::put_TextSettings(STSStyle* pDefStyle)
 
 	CAutoLock cAutoLock(&m_propsLock);
 
+    if(m_defStyle==*pDefStyle)
+        return S_FALSE;
 	if(!memcmp(&m_defStyle, pDefStyle, sizeof(m_defStyle)))
 		return S_FALSE;
 
