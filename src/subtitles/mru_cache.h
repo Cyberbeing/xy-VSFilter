@@ -71,6 +71,7 @@ public:
       return _max_num_items;
   }
   inline std::size_t get_max_num_items() const { return _max_num_items; }
+  inline std::size_t get_cur_items_num() const { return _il.size(); }
 
   iterator begin(){return _il.begin();}
   iterator end(){return _il.end();}
@@ -88,23 +89,33 @@ class enhanced_mru_list:public mru_list<Item, KeyExtractor>
 public:
     typedef typename hashed_cache::const_iterator hashed_cache_const_iterator;
 
-    enhanced_mru_list(std::size_t max_num_items):mru_list(max_num_items),_cache_hit(0){}
+    enhanced_mru_list(std::size_t max_num_items):mru_list(max_num_items),_cache_hit(0),_query_count(0){}
 
-    std::size_t set_max_num_items( std::size_t max_num_items )
+    std::size_t set_max_num_items( std::size_t max_num_items, bool clear_statistic_info=false )
     {
-        _cache_hit=0;
+        if(clear_statistic_info)
+        {
+            _cache_hit = 0;
+            _query_count = 0;
+        }
         return __super::set_max_num_items(max_num_items);
     }
-    void clear() { __super::clear(); _cache_hit=0; }
+    void clear(bool clear_statistic_info=false) 
+    { 
+        if(clear_statistic_info) 
+        { 
+            _cache_hit=0; 
+            _query_count=0; 
+        } 
+        __super::clear();         
+    }
 
     template< typename CompatibleKey >
     hashed_cache_const_iterator hash_find(const CompatibleKey & k)
     {
         hashed_cache_const_iterator& iter = _il.get<1>().find(k);
-        if(iter!=_il.get<1>().end())
-        {
-            _cache_hit++;
-        }
+        _query_count++;
+        _cache_hit += (iter!=_il.get<1>().end());
         return iter;
     }
 
@@ -112,8 +123,12 @@ public:
     {
         return _il.get<1>().end();
     }
+
+    inline std::size_t get_cache_hit() const { return _cache_hit; }
+    inline std::size_t get_query_count() const { return _query_count; }
 protected:
       std::size_t _cache_hit;
+      std::size_t _query_count;
 };
 
 #endif // end of __MRU_CACHE_H_256FCF72_8663_41DC_B98A_B822F6007912__
