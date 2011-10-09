@@ -47,9 +47,11 @@ extern int g_log_once_id;
 namespace xy_logger
 {
 
+#ifdef __DO_LOG
 extern log4cplus::Logger g_logger;
+#endif
 
-void doConfigure(const log4cplus::tstring& configFilename, log4cplus::Hierarchy& h = log4cplus::Logger::getDefaultHierarchy(), unsigned flags = 0);
+void doConfigure(const log4cplus::tstring& configFilename);
 
 static void write_file(const char * filename, const void * buff, int size)
 {

@@ -19,14 +19,15 @@ namespace xy_logger
 
 #ifdef __DO_LOG
     int g_log_once_id=0;
+    
+    log4cplus::Logger g_logger = log4cplus::Logger::getInstance( XY_TEXT("global_logger_xy") );
 #endif
 
-log4cplus::Logger g_logger = log4cplus::Logger::getInstance( XY_TEXT("global_logger_xy") );
-
-void doConfigure(const log4cplus::tstring& configFilename, 
-    log4cplus::Hierarchy& h /* = Logger::getDefaultHierarchy */, unsigned flags /* = 0 */)
+void doConfigure(const log4cplus::tstring& configFilename)
 {
 #ifdef __DO_LOG
+    log4cplus::Hierarchy& h = Logger::getDefaultHierarchy;
+    unsigned flags = 0;
     log4cplus::PropertyConfigurator::doConfigure(configFilename, h, flags);
 #endif
 }
