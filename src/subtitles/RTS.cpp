@@ -216,6 +216,8 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             {
                 if(!CreateOpaqueBox()) return;
             }
+            ScanLineDataMruItem item(scan_line_data_key, scan_line_data);
+            scan_line_data_cache->update_cache(item);
             m_fDrawn = true;      
         }
         else
