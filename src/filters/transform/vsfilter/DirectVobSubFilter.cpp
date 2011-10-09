@@ -1120,6 +1120,26 @@ STDMETHODIMP CDirectVobSubFilter::put_OverlayNoBlurCacheMaxItemNum(int overlay_n
     return hr;
 }
 
+STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
+{
+    CAutoLock cAutoLock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::get_CachesInfo(caches_info);
+
+    caches_info->path_cache_cur_item_num    = CacheManager::GetPathDataMruCache()->get_cur_items_num();
+    caches_info->path_cache_hit_count       = CacheManager::GetPathDataMruCache()->get_cache_hit();
+    caches_info->path_cache_query_count     = CacheManager::GetPathDataMruCache()->get_query_count();
+    caches_info->scanline_cache_cur_item_num= CacheManager::GetCWordMruCache()->get_cur_items_num();
+    caches_info->scanline_cache_hit_count   = CacheManager::GetCWordMruCache()->get_cache_hit();
+    caches_info->scanline_cache_query_count = CacheManager::GetCWordMruCache()->get_query_count();
+    caches_info->non_blur_cache_cur_item_num= CacheManager::GetOverlayNoBlurMruCache()->get_cur_items_num();
+    caches_info->non_blur_cache_hit_count   = CacheManager::GetOverlayNoBlurMruCache()->get_cache_hit();
+    caches_info->non_blur_cache_query_count = CacheManager::GetOverlayNoBlurMruCache()->get_query_count();
+    caches_info->overlay_cache_cur_item_num = CacheManager::GetOverlayMruCache()->get_cur_items_num();
+    caches_info->overlay_cache_hit_count    = CacheManager::GetOverlayMruCache()->get_cache_hit();
+    caches_info->overlay_cache_query_count  = CacheManager::GetOverlayMruCache()->get_query_count();
+    return hr;
+}
+
 STDMETHODIMP CDirectVobSubFilter::put_SubpixelPositionLevel(int subpixel_pos_level)
 {
     CAutoLock cAutolock(&m_csQueueLock);

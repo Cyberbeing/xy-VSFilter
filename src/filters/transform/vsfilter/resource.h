@@ -170,6 +170,7 @@
 #define IDC_EDIT                        325
 #define IDC_EDITOverlayNoBlurCache      325
 #define IDC_SPINOverlayNoBlurCache      326
+#define IDC_CACHES_INFO_BTN             327
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
 #define IDC_LABLE_OVERLAY_CACHE         403
@@ -204,7 +205,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        232
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         327
+#define _APS_NEXT_CONTROL_VALUE         328
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif
