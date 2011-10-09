@@ -263,12 +263,12 @@ extern "C" {
             int overlay_cache_max_item_num
             ) PURE;
 
-        STDMETHOD(get_CWordCacheMaxItemNum) (THIS_
-            int* word_cache_max_item_num
+        STDMETHOD(get_ScanLineDataCacheMaxItemNum) (THIS_
+            int* scan_line_data_cache_max_item_num
             ) PURE;
 
-        STDMETHOD(put_CWordCacheMaxItemNum) (THIS_
-            int word_cache_max_item_num
+        STDMETHOD(put_ScanLineDataCacheMaxItemNum) (THIS_
+            int scan_line_data_cache_max_item_num
             ) PURE;
 
         STDMETHOD(get_PathDataCacheMaxItemNum) (THIS_
@@ -286,6 +286,18 @@ extern "C" {
         STDMETHOD(put_OverlayNoBlurCacheMaxItemNum) (THIS_
             int overlay_no_blur_cache_max_item_num
             ) PURE;
+
+        struct CachesInfo
+        {
+            std::size_t path_cache_cur_item_num, path_cache_query_count,path_cache_hit_count,
+                scanline_cache_cur_item_num, scanline_cache_query_count,scanline_cache_hit_count,
+                non_blur_cache_cur_item_num, non_blur_cache_query_count,non_blur_cache_hit_count,
+                overlay_cache_cur_item_num, overlay_cache_query_count,overlay_cache_hit_count;
+        };
+        STDMETHOD(get_CachesInfo) (THIS_
+            CachesInfo* cache_info
+            ) PURE;
+
 
         STDMETHOD(get_SubpixelPositionLevel) (THIS_
             int* subpixel_pos_level

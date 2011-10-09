@@ -779,6 +779,47 @@ CDVSBasePPage(NAME("DirectVobSub More Property Page"), pUnk, IDD_DVSMOREPAGE, ID
 
 bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    switch(uMsg)
+    {
+    case WM_COMMAND:
+        {
+            switch(HIWORD(wParam))
+            {
+            case BN_CLICKED:
+                {
+                    if(LOWORD(wParam) == IDC_CACHES_INFO_BTN)
+                    {
+                        AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+                        IDirectVobSub::CachesInfo caches_info;
+                        m_pDirectVobSub->get_CachesInfo(&caches_info);
+                        CString msg;
+                        msg.Format(_T("Cache LV 4(path cache)\n")\
+                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)\n")\
+                                   _T("Cache LV 3(scanline cache)\n")\
+                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)\n")\
+                                   _T("Cache LV 2(non-blur cache)\n")\
+                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)\n")\
+                                   _T("Cache LV 1(overlay cache)\n")\
+                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)"),
+                            caches_info.path_cache_cur_item_num,     caches_info.path_cache_hit_count,     caches_info.path_cache_query_count,
+                            caches_info.scanline_cache_cur_item_num, caches_info.scanline_cache_hit_count, caches_info.scanline_cache_query_count,
+                            caches_info.non_blur_cache_cur_item_num, caches_info.non_blur_cache_hit_count, caches_info.non_blur_cache_query_count,
+                            caches_info.overlay_cache_cur_item_num,  caches_info.overlay_cache_hit_count,  caches_info.overlay_cache_query_count);
+                        MessageBox(
+                            m_hwnd,
+                            msg,
+                            _T("Caches Info"),
+                            MB_OK | MB_ICONINFORMATION | MB_APPLMODAL
+                            );
+                        return(true);
+                    }
+                }
+                break;
+            }
+        }
+        break;
+    }
     return(false);
 }
 
@@ -788,7 +829,7 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
     {
         m_pDirectVobSub->put_OverlayCacheMaxItemNum(m_overlay_cache_max_item_num);
         m_pDirectVobSub->put_OverlayNoBlurCacheMaxItemNum(m_overlay_no_blur_cache_max_item_num);
-        m_pDirectVobSub->put_CWordCacheMaxItemNum(m_word_cache_max_item_num);
+        m_pDirectVobSub->put_ScanLineDataCacheMaxItemNum(m_scan_line_data_cache_max_item_num);
         m_pDirectVobSub->put_PathDataCacheMaxItemNum(m_path_cache_max_item_num);
         m_pDirectVobSub->put_SubpixelPositionLevel(m_subpixel_pos_level);
     }
@@ -796,7 +837,7 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
     {
         m_pDirectVobSub->get_OverlayCacheMaxItemNum(&m_overlay_cache_max_item_num);
         m_pDirectVobSub->get_OverlayNoBlurCacheMaxItemNum(&m_overlay_no_blur_cache_max_item_num);
-        m_pDirectVobSub->get_CWordCacheMaxItemNum(&m_word_cache_max_item_num);
+        m_pDirectVobSub->get_ScanLineDataCacheMaxItemNum(&m_scan_line_data_cache_max_item_num);
         m_pDirectVobSub->get_PathDataCacheMaxItemNum(&m_path_cache_max_item_num);
         m_pDirectVobSub->get_SubpixelPositionLevel(&m_subpixel_pos_level);
     }
@@ -808,7 +849,7 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
     {
         m_overlay_cache_max_item_num = m_overlay_cache.GetPos32();
         m_overlay_no_blur_cache_max_item_num = m_overlay_no_blur_cache.GetPos32();
-        m_word_cache_max_item_num = m_scanline_cache.GetPos32();
+        m_scan_line_data_cache_max_item_num = m_scanline_cache.GetPos32();
         m_path_cache_max_item_num = m_path_cache.GetPos32();
 
         if (m_combo_subpixel_pos.GetCurSel() != CB_ERR)
@@ -829,7 +870,7 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
 
         m_overlay_cache.SetPos32(m_overlay_cache_max_item_num);
         m_overlay_no_blur_cache.SetPos32(m_overlay_no_blur_cache_max_item_num);
-        m_scanline_cache.SetPos32(m_word_cache_max_item_num);
+        m_scanline_cache.SetPos32(m_scan_line_data_cache_max_item_num);
         m_path_cache.SetPos32(m_path_cache_max_item_num);
 
         int temp = m_subpixel_pos_level;

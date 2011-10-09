@@ -99,12 +99,13 @@ public:
     STDMETHODIMP put_SubtitleTiming(int delay, int speedmul, int speeddiv);
 
     STDMETHODIMP put_OverlayCacheMaxItemNum(int overlay_cache_max_item_num);
-    STDMETHODIMP put_CWordCacheMaxItemNum(int word_cache_max_item_num);
+    STDMETHODIMP put_ScanLineDataCacheMaxItemNum(int scan_line_data_cache_max_item_num);
     STDMETHODIMP put_PathDataCacheMaxItemNum(int path_data_cache_max_item_num);
     STDMETHODIMP put_OverlayNoBlurCacheMaxItemNum(int overlay_no_blur_cache_max_item_num);
 
-    STDMETHODIMP put_SubpixelPositionLevel(int subpixel_pos_level);
+    STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
 
+    STDMETHODIMP put_SubpixelPositionLevel(int subpixel_pos_level);
 
     STDMETHODIMP get_MediaFPS(bool* fEnabled, double* fps);
     STDMETHODIMP put_MediaFPS(bool fEnabled, double fps);

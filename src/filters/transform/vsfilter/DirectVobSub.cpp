@@ -58,8 +58,8 @@ CDirectVobSub::CDirectVobSub()
     m_overlay_no_blur_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM), 256);
     if(m_overlay_no_blur_cache_max_item_num<0) m_overlay_no_blur_cache_max_item_num = 0;
 
-    m_word_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_WORD_CACHE_MAX_ITEM_NUM), 512);
-	if(m_word_cache_max_item_num<0) m_word_cache_max_item_num = 0;
+    m_scan_line_data_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM), 512);
+	if(m_scan_line_data_cache_max_item_num<0) m_scan_line_data_cache_max_item_num = 0;
     
     m_path_data_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), 512);
     if(m_path_data_cache_max_item_num<0) m_path_data_cache_max_item_num = 0;
@@ -485,21 +485,21 @@ STDMETHODIMP CDirectVobSub::put_OverlayCacheMaxItemNum(int overlay_cache_max_ite
     return S_OK;
 }
 
-STDMETHODIMP CDirectVobSub::get_CWordCacheMaxItemNum(int* word_cache_max_item_num)
+STDMETHODIMP CDirectVobSub::get_ScanLineDataCacheMaxItemNum(int* scan_line_data_cache_max_item_num)
 {
     CAutoLock cAutoLock(&m_propsLock);
 
-    if(word_cache_max_item_num) *word_cache_max_item_num = m_word_cache_max_item_num;
+    if(scan_line_data_cache_max_item_num) *scan_line_data_cache_max_item_num = m_scan_line_data_cache_max_item_num;
 
     return S_OK;
 }
 
-STDMETHODIMP CDirectVobSub::put_CWordCacheMaxItemNum(int word_cache_max_item_num)
+STDMETHODIMP CDirectVobSub::put_ScanLineDataCacheMaxItemNum(int scan_line_data_cache_max_item_num)
 {
     CAutoLock cAutoLock(&m_propsLock);
 
-    if(m_word_cache_max_item_num == word_cache_max_item_num || word_cache_max_item_num<0) return S_FALSE;
-    m_word_cache_max_item_num = word_cache_max_item_num;
+    if(m_scan_line_data_cache_max_item_num == scan_line_data_cache_max_item_num || scan_line_data_cache_max_item_num<0) return S_FALSE;
+    m_scan_line_data_cache_max_item_num = scan_line_data_cache_max_item_num;
 
     return S_OK;
 }
@@ -540,6 +540,31 @@ STDMETHODIMP CDirectVobSub::put_OverlayNoBlurCacheMaxItemNum(int overlay_no_blur
     m_overlay_no_blur_cache_max_item_num = overlay_no_blur_cache_max_item_num;
 
     return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::get_CachesInfo(CachesInfo* caches_info)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+    if(caches_info)
+    {
+        caches_info->path_cache_cur_item_num    = 0;
+        caches_info->path_cache_hit_count       = 0;
+        caches_info->path_cache_query_count     = 0;
+        caches_info->scanline_cache_cur_item_num= 0;
+        caches_info->scanline_cache_hit_count   = 0;
+        caches_info->scanline_cache_query_count = 0;
+        caches_info->non_blur_cache_cur_item_num= 0;
+        caches_info->non_blur_cache_hit_count   = 0;
+        caches_info->non_blur_cache_query_count = 0;
+        caches_info->overlay_cache_cur_item_num = 0;
+        caches_info->overlay_cache_hit_count    = 0;
+        caches_info->overlay_cache_query_count  = 0;
+        return S_OK;
+    }
+    else 
+    {
+        return S_FALSE;
+    }
 }
 
 STDMETHODIMP CDirectVobSub::get_SubpixelPositionLevel(int* subpixel_pos_level)
@@ -591,7 +616,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), m_overlay_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM), m_overlay_no_blur_cache_max_item_num);
-    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_WORD_CACHE_MAX_ITEM_NUM), m_word_cache_max_item_num);
+    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM), m_scan_line_data_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), m_path_data_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), m_subpixel_pos_level);
 	return S_OK;

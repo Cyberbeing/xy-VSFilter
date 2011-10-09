@@ -44,7 +44,7 @@ protected:
 	CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;
 
     int m_overlay_cache_max_item_num;
-    int m_word_cache_max_item_num;
+    int m_scan_line_data_cache_max_item_num;
     int m_path_data_cache_max_item_num;
     int m_overlay_no_blur_cache_max_item_num;
 
@@ -105,14 +105,16 @@ public:
     STDMETHODIMP get_OverlayCacheMaxItemNum(int* overlay_cache_max_item_num);
     STDMETHODIMP put_OverlayCacheMaxItemNum(int overlay_cache_max_item_num);
 
-    STDMETHODIMP get_CWordCacheMaxItemNum(int* word_cache_max_item_num);
-    STDMETHODIMP put_CWordCacheMaxItemNum(int word_cache_max_item_num);
+    STDMETHODIMP get_ScanLineDataCacheMaxItemNum(int* scan_line_data_cache_max_item_num);
+    STDMETHODIMP put_ScanLineDataCacheMaxItemNum(int scan_line_data_cache_max_item_num);
 
     STDMETHODIMP get_PathDataCacheMaxItemNum(int* path_data_cache_max_item_num);
     STDMETHODIMP put_PathDataCacheMaxItemNum(int path_data_cache_max_item_num);
     
     STDMETHODIMP get_OverlayNoBlurCacheMaxItemNum(int* overlay_no_blur_cache_max_item_num);
     STDMETHODIMP put_OverlayNoBlurCacheMaxItemNum(int overlay_no_blur_cache_max_item_num);
+
+    STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
 
     STDMETHODIMP get_SubpixelPositionLevel(int* subpixel_pos_level);
     STDMETHODIMP put_SubpixelPositionLevel(int subpixel_pos_level);

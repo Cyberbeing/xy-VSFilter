@@ -549,7 +549,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	CAutoLock cAutoLock(&m_csQueueLock);
     ColorConvTable::SetDefaultYUVType(m_fUseBT709?ColorConvTable::BT709:ColorConvTable::BT601);
     CacheManager::GetPathDataMruCache()->set_max_num_items(m_path_data_cache_max_item_num);
-    CacheManager::GetCWordMruCache()->set_max_num_items(m_word_cache_max_item_num);
+    CacheManager::GetScanLineDataMruCache()->set_max_num_items(m_scan_line_data_cache_max_item_num);
     CacheManager::GetOverlayNoBlurMruCache()->set_max_num_items(m_overlay_no_blur_cache_max_item_num);
     CacheManager::GetOverlayMruCache()->set_max_num_items(m_overlay_cache_max_item_num);
     SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_subpixel_pos_level) );
@@ -1081,14 +1081,14 @@ STDMETHODIMP CDirectVobSubFilter::put_OverlayCacheMaxItemNum( int overlay_cache_
     return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::put_CWordCacheMaxItemNum( int word_cache_max_item_num )
+STDMETHODIMP CDirectVobSubFilter::put_ScanLineDataCacheMaxItemNum( int scan_line_data_cache_max_item_num )
 {
     CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::put_CWordCacheMaxItemNum(word_cache_max_item_num);
+    HRESULT hr = CDirectVobSub::put_ScanLineDataCacheMaxItemNum(scan_line_data_cache_max_item_num);
 
     if(hr == NOERROR)
     {
-        CacheManager::GetCWordMruCache()->set_max_num_items(m_word_cache_max_item_num);
+        CacheManager::GetScanLineDataMruCache()->set_max_num_items(m_scan_line_data_cache_max_item_num);
     }
 
     return hr;
@@ -1117,6 +1117,26 @@ STDMETHODIMP CDirectVobSubFilter::put_OverlayNoBlurCacheMaxItemNum(int overlay_n
         CacheManager::GetOverlayNoBlurMruCache()->set_max_num_items(m_overlay_no_blur_cache_max_item_num);
     }
 
+    return hr;
+}
+
+STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
+{
+    CAutoLock cAutoLock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::get_CachesInfo(caches_info);
+
+    caches_info->path_cache_cur_item_num    = CacheManager::GetPathDataMruCache()->get_cur_items_num();
+    caches_info->path_cache_hit_count       = CacheManager::GetPathDataMruCache()->get_cache_hit();
+    caches_info->path_cache_query_count     = CacheManager::GetPathDataMruCache()->get_query_count();
+    caches_info->scanline_cache_cur_item_num= CacheManager::GetScanLineDataMruCache()->get_cur_items_num();
+    caches_info->scanline_cache_hit_count   = CacheManager::GetScanLineDataMruCache()->get_cache_hit();
+    caches_info->scanline_cache_query_count = CacheManager::GetScanLineDataMruCache()->get_query_count();
+    caches_info->non_blur_cache_cur_item_num= CacheManager::GetOverlayNoBlurMruCache()->get_cur_items_num();
+    caches_info->non_blur_cache_hit_count   = CacheManager::GetOverlayNoBlurMruCache()->get_cache_hit();
+    caches_info->non_blur_cache_query_count = CacheManager::GetOverlayNoBlurMruCache()->get_query_count();
+    caches_info->overlay_cache_cur_item_num = CacheManager::GetOverlayMruCache()->get_cur_items_num();
+    caches_info->overlay_cache_hit_count    = CacheManager::GetOverlayMruCache()->get_cache_hit();
+    caches_info->overlay_cache_query_count  = CacheManager::GetOverlayMruCache()->get_query_count();
     return hr;
 }
 

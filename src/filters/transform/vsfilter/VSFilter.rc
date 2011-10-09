@@ -620,7 +620,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_RP_WORD_CACHE_MAX_ITEM_NUM "Word_cache_max_item_num"
+    IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM "Scan_line_data_cache_max_item_num"
     IDS_RP_SUBPIXEL_POS_LEVEL "Subpixel Position Level"
     IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM "Path_cache_max_item_num"
     IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM 
