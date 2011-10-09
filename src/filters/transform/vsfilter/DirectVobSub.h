@@ -114,8 +114,6 @@ public:
     STDMETHODIMP get_OverlayNoBlurCacheMaxItemNum(int* overlay_no_blur_cache_max_item_num);
     STDMETHODIMP put_OverlayNoBlurCacheMaxItemNum(int overlay_no_blur_cache_max_item_num);
 
-    STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
-
     STDMETHODIMP get_SubpixelPositionLevel(int* subpixel_pos_level);
     STDMETHODIMP put_SubpixelPositionLevel(int subpixel_pos_level);
 

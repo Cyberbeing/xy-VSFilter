@@ -61,6 +61,55 @@ public:
 
 typedef ::boost::shared_ptr<PathData> SharedPtrPathData;
 
+class ScanLineData
+{
+    bool fFirstSet;
+    CPoint firstp, lastp;
+
+private:
+    int mWidth, mHeight;
+
+    typedef std::pair<unsigned __int64, unsigned __int64> tSpan;
+    typedef std::vector<tSpan> tSpanBuffer;
+
+    tSpanBuffer mOutline;
+    tSpanBuffer mWideOutline;
+    int mWideBorder;
+
+    struct Edge {
+        int next;
+        int posandflag;
+    } *mpEdgeBuffer;
+    unsigned mEdgeHeapSize;
+    unsigned mEdgeNext;
+
+    unsigned int* mpScanBuffer;
+
+    typedef unsigned char byte;
+
+protected:
+    int mPathOffsetX, mPathOffsetY;	
+
+private:
+    void _ReallocEdgeBuffer(int edges);
+    void _EvaluateBezier(const PathData& path_data, int ptbase, bool fBSpline);
+    void _EvaluateLine(const PathData& path_data, int pt1idx, int pt2idx);
+    void _EvaluateLine(int x0, int y0, int x1, int y1);	
+    static void _OverlapRegion(tSpanBuffer& dst, tSpanBuffer& src, int dx, int dy);
+
+public:
+    ScanLineData();
+    virtual ~ScanLineData();
+
+    bool ScanConvert(SharedPtrPathData path_data);
+    bool CreateWidenedRegion(int borderX, int borderY);
+    void DeleteOutlines();
+
+    friend class Rasterizer;
+};
+
+typedef ::boost::shared_ptr<ScanLineData> SharedPtrScanLineData;
+
 struct Overlay
 {
 public:
@@ -105,51 +154,11 @@ typedef ::boost::shared_ptr<Overlay> SharedPtrOverlay;
 
 class Rasterizer
 {
-	bool fFirstSet;
-	CPoint firstp, lastp;
-    
-private:
-	int mWidth, mHeight;
-
-	typedef std::pair<unsigned __int64, unsigned __int64> tSpan;
-	typedef std::vector<tSpan> tSpanBuffer;
-
-	tSpanBuffer mOutline;
-	tSpanBuffer mWideOutline;
-	int mWideBorder;
-
-	struct Edge {
-		int next;
-		int posandflag;
-	} *mpEdgeBuffer;
-	unsigned mEdgeHeapSize;
-	unsigned mEdgeNext;
-
-	unsigned int* mpScanBuffer;
-
-	typedef unsigned char byte;
-
-protected:
-	int mPathOffsetX, mPathOffsetY;	
-
-private:
-	void _ReallocEdgeBuffer(int edges);
-	void _EvaluateBezier(const PathData& path_data, int ptbase, bool fBSpline);
-	void _EvaluateLine(const PathData& path_data, int pt1idx, int pt2idx);
-	void _EvaluateLine(int x0, int y0, int x1, int y1);	
-	static void _OverlapRegion(tSpanBuffer& dst, tSpanBuffer& src, int dx, int dy);
-
-public:
-	Rasterizer();
-	virtual ~Rasterizer();
-    
-	bool ScanConvert(SharedPtrPathData path_data);
-	bool CreateWidenedRegion(int borderX, int borderY);
-	void DeleteOutlines();
-
-    bool Rasterize(int xsub, int ysub, SharedPtrOverlay overlay);
+    typedef unsigned char byte;
+public:    
+    static bool Rasterize(const ScanLineData& scan_line_data, int xsub, int ysub, SharedPtrOverlay overlay);
     static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);
 
-    CRect Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRect, byte* pAlphaMask, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder);    
+    static CRect Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRect, byte* pAlphaMask, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder);    
 };
 

@@ -515,424 +515,7 @@ static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int st
     }
 }
 
-Rasterizer::Rasterizer():mPathOffsetX(0),mPathOffsetY(0)
-{
-}
-
-Rasterizer::~Rasterizer()
-{    
-}
-
-void Rasterizer::_ReallocEdgeBuffer(int edges)
-{
-    mEdgeHeapSize = edges;
-    mpEdgeBuffer = (Edge*)realloc(mpEdgeBuffer, sizeof(Edge)*edges);
-}
-
-void Rasterizer::_EvaluateBezier(const PathData& path_data, int ptbase, bool fBSpline)
-{
-    const POINT* pt0 = path_data.mpPathPoints + ptbase;
-    const POINT* pt1 = path_data.mpPathPoints + ptbase + 1;
-    const POINT* pt2 = path_data.mpPathPoints + ptbase + 2;
-    const POINT* pt3 = path_data.mpPathPoints + ptbase + 3;
-    double x0 = pt0->x;
-    double x1 = pt1->x;
-    double x2 = pt2->x;
-    double x3 = pt3->x;
-    double y0 = pt0->y;
-    double y1 = pt1->y;
-    double y2 = pt2->y;
-    double y3 = pt3->y;
-    double cx3, cx2, cx1, cx0, cy3, cy2, cy1, cy0;
-    if(fBSpline)
-    {
-        // 1   [-1 +3 -3 +1]
-        // - * [+3 -6 +3  0]
-        // 6   [-3  0 +3  0]
-        //	   [+1 +4 +1  0]
-        double _1div6 = 1.0/6.0;
-        cx3 = _1div6*(-  x0+3*x1-3*x2+x3);
-        cx2 = _1div6*( 3*x0-6*x1+3*x2);
-        cx1 = _1div6*(-3*x0	   +3*x2);
-        cx0 = _1div6*(   x0+4*x1+1*x2);
-        cy3 = _1div6*(-  y0+3*y1-3*y2+y3);
-        cy2 = _1div6*( 3*y0-6*y1+3*y2);
-        cy1 = _1div6*(-3*y0     +3*y2);
-        cy0 = _1div6*(   y0+4*y1+1*y2);
-    }
-    else // bezier
-    {
-        // [-1 +3 -3 +1]
-        // [+3 -6 +3  0]
-        // [-3 +3  0  0]
-        // [+1  0  0  0]
-        cx3 = -  x0+3*x1-3*x2+x3;
-        cx2 =  3*x0-6*x1+3*x2;
-        cx1 = -3*x0+3*x1;
-        cx0 =    x0;
-        cy3 = -  y0+3*y1-3*y2+y3;
-        cy2 =  3*y0-6*y1+3*y2;
-        cy1 = -3*y0+3*y1;
-        cy0 =    y0;
-    }
-    //
-    // This equation is from Graphics Gems I.
-    //
-    // The idea is that since we're approximating a cubic curve with lines,
-    // any error we incur is due to the curvature of the line, which we can
-    // estimate by calculating the maximum acceleration of the curve.  For
-    // a cubic, the acceleration (second derivative) is a line, meaning that
-    // the absolute maximum acceleration must occur at either the beginning
-    // (|c2|) or the end (|c2+c3|).  Our bounds here are a little more
-    // conservative than that, but that's okay.
-    //
-    // If the acceleration of the parametric formula is zero (c2 = c3 = 0),
-    // that component of the curve is linear and does not incur any error.
-    // If a=0 for both X and Y, the curve is a line segment and we can
-    // use a step size of 1.
-    double maxaccel1 = fabs(2*cy2) + fabs(6*cy3);
-    double maxaccel2 = fabs(2*cx2) + fabs(6*cx3);
-    double maxaccel = maxaccel1 > maxaccel2 ? maxaccel1 : maxaccel2;
-    double h = 1.0;
-    if(maxaccel > 8.0) h = sqrt(8.0 / maxaccel);
-    if(!fFirstSet) {firstp.x = (LONG)cx0; firstp.y = (LONG)cy0; lastp = firstp; fFirstSet = true;}
-    for(double t = 0; t < 1.0; t += h)
-    {
-        double x = cx0 + t*(cx1 + t*(cx2 + t*cx3));
-        double y = cy0 + t*(cy1 + t*(cy2 + t*cy3));
-        _EvaluateLine(lastp.x, lastp.y, (int)x, (int)y);
-    }
-    double x = cx0 + cx1 + cx2 + cx3;
-    double y = cy0 + cy1 + cy2 + cy3;
-    _EvaluateLine(lastp.x, lastp.y, (int)x, (int)y);
-}
-
-void Rasterizer::_EvaluateLine(const PathData& path_data, int pt1idx, int pt2idx)
-{
-    const POINT* pt1 = path_data.mpPathPoints + pt1idx;
-    const POINT* pt2 = path_data.mpPathPoints + pt2idx;
-    _EvaluateLine(pt1->x, pt1->y, pt2->x, pt2->y);
-}
-
-void Rasterizer::_EvaluateLine(int x0, int y0, int x1, int y1)
-{
-    if(lastp.x != x0 || lastp.y != y0)
-    {
-        _EvaluateLine(lastp.x, lastp.y, x0, y0);
-    }
-    if(!fFirstSet) {firstp.x = x0; firstp.y = y0; fFirstSet = true;}
-    lastp.x = x1;
-    lastp.y = y1;
-    if(y1 > y0)	// down
-    {
-        __int64 xacc = (__int64)x0 << 13;
-        // prestep y0 down
-        int dy = y1 - y0;
-        int y = ((y0 + 3)&~7) + 4;
-        int iy = y >> 3;
-        y1 = (y1 - 5) >> 3;
-        if(iy <= y1)
-        {
-            __int64 invslope = (__int64(x1 - x0) << 16) / dy;
-            while(mEdgeNext + y1 + 1 - iy > mEdgeHeapSize)
-                _ReallocEdgeBuffer(mEdgeHeapSize*2);
-            xacc += (invslope * (y - y0)) >> 3;
-            while(iy <= y1)
-            {
-                int ix = (int)((xacc + 32768) >> 16);
-                mpEdgeBuffer[mEdgeNext].next = mpScanBuffer[iy];
-                mpEdgeBuffer[mEdgeNext].posandflag = ix*2 + 1;
-                mpScanBuffer[iy] = mEdgeNext++;
-                ++iy;
-                xacc += invslope;
-            }
-        }
-    }
-    else if(y1 < y0) // up
-    {
-        __int64 xacc = (__int64)x1 << 13;
-        // prestep y1 down
-        int dy = y0 - y1;
-        int y = ((y1 + 3)&~7) + 4;
-        int iy = y >> 3;
-        y0 = (y0 - 5) >> 3;
-        if(iy <= y0)
-        {
-            __int64 invslope = (__int64(x0 - x1) << 16) / dy;
-            while(mEdgeNext + y0 + 1 - iy > mEdgeHeapSize)
-                _ReallocEdgeBuffer(mEdgeHeapSize*2);
-            xacc += (invslope * (y - y1)) >> 3;
-            while(iy <= y0)
-            {
-                int ix = (int)((xacc + 32768) >> 16);
-                mpEdgeBuffer[mEdgeNext].next = mpScanBuffer[iy];
-                mpEdgeBuffer[mEdgeNext].posandflag = ix*2;
-                mpScanBuffer[iy] = mEdgeNext++;
-                ++iy;
-                xacc += invslope;
-            }
-        }
-    }
-}
-
-bool Rasterizer::ScanConvert(SharedPtrPathData path_data)
-{
-    int lastmoveto = -1;
-    int i;
-    // Drop any outlines we may have.
-    mOutline.clear();
-    mWideOutline.clear();
-    mWideBorder = 0;
-    // Determine bounding box
-    if(!path_data->mPathPoints)
-    {
-        mPathOffsetX = mPathOffsetY = 0;
-        mWidth = mHeight = 0;
-        return 0;
-    }
-    int minx = INT_MAX;
-    int miny = INT_MAX;
-    int maxx = INT_MIN;
-    int maxy = INT_MIN;
-    for(i=0; i<path_data->mPathPoints; ++i)
-    {
-        int ix = path_data->mpPathPoints[i].x;
-        int iy = path_data->mpPathPoints[i].y;
-        if(ix < minx) minx = ix;
-        if(ix > maxx) maxx = ix;
-        if(iy < miny) miny = iy;
-        if(iy > maxy) maxy = iy;
-    }
-    minx = (minx >> 3) & ~7;
-    miny = (miny >> 3) & ~7;
-    maxx = (maxx + 7) >> 3;
-    maxy = (maxy + 7) >> 3;
-    for(i=0; i<path_data->mPathPoints; ++i)
-    {
-        path_data->mpPathPoints[i].x -= minx*8;
-        path_data->mpPathPoints[i].y -= miny*8;
-    }
-    if(minx > maxx || miny > maxy)
-    {
-        mWidth = mHeight = 0;
-        mPathOffsetX = mPathOffsetY = 0;
-        path_data->_TrashPath();
-        return true;
-    }
-    mWidth = maxx + 1 - minx;
-    mHeight = maxy + 1 - miny;
-    mPathOffsetX = minx;
-    mPathOffsetY = miny;
-    // Initialize edge buffer.  We use edge 0 as a sentinel.
-    mEdgeNext = 1;
-    mEdgeHeapSize = 2048;
-    mpEdgeBuffer = (Edge*)malloc(sizeof(Edge)*mEdgeHeapSize);
-    // Initialize scanline list.
-    mpScanBuffer = new unsigned int[mHeight];
-    memset(mpScanBuffer, 0, mHeight*sizeof(unsigned int));
-    // Scan convert the outline.  Yuck, Bezier curves....
-    // Unfortunately, Windows 95/98 GDI has a bad habit of giving us text
-    // paths with all but the first figure left open, so we can't rely
-    // on the PT_CLOSEFIGURE flag being used appropriately.
-    fFirstSet = false;
-    firstp.x = firstp.y = 0;
-    lastp.x = lastp.y = 0;
-    for(i=0; i<path_data->mPathPoints; ++i)
-    {
-        BYTE t = path_data->mpPathTypes[i] & ~PT_CLOSEFIGURE;
-        switch(t)
-        {
-        case PT_MOVETO:
-            if(lastmoveto >= 0 && firstp != lastp)
-                _EvaluateLine(lastp.x, lastp.y, firstp.x, firstp.y);
-            lastmoveto = i;
-            fFirstSet = false;
-            lastp = path_data->mpPathPoints[i];
-            break;
-        case PT_MOVETONC:
-            break;
-        case PT_LINETO:
-            if(path_data->mPathPoints - (i-1) >= 2) _EvaluateLine(*path_data, i-1, i);
-            break;
-        case PT_BEZIERTO:
-            if(path_data->mPathPoints - (i-1) >= 4) _EvaluateBezier(*path_data, i-1, false);
-            i += 2;
-            break;
-        case PT_BSPLINETO:
-            if(path_data->mPathPoints - (i-1) >= 4) _EvaluateBezier(*path_data, i-1, true);
-            i += 2;
-            break;
-        case PT_BSPLINEPATCHTO:
-            if(path_data->mPathPoints - (i-3) >= 4) _EvaluateBezier(*path_data, i-3, true);
-            break;
-        }
-    }
-    if(lastmoveto >= 0 && firstp != lastp)
-        _EvaluateLine(lastp.x, lastp.y, firstp.x, firstp.y);
-    // Free the path since we don't need it anymore.
-    path_data->_TrashPath();
-    // Convert the edges to spans.  We couldn't do this before because some of
-    // the regions may have winding numbers >+1 and it would have been a pain
-    // to try to adjust the spans on the fly.  We use one heap to detangle
-    // a scanline's worth of edges from the singly-linked lists, and another
-    // to collect the actual scans.
-    std::vector<int> heap;
-    mOutline.reserve(mEdgeNext / 2);
-    __int64 y = 0;
-    for(y=0; y<mHeight; ++y)
-    {
-        int count = 0;
-        // Detangle scanline into edge heap.
-        for(unsigned ptr = (unsigned)(mpScanBuffer[y]&0xffffffff); ptr; ptr = mpEdgeBuffer[ptr].next)
-        {
-            heap.push_back(mpEdgeBuffer[ptr].posandflag);
-        }
-        // Sort edge heap.  Note that we conveniently made the opening edges
-        // one more than closing edges at the same spot, so we won't have any
-        // problems with abutting spans.
-        std::sort(heap.begin(), heap.end()/*begin() + heap.size()*/);
-        // Process edges and add spans.  Since we only check for a non-zero
-        // winding number, it doesn't matter which way the outlines go!
-        std::vector<int>::iterator itX1 = heap.begin();
-        std::vector<int>::iterator itX2 = heap.end(); // begin() + heap.size();
-        int x1, x2;
-        for(; itX1 != itX2; ++itX1)
-        {
-            int x = *itX1;
-            if(!count)
-                x1 = (x>>1);
-            if(x&1)
-                ++count;
-            else
-                --count;
-            if(!count)
-            {
-                x2 = (x>>1);
-                if(x2>x1)
-                    mOutline.push_back(std::pair<__int64,__int64>((y<<32)+x1+0x4000000040000000i64, (y<<32)+x2+0x4000000040000000i64)); // G: damn Avery, this is evil! :)
-            }
-        }
-        heap.clear();
-    }
-    // Dump the edge and scan buffers, since we no longer need them.
-    free(mpEdgeBuffer);
-    delete [] mpScanBuffer;
-    // All done!
-    return true;
-}
-
-using namespace std;
-
-void Rasterizer::_OverlapRegion(tSpanBuffer& dst, tSpanBuffer& src, int dx, int dy)
-{
-    tSpanBuffer temp;
-    temp.reserve(dst.size() + src.size());
-    dst.swap(temp);
-    tSpanBuffer::iterator itA = temp.begin();
-    tSpanBuffer::iterator itAE = temp.end();
-    tSpanBuffer::iterator itB = src.begin();
-    tSpanBuffer::iterator itBE = src.end();
-    // Don't worry -- even if dy<0 this will still work! // G: hehe, the evil twin :)
-    unsigned __int64 offset1 = (((__int64)dy)<<32) - dx;
-    unsigned __int64 offset2 = (((__int64)dy)<<32) + dx;
-    while(itA != itAE && itB != itBE)
-    {
-        if((*itB).first + offset1 < (*itA).first)
-        {
-            // B span is earlier.  Use it.
-            unsigned __int64 x1 = (*itB).first + offset1;
-            unsigned __int64 x2 = (*itB).second + offset2;
-            ++itB;
-            // B spans don't overlap, so begin merge loop with A first.
-            for(;;)
-            {
-                // If we run out of A spans or the A span doesn't overlap,
-                // then the next B span can't either (because B spans don't
-                // overlap) and we exit.
-                if(itA == itAE || (*itA).first > x2)
-                    break;
-                do {x2 = _MAX(x2, (*itA++).second);}
-                while(itA != itAE && (*itA).first <= x2);
-                // If we run out of B spans or the B span doesn't overlap,
-                // then the next A span can't either (because A spans don't
-                // overlap) and we exit.
-                if(itB == itBE || (*itB).first + offset1 > x2)
-                    break;
-                do {x2 = _MAX(x2, (*itB++).second + offset2);}
-                while(itB != itBE && (*itB).first + offset1 <= x2);
-            }
-            // Flush span.
-            dst.push_back(tSpan(x1, x2));
-        }
-        else
-        {
-            // A span is earlier.  Use it.
-            unsigned __int64 x1 = (*itA).first;
-            unsigned __int64 x2 = (*itA).second;
-            ++itA;
-            // A spans don't overlap, so begin merge loop with B first.
-            for(;;)
-            {
-                // If we run out of B spans or the B span doesn't overlap,
-                // then the next A span can't either (because A spans don't
-                // overlap) and we exit.
-                if(itB == itBE || (*itB).first + offset1 > x2)
-                    break;
-                do {x2 = _MAX(x2, (*itB++).second + offset2);}
-                while(itB != itBE && (*itB).first + offset1 <= x2);
-                // If we run out of A spans or the A span doesn't overlap,
-                // then the next B span can't either (because B spans don't
-                // overlap) and we exit.
-                if(itA == itAE || (*itA).first > x2)
-                    break;
-                do {x2 = _MAX(x2, (*itA++).second);}
-                while(itA != itAE && (*itA).first <= x2);
-            }
-            // Flush span.
-            dst.push_back(tSpan(x1, x2));
-        }
-    }
-    // Copy over leftover spans.
-    while(itA != itAE)
-        dst.push_back(*itA++);
-    while(itB != itBE)
-    {
-        dst.push_back(tSpan((*itB).first + offset1, (*itB).second + offset2));
-        ++itB;
-    }
-}
-
-bool Rasterizer::CreateWidenedRegion(int rx, int ry)
-{
-    if(rx < 0) rx = 0;
-    if(ry < 0) ry = 0;
-    mWideBorder = max(rx,ry);
-    if (ry > 0)
-    {
-        // Do a half circle.
-        // _OverlapRegion mirrors this so both halves are done.
-        for(int y = -ry; y <= ry; ++y)
-        {
-            int x = (int)(0.5 + sqrt(float(ry*ry - y*y)) * float(rx)/float(ry));
-            _OverlapRegion(mWideOutline, mOutline, x, y);
-        }
-    }
-    else if (ry == 0 && rx > 0)
-    {
-        // There are artifacts if we don't make at least two overlaps of the line, even at same Y coord
-        _OverlapRegion(mWideOutline, mOutline, rx, 0);
-        _OverlapRegion(mWideOutline, mOutline, rx, 0);
-    }
-    return true;
-}
-
-void Rasterizer::DeleteOutlines()
-{
-    mWideOutline.clear();
-    mOutline.clear();
-}
-
-bool Rasterizer::Rasterize(int xsub, int ysub, SharedPtrOverlay overlay)
+bool Rasterizer::Rasterize(const ScanLineData& scan_line_data, int xsub, int ysub, SharedPtrOverlay overlay)
 {
     using namespace ::boost::flyweights;
 
@@ -942,27 +525,27 @@ bool Rasterizer::Rasterize(int xsub, int ysub, SharedPtrOverlay overlay)
     }
     overlay->CleanUp();
 
-    if(!mWidth || !mHeight)
+    if(!scan_line_data.mWidth || !scan_line_data.mHeight)
     {
         return true;
     }
     xsub &= 7;
     ysub &= 7;
     //xsub = ysub = 0;
-    int width = mWidth + xsub;
-    int height = mHeight + ysub;
-    overlay->mOffsetX = mPathOffsetX - xsub;
-    overlay->mOffsetY = mPathOffsetY - ysub;
-    mWideBorder = (mWideBorder+7)&~7;
-    overlay->mfWideOutlineEmpty = mWideOutline.empty();
-    if(!mWideOutline.empty())
+    int width = scan_line_data.mWidth + xsub;
+    int height = scan_line_data.mHeight + ysub;
+    overlay->mOffsetX = scan_line_data.mPathOffsetX - xsub;
+    overlay->mOffsetY = scan_line_data.mPathOffsetY - ysub;
+    int wide_border = (scan_line_data.mWideBorder+7)&~7;
+    overlay->mfWideOutlineEmpty = scan_line_data.mWideOutline.empty();
+    if(!overlay->mfWideOutlineEmpty)
     {
-        width += 2*mWideBorder;
-        height += 2*mWideBorder;
-        xsub += mWideBorder;
-        ysub += mWideBorder;
-        overlay->mOffsetX -= mWideBorder;
-        overlay->mOffsetY -= mWideBorder;
+        width += 2*wide_border ;
+        height += 2*wide_border ;
+        xsub += wide_border ;
+        ysub += wide_border ;
+        overlay->mOffsetX -= wide_border;
+        overlay->mOffsetY -= wide_border;
     }
 
     overlay->mOverlayWidth = ((width+7)>>3) + 1;
@@ -975,11 +558,11 @@ bool Rasterizer::Rasterize(int xsub, int ysub, SharedPtrOverlay overlay)
     overlay->mpOverlayBuffer.border = overlay->mpOverlayBuffer.base + overlay->mOverlayPitch * overlay->mOverlayHeight;        
 
     // Are we doing a border?
-    tSpanBuffer* pOutline[2] = {&mOutline, &mWideOutline};
+    const ScanLineData::tSpanBuffer* pOutline[2] = {&(scan_line_data.mOutline), &(scan_line_data.mWideOutline)};
     for(int i = countof(pOutline)-1; i >= 0; i--)
     {
-        tSpanBuffer::iterator it = pOutline[i]->begin();
-        tSpanBuffer::iterator itEnd = pOutline[i]->end();
+        ScanLineData::tSpanBuffer::const_iterator it = pOutline[i]->begin();
+        ScanLineData::tSpanBuffer::const_iterator itEnd = pOutline[i]->end();
         byte* plan_selected = i==0 ? overlay->mpOverlayBuffer.body : overlay->mpOverlayBuffer.border;
         int pitch = overlay->mOverlayPitch;
         for(; it!=itEnd; ++it)
@@ -1705,4 +1288,425 @@ bool PathData::PartialEndPath(HDC hdc, long dx, long dy)
     }
     ::AbortPath(hdc);
     return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+// ScanLineData
+
+ScanLineData::ScanLineData():mPathOffsetX(0),mPathOffsetY(0)
+{
+}
+
+ScanLineData::~ScanLineData()
+{    
+}
+
+void ScanLineData::_ReallocEdgeBuffer(int edges)
+{
+    mEdgeHeapSize = edges;
+    mpEdgeBuffer = (Edge*)realloc(mpEdgeBuffer, sizeof(Edge)*edges);
+}
+
+void ScanLineData::_EvaluateBezier(const PathData& path_data, int ptbase, bool fBSpline)
+{
+    const POINT* pt0 = path_data.mpPathPoints + ptbase;
+    const POINT* pt1 = path_data.mpPathPoints + ptbase + 1;
+    const POINT* pt2 = path_data.mpPathPoints + ptbase + 2;
+    const POINT* pt3 = path_data.mpPathPoints + ptbase + 3;
+    double x0 = pt0->x;
+    double x1 = pt1->x;
+    double x2 = pt2->x;
+    double x3 = pt3->x;
+    double y0 = pt0->y;
+    double y1 = pt1->y;
+    double y2 = pt2->y;
+    double y3 = pt3->y;
+    double cx3, cx2, cx1, cx0, cy3, cy2, cy1, cy0;
+    if(fBSpline)
+    {
+        // 1   [-1 +3 -3 +1]
+        // - * [+3 -6 +3  0]
+        // 6   [-3  0 +3  0]
+        //	   [+1 +4 +1  0]
+        double _1div6 = 1.0/6.0;
+        cx3 = _1div6*(-  x0+3*x1-3*x2+x3);
+        cx2 = _1div6*( 3*x0-6*x1+3*x2);
+        cx1 = _1div6*(-3*x0	   +3*x2);
+        cx0 = _1div6*(   x0+4*x1+1*x2);
+        cy3 = _1div6*(-  y0+3*y1-3*y2+y3);
+        cy2 = _1div6*( 3*y0-6*y1+3*y2);
+        cy1 = _1div6*(-3*y0     +3*y2);
+        cy0 = _1div6*(   y0+4*y1+1*y2);
+    }
+    else // bezier
+    {
+        // [-1 +3 -3 +1]
+        // [+3 -6 +3  0]
+        // [-3 +3  0  0]
+        // [+1  0  0  0]
+        cx3 = -  x0+3*x1-3*x2+x3;
+        cx2 =  3*x0-6*x1+3*x2;
+        cx1 = -3*x0+3*x1;
+        cx0 =    x0;
+        cy3 = -  y0+3*y1-3*y2+y3;
+        cy2 =  3*y0-6*y1+3*y2;
+        cy1 = -3*y0+3*y1;
+        cy0 =    y0;
+    }
+    //
+    // This equation is from Graphics Gems I.
+    //
+    // The idea is that since we're approximating a cubic curve with lines,
+    // any error we incur is due to the curvature of the line, which we can
+    // estimate by calculating the maximum acceleration of the curve.  For
+    // a cubic, the acceleration (second derivative) is a line, meaning that
+    // the absolute maximum acceleration must occur at either the beginning
+    // (|c2|) or the end (|c2+c3|).  Our bounds here are a little more
+    // conservative than that, but that's okay.
+    //
+    // If the acceleration of the parametric formula is zero (c2 = c3 = 0),
+    // that component of the curve is linear and does not incur any error.
+    // If a=0 for both X and Y, the curve is a line segment and we can
+    // use a step size of 1.
+    double maxaccel1 = fabs(2*cy2) + fabs(6*cy3);
+    double maxaccel2 = fabs(2*cx2) + fabs(6*cx3);
+    double maxaccel = maxaccel1 > maxaccel2 ? maxaccel1 : maxaccel2;
+    double h = 1.0;
+    if(maxaccel > 8.0) h = sqrt(8.0 / maxaccel);
+    if(!fFirstSet) {firstp.x = (LONG)cx0; firstp.y = (LONG)cy0; lastp = firstp; fFirstSet = true;}
+    for(double t = 0; t < 1.0; t += h)
+    {
+        double x = cx0 + t*(cx1 + t*(cx2 + t*cx3));
+        double y = cy0 + t*(cy1 + t*(cy2 + t*cy3));
+        _EvaluateLine(lastp.x, lastp.y, (int)x, (int)y);
+    }
+    double x = cx0 + cx1 + cx2 + cx3;
+    double y = cy0 + cy1 + cy2 + cy3;
+    _EvaluateLine(lastp.x, lastp.y, (int)x, (int)y);
+}
+
+void ScanLineData::_EvaluateLine(const PathData& path_data, int pt1idx, int pt2idx)
+{
+    const POINT* pt1 = path_data.mpPathPoints + pt1idx;
+    const POINT* pt2 = path_data.mpPathPoints + pt2idx;
+    _EvaluateLine(pt1->x, pt1->y, pt2->x, pt2->y);
+}
+
+void ScanLineData::_EvaluateLine(int x0, int y0, int x1, int y1)
+{
+    if(lastp.x != x0 || lastp.y != y0)
+    {
+        _EvaluateLine(lastp.x, lastp.y, x0, y0);
+    }
+    if(!fFirstSet) {firstp.x = x0; firstp.y = y0; fFirstSet = true;}
+    lastp.x = x1;
+    lastp.y = y1;
+    if(y1 > y0)	// down
+    {
+        __int64 xacc = (__int64)x0 << 13;
+        // prestep y0 down
+        int dy = y1 - y0;
+        int y = ((y0 + 3)&~7) + 4;
+        int iy = y >> 3;
+        y1 = (y1 - 5) >> 3;
+        if(iy <= y1)
+        {
+            __int64 invslope = (__int64(x1 - x0) << 16) / dy;
+            while(mEdgeNext + y1 + 1 - iy > mEdgeHeapSize)
+                _ReallocEdgeBuffer(mEdgeHeapSize*2);
+            xacc += (invslope * (y - y0)) >> 3;
+            while(iy <= y1)
+            {
+                int ix = (int)((xacc + 32768) >> 16);
+                mpEdgeBuffer[mEdgeNext].next = mpScanBuffer[iy];
+                mpEdgeBuffer[mEdgeNext].posandflag = ix*2 + 1;
+                mpScanBuffer[iy] = mEdgeNext++;
+                ++iy;
+                xacc += invslope;
+            }
+        }
+    }
+    else if(y1 < y0) // up
+    {
+        __int64 xacc = (__int64)x1 << 13;
+        // prestep y1 down
+        int dy = y0 - y1;
+        int y = ((y1 + 3)&~7) + 4;
+        int iy = y >> 3;
+        y0 = (y0 - 5) >> 3;
+        if(iy <= y0)
+        {
+            __int64 invslope = (__int64(x0 - x1) << 16) / dy;
+            while(mEdgeNext + y0 + 1 - iy > mEdgeHeapSize)
+                _ReallocEdgeBuffer(mEdgeHeapSize*2);
+            xacc += (invslope * (y - y1)) >> 3;
+            while(iy <= y0)
+            {
+                int ix = (int)((xacc + 32768) >> 16);
+                mpEdgeBuffer[mEdgeNext].next = mpScanBuffer[iy];
+                mpEdgeBuffer[mEdgeNext].posandflag = ix*2;
+                mpScanBuffer[iy] = mEdgeNext++;
+                ++iy;
+                xacc += invslope;
+            }
+        }
+    }
+}
+
+bool ScanLineData::ScanConvert(SharedPtrPathData path_data)
+{
+    int lastmoveto = -1;
+    int i;
+    // Drop any outlines we may have.
+    mOutline.clear();
+    mWideOutline.clear();
+    mWideBorder = 0;
+    // Determine bounding box
+    if(!path_data->mPathPoints)
+    {
+        mPathOffsetX = mPathOffsetY = 0;
+        mWidth = mHeight = 0;
+        return 0;
+    }
+    int minx = INT_MAX;
+    int miny = INT_MAX;
+    int maxx = INT_MIN;
+    int maxy = INT_MIN;
+    for(i=0; i<path_data->mPathPoints; ++i)
+    {
+        int ix = path_data->mpPathPoints[i].x;
+        int iy = path_data->mpPathPoints[i].y;
+        if(ix < minx) minx = ix;
+        if(ix > maxx) maxx = ix;
+        if(iy < miny) miny = iy;
+        if(iy > maxy) maxy = iy;
+    }
+    minx = (minx >> 3) & ~7;
+    miny = (miny >> 3) & ~7;
+    maxx = (maxx + 7) >> 3;
+    maxy = (maxy + 7) >> 3;
+    for(i=0; i<path_data->mPathPoints; ++i)
+    {
+        path_data->mpPathPoints[i].x -= minx*8;
+        path_data->mpPathPoints[i].y -= miny*8;
+    }
+    if(minx > maxx || miny > maxy)
+    {
+        mWidth = mHeight = 0;
+        mPathOffsetX = mPathOffsetY = 0;
+        path_data->_TrashPath();
+        return true;
+    }
+    mWidth = maxx + 1 - minx;
+    mHeight = maxy + 1 - miny;
+    mPathOffsetX = minx;
+    mPathOffsetY = miny;
+    // Initialize edge buffer.  We use edge 0 as a sentinel.
+    mEdgeNext = 1;
+    mEdgeHeapSize = 2048;
+    mpEdgeBuffer = (Edge*)malloc(sizeof(Edge)*mEdgeHeapSize);
+    // Initialize scanline list.
+    mpScanBuffer = new unsigned int[mHeight];
+    memset(mpScanBuffer, 0, mHeight*sizeof(unsigned int));
+    // Scan convert the outline.  Yuck, Bezier curves....
+    // Unfortunately, Windows 95/98 GDI has a bad habit of giving us text
+    // paths with all but the first figure left open, so we can't rely
+    // on the PT_CLOSEFIGURE flag being used appropriately.
+    fFirstSet = false;
+    firstp.x = firstp.y = 0;
+    lastp.x = lastp.y = 0;
+    for(i=0; i<path_data->mPathPoints; ++i)
+    {
+        BYTE t = path_data->mpPathTypes[i] & ~PT_CLOSEFIGURE;
+        switch(t)
+        {
+        case PT_MOVETO:
+            if(lastmoveto >= 0 && firstp != lastp)
+                _EvaluateLine(lastp.x, lastp.y, firstp.x, firstp.y);
+            lastmoveto = i;
+            fFirstSet = false;
+            lastp = path_data->mpPathPoints[i];
+            break;
+        case PT_MOVETONC:
+            break;
+        case PT_LINETO:
+            if(path_data->mPathPoints - (i-1) >= 2) _EvaluateLine(*path_data, i-1, i);
+            break;
+        case PT_BEZIERTO:
+            if(path_data->mPathPoints - (i-1) >= 4) _EvaluateBezier(*path_data, i-1, false);
+            i += 2;
+            break;
+        case PT_BSPLINETO:
+            if(path_data->mPathPoints - (i-1) >= 4) _EvaluateBezier(*path_data, i-1, true);
+            i += 2;
+            break;
+        case PT_BSPLINEPATCHTO:
+            if(path_data->mPathPoints - (i-3) >= 4) _EvaluateBezier(*path_data, i-3, true);
+            break;
+        }
+    }
+    if(lastmoveto >= 0 && firstp != lastp)
+        _EvaluateLine(lastp.x, lastp.y, firstp.x, firstp.y);
+    // Free the path since we don't need it anymore.
+    path_data->_TrashPath();
+    // Convert the edges to spans.  We couldn't do this before because some of
+    // the regions may have winding numbers >+1 and it would have been a pain
+    // to try to adjust the spans on the fly.  We use one heap to detangle
+    // a scanline's worth of edges from the singly-linked lists, and another
+    // to collect the actual scans.
+    std::vector<int> heap;
+    mOutline.reserve(mEdgeNext / 2);
+    __int64 y = 0;
+    for(y=0; y<mHeight; ++y)
+    {
+        int count = 0;
+        // Detangle scanline into edge heap.
+        for(unsigned ptr = (unsigned)(mpScanBuffer[y]&0xffffffff); ptr; ptr = mpEdgeBuffer[ptr].next)
+        {
+            heap.push_back(mpEdgeBuffer[ptr].posandflag);
+        }
+        // Sort edge heap.  Note that we conveniently made the opening edges
+        // one more than closing edges at the same spot, so we won't have any
+        // problems with abutting spans.
+        std::sort(heap.begin(), heap.end()/*begin() + heap.size()*/);
+        // Process edges and add spans.  Since we only check for a non-zero
+        // winding number, it doesn't matter which way the outlines go!
+        std::vector<int>::iterator itX1 = heap.begin();
+        std::vector<int>::iterator itX2 = heap.end(); // begin() + heap.size();
+        int x1, x2;
+        for(; itX1 != itX2; ++itX1)
+        {
+            int x = *itX1;
+            if(!count)
+                x1 = (x>>1);
+            if(x&1)
+                ++count;
+            else
+                --count;
+            if(!count)
+            {
+                x2 = (x>>1);
+                if(x2>x1)
+                    mOutline.push_back(std::pair<__int64,__int64>((y<<32)+x1+0x4000000040000000i64, (y<<32)+x2+0x4000000040000000i64)); // G: damn Avery, this is evil! :)
+            }
+        }
+        heap.clear();
+    }
+    // Dump the edge and scan buffers, since we no longer need them.
+    free(mpEdgeBuffer);
+    delete [] mpScanBuffer;
+    // All done!
+    return true;
+}
+
+using namespace std;
+
+void ScanLineData::_OverlapRegion(tSpanBuffer& dst, tSpanBuffer& src, int dx, int dy)
+{
+    tSpanBuffer temp;
+    temp.reserve(dst.size() + src.size());
+    dst.swap(temp);
+    tSpanBuffer::iterator itA = temp.begin();
+    tSpanBuffer::iterator itAE = temp.end();
+    tSpanBuffer::iterator itB = src.begin();
+    tSpanBuffer::iterator itBE = src.end();
+    // Don't worry -- even if dy<0 this will still work! // G: hehe, the evil twin :)
+    unsigned __int64 offset1 = (((__int64)dy)<<32) - dx;
+    unsigned __int64 offset2 = (((__int64)dy)<<32) + dx;
+    while(itA != itAE && itB != itBE)
+    {
+        if((*itB).first + offset1 < (*itA).first)
+        {
+            // B span is earlier.  Use it.
+            unsigned __int64 x1 = (*itB).first + offset1;
+            unsigned __int64 x2 = (*itB).second + offset2;
+            ++itB;
+            // B spans don't overlap, so begin merge loop with A first.
+            for(;;)
+            {
+                // If we run out of A spans or the A span doesn't overlap,
+                // then the next B span can't either (because B spans don't
+                // overlap) and we exit.
+                if(itA == itAE || (*itA).first > x2)
+                    break;
+                do {x2 = _MAX(x2, (*itA++).second);}
+                while(itA != itAE && (*itA).first <= x2);
+                // If we run out of B spans or the B span doesn't overlap,
+                // then the next A span can't either (because A spans don't
+                // overlap) and we exit.
+                if(itB == itBE || (*itB).first + offset1 > x2)
+                    break;
+                do {x2 = _MAX(x2, (*itB++).second + offset2);}
+                while(itB != itBE && (*itB).first + offset1 <= x2);
+            }
+            // Flush span.
+            dst.push_back(tSpan(x1, x2));
+        }
+        else
+        {
+            // A span is earlier.  Use it.
+            unsigned __int64 x1 = (*itA).first;
+            unsigned __int64 x2 = (*itA).second;
+            ++itA;
+            // A spans don't overlap, so begin merge loop with B first.
+            for(;;)
+            {
+                // If we run out of B spans or the B span doesn't overlap,
+                // then the next A span can't either (because A spans don't
+                // overlap) and we exit.
+                if(itB == itBE || (*itB).first + offset1 > x2)
+                    break;
+                do {x2 = _MAX(x2, (*itB++).second + offset2);}
+                while(itB != itBE && (*itB).first + offset1 <= x2);
+                // If we run out of A spans or the A span doesn't overlap,
+                // then the next B span can't either (because B spans don't
+                // overlap) and we exit.
+                if(itA == itAE || (*itA).first > x2)
+                    break;
+                do {x2 = _MAX(x2, (*itA++).second);}
+                while(itA != itAE && (*itA).first <= x2);
+            }
+            // Flush span.
+            dst.push_back(tSpan(x1, x2));
+        }
+    }
+    // Copy over leftover spans.
+    while(itA != itAE)
+        dst.push_back(*itA++);
+    while(itB != itBE)
+    {
+        dst.push_back(tSpan((*itB).first + offset1, (*itB).second + offset2));
+        ++itB;
+    }
+}
+
+bool ScanLineData::CreateWidenedRegion(int rx, int ry)
+{
+    if(rx < 0) rx = 0;
+    if(ry < 0) ry = 0;
+    mWideBorder = max(rx,ry);
+    if (ry > 0)
+    {
+        // Do a half circle.
+        // _OverlapRegion mirrors this so both halves are done.
+        for(int y = -ry; y <= ry; ++y)
+        {
+            int x = (int)(0.5 + sqrt(float(ry*ry - y*y)) * float(rx)/float(ry));
+            _OverlapRegion(mWideOutline, mOutline, x, y);
+        }
+    }
+    else if (ry == 0 && rx > 0)
+    {
+        // There are artifacts if we don't make at least two overlaps of the line, even at same Y coord
+        _OverlapRegion(mWideOutline, mOutline, rx, 0);
+        _OverlapRegion(mWideOutline, mOutline, rx, 0);
+    }
+    return true;
+}
+
+void ScanLineData::DeleteOutlines()
+{
+    mWideOutline.clear();
+    mOutline.clear();
 }

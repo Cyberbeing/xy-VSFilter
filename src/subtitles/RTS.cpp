@@ -176,7 +176,12 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     if(iter==overlay_no_blur_cache->hash_end())
     {
         raterize_result.reset(new Overlay());
-        if(!m_fDrawn)
+
+        ScanLineDataCacheKey scan_line_data_key(*this, trans_org);
+        SharedPtrScanLineData scan_line_data;
+        ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
+        ScanLineDataMruCache::hashed_cache_const_iterator iter = scan_line_data_cache->hash_find(scan_line_data_key);
+        if(iter==scan_line_data_cache->hash_end())
         {
             //get outline path, if not cached, create it and cache a copy, else copy from cache
             SharedPtrPathData path_data(new PathData());        
@@ -201,10 +206,11 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             if(need_transform)
                 Transform(path_data, CPoint(trans_org.x*8, trans_org.y*8));
 
-            if(!ScanConvert(path_data)) return;
+            scan_line_data.reset(new ScanLineData());
+            if(!scan_line_data->ScanConvert(path_data)) return;
             if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
             {
-                if(!CreateWidenedRegion((int)(m_style.get().outlineWidthX+0.5), (int)(m_style.get().outlineWidthY+0.5))) return;
+                if(!scan_line_data->CreateWidenedRegion((int)(m_style.get().outlineWidthX+0.5), (int)(m_style.get().outlineWidthY+0.5))) return;
             }
             else if(m_style.get().borderStyle == 1)
             {
@@ -212,7 +218,11 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             }
             m_fDrawn = true;      
         }
-        if(!Rasterize(psub.x, psub.y, raterize_result)) return;
+        else
+        {
+            scan_line_data = iter->scan_line_data;
+        }
+        if(!Rasterizer::Rasterize(*scan_line_data, psub.x, psub.y, raterize_result)) return;
 
         OverlayNoBlurMruItem item(overlay_no_blur_key, raterize_result);
         CacheManager::GetOverlayNoBlurMruCache()->update_cache(item);
@@ -221,7 +231,7 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     {
         raterize_result = iter->overlay;
     }    
-    if(!Blur(*raterize_result, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
+    if(!Rasterizer::Blur(*raterize_result, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
     {
         *overlay = raterize_result;
     }
@@ -1069,13 +1079,13 @@ CRect CLine::PaintShadow(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPo
             CWord::Paint(w, CPoint(x, y), org, &overlay_list);
             if(w->m_style.get().borderStyle == 0)
             {
-                bbox |= w->Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw,
+                bbox |= Rasterizer::Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw,
                                 w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
                                 (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart));
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
-                bbox |= w->m_pOpaqueBox->Draw(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false);
+                bbox |= Rasterizer::Draw(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false);
             }
         }
         p.x += w->m_width;
@@ -1112,11 +1122,11 @@ CRect CLine::PaintOutline(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CP
             CWord::Paint(w, CPoint(x, y), org, &overlay_list);
             if(w->m_style.get().borderStyle == 0)
             {
-                bbox |= w->Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true);
+                bbox |= Rasterizer::Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
-                bbox |= w->m_pOpaqueBox->Draw(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false);
+                bbox |= Rasterizer::Draw(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false);
             }
         }
         p.x += w->m_width;
@@ -1187,7 +1197,7 @@ CRect CLine::PaintBody(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoin
         }
         OverlayList overlay_list;
         CWord::Paint(w, CPoint(x, y), org, &overlay_list);
-        bbox |= w->Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, true, false);
+        bbox |= Rasterizer::Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, true, false);
         p.x += w->m_width;
     }
     return(bbox);
@@ -1653,8 +1663,9 @@ void CRenderedTextSubtitle::Deinit()
     m_size = CSize(0, 0);
     m_vidrect.SetRectEmpty();
 
-    CacheManager::GetPathDataMruCache()->clear();
     CacheManager::GetCWordMruCache()->clear();
+    CacheManager::GetPathDataMruCache()->clear();
+    CacheManager::GetScanLineDataMruCache()->clear();
     CacheManager::GetOverlayNoBlurMruCache()->clear();
     CacheManager::GetOverlayMruCache()->clear();
 }

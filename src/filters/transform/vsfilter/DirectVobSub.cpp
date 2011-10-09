@@ -542,31 +542,6 @@ STDMETHODIMP CDirectVobSub::put_OverlayNoBlurCacheMaxItemNum(int overlay_no_blur
     return S_OK;
 }
 
-STDMETHODIMP CDirectVobSub::get_CachesInfo(CachesInfo* caches_info)
-{
-    CAutoLock cAutoLock(&m_propsLock);
-    if(caches_info)
-    {
-        caches_info->path_cache_cur_item_num    = 0;
-        caches_info->path_cache_hit_count       = 0;
-        caches_info->path_cache_query_count     = 0;
-        caches_info->scanline_cache_cur_item_num= 0;
-        caches_info->scanline_cache_hit_count   = 0;
-        caches_info->scanline_cache_query_count = 0;
-        caches_info->non_blur_cache_cur_item_num= 0;
-        caches_info->non_blur_cache_hit_count   = 0;
-        caches_info->non_blur_cache_query_count = 0;
-        caches_info->overlay_cache_cur_item_num = 0;
-        caches_info->overlay_cache_hit_count    = 0;
-        caches_info->overlay_cache_query_count  = 0;
-        return S_OK;
-    }
-    else 
-    {
-        return S_FALSE;
-    }
-}
-
 STDMETHODIMP CDirectVobSub::get_SubpixelPositionLevel(int* subpixel_pos_level)
 {
     CAutoLock cAutoLock(&m_propsLock);

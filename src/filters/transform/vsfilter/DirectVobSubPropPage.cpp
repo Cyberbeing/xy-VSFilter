@@ -779,47 +779,6 @@ CDVSBasePPage(NAME("DirectVobSub More Property Page"), pUnk, IDD_DVSMOREPAGE, ID
 
 bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    switch(uMsg)
-    {
-    case WM_COMMAND:
-        {
-            switch(HIWORD(wParam))
-            {
-            case BN_CLICKED:
-                {
-                    if(LOWORD(wParam) == IDC_CACHES_INFO_BTN)
-                    {
-                        AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-                        IDirectVobSub::CachesInfo caches_info;
-                        m_pDirectVobSub->get_CachesInfo(&caches_info);
-                        CString msg;
-                        msg.Format(_T("Cache LV 4(path cache)\n")\
-                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)\n")\
-                                   _T("Cache LV 3(scanline cache)\n")\
-                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)\n")\
-                                   _T("Cache LV 2(non-blur cache)\n")\
-                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)\n")\
-                                   _T("Cache LV 1(overlay cache)\n")\
-                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)"),
-                            caches_info.path_cache_cur_item_num,     caches_info.path_cache_hit_count,     caches_info.path_cache_query_count,
-                            caches_info.scanline_cache_cur_item_num, caches_info.scanline_cache_hit_count, caches_info.scanline_cache_query_count,
-                            caches_info.non_blur_cache_cur_item_num, caches_info.non_blur_cache_hit_count, caches_info.non_blur_cache_query_count,
-                            caches_info.overlay_cache_cur_item_num,  caches_info.overlay_cache_hit_count,  caches_info.overlay_cache_query_count);
-                        MessageBox(
-                            m_hwnd,
-                            msg,
-                            _T("Caches Info"),
-                            MB_OK | MB_ICONINFORMATION | MB_APPLMODAL
-                            );
-                        return(true);
-                    }
-                }
-                break;
-            }
-        }
-        break;
-    }
     return(false);
 }
 

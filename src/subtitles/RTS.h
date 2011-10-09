@@ -64,7 +64,7 @@ class CWord;
 typedef CWord* PCWord;
 typedef ::boost::shared_ptr<CWord> SharedPtrCWord;
 typedef ::boost::shared_ptr<CPolygon> SharedPtrCPolygon;
-class CWord : public Rasterizer, public ::boost::enable_shared_from_this<CWord>
+class CWord : public ::boost::enable_shared_from_this<CWord>
 {
     bool m_fDrawn;
     CPoint m_p;
