@@ -66,9 +66,6 @@ typedef ::boost::shared_ptr<CWord> SharedPtrCWord;
 typedef ::boost::shared_ptr<CPolygon> SharedPtrCPolygon;
 class CWord
 {
-    bool m_fDrawn;
-    CPoint m_p;
-
     bool NeedTransform();
     void Transform(SharedPtrPathData path_data, const CPoint& org);
 

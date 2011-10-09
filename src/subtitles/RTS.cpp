@@ -96,7 +96,6 @@ CWord::CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     : m_style(style), m_str(str)
     , m_width(0), m_ascent(0), m_descent(0)
     , m_ktype(ktype), m_kstart(kstart), m_kend(kend)
-    , m_fDrawn(false), m_p(INT_MAX, INT_MAX)
     , m_fLineBreak(false), m_fWhiteSpaceChar(false)
     //, m_pOpaqueBox(NULL)
 {
@@ -125,8 +124,6 @@ bool CWord::Append(const SharedPtrCWord& w)
     temp += w->m_str.get();
     m_str = temp;
     m_width += w->m_width;
-    m_fDrawn = false;
-    m_p = CPoint(INT_MAX, INT_MAX);
     return(true);
 }
 
@@ -217,8 +214,7 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
                 if(!CreateOpaqueBox()) return;
             }
             ScanLineDataMruItem item(scan_line_data_key, scan_line_data);
-            scan_line_data_cache->update_cache(item);
-            m_fDrawn = true;      
+            scan_line_data_cache->update_cache(item);   
         }
         else
         {
@@ -237,7 +233,6 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     {
         *overlay = raterize_result;
     }
-    m_p = psub;
 }
 
 bool CWord::NeedTransform()
