@@ -56,16 +56,16 @@ public:
     POINT m_org;  
 };
 
-class OverlayNoBlurKey: public PathDataCacheKey
+class OverlayNoBlurKey: public ScanLineDataCacheKey
 {
 public:
-    OverlayNoBlurKey(const CWord& word, const POINT& p, const POINT& org):PathDataCacheKey(word),m_p(p),m_org(org) { }
-    OverlayNoBlurKey(const OverlayNoBlurKey& key):PathDataCacheKey(key),m_p(key.m_p),m_org(key.m_org) { }
+    OverlayNoBlurKey(const CWord& word, const POINT& p, const POINT& org):ScanLineDataCacheKey(word,org),m_p(p) { }
+    OverlayNoBlurKey(const OverlayNoBlurKey& key):ScanLineDataCacheKey(key),m_p(key.m_p) { }
     OverlayNoBlurKey(const FwSTSStyle& style, const CStringW& str, const POINT& p, const POINT& org)
-        :PathDataCacheKey(style, str),m_p(p), m_org(org) { }
+        :ScanLineDataCacheKey(style, str, org),m_p(p) { }
     bool operator==(const OverlayNoBlurKey& key)const;
 
-    POINT m_p, m_org;    
+    POINT m_p;    
 };
 
 class OverlayKey: public CWordCacheKey

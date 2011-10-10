@@ -174,25 +174,23 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     {
         raterize_result.reset(new Overlay());
 
-        ScanLineDataCacheKey scan_line_data_key(*this, trans_org);
         SharedPtrScanLineData scan_line_data;
         ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
-        ScanLineDataMruCache::hashed_cache_const_iterator iter = scan_line_data_cache->hash_find(scan_line_data_key);
+        ScanLineDataMruCache::hashed_cache_const_iterator iter = scan_line_data_cache->hash_find(overlay_no_blur_key);
         if(iter==scan_line_data_cache->hash_end())
         {
             //get outline path, if not cached, create it and cache a copy, else copy from cache
             SharedPtrPathData path_data(new PathData());        
-            PathDataCacheKey path_data_key(*this);
             PathDataMruCache* path_data_cache = CacheManager::GetPathDataMruCache();
-            PathDataMruCache::hashed_cache_const_iterator iter = path_data_cache->hash_find(path_data_key);
+            PathDataMruCache::hashed_cache_const_iterator iter = path_data_cache->hash_find(overlay_no_blur_key);
             if(iter==path_data_cache->hash_end())    
             {
                 if(!CreatePath(path_data)) return;
 
                 SharedPtrPathData data(new PathData());
                 *data = *path_data;//important! copy not ref
-                PathDataMruItem item(path_data_key, data);
-                CacheManager::GetPathDataMruCache()->update_cache(item);
+                PathDataMruItem item(overlay_no_blur_key, data);
+                path_data_cache->update_cache(item);
             }
             else
             {
@@ -213,7 +211,7 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             {
                 if(!CreateOpaqueBox()) return;
             }
-            ScanLineDataMruItem item(scan_line_data_key, scan_line_data);
+            ScanLineDataMruItem item(overlay_no_blur_key, scan_line_data);
             scan_line_data_cache->update_cache(item);   
         }
         else
@@ -223,7 +221,7 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
         if(!Rasterizer::Rasterize(*scan_line_data, psub.x, psub.y, raterize_result)) return;
 
         OverlayNoBlurMruItem item(overlay_no_blur_key, raterize_result);
-        CacheManager::GetOverlayNoBlurMruCache()->update_cache(item);
+        overlay_no_blur_cache->update_cache(item);
     }
     else
     {
