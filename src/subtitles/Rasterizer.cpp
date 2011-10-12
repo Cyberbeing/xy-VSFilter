@@ -486,31 +486,89 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
  */
 static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int stride)
 {   
-#pragma omp parallel for    
-    for (int y = 0; y < h; y++) {
+    WORD *col_pix_buf_base = reinterpret_cast<WORD*>(xy_malloc(w*sizeof(WORD)));
+    WORD *col_sum_buf_base = reinterpret_cast<WORD*>(xy_malloc(w*sizeof(WORD)));
+    if(!col_sum_buf_base || !col_pix_buf_base)
+    {
+        //ToDo: error handling
+        return;
+    }
+    memset(col_pix_buf_base, 0, w*sizeof(WORD));
+    memset(col_sum_buf_base, 0, w*sizeof(WORD));
+
+    {
+        int y = 1;
         unsigned char *src=buf+y*stride;
-        unsigned *dst=tmp_base+y*stride;
-        int old_sum = src[0]+src[1];
-        int new_sum = 0;
-        for (int x = 1; x < w-1; x++) {
-            new_sum = src[x] + src[x+1];
-            dst[x] = (old_sum + new_sum);
-            old_sum = new_sum;
+
+        WORD *col_pix_buf = col_pix_buf_base-2;//for aligment;
+        WORD *col_sum_buf = col_sum_buf_base-2;//for aligment;
+
+        int x = 2;
+        int old_pix = src[x-1];
+        int old_sum = old_pix + src[x-2];
+        for ( ; x < w; x++) {
+            int temp1 = src[x];
+            int temp2 = old_pix + temp1;
+            old_pix = temp1;
+            temp1 = old_sum + temp2;
+            old_sum = temp2;
+
+            temp2 = col_pix_buf[x] + temp1;
+            col_pix_buf[x] = temp1;
+            //dst[x-1] = (col_sum_buf[x] + temp2 + 8) >> 4;
+            col_sum_buf[x] = temp2;
         }
     }
 
-#pragma omp parallel for
-    for (int x = 1; x < w-1; x++) {
-        unsigned *src = tmp_base + x + stride;
-        unsigned char *dst = buf + x + stride;
-        int old_sum = src[-stride] + src[0];
-        int new_sum = 0;
-        for (int y = 1; y < h-1; y++) {
-            new_sum = src[0] + src[stride];
-            dst[0] = (old_sum + new_sum) >> 4;
-            old_sum = new_sum;
-            src += stride;
-            dst += stride;
+    __m128i round = _mm_set1_epi16(8);
+    for (int y = 2; y < h; y++) {
+        unsigned char *src=buf+y*stride;
+        unsigned char *dst=buf+(y-1)*stride;
+
+        WORD *col_pix_buf = col_pix_buf_base-2;//for aligment;
+        WORD *col_sum_buf = col_sum_buf_base-2;//for aligment;
+                
+        int x = 2;
+        __m128i old_pix_128 = _mm_cvtsi32_si128(src[1]);
+        __m128i old_sum_128 = _mm_cvtsi32_si128(src[0]+src[1]);
+        for ( ; x < (w&(~7)); x+=8) {
+            __m128i new_pix = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(src+x));
+            new_pix = _mm_unpacklo_epi8(new_pix, _mm_setzero_si128());
+            __m128i temp = _mm_slli_si128(new_pix,2);
+            temp = _mm_add_epi16(temp, old_pix_128);
+            temp = _mm_add_epi16(temp, new_pix);
+            old_pix_128 = _mm_srli_si128(new_pix,14);
+
+            new_pix = _mm_slli_si128(temp,2);
+            new_pix = _mm_add_epi16(new_pix, old_sum_128);
+            new_pix = _mm_add_epi16(new_pix, temp);
+            old_sum_128 = _mm_srli_si128(temp, 14);
+
+            __m128i old_col_pix = _mm_loadu_si128( reinterpret_cast<const __m128i*>(col_pix_buf+x) );
+            __m128i old_col_sum = _mm_loadu_si128( reinterpret_cast<const __m128i*>(col_sum_buf+x) );
+            _mm_storeu_si128( reinterpret_cast<__m128i*>(col_pix_buf+x), new_pix );
+            temp = _mm_add_epi16(new_pix, old_col_pix);
+            _mm_storeu_si128( reinterpret_cast<__m128i*>(col_sum_buf+x), temp );
+
+            old_col_sum = _mm_add_epi16(old_col_sum, temp);
+            old_col_sum = _mm_add_epi16(old_col_sum, round);
+            old_col_sum = _mm_srli_epi16(old_col_sum, 4);
+            old_col_sum = _mm_packus_epi16(old_col_sum, old_col_sum);
+            _mm_storel_epi64( reinterpret_cast<__m128i*>(dst+x-1), old_col_sum );
+        }
+        int old_pix = src[x-1];
+        int old_sum = old_pix + src[x-2];
+        for ( ; x < w; x++) {
+            int temp1 = src[x];
+            int temp2 = old_pix + temp1;
+            old_pix = temp1;
+            temp1 = old_sum + temp2;
+            old_sum = temp2;
+
+            temp2 = col_pix_buf[x] + temp1;
+            col_pix_buf[x] = temp1;
+            dst[x-1] = (col_sum_buf[x] + temp2 + 8) >> 4;
+            col_sum_buf[x] = temp2;
         }
     }
 }

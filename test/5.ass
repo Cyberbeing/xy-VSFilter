@@ -21,4 +21,4 @@ Style: Signs,Arial,40,&H00FFFFFF,&H000000FF,&H00172F0B,&H96000000,-1,0,0,0,100,1
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
-Dialogue: 0,0:00:03.62,0:00:08.63,Default,,0000,0000,0000,,{\fs60\blur2\t(0,4000,\blur0)\shad0\bord0\fnPalatino Linotype\b1\c&H656565&\pos(897,486)}Исток начала
+Dialogue: 0,0:00:00.62,0:00:05.63,Default,,0000,0000,0000,,{\fs60\blur2\t(0,4000,\blur0)\shad0\bord0\fnPalatino Linotype\b1\c&H656565&\pos(897,486)}Исток начала
