@@ -34,14 +34,9 @@ CDX7SubPic::CDX7SubPic(IDirect3DDevice7* pD3DDev, IDirectDrawSurface7* pSurface)
 {
 	DDSURFACEDESC2 ddsd;
 	INITDDSTRUCT(ddsd);
-	if(SUCCEEDED(m_pSurface->GetSurfaceDesc(&ddsd)))
-	{
+	if(SUCCEEDED(m_pSurface->GetSurfaceDesc(&ddsd))) {
 		m_maxsize.SetSize(ddsd.dwWidth, ddsd.dwHeight);
-
-		CRect allPic(0, 0, ddsd.dwWidth, ddsd.dwHeight);
-		m_rectListDirty.AddTail(allPic);
-
-		m_rectDirtyUnion.SetRect(0, 0, ddsd.dwWidth, ddsd.dwHeight);
+		m_rcDirty.SetRect(0, 0, ddsd.dwWidth, ddsd.dwHeight);
 	}
 }
 
@@ -81,26 +76,24 @@ STDMETHODIMP CDX7SubPic::CopyTo(ISubPic* pSubPic)
     }
 	
 
-	CPoint p = m_rectDirtyUnion.TopLeft();
-	hr = m_pD3DDev->Load((IDirectDrawSurface7*)pSubPic->GetObject(), &p, (IDirectDrawSurface7*)GetObject(), m_rectDirtyUnion, 0);
+	CPoint p = m_rcDirty.TopLeft();
+	hr = m_pD3DDev->Load((IDirectDrawSurface7*)pSubPic->GetObject(), &p, (IDirectDrawSurface7*)GetObject(), m_rcDirty, 0);
 
 	return SUCCEEDED(hr) ? S_OK : E_FAIL;
 }
 
 STDMETHODIMP CDX7SubPic::ClearDirtyRect(DWORD color)
 {
-	if(m_rectListDirty.IsEmpty() || m_rectDirtyUnion.IsRectEmpty()) {
+	if(m_rcDirty.IsRectEmpty()) {
 		return S_FALSE;
 	}
 
 	DDBLTFX fx;
 	INITDDSTRUCT(fx);
 	fx.dwFillColor = color;
-	m_pSurface->Blt(&m_rectDirtyUnion, NULL, NULL, DDBLT_WAIT|DDBLT_COLORFILL, &fx);
+	m_pSurface->Blt(&m_rcDirty, NULL, NULL, DDBLT_WAIT|DDBLT_COLORFILL, &fx);
 
-    m_rectListDirty.RemoveAll();
-
-	m_rectDirtyUnion.SetRectEmpty();
+	m_rcDirty.SetRectEmpty();
 
 	return S_OK;
 }
@@ -124,19 +117,16 @@ STDMETHODIMP CDX7SubPic::Lock(SubPicDesc& spd)
 	return S_OK;
 }
 
-STDMETHODIMP CDX7SubPic::Unlock(CAtlList<CRect>* dirtyRectList)
+STDMETHODIMP CDX7SubPic::Unlock(RECT* pDirtyRect)
 {
 	m_pSurface->Unlock(NULL);
 
-	if(dirtyRectList)
-	{
-		SetDirtyRect(dirtyRectList);
-	}
-	else
-	{
-		m_rectDirtyUnion = CRect(CPoint(0,0),m_size);
-		m_rectListDirty.RemoveAll();
-		m_rectListDirty.AddTail(m_rectDirtyUnion);
+	if(pDirtyRect) {
+		m_rcDirty = *pDirtyRect;
+		m_rcDirty.InflateRect(1, 1);
+		m_rcDirty &= CRect(CPoint(0, 0), m_size);
+	} else {
+		m_rcDirty = CRect(CPoint(0, 0), m_size);
 	}
 	return S_OK;
 }
@@ -230,30 +220,6 @@ STDMETHODIMP CDX7SubPic::AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc
     return E_FAIL;
 }
 
-STDMETHODIMP CDX7SubPic::SetDirtyRect( CAtlList<CRect>* dirtyRectList )
-{
-    if(dirtyRectList)
-    {
-        POSITION pos = dirtyRectList->GetHeadPosition();
-        while(pos!=NULL)
-        {
-            CRect& cRect = dirtyRectList->GetNext(pos);
-            cRect.InflateRect(1,1);
-            cRect &= CRect(CPoint(0, 0), m_size);
-        }
-    }
-	HRESULT hr = __super::SetDirtyRect(dirtyRectList);
-	if(FAILED(hr)) {
-		return hr;
-    }
-	POSITION pos = m_rectListDirty.GetHeadPosition();
-	m_rectDirtyUnion.SetRectEmpty();
-	while(pos!=NULL)
-	{
-		m_rectDirtyUnion |= m_rectListDirty.GetNext(pos);
-	}
-	return S_OK;
-}
 //
 // CDX7SubPicAllocator
 //

@@ -25,12 +25,13 @@
 
 #include "ISubPic.h"
 
-class CSubPicImpl : public CUnknown, public ISubPic
+class CSubPicImplHelper
 {
 protected:
     REFERENCE_TIME m_rtStart, m_rtStop;
     REFERENCE_TIME m_rtSegmentStart, m_rtSegmentStop;
-    CAtlList<CRect> m_rectListDirty;
+
+    CRect m_rcDirty;
 
     CSize m_maxsize, m_size;
     CRect m_vidrect;
@@ -66,15 +67,8 @@ protected:
 
 	*/
 
-
-public:
-    static const int DIRTY_RECT_MERGE_EMPTY_AREA = 100;
-
-    CSubPicImpl();
-
-    DECLARE_IUNKNOWN;
-    STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
-
+    CSubPicImplHelper();
+    
     // ISubPic
 
     STDMETHODIMP_(REFERENCE_TIME) GetStart() const;
@@ -82,21 +76,20 @@ public:
     STDMETHODIMP_(void) SetStart(REFERENCE_TIME rtStart);
     STDMETHODIMP_(void) SetStop(REFERENCE_TIME rtStop);
 
-    STDMETHODIMP GetDesc(SubPicDesc& spd) const = 0;
+    //STDMETHODIMP GetDesc(SubPicDesc& spd) const = 0;
     STDMETHODIMP CopyTo(ISubPic* pSubPic);
 
-    STDMETHODIMP ClearDirtyRect(DWORD color) = 0;
+    //STDMETHODIMP ClearDirtyRect(DWORD color) = 0;
     STDMETHODIMP GetDirtyRect(RECT* pDirtyRect) const;
-    STDMETHODIMP GetDirtyRects(CAtlList<const CRect>& dirtyRectList /*[out]*/) const;
-    STDMETHODIMP SetDirtyRect(CAtlList<CRect>* dirtyRectList /*[in]*/);
+    STDMETHODIMP SetDirtyRect(RECT* pDirtyRect /*[in]*/);
 
     STDMETHODIMP GetMaxSize(SIZE* pMaxSize) const;
     STDMETHODIMP SetSize(SIZE size, RECT vidrect);
 
-    STDMETHODIMP Lock(SubPicDesc& spd) = 0;
-    STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList /*[in]*/) = 0;
+    //STDMETHODIMP Lock(SubPicDesc& spd) = 0;
+    //STDMETHODIMP Unlock(RECT* pDirtyRect /*[in]*/) = 0;
 
-    STDMETHODIMP AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget) = 0;
+    //STDMETHODIMP AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget) = 0;
 
 	STDMETHODIMP SetVirtualTextureSize (const SIZE pSize, const POINT pTopLeft);
 	STDMETHODIMP GetSourceAndDest(SIZE* pSize, RECT* pRcSource, RECT* pRcDest);
@@ -105,9 +98,185 @@ public:
 	STDMETHODIMP_(REFERENCE_TIME) GetSegmentStop();
 	STDMETHODIMP_(void) SetSegmentStart(REFERENCE_TIME rtStart);
 	STDMETHODIMP_(void) SetSegmentStop(REFERENCE_TIME rtStop);
-
 };
 
+class CSubPicImpl : public CUnknown, public CSubPicImplHelper, public ISubPic
+{
+public:
+    CSubPicImpl();
+
+    DECLARE_IUNKNOWN;
+    STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
+
+    // ISubPic
+
+    STDMETHODIMP_(REFERENCE_TIME) GetStart() const
+    {
+        return CSubPicImplHelper::GetStart();
+    }
+    STDMETHODIMP_(REFERENCE_TIME) GetStop() const
+    {
+        return CSubPicImplHelper::GetStop();
+    }
+    STDMETHODIMP_(void) SetStart(REFERENCE_TIME rtStart)
+    {
+        return CSubPicImplHelper::SetStart(rtStart);
+    }
+    STDMETHODIMP_(void) SetStop(REFERENCE_TIME rtStop)
+    {
+        return CSubPicImplHelper::SetStop(rtStop);
+    }
+
+    STDMETHODIMP GetDesc(SubPicDesc& spd) const = 0;
+    STDMETHODIMP CopyTo(ISubPic* pSubPic)
+    {
+        return CSubPicImplHelper::CopyTo(pSubPic);
+    }
+
+    STDMETHODIMP ClearDirtyRect(DWORD color) = 0;
+    STDMETHODIMP GetDirtyRect(RECT* pDirtyRect) const
+    {
+        return CSubPicImplHelper::GetDirtyRect(pDirtyRect);
+    }
+    STDMETHODIMP SetDirtyRect(RECT* pDirtyRect /*[in]*/)
+    {
+        return CSubPicImplHelper::SetDirtyRect(pDirtyRect);
+    }
+
+    STDMETHODIMP GetMaxSize(SIZE* pMaxSize) const
+    {
+        return CSubPicImplHelper::GetMaxSize(pMaxSize);
+    }
+    STDMETHODIMP SetSize(SIZE size, RECT vidrect)
+    {
+        return CSubPicImplHelper::SetSize(size, vidrect);
+    }
+
+    STDMETHODIMP Lock(SubPicDesc& spd) = 0;
+    STDMETHODIMP Unlock(RECT* pDirtyRect /*[in]*/) = 0;
+
+    STDMETHODIMP AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget) = 0;
+
+	STDMETHODIMP SetVirtualTextureSize (const SIZE pSize, const POINT pTopLeft)
+    {
+        return CSubPicImplHelper::SetVirtualTextureSize(pSize, pTopLeft);
+    }
+	STDMETHODIMP GetSourceAndDest(SIZE* pSize, RECT* pRcSource, RECT* pRcDest)
+    {
+        return CSubPicImplHelper::GetSourceAndDest(pSize, pRcSource, pRcDest);
+    }
+
+	STDMETHODIMP_(REFERENCE_TIME) GetSegmentStart()
+    {
+        return CSubPicImplHelper::GetSegmentStart();
+    }
+	STDMETHODIMP_(REFERENCE_TIME) GetSegmentStop()
+    {
+        return CSubPicImplHelper::GetSegmentStop();
+    }
+	STDMETHODIMP_(void) SetSegmentStart(REFERENCE_TIME rtStart)
+    {
+        return CSubPicImplHelper::SetSegmentStart(rtStart);
+    }
+	STDMETHODIMP_(void) SetSegmentStop(REFERENCE_TIME rtStop)
+    {
+        return CSubPicImplHelper::SetSegmentStop(rtStop);
+    }
+};
+
+class CSubPicExImpl : public CUnknown, public CSubPicImplHelper, public ISubPicEx
+{
+protected:
+    CAtlList<CRect> m_rectListDirty;
+
+public:
+    static const int DIRTY_RECT_MERGE_EMPTY_AREA = 100;
+	
+    CSubPicExImpl();
+
+    DECLARE_IUNKNOWN;
+    STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
+    
+    // ISubPic
+
+    STDMETHODIMP_(REFERENCE_TIME) GetStart() const
+    {
+        return CSubPicImplHelper::GetStart();
+    }
+    STDMETHODIMP_(REFERENCE_TIME) GetStop() const
+    {
+        return CSubPicImplHelper::GetStop();
+    }
+    STDMETHODIMP_(void) SetStart(REFERENCE_TIME rtStart)
+    {
+        return CSubPicImplHelper::SetStart(rtStart);
+    }
+    STDMETHODIMP_(void) SetStop(REFERENCE_TIME rtStop)
+    {
+        return CSubPicImplHelper::SetStop(rtStop);
+    }
+
+    STDMETHODIMP GetDesc(SubPicDesc& spd) const = 0;
+    STDMETHODIMP CopyTo(ISubPic* pSubPic)
+    {
+        return CSubPicImplHelper::CopyTo(pSubPic);
+    }
+
+    STDMETHODIMP ClearDirtyRect(DWORD color) = 0;
+    STDMETHODIMP GetDirtyRect(RECT* pDirtyRect) const
+    {
+        return CSubPicImplHelper::GetDirtyRect(pDirtyRect);
+    }
+    STDMETHODIMP SetDirtyRect(RECT* pDirtyRect /*[in]*/);
+
+    STDMETHODIMP GetMaxSize(SIZE* pMaxSize) const
+    {
+        return CSubPicImplHelper::GetMaxSize(pMaxSize);
+    }
+    STDMETHODIMP SetSize(SIZE size, RECT vidrect)
+    {
+        return CSubPicImplHelper::SetSize(size, vidrect);
+    }
+
+    STDMETHODIMP Lock(SubPicDesc& spd) = 0;
+    STDMETHODIMP Unlock(RECT* pDirtyRect /*[in]*/);
+
+    STDMETHODIMP AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget) = 0;
+
+    STDMETHODIMP SetVirtualTextureSize (const SIZE pSize, const POINT pTopLeft)
+    {
+        return CSubPicImplHelper::SetVirtualTextureSize(pSize, pTopLeft);
+    }
+    STDMETHODIMP GetSourceAndDest(SIZE* pSize, RECT* pRcSource, RECT* pRcDest)
+    {
+        return CSubPicImplHelper::GetSourceAndDest(pSize, pRcSource, pRcDest);
+    }
+
+    STDMETHODIMP_(REFERENCE_TIME) GetSegmentStart()
+    {
+        return CSubPicImplHelper::GetSegmentStart();
+    }
+    STDMETHODIMP_(REFERENCE_TIME) GetSegmentStop()
+    {
+        return CSubPicImplHelper::GetSegmentStop();
+    }
+    STDMETHODIMP_(void) SetSegmentStart(REFERENCE_TIME rtStart)
+    {
+        return CSubPicImplHelper::SetSegmentStart(rtStart);
+    }
+    STDMETHODIMP_(void) SetSegmentStop(REFERENCE_TIME rtStop)
+    {
+        return CSubPicImplHelper::SetSegmentStop(rtStop);
+    }
+
+    // ISubPicEx
+    STDMETHODIMP CopyTo(ISubPicEx* pSubPicEx);
+
+    STDMETHODIMP GetDirtyRects(CAtlList<const CRect>& dirtyRectList /*[out]*/) const;
+    STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList /*[in]*/);
+
+    STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList /*[in]*/) = 0;
+};
 
 class CSubPicAllocatorImpl : public CUnknown, public ISubPicAllocator
 {
@@ -119,10 +288,8 @@ private:
     bool m_fDynamicWriteOnly;
 
     virtual bool Alloc(bool fStatic, ISubPic** ppSubPic) = 0;
-
 protected:
     bool m_fPow2Textures;
-
 public:
     CSubPicAllocatorImpl(SIZE cursize, bool fDynamicWriteOnly, bool fPow2Textures);
 
@@ -142,3 +309,40 @@ public:
     };
 };
 
+class CSubPicExAllocatorImpl : public CUnknown, public ISubPicExAllocator
+{
+    CComPtr<ISubPicEx> m_pStatic;
+
+private:
+    CSize m_cursize;
+    CRect m_curvidrect;
+    bool m_fDynamicWriteOnly;
+    
+    bool Alloc(bool fStatic, ISubPic** ppSubPic);
+    
+    virtual bool AllocEx(bool fStatic, ISubPicEx** ppSubPic) = 0;
+protected:
+    bool m_fPow2Textures;
+
+public:
+    CSubPicExAllocatorImpl(SIZE cursize, bool fDynamicWriteOnly, bool fPow2Textures);
+
+    DECLARE_IUNKNOWN;
+    STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
+
+    // ISubPicAllocator
+
+    STDMETHODIMP SetCurSize(SIZE cursize);
+    STDMETHODIMP SetCurVidRect(RECT curvidrect);
+    STDMETHODIMP GetStatic(ISubPic** ppSubPic);
+    STDMETHODIMP AllocDynamic(ISubPic** ppSubPic);
+    STDMETHODIMP_(bool) IsDynamicWriteOnly();
+    STDMETHODIMP ChangeDevice(IUnknown* pDev);
+    STDMETHODIMP SetMaxTextureSize(SIZE MaxTextureSize) {
+        return E_NOTIMPL;
+    };
+
+    // ISubPicExAllocator
+    STDMETHODIMP GetStaticEx(ISubPicEx** ppSubPic);
+    STDMETHODIMP AllocDynamicEx(ISubPicEx** ppSubPic);
+};

@@ -139,6 +139,7 @@
     </ClCompile>
     <ClCompile Include="SubPicAllocatorPresenterImpl.cpp" />
     <ClCompile Include="SubPicImpl.cpp" />
+    <ClCompile Include="SubPicProviderExWrapper.cpp" />
     <ClCompile Include="SubPicProviderImpl.cpp" />
     <ClCompile Include="SubPicQueueImpl.cpp" />
   </ItemGroup>
@@ -155,6 +156,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SubPicAllocatorPresenterImpl.h" />
     <ClInclude Include="SubPicImpl.h" />
+    <ClInclude Include="SubPicProviderExWrapper.h" />
     <ClInclude Include="SubPicProviderImpl.h" />
     <ClInclude Include="SubPicQueueImpl.h" />
   </ItemGroup>

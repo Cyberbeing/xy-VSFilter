@@ -277,10 +277,10 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 
 		if(m_pSubPicQueue)
 		{
-			CComPtr<ISubPic> pSubPic;
+			CComPtr<ISubPicEx> pSubPic;
 
 			//int timeStamp1 = GetTickCount();
-			bool lookupResult = SUCCEEDED(m_pSubPicQueue->LookupSubPic(CalcCurrentTime(), &pSubPic));
+			bool lookupResult = SUCCEEDED(m_pSubPicQueue->LookupSubPicEx(CalcCurrentTime(), &pSubPic));
 			//int timeStamp2 = GetTickCount();
 			//m_time_rasterization += timeStamp2-timeStamp1;
 
@@ -584,9 +584,8 @@ void CDirectVobSubFilter::InitSubPicQueue()
         m_pTempPicBuff.Allocate(m_spd.pitch*m_spd.h);
 	m_spd.bits = (void*)m_pTempPicBuff;
 
-	//CComPtr<ISubPicAllocator> pSubPicAllocator = new CMemSubPicAllocator(m_spd.type, CSize(m_w, m_h));
-	DbgLog((LOG_TRACE, 3, "new CPooledSubPicAllocator"));
-	CComPtr<ISubPicAllocator> pSubPicAllocator = new CPooledSubPicAllocator(m_spd.type, CSize(m_w, m_h), MAX_SUBPIC_QUEUE_LENGTH + 1);
+	//CComPtr<ISubPicExAllocator> pSubPicAllocator = new CMemSubPicAllocator(m_spd.type, CSize(m_w, m_h));
+	CComPtr<ISubPicExAllocator> pSubPicAllocator = new CPooledSubPicAllocator(m_spd.type, CSize(m_w, m_h), MAX_SUBPIC_QUEUE_LENGTH + 1);
 
 	CSize video(bihIn.biWidth, bihIn.biHeight), window = video;
 	if(AdjustFrameSize(window)) video += video;
@@ -599,7 +598,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	//m_pSubPicQueue = m_fDoPreBuffering
 	//	? (ISubPicQueue*)new CSubPicQueue(MAX_SUBPIC_QUEUE_LENGTH, pSubPicAllocator, &hr)
 	//	: (ISubPicQueue*)new CSubPicQueueNoThread(pSubPicAllocator, &hr);
-    m_pSubPicQueue = (ISubPicQueue*)new CSubPicQueueNoThread(pSubPicAllocator, &hr);
+    m_pSubPicQueue = new CSubPicQueueNoThread(pSubPicAllocator, &hr);
 
 	if(FAILED(hr)) m_pSubPicQueue = NULL;
 
@@ -1730,7 +1729,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 	m_nSubtitleId = (DWORD_PTR)pSubStream;
 
 	if(m_pSubPicQueue)
-		m_pSubPicQueue->SetSubPicProvider(CComQIPtr<ISubPicProvider>(pSubStream));
+		m_pSubPicQueue->SetSubPicProviderEx(CComQIPtr<ISubPicProviderEx>(pSubStream));
 }
 
 void CDirectVobSubFilter::InvalidateSubtitle(REFERENCE_TIME rtInvalidate, DWORD_PTR nSubtitleId)

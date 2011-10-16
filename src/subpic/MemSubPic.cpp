@@ -114,7 +114,7 @@ STDMETHODIMP CMemSubPic::GetDesc(SubPicDesc& spd) const
     return S_OK;
 }
 
-STDMETHODIMP CMemSubPic::CopyTo(ISubPic* pSubPic)
+STDMETHODIMP CMemSubPic::CopyTo(ISubPicEx* pSubPic)
 {
     HRESULT hr;
 	if(FAILED(hr = __super::CopyTo(pSubPic))) {
@@ -195,7 +195,7 @@ STDMETHODIMP CMemSubPic::Lock(SubPicDesc& spd)
 STDMETHODIMP CMemSubPic::Unlock(CAtlList<CRect>* dirtyRectList)
 {
     POSITION pos;
-    SetDirtyRect(dirtyRectList);
+    SetDirtyRectEx(dirtyRectList);
     if(m_rectListDirty.IsEmpty()) {
         return S_OK;
     }
@@ -639,7 +639,7 @@ STDMETHODIMP CMemSubPic::AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc
     return S_OK;
 }
 
-STDMETHODIMP CMemSubPic::SetDirtyRect(CAtlList<CRect>* dirtyRectList )
+STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
 {
     //if(m_spd.type == MSP_YUY2 || m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV || m_spd.type == MSP_AYUV)
     if(dirtyRectList!=NULL)
@@ -666,14 +666,14 @@ STDMETHODIMP CMemSubPic::SetDirtyRect(CAtlList<CRect>* dirtyRectList )
             }
         }
     }
-    return __super::SetDirtyRect(dirtyRectList);
+    return __super::SetDirtyRectEx(dirtyRectList);
 }
 //
 // CMemSubPicAllocator
 //
 
 CMemSubPicAllocator::CMemSubPicAllocator(int type, SIZE maxsize)
-    : CSubPicAllocatorImpl(maxsize, false, false)
+    : CSubPicExAllocatorImpl(maxsize, false, false)
     , m_type(type)
     , m_maxsize(maxsize)
 {
@@ -681,7 +681,7 @@ CMemSubPicAllocator::CMemSubPicAllocator(int type, SIZE maxsize)
 
 // ISubPicAllocatorImpl
 
-bool CMemSubPicAllocator::Alloc(bool fStatic, ISubPic** ppSubPic)
+bool CMemSubPicAllocator::AllocEx(bool fStatic, ISubPicEx** ppSubPic)
 {
 	if(!ppSubPic) {
 		return false;
@@ -695,7 +695,7 @@ bool CMemSubPicAllocator::Alloc(bool fStatic, ISubPic** ppSubPic)
 	spd.bits = DNew BYTE[spd.pitch*spd.h];
 	if(!spd.bits) {
 		return false;
-	}
+	}    
 	*ppSubPic = DNew CMemSubPic(spd);
 	if(!(*ppSubPic)) {
 		return false;

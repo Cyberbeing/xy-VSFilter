@@ -96,7 +96,7 @@ bool STDMETHODCALLTYPE CPooledSubPicAllocator::InitPool( int capacity )
 }
 
 CPooledSubPicAllocator::CPooledSubPicAllocator( int type, SIZE maxsize, int capacity )
-	:CSubPicAllocatorImpl(maxsize, false, false)
+	:CSubPicExAllocatorImpl(maxsize, false, false)
 	, _type(type)
 	, _maxsize(maxsize)
 {
@@ -105,7 +105,7 @@ CPooledSubPicAllocator::CPooledSubPicAllocator( int type, SIZE maxsize, int capa
 }
 
 
-bool CPooledSubPicAllocator::Alloc( bool fStatic, ISubPic** ppSubPic )
+bool CPooledSubPicAllocator::AllocEx( bool fStatic, ISubPicEx** ppSubPic )
 {
 	if(!ppSubPic)
 		return(false);

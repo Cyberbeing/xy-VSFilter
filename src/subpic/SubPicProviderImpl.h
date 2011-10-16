@@ -25,7 +25,7 @@
 
 #include "ISubPic.h"
 
-class CSubPicProviderImpl : public CUnknown, public ISubPicProvider
+class CSubPicProviderImpl : public CUnknown, public ISubPicProviderEx
 {
 protected:
     CCritSec* m_pLock;
@@ -47,12 +47,19 @@ public:
 
     STDMETHODIMP_(REFERENCE_TIME) GetStart(POSITION pos, double fps) = 0;
     STDMETHODIMP_(REFERENCE_TIME) GetStop(POSITION pos, double fps) = 0;
-    STDMETHODIMP_(VOID) GetStartStop(POSITION pos, double fps, /*out*/REFERENCE_TIME& start, /*out*/REFERENCE_TIME& stop);
 
     STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox) = 0;
-    STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
 	STDMETHODIMP GetTextureSize (POSITION pos, SIZE& MaxTextureSize, SIZE& VirtualSize, POINT& VirtualTopLeft) {
 		return E_NOTIMPL;
 	};
+
+    // ISubPicProviderEx
+
+    STDMETHODIMP_(VOID) GetStartStop(POSITION pos, double fps, /*out*/REFERENCE_TIME& start, /*out*/REFERENCE_TIME& stop);
+
+    STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
+
+    STDMETHODIMP_(bool) IsColorTypeSupported(int type);
+    STDMETHODIMP_(int) SetOutputColorType(int type);//Important! May failed!
 };
 

@@ -13,7 +13,7 @@ interface IPooledAllocator
 	STDMETHOD_(void, OnItemDestruct)(void* Item) PURE;
 };
 
-class CPooledSubPicAllocator : public CSubPicAllocatorImpl, public IPooledAllocator
+class CPooledSubPicAllocator : public CSubPicExAllocatorImpl, public IPooledAllocator
 {
 public:
 	STDMETHODIMP_(void) ReleaseItem(void* Item);
@@ -32,7 +32,7 @@ private:
 	CAtlList<CPooledSubPic*> _free;
 	CAtlList<CPooledSubPic*> _using;
 		
-	virtual bool Alloc(bool fStatic, ISubPic** ppSubPic);
+	virtual bool AllocEx(bool fStatic, ISubPicEx** ppSubPic);
 };
 
 class CPooledSubPic : public CMemSubPic

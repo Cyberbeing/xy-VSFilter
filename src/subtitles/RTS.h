@@ -354,7 +354,7 @@ public:
     DECLARE_IUNKNOWN
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
-    // ISubPicProvider
+    // ISubPicProviderEx
     STDMETHODIMP_(POSITION) GetStartPosition(REFERENCE_TIME rt, double fps);
     STDMETHODIMP_(POSITION) GetNext(POSITION pos);
     STDMETHODIMP_(REFERENCE_TIME) GetStart(POSITION pos, double fps);
@@ -362,7 +362,7 @@ public:
     STDMETHODIMP_(VOID) GetStartStop(POSITION pos, double fps, /*out*/REFERENCE_TIME &start, /*out*/REFERENCE_TIME &stop);
     STDMETHODIMP_(bool) IsAnimated(POSITION pos);
     STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox);
-    STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
+    STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
 
     // IPersist
     STDMETHODIMP GetClassID(CLSID* pClassID);

@@ -63,7 +63,6 @@ class CDX9SubPic : public CSubPicImpl
 {
 	CComPtr<IDirect3DSurface9> m_pSurface;
 
-	CRect m_rectDirtyUnion;
 protected:
 	STDMETHODIMP_(void*) GetObject() const; // returns IDirect3DTexture9*
 
@@ -78,8 +77,7 @@ public:
 	STDMETHODIMP CopyTo(ISubPic* pSubPic);
 	STDMETHODIMP ClearDirtyRect(DWORD color);
 	STDMETHODIMP Lock(SubPicDesc& spd);
-	STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList);
-	STDMETHODIMP SetDirtyRect(CAtlList<CRect>* dirtyRectList);
+	STDMETHODIMP Unlock(RECT* pDirtyRect);
 	STDMETHODIMP AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
 };
 

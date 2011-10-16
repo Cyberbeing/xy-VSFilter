@@ -25,6 +25,8 @@
 #include <atlcoll.h>
 #include "CoordGeom.h"
 
+enum ColorType {MSP_RGB32,MSP_RGB24,MSP_RGB16,MSP_RGB15,MSP_YUY2,MSP_YV12,MSP_IYUV,MSP_AYUV,MSP_RGBA};
+
 #pragma pack(push, 1)
 struct SubPicDesc {
 	int type;
@@ -62,14 +64,13 @@ public IUnknown {
 
 	STDMETHOD (ClearDirtyRect) (DWORD color /*[in]*/) PURE;
 	STDMETHOD (GetDirtyRect) (RECT* pDirtyRect /*[out]*/) const PURE;
-	STDMETHOD (GetDirtyRects) (CAtlList<const CRect>& dirtyRectList /*[out]*/) const PURE;
-	STDMETHOD (SetDirtyRect) (CAtlList<CRect>* dirtyRectList /*[in]*/) PURE;
+	STDMETHOD (SetDirtyRect) (RECT* pDirtyRect /*[in]*/) PURE;
 
 	STDMETHOD (GetMaxSize) (SIZE* pMaxSize /*[out]*/) const PURE;
 	STDMETHOD (SetSize) (SIZE pSize /*[in]*/, RECT vidrect /*[in]*/) PURE;
 
 	STDMETHOD (Lock) (SubPicDesc& spd /*[out]*/) PURE;
-	STDMETHOD (Unlock) (CAtlList<CRect>* dirtyRectList /*[in]*/) PURE;
+	STDMETHOD (Unlock) (RECT* pDirtyRect /*[in]*/) PURE;
 
 	STDMETHOD (AlphaBlt) (const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget = NULL /*[in]*/) PURE;
 	STDMETHOD (GetSourceAndDest) (SIZE* pSize /*[in]*/, RECT* pRcSource /*[out]*/, RECT* pRcDest /*[out]*/) PURE;
@@ -79,6 +80,17 @@ public IUnknown {
 	STDMETHOD_(REFERENCE_TIME, GetSegmentStop) () PURE;
 	STDMETHOD_(void, SetSegmentStart) (REFERENCE_TIME rtStart) PURE;
 	STDMETHOD_(void, SetSegmentStop) (REFERENCE_TIME rtStop) PURE;
+};
+
+interface __declspec(uuid("728B3CDC-B0B2-4DA8-8426-AEDE9C90674E"))
+ISubPicEx :
+public ISubPic {
+    STDMETHOD (CopyTo) (ISubPicEx* pSubPicEx /*[in]*/) PURE;
+
+    STDMETHOD (GetDirtyRects) (CAtlList<const CRect>& dirtyRectList /*[out]*/) const PURE;
+    STDMETHOD (SetDirtyRectEx) (CAtlList<CRect>* dirtyRectList /*[in]*/) PURE;
+    
+	STDMETHOD (Unlock) (CAtlList<CRect>* dirtyRectList /*[in]*/) PURE;    
 };
 
 //
@@ -100,6 +112,13 @@ public IUnknown {
 	STDMETHOD (SetMaxTextureSize) (SIZE MaxTextureSize) PURE;
 };
 
+interface __declspec(uuid("379DD04B-F132-475E-9901-AB02FF4351A7"))
+ISubPicExAllocator :
+public ISubPicAllocator {
+    STDMETHOD (GetStaticEx) (ISubPicEx** ppSubPic /*[out]*/) PURE;
+    STDMETHOD (AllocDynamicEx) (ISubPicEx** ppSubPic /*[out]*/) PURE;
+};
+
 //
 // ISubPicProvider
 //
@@ -115,13 +134,21 @@ public IUnknown {
 
 	STDMETHOD_(REFERENCE_TIME, GetStart) (POSITION pos, double fps) PURE;
 	STDMETHOD_(REFERENCE_TIME, GetStop) (POSITION pos, double fps) PURE;
-	STDMETHOD_(VOID, GetStartStop) (POSITION pos, double fps, /*out*/REFERENCE_TIME& start, /*out*/REFERENCE_TIME& stop) PURE;
 
 	STDMETHOD_(bool, IsAnimated) (POSITION pos) PURE;
 
 	STDMETHOD (Render) (SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox) PURE;
-	STDMETHOD (Render) (SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList) PURE;
     STDMETHOD (GetTextureSize) (POSITION pos, SIZE& MaxTextureSize, SIZE& VirtualSize, POINT& VirtualTopLeft) PURE;
+};
+
+interface __declspec(uuid("F8B6C39E-4188-41E0-9CCF-79579C376A40"))
+ISubPicProviderEx :
+public ISubPicProvider {
+	STDMETHOD_(VOID, GetStartStop) (POSITION pos, double fps, /*out*/REFERENCE_TIME& start, /*out*/REFERENCE_TIME& stop) PURE;
+    STDMETHOD (RenderEx) (SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList) PURE;
+
+    STDMETHOD_(bool, IsColorTypeSupported) (int type) PURE;
+    STDMETHOD_(int, SetOutputColorType) (int type) PURE;//Important! May failed!
 };
 
 //
@@ -142,6 +169,26 @@ public IUnknown {
 
 	STDMETHOD (GetStats) (int& nSubPics, REFERENCE_TIME& rtNow, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
 	STDMETHOD (GetStats) (int nSubPic /*[in]*/, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
+};
+
+interface __declspec(uuid("E1EAC839-0584-49D3-8DAF-5D22FCD1B651"))
+ISubPicQueueEx :
+public IUnknown // not inherit ISubPicQueue so that 
+                // when it comes to a point that we want to delete ISubPicQueue interface,
+                // we will have less trouble
+{
+public:
+    STDMETHOD (SetSubPicProviderEx) (ISubPicProviderEx* pSubPicProvider /*[in]*/) PURE;
+    STDMETHOD (GetSubPicProviderEx) (ISubPicProviderEx** pSubPicProvider /*[out]*/) PURE;
+
+    STDMETHOD (SetFPS) (double fps /*[in]*/) PURE;
+    STDMETHOD (SetTime) (REFERENCE_TIME rtNow /*[in]*/) PURE;
+
+    STDMETHOD (Invalidate) (REFERENCE_TIME rtInvalidate = -1) PURE;
+    STDMETHOD_(bool, LookupSubPicEx) (REFERENCE_TIME rtNow /*[in]*/, ISubPicEx** ppSubPic /*[out]*/) PURE;
+
+    STDMETHOD (GetStats) (int& nSubPics, REFERENCE_TIME& rtNow, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
+    STDMETHOD (GetStats) (int nSubPic /*[in]*/, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
 };
 
 //

@@ -65,7 +65,7 @@ public:
 
 		if(!m_pSubPicQueue)
 		{
-			CComPtr<ISubPicAllocator> pAllocator = new CMemSubPicAllocator(dst.type, size);
+			CComPtr<ISubPicExAllocator> pAllocator = new CMemSubPicAllocator(dst.type, size);
 
 			HRESULT hr;
 			if(!(m_pSubPicQueue = new CSubPicQueueNoThread(pAllocator, &hr)) || FAILED(hr))

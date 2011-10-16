@@ -35,10 +35,7 @@ CDX9SubPic::CDX9SubPic(IDirect3DSurface9* pSurface, CDX9SubPicAllocator *pAlloca
 	ZeroMemory(&d3dsd, sizeof(d3dsd));
 	if(SUCCEEDED(m_pSurface->GetDesc(&d3dsd))) {
 		m_maxsize.SetSize(d3dsd.Width, d3dsd.Height);
-		CRect allSpd(0, 0, d3dsd.Width, d3dsd.Height);
-		//m_rcDirty.SetRect(0, 0, d3dsd.Width, d3dsd.Height);
-		m_rectListDirty.AddTail(allSpd);
-		m_rectDirtyUnion.SetRect(CPoint(0, 0), CPoint(m_maxsize));
+		m_rcDirty.SetRect(0, 0, d3dsd.Width, d3dsd.Height);
 	}
 }
 
@@ -102,7 +99,7 @@ STDMETHODIMP CDX9SubPic::CopyTo(ISubPic* pSubPic)
 		return hr;
 	}
 
-	if(m_rectListDirty.IsEmpty() || m_rectDirtyUnion.IsRectEmpty()) {
+	if(m_rcDirty.IsRectEmpty()) {
 		return S_FALSE;
 	}
 
@@ -134,7 +131,7 @@ STDMETHODIMP CDX9SubPic::CopyTo(ISubPic* pSubPic)
 
 STDMETHODIMP CDX9SubPic::ClearDirtyRect(DWORD color)
 {
-	if(m_rectListDirty.IsEmpty() || m_rectDirtyUnion.IsRectEmpty()) {
+	if(m_rcDirty.IsRectEmpty()) {
 		return S_FALSE;
 	}
 
@@ -144,26 +141,20 @@ STDMETHODIMP CDX9SubPic::ClearDirtyRect(DWORD color)
 	}
 
 	SubPicDesc spd;
-	if(SUCCEEDED(Lock(spd)))
-	{
-		POSITION pos = m_rectListDirty.GetHeadPosition();
-		while(pos!=NULL)
-		{
-			CRect& cRect = m_rectListDirty.GetNext(pos);
-			int h = cRect.Height();
+	if(SUCCEEDED(Lock(spd))) {
+		int h = m_rcDirty.Height();
 
-			BYTE* ptr = (BYTE*)spd.bits + spd.pitch*(cRect.top) + (cRect.left*spd.bpp>>3);
+		BYTE* ptr = (BYTE*)spd.bits + spd.pitch*m_rcDirty.top + (m_rcDirty.left*spd.bpp>>3);
 
-			if(spd.bpp == 16) {
-				while(h-- > 0) {
-					memsetw(ptr, color, 2 * cRect.Width());
-					ptr += spd.pitch;
-				}
-			} else if(spd.bpp == 32) {
-				while(h-- > 0) {
-					memsetd(ptr, color, 4 * cRect.Width());
-					ptr += spd.pitch;
-				}
+		if(spd.bpp == 16) {
+			while(h-- > 0) {
+				memsetw(ptr, color, 2 * m_rcDirty.Width());
+				ptr += spd.pitch;
+			}
+		} else if(spd.bpp == 32) {
+			while(h-- > 0) {
+				memsetd(ptr, color, 4 * m_rcDirty.Width());
+				ptr += spd.pitch;
 			}
         }
 /*
@@ -176,9 +167,8 @@ STDMETHODIMP CDX9SubPic::ClearDirtyRect(DWORD color)
 
 //		HRESULT hr = pD3DDev->ColorFill(m_pSurface, m_rcDirty, color);
 
-	m_rectListDirty.RemoveAll();
-	m_rectDirtyUnion.SetRectEmpty();
-	
+	m_rcDirty.SetRectEmpty();
+
 	return S_OK;
 }
 
@@ -209,21 +199,27 @@ STDMETHODIMP CDX9SubPic::Lock(SubPicDesc& spd)
 	return S_OK;
 }
 
-STDMETHODIMP CDX9SubPic::Unlock(CAtlList<CRect>* dirtyRectList)
+STDMETHODIMP CDX9SubPic::Unlock(RECT* pDirtyRect)
 {
 	HRESULT hr = m_pSurface->UnlockRect();
 
-	if(dirtyRectList) {
-	    SetDirtyRect(dirtyRectList);
+	if(pDirtyRect) {
+		m_rcDirty = *pDirtyRect;
+		if (!((CRect*)pDirtyRect)->IsRectEmpty()) {
+			m_rcDirty.InflateRect(1, 1);
+			m_rcDirty.left &= ~127;
+			m_rcDirty.top &= ~63;
+			m_rcDirty.right = (m_rcDirty.right + 127) & ~127;
+			m_rcDirty.bottom = (m_rcDirty.bottom + 63) & ~63;
+			m_rcDirty &= CRect(CPoint(0, 0), m_size);
+		}
 	} else {
-		m_rectDirtyUnion = CRect(CPoint(0,0),m_size);
-		m_rectListDirty.RemoveAll();
-		m_rectListDirty.AddTail(m_rectDirtyUnion);
+		m_rcDirty = CRect(CPoint(0, 0), m_size);
 	}
 
 	CComPtr<IDirect3DTexture9> pTexture = (IDirect3DTexture9*)GetObject();
-	if (pTexture && m_rectDirtyUnion.IsRectEmpty()) {
-		hr = pTexture->AddDirtyRect(&m_rectDirtyUnion);
+	if (pTexture && !((CRect*)pDirtyRect)->IsRectEmpty()) {
+		hr = pTexture->AddDirtyRect(&m_rcDirty);
 	}
 	return S_OK;
 }
@@ -342,35 +338,7 @@ STDMETHODIMP CDX9SubPic::AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc
 		return S_OK;
 	} while(0);
 
-    return E_FAIL;
-}
-
-STDMETHODIMP CDX9SubPic::SetDirtyRect( CAtlList<CRect>* dirtyRectList )
-{
-	if(dirtyRectList)
-	{
-		POSITION pos = dirtyRectList->GetHeadPosition();
-		while(pos!=NULL)
-		{
-			CRect& cRect = dirtyRectList->GetNext(pos);
-			cRect.InflateRect(1,1);
-			cRect.left &= ~127;
-			cRect.top &= ~63;
-			cRect.right = (cRect.right + 127) & ~127;
-			cRect.bottom = (cRect.bottom + 63) & ~63;
-			cRect &= CRect(CPoint(0, 0), m_size);
-		}
-	}
-    HRESULT hr = __super::SetDirtyRect(dirtyRectList);
-    if(FAILED(hr)) {
-        return hr;
-    }
-    POSITION pos = m_rectListDirty.GetHeadPosition();
-    m_rectDirtyUnion.SetRectEmpty();
-    while(pos!=NULL)
-    {
-        m_rectDirtyUnion |= m_rectListDirty.GetNext(pos);
-    }
+	return E_FAIL;
 }
 
 //

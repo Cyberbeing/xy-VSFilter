@@ -49,7 +49,7 @@ class CDirectVobSubFilter
     friend class CTextInputPin;
 
 	CCritSec m_csQueueLock;
-	CComPtr<ISubPicQueue> m_pSubPicQueue;
+	CComPtr<ISubPicQueueEx> m_pSubPicQueue;
 	void InitSubPicQueue();
 	SubPicDesc m_spd;
 

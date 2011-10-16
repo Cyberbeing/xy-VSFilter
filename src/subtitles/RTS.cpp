@@ -2653,6 +2653,7 @@ STDMETHODIMP CRenderedTextSubtitle::NonDelegatingQueryInterface(REFIID riid, voi
         QI(IPersist)
         QI(ISubStream)
         QI(ISubPicProvider)
+        QI(ISubPicProviderEx)
         __super::NonDelegatingQueryInterface(riid, ppv);
 }
 
@@ -2805,7 +2806,7 @@ static int lscomp(const void* ls1, const void* ls2)
     return(ret);
 }
 
-STDMETHODIMP CRenderedTextSubtitle::Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList)
+STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList)
 {
     CRect bbox2(0,0,0,0);
     if(m_size != CSize(spd.w*8, spd.h*8) || m_vidrect != CRect(spd.vidrect.left*8, spd.vidrect.top*8, spd.vidrect.right*8, spd.vidrect.bottom*8))
@@ -3044,7 +3045,7 @@ STDMETHODIMP CRenderedTextSubtitle::Render(SubPicDesc& spd, REFERENCE_TIME rt, d
 STDMETHODIMP CRenderedTextSubtitle::Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox)
 {
     CAtlList<CRect> rectList;
-    HRESULT result = Render(spd, rt, fps, rectList);
+    HRESULT result = RenderEx(spd, rt, fps, rectList);
     POSITION pos = rectList.GetHeadPosition();
     CRect bbox2(0,0,0,0);
     while(pos!=NULL)

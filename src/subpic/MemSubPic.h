@@ -23,11 +23,9 @@
 
 #include "SubPicImpl.h"
 
-enum {MSP_RGB32,MSP_RGB24,MSP_RGB16,MSP_RGB15,MSP_YUY2,MSP_YV12,MSP_IYUV,MSP_AYUV,MSP_RGBA};
-
 // CMemSubPic
 
-class CMemSubPic : public CSubPicImpl
+class CMemSubPic : public CSubPicExImpl
 {
 protected:
 	SubPicDesc m_spd;
@@ -42,23 +40,25 @@ public:
 
 	// ISubPic
 	STDMETHODIMP GetDesc(SubPicDesc& spd) const;
-	STDMETHODIMP CopyTo(ISubPic* pSubPic);
-	STDMETHODIMP ClearDirtyRect(DWORD color);
-	STDMETHODIMP Lock(SubPicDesc& spd);
-	//STDMETHODIMP Unlock(RECT* pDirtyRect);
+    STDMETHODIMP ClearDirtyRect(DWORD color);
+    STDMETHODIMP Lock(SubPicDesc& spd);
+    STDMETHODIMP AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+
+    // ISubPicEx
+	STDMETHODIMP CopyTo(ISubPicEx* pSubPic);
 	STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList);
-	STDMETHODIMP SetDirtyRect(CAtlList<CRect>* dirtyRectList);
-	STDMETHODIMP AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+	STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);
+	
 };
 
 // CMemSubPicAllocator
 
-class CMemSubPicAllocator : public CSubPicAllocatorImpl
+class CMemSubPicAllocator : public CSubPicExAllocatorImpl
 {
 	int m_type;
 	CSize m_maxsize;
 
-	bool Alloc(bool fStatic, ISubPic** ppSubPic);
+	bool AllocEx(bool fStatic, ISubPicEx** ppSubPic);
 
 public:
 	CMemSubPicAllocator(int type, SIZE maxsize);

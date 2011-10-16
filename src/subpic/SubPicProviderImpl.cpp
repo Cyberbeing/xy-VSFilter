@@ -43,6 +43,7 @@ STDMETHODIMP CSubPicProviderImpl::NonDelegatingQueryInterface(REFIID riid, void*
 {
     return
         QI(ISubPicProvider)
+        QI(ISubPicProviderEx)
         __super::NonDelegatingQueryInterface(riid, ppv);
 }
 
@@ -58,16 +59,30 @@ STDMETHODIMP CSubPicProviderImpl::Unlock()
     return m_pLock ? m_pLock->Unlock(), S_OK : E_FAIL;
 }
 
+// ISubPicProviderEx
+
 STDMETHODIMP_(VOID) CSubPicProviderImpl::GetStartStop( POSITION pos, double fps, /*out*/REFERENCE_TIME& start, /*out*/REFERENCE_TIME& stop )
 {
     start = GetStart(pos, fps);
     stop = GetStop(pos, fps);
 }
-STDMETHODIMP CSubPicProviderImpl::Render( SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList )
+
+STDMETHODIMP CSubPicProviderImpl::RenderEx( SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList )
 {
     CRect cRect = new CRect(0,0,0,0);
     HRESULT hr = Render(spd, rt, fps, cRect);
     if(SUCCEEDED(hr))
         rectList.AddTail(cRect);
     return hr;
+}
+
+STDMETHODIMP_(bool) CSubPicProviderImpl::IsColorTypeSupported( int type )
+{
+    return type==MSP_RGB32;
+}
+
+STDMETHODIMP_(int) CSubPicProviderImpl::SetOutputColorType( int type )
+{
+    (type);
+    return MSP_RGB32;
 }
