@@ -1222,30 +1222,30 @@ inline double GetFloat(CStringW& buff, char sep = ',') //throw(...)
     return((double)ret);
 }
 
-inline CStringW::PXSTR NextStr(CStringW::PXSTR * buff, TCHAR sep = ',')
+inline CStringW::PCXSTR TryNextStr(CStringW::PXSTR * buff, WCHAR sep = WCHAR(','))
 {
     CStringW::PXSTR start = NULL;
     CStringW::PXSTR ret = NULL;
-    for(start=*buff; *start!=0 && *start==TCHAR(' '); start++) ;
-
+    for(start=*buff; *start!=0 && *start==WCHAR(' '); start++) ;
+    
+    *buff=start;
     ret = start;
 
     for( ;*start!=0 && *start!=sep; start++) ;
 
     if(*start!=0)
         *buff = start+1;
-    else
-        *buff = start;
+
     *start = 0;
 
     return(ret);
 }
 
-inline int NextInt(CStringW::PXSTR * buff, char sep = ',') //throw(...)
+inline int NextInt(CStringW::PXSTR * buff, WCHAR sep = WCHAR(',')) //throw(...)
 {
     CStringW str;
 
-    str = NextStr(buff, sep);
+    str = TryNextStr(buff, sep);
     str.MakeLower();
 
     CStringW fmtstr = str.GetLength() > 2 && (str.Left(2) == L"&h" || str.Left(2) == L"0x")
@@ -1258,11 +1258,11 @@ inline int NextInt(CStringW::PXSTR * buff, char sep = ',') //throw(...)
     return(ret);
 }
 
-inline double NextFloat(CStringW::PXSTR * buff, char sep = ',') //throw(...)
+inline double NextFloat(CStringW::PXSTR * buff, WCHAR sep = WCHAR(',')) //throw(...)
 {
     CStringW str;
 
-    str = NextStr(buff, sep);
+    str = TryNextStr(buff, sep);
     str.MakeLower();
 
     float ret;
@@ -1402,7 +1402,7 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
                 CString Style, Actor, Effect;
                 CRect marginRect;
 
-                if(version <= 4){NextStr(&__buff, '='); NextInt(&__buff);} /* Marked = */
+                if(version <= 4){TryNextStr(&__buff, '='); NextInt(&__buff);} /* Marked = */
                 if(version >= 5)layer = NextInt(&__buff);
                 hh1 = NextInt(&__buff, ':');
                 mm1 = NextInt(&__buff, ':');
@@ -1412,13 +1412,13 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
                 mm2 = NextInt(&__buff, ':');
                 ss2 = NextInt(&__buff, '.');
                 ms2_div10 = NextInt(&__buff);
-                Style = WToT(NextStr(&__buff));
-                Actor = WToT(NextStr(&__buff));
+                Style = WToT(TryNextStr(&__buff));
+                Actor = WToT(TryNextStr(&__buff));
                 marginRect.left = NextInt(&__buff);
                 marginRect.right = NextInt(&__buff);
                 marginRect.top = marginRect.bottom = NextInt(&__buff);
                 if(version >= 6)marginRect.bottom = NextInt(&__buff);
-                Effect = WToT(NextStr(&__buff));
+                Effect = WToT(TryNextStr(&__buff));
 
                 CStringW buff2 = __buff;
                 int len = min(Effect.GetLength(), buff2.GetLength());
