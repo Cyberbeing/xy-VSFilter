@@ -38,7 +38,7 @@ issue 14: incorrect result, random corruption at subtitle's right border with 14
 ==============================================================
 issue 15: incorrect result, fax/fay effects not working with 15.ass. Introduced before Commit:ce0314dce9552f62ed07b51ae5d11010e0bfb65e.(fixed)
 ==============================================================
-issue 16: crashed with (malformed) 16.ass while stock vsfilter don't. 
+issue 16: crashed with (malformed) 16.ass while stock vsfilter don't. (crash fixed, but sub still not showing)
 ==============================================================
 issue 17: failed to display vobsub format subtitle in color output other than rgb.
 ==============================================================
