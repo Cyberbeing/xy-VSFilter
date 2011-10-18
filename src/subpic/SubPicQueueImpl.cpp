@@ -23,7 +23,7 @@
 #include "SubPicQueueImpl.h"
 #include "../DSUtil/DSUtil.h"
 #include "CRect2.h"
-#include "MemSubPic.h"
+
 #include "SubPicProviderExWrapper.h"
 
 #define CSUBPICQUEUE_THREAD_PROC_WAIT_TIMEOUT	20
@@ -34,7 +34,7 @@
 // CSubPicQueueImpl
 //
 
-CSubPicQueueImpl::CSubPicQueueImpl(ISubPicExAllocator* pAllocator, HRESULT* phr)
+CSubPicQueueImpl::CSubPicQueueImpl(ISubPicExAllocator* pAllocator, HRESULT* phr, const int *prefered_colortype/*=NULL*/, int prefered_colortype_num/*=0*/)
 	: CUnknown(NAME("CSubPicQueueImpl"), NULL)
 	, m_pAllocator(pAllocator)
 	, m_rtNow(0)
@@ -51,6 +51,17 @@ CSubPicQueueImpl::CSubPicQueueImpl(ISubPicExAllocator* pAllocator, HRESULT* phr)
 		}
 		return;
 	}
+    for (int i=0;i<prefered_colortype_num;i++)
+    {
+        m_prefered_colortype.AddTail(prefered_colortype[i]);
+    }
+    if(m_prefered_colortype.IsEmpty())
+    {
+        m_prefered_colortype.AddTail(MSP_AY11);
+        m_prefered_colortype.AddTail(MSP_AYUV);
+        m_prefered_colortype.AddTail(MSP_AUYV);
+        m_prefered_colortype.AddTail(MSP_RGBA);
+    }
 }
 
 CSubPicQueueImpl::~CSubPicQueueImpl()
@@ -110,6 +121,21 @@ STDMETHODIMP CSubPicQueueImpl::SetSubPicProviderEx( ISubPicProviderEx* pSubPicPr
     {
         CAutoLock cAutoLock(&m_csSubPicProvider);
         m_pSubPicProviderEx = pSubPicProviderEx;
+
+        if(m_pSubPicProviderEx!=NULL && m_pAllocator!=NULL)
+        {
+            POSITION pos = m_prefered_colortype.GetHeadPosition();
+            while(pos!=NULL)
+            {
+                int color_type = m_prefered_colortype.GetNext(pos);
+                if( m_pSubPicProviderEx->IsColorTypeSupported( color_type ) &&
+                    m_pAllocator->IsSpdColorTypeSupported( color_type ) )
+                {
+                    m_pAllocator->SetSpdColorType(color_type);
+                    break;
+                }            
+            }
+        }
     }
     Invalidate();
 
@@ -484,7 +510,7 @@ DWORD CSubPicQueue::ThreadProc()
 				if(pos!=NULL)//!m_fBreakBuffering
 				{
 					reachEnd = false;
-					ASSERT(GetCount() < (size_t)nMaxSubPic);
+					ASSERT(m_Queue.GetCount() < (size_t)nMaxSubPic);
 
 					//DbgLog((LOG_TRACE, 3, "CSubPicQueue::ThreadProc => GetStartStop"));
 					pSubPicProviderEx->GetStartStop(pos, fps, rtStart, rtStop);
@@ -572,8 +598,8 @@ DWORD CSubPicQueue::ThreadProc()
 // CSubPicQueueNoThread
 //
 
-CSubPicQueueNoThread::CSubPicQueueNoThread(ISubPicExAllocator* pAllocator, HRESULT* phr)
-	: CSubPicQueueImpl(pAllocator, phr)
+CSubPicQueueNoThread::CSubPicQueueNoThread(ISubPicExAllocator* pAllocator, HRESULT* phr, const int *prefered_colortype/*=NULL*/, int prefered_colortype_num/*=0*/)
+	: CSubPicQueueImpl(pAllocator, phr, prefered_colortype, prefered_colortype_num)
 {
 }
 

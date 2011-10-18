@@ -28,16 +28,26 @@
 class CMemSubPic : public CSubPicExImpl
 {
 protected:
+    int m_type;
+    bool converted;
+
+    int m_alpha_blt_dst_type;
+
 	SubPicDesc m_spd;
 
 protected:
 	STDMETHODIMP_(void*) GetObject() const; // returns SubPicDesc*
-
+        
+    STDMETHODIMP AlphaBltAyuv_Yv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+    STDMETHODIMP AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+    
+    STDMETHODIMP UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList);
+    STDMETHODIMP UnlockOther(CAtlList<CRect>* dirtyRectList);
 public:
 
-	CMemSubPic(SubPicDesc& spd);
+	CMemSubPic(SubPicDesc& spd, int alpha_blt_dst_type);
 	virtual ~CMemSubPic();
-
+    
 	// ISubPic
 	STDMETHODIMP GetDesc(SubPicDesc& spd) const;
     STDMETHODIMP ClearDirtyRect(DWORD color);
@@ -48,7 +58,7 @@ public:
 	STDMETHODIMP CopyTo(ISubPicEx* pSubPic);
 	STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList);
 	STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);
-	
+
 };
 
 // CMemSubPicAllocator
@@ -56,12 +66,13 @@ public:
 class CMemSubPicAllocator : public CSubPicExAllocatorImpl
 {
 	int m_type;
+    int m_alpha_blt_dst_type;
 	CSize m_maxsize;
 
 	bool AllocEx(bool fStatic, ISubPicEx** ppSubPic);
 
 public:
-	CMemSubPicAllocator(int type, SIZE maxsize);
+	CMemSubPicAllocator(int alpha_blt_dst_type, SIZE maxsize, int type=-1);
 };
 
 

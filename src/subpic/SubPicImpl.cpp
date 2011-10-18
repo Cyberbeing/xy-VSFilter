@@ -199,7 +199,7 @@ STDMETHODIMP CSubPicImpl::NonDelegatingQueryInterface( REFIID riid, void** ppv )
 //
 
 CSubPicExImpl::CSubPicExImpl()
-    :CUnknown(NAME('CSubPicExImpl'),NULL),CSubPicImplHelper()
+    :CUnknown(NAME("CSubPicExImpl"),NULL),CSubPicImplHelper()
 {
 
 }
@@ -519,3 +519,13 @@ bool CSubPicExAllocatorImpl::Alloc( bool fStatic, ISubPic** ppSubPic )
     }
 }
 
+STDMETHODIMP_(int) CSubPicExAllocatorImpl::SetSpdColorType( int color_type )
+{
+    (color_type);
+    return MSP_RGBA;
+}
+
+STDMETHODIMP_(bool) CSubPicExAllocatorImpl::IsSpdColorTypeSupported( int type )
+{
+    return MSP_RGBA==type;
+}

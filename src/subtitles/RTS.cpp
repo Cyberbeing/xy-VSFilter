@@ -24,7 +24,6 @@
 #include <time.h>
 #include "RTS.h"
 #include "cache_manager.h"
-#include "../SubPic/MemSubPic.h"
 #include "../subpic/color_conv_table.h"
 #include "subpixel_position_controler.h"
 
@@ -1057,11 +1056,11 @@ CRect CLine::PaintShadow(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPo
             COLORREF shadow = revcolor(w->m_style.get().colors[3]) | (a<<24);
             DWORD sw[6] = {shadow, -1};
             //xy
-            if(spd.type == MSP_YUY2)
+            if(spd.type == MSP_AUYV)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AUYV);
             }
-            else if(spd.type == MSP_AYUV || spd.type == MSP_YV12 || spd.type == MSP_IYUV)
+            else if(spd.type == MSP_AYUV || spd.type == MSP_AY11)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AYUV);
             }
@@ -1100,11 +1099,11 @@ CRect CLine::PaintOutline(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CP
             COLORREF outline = revcolor(w->m_style.get().colors[2]) | ((0xff-aoutline)<<24);
             DWORD sw[6] = {outline, -1};
             //xy
-            if(spd.type == MSP_YUY2)
+            if(spd.type == MSP_AUYV)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AUYV);
             }
-            else if(spd.type == MSP_AYUV || spd.type == MSP_YV12 || spd.type == MSP_IYUV)
+            else if(spd.type == MSP_AYUV || spd.type == MSP_AY11)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AYUV);
             }
@@ -1173,13 +1172,13 @@ CRect CLine::PaintBody(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoin
         sw[4] = sw[2];
         sw[5] = 0x00ffffff;
         //xy
-        if(spd.type == MSP_YUY2)
+        if(spd.type == MSP_AUYV)
         {
             sw[0] =rgb2yuv(sw[0], XY_AUYV);
             sw[2] =rgb2yuv(sw[2], XY_AUYV);
             sw[4] =rgb2yuv(sw[4], XY_AUYV);
         }
-        else if(spd.type == MSP_AYUV || spd.type == MSP_YV12 || spd.type == MSP_IYUV)
+        else if(spd.type == MSP_AYUV || spd.type == MSP_AY11)
         {
             sw[0] =rgb2yuv(sw[0], XY_AYUV);
             sw[2] =rgb2yuv(sw[2], XY_AYUV);
@@ -3101,4 +3100,12 @@ STDMETHODIMP CRenderedTextSubtitle::Reload()
     CFileStatus s;
     if(!CFile::GetStatus(m_path, s)) return E_FAIL;
     return !m_path.IsEmpty() && Open(m_path, DEFAULT_CHARSET) ? S_OK : E_FAIL;
+}
+
+STDMETHODIMP_(bool) CRenderedTextSubtitle::IsColorTypeSupported( int type )
+{
+    return type==MSP_AY11 ||
+           type==MSP_AYUV ||
+           type==MSP_AUYV ||
+           type==MSP_RGBA;
 }

@@ -311,8 +311,6 @@ public:
 
 class CSubPicExAllocatorImpl : public CUnknown, public ISubPicExAllocator
 {
-    CComPtr<ISubPicEx> m_pStatic;
-
 private:
     CSize m_cursize;
     CRect m_curvidrect;
@@ -322,8 +320,8 @@ private:
     
     virtual bool AllocEx(bool fStatic, ISubPicEx** ppSubPic) = 0;
 protected:
+    CComPtr<ISubPicEx> m_pStatic;
     bool m_fPow2Textures;
-
 public:
     CSubPicExAllocatorImpl(SIZE cursize, bool fDynamicWriteOnly, bool fPow2Textures);
 
@@ -343,6 +341,9 @@ public:
     };
 
     // ISubPicExAllocator
+    STDMETHODIMP_(bool) IsSpdColorTypeSupported(int type);
+    STDMETHODIMP_(int) SetSpdColorType(int color_type);
+
     STDMETHODIMP GetStaticEx(ISubPicEx** ppSubPic);
     STDMETHODIMP AllocDynamicEx(ISubPicEx** ppSubPic);
 };

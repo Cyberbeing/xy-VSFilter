@@ -22,6 +22,10 @@ struct ColorConvTable
     static const ColorConvTable* GetDefaultColorConvTable() { return GetColorConvTable(s_default_yuv_type); }
 
     YUV_Type yuv_type;
+
+    unsigned char Clip_base[256*3];
+    const unsigned char* Clip;
+
     int c2y_cyb;
     int c2y_cyg;
     int c2y_cyr;

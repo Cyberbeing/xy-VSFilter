@@ -40,5 +40,5 @@ issue 15: incorrect result, fax/fay effects not working with 15.ass. Introduced 
 ==============================================================
 issue 16: crashed with (malformed) 16.ass while stock vsfilter don't. (fixed)
 ==============================================================
-issue 17: failed to display vobsub format subtitle in color output other than rgb.
+issue 17: failed to display vobsub format subtitle in color output other than rgb.(fixed)
 ==============================================================

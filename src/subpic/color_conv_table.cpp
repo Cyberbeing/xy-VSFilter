@@ -111,15 +111,15 @@ void ColorConvTable::InitBT709ColorConvTable()
 }
 
 void ColorConvTable::ColorConvInit()
-{        
-    int i;
-    //for(i = 0; i < 256; i++)
-    //{
-    //    Clip_base[i] = 0;
-    //    Clip_base[i+256] = i;
-    //    Clip_base[i+512] = 255;
-    //}
-    for(i = 0; i < 256; i++)
+{    
+    Clip = Clip_base + 256;
+    for(int i = 0; i < 256; i++)
+    {
+        Clip_base[i] = 0;
+        Clip_base[i+256] = i;
+        Clip_base[i+512] = 255;
+    }
+    for(int i = 0; i < 256; i++)
     {
         c2y_yb[i] = c2y_cyb*i;
         c2y_yg[i] = c2y_cyg*i;

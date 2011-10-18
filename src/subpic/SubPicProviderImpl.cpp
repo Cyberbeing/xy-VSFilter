@@ -78,11 +78,6 @@ STDMETHODIMP CSubPicProviderImpl::RenderEx( SubPicDesc& spd, REFERENCE_TIME rt, 
 
 STDMETHODIMP_(bool) CSubPicProviderImpl::IsColorTypeSupported( int type )
 {
-    return type==MSP_RGB32;
+    return type==MSP_RGBA;
 }
 
-STDMETHODIMP_(int) CSubPicProviderImpl::SetOutputColorType( int type )
-{
-    (type);
-    return MSP_RGB32;
-}

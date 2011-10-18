@@ -26,7 +26,6 @@
 #include <algorithm>
 #include "Rasterizer.h"
 #include "SeparableFilter.h"
-#include "../SubPic/MemSubPic.h"
 #include "xy_logger.h"
 #include <boost/flyweight/key_value.hpp>
 
@@ -944,7 +943,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRec
     // CPUID from VDub
     bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
     bool fSingleColor = (switchpts[1]==0xffffffff);
-    bool fYV12 = spd.type==MSP_YV12 || spd.type==MSP_IYUV;
+    bool fYV12 = (spd.type==MSP_AY11);
     int draw_method = 0;
     //	if(pAlphaMask)
     //		draw_method |= DM::ALPHA_MASK;

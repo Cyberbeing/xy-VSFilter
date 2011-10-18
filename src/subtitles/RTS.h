@@ -364,6 +364,8 @@ public:
     STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox);
     STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
 
+    STDMETHODIMP_(bool) IsColorTypeSupported(int type);
+
     // IPersist
     STDMETHODIMP GetClassID(CLSID* pClassID);
 

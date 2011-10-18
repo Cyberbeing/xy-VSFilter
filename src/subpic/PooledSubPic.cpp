@@ -55,34 +55,10 @@ bool STDMETHODCALLTYPE CPooledSubPicAllocator::InitPool( int capacity )
 		}
 	}
 
-	SubPicDesc spd;
 	while(_capacity<capacity)
 	{
-		spd.type = _type;
-		spd.w = _maxsize.cx;
-		spd.h = _maxsize.cy;
-//		spd.bpp = 32;
-    	spd.bpp = (spd.type == MSP_YV12 || spd.type == MSP_IYUV) ? 8 : 32;
-		spd.pitch = (spd.w*spd.bpp)>>3;
-
-//		if(!(spd.bits = new BYTE[spd.pitch*spd.h]))
-        if(spd.type == MSP_YV12 || spd.type == MSP_IYUV)
-        {
-            spd.bits = xy_malloc(spd.pitch*spd.h*4);
-        }
-        else
-        {
-            spd.bits = xy_malloc(spd.pitch*spd.h);
-        }
-		if(!spd.bits)
+		if(!(temp = DoAlloc()))
 		{
-			ASSERT(0);
-			return(false);
-		}
-
-		if(!(temp = new CPooledSubPic(spd, this)))
-		{
-			delete[] spd.bits;
 			ASSERT(0);
 			return(false);
 		}
@@ -95,11 +71,32 @@ bool STDMETHODCALLTYPE CPooledSubPicAllocator::InitPool( int capacity )
 	return true;
 }
 
-CPooledSubPicAllocator::CPooledSubPicAllocator( int type, SIZE maxsize, int capacity )
+CPooledSubPicAllocator::CPooledSubPicAllocator( int alpha_blt_dst_type, SIZE maxsize, int capacity, int type/*=-1*/ )
 	:CSubPicExAllocatorImpl(maxsize, false, false)
-	, _type(type)
+    , _alpha_blt_dst_type(alpha_blt_dst_type)
 	, _maxsize(maxsize)
+    , _type(type)
 {
+    if(_type==-1)
+    {
+        switch(alpha_blt_dst_type)
+        {
+        case MSP_YUY2:
+            _type = MSP_AUYV;
+            break;
+        case MSP_AYUV:
+            _type = MSP_AYUV;
+            break;
+        case MSP_IYUV:
+        case MSP_YV12:
+            _type = MSP_AY11;
+            break;
+        default:
+            _type = MSP_RGBA;
+            break;
+        }
+    }
+
 	_capacity = 0;
 	InitPool(capacity);
 }
@@ -108,12 +105,21 @@ CPooledSubPicAllocator::CPooledSubPicAllocator( int type, SIZE maxsize, int capa
 bool CPooledSubPicAllocator::AllocEx( bool fStatic, ISubPicEx** ppSubPic )
 {
 	if(!ppSubPic)
+    {
 		return(false);
+    }
 	{
 		CAutoLock lock(&_poolLock);
 		if(!_free.IsEmpty())
 		{
 			CPooledSubPic *item = _free.RemoveHead();
+            if(item->m_type!=_type)
+            {
+                item->_pool = NULL;
+                item->Release();
+                item = DoAlloc();
+                item->AddRef();
+            }
 			_using.AddTail(item);
 			*ppSubPic = item;
 			item->AddRef();
@@ -121,19 +127,10 @@ bool CPooledSubPicAllocator::AllocEx( bool fStatic, ISubPicEx** ppSubPic )
 	}
 	if(*ppSubPic!=NULL)
 	{
-		//SubPicDesc* pSpd = (*ppSubPic)->GetObject();
-		//pSpd->w = _maxsize.cx;
-		//pSpd->h = _maxsize.cy;
-		//pSpd->bpp = 32;
-		//pSpd->pitch = ((spd->w) * (pSpd->bpp))>>3;
-		//pSpd->type = _type;
-
-		//DbgLog((LOG_TRACE, 3, "Alloc succeed: free:%d", _free.GetCount()));
 		return true;
 	}
 	else
 	{
-		//DbgLog((LOG_TRACE, 3, "Alloc failed: free:%d", _free.GetCount()));
 		return false;
 	}
 }
@@ -154,6 +151,66 @@ CPooledSubPicAllocator::~CPooledSubPicAllocator()
 		item->_pool = NULL;
 		item->Release();
 	}
+}
+
+STDMETHODIMP_(int) CPooledSubPicAllocator::SetSpdColorType( int color_type )
+{
+    if(_type!=color_type)
+    {
+        m_pStatic = NULL;
+        _type = color_type;
+    }
+    return _type;
+}
+
+STDMETHODIMP_(bool) CPooledSubPicAllocator::IsSpdColorTypeSupported( int type )
+{
+    if( (type==MSP_RGBA) 
+        ||
+        (type==MSP_AUYV &&  _alpha_blt_dst_type == MSP_YUY2)
+        ||
+        (type==MSP_AYUV &&  _alpha_blt_dst_type == MSP_AYUV)//ToDo: fix me MSP_AYUV 
+        ||
+        (type==MSP_AY11 && (_alpha_blt_dst_type == MSP_IYUV ||
+                            _alpha_blt_dst_type == MSP_YV12)) )
+    {
+        return true;
+    }
+    return false;
+}
+
+CPooledSubPic* CPooledSubPicAllocator::DoAlloc()
+{
+    SubPicDesc spd;
+    spd.type = _type;
+    spd.w = _maxsize.cx;
+    spd.h = _maxsize.cy;
+    //		spd.bpp = 32;
+    spd.bpp = (_type == MSP_AY11) ? 8 : 32;
+    spd.pitch = (spd.w*spd.bpp)>>3;
+
+    //		if(!(spd.bits = new BYTE[spd.pitch*spd.h]))
+    if(_type == MSP_AY11)
+    {
+        spd.bits = xy_malloc(spd.pitch*spd.h*4);
+    }
+    else
+    {
+        spd.bits = xy_malloc(spd.pitch*spd.h);
+    }
+    if(!spd.bits)
+    {
+        ASSERT(0);
+        return(NULL);
+    }
+    CPooledSubPic* temp = NULL;
+    if(!(temp = new CPooledSubPic(spd, _alpha_blt_dst_type, this)))
+    {
+        delete[] spd.bits;
+        ASSERT(0);
+        return(NULL);
+    }
+    return temp;
 }
 
 STDMETHODIMP_(ULONG) CPooledSubPic::Release( void )

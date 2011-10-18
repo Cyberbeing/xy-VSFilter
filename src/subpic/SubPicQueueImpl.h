@@ -27,6 +27,8 @@
 
 class CSubPicQueueImpl : public CUnknown, public ISubPicQueue, public ISubPicQueueEx
 {
+    CAtlList<int> m_prefered_colortype;
+
 	CCritSec m_csSubPicProvider;
 	CComPtr<ISubPicProviderEx> m_pSubPicProviderEx;
 
@@ -40,7 +42,7 @@ protected:
 	HRESULT RenderTo(ISubPicEx* pSubPic, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, double fps, BOOL bIsAnimated);
 
 public:
-	CSubPicQueueImpl(ISubPicExAllocator* pAllocator, HRESULT* phr);
+	CSubPicQueueImpl(ISubPicExAllocator* pAllocator, HRESULT* phr, const int *prefered_colortype=NULL, int prefered_colortype_num=0);
 	virtual ~CSubPicQueueImpl();
 
 	DECLARE_IUNKNOWN;
@@ -119,17 +121,19 @@ class CSubPicQueueNoThread : public CSubPicQueueImpl
 	CCritSec m_csLock;
 	CComPtr<ISubPicEx> m_pSubPic;
 
+    CAtlList<int> m_prefered_colortype;
 public:
-	CSubPicQueueNoThread(ISubPicExAllocator* pAllocator, HRESULT* phr);
+	CSubPicQueueNoThread(ISubPicExAllocator* pAllocator, HRESULT* phr, const int *prefered_colortype=NULL, int prefered_colortype_num=0);
 	virtual ~CSubPicQueueNoThread();
 
 	// ISubPicQueue
-
 	STDMETHODIMP Invalidate(REFERENCE_TIME rtInvalidate = -1);
 	STDMETHODIMP_(bool) LookupSubPic(REFERENCE_TIME rtNow, ISubPic** ppSubPic);
-    STDMETHODIMP_(bool) LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSubPic);
-
+    
 	STDMETHODIMP GetStats(int& nSubPics, REFERENCE_TIME& rtNow, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop);
 	STDMETHODIMP GetStats(int nSubPic, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop);
+
+    // ISubPicQueueEx
+    STDMETHODIMP_(bool) LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSubPic);
 };
 

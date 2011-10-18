@@ -25,7 +25,19 @@
 #include <atlcoll.h>
 #include "CoordGeom.h"
 
-enum ColorType {MSP_RGB32,MSP_RGB24,MSP_RGB16,MSP_RGB15,MSP_YUY2,MSP_YV12,MSP_IYUV,MSP_AYUV,MSP_RGBA};
+enum ColorType {    
+    MSP_RGB32,
+    MSP_RGB24,
+    MSP_RGB16,
+    MSP_RGB15,
+    MSP_YUY2,
+    MSP_YV12,
+    MSP_IYUV,
+    MSP_AYUV,
+    MSP_RGBA,
+    MSP_AY11, //AYUV in planar form
+    MSP_AUYV
+};
 
 #pragma pack(push, 1)
 struct SubPicDesc {
@@ -90,7 +102,7 @@ public ISubPic {
     STDMETHOD (GetDirtyRects) (CAtlList<const CRect>& dirtyRectList /*[out]*/) const PURE;
     STDMETHOD (SetDirtyRectEx) (CAtlList<CRect>* dirtyRectList /*[in]*/) PURE;
     
-	STDMETHOD (Unlock) (CAtlList<CRect>* dirtyRectList /*[in]*/) PURE;    
+	STDMETHOD (Unlock) (CAtlList<CRect>* dirtyRectList /*[in]*/) PURE;
 };
 
 //
@@ -115,6 +127,9 @@ public IUnknown {
 interface __declspec(uuid("379DD04B-F132-475E-9901-AB02FF4351A7"))
 ISubPicExAllocator :
 public ISubPicAllocator {
+    STDMETHOD_(bool, IsSpdColorTypeSupported) (int type) PURE;
+    STDMETHOD_(int, SetSpdColorType) (int color_type) PURE;
+
     STDMETHOD (GetStaticEx) (ISubPicEx** ppSubPic /*[out]*/) PURE;
     STDMETHOD (AllocDynamicEx) (ISubPicEx** ppSubPic /*[out]*/) PURE;
 };
@@ -148,7 +163,6 @@ public ISubPicProvider {
     STDMETHOD (RenderEx) (SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList) PURE;
 
     STDMETHOD_(bool, IsColorTypeSupported) (int type) PURE;
-    STDMETHOD_(int, SetOutputColorType) (int type) PURE;//Important! May failed!
 };
 
 //

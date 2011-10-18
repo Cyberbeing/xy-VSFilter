@@ -60,6 +60,5 @@ public:
     STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
 
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
-    STDMETHODIMP_(int) SetOutputColorType(int type);//Important! May failed!
 };
 

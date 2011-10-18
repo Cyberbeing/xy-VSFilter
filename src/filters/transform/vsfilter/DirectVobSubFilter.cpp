@@ -28,7 +28,6 @@
 #include "VSFilter.h"
 #include "systray.h"
 #include "../../../DSUtil/MediaTypes.h"
-#include "../../../SubPic/MemSubPic.h"
 #include "../../../SubPic/SubPicQueueImpl.h"
 #include "../../../SubPic/PooledSubPic.h"
 #include "../../../subpic/color_conv_table.h"
@@ -584,8 +583,12 @@ void CDirectVobSubFilter::InitSubPicQueue()
         m_pTempPicBuff.Allocate(m_spd.pitch*m_spd.h);
 	m_spd.bits = (void*)m_pTempPicBuff;
 
-	//CComPtr<ISubPicExAllocator> pSubPicAllocator = new CMemSubPicAllocator(m_spd.type, CSize(m_w, m_h));
+	//CComPtr<ISubPicExAllocator> pSubPicAllocator = new CMemSubPicAllocator(m_spd.type, CSize(m_w, m_h));    
 	CComPtr<ISubPicExAllocator> pSubPicAllocator = new CPooledSubPicAllocator(m_spd.type, CSize(m_w, m_h), MAX_SUBPIC_QUEUE_LENGTH + 1);
+    if(pSubPicAllocator==NULL)
+    {
+        MessageBox(NULL, _T("FUCK!"), _T("FUCK!"), 0);
+    }
 
 	CSize video(bihIn.biWidth, bihIn.biHeight), window = video;
 	if(AdjustFrameSize(window)) video += video;
