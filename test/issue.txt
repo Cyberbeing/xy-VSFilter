@@ -42,3 +42,5 @@ issue 16: crashed with (malformed) 16.ass while stock vsfilter don't. (fixed)
 ==============================================================
 issue 17: failed to display vobsub format subtitle in color output other than rgb.(fixed)
 ==============================================================
+issue 18: YUY2 output not working right.
+==============================================================
