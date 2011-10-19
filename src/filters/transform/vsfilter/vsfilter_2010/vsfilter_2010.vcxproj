@@ -117,7 +117,7 @@
       <ModuleDefinitionFile>$(SolutionDir)VSFilter.def</ModuleDefinitionFile>
       <DelayLoadDLLs>oleacc.dll</DelayLoadDLLs>
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\..\lib</AdditionalLibraryDirectories>
-      <Profile>true</Profile>
+      <Profile>false</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
