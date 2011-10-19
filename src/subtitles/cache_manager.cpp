@@ -7,22 +7,22 @@
 
 std::size_t hash_value(const CWord& key)
 {
-    return( CStringElementTraits<CString>::Hash(key.m_str.get()) );
+    return( CStringElementTraits<CString>::Hash(key.m_str) );
 }
 
 std::size_t hash_value(const CWordCacheKey& key)
 {
-    return( CStringElementTraits<CString>::Hash(key.m_str.get()) );
+    return( CStringElementTraits<CString>::Hash(key.m_str) );
 }
 
 std::size_t hash_value(const OverlayKey& key)
 {
-    return( CStringElementTraits<CString>::Hash(key.m_str.get()) ^ key.m_p.x ^ key.m_p.y );
+    return( CStringElementTraits<CString>::Hash(key.m_str) ^ key.m_p.x ^ key.m_p.y );
 }
 
 std::size_t hash_value( const PathDataCacheKey& key )
 {
-    return( CStringElementTraits<CString>::Hash(key.m_str.get()) ); 
+    return( CStringElementTraits<CString>::Hash(key.m_str) ); 
 }
 
 std::size_t hash_value( const ScanLineDataCacheKey& key )

@@ -16,7 +16,7 @@ public:
     bool operator==(const CWordCacheKey& key)const;
     bool operator==(const CWord& key)const;
 
-    FwStringW m_str;
+    CStringW m_str;
     FwSTSStyle m_style;
     int m_ktype, m_kstart, m_kend;
 };
@@ -29,7 +29,7 @@ public:
     PathDataCacheKey(const FwSTSStyle& style, const CStringW& str):m_str(str),m_style(style){}
     bool operator==(const PathDataCacheKey& key)const
     {
-        return m_str==key.m_str && ( m_style==key.m_style || CompareSTSStyle(m_style.get(), key.m_style.get()) );
+        return m_str==key.m_str && ( m_style==key.m_style || CompareSTSStyle(m_style, key.m_style) );
     }
     bool operator==(const CWord& key)const
     {
@@ -38,7 +38,7 @@ public:
 
     static bool CompareSTSStyle(const STSStyle& lhs, const STSStyle& rhs);
 protected:
-    FwStringW m_str;
+    CStringW m_str;
     FwSTSStyle m_style;
 
     friend std::size_t hash_value(const PathDataCacheKey& key);

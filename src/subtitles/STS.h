@@ -39,7 +39,7 @@ public:
 	COLORREF colors[4]; // usually: {primary, secondary, outline/background, shadow}
 	BYTE	alpha[4];
     int		charSet;
-    FwString fontName;
+    CString fontName;
 	double	fontSize; // height
 	double	fontScaleX, fontScaleY; // percent
 	double	fontSpacing; // +/- pixels
@@ -73,19 +73,10 @@ typedef ::boost::flyweights::flyweight<STSStyle, ::boost::flyweights::no_locking
 //for FwSTSStyle
 static inline std::size_t hash_value(const STSStyle& s)
 {
-    return CStringElementTraits<CString>::Hash(s.fontName.get()) ^ s.colors[0] ^ s.colors[2]; //fix me
+    return CStringElementTraits<CString>::Hash(s.fontName) ^ s.colors[0] ^ s.colors[2]; //fix me
 }
 
-class CFwStringTraits:public CElementTraits<FwString>
-{
-public:
-    static ULONG Hash(_In_ const FwString& element) throw()
-    {
-        return( CStringElementTraits<CString>::Hash(element.get()) );
-    }
-};
-
-class CSTSStyleMap : public CAtlMap<FwString, STSStyle*, CFwStringTraits >
+class CSTSStyleMap : public CAtlMap<CString, STSStyle*, CStringElementTraits<CString> >
 {
 public:
 	CSTSStyleMap() {}
@@ -97,7 +88,7 @@ typedef struct
 {
 	CStringW str;
 	bool fUnicode;
-	FwString style, actor, effect;
+	CString style, actor, effect;
 	CRect marginRect;
 	int layer;
 	int start, end;
@@ -168,11 +159,11 @@ public:
 	bool Open(BYTE* data, int len, int CharSet, CString name);
 	bool SaveAs(CString fn, exttype et, double fps = -1, CTextFile::enc = CTextFile::ASCII);
    
-	void Add(CStringW str, bool fUnicode, int start, int end, FwString style = FwString(CString(_T("Default"))), 
-        const FwString& actor = FwString(CString(_T(""))), 
-        const FwString& effect = FwString(CString(_T(""))), 
+	void Add(CStringW str, bool fUnicode, int start, int end, CString style = CString(_T("Default")), 
+        const CString& actor = CString(_T("")), 
+        const CString& effect = CString(_T("")), 
         const CRect& marginRect = CRect(0,0,0,0), int layer = 0, int readorder = -1);
-    //void Add(CStringW str, bool fUnicode, int start, int end, const FwString& style, const FwString& actor, const FwString& effect, const CRect& marginRect, int layer, int readorder);
+    //void Add(CStringW str, bool fUnicode, int start, int end, const CString& style, const CString& actor, const CString& effect, const CRect& marginRect, int layer, int readorder);
     //void Add(CStringW str, bool fUnicode, int start, int end);
 
     //add an STSEntry obj to the array
@@ -182,7 +173,7 @@ public:
 
 	STSStyle* CreateDefaultStyle(int CharSet);
 	void ChangeUnknownStylesToDefault();
-	void AddStyle(FwString name, STSStyle* style); // style will be stored and freed in Empty() later
+	void AddStyle(CString name, STSStyle* style); // style will be stored and freed in Empty() later
 	bool CopyStyles(const CSTSStyleMap& styles, bool fAppend = false);
 
 	bool SetDefaultStyle(STSStyle& s);

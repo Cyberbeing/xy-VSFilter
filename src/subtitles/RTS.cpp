@@ -98,7 +98,7 @@ CWord::CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     , m_fLineBreak(false), m_fWhiteSpaceChar(false)
     //, m_pOpaqueBox(NULL)
 {
-    if(m_str.get().IsEmpty())
+    if(m_str.IsEmpty())
     {
         m_fWhiteSpaceChar = m_fLineBreak = true;
     }
@@ -118,17 +118,15 @@ bool CWord::Append(const SharedPtrCWord& w)
     if(!(m_style == w->m_style)
             || m_fLineBreak || w->m_fLineBreak
             || w->m_kstart != w->m_kend || m_ktype != w->m_ktype) return(false);
-    m_fWhiteSpaceChar = m_fWhiteSpaceChar && w->m_fWhiteSpaceChar;
-    CStringW temp = m_str.get();
-    temp += w->m_str.get();
-    m_str = temp;
+    m_fWhiteSpaceChar = m_fWhiteSpaceChar && w->m_fWhiteSpaceChar;    
+    m_str += w->m_str;    
     m_width += w->m_width;
     return(true);
 }
 
 void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, OverlayList* overlay_list )
 {
-    if(!word->m_str.get() || overlay_list==NULL) return;
+    if(!word->m_str || overlay_list==NULL) return;
 
     CPoint psub = SubpixelPositionControler::GetGlobalControler().GetSubpixel(p);
     CPoint trans_org = org - p;
@@ -658,7 +656,7 @@ CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     if(m_style.get().fontSpacing || (long)GetVersion() < 0)
     {
         bool bFirstPath = true;
-        for(LPCWSTR s = m_str.get(); *s; s++)
+        for(LPCWSTR s = m_str; *s; s++)
         {
             CSize extent;
             if(!GetTextExtentPoint32W(g_hDC, s, 1, &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return;}
@@ -669,7 +667,7 @@ CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     else
     {
         CSize extent;
-        if(!GetTextExtentPoint32W(g_hDC, m_str.get(), wcslen(m_str.get()), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return;}
+        if(!GetTextExtentPoint32W(g_hDC, m_str, wcslen(m_str), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return;}
         m_width += extent.cx;
     }
     m_width = (int)(m_style.get().fontScaleX/100*m_width + 4) >> 3;
@@ -700,7 +698,7 @@ bool CText::CreatePath(SharedPtrPathData path_data)
     if(m_style.get().fontSpacing || (long)GetVersion() < 0)
     {
         bool bFirstPath = true;
-        for(LPCWSTR s = m_str.get(); *s; s++)
+        for(LPCWSTR s = m_str; *s; s++)
         {
             CSize extent;
             if(!GetTextExtentPoint32W(g_hDC, s, 1, &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);}
@@ -714,9 +712,9 @@ bool CText::CreatePath(SharedPtrPathData path_data)
     else
     {
         CSize extent;
-        if(!GetTextExtentPoint32W(g_hDC, m_str.get(), m_str.get().GetLength(), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);}
+        if(!GetTextExtentPoint32W(g_hDC, m_str, m_str.GetLength(), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);}
         path_data->BeginPath(g_hDC);
-        TextOutW(g_hDC, 0, 0, m_str.get(), m_str.get().GetLength());
+        TextOutW(g_hDC, 0, 0, m_str, m_str.GetLength());
         path_data->EndPath(g_hDC);
     }
     SelectFont(g_hDC, hOldFont);
@@ -732,7 +730,7 @@ CPolygon::CPolygon(const FwSTSStyle& style, CStringW str, int ktype, int kstart,
     ParseStr();
 }
 
-CPolygon::CPolygon(CPolygon& src) : CWord(src.m_style, src.m_str.get(), src.m_ktype, src.m_kstart, src.m_kend)
+CPolygon::CPolygon(CPolygon& src) : CWord(src.m_style, src.m_str, src.m_ktype, src.m_kstart, src.m_kend)
 {
 	m_scalex = src.m_scalex;
 	m_scaley = src.m_scaley;
@@ -777,7 +775,7 @@ bool CPolygon::ParseStr()
     if(m_pathTypesOrg.GetCount() > 0) return(true);
     CPoint p;
     int j, lastsplinestart = -1, firstmoveto = -1, lastmoveto = -1;
-    CStringW str = m_str.get();
+    CStringW str = m_str;
     str.SpanIncluding(L"mnlbspc 0123456789");
     str.Replace(L"m", L"*m");
     str.Replace(L"n", L"*n");
@@ -2291,7 +2289,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& 
         case CMD_r:
             {
                 STSStyle* val;
-                style = (!p.IsEmpty() && m_styles.Lookup(FwString(WToT(p)), val) && val) ? *val : org;
+                style = (!p.IsEmpty() && m_styles.Lookup(WToT(p), val) && val) ? *val : org;
                 break;
             }
         case CMD_shad:

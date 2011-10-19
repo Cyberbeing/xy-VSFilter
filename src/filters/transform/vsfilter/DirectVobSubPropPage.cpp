@@ -351,7 +351,7 @@ bool CDVSMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 						if(dlg.DoModal() == IDOK)
 						{
 							m_defStyle = dlg.m_stss;
-							CString str = m_defStyle.fontName.get();
+							CString str = m_defStyle.fontName;
 							if(str.GetLength() > 18) str = str.Left(16).TrimRight() + _T("...");
 							m_font.SetWindowText(str);
 						}
@@ -433,7 +433,7 @@ void CDVSMainPPage::UpdateControlData(bool fSave)
 		m_subposy.SetRange(-20, 120);
 		m_subposy.SetPos(m_PlacementYperc);
 		m_subposy.EnableWindow(m_fOverridePlacement);
-		m_font.SetWindowText(m_defStyle.fontName.get());
+		m_font.SetWindowText(m_defStyle.fontName);
 		m_forcedsubs.SetCheck(m_fOnlyShowForcedVobSubs);
 		m_langs.ResetContent();
 		m_langs.EnableWindow(m_nLangs > 0);

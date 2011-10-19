@@ -76,7 +76,7 @@ class CWord
     CWord(const CWord&);//disable default copy constructor
 
 protected:
-    FwStringW m_str;
+    CStringW m_str;
 
     virtual bool CreatePath(SharedPtrPathData path_data) = 0;
 

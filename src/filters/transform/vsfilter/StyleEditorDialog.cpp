@@ -125,7 +125,7 @@ void CStyleEditorDialog::UpdateControlData(bool fSave)
 	}
 	else
 	{
-		m_font.SetWindowText(m_stss.fontName.get());
+		m_font.SetWindowText(m_stss.fontName);
 		m_iCharset = -1;
 		for(int i = 0; i < CharSetLen; i++)
 		{

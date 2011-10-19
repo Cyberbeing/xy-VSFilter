@@ -190,7 +190,7 @@ CHtmlColorMap::CHtmlColorMap()
 
 CHtmlColorMap g_colors;
 
-FwString g_default_style(CString(_T("Default")));
+CString g_default_style(_T("Default"));
 
 //
 
@@ -614,7 +614,7 @@ static bool OpenSubViewer(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
                 i = j;
 
                 if(tag == L"font")
-                    font = def.fontName.get().CompareNoCase(WToT(param)) ? param : L"";
+                    font = def.fontName.CompareNoCase(WToT(param)) ? param : L"";
                 else if(tag == L"colf")
                     color = def.colors[0] != wcstol(((LPCWSTR)param)+2, 0, 16) ? param : L"";
                 else if(tag == L"size")
@@ -883,7 +883,7 @@ static bool OpenMicroDVD(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
                     style = buff.Mid(1, i-1);
                     style.MakeUpper();
                     if(style.GetLength()) {CString str = style.Mid(1); str.MakeLower(); style = style.Left(1) + str;}
-                    ret.AddStyle(FwString(style), s);
+                    ret.AddStyle(style, s);
                     CharSet = s->charSet;
                     continue;
                 }
@@ -903,7 +903,7 @@ static bool OpenMicroDVD(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
                 MicroDVD2SSA(buff.Mid(buff.Find('}', buff.Find('}')+1)+1), file->IsUnicode(), CharSet),
                 file->IsUnicode(),
                 start, end,
-                FwString(style));
+                style);
 
             if(fCheck)
             {
@@ -1563,7 +1563,7 @@ if(sver <= 4)   style->scrAlignment = (style->scrAlignment&4) ? ((style->scrAlig
 
                 StyleName.TrimLeft('*');
 
-                ret.AddStyle(FwString(StyleName), style);
+                ret.AddStyle(StyleName, style);
             }
             catch(...)
             {
@@ -1728,7 +1728,7 @@ static bool OpenXombieSub(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
                 style->shadowDepthX = max(style->shadowDepthX, 0);
                 style->shadowDepthY = max(style->shadowDepthY, 0);
 
-                ret.AddStyle(FwString(StyleName), style);
+                ret.AddStyle(StyleName, style);
             }
             catch(...)
             {
@@ -1769,7 +1769,7 @@ static bool OpenXombieSub(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
                     file->IsUnicode(),
                     (((hh1*60 + mm1)*60) + ss1)*1000 + ms1,
                     (((hh2*60 + mm2)*60) + ss2)*1000 + ms2,
-                    FwString(Style), FwString(Actor), FwString(_T("")),
+                    Style, Actor, _T(""),
                     marginRect,
                     layer);
             }
@@ -1968,7 +1968,7 @@ void CSTSStyleMap::Free()
     POSITION pos = GetStartPosition();
     while(pos)
     {
-        FwString key;
+        CString key;
         STSStyle* val;
         GetNextAssoc(pos, key, val);
         delete val;
@@ -1984,7 +1984,7 @@ bool CSimpleTextSubtitle::CopyStyles(const CSTSStyleMap& styles, bool fAppend)
     POSITION pos = styles.GetStartPosition();
     while(pos)
     {
-        FwString key;
+        CString key;
         STSStyle* val;
         styles.GetNextAssoc(pos, key, val);
 
@@ -2007,17 +2007,16 @@ void CSimpleTextSubtitle::Empty()
     RemoveAll();
 }
 
-void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, FwString style, const FwString& actor, const FwString& effect, const CRect& marginRect, int layer, int readorder)
+void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, CString style, const CString& actor, const CString& effect, const CRect& marginRect, int layer, int readorder)
 {
     if(start > end || str.Trim().IsEmpty() ) return;
 
     str.Remove('\r');
     str.Replace(L"\n", L"\\N");
-    if(style.get().IsEmpty()) style = g_default_style;
+    if(style.IsEmpty()) style = g_default_style;
     else if(style!=g_default_style)
     {
-        CString style_str = style.get();
-        style = style_str.TrimLeft('*');
+        style.TrimLeft('*');
     }
 
     STSEntry sub;
@@ -2210,7 +2209,7 @@ STSStyle* CSimpleTextSubtitle::CreateDefaultStyle(int CharSet)
 
 void CSimpleTextSubtitle::ChangeUnknownStylesToDefault()
 {
-    CAtlMap<FwString, STSStyle*, CFwStringTraits > unknown;
+    CAtlMap<CString, STSStyle*, CStringElementTraits<CString> > unknown;
     bool fReport = true;
 
     for(size_t i = 0; i < GetCount(); i++)
@@ -2225,7 +2224,7 @@ void CSimpleTextSubtitle::ChangeUnknownStylesToDefault()
                 if(fReport)
                 {
                     CString msg;
-                    msg.Format(_T("Unknown style found: \"%s\", changed to \"Default\"!\n\nPress Cancel to ignore further warnings."), stse.style.get());
+                    msg.Format(_T("Unknown style found: \"%s\", changed to \"Default\"!\n\nPress Cancel to ignore further warnings."), stse.style);
                     if(MessageBox(NULL, msg, _T("Warning"), MB_OKCANCEL|MB_ICONWARNING) != IDOK) fReport = false;
                 }
 
@@ -2237,11 +2236,11 @@ void CSimpleTextSubtitle::ChangeUnknownStylesToDefault()
     }
 }
 
-void CSimpleTextSubtitle::AddStyle(FwString name, STSStyle* style)
+void CSimpleTextSubtitle::AddStyle(CString name, STSStyle* style)
 {
     int i, j;
 
-    if(name.get().IsEmpty()) name = g_default_style;
+    if(name.IsEmpty()) name = g_default_style;
 
     STSStyle* val;
     if(m_styles.Lookup(name, val))
@@ -2251,7 +2250,7 @@ void CSimpleTextSubtitle::AddStyle(FwString name, STSStyle* style)
             delete style;
             return;
         }
-        const CString& name_str = name.get();
+        const CString& name_str = name;
 
         int len = name_str.GetLength();
 
@@ -2268,7 +2267,7 @@ void CSimpleTextSubtitle::AddStyle(FwString name, STSStyle* style)
 
         idx++;
 
-        FwString name3;
+        CString name3;
         CString name3_str;
         do
         {
@@ -2942,15 +2941,15 @@ bool CSimpleTextSubtitle::SaveAs(CString fn, exttype et, double fps, CTextFile::
         POSITION pos = m_styles.GetStartPosition();
         while(pos)
         {
-            FwString key;
+            CString key;
             STSStyle* s;
             m_styles.GetNextAssoc(pos, key, s);
 
             if(et == EXTSSA)
             {
                 CString str2;
-                str2.Format(str, key.get(),
-                    s->fontName.get(), (int)s->fontSize,
+                str2.Format(str, key,
+                    s->fontName, (int)s->fontSize,
                     s->colors[0]&0xffffff,
                     s->colors[1]&0xffffff,
                     s->colors[2]&0xffffff,
@@ -2968,7 +2967,7 @@ bool CSimpleTextSubtitle::SaveAs(CString fn, exttype et, double fps, CTextFile::
             {
                 CString str2;
                 str2.Format(str, key,
-                    s->fontName.get(), (int)s->fontSize,
+                    s->fontName, (int)s->fontSize,
                     (s->colors[0]&0xffffff) | (s->alpha[0]<<24),
                     (s->colors[1]&0xffffff) | (s->alpha[1]<<24),
                     (s->colors[2]&0xffffff) | (s->alpha[2]<<24),
@@ -3056,7 +3055,7 @@ bool CSimpleTextSubtitle::SaveAs(CString fn, exttype et, double fps, CTextFile::
             str2.Format(fmt,
                 hh1, mm1, ss1, ms1/10,
                 hh2, mm2, ss2, ms2/10,
-                TToW(stse.style.get()), TToW(stse.actor),
+                TToW(stse.style), TToW(stse.actor),
                 stse.marginRect.left, stse.marginRect.right, (stse.marginRect.top + stse.marginRect.bottom) / 2,
                 TToW(stse.effect), str);
         }
@@ -3067,7 +3066,7 @@ bool CSimpleTextSubtitle::SaveAs(CString fn, exttype et, double fps, CTextFile::
                 stse.layer,
                 hh1, mm1, ss1, ms1/10,
                 hh2, mm2, ss2, ms2/10,
-                TToW(stse.style.get()), TToW(stse.actor),
+                TToW(stse.style), TToW(stse.actor),
                 stse.marginRect.left, stse.marginRect.right, (stse.marginRect.top + stse.marginRect.bottom) / 2,
                 TToW(stse.effect), str);
         }
@@ -3101,7 +3100,7 @@ bool CSimpleTextSubtitle::SaveAs(CString fn, exttype et, double fps, CTextFile::
 
         str  = _T("Style: Default,%s,%d,&H%08x,&H%08x,&H%08x,&H%08x,%d,%d,%d,%d,%d,%d,%d,%.2f,%d,%d,%d,%d,%d,%d,%d,%d\n");
         str2.Format(str,
-            s->fontName.get(), (int)s->fontSize,
+            s->fontName, (int)s->fontSize,
             (s->colors[0]&0xffffff) | (s->alpha[0]<<24),
             (s->colors[1]&0xffffff) | (s->alpha[1]<<24),
             (s->colors[2]&0xffffff) | (s->alpha[2]<<24),
@@ -3218,7 +3217,7 @@ void STSStyle::operator = (const LOGFONT& lf)
 LOGFONTA& operator <<= (LOGFONTA& lfa, const STSStyle& s)
 {
     lfa.lfCharSet = s.charSet;
-    strncpy_s(lfa.lfFaceName, LF_FACESIZE, CStringA(s.fontName.get()), _TRUNCATE);
+    strncpy_s(lfa.lfFaceName, LF_FACESIZE, CStringA(s.fontName), _TRUNCATE);
     HDC hDC = GetDC(0);
     lfa.lfHeight = -MulDiv((int)(s.fontSize+0.5), GetDeviceCaps(hDC, LOGPIXELSY), 72);
     ReleaseDC(0, hDC);
@@ -3232,7 +3231,7 @@ LOGFONTA& operator <<= (LOGFONTA& lfa, const STSStyle& s)
 LOGFONTW& operator <<= (LOGFONTW& lfw, const STSStyle& s)
 {
     lfw.lfCharSet = s.charSet;
-    wcsncpy_s(lfw.lfFaceName, LF_FACESIZE, CStringW(s.fontName.get()), _TRUNCATE);
+    wcsncpy_s(lfw.lfFaceName, LF_FACESIZE, CStringW(s.fontName), _TRUNCATE);
     HDC hDC = GetDC(0);
     lfw.lfHeight = -MulDiv((int)(s.fontSize+0.5), GetDeviceCaps(hDC, LOGPIXELSY), 72);
     ReleaseDC(0, hDC);
@@ -3259,7 +3258,7 @@ CString& operator <<= (CString& style, const STSStyle& s)
         s.colors[0], s.colors[1], s.colors[2], s.colors[3],
         s.alpha[0], s.alpha[1], s.alpha[2], s.alpha[3],
         s.charSet,
-        s.fontName.get(),s.fontSize,s.fontScaleX, s.fontScaleY,s.fontSpacing,s.fontWeight,
+        s.fontName,s.fontSize,s.fontScaleX, s.fontScaleY,s.fontSpacing,s.fontWeight,
         (int)s.fItalic, (int)s.fUnderline, (int)s.fStrikeOut, s.fBlur, s.fGaussianBlur,
         s.fontAngleZ, s.fontAngleX, s.fontAngleY,
         s.relativeTo);
