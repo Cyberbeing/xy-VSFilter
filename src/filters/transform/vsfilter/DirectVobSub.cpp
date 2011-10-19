@@ -64,7 +64,7 @@ CDirectVobSub::CDirectVobSub()
     m_path_data_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), 512);
     if(m_path_data_cache_max_item_num<0) m_path_data_cache_max_item_num = 0;
 
-    m_subpixel_pos_level = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), SubpixelPositionControler::FOUR_X_FOUR);
+    m_subpixel_pos_level = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), SubpixelPositionControler::EIGHT_X_EIGHT);
     if(m_subpixel_pos_level<0) m_subpixel_pos_level=0;
     else if(m_subpixel_pos_level>=SubpixelPositionControler::MAX_COUNT) m_subpixel_pos_level=SubpixelPositionControler::EIGHT_X_EIGHT;
 
