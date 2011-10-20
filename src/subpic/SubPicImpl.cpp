@@ -243,6 +243,104 @@ STDMETHODIMP CSubPicExImpl::SetDirtyRect(RECT* pDirtyRect)
     }
 }
 
+void MergeRects(const CAtlList<CRect>& input, CAtlList<CRect>* output)
+{
+    if(output==NULL || input.GetCount()==0)
+        return;
+
+    struct Segment
+    {
+        int top, bottom;
+        int seg_start, seg_end;
+        std::vector<CPoint> segs;
+    };
+
+    struct BreakPoint
+    {
+        int x;
+        const RECT* rect;
+
+        inline bool operator<(const BreakPoint& breakpoint ) const
+        {
+            return (x < breakpoint.x);
+        }
+    };
+
+    int input_count = input.GetCount();
+    std::vector<int> vertical_breakpoints(2*input_count);
+    std::vector<BreakPoint> herizon_breakpoints(input_count + 1);
+    
+    POSITION pos = input.GetHeadPosition();
+    for(int i=0; i<input_count; i++)
+    {
+        const CRect& rect = input.GetNext(pos);
+        vertical_breakpoints[2*i]=rect.top;
+        vertical_breakpoints[2*i+1]=rect.bottom;
+
+        herizon_breakpoints[i].x = rect.left;
+        herizon_breakpoints[i].rect = &rect;
+    }
+    CRect sentinel_rect(INT_MAX, 0, INT_MAX, INT_MAX);
+    herizon_breakpoints[input_count].x = INT_MAX;//sentinel
+    herizon_breakpoints[input_count].rect = &sentinel_rect;
+
+    std::sort(vertical_breakpoints.begin(), vertical_breakpoints.end());
+    std::sort(herizon_breakpoints.begin(), herizon_breakpoints.end());
+
+    std::vector<Segment> tempSegments(vertical_breakpoints.size()-1);
+    int ptr = 1, prev = vertical_breakpoints[0], count = 0;
+    for(size_t i = vertical_breakpoints.size()-1; i > 0; i--, ptr++)
+    {
+        if(vertical_breakpoints[ptr] != prev)
+        {
+            Segment& seg = tempSegments[count];
+            seg.top = prev;
+            seg.bottom = vertical_breakpoints[ptr];
+            seg.seg_end = seg.seg_start = 0;
+
+            prev = vertical_breakpoints[ptr];
+            count++;
+        }
+    }    
+
+    for(int i=0; i<=input_count; i++)
+    {
+        const CRect& rect = *herizon_breakpoints[i].rect;
+
+        size_t start = 0, mid, end = count;
+
+        while(start<end)
+        {
+            mid = (start+end)>>1;
+            if(tempSegments[mid].top < rect.top)
+            {
+                start = mid+1;
+            }
+            else
+            {
+                end = mid;
+            }
+        }
+        for(; start < count && tempSegments[start].bottom <= rect.bottom; start++)
+        {
+            if(tempSegments[start].seg_end<rect.left)
+            {
+                if(tempSegments[start].seg_end>tempSegments[start].seg_start)
+                {
+                    CRect out_rect( tempSegments[start].seg_start, tempSegments[start].top, tempSegments[start].seg_end, tempSegments[start].bottom );
+                    output->AddTail(out_rect);
+                }
+                tempSegments[start].seg_start = rect.left;
+                tempSegments[start].seg_end = rect.right;
+            }
+            else if( tempSegments[start].seg_end<rect.right )
+            {
+                tempSegments[start].seg_end=rect.right;
+            }
+        }
+    }
+}
+
 STDMETHODIMP CSubPicExImpl::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList)
 {    
     if(dirtyRectList!=NULL)
@@ -254,35 +352,9 @@ STDMETHODIMP CSubPicExImpl::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList)
         POSITION pos = dirtyRectList->GetHeadPosition();
         while(pos!=NULL)
         {
-            CRect crectSrc = dirtyRectList->GetNext(pos);
-            tagPos = m_rectListDirty.GetHeadPosition();
-            while(tagPos!=NULL)
-            {
-                CRect crectTag = m_rectListDirty.GetAt(tagPos);
-                if(CRect2::IsIntersect(&crectTag, &crectSrc))
-                {
-                    crectSrc |= crectTag;
-                    m_rectListDirty.RemoveAt(tagPos);
-                    tagPos = m_rectListDirty.GetHeadPosition();
-                }
-                else
-                {
-                    CRect temp;
-                    temp.UnionRect(crectSrc, crectTag);
-                    if(CRect2::Area(temp) - CRect2::Area(crectSrc) - CRect2::Area(crectTag) > DIRTY_RECT_MERGE_EMPTY_AREA)
-                    {
-                        m_rectListDirty.GetNext(tagPos);
-                    }
-                    else
-                    {
-                        crectSrc |= crectTag;
-                        m_rectListDirty.RemoveAt(tagPos);
-                        tagPos = m_rectListDirty.GetHeadPosition();
-                    }
-                }
-            }
-            m_rectListDirty.AddTail(crectSrc);
+            m_rcDirty |= dirtyRectList->GetNext(pos);
         }
+        MergeRects(*dirtyRectList, &m_rectListDirty);
         return S_OK;
     }
     return E_POINTER;

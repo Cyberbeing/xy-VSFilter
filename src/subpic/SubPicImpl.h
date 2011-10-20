@@ -189,9 +189,7 @@ class CSubPicExImpl : public CUnknown, public CSubPicImplHelper, public ISubPicE
 protected:
     CAtlList<CRect> m_rectListDirty;
 
-public:
-    static const int DIRTY_RECT_MERGE_EMPTY_AREA = 100;
-	
+public:	
     CSubPicExImpl();
 
     DECLARE_IUNKNOWN;
