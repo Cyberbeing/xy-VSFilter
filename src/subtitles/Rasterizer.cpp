@@ -823,64 +823,81 @@ void AlphaBlt(byte* pY,
     __m128i zero = _mm_setzero_si128();
     __m128i s = _mm_set1_epi16(Y);               //s = c  0  c  0  c  0  c  0  c  0  c  0  c  0  c  0    
 
-    for( ; h>0; h--, pAlphaMask += src_stride, pY += dst_stride )
+    if( w>16 )//IMPORTANT! The result of the following code is undefined with w<15.
     {
-        const BYTE* sa = pAlphaMask;      
-        BYTE* dy = pY;
-        const BYTE* dy_first_mod16 = reinterpret_cast<BYTE*>((reinterpret_cast<int>(pY)+15)&~15);
-        const BYTE* dy_end_mod16 = reinterpret_cast<BYTE*>(reinterpret_cast<int>(pY+w)&~15);
-        const BYTE* dy_end = pY + w;   
-
-        for(;dy < dy_first_mod16; sa++, dy++)
+        for( ; h>0; h--, pAlphaMask += src_stride, pY += dst_stride )
         {
-            *dy = (*dy * (256 - *sa)+ Y*(*sa+1))>>8;
+            const BYTE* sa = pAlphaMask;      
+            BYTE* dy = pY;
+            const BYTE* dy_first_mod16 = reinterpret_cast<BYTE*>((reinterpret_cast<int>(pY)+15)&~15);  //IMPORTANT! w must >= 15
+            const BYTE* dy_end_mod16 = reinterpret_cast<BYTE*>(reinterpret_cast<int>(pY+w)&~15);
+            const BYTE* dy_end = pY + w;   
+
+            for(;dy < dy_first_mod16; sa++, dy++)
+            {
+                *dy = (*dy * (256 - *sa)+ Y*(*sa+1))>>8;
+            }
+            for(; dy < dy_end_mod16; sa+=8, dy+=16)
+            {
+                __m128i a = _mm_loadl_epi64((__m128i*)sa);
+
+                //Y
+                __m128i d = _mm_load_si128((__m128i*)dy);
+
+                //__m128i ones = _mm_cmpeq_epi32(zero,zero); //ones = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+                //__m128i ia = _mm_xor_si128(a,ones);        //ia   = ~a
+                //ia = _mm_unpacklo_epi8(ia,zero);           //ia   = ~a0 0 ~a1 0 ~a2 0 ~a3 0 ~a4 0 ~a5 0 ~a6 0 ~a7 0
+                a = _mm_unpacklo_epi8(a,zero);               //a= a0 0  a1 0  a2 0  a3 0  a4 0  a5 0  a6 0  a7 0            
+                __m128i ones = _mm_set1_epi16(256);          //ones = 0  1  0  1  0  1  0  1  0  1  0  1  0  1  0  1
+                __m128i ia = _mm_sub_epi16(ones, a);         //ia   = 256-a0 ... 256-a7
+                ones = _mm_srli_epi16(ones, 8);
+                a = _mm_add_epi16(a, ones);                  //a= 1+a0 ... 1+a7
+
+                __m128i dl = _mm_unpacklo_epi8(d,zero);               //d    = b0 0  b1 0  b2 0  b3 0  b4 0  b5 0  b6 0  b7 0 
+                __m128i sl = _mm_mullo_epi16(s,a);            //sl   = c0*a0  c1*a1  ... c7*a7
+
+                dl = _mm_mullo_epi16(dl,ia);                   //d    = b0*~a0 b1*~a1 ... b7*~a7
+
+                dl = _mm_add_epi16(dl,sl);                     //d   = d + sl
+                dl = _mm_srli_epi16(dl, 8);                    //d   = d>>8
+
+                sa += 8;
+                a = _mm_loadl_epi64((__m128i*)sa);
+
+                a = _mm_unpacklo_epi8(a,zero);            
+                ones = _mm_slli_epi16(ones, 8);
+                ia = _mm_sub_epi16(ones, a);
+                ones = _mm_srli_epi16(ones, 8);
+                a = _mm_add_epi16(a,ones);
+
+                d = _mm_unpackhi_epi8(d,zero);
+                sl = _mm_mullo_epi16(s,a);
+                d = _mm_mullo_epi16(d,ia);
+                d = _mm_add_epi16(d,sl);
+                d = _mm_srli_epi16(d, 8);
+
+                dl = _mm_packus_epi16(dl,d);
+
+                _mm_store_si128((__m128i*)dy, dl);
+            }
+            for(;dy < dy_end; sa++, dy++)
+            {
+                *dy = (*dy * (256 - *sa)+ Y*(*sa+1))>>8;
+            }
         }
-        for(; dy < dy_end_mod16; sa+=8, dy+=16)
+    }
+    else
+    {
+        for( ; h>0; h--, pAlphaMask += src_stride, pY += dst_stride )
         {
-            __m128i a = _mm_loadl_epi64((__m128i*)sa);
+            const BYTE* sa = pAlphaMask;      
+            BYTE* dy = pY;
+            const BYTE* dy_end = pY + w;   
 
-            //Y
-            __m128i d = _mm_load_si128((__m128i*)dy);
-
-            //__m128i ones = _mm_cmpeq_epi32(zero,zero); //ones = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-            //__m128i ia = _mm_xor_si128(a,ones);        //ia   = ~a
-            //ia = _mm_unpacklo_epi8(ia,zero);           //ia   = ~a0 0 ~a1 0 ~a2 0 ~a3 0 ~a4 0 ~a5 0 ~a6 0 ~a7 0
-            a = _mm_unpacklo_epi8(a,zero);               //a= a0 0  a1 0  a2 0  a3 0  a4 0  a5 0  a6 0  a7 0            
-            __m128i ones = _mm_set1_epi16(256);          //ones = 0  1  0  1  0  1  0  1  0  1  0  1  0  1  0  1
-            __m128i ia = _mm_sub_epi16(ones, a);         //ia   = 256-a0 ... 256-a7
-            ones = _mm_srli_epi16(ones, 8);
-            a = _mm_add_epi16(a, ones);                  //a= 1+a0 ... 1+a7
-
-            __m128i dl = _mm_unpacklo_epi8(d,zero);               //d    = b0 0  b1 0  b2 0  b3 0  b4 0  b5 0  b6 0  b7 0 
-            __m128i sl = _mm_mullo_epi16(s,a);            //sl   = c0*a0  c1*a1  ... c7*a7
-            
-            dl = _mm_mullo_epi16(dl,ia);                   //d    = b0*~a0 b1*~a1 ... b7*~a7
-
-            dl = _mm_add_epi16(dl,sl);                     //d   = d + sl
-            dl = _mm_srli_epi16(dl, 8);                    //d   = d>>8
-            
-            sa += 8;
-            a = _mm_loadl_epi64((__m128i*)sa);
-
-            a = _mm_unpacklo_epi8(a,zero);            
-            ones = _mm_slli_epi16(ones, 8);
-            ia = _mm_sub_epi16(ones, a);
-            ones = _mm_srli_epi16(ones, 8);
-            a = _mm_add_epi16(a,ones);
-
-            d = _mm_unpackhi_epi8(d,zero);
-            sl = _mm_mullo_epi16(s,a);
-            d = _mm_mullo_epi16(d,ia);
-            d = _mm_add_epi16(d,sl);
-            d = _mm_srli_epi16(d, 8);
-
-            dl = _mm_packus_epi16(dl,d);
-
-            _mm_store_si128((__m128i*)dy, dl);
-        }
-        for(;dy < dy_end; sa++, dy++)
-        {
-            *dy = (*dy * (256 - *sa)+ Y*(*sa+1))>>8;
+            for(;dy < dy_end; sa++, dy++)
+            {
+                *dy = (*dy * (256 - *sa)+ Y*(*sa+1))>>8;
+            }
         }
     }
     //__asm emms;
@@ -1177,8 +1194,10 @@ void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const b
     pBorder = pBorder!=NULL ? pBorder + y*mOverlayPitch + x: NULL;
     byte* dst = outputAlphaMask + y*mOverlayPitch + x;
 
-    const int x0 = ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst);
-    const int x00 = ((reinterpret_cast<int>(dst)+15)&~15) - reinterpret_cast<int>(dst);
+    const int x0 = ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) < w ?
+                    ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) : w; //IMPORTANT! Should not exceed w.
+    const int x00 = ((reinterpret_cast<int>(dst)+15)&~15) - reinterpret_cast<int>(dst) < w ?
+                    ((reinterpret_cast<int>(dst)+15)&~15) - reinterpret_cast<int>(dst) : w;//IMPORTANT! Should not exceed w.
     const int x_end00  = ((reinterpret_cast<int>(dst)+w)&~15) - reinterpret_cast<int>(dst);
     const int x_end0 = ((reinterpret_cast<int>(dst)+w)&~3) - reinterpret_cast<int>(dst);
     const int x_end = w;

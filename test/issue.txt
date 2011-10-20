@@ -44,7 +44,7 @@ issue 17: failed to display vobsub format subtitle in color output other than rg
 ==============================================================
 issue 18: YUY2 output not working right.
 ==============================================================
-issue 19: Corruption with 17.ass. Using it with a 1024 x 576 video, the corruption lies between "omoi " and "ka".
+issue 19: Corruption with 17.ass. Using it with a 1024 x 576 video, the corruption lies between "omoi " and "ka".(fixed)
 ==============================================================
 issue 20: Incorrect result when seeking with 18.ass.  Using it with a 1024 x 576 video, pause and seek to frame 280, the result subpic is corresponding to another time.
 ==============================================================
