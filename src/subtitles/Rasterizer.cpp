@@ -570,6 +570,9 @@ static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int st
             col_sum_buf[x] = temp2;
         }
     }
+
+    xy_free(col_sum_buf_base);
+    xy_free(col_pix_buf_base);
 }
 
 bool Rasterizer::Rasterize(const ScanLineData& scan_line_data, int xsub, int ysub, SharedPtrOverlay overlay)
@@ -1049,7 +1052,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRec
                 // So if we have passed the switchpoint (?) switch to another colour
                 // (So switchpts stores both colours *and* coordinates?)
                 if(wt+xo >= sw[1]) {while(wt+xo >= sw[1]) sw += 2; color = sw[-2];}
-                pixmix_sse2(&dst[wt], color, (s[wt]*(color>>24))>>8);
+                pixmix_sse2(&dst[wt], color, s[wt]);
             }
             s += overlayPitch;
             dst = (unsigned long *)((char *)dst + spd.pitch);
@@ -1064,7 +1067,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRec
             for(int wt=0; wt<w; ++wt)
             {
                 if(wt+xo >= sw[1]) {while(wt+xo >= sw[1]) sw += 2; color = sw[-2];}
-                pixmix(&dst[wt], color, (s[wt]*(color>>24))>>8);
+                pixmix(&dst[wt], color, s[wt]);
             }
             s += overlayPitch;
             dst = (unsigned long *)((char *)dst + spd.pitch);
