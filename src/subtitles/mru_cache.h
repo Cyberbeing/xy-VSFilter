@@ -21,7 +21,6 @@
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
 #include <boost/multi_index/mem_fun.hpp> 
-#include <boost/bimap/bimap.hpp>
 
 /* An MRU (most recently used) list keeps record of the last n
  * inserted items, listing first the newer ones. Care has to be
