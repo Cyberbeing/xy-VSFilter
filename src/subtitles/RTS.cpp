@@ -1190,6 +1190,16 @@ CRect CLine::PaintBody(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoin
     return(bbox);
 }
 
+void CLine::AddWord2Tail( SharedPtrCWord words )
+{
+    __super::AddTail(words);
+}
+
+bool CLine::IsEmpty()
+{
+    return __super::IsEmpty();
+}
+
 
 // CSubtitle
 
@@ -1304,10 +1314,10 @@ CLine* CSubtitle::GetNextLine(POSITION& pos, int maxwidth)
         }
         if((ret->m_width += width) <= maxwidth || ret->IsEmpty())
         {
-            ret->AddTail(w->Copy());
+            ret->AddWord2Tail(w->Copy());
             while(pos != pos2)
             {
-                ret->AddTail(m_words.GetNext(pos)->Copy());
+                ret->AddWord2Tail(m_words.GetNext(pos)->Copy());
             }
             pos = pos2;
         }
@@ -1425,6 +1435,16 @@ void CSubtitle::MakeLines(CSize size, CRect marginRect)
                         : m_scrAlignment <= 6 ? (marginRect.top + (size.cy - marginRect.bottom) - spaceNeeded.cy + 1) / 2
                         : marginRect.top),
                  spaceNeeded);
+}
+
+POSITION CSubtitle::GetHeadLinePosition()
+{
+    return __super::GetHeadPosition();
+}
+
+CLine* CSubtitle::GetNextLine( POSITION& pos )
+{
+    return __super::GetNext(pos);
 }
 
 // CScreenLayoutAllocator
@@ -2970,10 +2990,10 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
         iclipRect[3] = CRect(0, clipRect.bottom, spd.w, spd.h);
         int dbgTest = 0;
         bbox2 = CRect(0,0,0,0);
-        pos = s->GetHeadPosition();
+        pos = s->GetHeadLinePosition();
         while(pos)
         {
-            CLine* l = s->GetNext(pos);
+            CLine* l = s->GetNextLine(pos);
             p.x = (s->m_scrAlignment%3) == 1 ? org.x
                   : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
                   :                            org.x - (l->m_width/2);
@@ -2991,10 +3011,10 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
             p.y += l->m_ascent + l->m_descent;
         }
         p = p2;
-        pos = s->GetHeadPosition();
+        pos = s->GetHeadLinePosition();
         while(pos)
         {
-            CLine* l = s->GetNext(pos);
+            CLine* l = s->GetNextLine(pos);
             p.x = (s->m_scrAlignment%3) == 1 ? org.x
                   : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
                   :                            org.x - (l->m_width/2);
@@ -3012,10 +3032,10 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
             p.y += l->m_ascent + l->m_descent;
         }
         p = p2;
-        pos = s->GetHeadPosition();
+        pos = s->GetHeadLinePosition();
         while(pos)
         {
-            CLine* l = s->GetNext(pos);
+            CLine* l = s->GetNextLine(pos);
             p.x = (s->m_scrAlignment%3) == 1 ? org.x
                   : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
                   :                            org.x - (l->m_width/2);

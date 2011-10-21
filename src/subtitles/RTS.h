@@ -158,7 +158,7 @@ public:
     BYTE* m_pAlphaMask;
 };
 
-class CLine : public CAtlList<SharedPtrCWord>
+class CLine: private CAtlList<SharedPtrCWord>
 {
 public:
     int m_width, m_ascent, m_descent, m_borderX, m_borderY;
@@ -166,6 +166,9 @@ public:
     virtual ~CLine();
 
     void Compact();
+
+    void AddWord2Tail(SharedPtrCWord words);
+    bool IsEmpty();
 
     CRect PaintShadow(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoint p, CPoint org, int time, int alpha);
     CRect PaintOutline(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoint p, CPoint org, int time, int alpha);
@@ -191,7 +194,7 @@ public:
     int t[4];
 };
 
-class CSubtitle : public CAtlList<CLine*>
+class CSubtitle: private CAtlList<CLine*>
 {
     int GetFullWidth();
     int GetFullLineWidth(POSITION pos);
@@ -225,6 +228,9 @@ public:
     void CreateClippers(CSize size);
 
     void MakeLines(CSize size, CRect marginRect);
+
+    POSITION GetHeadLinePosition();
+    CLine* GetNextLine(POSITION& pos);
 };
 
 class CScreenLayoutAllocator
