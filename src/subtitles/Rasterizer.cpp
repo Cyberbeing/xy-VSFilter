@@ -575,6 +575,41 @@ static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int st
     xy_free(col_pix_buf_base);
 }
 
+static void Bilinear(unsigned char *buf, int w, int h, int stride, int x_factor, int y_factor)
+{   
+    WORD *col_pix_buf_base = reinterpret_cast<WORD*>(xy_malloc(w*sizeof(WORD)));
+    if(!col_pix_buf_base)
+    {
+        //ToDo: error handling
+        return;
+    }
+    memset(col_pix_buf_base, 0, w*sizeof(WORD));
+
+    for (int y = 0; y < h; y++){
+        unsigned char *src=buf+y*stride;
+
+        WORD *col_pix_buf = col_pix_buf_base;
+        int last=0;
+        for(int x = 0; x < w; x++)
+        {
+            int temp1 = src[x];
+            int temp2 = temp1*x_factor;
+            temp1 <<= 3;
+            temp1 -= temp2;
+            temp1 += last;
+            last = temp2;
+
+            temp2 = temp1*y_factor;
+            temp1 <<= 3;
+            temp1 -= temp2;
+            temp1 += col_pix_buf[x];
+            src[x] = ((temp1+32)>>6);
+            col_pix_buf[x] = temp2;
+        }
+    }
+    xy_free(col_pix_buf_base);
+}
+
 bool Rasterizer::Rasterize(const ScanLineData& scan_line_data, int xsub, int ysub, SharedPtrOverlay overlay)
 {
     using namespace ::boost::flyweights;
@@ -608,6 +643,8 @@ bool Rasterizer::Rasterize(const ScanLineData& scan_line_data, int xsub, int ysu
         overlay->mOffsetY -= wide_border;
     }
 
+    overlay->mWidth = width;
+    overlay->mHeight = height;
     overlay->mOverlayWidth = ((width+7)>>3) + 1;
     overlay->mOverlayHeight = ((height+7)>>3) + 1;
     overlay->mOverlayPitch = (overlay->mOverlayWidth+15)&~15;
@@ -669,6 +706,8 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianB
 
     output_overlay->mOffsetX = input_overlay.mOffsetX;
     output_overlay->mOffsetY = input_overlay.mOffsetY;
+    output_overlay->mWidth = input_overlay.mWidth;
+    output_overlay->mHeight = input_overlay.mHeight;
     output_overlay->mOverlayWidth = input_overlay.mOverlayWidth;
     output_overlay->mOverlayHeight = input_overlay.mOverlayHeight;
     output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
@@ -685,6 +724,8 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianB
 
         output_overlay->mOffsetX -= bluradjust;
         output_overlay->mOffsetY -= bluradjust;
+        output_overlay->mWidth += (bluradjust<<1);
+        output_overlay->mHeight += (bluradjust<<1);
         output_overlay->mOverlayWidth += (bluradjust>>2);
         output_overlay->mOverlayHeight += (bluradjust>>2);
     }
@@ -1508,6 +1549,60 @@ void Overlay::FillAlphaMash( byte* outputAlphaMask, bool fBody, bool fBorder, in
         //should NOT happen
         ASSERT(0);
     }
+}
+
+Overlay* Overlay::GetSubpixelVariance(unsigned int xshift, unsigned int yshift)
+{
+    Overlay* overlay = new Overlay();
+    if(!overlay)
+    {
+        return NULL;
+    }
+    xshift &= 7;
+    yshift &= 7;
+
+    overlay->mOffsetX = mOffsetX - xshift;
+    overlay->mOffsetY = mOffsetY - yshift;
+    overlay->mWidth = mWidth + xshift;
+    overlay->mHeight = mHeight + yshift;
+
+    overlay->mOverlayWidth = ((overlay->mWidth+7)>>3) + 1;
+    overlay->mOverlayHeight = ((overlay->mHeight + 7)>>3) + 1;
+    overlay->mOverlayPitch = (overlay->mOverlayWidth+15)&~15;
+    
+    overlay->mpOverlayBuffer.base = reinterpret_cast<byte*>(xy_malloc(2 * overlay->mOverlayPitch * overlay->mOverlayHeight));
+    overlay->mpOverlayBuffer.body = overlay->mpOverlayBuffer.base;
+    overlay->mpOverlayBuffer.border = overlay->mpOverlayBuffer.base + overlay->mOverlayPitch * overlay->mOverlayHeight;
+
+    overlay->mfWideOutlineEmpty = mfWideOutlineEmpty;
+    
+    if(overlay->mOverlayWidth==mOverlayWidth && overlay->mOverlayHeight==mOverlayHeight)
+        memcpy(overlay->mpOverlayBuffer.base, mpOverlayBuffer.base, 2 * mOverlayPitch * mOverlayHeight);
+    else
+    {
+        memset(overlay->mpOverlayBuffer.base, 0, 2 * overlay->mOverlayPitch * overlay->mOverlayHeight);
+        byte* dst = overlay->mpOverlayBuffer.body;
+        const byte* src = mpOverlayBuffer.body;
+        for (int i=0;i<mOverlayHeight;i++)
+        {
+            memcpy(dst, src, mOverlayPitch);
+            dst += overlay->mOverlayPitch;
+            src += mOverlayPitch;
+        }
+        dst = overlay->mpOverlayBuffer.border;
+        src = mpOverlayBuffer.border;
+        for (int i=0;i<mOverlayHeight;i++)
+        {
+            memcpy(dst, src, mOverlayPitch);
+            dst += overlay->mOverlayPitch;
+            src += mOverlayPitch;
+        }
+    }
+    //not equal
+    //  Bilinear(overlay->mpOverlayBuffer.base, overlay->mOverlayWidth, 2*overlay->mOverlayHeight, overlay->mOverlayPitch, xshift, yshift);
+    Bilinear(overlay->mpOverlayBuffer.body, overlay->mOverlayWidth, overlay->mOverlayHeight, overlay->mOverlayPitch, xshift, yshift);
+    Bilinear(overlay->mpOverlayBuffer.border, overlay->mOverlayWidth, overlay->mOverlayHeight, overlay->mOverlayPitch, xshift, yshift);
+    return overlay;
 }
 
 ///////////////////////////////////////////////////////////////

@@ -148,7 +148,14 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
     else
     {
         overlay_list->overlay = iter->overlay;
-    }    
+    }
+    if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() 
+        && (psub.x!=(p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) 
+         || psub.y!=(p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK)) )
+    {
+        overlay_list->overlay.reset(overlay_list->overlay->GetSubpixelVariance((p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.x, 
+                                                                               (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.y));
+    }
     if(word->m_style.get().borderStyle == 1)
     {
         if(!word->CreateOpaqueBox()) return;

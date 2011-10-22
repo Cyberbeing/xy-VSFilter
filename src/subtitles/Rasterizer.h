@@ -134,12 +134,15 @@ public:
         int x, int y, int w, int h, 
         const byte* pAlphaMask, int pitch, DWORD color_alpha);
 
+    Overlay* GetSubpixelVariance(unsigned int xshift, unsigned int yshift);
+
     struct {
         byte *base;
         byte *body;
         byte *border;
     } mpOverlayBuffer;
     int mOffsetX, mOffsetY;
+    int mWidth, mHeight;
         
     int mOverlayWidth, mOverlayHeight, mOverlayPitch;
 

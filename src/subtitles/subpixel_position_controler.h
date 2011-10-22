@@ -16,7 +16,8 @@ public:
         TWO_X_TWO = 1,
         FOUR_X_FOUR = 2,
         EIGHT_X_EIGHT = 3,
-        MAX_COUNT = 4
+        EIGHT_X_EIGHT_INTERPOLATE = 4,
+        MAX_COUNT
     };
     enum SUBPIXEL_MASK
     {
@@ -24,6 +25,7 @@ public:
         TWO_X_TWO_MASK = 4,
         FOUR_X_FOUR_MASK = 6,
         EIGHT_X_EIGHT_MASK = 7,
+        EIGHT_X_EIGHT_INTERPOLATE_MASK = 0,
     };
     SUBPIXEL_LEVEL SetSubpixelLevel(SUBPIXEL_LEVEL subpixel_level);
     inline SUBPIXEL_LEVEL GetSubpixelLevel()
@@ -35,6 +37,7 @@ public:
         CPoint result(p.x & _subpixel_mask, p.y & _subpixel_mask);
         return result;
     }
+    inline bool UseBilinearShift() { return _subpixel_level==EIGHT_X_EIGHT_INTERPOLATE; }
 
     static SubpixelPositionControler& GetGlobalControler()
     {

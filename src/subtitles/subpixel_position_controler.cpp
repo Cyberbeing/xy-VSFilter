@@ -25,6 +25,9 @@ SubpixelPositionControler::SUBPIXEL_LEVEL SubpixelPositionControler::SetSubpixel
         case EIGHT_X_EIGHT:
             _subpixel_mask = EIGHT_X_EIGHT_MASK;
             break;
+        case EIGHT_X_EIGHT_INTERPOLATE:
+            _subpixel_mask = EIGHT_X_EIGHT_INTERPOLATE_MASK;
+            break;
         }
         _subpixel_level = subpixel_level;
         CacheManager::GetOverlayMruCache()->clear();

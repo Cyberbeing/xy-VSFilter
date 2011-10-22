@@ -876,14 +876,15 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         int temp = m_subpixel_pos_level;
         if(m_subpixel_pos_level < 0)
             temp = 0;
-        else if ( m_subpixel_pos_level >= 4 )
-            temp = 3;
+        else if ( m_subpixel_pos_level >= 5 )
+            temp = 4;
 
         m_combo_subpixel_pos.ResetContent();
         m_combo_subpixel_pos.AddString( CString(_T("NONE(fastest)")) );m_combo_subpixel_pos.SetItemData(0, 0);
         m_combo_subpixel_pos.AddString( CString(_T("2x2")) );m_combo_subpixel_pos.SetItemData(1, 1);
         m_combo_subpixel_pos.AddString( CString(_T("4x4")) );m_combo_subpixel_pos.SetItemData(2, 2);
         m_combo_subpixel_pos.AddString( CString(_T("8x8(vsfiler2.39 default)")) );m_combo_subpixel_pos.SetItemData(3, 3);
+        m_combo_subpixel_pos.AddString( CString(_T("8x8 fast")) );m_combo_subpixel_pos.SetItemData(4, 4);
 
         m_combo_subpixel_pos.SetCurSel( temp );        
     }
