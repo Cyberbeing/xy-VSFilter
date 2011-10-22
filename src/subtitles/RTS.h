@@ -251,7 +251,7 @@ public:
 };
 
 [uuid("537DCACA-2812-4a4f-B2C6-1A34C17ADEB0")]
-class CRenderedTextSubtitle : public CSimpleTextSubtitle, public CSubPicProviderImpl, public ISubStream
+class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, public CSimpleTextSubtitle
 {
     CAtlMap<int, CSubtitle*> m_subtitleCache;   
 
