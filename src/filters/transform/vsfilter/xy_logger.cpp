@@ -26,7 +26,7 @@ namespace xy_logger
 void doConfigure(const log4cplus::tstring& configFilename)
 {
 #ifdef __DO_LOG
-    log4cplus::Hierarchy& h = Logger::getDefaultHierarchy;
+    log4cplus::Hierarchy& h = log4cplus::Logger::getDefaultHierarchy();
     unsigned flags = 0;
     log4cplus::PropertyConfigurator::doConfigure(configFilename, h, flags);
 #endif
