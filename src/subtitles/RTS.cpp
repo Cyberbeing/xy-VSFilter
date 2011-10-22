@@ -2591,7 +2591,7 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
     m_ktype = m_kstart = m_kend = 0;
     m_nPolygon = 0;
     m_polygonBaselineOffset = 0;
-    ParseEffect(sub, GetAt(entry).effect);
+    ParseEffect(sub, m_entries.GetAt(entry).effect);
     while(!str.IsEmpty())
     {
         bool fParsed = false;
@@ -2644,7 +2644,7 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
     if(sub->m_effects[EF_ORG] && (sub->m_effects[EF_MOVE] || sub->m_effects[EF_BANNER] || sub->m_effects[EF_SCROLL]))
         sub->m_fAnimated = true;
     sub->m_scrAlignment = abs(sub->m_scrAlignment);
-    STSEntry stse = GetAt(entry);
+    STSEntry stse = m_entries.GetAt(entry);
     CRect marginRect = stse.marginRect;
     if(marginRect.left == 0) marginRect.left = orgstss.marginRect.get().left;
     if(marginRect.top == 0) marginRect.top = orgstss.marginRect.get().top;
@@ -2848,7 +2848,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
             int key;
             CSubtitle* value;
             m_subtitleCache.GetNextAssoc(pos, key, value);
-            STSEntry& stse = GetAt(key);
+            STSEntry& stse = m_entries.GetAt(key);
             if(stse.end <= (t-30000) || stse.start > (t+30000))
             {
                 delete value;
@@ -2863,15 +2863,15 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     {
         LSub ls;
         ls.idx = stss->subs[i];
-        ls.layer = GetAt(stss->subs[i]).layer;
-        ls.readorder = GetAt(stss->subs[i]).readorder;
+        ls.layer = m_entries.GetAt(stss->subs[i]).layer;
+        ls.readorder = m_entries.GetAt(stss->subs[i]).readorder;
         subs.Add(ls);
     }
     qsort(subs.GetData(), subs.GetCount(), sizeof(LSub), lscomp);
     for(int i = 0, j = subs.GetCount(); i < j; i++)
     {
         int entry = subs[i].idx;
-        STSEntry stse = GetAt(entry);
+        STSEntry stse = m_entries.GetAt(entry);
         {
             int start = TranslateStart(entry, fps);
             m_time = t - start;

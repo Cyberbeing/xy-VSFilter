@@ -108,12 +108,13 @@ public:
 	void operator = (const STSSegment& stss) {start = stss.start; end = stss.end; animated = stss.animated; subs.Copy(stss.subs);}
 };
 
-class CSimpleTextSubtitle : public CAtlArray<STSEntry>
+class CSimpleTextSubtitle
 {
 	friend class CSubtitleEditorDlg;
 
 protected:
-	CAtlArray<STSSegment> m_segments;
+    CAtlArray<STSEntry> m_entries;
+    CAtlArray<STSSegment> m_segments;
 	virtual void OnChanged() {}
 
 public:
@@ -148,6 +149,8 @@ public:
 
 	virtual void Copy(CSimpleTextSubtitle& sts);
 	virtual void Empty();
+
+    bool IsEmpty();
 
 	void Sort(bool fRestoreReadorder = false);
 	void CreateSegments();
@@ -222,6 +225,8 @@ public:
 
 	void SetStr(int i, CStringA str, bool fUnicode /* ignored */);
 	void SetStr(int i, CStringW str, bool fUnicode);
+
+    friend bool OpenMicroDVD(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet);
 };
 
 extern BYTE CharSetList[];
