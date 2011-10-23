@@ -318,17 +318,19 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
                 BYTE* e = s + w*4;
                 for(; s < e; s+=8) { // ARGB ARGB -> AxYU AxYV
                     if((s[3]+s[7]) < 0x1fe) {
-                    
-                        s[1] = (c2y_yb[s[0]] + c2y_yg[s[1]] + c2y_yr[s[2]] + 0x108000) >> 16;
-                        s[5] = (c2y_yb[s[4]] + c2y_yg[s[5]] + c2y_yr[s[6]] + 0x108000) >> 16;
+                        int a = 0x200 - (s[3]+s[7]);
+                        a <<= 7;
+                        // 0 <= a <= 0x10000
+                        s[1] = (c2y_yb[s[0]] + c2y_yg[s[1]] + c2y_yr[s[2]] + 0x10*a  + 0x8000) >> 16;
+                        s[5] = (c2y_yb[s[4]] + c2y_yg[s[5]] + c2y_yr[s[6]] + 0x10*a  + 0x8000) >> 16;
 
                         int scaled_y = (s[1]+s[5]-32) * cy_cy2;
 
-                        s[0] = Clip[(((((s[0]+s[4])<<15) - scaled_y) >> 10) * c2y_cu + 0x800000 + 0x8000) >> 16];
-                        s[4] = Clip[(((((s[2]+s[6])<<15) - scaled_y) >> 10) * c2y_cv + 0x800000 + 0x8000) >> 16];
+                        s[0] = Clip[(((((s[0]+s[4])<<15) - scaled_y) >> 10) * c2y_cu + 0x80*a + 0x8000) >> 16];
+                        s[4] = Clip[(((((s[2]+s[6])<<15) - scaled_y) >> 10) * c2y_cv + 0x80*a + 0x8000) >> 16];
                     } else {
-                        s[1] = s[5] = 0x10;
-                        s[0] = s[4] = 0x80;
+                        s[1] = s[5] = 0;
+                        s[0] = s[4] = 0;
                     }
                 }
             }
@@ -339,14 +341,18 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
                 BYTE* e = s + w*4;
                 for(; s < e; s+=4) { // ARGB -> AYUV
                     if(s[3] < 0xff) {
-                        int y = (c2y_yb[s[0]] + c2y_yg[s[1]] + c2y_yr[s[2]] + 0x108000) >> 16;
+                        int a = 0x100 - s[3];
+                        a <<= 8;
+                        // 0 <= a <= 0x10000
+
+                        int y = (c2y_yb[s[0]] + c2y_yg[s[1]] + c2y_yr[s[2]] + 0x10*a + 0x8000) >> 16;
                         int scaled_y = (y-32) * cy_cy;
-                        s[1] = Clip[((((s[0]<<16) - scaled_y) >> 10) * c2y_cu + 0x800000 + 0x8000) >> 16];
-                        s[0] = Clip[((((s[2]<<16) - scaled_y) >> 10) * c2y_cv + 0x800000 + 0x8000) >> 16];
+                        s[1] = Clip[((((s[0]<<16) - scaled_y) >> 10) * c2y_cu + 0x80*a + 0x8000) >> 16];
+                        s[0] = Clip[((((s[2]<<16) - scaled_y) >> 10) * c2y_cv + 0x80*a + 0x8000) >> 16];
                         s[2] = y;
                     } else {
-                        s[0] = s[1] = 0x80;
-                        s[2] = 0x10;
+                        s[0] = s[1] = 0;
+                        s[2] = 0;
                     }
                 }
             }
@@ -541,31 +547,27 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                 ia = (s2[3]+s2[7])>>1;
                 if(ia < 0xff)
                 {
-                    //int y1 = (BYTE)(((((*d2&0xff)-0x10)*s2[3])>>8) + s2[1]); // + y1;
-                    //int y2 = (BYTE)((((((*d2>>16)&0xff)-0x10)*s2[7])>>8) + s2[5]); // + y2;
-                    //int u = (BYTE)((((((*d2>>8)&0xff)-0x80)*ia)>>8) + s2[0]); // + u;
-                    //int v = (BYTE)((((((*d2>>24)&0xff)-0x80)*ia)>>8) + s2[4]); // + v;
-
+                    //int y1 = (BYTE)(((((*d2&0xff))*s2[3])>>8) + s2[1]); // + y1;
+                    //int u = (BYTE)((((((*d2>>8)&0xff))*ia)>>8) + s2[0]); // + u;
+                    //int y2 = (BYTE)((((((*d2>>16)&0xff))*s2[7])>>8) + s2[5]); // + y2;                    
+                    //int v = (BYTE)((((((*d2>>24)&0xff))*ia)>>8) + s2[4]); // + v;
                     //*d2 = (v<<24)|(y2<<16)|(u<<8)|y1;
-                    static const __int64 _8181 = 0x0080001000800010i64;
+                    
                     ia = (ia<<24)|(s2[7]<<16)|(ia<<8)|s2[3];
                     c = (s2[4]<<24)|(s2[5]<<16)|(s2[0]<<8)|s2[1]; // (v<<24)|(y2<<16)|(u<<8)|y1;
                     __asm
                     {
-                            //mov			esi, s2
                             mov			edi, d2
                             pxor		mm0, mm0
-                            movq		mm1, _8181
                             movd		mm2, c
                             punpcklbw	mm2, mm0
                             movd		mm3, [edi]
                             punpcklbw	mm3, mm0
                             movd		mm4, ia
                             punpcklbw	mm4, mm0
-                            //psrlw		mm4, 1
-                            psubw		mm3, mm1
+                            psraw		mm4, 1          //or else, overflow because psraw shift in sign bit
                             pmullw		mm3, mm4
-                            psraw		mm3, 8
+                            psraw		mm3, 7
                             paddsw		mm3, mm2
                             packuswb	mm3, mm3
                             movd		[edi], mm3
@@ -795,7 +797,7 @@ STDMETHODIMP CMemSubPic::AlphaBltAyuv_Yv12(const RECT* pSrc, const RECT* pDst, S
         BYTE* d2 = d;
         for(; s2 < s2end; s2 += 4, d2++) {
             if(s2[3] < 0xff) {
-                d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];
+                d2[0] = ((d2[0]*s2[3])>>8) + s2[1];
             }
         }
     }
@@ -844,7 +846,7 @@ STDMETHODIMP CMemSubPic::AlphaBltAyuv_Yv12(const RECT* pSrc, const RECT* pDst, S
             for(; s2 < s2end; s2 += 8, d2++, is2 += 8) {
                 unsigned int ia = (s2[3]+s2[3+src.pitch]+is2[3]+is2[3+src.pitch])>>2;
                 if(ia < 0xff) {
-                    *d2 = (((*d2-0x80)*ia)>>8) + ((s2[0]+s2[src.pitch])>>1);
+                    *d2 = ((*d2*ia)>>8) + ((s2[0]+s2[src.pitch])>>1);
                 }
             }
         }
@@ -870,7 +872,7 @@ STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
                 cRectSrc.bottom = (cRectSrc.bottom+1)&~1;
             }
         }
-        else if(m_spd.type == MSP_YUY2 || m_alpha_blt_dst_type==MSP_YUY2)
+        else if(m_spd.type == MSP_AUYV || m_alpha_blt_dst_type==MSP_YUY2)
         {
             while(pos!=NULL)
             {

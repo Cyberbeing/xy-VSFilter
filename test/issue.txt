@@ -42,7 +42,7 @@ issue 16: crashed with (malformed) 16.ass while stock vsfilter don't. (fixed)
 ==============================================================
 issue 17: failed to display vobsub format subtitle in color output other than rgb.(fixed)
 ==============================================================
-issue 18: YUY2 output not working right.
+issue 18: YUY2 output not working right.(fixed)
 ==============================================================
 issue 19: Corruption with 17.ass. Using it with a 1024 x 576 video, the corruption lies between "omoi " and "ka".(fixed)
 ==============================================================
