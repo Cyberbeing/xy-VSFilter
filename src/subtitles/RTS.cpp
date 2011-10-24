@@ -953,11 +953,15 @@ CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool 
     : m_polygon( new CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0) )
 {    
     m_size.cx = m_size.cy = 0;
-    m_pAlphaMask = NULL;
-    if(size.cx < 0 || size.cy < 0 || !(m_pAlphaMask = new BYTE[size.cx*size.cy])) return;
+    //m_pAlphaMask = NULL;
+    if(size.cx < 0 || size.cy < 0)
+        return;
+    m_pAlphaMask.reset(new BYTE[size.cx*size.cy]);
+    if( !m_pAlphaMask )
+        return;
     m_size = size;
     m_inverse = inverse;
-    memset(m_pAlphaMask, 0, size.cx*size.cy);
+    memset( m_pAlphaMask.get(), 0, size.cx*size.cy);
     OverlayList overlay_list;
     CWord::Paint( m_polygon, CPoint(0, 0), CPoint(0, 0), &overlay_list );
     int w = overlay_list.overlay->mOverlayWidth, h = overlay_list.overlay->mOverlayHeight;
@@ -969,7 +973,7 @@ CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool 
     if(y+h > m_size.cy) h = m_size.cy-y;
     if(w <= 0 || h <= 0) return;
     const BYTE* src = overlay_list.overlay->mpOverlayBuffer.body + (overlay_list.overlay->mOverlayPitch * yo + xo);
-    BYTE* dst = m_pAlphaMask + m_size.cx * y + x;
+    BYTE* dst = m_pAlphaMask.get() + m_size.cx * y + x;
     while(h--)
     {
         //for(int wt=0; wt<w; ++wt)
@@ -980,16 +984,15 @@ CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool 
     }
     if(inverse)
     {
-        BYTE* dst = m_pAlphaMask;
+        BYTE* dst = m_pAlphaMask.get();
         for(int i = size.cx*size.cy; i>0; --i, ++dst)
             *dst = 0x40 - *dst; // mask is 6 bit
     }
 }
 
 CClipper::~CClipper()
-{
-    if(m_pAlphaMask) delete [] m_pAlphaMask;
-    m_pAlphaMask = NULL;
+{    
+    m_pAlphaMask.reset(NULL);
 }
 
 // CLine
@@ -1044,7 +1047,7 @@ void CLine::Compact()
     }
 }
 
-CRect CLine::PaintShadow(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoint p, CPoint org, int time, int alpha)
+CRect CLine::PaintShadow(DrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
 {
     CRect bbox(0, 0, 0, 0);
     POSITION pos = GetHeadPosition();
@@ -1072,14 +1075,22 @@ CRect CLine::PaintShadow(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPo
             OverlayList overlay_list;
             CWord::Paint(w, CPoint(x, y), org, &overlay_list);
             if(w->m_style.get().borderStyle == 0)
-            {
-                bbox |= Rasterizer::Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw,
-                                w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
-                                (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart));
+            {                
+                SharedPtrDrawItem draw_item( 
+                    Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw,
+                        w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
+                        (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart))
+                );
+                output->AddTail(draw_item);
+                bbox |= Rasterizer::DryDraw(spd, *draw_item);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
-                bbox |= Rasterizer::Draw(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false);
+                SharedPtrDrawItem draw_item( 
+                    Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false)
+                );
+                output->AddTail(draw_item);
+                bbox |= Rasterizer::DryDraw(spd, *draw_item);
             }
         }
         p.x += w->m_width;
@@ -1087,7 +1098,7 @@ CRect CLine::PaintShadow(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPo
     return(bbox);
 }
 
-CRect CLine::PaintOutline(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoint p, CPoint org, int time, int alpha)
+CRect CLine::PaintOutline(DrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
 {
     CRect bbox(0, 0, 0, 0);
     POSITION pos = GetHeadPosition();
@@ -1116,11 +1127,19 @@ CRect CLine::PaintOutline(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CP
             CWord::Paint(w, CPoint(x, y), org, &overlay_list);
             if(w->m_style.get().borderStyle == 0)
             {
-                bbox |= Rasterizer::Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true);
+                SharedPtrDrawItem draw_item( 
+                    Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
+                );
+                output->AddTail(draw_item);
+                bbox |= Rasterizer::DryDraw(spd, *draw_item);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
-                bbox |= Rasterizer::Draw(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false);
+                SharedPtrDrawItem draw_item( 
+                    Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false)
+                );
+                output->AddTail(draw_item);
+                bbox |= Rasterizer::DryDraw(spd, *draw_item);
             }
         }
         p.x += w->m_width;
@@ -1128,7 +1147,7 @@ CRect CLine::PaintOutline(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CP
     return(bbox);
 }
 
-CRect CLine::PaintBody(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoint p, CPoint org, int time, int alpha)
+CRect CLine::PaintBody(DrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
 {
     CRect bbox(0, 0, 0, 0);
     POSITION pos = GetHeadPosition();
@@ -1191,7 +1210,11 @@ CRect CLine::PaintBody(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoin
         }
         OverlayList overlay_list;
         CWord::Paint(w, CPoint(x, y), org, &overlay_list);
-        bbox |= Rasterizer::Draw(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, true, false);
+        SharedPtrDrawItem draw_item( 
+            Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, true, false)
+        );
+        output->AddTail(draw_item);
+        bbox |= Rasterizer::DryDraw(spd, *draw_item);
         p.x += w->m_width;
     }
     return(bbox);
@@ -1356,7 +1379,7 @@ void CSubtitle::CreateClippers(CSize size)
             if(!m_pClipper) return;
         }
         int da = (64<<8)/width;
-        BYTE* am = m_pClipper->m_pAlphaMask;
+        BYTE* am = m_pClipper->m_pAlphaMask.get();
         for(int j = 0; j < h; j++, am += w)
         {
             int a = 0;
@@ -1390,7 +1413,7 @@ void CSubtitle::CreateClippers(CSize size)
         if(k < h)
         {
             BYTE* am = &m_pClipper->m_pAlphaMask[k*w];
-            memset(m_pClipper->m_pAlphaMask, 0, am - m_pClipper->m_pAlphaMask);
+            memset(m_pClipper->m_pAlphaMask.get(), 0, am - m_pClipper->m_pAlphaMask.get());
             for(int j = k; j < l; j++, a += da)
             {
                 for(int i = 0; i < w; i++, am++)
@@ -2868,6 +2891,8 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
         subs.Add(ls);
     }
     qsort(subs.GetData(), subs.GetCount(), sizeof(LSub), lscomp);
+
+    DrawItemList drawItemList;
     for(int i = 0, j = subs.GetCount(); i < j; i++)
     {
         int entry = subs[i].idx;
@@ -2985,7 +3010,9 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
         org.x = (s->m_scrAlignment%3) == 1 ? r.left : (s->m_scrAlignment%3) == 2 ? r.CenterPoint().x : r.right;
         org.y = s->m_scrAlignment <= 3 ? r.bottom : s->m_scrAlignment <= 6 ? r.CenterPoint().y : r.top;
         if(!fOrgOverride) org2 = org;
-        BYTE* pAlphaMask = s->m_pClipper?s->m_pClipper->m_pAlphaMask:NULL;
+        SharedArrayByte pAlphaMask;
+        if( s->m_pClipper )
+            pAlphaMask = s->m_pClipper->m_pAlphaMask;
         CPoint p, p2(0, r.top);
         POSITION pos;
         p = p2;
@@ -3006,14 +3033,14 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                   :                            org.x - (l->m_width/2);
             if (s->m_clipInverse)
             {
-                bbox2 |= l->PaintShadow(spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintShadow(&drawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintShadow(&drawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintShadow(&drawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintShadow(&drawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
             }
             else
             {
-                bbox2 |= l->PaintShadow(spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintShadow(&drawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
             }
             p.y += l->m_ascent + l->m_descent;
         }
@@ -3027,14 +3054,14 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                   :                            org.x - (l->m_width/2);
             if (s->m_clipInverse)
             {
-                bbox2 |= l->PaintOutline(spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintOutline(&drawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintOutline(&drawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintOutline(&drawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintOutline(&drawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
             }
             else
             {
-                bbox2 |= l->PaintOutline(spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintOutline(&drawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
             }
             p.y += l->m_ascent + l->m_descent;
         }
@@ -3048,20 +3075,22 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                   :                            org.x - (l->m_width/2);
             if (s->m_clipInverse)
             {
-                bbox2 |= l->PaintBody(spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintBody(&drawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintBody(&drawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintBody(&drawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintBody(&drawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
             }
             else
             {
-                bbox2 |= l->PaintBody(spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintBody(&drawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
             }
             //DbgLog((LOG_TRACE,3,"%d line:%x bbox2 l:%d, t:%d, r:%d, b:%d", dbgTest++, l, bbox2->left, bbox2->top, bbox2->right, bbox2->bottom));
             p.y += l->m_ascent + l->m_descent;
         }
         rectList.AddTail(bbox2);
     }
+
+    Draw(spd, drawItemList);
     return (subs.GetCount() && !rectList.IsEmpty()) ? S_OK : S_FALSE;
 }
 
@@ -3133,4 +3162,14 @@ STDMETHODIMP_(bool) CRenderedTextSubtitle::IsColorTypeSupported( int type )
            type==MSP_AYUV ||
            type==MSP_AUYV ||
            type==MSP_RGBA;
+}
+
+void CRenderedTextSubtitle::Draw( SubPicDesc& spd, DrawItemList& drawItemList )
+{
+    POSITION pos = drawItemList.GetHeadPosition();
+    while(pos)
+    {
+        SharedPtrDrawItem& draw_item = drawItemList.GetNext(pos);
+        Rasterizer::Draw( spd, *draw_item );
+    }
 }

@@ -961,7 +961,7 @@ static const __int64 _00ff00ff00ff00ff = 0x00ff00ff00ff00ffi64;
 //    switchpts[i*2] contains a colour and switchpts[i*2+1] contains the coordinate to use that colour from
 // fBody tells whether to render the body of the subs.
 // fBorder tells whether to render the border of the subs.
-CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRect, byte* pAlphaMask, 
+CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, byte* pAlphaMask, 
     int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder)
 {
     CRect bbox(0, 0, 0, 0);
@@ -1228,6 +1228,63 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, CRect& clipRec
     return bbox;
 }
 
+CRect Rasterizer::Draw( SubPicDesc& spd, DrawItem& draw_item )
+{
+    return Draw(spd, draw_item.overlay, draw_item.clip_rect, draw_item.alpha_mask.get(), 
+        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
+}
+
+DrawItem* Rasterizer::CreateDrawItem( SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, SharedArrayByte pAlphaMask, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
+{
+    DrawItem* result = new DrawItem();
+    result->overlay = overlay;
+    result->clip_rect = clipRect;
+    result->alpha_mask = pAlphaMask;
+    result->xsub = xsub;
+    result->ysub = ysub;
+
+    memcpy(result->switchpts, switchpts, sizeof(result->switchpts));
+    result->fBody = fBody;
+    result->fBorder = fBorder;
+    return result;
+}
+
+CRect Rasterizer::DryDraw( SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, byte* pAlphaMask, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
+{
+    CRect bbox(0, 0, 0, 0);
+    if(!switchpts || !fBody && !fBorder) return(bbox);
+
+    // clip
+    // Limit drawn area to intersection of rendering surface and rectangular clip area
+    CRect r(0, 0, spd.w, spd.h);
+    r &= clipRect;
+    // Remember that all subtitle coordinates are specified in 1/8 pixels
+    // (x+4)>>3 rounds to nearest whole pixel.
+    // ??? What is xsub, ysub, mOffsetX and mOffsetY ?
+    int overlayPitch = overlay->mOverlayPitch;
+    int x = (xsub + overlay->mOffsetX + 4)>>3;
+    int y = (ysub + overlay->mOffsetY + 4)>>3;
+    int w = overlay->mOverlayWidth;
+    int h = overlay->mOverlayHeight;
+    int xo = 0, yo = 0;
+    // Again, limiting?
+    if(x < r.left) {xo = r.left-x; w -= r.left-x; x = r.left;}
+    if(y < r.top) {yo = r.top-y; h -= r.top-y; y = r.top;}
+    if(x+w > r.right) w = r.right-x;
+    if(y+h > r.bottom) h = r.bottom-y;
+    // Check if there's actually anything to render
+    if(w <= 0 || h <= 0) return(bbox);
+    bbox.SetRect(x, y, x+w, y+h);
+    bbox &= CRect(0, 0, spd.w, spd.h);
+
+    return bbox;
+}
+
+CRect Rasterizer::DryDraw( SubPicDesc& spd, DrawItem& draw_item )
+{
+    return DryDraw(spd, draw_item.overlay, draw_item.clip_rect, draw_item.alpha_mask.get(), 
+        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
+}
 ///////////////////////////////////////////////////////////////
 
 // Overlay
