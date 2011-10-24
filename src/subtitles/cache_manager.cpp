@@ -17,7 +17,12 @@ std::size_t hash_value(const CWordCacheKey& key)
 
 std::size_t hash_value(const OverlayKey& key)
 {
-    return( CStringElementTraits<CString>::Hash(key.m_str) ^ key.m_p.x ^ key.m_p.y );
+    size_t hash = CStringElementTraits<CString>::Hash(key.m_str);
+    hash += (hash<<5);
+    hash += key.m_p.x;
+    hash += (hash<<5);
+    hash += key.m_p.y;
+    return  hash;
 }
 
 std::size_t hash_value( const PathDataCacheKey& key )
@@ -27,12 +32,24 @@ std::size_t hash_value( const PathDataCacheKey& key )
 
 std::size_t hash_value( const ScanLineDataCacheKey& key )
 {
-    return hash_value(static_cast<PathDataCacheKey>(key)) ^ key.m_org.x ^ key.m_org.y;
+    //return hash_value(static_cast<PathDataCacheKey>(key)) ^ key.m_org.x ^ key.m_org.y;
+    size_t hash = hash_value(static_cast<const PathDataCacheKey&>(key));
+    hash += (hash<<5);
+    hash += key.m_org.x;
+    hash += (hash<<5);
+    hash += key.m_org.y;
+    return  hash;
 }
 
 std::size_t hash_value( const OverlayNoBlurKey& key )
 {
-    return hash_value(static_cast<ScanLineDataCacheKey>(key)) ^ key.m_p.x ^ key.m_p.y;
+    //return hash_value(static_cast<ScanLineDataCacheKey>(key)) ^ key.m_p.x ^ key.m_p.y;
+    size_t hash = hash_value(static_cast<const ScanLineDataCacheKey&>(key));
+    hash += (hash<<5);
+    hash += key.m_p.x;
+    hash += (hash<<5);
+    hash += key.m_p.y;
+    return  hash;
 }
 
 CWordCacheKey::CWordCacheKey( const CWord& word )
@@ -98,7 +115,8 @@ bool PathDataCacheKey::CompareSTSStyle( const STSStyle& lhs, const STSStyle& rhs
 
 bool ScanLineDataCacheKey::operator==( const ScanLineDataCacheKey& key ) const
 { 
-    return (static_cast<PathDataCacheKey>(*this)==static_cast<PathDataCacheKey>(key)) 
+    return //(static_cast<PathDataCacheKey>(*this)==static_cast<PathDataCacheKey>(key)) 
+        PathDataCacheKey::operator==(key) //static_cast will call copy constructer to construct a tmp obj
         && this->m_style.get().borderStyle == key.m_style.get().borderStyle
         && fabs(this->m_style.get().outlineWidthX - key.m_style.get().outlineWidthX) < 0.000001
         && fabs(this->m_style.get().outlineWidthY - key.m_style.get().outlineWidthY) < 0.000001
@@ -118,8 +136,10 @@ bool ScanLineDataCacheKey::operator==( const ScanLineDataCacheKey& key ) const
 
 bool OverlayNoBlurKey::operator==( const OverlayNoBlurKey& key ) const
 { 
-    return (static_cast<ScanLineDataCacheKey>(*this)==static_cast<ScanLineDataCacheKey>(key)) 
-        && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y); 
+    //static_cast will call copy constructer to construct a tmp obj
+    //return (static_cast<ScanLineDataCacheKey>(*this)==static_cast<ScanLineDataCacheKey>(key)) 
+    //    && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y); 
+    return ScanLineDataCacheKey::operator==(key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -177,3 +197,12 @@ ScanLineDataMruCache* CacheManager::GetScanLineDataMruCache()
     return s_scan_line_data_mru_cache;
 }
 
+
+bool OverlayKey::operator==( const OverlayKey& key ) const
+{    
+    return CWordCacheKey::operator==(key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
+        && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y);
+    //static_cast will call copy constructer to construct a tmp obj
+    //return ((CWordCacheKey)(*this)==(CWordCacheKey)key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
+    //        && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y);
+}

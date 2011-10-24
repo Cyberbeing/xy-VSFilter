@@ -20,5 +20,14 @@ inline std::size_t hash_value(const CStringA& s)
 
 inline std::size_t hash_value(const CRect& s)
 {
-    return s.left ^ s.right ^ s.bottom ^ s.top;
+    std::size_t hash = 515;
+    hash += (hash<<5);
+    hash += s.left;
+    hash += (hash<<5);
+    hash += s.right;
+    hash += (hash<<5);
+    hash += s.bottom;
+    hash += (hash<<5);
+    hash += s.top;
+    return hash;
 }

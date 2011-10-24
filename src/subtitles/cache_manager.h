@@ -75,11 +75,7 @@ public:
     OverlayKey(const OverlayKey& key):CWordCacheKey(key),m_p(key.m_p),m_org(key.m_org) { }
     OverlayKey(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend, const POINT& p, const POINT& org)
         :CWordCacheKey(style, str, ktype, kstart, kend),m_p(p), m_org(org) { }
-    bool operator==(const OverlayKey& key)const 
-    { 
-        return ((CWordCacheKey)(*this)==(CWordCacheKey)key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
-          && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y); 
-    }    
+    bool operator==(const OverlayKey& key)const;  
     bool CompareTo(const CWord& word, const POINT& p, const POINT& org)const 
     { 
         return ((CWordCacheKey)(*this)==word) && (m_p.x==p.x) && (m_p.y==p.y) && (m_org.x==org.x) && (m_org.y==org.y);

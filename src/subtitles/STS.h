@@ -71,9 +71,33 @@ public:
 
 typedef ::boost::flyweights::flyweight<STSStyle, ::boost::flyweights::no_locking> FwSTSStyle;
 //for FwSTSStyle
+static inline std::size_t hash_value(const double& d)
+{
+    std::size_t hash = 515;
+    const int32_t* tmp = reinterpret_cast<const int32_t*>(&d);
+    hash += (hash<<5);
+    hash += *(tmp++);
+    hash += (hash<<5);
+    hash += *(tmp++);
+    return hash;
+}
+
 static inline std::size_t hash_value(const STSStyle& s)
 {
-    return CStringElementTraits<CString>::Hash(s.fontName) ^ s.colors[0] ^ s.colors[2]; //fix me
+	//Todo: fix me
+    std::size_t hash = CStringElementTraits<CString>::Hash(s.fontName);
+    hash = (hash<<5) + (hash) + s.colors[0];
+    hash = (hash<<5) + (hash) + s.colors[2];
+    hash = (hash<<5) + (hash) + hash_value(s.fontSize);
+    hash = (hash<<5) + (hash) + hash_value(s.fontScaleX);
+    hash = (hash<<5) + (hash) + hash_value(s.fontScaleY);
+    hash = (hash<<5) + (hash) + hash_value(s.fontAngleX);
+    hash = (hash<<5) + (hash) + hash_value(s.fontAngleY);
+    hash = (hash<<5) + (hash) + hash_value(s.fontAngleZ);
+    hash = (hash<<5) + (hash) + hash_value(s.fontShiftX);
+    hash = (hash<<5) + (hash) + hash_value(s.fontShiftY);
+
+    return  hash;
 }
 
 class CSTSStyleMap : public CAtlMap<CString, STSStyle*, CStringElementTraits<CString> >
