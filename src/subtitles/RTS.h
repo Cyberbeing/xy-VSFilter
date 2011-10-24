@@ -139,7 +139,7 @@ protected:
     virtual bool CreatePath(SharedPtrPathData path_data);
 
 public:
-    CPolygon(const FwSTSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline);
+    CPolygon(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline);
 	CPolygon(CPolygon&); // can't use a const reference because we need to use CAtlArray::Copy which expects a non-const reference
     virtual ~CPolygon();
 
@@ -335,10 +335,10 @@ class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, pub
     int m_polygonBaselineOffset;
     double m_fps;
 
-    void ParseEffect(CSubtitle* sub, CString str);
+    void ParseEffect(CSubtitle* sub, const CString& str);
     void ParseString(CSubtitle* sub, CStringW str, const FwSTSStyle& style);
-    void ParsePolygon(CSubtitle* sub, CStringW str, const FwSTSStyle& style);
-    bool ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& style, const STSStyle& org, bool fAnimate = false);
+    void ParsePolygon(CSubtitle* sub, const CStringW& str, const FwSTSStyle& style);
+    bool ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate = false);
     bool ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle& style, STSStyle& org);
 
     double CalcAnimation(double dst, double src, bool fAnimate);

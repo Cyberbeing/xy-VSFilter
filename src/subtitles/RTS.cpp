@@ -62,6 +62,59 @@ static long revcolor(long c)
     return ((c&0xff0000)>>16) + (c&0xff00) + ((c&0xff)<<16);
 }
 
+// Skip all leading whitespace
+inline CStringW::PCXSTR SkipWhiteSpaceLeft(const CStringW& str)
+{
+    CStringW::PCXSTR psz = str.GetString();
+
+    while( iswspace( *psz ) )
+    {
+        psz++;
+    }
+    return psz;
+}
+
+// Skip all trailing whitespace
+inline CStringW::PCXSTR SkipWhiteSpaceRight(const CStringW& str)
+{
+    CStringW::PCXSTR psz = str.GetString();
+    CStringW::PCXSTR pszLast = psz + str.GetLength() - 1;
+    bool first_white = false;
+    while( iswspace( *pszLast ) )
+    {
+        pszLast--;
+        if(pszLast<psz)
+            break;
+    }
+    return pszLast;
+}
+
+// Skip all leading whitespace
+inline CStringW::PCXSTR SkipWhiteSpaceLeft(CStringW::PCXSTR start, CStringW::PCXSTR end)
+{
+    while( start!=end && iswspace( *start ) )
+    {
+        start++;
+    }
+    return start;
+}
+
+// Skip all trailing whitespace, first char must NOT be white space
+inline CStringW::PCXSTR FastSkipWhiteSpaceRight(CStringW::PCXSTR start, CStringW::PCXSTR end)
+{
+    while( iswspace( *--end ) );
+    return end+1;
+}
+
+inline CStringW::PCXSTR FindChar(CStringW::PCXSTR start, CStringW::PCXSTR end, WCHAR c)
+{
+    while( start!=end && *start!=c )
+    {
+        start++;
+    }
+    return start;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // CMyFont
@@ -730,7 +783,7 @@ bool CText::CreatePath(SharedPtrPathData path_data)
 
 // CPolygon
 
-CPolygon::CPolygon(const FwSTSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline)
+CPolygon::CPolygon(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline)
     : CWord(style, str, ktype, kstart, kend)
     , m_scalex(scalex), m_scaley(scaley), m_baseline(baseline)
 {
@@ -1708,18 +1761,27 @@ void CRenderedTextSubtitle::Deinit()
     CacheManager::GetOverlayMruCache()->clear();
 }
 
-void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, CString str)
+void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
 {
-    str.Trim();
-    if(!sub || str.IsEmpty()) return;
-    const TCHAR* s = _tcschr(str, ';');
-    if(!s) {s = (LPTSTR)(LPCTSTR)str; s += str.GetLength()-1;}
-    s++;
-    CString effect = str.Left(s - str);
-    if(!effect.CompareNoCase(_T("Banner;")))
+    CStringW::PCXSTR str_start = str.GetString();
+    CStringW::PCXSTR str_end = str_start + str.GetLength();
+    str_start = SkipWhiteSpaceLeft(str_start, str_end);
+
+    if(!sub || *str_start==0)
+        return;
+
+    str_end = FastSkipWhiteSpaceRight(str_start, str_end);
+
+    const WCHAR* s = FindChar(str_start, str_end, L';');
+    if(*s==L';') {
+        s++;
+    }
+    
+    const CStringW effect(str_start, s-str_start);
+    if(!effect.CompareNoCase( L"Banner;" ) )
     {
         int delay, lefttoright = 0, fadeawaywidth = 0;
-        if(_stscanf(s, _T("%d;%d;%d"), &delay, &lefttoright, &fadeawaywidth) < 1) return;
+        if(swscanf(s, L"%d;%d;%d", &delay, &lefttoright, &fadeawaywidth) < 1) return;
         Effect* e = new Effect;
         if(!e) return;
         sub->m_effects[e->type = EF_BANNER] = e;
@@ -1728,10 +1790,10 @@ void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, CString str)
         e->param[2] = (int)(sub->m_scalex*fadeawaywidth);
         sub->m_wrapStyle = 2;
     }
-    else if(!effect.CompareNoCase(_T("Scroll up;")) || !effect.CompareNoCase(_T("Scroll down;")))
+    else if(!effect.CompareNoCase(L"Scroll up;") || !effect.CompareNoCase(L"Scroll down;"))
     {
         int top, bottom, delay, fadeawayheight = 0;
-        if(_stscanf(s, _T("%d;%d;%d;%d"), &top, &bottom, &delay, &fadeawayheight) < 3) return;
+        if(swscanf(s, L"%d;%d;%d;%d", &top, &bottom, &delay, &fadeawayheight) < 3) return;
         if(top > bottom) {int tmp = top; top = bottom; bottom = tmp;}
         Effect* e = new Effect;
         if(!e) return;
@@ -1824,7 +1886,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
     return;
 }
 
-void CRenderedTextSubtitle::ParsePolygon(CSubtitle* sub, CStringW str, const FwSTSStyle& style)
+void CRenderedTextSubtitle::ParsePolygon(CSubtitle* sub, const CStringW& str, const FwSTSStyle& style)
 {
     if(!sub || !str.GetLength() || !m_nPolygon) return;
 
@@ -1845,36 +1907,80 @@ void CRenderedTextSubtitle::ParsePolygon(CSubtitle* sub, CStringW str, const FwS
     }
 }
 
-bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& style, const STSStyle& org, bool fAnimate)
+bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate)
 {
     if(!sub) return(false);
     int nTags = 0, nUnrecognizedTags = 0;
     for(int i = 0, j; (j = str.Find(L'\\', i)) >= 0; i = j)
     {
-        CStringW cmd;
-        for(WCHAR c = str[++j]; c && c != L'(' && c != L'\\'; cmd += c, c = str[++j]);
-        cmd.Trim();
+        j++;
+        CStringW::PCXSTR str_start = str.GetString() + j;
+        CStringW::PCXSTR pc = str_start;
+        while( iswspace(*pc) ) 
+        {
+            pc++;
+        }
+        j += pc-str_start;
+        str_start = pc;
+        while( *pc && *pc != L'(' && *pc != L'\\' )
+        {
+            pc++;
+        }
+        j += pc-str_start;        
+        if( pc-str_start>0 )
+        {
+            while( iswspace(*--pc) );
+            pc++;
+        }
+                
+        const CStringW cmd(str_start, pc-str_start);
         if(cmd.IsEmpty()) continue;
+
         CAtlArray<CStringW> params;
         if(str[j] == L'(')
         {
-            CStringW param;
-            for(WCHAR c = str[++j]; c && c != L')'; param += c, c = str[++j]);
-            param.Trim();
-            while(!param.IsEmpty())
+            j++;
+            CStringW::PCXSTR str_start = str.GetString() + j;
+            CStringW::PCXSTR pc = str_start;
+            while( iswspace(*pc) ) 
             {
-                int i = param.Find(L','), j = param.Find(L'\\');
-                if(i >= 0 && (j < 0 || i < j))
+                pc++;
+            }
+            j += pc-str_start;
+            str_start = pc;
+            while( *pc && *pc != L')' )
+            {
+                pc++;
+            }
+            j += pc-str_start;        
+            if( pc-str_start>0 )
+            {
+                while( iswspace(*--pc) );
+                pc++;
+            }
+
+            CStringW::PCXSTR param_start = str_start;
+            CStringW::PCXSTR param_end = pc;
+            while( param_start<param_end )
+            {
+                param_start = SkipWhiteSpaceLeft(param_start, param_end);
+
+                CStringW::PCXSTR newstart = FindChar(param_start, param_end, L',');
+                CStringW::PCXSTR newend = FindChar(param_start, param_end, L'\\');
+                if(newstart > param_start && newstart < newend)
                 {
-                    CStringW s = param.Left(i).Trim();
+                    newstart = FastSkipWhiteSpaceRight(param_start, newstart);
+                    CStringW s(param_start, newstart - param_start);
+
                     if(!s.IsEmpty()) params.Add(s);
-                    param = i+1 < param.GetLength() ? param.Mid(i+1) : L"";
+                    param_start = newstart + 1;
                 }
-                else
+                else if(param_start<param_end)
                 {
-                    param.Trim();
-                    if(!param.IsEmpty()) params.Add(param);
-                    param.Empty();
+                    CStringW s(param_start, param_end - param_start);
+
+                    params.Add(s);
+                    param_start = param_end;
                 }
             }
         }
@@ -1956,7 +2062,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& 
         }
         nTags++;
         // TODO: call ParseStyleModifier(cmd, params, ..) and move the rest there
-        CStringW p = params.GetCount() > 0 ? params[0] : L"";
+        const CStringW& p = params.GetCount() > 0 ? params[0] : CStringW("");
         switch ( cmd_type )
         {
         case CMD_1c :
@@ -2365,32 +2471,32 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, CStringW str, STSStyle& 
             }
         case CMD_t: // \t([<t1>,<t2>,][<accel>,]<style modifiers>)
             {
-                p.Empty();
+                CStringW param;
                 m_animStart = m_animEnd = 0;
                 m_animAccel = 1;
                 if(params.GetCount() == 1)
                 {
-                    p = params[0];
+                    param = params[0];
                 }
                 else if(params.GetCount() == 2)
                 {
                     m_animAccel = wcstod(params[0], NULL);
-                    p = params[1];
+                    param = params[1];
                 }
                 else if(params.GetCount() == 3)
                 {
                     m_animStart = (int)wcstod(params[0], NULL);
                     m_animEnd = (int)wcstod(params[1], NULL);
-                    p = params[2];
+                    param = params[2];
                 }
                 else if(params.GetCount() == 4)
                 {
                     m_animStart = wcstol(params[0], NULL, 10);
                     m_animEnd = wcstol(params[1], NULL, 10);
                     m_animAccel = wcstod(params[2], NULL);
-                    p = params[3];
+                    param = params[3];
                 }
-                ParseSSATag(sub, p, style, org, true);
+                ParseSSATag(sub, param, style, org, true);
                 sub->m_fAnimated = true;
                 break;
             }
