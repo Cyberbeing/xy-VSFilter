@@ -182,19 +182,19 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
     if(!word->m_str || overlay_list==NULL) return;
 
     CPoint psub = SubpixelPositionControler::GetGlobalControler().GetSubpixel(p);
-    CPoint trans_org = org - p;
-    OverlayKey overlay_key(*word, psub, trans_org);
+    CPoint trans_org = org - p;    
     bool need_transform = word->NeedTransform();
     if(!need_transform)
     {
-        overlay_key.m_org.x=0;
-        overlay_key.m_org.y=0;
-    }   
+        trans_org.x=0;
+        trans_org.y=0;
+    }
+    OverlayKey overlay_key(*word, psub, trans_org);
     OverlayMruCache* overlay_cache = CacheManager::GetOverlayMruCache();
     OverlayMruCache::hashed_cache_const_iterator iter = overlay_cache->hash_find(overlay_key);
     if(iter==overlay_cache->hash_end())    
     {
-        word->DoPaint(psub, trans_org, &(overlay_list->overlay));
+        word->DoPaint(psub, trans_org, &(overlay_list->overlay), overlay_key);
         OverlayMruItem item(overlay_key, overlay_list->overlay);
         CacheManager::GetOverlayMruCache()->update_cache(item);
     }
@@ -217,14 +217,12 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
     }
 }
 
-void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay)
+void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key)
 {
     overlay->reset(new Overlay());
 
-    OverlayNoBlurKey overlay_no_blur_key(*this, psub, trans_org);
-
     OverlayNoBlurMruCache* overlay_no_blur_cache = CacheManager::GetOverlayNoBlurMruCache();
-    OverlayNoBlurMruCache::hashed_cache_const_iterator iter = overlay_no_blur_cache->hash_find(overlay_no_blur_key);
+    OverlayNoBlurMruCache::hashed_cache_const_iterator iter = overlay_no_blur_cache->hash_find(key);
     
     SharedPtrOverlay raterize_result;
     if(iter==overlay_no_blur_cache->hash_end())
@@ -233,20 +231,20 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
 
         SharedPtrScanLineData scan_line_data;
         ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
-        ScanLineDataMruCache::hashed_cache_const_iterator iter = scan_line_data_cache->hash_find(overlay_no_blur_key);
+        ScanLineDataMruCache::hashed_cache_const_iterator iter = scan_line_data_cache->hash_find(key);
         if(iter==scan_line_data_cache->hash_end())
         {
             //get outline path, if not cached, create it and cache a copy, else copy from cache
             SharedPtrPathData path_data(new PathData());        
             PathDataMruCache* path_data_cache = CacheManager::GetPathDataMruCache();
-            PathDataMruCache::hashed_cache_const_iterator iter = path_data_cache->hash_find(overlay_no_blur_key);
+            PathDataMruCache::hashed_cache_const_iterator iter = path_data_cache->hash_find(key);
             if(iter==path_data_cache->hash_end())    
             {
                 if(!CreatePath(path_data)) return;
 
                 SharedPtrPathData data(new PathData());
                 *data = *path_data;//important! copy not ref
-                PathDataMruItem item(overlay_no_blur_key, data);
+                PathDataMruItem item(key, data);
                 path_data_cache->update_cache(item);
             }
             else
@@ -268,7 +266,7 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             {
                 if(!CreateOpaqueBox()) return;
             }
-            ScanLineDataMruItem item(overlay_no_blur_key, scan_line_data);
+            ScanLineDataMruItem item(key, scan_line_data);
             scan_line_data_cache->update_cache(item);   
         }
         else
@@ -277,7 +275,7 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
         }
         if(!Rasterizer::Rasterize(*scan_line_data, psub.x, psub.y, raterize_result)) return;
 
-        OverlayNoBlurMruItem item(overlay_no_blur_key, raterize_result);
+        OverlayNoBlurMruItem item(key, raterize_result);
         overlay_no_blur_cache->update_cache(item);
     }
     else

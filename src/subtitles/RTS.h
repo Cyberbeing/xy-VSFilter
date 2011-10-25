@@ -66,6 +66,8 @@ class CWord;
 typedef CWord* PCWord;
 typedef ::boost::shared_ptr<CWord> SharedPtrCWord;
 typedef ::boost::shared_ptr<CPolygon> SharedPtrCPolygon;
+
+class OverlayKey;
 class CWord
 {
     bool NeedTransform();
@@ -82,7 +84,7 @@ protected:
 
     virtual bool CreatePath(SharedPtrPathData path_data) = 0;
 
-    void DoPaint(const CPoint& p, const CPoint& org, SharedPtrOverlay* overlay);
+    void DoPaint(const CPoint& p, const CPoint& org, SharedPtrOverlay* overlay, const OverlayKey& key);
 public:
     bool m_fWhiteSpaceChar, m_fLineBreak;
 

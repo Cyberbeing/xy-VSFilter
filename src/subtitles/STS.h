@@ -71,20 +71,9 @@ public:
 
 typedef ::boost::flyweights::flyweight<STSStyle, ::boost::flyweights::no_locking> FwSTSStyle;
 //for FwSTSStyle
-static inline std::size_t hash_value(const double& d)
-{
-    std::size_t hash = 515;
-    const int32_t* tmp = reinterpret_cast<const int32_t*>(&d);
-    hash += (hash<<5);
-    hash += *(tmp++);
-    hash += (hash<<5);
-    hash += *(tmp++);
-    return hash;
-}
-
 static inline std::size_t hash_value(const STSStyle& s)
 {
-	//Todo: fix me
+    //Todo: fix me
     std::size_t hash = CStringElementTraits<CString>::Hash(s.fontName);
     hash = (hash<<5) + (hash) + s.colors[0];
     hash = (hash<<5) + (hash) + s.colors[2];

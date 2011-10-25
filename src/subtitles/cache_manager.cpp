@@ -15,16 +15,6 @@ std::size_t hash_value(const CWordCacheKey& key)
     return( CStringElementTraits<CString>::Hash(key.m_str) );
 }
 
-std::size_t hash_value(const OverlayKey& key)
-{
-    size_t hash = CStringElementTraits<CString>::Hash(key.m_str);
-    hash += (hash<<5);
-    hash += key.m_p.x;
-    hash += (hash<<5);
-    hash += key.m_p.y;
-    return  hash;
-}
-
 std::size_t hash_value( const PathDataCacheKey& key )
 {
     return( CStringElementTraits<CString>::Hash(key.m_str) ); 
@@ -49,6 +39,16 @@ std::size_t hash_value( const OverlayNoBlurKey& key )
     hash += key.m_p.x;
     hash += (hash<<5);
     hash += key.m_p.y;
+    return  hash;
+}
+
+std::size_t hash_value(const OverlayKey& key)
+{
+    size_t hash = hash_value(static_cast<const OverlayNoBlurKey&>(key));
+    hash += (hash<<5);
+    hash += key.m_style.get().fBlur;
+    hash += (hash<<5);
+    hash += hash_value(key.m_style.get().fGaussianBlur);
     return  hash;
 }
 
@@ -144,6 +144,20 @@ bool OverlayNoBlurKey::operator==( const OverlayNoBlurKey& key ) const
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+// OverlayKey
+
+bool OverlayKey::operator==( const OverlayKey& key ) const
+{    
+    return OverlayNoBlurKey::operator==(key)
+        && fabs(this->m_style.get().fGaussianBlur - key.m_style.get().fGaussianBlur) < 0.000001
+        && this->m_style.get().fBlur == key.m_style.get().fBlur;
+    //static_cast will call copy constructer to construct a tmp obj
+    //return ((CWordCacheKey)(*this)==(CWordCacheKey)key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
+    //        && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 // CacheManager
 
 CWordMruCache* CacheManager::s_word_mru_cache = NULL;
@@ -195,14 +209,4 @@ ScanLineDataMruCache* CacheManager::GetScanLineDataMruCache()
         s_scan_line_data_mru_cache = new ScanLineDataMruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
     }
     return s_scan_line_data_mru_cache;
-}
-
-
-bool OverlayKey::operator==( const OverlayKey& key ) const
-{    
-    return CWordCacheKey::operator==(key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
-        && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y);
-    //static_cast will call copy constructer to construct a tmp obj
-    //return ((CWordCacheKey)(*this)==(CWordCacheKey)key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
-    //        && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y);
 }

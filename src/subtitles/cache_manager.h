@@ -68,20 +68,15 @@ public:
     POINT m_p;    
 };
 
-class OverlayKey: public CWordCacheKey
+class OverlayKey: public OverlayNoBlurKey
 {
 public:
-    OverlayKey(const CWord& word, const POINT& p, const POINT& org):CWordCacheKey(word),m_p(p),m_org(org) { }
-    OverlayKey(const OverlayKey& key):CWordCacheKey(key),m_p(key.m_p),m_org(key.m_org) { }
-    OverlayKey(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend, const POINT& p, const POINT& org)
-        :CWordCacheKey(style, str, ktype, kstart, kend),m_p(p), m_org(org) { }
-    bool operator==(const OverlayKey& key)const;  
-    bool CompareTo(const CWord& word, const POINT& p, const POINT& org)const 
-    { 
-        return ((CWordCacheKey)(*this)==word) && (m_p.x==p.x) && (m_p.y==p.y) && (m_org.x==org.x) && (m_org.y==org.y);
-    }
+    OverlayKey(const CWord& word, const POINT& p, const POINT& org):OverlayNoBlurKey(word, p, org) { }
+    OverlayKey(const OverlayKey& key):OverlayNoBlurKey(key){ }
 
-    POINT m_p, m_org;    
+    bool operator==(const OverlayKey& key)const;
+
+    friend std::size_t hash_value(const OverlayKey& key);
 };
 
 std::size_t hash_value(const CWord& key);
