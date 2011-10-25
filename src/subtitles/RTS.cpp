@@ -180,8 +180,7 @@ bool CWord::Append(const SharedPtrCWord& w)
 void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, OverlayList* overlay_list )
 {
     if(!word->m_str || overlay_list==NULL) return;
-
-    CPoint psub = SubpixelPositionControler::GetGlobalControler().GetSubpixel(p);
+    
     CPoint trans_org = org - p;    
     bool need_transform = word->NeedTransform();
     if(!need_transform)
@@ -189,27 +188,52 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
         trans_org.x=0;
         trans_org.y=0;
     }
-    OverlayKey overlay_key(*word, psub, trans_org);
-    OverlayMruCache* overlay_cache = CacheManager::GetOverlayMruCache();
-    OverlayMruCache::hashed_cache_const_iterator iter = overlay_cache->hash_find(overlay_key);
-    if(iter==overlay_cache->hash_end())    
+
+    if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() )
     {
-        word->DoPaint(psub, trans_org, &(overlay_list->overlay), overlay_key);
-        OverlayMruItem item(overlay_key, overlay_list->overlay);
-        overlay_cache->update_cache(item);
+        CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
+        OverlayKey sub_key(*word, psub_true, trans_org);
+
+        OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();
+        
+        OverlayMruCache::hashed_cache_const_iterator iter = overlay_cache->hash_find(sub_key);
+        if(iter!=overlay_cache->hash_end()) 
+        {
+            overlay_list->overlay = iter->overlay;
+            overlay_cache->update_cache( *iter );
+        }
     }
-    else
+    if( !overlay_list->overlay )
     {
-        overlay_list->overlay = iter->overlay;
-        overlay_cache->update_cache( *iter );
+        CPoint psub = SubpixelPositionControler::GetGlobalControler().GetSubpixel(p);
+        OverlayKey overlay_key(*word, psub, trans_org);
+        OverlayMruCache* overlay_cache = CacheManager::GetOverlayMruCache();
+        OverlayMruCache::hashed_cache_const_iterator iter = overlay_cache->hash_find(overlay_key);
+        if(iter==overlay_cache->hash_end())    
+        {
+            word->DoPaint(psub, trans_org, &(overlay_list->overlay), overlay_key);
+            OverlayMruItem item(overlay_key, overlay_list->overlay);
+            overlay_cache->update_cache(item);
+        }
+        else
+        {
+            overlay_list->overlay = iter->overlay;
+            overlay_cache->update_cache( *iter );
+        }
+        if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() 
+            && (psub.x!=(p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) 
+            || psub.y!=(p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK)) )
+        {
+            overlay_list->overlay.reset(overlay_list->overlay->GetSubpixelVariance((p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.x, 
+                (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.y));
+            CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
+            OverlayKey sub_key(*word, psub_true, trans_org);
+            OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();
+            OverlayMruItem item(sub_key, overlay_list->overlay);
+            overlay_cache->update_cache(item);
+        }
     }
-    if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() 
-        && (psub.x!=(p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) 
-         || psub.y!=(p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK)) )
-    {
-        overlay_list->overlay.reset(overlay_list->overlay->GetSubpixelVariance((p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.x, 
-                                                                               (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.y));
-    }
+
     if(word->m_style.get().borderStyle == 1)
     {
         if(!word->CreateOpaqueBox()) return;

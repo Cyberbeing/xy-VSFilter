@@ -174,6 +174,7 @@ typedef enhanced_mru_list<
 class CacheManager
 {
 public:
+    static const int SUBPIXEL_VARIANCE_CACHE_ITEM_NUM = 256;
     static const int OVERLAY_CACHE_ITEM_NUM = 256;
 
     static const int OVERLAY_NO_BLUR_CACHE_ITEM_NUM = 256;
@@ -181,12 +182,14 @@ public:
     static const int PATH_CACHE_ITEM_NUM = 256;
     static const int WORD_CACHE_ITEM_NUM = 512;
 
+    static OverlayMruCache* GetSubpixelVarianceCache();
     static OverlayMruCache* GetOverlayMruCache();
     static OverlayNoBlurMruCache* GetOverlayNoBlurMruCache();
     static ScanLineDataMruCache* GetScanLineDataMruCache();
     static PathDataMruCache* GetPathDataMruCache();
     static CWordMruCache* GetCWordMruCache();
 private:
+    static OverlayMruCache* s_subpixel_variance_cache;
     static OverlayMruCache* s_overlay_mru_cache;
     static OverlayNoBlurMruCache* s_overlay_no_blur_mru_cache;
     static PathDataMruCache* s_path_data_mru_cache;
