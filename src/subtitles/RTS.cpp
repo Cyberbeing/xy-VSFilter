@@ -196,11 +196,12 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
     {
         word->DoPaint(psub, trans_org, &(overlay_list->overlay), overlay_key);
         OverlayMruItem item(overlay_key, overlay_list->overlay);
-        CacheManager::GetOverlayMruCache()->update_cache(item);
+        overlay_cache->update_cache(item);
     }
     else
     {
         overlay_list->overlay = iter->overlay;
+        overlay_cache->update_cache( *iter );
     }
     if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() 
         && (psub.x!=(p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) 
@@ -249,7 +250,8 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             }
             else
             {
-                *path_data = *(iter->path_data); //important! copy not ref
+                *path_data = *(iter->path_data); //important! copy not ref                
+                path_data_cache->update_cache( *iter );
             } 
 
             bool need_transform = NeedTransform();
@@ -272,6 +274,7 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
         else
         {
             scan_line_data = iter->scan_line_data;
+            scan_line_data_cache->update_cache( *iter );
         }
         if(!Rasterizer::Rasterize(*scan_line_data, psub.x, psub.y, raterize_result)) return;
 
@@ -281,6 +284,7 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     else
     {
         raterize_result = iter->overlay;
+        overlay_no_blur_cache->update_cache( *iter );
     }    
     if(!Rasterizer::Blur(*raterize_result, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
     {
