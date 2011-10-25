@@ -1102,13 +1102,16 @@ void CLine::Compact()
     }
 }
 
-CRect CLine::PaintShadow(DrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
+CRect CLine::PaintShadow(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
 {
     CRect bbox(0, 0, 0, 0);
     POSITION pos = GetHeadPosition();
+    POSITION outputPos = output->GetHeadPosition();
     while(pos)
     {
         SharedPtrCWord w = GetNext(pos);
+        CompositeDrawItem& outputItem = output->GetNext(outputPos);
+
         if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
         if(w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0)
         {
@@ -1130,22 +1133,20 @@ CRect CLine::PaintShadow(DrawItemList* output, SubPicDesc& spd, CRect& clipRect,
             OverlayList overlay_list;
             CWord::Paint(w, CPoint(x, y), org, &overlay_list);
             if(w->m_style.get().borderStyle == 0)
-            {                
-                SharedPtrDrawItem draw_item( 
+            {
+                outputItem.shadow.reset( 
                     Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw,
                         w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
                         (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart))
                 );
-                output->AddTail(draw_item);
-                bbox |= Rasterizer::DryDraw(spd, *draw_item);
+                bbox |= Rasterizer::DryDraw(spd, *outputItem.shadow);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
-                SharedPtrDrawItem draw_item( 
+                outputItem.shadow.reset( 
                     Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false)
                 );
-                output->AddTail(draw_item);
-                bbox |= Rasterizer::DryDraw(spd, *draw_item);
+                bbox |= Rasterizer::DryDraw(spd, *outputItem.shadow);
             }
         }
         p.x += w->m_width;
@@ -1153,13 +1154,15 @@ CRect CLine::PaintShadow(DrawItemList* output, SubPicDesc& spd, CRect& clipRect,
     return(bbox);
 }
 
-CRect CLine::PaintOutline(DrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
+CRect CLine::PaintOutline(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
 {
     CRect bbox(0, 0, 0, 0);
     POSITION pos = GetHeadPosition();
+    POSITION outputPos = output->GetHeadPosition();
     while(pos)
     {
         SharedPtrCWord w = GetNext(pos);
+        CompositeDrawItem& outputItem = output->GetNext(outputPos);
         if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
         if(w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0 && !(w->m_ktype == 2 && time < w->m_kstart))
         {
@@ -1182,19 +1185,17 @@ CRect CLine::PaintOutline(DrawItemList* output, SubPicDesc& spd, CRect& clipRect
             CWord::Paint(w, CPoint(x, y), org, &overlay_list);
             if(w->m_style.get().borderStyle == 0)
             {
-                SharedPtrDrawItem draw_item( 
+                outputItem.outline.reset( 
                     Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
                 );
-                output->AddTail(draw_item);
-                bbox |= Rasterizer::DryDraw(spd, *draw_item);
+                bbox |= Rasterizer::DryDraw(spd, *outputItem.outline);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
-                SharedPtrDrawItem draw_item( 
+                outputItem.outline.reset( 
                     Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false)
                 );
-                output->AddTail(draw_item);
-                bbox |= Rasterizer::DryDraw(spd, *draw_item);
+                bbox |= Rasterizer::DryDraw(spd, *outputItem.outline);
             }
         }
         p.x += w->m_width;
@@ -1202,13 +1203,15 @@ CRect CLine::PaintOutline(DrawItemList* output, SubPicDesc& spd, CRect& clipRect
     return(bbox);
 }
 
-CRect CLine::PaintBody(DrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
+CRect CLine::PaintBody(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
 {
     CRect bbox(0, 0, 0, 0);
     POSITION pos = GetHeadPosition();
+    POSITION outputPos = output->GetHeadPosition();
     while(pos)
     {
         SharedPtrCWord w = GetNext(pos);
+        CompositeDrawItem& outputItem = output->GetNext(outputPos);
         if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
         int x = p.x;
         int y = p.y + m_ascent - w->m_ascent;
@@ -1265,11 +1268,10 @@ CRect CLine::PaintBody(DrawItemList* output, SubPicDesc& spd, CRect& clipRect, S
         }
         OverlayList overlay_list;
         CWord::Paint(w, CPoint(x, y), org, &overlay_list);
-        SharedPtrDrawItem draw_item( 
+        outputItem.body.reset( 
             Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, true, false)
         );
-        output->AddTail(draw_item);
-        bbox |= Rasterizer::DryDraw(spd, *draw_item);
+        bbox |= Rasterizer::DryDraw(spd, *outputItem.body);
         p.x += w->m_width;
     }
     return(bbox);
@@ -1283,6 +1285,11 @@ void CLine::AddWord2Tail( SharedPtrCWord words )
 bool CLine::IsEmpty()
 {
     return __super::IsEmpty();
+}
+
+int CLine::GetWordCount()
+{
+    return GetCount();
 }
 
 
@@ -3000,7 +3007,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     }
     qsort(subs.GetData(), subs.GetCount(), sizeof(LSub), lscomp);
 
-    DrawItemList drawItemList;
+    CompositeDrawItemList drawItemList;
     for(int i = 0, j = subs.GetCount(); i < j; i++)
     {
         int entry = subs[i].idx;
@@ -3139,60 +3146,46 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
             p.x = (s->m_scrAlignment%3) == 1 ? org.x
                   : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
                   :                            org.x - (l->m_width/2);
+            
+            CompositeDrawItemList tmpDrawItemList;
             if (s->m_clipInverse)
-            {
-                bbox2 |= l->PaintShadow(&drawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(&drawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(&drawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(&drawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
+            {              
+                for (int i=0;i<l->GetWordCount();i++)
+                {
+                    tmpDrawItemList.AddTail();
+                    tmpDrawItemList.AddTail();
+                    tmpDrawItemList.AddTail();
+                    tmpDrawItemList.AddTail();
+                }
+                bbox2 |= l->PaintShadow(&tmpDrawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintShadow(&tmpDrawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintShadow(&tmpDrawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintShadow(&tmpDrawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
+
+                bbox2 |= l->PaintOutline(&tmpDrawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintOutline(&tmpDrawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintOutline(&tmpDrawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintOutline(&tmpDrawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
+
+                bbox2 |= l->PaintBody(&tmpDrawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintBody(&tmpDrawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintBody(&tmpDrawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintBody(&tmpDrawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
             }
             else
             {
-                bbox2 |= l->PaintShadow(&drawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
+                for (int i=0;i<l->GetWordCount();i++)
+                {
+                    tmpDrawItemList.AddTail();
+                }
+                bbox2 |= l->PaintShadow(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
+
+                bbox2 |= l->PaintOutline(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
+
+                bbox2 |= l->PaintBody(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
             }
-            p.y += l->m_ascent + l->m_descent;
-        }
-        p = p2;
-        pos = s->GetHeadLinePosition();
-        while(pos)
-        {
-            CLine* l = s->GetNextLine(pos);
-            p.x = (s->m_scrAlignment%3) == 1 ? org.x
-                  : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
-                  :                            org.x - (l->m_width/2);
-            if (s->m_clipInverse)
-            {
-                bbox2 |= l->PaintOutline(&drawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(&drawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(&drawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(&drawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
-            }
-            else
-            {
-                bbox2 |= l->PaintOutline(&drawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
-            }
-            p.y += l->m_ascent + l->m_descent;
-        }
-        p = p2;
-        pos = s->GetHeadLinePosition();
-        while(pos)
-        {
-            CLine* l = s->GetNextLine(pos);
-            p.x = (s->m_scrAlignment%3) == 1 ? org.x
-                  : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
-                  :                            org.x - (l->m_width/2);
-            if (s->m_clipInverse)
-            {
-                bbox2 |= l->PaintBody(&drawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(&drawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(&drawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(&drawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
-            }
-            else
-            {
-                bbox2 |= l->PaintBody(&drawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
-            }
-            //DbgLog((LOG_TRACE,3,"%d line:%x bbox2 l:%d, t:%d, r:%d, b:%d", dbgTest++, l, bbox2->left, bbox2->top, bbox2->right, bbox2->bottom));
+
+            drawItemList.AddTailList(&tmpDrawItemList);
             p.y += l->m_ascent + l->m_descent;
         }
         rectList.AddTail(bbox2);
@@ -3272,12 +3265,27 @@ STDMETHODIMP_(bool) CRenderedTextSubtitle::IsColorTypeSupported( int type )
            type==MSP_RGBA;
 }
 
-void CRenderedTextSubtitle::Draw( SubPicDesc& spd, DrawItemList& drawItemList )
+void CRenderedTextSubtitle::Draw( SubPicDesc& spd, CompositeDrawItemList& drawItemList )
 {
     POSITION pos = drawItemList.GetHeadPosition();
     while(pos)
     {
-        SharedPtrDrawItem& draw_item = drawItemList.GetNext(pos);
-        Rasterizer::Draw( spd, *draw_item );
+        CompositeDrawItem& draw_item = drawItemList.GetNext(pos);
+        if(draw_item.shadow)
+            Rasterizer::Draw( spd, *draw_item.shadow );
+    }
+    pos = drawItemList.GetHeadPosition();
+    while(pos)
+    {
+        CompositeDrawItem& draw_item = drawItemList.GetNext(pos);
+        if(draw_item.outline)
+            Rasterizer::Draw( spd, *draw_item.outline );
+    }
+    pos = drawItemList.GetHeadPosition();
+    while(pos)
+    {
+        CompositeDrawItem& draw_item = drawItemList.GetNext(pos);
+        if(draw_item.body)
+            Rasterizer::Draw( spd, *draw_item.body );
     }
 }

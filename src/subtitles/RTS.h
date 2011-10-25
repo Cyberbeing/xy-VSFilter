@@ -60,7 +60,14 @@ struct OverlayList
     }
 };
 
-typedef CAtlList<SharedPtrDrawItem> DrawItemList;
+struct CompositeDrawItem
+{
+    SharedPtrDrawItem shadow;
+    SharedPtrDrawItem outline;
+    SharedPtrDrawItem body;
+};
+
+typedef CAtlList<CompositeDrawItem> CompositeDrawItemList;
 
 class CWord;
 typedef CWord* PCWord;
@@ -171,13 +178,13 @@ public:
 
     void Compact();
 
-
+    int GetWordCount();
     void AddWord2Tail(SharedPtrCWord words);
     bool IsEmpty();
 
-    CRect PaintShadow(DrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha);
-    CRect PaintOutline(DrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha);
-    CRect PaintBody(DrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha);
+    CRect PaintShadow(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha);
+    CRect PaintOutline(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha);
+    CRect PaintBody(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha);
 };
 
 enum eftype
@@ -345,7 +352,8 @@ class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, pub
 
     double CalcAnimation(double dst, double src, bool fAnimate);
 
-    void Draw(SubPicDesc& spd, DrawItemList& drawItemList);
+    void Draw(SubPicDesc& spd, CompositeDrawItemList& drawItemList);
+    
     CSubtitle* GetSubtitle(int entry);
 
 protected:
