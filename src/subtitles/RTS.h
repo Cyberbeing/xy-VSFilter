@@ -334,6 +334,13 @@ class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, pub
     static CAtlMap<CStringW, AssCmdType, CStringElementTraits<CStringW>> m_cmdMap;
     static void InitCmdMap();
 
+    struct AssTag
+    {
+        CStringW cmd;
+        AssCmdType cmdType;
+        CAtlArray<CStringW> strParams;
+    };
+
     // temp variables, used when parsing the script
     int m_time, m_delay;
     int m_animStart, m_animEnd;
@@ -346,6 +353,7 @@ class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, pub
     void ParseEffect(CSubtitle* sub, const CString& str);
     void ParseString(CSubtitle* sub, CStringW str, const FwSTSStyle& style);
     void ParsePolygon(CSubtitle* sub, const CStringW& str, const FwSTSStyle& style);
+    static bool ParseSSATag(CAtlList<AssTag> *assTags, const CStringW& str);
     bool ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate = false);
     bool ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle& style, STSStyle& org);
 

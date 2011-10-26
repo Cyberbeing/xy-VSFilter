@@ -1957,12 +1957,16 @@ void CRenderedTextSubtitle::ParsePolygon(CSubtitle* sub, const CStringW& str, co
     }
 }
 
-bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate)
+bool CRenderedTextSubtitle::ParseSSATag( CAtlList<AssTag> *assTags, const CStringW& str )
 {
-    if(!sub) return(false);
+    if(!assTags) return(false);
     int nTags = 0, nUnrecognizedTags = 0;
     for(int i = 0, j; (j = str.Find(L'\\', i)) >= 0; i = j)
     {
+        POSITION pos = assTags->AddTail();
+        AssTag& assTag = assTags->GetAt(pos);
+        assTag.cmdType = CMD_COUNT;
+
         j++;
         CStringW::PCXSTR str_start = str.GetString() + j;
         CStringW::PCXSTR pc = str_start;
@@ -1986,7 +1990,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STS
         const CStringW cmd(str_start, pc-str_start);
         if(cmd.IsEmpty()) continue;
 
-        CAtlArray<CStringW> params;
+        CAtlArray<CStringW>& params = assTag.strParams;
         if(str[j] == L'(')
         {
             j++;
@@ -2082,7 +2086,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STS
         case CMD_xshad:
         case CMD_ybord:
         case CMD_yshad:
-//        default:
+            //        default:
             params.Add(cmd.Mid(cmd_length));
             break;
         case CMD_c:
@@ -2110,7 +2114,30 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STS
             nUnrecognizedTags++;
             break;
         }
+
+        assTag.cmd = cmd;
+        assTag.cmdType = cmd_type;
+        
         nTags++;
+    }
+    return(true);
+}
+
+bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate)
+{
+    if(!sub) return(false);
+
+    CAtlList<AssTag> assTags;
+    ParseSSATag(&assTags, str);
+
+    POSITION pos = assTags.GetHeadPosition();
+    while(pos)
+    {
+        const AssTag& assTag = assTags.GetNext(pos);
+        const CStringW& cmd = assTag.cmd;
+        AssCmdType cmd_type = assTag.cmdType;
+        const CAtlArray<CStringW>& params = assTag.strParams;
+
         // TODO: call ParseStyleModifier(cmd, params, ..) and move the rest there
         const CStringW& p = params.GetCount() > 0 ? params[0] : CStringW("");
         switch ( cmd_type )
@@ -2598,8 +2625,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STS
             break;
         }
     }
-//  return(nUnrecognizedTags < nTags);
-    return(true); // there are ppl keeping coments inside {}, lets make them happy now
+    return(true);
 }
 
 bool CRenderedTextSubtitle::ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle& style, STSStyle& org)
