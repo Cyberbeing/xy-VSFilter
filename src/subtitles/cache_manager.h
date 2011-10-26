@@ -115,11 +115,11 @@ struct PathDataMruItem
 
 struct ScanLineDataMruItem
 {
-    ScanLineDataMruItem(const ScanLineDataCacheKey& scan_line_data_key_, const SharedPtrScanLineData& scan_line_data_):
+    ScanLineDataMruItem(const ScanLineDataCacheKey& scan_line_data_key_, const SharedPtrConstScanLineData& scan_line_data_):
         scan_line_data_key(scan_line_data_key_),scan_line_data(scan_line_data_){}
 
     ScanLineDataCacheKey scan_line_data_key;
-    SharedPtrScanLineData scan_line_data;
+    SharedPtrConstScanLineData scan_line_data;
 };
 
 struct OverlayNoBlurMruItem

@@ -109,6 +109,7 @@ public:
     friend class Rasterizer;
 };
 
+typedef ::boost::shared_ptr<const ScanLineData> SharedPtrConstScanLineData;
 typedef ::boost::shared_ptr<ScanLineData> SharedPtrScanLineData;
 
 struct Overlay

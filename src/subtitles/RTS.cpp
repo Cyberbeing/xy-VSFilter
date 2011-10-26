@@ -254,7 +254,7 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     {
         raterize_result.reset(new Overlay());
 
-        SharedPtrScanLineData scan_line_data;
+        SharedPtrConstScanLineData scan_line_data;
         ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
         ScanLineDataMruCache::hashed_cache_const_iterator iter = scan_line_data_cache->hash_find(key);
         if(iter==scan_line_data_cache->hash_end())
@@ -282,18 +282,20 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             if(need_transform)
                 Transform(path_data, CPoint(trans_org.x*8, trans_org.y*8));
             
-            scan_line_data.reset(new ScanLineData());
-            if(!scan_line_data->ScanConvert(path_data)) return;
+            SharedPtrScanLineData tmp(new ScanLineData());
+            if(!tmp->ScanConvert(path_data)) return;
             if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
             {
-                if(!scan_line_data->CreateWidenedRegion((int)(m_style.get().outlineWidthX+0.5), (int)(m_style.get().outlineWidthY+0.5))) return;
+                if(!tmp->CreateWidenedRegion((int)(m_style.get().outlineWidthX+0.5), (int)(m_style.get().outlineWidthY+0.5))) return;
             }
             else if(m_style.get().borderStyle == 1)
             {
                 if(!CreateOpaqueBox()) return;
             }
-            ScanLineDataMruItem item(key, scan_line_data);
-            scan_line_data_cache->update_cache(item);   
+            
+            ScanLineDataMruItem item(key, tmp);
+            scan_line_data_cache->update_cache(item); 
+            scan_line_data = tmp;
         }
         else
         {
