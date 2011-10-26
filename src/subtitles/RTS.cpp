@@ -1447,10 +1447,10 @@ CLine* CSubtitle::GetNextLine(POSITION& pos, int maxwidth)
         }
         if((ret->m_width += width) <= maxwidth || ret->IsEmpty())
         {
-            ret->AddWord2Tail(w->Copy());
+            ret->AddWord2Tail(w);
             while(pos != pos2)
             {
-                ret->AddWord2Tail(m_words.GetNext(pos)->Copy());
+                ret->AddWord2Tail(m_words.GetNext(pos));
             }
             pos = pos2;
         }
