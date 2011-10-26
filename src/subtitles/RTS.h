@@ -80,8 +80,8 @@ class CWord
     bool NeedTransform();
     void Transform(SharedPtrPathData path_data, const CPoint& org);
 
-	void Transform_C(SharedPtrPathData path_data, const CPoint &org );
-	void Transform_SSE2(SharedPtrPathData path_data, const CPoint &org );
+	void Transform_C(const SharedPtrPathData& path_data, const CPoint &org );
+	void Transform_SSE2(const SharedPtrPathData& path_data, const CPoint &org );
     bool CreateOpaqueBox();
 
     CWord(const CWord&);//disable default copy constructor
@@ -89,7 +89,7 @@ class CWord
 protected:
     CStringW m_str;
 
-    virtual bool CreatePath(SharedPtrPathData path_data) = 0;
+    virtual bool CreatePath(const SharedPtrPathData& path_data) = 0;
 
     void DoPaint(const CPoint& p, const CPoint& org, SharedPtrOverlay* overlay, const OverlayKey& key);
 public:
@@ -122,7 +122,7 @@ public:
 class CText : public CWord
 {
 protected:
-    virtual bool CreatePath(SharedPtrPathData path_data);
+    virtual bool CreatePath(const SharedPtrPathData& path_data);
 
 public:
     CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend);
@@ -145,7 +145,7 @@ protected:
     CAtlArray<BYTE> m_pathTypesOrg;
     CAtlArray<CPoint> m_pathPointsOrg;
 
-    virtual bool CreatePath(SharedPtrPathData path_data);
+    virtual bool CreatePath(const SharedPtrPathData& path_data);
 
 public:
     CPolygon(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline);

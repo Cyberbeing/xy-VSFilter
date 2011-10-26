@@ -106,11 +106,11 @@ struct CWordMruItem
 
 struct PathDataMruItem
 {
-    PathDataMruItem(const PathDataCacheKey& path_data_key_, const SharedPtrPathData& path_data_):
+    PathDataMruItem(const PathDataCacheKey& path_data_key_, const SharedPtrConstPathData& path_data_):
         path_data_key(path_data_key_),path_data(path_data_){}
 
     PathDataCacheKey path_data_key;
-    SharedPtrPathData path_data;
+    SharedPtrConstPathData path_data;
 };
 
 struct ScanLineDataMruItem

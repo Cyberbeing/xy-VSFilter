@@ -59,6 +59,7 @@ public:
     int mPathPoints;
 };
 
+typedef ::boost::shared_ptr<const PathData> SharedPtrConstPathData;
 typedef ::boost::shared_ptr<PathData> SharedPtrPathData;
 
 class ScanLineData

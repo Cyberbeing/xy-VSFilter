@@ -281,7 +281,7 @@ void CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             bool need_transform = NeedTransform();
             if(need_transform)
                 Transform(path_data, CPoint(trans_org.x*8, trans_org.y*8));
-
+            
             scan_line_data.reset(new ScanLineData());
             if(!scan_line_data->ScanConvert(path_data)) return;
             if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
@@ -338,7 +338,7 @@ void CWord::Transform(SharedPtrPathData path_data, const CPoint& org)
 		Transform_C(path_data, org);
 }
 
-void CWord::Transform_C(SharedPtrPathData path_data, const CPoint &org )
+void CWord::Transform_C(const SharedPtrPathData& path_data, const CPoint &org )
 {
 	double scalex = m_style.get().fontScaleX/100;
 	double scaley = m_style.get().fontScaleY/100;
@@ -444,7 +444,7 @@ void CWord::Transform_C(SharedPtrPathData path_data, const CPoint &org )
 	}
 }
 
-void CWord::Transform_SSE2(SharedPtrPathData path_data, const CPoint &org )
+void CWord::Transform_SSE2(const SharedPtrPathData& path_data, const CPoint &org )
 {
 	// __m128 union data type currently not supported with Intel C++ Compiler, so just call C version
 #ifdef __ICL
@@ -776,7 +776,7 @@ bool CText::Append(const SharedPtrCWord& w)
     return (w && CWord::Append(w));
 }
 
-bool CText::CreatePath(SharedPtrPathData path_data)
+bool CText::CreatePath(const SharedPtrPathData& path_data)
 {
     FwCMyFont font(m_style);
     HFONT hOldFont = SelectFont(g_hDC, font.get());
@@ -1010,7 +1010,7 @@ bool CPolygon::ParseStr()
     return(true);
 }
 
-bool CPolygon::CreatePath(SharedPtrPathData path_data)
+bool CPolygon::CreatePath(const SharedPtrPathData& path_data)
 {
     int len = m_pathTypesOrg.GetCount();
     if(len == 0) return(false);
