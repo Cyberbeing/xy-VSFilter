@@ -339,6 +339,7 @@ class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, pub
         CStringW cmd;
         AssCmdType cmdType;
         CAtlArray<CStringW> strParams;
+        CAtlList<AssTag> embeded;
     };
 
     // temp variables, used when parsing the script
@@ -354,7 +355,9 @@ class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, pub
     void ParseString(CSubtitle* sub, CStringW str, const FwSTSStyle& style);
     void ParsePolygon(CSubtitle* sub, const CStringW& str, const FwSTSStyle& style);
     static bool ParseSSATag(CAtlList<AssTag> *assTags, const CStringW& str);
+    bool ParseSSATag(CSubtitle* sub, const CAtlList<AssTag>& assTags, STSStyle& style, const STSStyle& org, bool fAnimate = false);
     bool ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate = false);
+
     bool ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle& style, STSStyle& org);
 
     double CalcAnimation(double dst, double src, bool fAnimate);

@@ -2108,7 +2108,9 @@ bool CRenderedTextSubtitle::ParseSSATag( CAtlList<AssTag> *assTags, const CStrin
         case CMD_move:
         case CMD_org:
         case CMD_pos:
+            break;
         case CMD_t:
+            ParseSSATag(&assTag.embeded, params[0]);
             break;
         case CMD_COUNT:
             nUnrecognizedTags++;
@@ -2123,13 +2125,10 @@ bool CRenderedTextSubtitle::ParseSSATag( CAtlList<AssTag> *assTags, const CStrin
     return(true);
 }
 
-bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate)
+bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const CAtlList<AssTag>& assTags, STSStyle& style, const STSStyle& org, bool fAnimate /*= false*/ )
 {
     if(!sub) return(false);
-
-    CAtlList<AssTag> assTags;
-    ParseSSATag(&assTags, str);
-
+    
     POSITION pos = assTags.GetHeadPosition();
     while(pos)
     {
@@ -2573,7 +2572,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STS
                     m_animAccel = wcstod(params[2], NULL);
                     param = params[3];
                 }
-                ParseSSATag(sub, param, style, org, true);
+                ParseSSATag(sub, assTag.embeded, style, org, true);
                 sub->m_fAnimated = true;
                 break;
             }
@@ -2626,6 +2625,14 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STS
         }
     }
     return(true);
+}
+
+bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate)
+{
+    if(!sub) return(false);
+    CAtlList<AssTag> assTags;
+    ParseSSATag(&assTags, str);
+    return ParseSSATag(sub, assTags, style, org, fAnimate);
 }
 
 bool CRenderedTextSubtitle::ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle& style, STSStyle& org)
