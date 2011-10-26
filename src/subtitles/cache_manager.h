@@ -88,6 +88,12 @@ std::size_t hash_value(const CWordCacheKey& key);
 
 //shouldn't use std::pair, or else VC complaining error C2440
 //typedef std::pair<OverlayKey, SharedPtrOverlay> OverlayMruItem; 
+struct AssTagListMruItem
+{
+    CStringW script;
+    CRenderedTextSubtitle::SharedPtrConstAssTagList tag_list;
+};
+
 struct OverlayMruItem
 {
     OverlayMruItem(const OverlayKey& overlay_key_, const SharedPtrOverlay& overlay_):overlay_key(overlay_key_),overlay(overlay_){}
@@ -132,6 +138,14 @@ struct OverlayNoBlurMruItem
 };
 
 typedef enhanced_mru_list<
+    AssTagListMruItem, 
+    boost::multi_index::member<AssTagListMruItem, 
+    CStringW, 
+    &AssTagListMruItem::script
+    >
+> AssTagListMruCache;
+
+typedef enhanced_mru_list<
     OverlayMruItem, 
     boost::multi_index::member<OverlayMruItem, 
     OverlayKey, 
@@ -174,6 +188,7 @@ typedef enhanced_mru_list<
 class CacheManager
 {
 public:
+    static const int ASS_TAG_LIST_CACHE_ITEM_NUM = 256;
     static const int SUBPIXEL_VARIANCE_CACHE_ITEM_NUM = 256;
     static const int OVERLAY_CACHE_ITEM_NUM = 256;
 
@@ -182,6 +197,7 @@ public:
     static const int PATH_CACHE_ITEM_NUM = 256;
     static const int WORD_CACHE_ITEM_NUM = 512;
 
+    static AssTagListMruCache* GetAssTagListMruCache();
     static OverlayMruCache* GetSubpixelVarianceCache();
     static OverlayMruCache* GetOverlayMruCache();
     static OverlayNoBlurMruCache* GetOverlayNoBlurMruCache();
@@ -189,6 +205,7 @@ public:
     static PathDataMruCache* GetPathDataMruCache();
     static CWordMruCache* GetCWordMruCache();
 private:
+    static AssTagListMruCache* s_ass_tag_list_cache;
     static OverlayMruCache* s_subpixel_variance_cache;
     static OverlayMruCache* s_overlay_mru_cache;
     static OverlayNoBlurMruCache* s_overlay_no_blur_mru_cache;

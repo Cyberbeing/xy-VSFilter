@@ -1957,7 +1957,7 @@ void CRenderedTextSubtitle::ParsePolygon(CSubtitle* sub, const CStringW& str, co
     }
 }
 
-bool CRenderedTextSubtitle::ParseSSATag( CAtlList<AssTag> *assTags, const CStringW& str )
+bool CRenderedTextSubtitle::ParseSSATag( AssTagList *assTags, const CStringW& str )
 {
     if(!assTags) return(false);
     int nTags = 0, nUnrecognizedTags = 0;
@@ -2125,7 +2125,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CAtlList<AssTag> *assTags, const CStrin
     return(true);
 }
 
-bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const CAtlList<AssTag>& assTags, STSStyle& style, const STSStyle& org, bool fAnimate /*= false*/ )
+bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTags, STSStyle& style, const STSStyle& org, bool fAnimate /*= false*/ )
 {
     if(!sub) return(false);
     
@@ -2629,10 +2629,26 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const CAtlList<AssTag>&
 
 bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate)
 {
-    if(!sub) return(false);
-    CAtlList<AssTag> assTags;
-    ParseSSATag(&assTags, str);
-    return ParseSSATag(sub, assTags, style, org, fAnimate);
+    if(!sub) return(false);   
+
+    SharedPtrConstAssTagList assTags;
+    AssTagListMruCache *ass_tag_cache = CacheManager::GetAssTagListMruCache();
+    AssTagListMruCache::hashed_cache_const_iterator iter = ass_tag_cache->hash_find(str);
+    if (iter==ass_tag_cache->hash_end())
+    {
+        AssTagList *tmp = new AssTagList();
+        ParseSSATag(tmp, str);
+        assTags.reset(tmp);
+        AssTagListMruItem item;
+        item.script = str; item.tag_list = assTags;
+        ass_tag_cache->update_cache( item );
+    }
+    else
+    {
+        assTags = iter->tag_list;
+        ass_tag_cache->update_cache( *iter );
+    }
+    return ParseSSATag(sub, *assTags, style, org, fAnimate);
 }
 
 bool CRenderedTextSubtitle::ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle& style, STSStyle& org)

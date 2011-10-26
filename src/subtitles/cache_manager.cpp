@@ -166,6 +166,7 @@ ScanLineDataMruCache* CacheManager::s_scan_line_data_mru_cache = NULL;
 OverlayNoBlurMruCache* CacheManager::s_overlay_no_blur_mru_cache = NULL;
 OverlayMruCache* CacheManager::s_overlay_mru_cache = NULL;
 OverlayMruCache* CacheManager::s_subpixel_variance_cache = NULL;
+AssTagListMruCache* CacheManager::s_ass_tag_list_cache = NULL;
 
 OverlayMruCache* CacheManager::GetOverlayMruCache()
 {
@@ -219,4 +220,13 @@ OverlayMruCache* CacheManager::GetSubpixelVarianceCache()
         s_subpixel_variance_cache = new OverlayMruCache(SUBPIXEL_VARIANCE_CACHE_ITEM_NUM);
     }
     return s_subpixel_variance_cache;    
+}
+
+AssTagListMruCache* CacheManager::GetAssTagListMruCache()
+{
+    if(s_ass_tag_list_cache==NULL)
+    {
+        s_ass_tag_list_cache = new AssTagListMruCache(ASS_TAG_LIST_CACHE_ITEM_NUM);
+    }
+    return s_ass_tag_list_cache;  
 }

@@ -264,13 +264,7 @@ public:
 [uuid("537DCACA-2812-4a4f-B2C6-1A34C17ADEB0")]
 class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, public CSimpleTextSubtitle
 {
-    CAtlMap<int, CSubtitle*> m_subtitleCache;   
-
-    CScreenLayoutAllocator m_sla;
-
-    CSize m_size;
-    CRect m_vidrect;
-
+public:
     enum AssCmdType
     {
         CMD_1c = 0,
@@ -332,15 +326,24 @@ class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, pub
     static const int MIN_CMD_LENGTH = 1;//c etc
     static const int MAX_CMD_LENGTH = 5;//alpha, iclip, xbord, xshad, ybord, yshad
     static CAtlMap<CStringW, AssCmdType, CStringElementTraits<CStringW>> m_cmdMap;
-    static void InitCmdMap();
 
+    struct AssTag;
+    typedef CAtlList<AssTag> AssTagList;
+    typedef ::boost::shared_ptr<const AssTagList> SharedPtrConstAssTagList;
     struct AssTag
     {
         CStringW cmd;
         AssCmdType cmdType;
         CAtlArray<CStringW> strParams;
-        CAtlList<AssTag> embeded;
+        AssTagList embeded;
     };
+private:
+    CAtlMap<int, CSubtitle*> m_subtitleCache;   
+
+    CScreenLayoutAllocator m_sla;
+
+    CSize m_size;
+    CRect m_vidrect;
 
     // temp variables, used when parsing the script
     int m_time, m_delay;
@@ -351,11 +354,13 @@ class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, pub
     int m_polygonBaselineOffset;
     double m_fps;
 
+    static void InitCmdMap();
+
     void ParseEffect(CSubtitle* sub, const CString& str);
     void ParseString(CSubtitle* sub, CStringW str, const FwSTSStyle& style);
     void ParsePolygon(CSubtitle* sub, const CStringW& str, const FwSTSStyle& style);
-    static bool ParseSSATag(CAtlList<AssTag> *assTags, const CStringW& str);
-    bool ParseSSATag(CSubtitle* sub, const CAtlList<AssTag>& assTags, STSStyle& style, const STSStyle& org, bool fAnimate = false);
+    static bool ParseSSATag(AssTagList *assTags, const CStringW& str);
+    bool ParseSSATag(CSubtitle* sub, const AssTagList& assTags, STSStyle& style, const STSStyle& org, bool fAnimate = false);
     bool ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate = false);
 
     bool ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle& style, STSStyle& org);
