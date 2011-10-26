@@ -161,6 +161,21 @@ CWord::CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     m_width = 0;
 }
 
+CWord::CWord( const CWord& src)
+{
+    m_str = src.m_str;
+    m_fWhiteSpaceChar = src.m_fWhiteSpaceChar;
+    m_fLineBreak = src.m_fLineBreak;
+    m_style = src.m_style;
+    m_pOpaqueBox = src.m_pOpaqueBox;//allow since it is shared_ptr
+    m_ktype = src.m_ktype;
+    m_kstart = src.m_kstart;
+    m_kend = src.m_kend;
+    m_width = src.m_width;
+    m_ascent = src.m_ascent;
+    m_descent = src.m_descent;
+}
+
 CWord::~CWord()
 {
     //if(m_pOpaqueBox) delete m_pOpaqueBox;
@@ -762,7 +777,7 @@ CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     SelectFont(g_hDC, hOldFont);
 }
 
-CText::CText( const CText& src ):CWord(src.m_style, src.m_str, src.m_ktype, src.m_kstart, src.m_kend)
+CText::CText( const CText& src ):CWord(src)
 {
     m_width = src.m_width;
 }
@@ -818,7 +833,7 @@ CPolygon::CPolygon(const FwSTSStyle& style, const CStringW& str, int ktype, int 
     ParseStr();
 }
 
-CPolygon::CPolygon(CPolygon& src) : CWord(src.m_style, src.m_str, src.m_ktype, src.m_kstart, src.m_kend)
+CPolygon::CPolygon(CPolygon& src) : CWord(src)
 {
 	m_scalex = src.m_scalex;
 	m_scaley = src.m_scaley;

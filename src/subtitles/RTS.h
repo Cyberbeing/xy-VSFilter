@@ -84,8 +84,6 @@ class CWord
 	void Transform_SSE2(const SharedPtrPathData& path_data, const CPoint &org );
     bool CreateOpaqueBox();
 
-    CWord(const CWord&);//disable default copy constructor
-
 protected:
     CStringW m_str;
 
@@ -104,6 +102,7 @@ public:
     int m_width, m_ascent, m_descent;
 
     CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend); // str[0] = 0 -> m_fLineBreak = true (in this case we only need and use the height of m_font from the whole class)
+    CWord(const CWord&);
     virtual ~CWord();
 
     virtual SharedPtrCWord Copy() = 0;
