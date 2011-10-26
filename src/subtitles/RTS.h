@@ -38,10 +38,10 @@ class CMyFont : public CFont
 public:
     int m_ascent, m_descent;
     
-    CMyFont(const FwSTSStyle& style);
+    CMyFont(const STSStyleBase& style);
 };
 
-typedef ::boost::flyweights::flyweight<::boost::flyweights::key_value<FwSTSStyle, CMyFont>, ::boost::flyweights::no_locking> FwCMyFont;
+typedef ::boost::flyweights::flyweight<::boost::flyweights::key_value<STSStyleBase, CMyFont>, ::boost::flyweights::no_locking> FwCMyFont;
 
 class CPolygon;
 

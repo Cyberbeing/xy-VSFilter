@@ -3127,6 +3127,17 @@ bool CSimpleTextSubtitle::IsEmpty()
 
 ////////////////////////////////////////////////////////////////////
 
+bool STSStyleBase::operator==( const STSStyleBase& s ) const
+{
+    return charSet == s.charSet
+        && fontName == s.fontName
+        && fontSize == s.fontSize
+        && fontWeight == s.fontWeight
+        && fItalic == s.fItalic
+        && fUnderline == s.fUnderline
+        && fStrikeOut == s.fStrikeOut;
+}
+
 STSStyle::STSStyle()
 {
     SetDefault();
@@ -3219,7 +3230,7 @@ void STSStyle::operator = (const LOGFONT& lf)
     fStrikeOut = !!lf.lfStrikeOut;
 }
 
-LOGFONTA& operator <<= (LOGFONTA& lfa, const STSStyle& s)
+LOGFONTA& operator <<= (LOGFONTA& lfa, const STSStyleBase& s)
 {
     lfa.lfCharSet = s.charSet;
     strncpy_s(lfa.lfFaceName, LF_FACESIZE, CStringA(s.fontName), _TRUNCATE);
@@ -3233,7 +3244,7 @@ LOGFONTA& operator <<= (LOGFONTA& lfa, const STSStyle& s)
     return(lfa);
 }
 
-LOGFONTW& operator <<= (LOGFONTW& lfw, const STSStyle& s)
+LOGFONTW& operator <<= (LOGFONTW& lfw, const STSStyleBase& s)
 {
     lfw.lfCharSet = s.charSet;
     wcsncpy_s(lfw.lfFaceName, LF_FACESIZE, CStringW(s.fontName), _TRUNCATE);

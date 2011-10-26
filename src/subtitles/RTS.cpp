@@ -119,12 +119,12 @@ inline CStringW::PCXSTR FindChar(CStringW::PCXSTR start, CStringW::PCXSTR end, W
 
 // CMyFont
 
-CMyFont::CMyFont(const FwSTSStyle& style)
+CMyFont::CMyFont(const STSStyleBase& style)
 {
     LOGFONT lf;
     memset(&lf, 0, sizeof(lf));
-    lf <<= style.get();
-    lf.lfHeight = (LONG)(style.get().fontSize+0.5);
+    lf <<= style;
+    lf.lfHeight = (LONG)(style.fontSize+0.5);
     lf.lfOutPrecision = OUT_TT_PRECIS;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfQuality = ANTIALIASED_QUALITY;
@@ -155,7 +155,7 @@ CWord::CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     {
         m_fWhiteSpaceChar = m_fLineBreak = true;
     }
-    FwCMyFont font(m_style);
+    FwCMyFont font( static_cast<const STSStyleBase&>(m_style.get()) );
     m_ascent = (int)(m_style.get().fontScaleY/100*font.get().m_ascent);
     m_descent = (int)(m_style.get().fontScaleY/100*font.get().m_descent);
     m_width = 0;

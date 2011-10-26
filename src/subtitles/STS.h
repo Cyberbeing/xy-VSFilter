@@ -28,7 +28,23 @@
 
 typedef enum {TIME, FRAME} tmode; // the meaning of STSEntry::start/end
 
-class STSStyle
+struct STSStyleBase
+{
+    int		charSet;
+    CString fontName;
+    double	fontSize; // height
+    int		fontWeight;
+    bool	fItalic;
+    bool	fUnderline;
+    bool	fStrikeOut;
+
+    bool operator == (const STSStyleBase& s)const;
+};
+
+LOGFONTA& operator <<= (LOGFONTA& lfa, const STSStyleBase& s);
+LOGFONTW& operator <<= (LOGFONTW& lfw, const STSStyleBase& s);
+
+struct STSStyle: public STSStyleBase
 {
 public:
 	FwRect	marginRect; // measured from the sides
@@ -38,15 +54,10 @@ public:
 	double	shadowDepthX, shadowDepthY;
 	COLORREF colors[4]; // usually: {primary, secondary, outline/background, shadow}
 	BYTE	alpha[4];
-    int		charSet;
-    CString fontName;
-	double	fontSize; // height
+
 	double	fontScaleX, fontScaleY; // percent
 	double	fontSpacing; // +/- pixels
-	int		fontWeight;
-	bool	fItalic;
-	bool	fUnderline;
-	bool	fStrikeOut;
+
 	int		fBlur;
 	double	fGaussianBlur;
 	double	fontAngleZ, fontAngleX, fontAngleY;
@@ -62,22 +73,31 @@ public:
 
 	void operator = (const LOGFONT& lf);
 
-	friend LOGFONTA& operator <<= (LOGFONTA& lfa, const STSStyle& s);
-	friend LOGFONTW& operator <<= (LOGFONTW& lfw, const STSStyle& s);
-
 	friend CString& operator <<= (CString& style, const STSStyle& s);
 	friend STSStyle& operator <<= (STSStyle& s, const CString& style);
 };
 
 typedef ::boost::flyweights::flyweight<STSStyle, ::boost::flyweights::no_locking> FwSTSStyle;
+
 //for FwSTSStyle
+static inline std::size_t hash_value(const STSStyleBase& s)
+{    
+    std::size_t hash = CStringElementTraits<CString>::Hash(s.fontName);
+    hash = (hash<<5) + (hash) + s.charSet;
+    hash = (hash<<5) + (hash) + hash_value(s.fontSize);
+    hash = (hash<<5) + (hash) + s.fontWeight;
+    hash = (hash<<5) + (hash) + s.fItalic;          //Todo: fix me
+    hash = (hash<<5) + (hash) + s.fUnderline;
+    hash = (hash<<5) + (hash) + s.fStrikeOut;
+    return  hash;
+}
+
 static inline std::size_t hash_value(const STSStyle& s)
 {
     //Todo: fix me
-    std::size_t hash = CStringElementTraits<CString>::Hash(s.fontName);
+    std::size_t hash = hash_value(static_cast<const STSStyleBase&>(s));        
     hash = (hash<<5) + (hash) + s.colors[0];
     hash = (hash<<5) + (hash) + s.colors[2];
-    hash = (hash<<5) + (hash) + hash_value(s.fontSize);
     hash = (hash<<5) + (hash) + hash_value(s.fontScaleX);
     hash = (hash<<5) + (hash) + hash_value(s.fontScaleY);
     hash = (hash<<5) + (hash) + hash_value(s.fontAngleX);
