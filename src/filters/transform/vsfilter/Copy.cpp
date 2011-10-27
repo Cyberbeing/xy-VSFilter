@@ -31,6 +31,7 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
     const ColorConvTable* color_conv_table = ColorConvTable::GetDefaultColorConvTable();
 	if(subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV)
 	{
+        //TODO: Fix ME!
 		BYTE* db = (BYTE*)d;
 		BYTE* dbtend = db + w;
 
@@ -43,6 +44,21 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
 			}
 		}
 	}
+    else if(subtype == MEDIASUBTYPE_P010)
+    {        
+        //TODO: Fix ME!
+        WORD* db = reinterpret_cast<WORD*>(d);
+        WORD* dbtend = db + w;
+
+        for(; db < dbtend; sub+=4, db++)
+        {
+            if(sub[3] < 0xff)
+            {
+                int y = (color_conv_table->c2y_yb[sub[0]] + color_conv_table->c2y_yg[sub[1]] + color_conv_table->c2y_yr[sub[2]] + 0x108000) >> 14;
+                *db = y; // w/o colors 
+            }
+        }
+    }
 	else if(subtype == MEDIASUBTYPE_YUY2)
 	{
 		WORD* ds = (WORD*)d;
@@ -140,6 +156,28 @@ void Scale2x(const GUID& subtype, BYTE* d, int dpitch, BYTE* s, int spitch, int 
 
 		AvgLines8(d, h*2, dpitch);
 	}
+    else if(subtype == MEDIASUBTYPE_P010)
+    {
+        BYTE* s1 = s;
+        BYTE* s1_end = s + h*spitch;
+        BYTE* d1 = d;
+
+        for( ; s1 < s1_end; s1 += spitch, d1 += dpitch )
+        {
+            WORD* s2 = reinterpret_cast<WORD*>(s1);
+            WORD* s2_end = reinterpret_cast<WORD*>(s1) + (w-1);
+            WORD* d2 = reinterpret_cast<WORD*>(d1);
+                        
+            for( ; s2 < s2_end; s2 ++, d2 += 2)
+            {
+                d2[0] = s2[0];
+                d2[1] = (s2[0]+s2[1])>>1;
+            }
+            d2[0] = d2[1] = s1[0];
+        }
+
+        AvgLines8(d, h*2, dpitch);
+    }
 	else if(subtype == MEDIASUBTYPE_YUY2)
 	{
 		unsigned __int64 __0xffffffff00000000 = 0xffffffff00000000;

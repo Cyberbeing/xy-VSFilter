@@ -284,21 +284,29 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
 			}
 		}
 	}
-	else if(subtype == MEDIASUBTYPE_YUY2)
-	{
-		if(bihOut.biCompression == '2YUY')
-		{
-			BitBltFromYUY2ToYUY2(w, h, pOut, bihOut.biWidth*2, ppIn[0], pitchIn);
-		}
-		else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
-		{
-			if(!BitBltFromYUY2ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, ppIn[0], pitchIn))
-			{
-				for(DWORD y = 0; y < h; y++, pOut += pitchOut)
-					memset(pOut, 0, pitchOut);
-			}
-		}
-	}
+    else if(subtype == MEDIASUBTYPE_P010)
+    {
+        if (bihOut.biCompression != subtype.Data1)
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        //TODO: FIX ME!
+        BitBltFromYUY2ToYUY2(w*2, h, pOut, bihOut.biWidth*2, ppIn[0], pitchIn);
+        BitBltFromYUY2ToYUY2(w*2, h/2, pOut+bihOut.biWidth*2*h, bihOut.biWidth*2, ppIn[1], pitchIn);
+    }
+    else if(subtype == MEDIASUBTYPE_YUY2)
+    {
+        if(bihOut.biCompression == '2YUY')
+        {
+            BitBltFromYUY2ToYUY2(w, h, pOut, bihOut.biWidth*2, ppIn[0], pitchIn);
+        }
+        else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
+        {
+            if(!BitBltFromYUY2ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, ppIn[0], pitchIn))
+            {
+                for(DWORD y = 0; y < h; y++, pOut += pitchOut)
+                    memset(pOut, 0, pitchOut);
+            }
+        }
+    }
 	else if(subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_RGB24 || subtype == MEDIASUBTYPE_RGB565)
 	{
 		int sbpp = 
@@ -336,6 +344,7 @@ HRESULT CBaseVideoFilter::CheckInputType(const CMediaType* mtIn)
 	return mtIn->majortype == MEDIATYPE_Video 
 		&& (mtIn->subtype == MEDIASUBTYPE_YV12 
 		 || mtIn->subtype == MEDIASUBTYPE_I420 
+         || mtIn->subtype == MEDIASUBTYPE_P010
 		 || mtIn->subtype == MEDIASUBTYPE_IYUV
 		 || mtIn->subtype == MEDIASUBTYPE_YUY2
 		 || mtIn->subtype == MEDIASUBTYPE_ARGB32
@@ -368,7 +377,11 @@ HRESULT CBaseVideoFilter::CheckTransform(const CMediaType* mtIn, const CMediaTyp
 		&& mtOut->subtype != MEDIASUBTYPE_RGB24
 		&& mtOut->subtype != MEDIASUBTYPE_RGB565)
 			return VFW_E_TYPE_NOT_ACCEPTED;
-	}
+    }
+    else if(mtIn->subtype == MEDIASUBTYPE_P010) {
+        if(mtOut->subtype != mtIn->subtype)
+        return VFW_E_TYPE_NOT_ACCEPTED;
+    }
 	else if(mtIn->majortype == MEDIATYPE_Video 
 	&& (mtIn->subtype == MEDIASUBTYPE_YUY2))
 	{
@@ -438,6 +451,7 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 		{&MEDIASUBTYPE_YV12, 3, 12, '21VY'},
 		{&MEDIASUBTYPE_I420, 3, 12, '024I'},
 		{&MEDIASUBTYPE_IYUV, 3, 12, 'VUYI'},
+        {&MEDIASUBTYPE_P010, 2, 24, '010P'},
 		{&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
 		{&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
 		{&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},

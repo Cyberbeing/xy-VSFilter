@@ -36,7 +36,8 @@ enum ColorType {
     MSP_AYUV,
     MSP_RGBA,
     MSP_AY11, //AYUV in planar form
-    MSP_AUYV
+    MSP_AUYV,
+    MSP_P010
 };
 
 #pragma pack(push, 1)
