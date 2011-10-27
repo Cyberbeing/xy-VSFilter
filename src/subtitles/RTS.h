@@ -123,6 +123,7 @@ class CText : public CWord
 protected:
     virtual bool CreatePath(const SharedPtrPathData& path_data);
 
+    void GetTextInfo(const FwSTSStyle& style, const CStringW& str);
 public:
     CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend);
     CText(const CText& src);

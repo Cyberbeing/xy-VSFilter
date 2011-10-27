@@ -759,30 +759,7 @@ CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     {
         m_fWhiteSpaceChar = true;
     }
-    FwCMyFont font(m_style);
-    m_ascent = (int)(m_style.get().fontScaleY/100*font.get().m_ascent);
-    m_descent = (int)(m_style.get().fontScaleY/100*font.get().m_descent);
-
-    HFONT hOldFont = SelectFont(g_hDC, font.get());
-    if(m_style.get().fontSpacing || (long)GetVersion() < 0)
-    {
-        bool bFirstPath = true;
-        for(LPCWSTR s = m_str; *s; s++)
-        {
-            CSize extent;
-            if(!GetTextExtentPoint32W(g_hDC, s, 1, &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return;}
-            m_width += extent.cx + (int)m_style.get().fontSpacing;
-        }
-//          m_width -= (int)m_style.get().fontSpacing; // TODO: subtract only at the end of the line
-    }
-    else
-    {
-        CSize extent;
-        if(!GetTextExtentPoint32W(g_hDC, m_str, wcslen(m_str), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return;}
-        m_width += extent.cx;
-    }
-    m_width = (int)(m_style.get().fontScaleX/100*m_width + 4) >> 3;
-    SelectFont(g_hDC, hOldFont);
+    GetTextInfo(m_style, m_str);
 }
 
 CText::CText( const CText& src ):CWord(src)
@@ -830,6 +807,34 @@ bool CText::CreatePath(const SharedPtrPathData& path_data)
     }
     SelectFont(g_hDC, hOldFont);
     return(true);
+}
+
+void CText::GetTextInfo(const FwSTSStyle& style, const CStringW& str )
+{
+    FwCMyFont font(style);
+    m_ascent = (int)(style.get().fontScaleY/100*font.get().m_ascent);
+    m_descent = (int)(style.get().fontScaleY/100*font.get().m_descent);
+
+    HFONT hOldFont = SelectFont(g_hDC, font.get());
+    if(style.get().fontSpacing || (long)GetVersion() < 0)
+    {
+        bool bFirstPath = true;
+        for(LPCWSTR s = str; *s; s++)
+        {
+            CSize extent;
+            if(!GetTextExtentPoint32W(g_hDC, s, 1, &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return;}
+            m_width += extent.cx + (int)style.get().fontSpacing;
+        }
+        //          m_width -= (int)m_style.get().fontSpacing; // TODO: subtract only at the end of the line
+    }
+    else
+    {
+        CSize extent;
+        if(!GetTextExtentPoint32W(g_hDC, str, wcslen(str), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return;}
+        m_width += extent.cx;
+    }
+    m_width = (int)(style.get().fontScaleX/100*m_width + 4) >> 3;
+    SelectFont(g_hDC, hOldFont);
 }
 
 // CPolygon
