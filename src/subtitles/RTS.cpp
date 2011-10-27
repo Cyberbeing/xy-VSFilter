@@ -155,9 +155,6 @@ CWord::CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     {
         m_fWhiteSpaceChar = m_fLineBreak = true;
     }
-    FwCMyFont font( static_cast<const STSStyleBase&>(m_style.get()) );
-    m_ascent = (int)(m_style.get().fontScaleY/100*font.get().m_ascent);
-    m_descent = (int)(m_style.get().fontScaleY/100*font.get().m_descent);
     m_width = 0;
 }
 
@@ -763,6 +760,9 @@ CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
         m_fWhiteSpaceChar = true;
     }
     FwCMyFont font(m_style);
+    m_ascent = (int)(m_style.get().fontScaleY/100*font.get().m_ascent);
+    m_descent = (int)(m_style.get().fontScaleY/100*font.get().m_descent);
+
     HFONT hOldFont = SelectFont(g_hDC, font.get());
     if(m_style.get().fontSpacing || (long)GetVersion() < 0)
     {
