@@ -759,7 +759,11 @@ CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     {
         m_fWhiteSpaceChar = true;
     }
-    GetTextInfo(m_style, m_str);
+    TextInfo text_info;
+    GetTextInfo(&text_info, m_style, m_str);
+    this->m_ascent = text_info.m_ascent;
+    this->m_descent = text_info.m_descent;
+    this->m_width = text_info.m_width;
 }
 
 CText::CText( const CText& src ):CWord(src)
@@ -809,11 +813,11 @@ bool CText::CreatePath(const SharedPtrPathData& path_data)
     return(true);
 }
 
-void CText::GetTextInfo(const FwSTSStyle& style, const CStringW& str )
+void CText::GetTextInfo(TextInfo *output, const FwSTSStyle& style, const CStringW& str )
 {
     FwCMyFont font(style);
-    m_ascent = (int)(style.get().fontScaleY/100*font.get().m_ascent);
-    m_descent = (int)(style.get().fontScaleY/100*font.get().m_descent);
+    output->m_ascent = (int)(style.get().fontScaleY/100*font.get().m_ascent);
+    output->m_descent = (int)(style.get().fontScaleY/100*font.get().m_descent);
 
     HFONT hOldFont = SelectFont(g_hDC, font.get());
     if(style.get().fontSpacing || (long)GetVersion() < 0)
@@ -823,7 +827,7 @@ void CText::GetTextInfo(const FwSTSStyle& style, const CStringW& str )
         {
             CSize extent;
             if(!GetTextExtentPoint32W(g_hDC, s, 1, &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return;}
-            m_width += extent.cx + (int)style.get().fontSpacing;
+            output->m_width += extent.cx + (int)style.get().fontSpacing;
         }
         //          m_width -= (int)m_style.get().fontSpacing; // TODO: subtract only at the end of the line
     }
@@ -831,9 +835,9 @@ void CText::GetTextInfo(const FwSTSStyle& style, const CStringW& str )
     {
         CSize extent;
         if(!GetTextExtentPoint32W(g_hDC, str, wcslen(str), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return;}
-        m_width += extent.cx;
+        output->m_width += extent.cx;
     }
-    m_width = (int)(style.get().fontScaleX/100*m_width + 4) >> 3;
+    output->m_width = (int)(style.get().fontScaleX/100*output->m_width + 4) >> 3;
     SelectFont(g_hDC, hOldFont);
 }
 

@@ -120,10 +120,15 @@ public:
 
 class CText : public CWord
 {
+public:
+    struct TextInfo
+    {
+        int m_width, m_ascent, m_descent;
+    };
 protected:
     virtual bool CreatePath(const SharedPtrPathData& path_data);
 
-    void GetTextInfo(const FwSTSStyle& style, const CStringW& str);
+    static void GetTextInfo(TextInfo *output, const FwSTSStyle& style, const CStringW& str);
 public:
     CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend);
     CText(const CText& src);
