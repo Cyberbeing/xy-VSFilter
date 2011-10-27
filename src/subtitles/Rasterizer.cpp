@@ -1670,16 +1670,15 @@ PathData::PathData():mpPathTypes(NULL), mpPathPoints(NULL), mPathPoints(0)
 {
 }
 
-PathData::PathData( const PathData& src )
+PathData::PathData( const PathData& src ):mPathPoints(src.mPathPoints)
 {
     //TODO: deal with the case that src.mPathPoints<0 
-    if(mPathPoints!=src.mPathPoints && src.mPathPoints>0)
+    if(mPathPoints>0)
     {
-        mPathPoints = src.mPathPoints;
-        mpPathTypes = (BYTE*)realloc(mpPathTypes, mPathPoints * sizeof(BYTE));
-        mpPathPoints = (POINT*)realloc(mpPathPoints, mPathPoints * sizeof(POINT));
+        mpPathTypes = static_cast<BYTE*>(malloc(mPathPoints * sizeof(BYTE)));
+        mpPathPoints = static_cast<POINT*>(malloc(mPathPoints * sizeof(POINT)));
     }
-    if(src.mPathPoints>0)
+    if(mPathPoints>0)
     {
         memcpy(mpPathTypes, src.mpPathTypes, mPathPoints*sizeof(BYTE));
         memcpy(mpPathPoints, src.mpPathPoints, mPathPoints*sizeof(POINT));
@@ -1693,8 +1692,10 @@ const PathData& PathData::operator=( const PathData& src )
         if(mPathPoints!=src.mPathPoints && src.mPathPoints>0)
         {
             mPathPoints = src.mPathPoints;
-            mpPathTypes = (BYTE*)realloc(mpPathTypes, mPathPoints * sizeof(BYTE));
-            mpPathPoints = (POINT*)realloc(mpPathPoints, mPathPoints * sizeof(POINT));
+            delete[] mpPathTypes;
+            delete[] mpPathPoints;
+            mpPathTypes = static_cast<BYTE*>(malloc(mPathPoints * sizeof(BYTE)));
+            mpPathPoints = static_cast<POINT*>(malloc(mPathPoints * sizeof(POINT)));//better than realloc
         }
         if(src.mPathPoints>0)
         {
