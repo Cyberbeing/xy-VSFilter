@@ -759,11 +759,28 @@ CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     {
         m_fWhiteSpaceChar = true;
     }
-    TextInfo text_info;
-    GetTextInfo(&text_info, m_style, m_str);
-    this->m_ascent = text_info.m_ascent;
-    this->m_descent = text_info.m_descent;
-    this->m_width = text_info.m_width;
+    SharedPtrTextInfo text_info;
+    TextInfoCacheKey text_info_key;
+    text_info_key.m_str = m_str;
+    text_info_key.m_style = m_style;
+    TextInfoMruCache* text_info_cache = CacheManager::GetTextInfoCache();
+    TextInfoMruCache::hashed_cache_const_iterator iter = text_info_cache->hash_find(text_info_key);
+    if(iter==text_info_cache->hash_end())
+    {
+        TextInfo* tmp=new TextInfo();
+        GetTextInfo(tmp, m_style, m_str);
+        text_info.reset(tmp);
+        TextInfoMruItem item(text_info_key, text_info);
+        text_info_cache->update_cache(item);
+    }
+    else
+    {
+        text_info = iter->text_info;
+        text_info_cache->update_cache( *iter );
+    }
+    this->m_ascent = text_info->m_ascent;
+    this->m_descent = text_info->m_descent;
+    this->m_width = text_info->m_width;
 }
 
 CText::CText( const CText& src ):CWord(src)

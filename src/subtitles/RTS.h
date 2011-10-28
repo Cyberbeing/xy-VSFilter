@@ -125,6 +125,7 @@ public:
     {
         int m_width, m_ascent, m_descent;
     };
+    typedef ::boost::shared_ptr<TextInfo> SharedPtrTextInfo;
 protected:
     virtual bool CreatePath(const SharedPtrPathData& path_data);
 

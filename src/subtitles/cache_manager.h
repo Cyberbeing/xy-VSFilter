@@ -7,6 +7,14 @@
 
 #include "RTS.h"
 
+class TextInfoCacheKey
+{
+public:
+    CStringW m_str;
+    FwSTSStyle m_style;
+    bool operator==(const TextInfoCacheKey& key)const;
+};
+
 class CWordCacheKey
 {
 public:
@@ -79,6 +87,7 @@ public:
     friend std::size_t hash_value(const OverlayKey& key);
 };
 
+std::size_t hash_value(const TextInfoCacheKey& key);
 std::size_t hash_value(const CWord& key);
 std::size_t hash_value(const PathDataCacheKey& key);
 std::size_t hash_value(const ScanLineDataCacheKey& key);
@@ -100,6 +109,15 @@ struct OverlayMruItem
 
     OverlayKey overlay_key;
     SharedPtrOverlay overlay;
+};
+
+struct TextInfoMruItem
+{
+    TextInfoMruItem(const TextInfoCacheKey& text_info_key_, const CText::SharedPtrTextInfo& text_info_ )
+        :text_info_key(text_info_key_), text_info(text_info_){}
+
+    TextInfoCacheKey text_info_key;
+    CText::SharedPtrTextInfo text_info;
 };
 
 struct CWordMruItem
@@ -136,6 +154,14 @@ struct OverlayNoBlurMruItem
     OverlayNoBlurKey key;
     SharedPtrOverlay overlay;
 };
+
+typedef enhanced_mru_list<
+    TextInfoMruItem, 
+    boost::multi_index::member<TextInfoMruItem, 
+    TextInfoCacheKey, 
+    &TextInfoMruItem::text_info_key
+    >
+> TextInfoMruCache;
 
 typedef enhanced_mru_list<
     AssTagListMruItem, 
@@ -188,6 +214,7 @@ typedef enhanced_mru_list<
 class CacheManager
 {
 public:
+    static const int TEXT_INFO_CACHE_ITEM_NUM = 2048;
     static const int ASS_TAG_LIST_CACHE_ITEM_NUM = 256;
     static const int SUBPIXEL_VARIANCE_CACHE_ITEM_NUM = 256;
     static const int OVERLAY_CACHE_ITEM_NUM = 256;
@@ -197,6 +224,7 @@ public:
     static const int PATH_CACHE_ITEM_NUM = 256;
     static const int WORD_CACHE_ITEM_NUM = 512;
 
+    static TextInfoMruCache* GetTextInfoCache();
     static AssTagListMruCache* GetAssTagListMruCache();
     static OverlayMruCache* GetSubpixelVarianceCache();
     static OverlayMruCache* GetOverlayMruCache();
@@ -205,6 +233,7 @@ public:
     static PathDataMruCache* GetPathDataMruCache();
     static CWordMruCache* GetCWordMruCache();
 private:
+    static TextInfoMruCache* s_text_info_cache;
     static AssTagListMruCache* s_ass_tag_list_cache;
     static OverlayMruCache* s_subpixel_variance_cache;
     static OverlayMruCache* s_overlay_mru_cache;

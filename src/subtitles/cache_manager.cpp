@@ -5,6 +5,20 @@
 #include "StdAfx.h"
 #include "cache_manager.h"
 
+std::size_t hash_value( const TextInfoCacheKey& key )
+{
+    size_t hash = CStringElementTraits<CString>::Hash(key.m_str);
+    hash += (hash<<5);
+    hash += hash_value( static_cast<const STSStyleBase&>(key.m_style.get()) );
+    hash += (hash<<5);
+    hash += hash_value( key.m_style.get().fontScaleX );
+    hash += (hash<<5);
+    hash += hash_value( key.m_style.get().fontScaleY );
+    hash += (hash<<5);
+    hash += hash_value( key.m_style.get().fontSpacing );
+    return hash;
+}
+
 std::size_t hash_value(const CWord& key)
 {
     return( CStringElementTraits<CString>::Hash(key.m_str) );
@@ -51,6 +65,23 @@ std::size_t hash_value(const OverlayKey& key)
     hash += hash_value(key.m_style.get().fGaussianBlur);
     return  hash;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+// TextInfoCacheKey
+
+bool TextInfoCacheKey::operator==( const TextInfoCacheKey& key ) const
+{
+    return m_str == key.m_str 
+        && static_cast<const STSStyleBase&>(m_style).operator==(key.m_style)
+        && m_style.get().fontScaleX == key.m_style.get().fontScaleX
+        && m_style.get().fontScaleY == key.m_style.get().fontScaleY
+        && m_style.get().fontSpacing == key.m_style.get().fontSpacing;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+// CWordCacheKey
 
 CWordCacheKey::CWordCacheKey( const CWord& word )
 {
@@ -159,7 +190,7 @@ bool OverlayKey::operator==( const OverlayKey& key ) const
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // CacheManager
-
+TextInfoMruCache* CacheManager::s_text_info_cache = NULL;
 CWordMruCache* CacheManager::s_word_mru_cache = NULL;
 PathDataMruCache* CacheManager::s_path_data_mru_cache = NULL;
 ScanLineDataMruCache* CacheManager::s_scan_line_data_mru_cache = NULL;
@@ -229,4 +260,13 @@ AssTagListMruCache* CacheManager::GetAssTagListMruCache()
         s_ass_tag_list_cache = new AssTagListMruCache(ASS_TAG_LIST_CACHE_ITEM_NUM);
     }
     return s_ass_tag_list_cache;  
+}
+
+TextInfoMruCache* CacheManager::GetTextInfoCache()
+{
+    if(s_text_info_cache==NULL)
+    {
+        s_text_info_cache = new TextInfoMruCache(TEXT_INFO_CACHE_ITEM_NUM);
+    }
+    return s_text_info_cache;
 }
