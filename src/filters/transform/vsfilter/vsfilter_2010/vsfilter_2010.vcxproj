@@ -111,7 +111,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>delayimp.lib;strmbaseRU.lib;dsutilRU.lib;subtitlesRU.lib;subpicRU.lib;basevideofilterRU.lib;libssfRU.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;strmbaseRU.lib;dsutilRU.lib;subtitlesRU.lib;subpicRU.lib;basevideofilterRU.lib;libssfRU.lib;log4cplus_staticRU.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>$(SolutionDir)VSFilter.def</ModuleDefinitionFile>
