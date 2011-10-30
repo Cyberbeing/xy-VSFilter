@@ -174,7 +174,8 @@ STDMETHODIMP CSubtitleInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME
 	{
 		CAutoLock cAutoLock(m_pSubLock);
 		CRenderedTextSubtitle* pRTS = dynamic_cast<CRenderedTextSubtitle*>(static_cast<ISubStream*>(m_pSubStream));
-		pRTS->CreateSegments();
+		pRTS->RemoveAllEntries();
+        pRTS->CreateSegments();
 	}
 	else if(m_mt.majortype == MEDIATYPE_Subtitle && m_mt.subtype == MEDIASUBTYPE_SSF)
 	{

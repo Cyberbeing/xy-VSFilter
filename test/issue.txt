@@ -50,5 +50,5 @@ issue 20: Incorrect result when seeking with 18.ass.  Using it with a 1024 x 576
 ==============================================================
 issue 21: crash with 19.ass because of uninitiated point. Whitespace in the script trigger the bug. Introduced in Commit:719aa9a7fbf614d3911ecfa591632e01fd11aafb. (fixed)
 ==============================================================
-issue 22: subtitle line duplication with 20.ass embeded.
+issue 22: subtitle line duplication with 20.ass embeded. Introduced in Commit:c428d33463893e4c600ce00f7f4dd0a9bcbf63ba.(fixed)
 ==============================================================

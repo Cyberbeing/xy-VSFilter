@@ -3125,6 +3125,11 @@ bool CSimpleTextSubtitle::IsEmpty()
     return m_entries.IsEmpty();
 }
 
+void CSimpleTextSubtitle::RemoveAllEntries()
+{
+    m_entries.RemoveAll();
+}
+
 ////////////////////////////////////////////////////////////////////
 
 bool STSStyleBase::operator==( const STSStyleBase& s ) const

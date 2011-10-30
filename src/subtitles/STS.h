@@ -186,7 +186,8 @@ public:
     bool IsEmpty();
 
 	void Sort(bool fRestoreReadorder = false);
-	void CreateSegments();
+    void RemoveAllEntries();
+	void CreateSegments();    
 
 	void Append(CSimpleTextSubtitle& sts, int timeoff = -1);
 
