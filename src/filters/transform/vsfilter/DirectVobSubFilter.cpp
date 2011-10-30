@@ -87,7 +87,7 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 		lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
 		lf.lfQuality = ANTIALIASED_QUALITY;
 		HDC hdc = GetDC(NULL);
-		lf.lfHeight = -MulDiv(10, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+		lf.lfHeight = -MulDiv(10, GetDeviceCaps(hdc, LOGPIXELSY), 54);
 		ReleaseDC(NULL, hdc);
 		lf.lfWeight = FW_BOLD;
 		_tcscpy(lf.lfFaceName, _T("Arial"));
@@ -331,10 +331,9 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 			}
 		}
 	}
-    //CopyBuffer(pDataOut, pDataIn, bihIn.biWidth, bihIn.biHeight, bihIn.biWidth*2, mt.subtype);
 	CopyBuffer(pDataOut, (BYTE*)spd.bits, spd.w, abs(spd.h)*(fFlip?-1:1), spd.pitch, mt.subtype);
 
-	//PrintMessages(pDataOut);
+	PrintMessages(pDataOut);
 	return m_pOutput->Deliver(pOut);
 }
 
