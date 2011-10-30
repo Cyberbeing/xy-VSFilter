@@ -965,14 +965,14 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                     {
                         unsigned int ia = ( 
                             sa2[0]+          sa2[1]+
-                            sa2[0+src.pitch]+sa2[1+src.pitch]);
+                            sa2[0+src.pitch]+sa2[1+src.pitch]);                        
+                        *d3 = (((*d3)*ia)>>10) + ((
+                            s_u2[0] +       s_u2[1]+
+                            s_u2[src.pitch]+s_u2[1+src.pitch] )<<6);
+                        d3++;
                         *d3 = (((*d3)*ia)>>10) + ((
                             s_v2[0] +       s_v2[1]+
                             s_v2[src.pitch]+s_v2[1+src.pitch] )<<6);
-                        d3++;
-                        *d3 = (((*d3)*ia)>>10) + ((
-                            s_u2[0] +       s_u2[1]+
-                            s_u2[src.pitch]+s_u2[1+src.pitch] )<<6);                       
                     }
                 }
             }

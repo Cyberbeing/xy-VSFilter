@@ -56,5 +56,5 @@ issue 23: poor performance for unsorted embedded ass subtitles. With such subtit
 	choise 1: mix 21.ass with any video into .mkv, play it and watch OSD info. It will show that Cache LV 1 gets unreasonable high query count. 
 	choise 2: mix 22.ass with any video into .mkv, play it and watch OSD info. It will show that total query count of Cache LV 1 is 4 times, while using the subtitle as external subtitle or sorted before mixing, Cache LV 1 gets queried 3 times totally. (fixed)
 ==============================================================
-issue 24: incorrect color with P010/P016. 
+issue 24: incorrect color with P010/P016. (fixed)
 ==============================================================
