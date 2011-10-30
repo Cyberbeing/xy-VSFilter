@@ -32,6 +32,8 @@
 #include "text_reader.h"
 #include <algorithm>
 #include <vector>
+#include "xy_logger.h"
+
 // gathered from http://www.netwave.or.jp/~shikai/shikai/shcolor.htm
 
 struct htmlcolor {TCHAR* name; DWORD color;} hmtlcolors[] =
@@ -243,6 +245,23 @@ TCHAR* CharSetNames[] =
 };
 
 int CharSetLen = countof(CharSetList);
+
+static void LogSegments(const CAtlArray<STSSegment>& segments)
+{
+#ifdef __DO_LOG
+    for (int i=0;i<segments.GetCount();i++)
+    {
+        const STSSegment& s = segments[i];
+        XY_LOG_INFO(_T("\tsegments ")<<i<<_T(":")<<s.start<<_T(" ")
+            <<s.end<<_T(" ")<<s.subs.GetCount());
+        XY_LOG_INFO(_T("\tsubs: "));
+        for (int j=0;j<s.subs.GetCount();j++)
+        {
+            XY_LOG_INFO(_T("\t\t ")<<s.subs[j]);
+        }
+    }
+#endif
+}
 
 //
 
@@ -2007,8 +2026,16 @@ void CSimpleTextSubtitle::Empty()
     m_entries.RemoveAll();
 }
 
-void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, CString style, const CString& actor, const CString& effect, const CRect& marginRect, int layer, int readorder)
+void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, 
+    CString style, const CString& actor, const CString& effect, const CRect& marginRect, int layer, int readorder)
 {
+    XY_LOG_INFO(start<<_T(" ")<<end<<_T(" ")<<str.GetString()<<_T(" style:")<<style.GetString()
+        <<_T(" Unicode:")<<fUnicode
+        <<_T(" actor:")<<actor.GetString()<<_T(" effect:")<<effect.GetString()
+        <<_T(" (l:")<<marginRect.left<<_T(",t:")<<marginRect.top<<_T(",r:")<<marginRect.right<<_T(",b:")<<marginRect.bottom
+        <<_T(" layer:")<<layer<<_T(" readorder:")<<readorder
+        <<_T(" entries:")<<m_entries.GetCount()<<_T(" seg:")<<m_segments.GetCount());
+
     if(start > end || str.Trim().IsEmpty() ) return;
 
     str.Remove('\r');
@@ -2067,12 +2094,14 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, C
             STSSegment& s = m_segments[i];
 
             if(start >= s.end)
+            {
                 continue;
-
-            if(end <= s.start)
+            }
+            else if(end <= s.start)
+            {
                 break;
-
-            if(s.start < start && start < s.end)
+            }
+            else if(s.start < start && start < s.end)
             {
                 STSSegment stss(s.start, start);
                 stss.subs.Copy(s.subs);
@@ -2080,30 +2109,32 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, C
                 m_segments.InsertAt(i, stss);
                 continue;
             }
-
             if(start <= s.start && s.end <= end)
             {
                 for(int j = 0, k = s.subs.GetCount(); j <= k; j++)
                 {
                     if(j == k || sub.readorder < m_entries.GetAt(s.subs[j]).readorder)
+                    {
                         s.subs.InsertAt(j, n);
+                        break;
+                    }
                 }
-//              s.subs.Add(n);
             }
-
-            if(s.start < end && end < s.end)
+            else if(s.start < end && end < s.end)
             {
                 STSSegment stss(s.start, end);
                 stss.subs.Copy(s.subs);
                 for(int j = 0, k = s.subs.GetCount(); j <= k; j++)
                 {
                     if(j == k || sub.readorder < m_entries.GetAt(stss.subs[j]).readorder)
+                    {
                         stss.subs.InsertAt(j, n);
+                        break;
+                    }
                 }
-//              stss.subs.Add(n);
                 s.start = end;
                 m_segments.InsertAt(i, stss);
-            }
+            }            
         }
 
         if(end > m_segments[m_segments.GetCount()-1].end)
@@ -2113,7 +2144,6 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, C
             m_segments.Add(stss);
         }
     }
-
 /*
     str.Remove('\r');
     str.Replace(L"\n", L"\\N");
