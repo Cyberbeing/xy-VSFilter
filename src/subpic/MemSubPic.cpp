@@ -208,7 +208,8 @@ STDMETHODIMP CMemSubPic::Unlock( CAtlList<CRect>* dirtyRectList )
         ||
         (src_type==MSP_AY11 && (dst_type == MSP_IYUV ||
                                 dst_type == MSP_YV12 ||
-                                dst_type == MSP_P010)))
+                                dst_type == MSP_P010 ||
+                                dst_type == MSP_P016)))
     {
         return UnlockOther(dirtyRectList);        
     }
@@ -279,7 +280,8 @@ STDMETHODIMP CMemSubPic::UnlockOther(CAtlList<CRect>* dirtyRectList)
 
             XY_DO_ONCE( xy_logger::write_file("G:\\a1_ul", top, m_spd.pitch*(h-1)) );
         }
-        else if(m_alpha_blt_dst_type == MSP_YV12 || m_alpha_blt_dst_type == MSP_IYUV || m_alpha_blt_dst_type == MSP_YV12)
+        else if(m_alpha_blt_dst_type == MSP_YV12 || m_alpha_blt_dst_type == MSP_IYUV || m_alpha_blt_dst_type == MSP_YV12 
+             || m_alpha_blt_dst_type == MSP_P010 || m_alpha_blt_dst_type == MSP_P016)
         {
             //nothing to do
         }
@@ -384,7 +386,8 @@ STDMETHODIMP CMemSubPic::AlphaBlt( const RECT* pSrc, const RECT* pDst, SubPicDes
         ||
         (src_type==MSP_AY11 && (dst_type == MSP_IYUV ||
                                 dst_type == MSP_YV12 ||
-                                dst_type == MSP_P010 )) )
+                                dst_type == MSP_P010 ||
+                                dst_type == MSP_P016 )) )
     {
         return AlphaBltOther(pSrc, pDst, pTarget);        
     }
@@ -756,6 +759,7 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
         }
         break;
     case MSP_P010:
+    case MSP_P016:
         {
             //dst.pitch = abs(dst.pitch);
             int h2 = h/2;
@@ -1083,7 +1087,8 @@ STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
     if(dirtyRectList!=NULL)
     {
         POSITION pos = dirtyRectList->GetHeadPosition();
-        if(m_spd.type == MSP_AY11 || m_alpha_blt_dst_type==MSP_IYUV || m_alpha_blt_dst_type==MSP_YV12 || m_alpha_blt_dst_type==MSP_P010)
+        if(m_spd.type == MSP_AY11 || m_alpha_blt_dst_type==MSP_IYUV || m_alpha_blt_dst_type==MSP_YV12 
+            || m_alpha_blt_dst_type==MSP_P010 || m_alpha_blt_dst_type==MSP_P016)
         {
             while(pos!=NULL)
             {

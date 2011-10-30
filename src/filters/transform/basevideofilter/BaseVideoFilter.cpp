@@ -284,7 +284,7 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
 			}
 		}
 	}
-    else if(subtype == MEDIASUBTYPE_P010)
+    else if(subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016)
     {
         if (bihOut.biCompression != subtype.Data1)
             return VFW_E_TYPE_NOT_ACCEPTED;
@@ -344,8 +344,9 @@ HRESULT CBaseVideoFilter::CheckInputType(const CMediaType* mtIn)
 	return mtIn->majortype == MEDIATYPE_Video 
 		&& (mtIn->subtype == MEDIASUBTYPE_YV12 
 		 || mtIn->subtype == MEDIASUBTYPE_I420 
-         || mtIn->subtype == MEDIASUBTYPE_P010
 		 || mtIn->subtype == MEDIASUBTYPE_IYUV
+         || mtIn->subtype == MEDIASUBTYPE_P010
+         || mtIn->subtype == MEDIASUBTYPE_P016
 		 || mtIn->subtype == MEDIASUBTYPE_YUY2
 		 || mtIn->subtype == MEDIASUBTYPE_ARGB32
 		 || mtIn->subtype == MEDIASUBTYPE_RGB32
@@ -378,7 +379,8 @@ HRESULT CBaseVideoFilter::CheckTransform(const CMediaType* mtIn, const CMediaTyp
 		&& mtOut->subtype != MEDIASUBTYPE_RGB565)
 			return VFW_E_TYPE_NOT_ACCEPTED;
     }
-    else if(mtIn->subtype == MEDIASUBTYPE_P010) {
+    else if(mtIn->subtype == MEDIASUBTYPE_P010 
+         || mtIn->subtype == MEDIASUBTYPE_P016) {
         if(mtOut->subtype != mtIn->subtype)
         return VFW_E_TYPE_NOT_ACCEPTED;
     }
@@ -452,6 +454,7 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 		{&MEDIASUBTYPE_I420, 3, 12, '024I'},
 		{&MEDIASUBTYPE_IYUV, 3, 12, 'VUYI'},
         {&MEDIASUBTYPE_P010, 2, 24, '010P'},
+        {&MEDIASUBTYPE_P016, 2, 24, '610P'},
 		{&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
 		{&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
 		{&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},

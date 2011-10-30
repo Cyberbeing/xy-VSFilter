@@ -44,7 +44,7 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
 			}
 		}
 	}
-    else if(subtype == MEDIASUBTYPE_P010)
+    else if(subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016)
     {        
         //TODO: Fix ME!
         WORD* db = reinterpret_cast<WORD*>(d);
@@ -156,7 +156,7 @@ void Scale2x(const GUID& subtype, BYTE* d, int dpitch, BYTE* s, int spitch, int 
 
 		AvgLines8(d, h*2, dpitch);
 	}
-    else if(subtype == MEDIASUBTYPE_P010)
+    else if(subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016)
     {
         BYTE* s1 = s;
         BYTE* s1_end = s + h*spitch;
