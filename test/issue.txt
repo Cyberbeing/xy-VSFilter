@@ -52,3 +52,7 @@ issue 21: crash with 19.ass because of uninitiated point. Whitespace in the scri
 ==============================================================
 issue 22: subtitle line duplication with 20.ass embeded. Introduced in Commit:c428d33463893e4c600ce00f7f4dd0a9bcbf63ba.(fixed)
 ==============================================================
+issue 23: poor performance for unsorted embedded ass subtitles. With such subtitles, rasterizer::Draw function is called far more frequently then both external subtitle and sorted embedded subtitle. Steps to reproduce it: 
+	choise 1: mix 21.ass with any video into .mkv, play it and watch OSD info. It will show that Cache LV 1 gets unreasonable high query count. 
+	choise 2: mix 22.ass with any video into .mkv, play it and watch OSD info. It will show that total query count of Cache LV 1 is 4 times, while using the subtitle as external subtitle or sorted before mixing, Cache LV 1 gets queried 3 times totally.
+==============================================================
