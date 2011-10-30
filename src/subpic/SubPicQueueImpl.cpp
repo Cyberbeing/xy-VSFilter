@@ -612,9 +612,11 @@ CSubPicQueueNoThread::~CSubPicQueueNoThread()
 STDMETHODIMP CSubPicQueueNoThread::Invalidate(REFERENCE_TIME rtInvalidate)
 {
 	CAutoLock cQueueLock(&m_csLock);
-
-	m_pSubPic = NULL;
-
+    
+    if( m_pSubPic && m_pSubPic->GetStop() >= rtInvalidate)
+    {
+	    m_pSubPic = NULL;
+    }
 	return S_OK;
 }
 
