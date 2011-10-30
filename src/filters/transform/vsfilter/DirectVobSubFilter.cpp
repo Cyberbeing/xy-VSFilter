@@ -46,6 +46,10 @@
 bool g_RegOK = true;//false; // doesn't work with the dvd graph builder
 #include "valami.cpp"
 
+#ifdef __DO_LOG
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+#endif
+
 ////////////////////////////////////////////////////////////////////////////
 //
 // Constructor
@@ -58,7 +62,17 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	, m_fps(25)
 {
 	DbgLog((LOG_TRACE, 3, _T("CDirectVobSubFilter::CDirectVobSubFilter")));
-    xy_logger::doConfigure(_T("G:\\vsfilter.properties"));
+
+    // and then, anywhere you need it:
+
+#ifdef __DO_LOG
+    LPTSTR  strDLLPath = new TCHAR[_MAX_PATH];
+    ::GetModuleFileName( reinterpret_cast<HINSTANCE>(&__ImageBase), strDLLPath, _MAX_PATH);
+    CString dllPath = strDLLPath;
+    dllPath += ".properties";
+    xy_logger::doConfigure( dllPath.GetString() );
+#endif
+
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	m_hdc = 0;
