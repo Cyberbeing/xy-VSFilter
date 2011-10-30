@@ -48,5 +48,5 @@ issue 19: Corruption with 17.ass. Using it with a 1024 x 576 video, the corrupti
 ==============================================================
 issue 20: Incorrect result when seeking with 18.ass.  Using it with a 1024 x 576 video, pause and seek to frame 280, the result subpic is corresponding to another time.
 ==============================================================
-issue 21: crash with 19.ass because of uninitiated point. Whitespace in the script trigger the bug. Introduced in Commit:719aa9a7fbf614d3911ecfa591632e01fd11aafb.
+issue 21: crash with 19.ass because of uninitiated point. Whitespace in the script trigger the bug. Introduced in Commit:719aa9a7fbf614d3911ecfa591632e01fd11aafb. (fixed)
 ==============================================================
