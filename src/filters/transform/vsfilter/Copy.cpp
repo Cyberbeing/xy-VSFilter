@@ -23,8 +23,23 @@
 #include "..\..\..\DSUtil\MediaTypes.h"
 
 #include <initguid.h>
-#include "..\..\..\..\include\moreuuids.h"
+#include "../../../../include/moreuuids.h"
 #include "../../subpic/color_conv_table.h"
+
+#include "xy_logger.h"
+
+static void LogSubPicStartStop( const REFERENCE_TIME& rtStart, const REFERENCE_TIME& rtStop, const CString& msg)
+{
+#ifdef __DO_LOG
+    static REFERENCE_TIME s_rtStart = -1, s_rtStop = -1;
+    if(s_rtStart!=rtStart || s_rtStop!=rtStop)
+    {
+        XY_LOG_INFO(tmp.GetString());
+        s_rtStart=rtStart;
+        s_rtStop=rtStop;
+    }
+#endif
+}
 
 void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
 {
@@ -540,8 +555,22 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 				tmp.Format(_T("%d: %I64d - %I64d [ms]\n"), i, rtStart/10000, rtStop/10000);
 				msg += tmp;
 			}
-
+            LogSubPicStartStop(rtStart, rtStop, tmp);
 		}
+
+        //print cache info
+        CachesInfo caches_info;
+        get_CachesInfo(&caches_info);
+        tmp.Format(_T("Cache :stored_num/hit_count/query_count\n")\
+            _T("  LV 4:%ld/%ld/%ld\n")\
+            _T("  LV 3:%ld/%ld/%ld\n")\
+            _T("  LV 2:%ld/%ld/%ld\n")\
+            _T("  LV 1:%ld/%ld/%ld\n"),            
+            caches_info.path_cache_cur_item_num,     caches_info.path_cache_hit_count,     caches_info.path_cache_query_count,
+            caches_info.scanline_cache_cur_item_num, caches_info.scanline_cache_hit_count, caches_info.scanline_cache_query_count,
+            caches_info.non_blur_cache_cur_item_num, caches_info.non_blur_cache_hit_count, caches_info.non_blur_cache_query_count,
+            caches_info.overlay_cache_cur_item_num,  caches_info.overlay_cache_hit_count,  caches_info.overlay_cache_query_count);
+        msg += tmp;
 	}
 
 	if(msg.IsEmpty()) return;
