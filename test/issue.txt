@@ -58,5 +58,5 @@ issue 23: poor performance for unsorted embedded ass subtitles. With such subtit
 ==============================================================
 issue 24: incorrect color with P010/P016. (fixed)
 ==============================================================
-issue 25: \t tags not working, e.g. in 23.ass.
+issue 25: \t tags not working, e.g. in 23.ass.(fixed)
 ==============================================================
