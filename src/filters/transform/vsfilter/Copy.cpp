@@ -607,6 +607,8 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 
 	if(subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV)
 		pitchOut = bihOut.biWidth;
+    else if (subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016)
+        pitchOut = bihOut.biWidth * 2;
 
 	pitchIn = (pitchIn+3)&~3;
 	pitchOut = (pitchOut+3)&~3;

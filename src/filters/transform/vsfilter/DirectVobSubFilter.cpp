@@ -87,7 +87,8 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 		lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
 		lf.lfQuality = ANTIALIASED_QUALITY;
 		HDC hdc = GetDC(NULL);
-		lf.lfHeight = -MulDiv(10, GetDeviceCaps(hdc, LOGPIXELSY), 54);
+		lf.lfHeight = 28;
+            //MulDiv(20, GetDeviceCaps(hdc, LOGPIXELSY), 54);
 		ReleaseDC(NULL, hdc);
 		lf.lfWeight = FW_BOLD;
 		_tcscpy(lf.lfFaceName, _T("Arial"));
