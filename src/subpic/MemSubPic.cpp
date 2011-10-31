@@ -786,64 +786,51 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
             ss[0] = src_origin + src.pitch*src.h*2;//U
             ss[1] = src_origin + src.pitch*src.h*3;//V
 
-            //// equivalent:                
-            ////   if( (reinterpret_cast<intptr_t>(s2)&15)==0 && (reinterpret_cast<intptr_t>(sa)&15)==0 
-            ////     && (reinterpret_cast<intptr_t>(d2)&15)==0 )
-            //if( ((reinterpret_cast<intptr_t>(s) | static_cast<intptr_t>(src.pitch) |
-            //    reinterpret_cast<intptr_t>(d) | static_cast<intptr_t>(dst.pitch) ) & 15 )==0 )
-            //{
-            //    for(int i=0; i<h; i++, s += src.pitch, d += dst.pitch)
-            //    {
-            //        BYTE* sa = s;
-            //        BYTE* s2 = s + src.pitch*src.h;
-            //        BYTE* s2end_mod16 = s2 + (w&~15);
-            //        BYTE* s2end = s2 + w;
-            //        BYTE* d2 = d;
+            // equivalent:                
+            //   if( (reinterpret_cast<intptr_t>(s2)&15)==0 && (reinterpret_cast<intptr_t>(sa)&15)==0 
+            //     && (reinterpret_cast<intptr_t>(d2)&15)==0 )
+            if( ((reinterpret_cast<intptr_t>(s) | static_cast<intptr_t>(src.pitch) |
+                  reinterpret_cast<intptr_t>(d) | static_cast<intptr_t>(dst.pitch) ) & 15 )==0 )
+            {
+                for(int i=0; i<h; i++, s += src.pitch, d += dst.pitch)
+                {
+                    BYTE* sa = s;
+                    BYTE* s2 = s + src.pitch*src.h;
+                    BYTE* s2end_mod16 = s2 + (w&~15);
+                    BYTE* s2end = s2 + w;
+                    BYTE* d2 = d;
 
-            //        for(; s2 < s2end_mod16; s2+=16, sa+=16, d2+=32)
-            //        {
-            //            __asm
-            //            {
-            //                    //important!
-            //                    mov			edi, d2
-            //                    mov         esi, sa
-            //                    movaps      XMM1,[edi]
-            //                    movaps      XMM2,[esi]
-            //                    mov         esi, s2
-            //                    movaps      XMM3,[esi]
-            //                                               
-            //                    xorps       XMM4,XMM4
-            //                    punpcklbw   XMM4,XMM2
+                    for(; s2 < s2end_mod16; s2+=16, sa+=16, d2+=16)
+                    {
+                        //important!
+                        __m128i alpha = _mm_load_si128( reinterpret_cast<const __m128i*>(sa) );
+                        __m128i src_y = _mm_load_si128( reinterpret_cast<const __m128i*>(s2) );
+                        __m128i dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(d2) );
+                        __m128i lo = _mm_setzero_si128();
+                        lo = _mm_unpacklo_epi8(lo, alpha);
+                        dst_y = _mm_mulhi_epu16(dst_y, lo); 
+                        lo = _mm_setzero_si128();
+                        lo = _mm_unpacklo_epi8(lo, src_y);
+                        dst_y = _mm_adds_epu16(dst_y, lo);                            
+                        _mm_store_si128( reinterpret_cast<__m128i*>(d2), dst_y );
 
-            //                    pmulhuw     XMM1,XMM4
-
-            //                    movaps      XMM5,XMM3
-            //                    xorps       XMM0,XMM0
-            //                    punpcklbw   XMM5,XMM0
-            //                    psraw       XMM5,2
-
-            //                    paddusb     XMM1,XMM5
-            //                    movntps     [edi],XMM1
-
-            //                    add         edi,16
-            //                    movaps      XMM1,[edi]
-            //                                                    
-            //                    punpckhbw   XMM2,XMM0
-            //                    pmulhuw     XMM1,XMM2
-
-            //                    punpckhbw   XMM3,XMM0
-            //                    psraw       XMM3,2
-            //                    paddusb     XMM1,XMM3
-            //                    movntps     [edi],XMM1
-            //            }
-            //        }
-            //        for( WORD* d3=reinterpret_cast<WORD*>(d2); s2 < s2end; s2++, sa++, d3++)
-            //        {
-            //            d3[0] = (((d3[0])*sa[0])>>8) + (s2[0]<<2);
-            //        }
-            //    }
-            //}
-            //else //fix me: only a workaround for non-mod-16 size video
+                        d2 += 16;
+                        dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(d2) );
+                        lo = _mm_setzero_si128();
+                        lo = _mm_unpackhi_epi8(lo, alpha);
+                        dst_y = _mm_mulhi_epu16(dst_y, lo); 
+                        lo = _mm_setzero_si128();
+                        lo = _mm_unpackhi_epi8(lo, src_y);
+                        dst_y = _mm_adds_epu16(dst_y, lo);
+                        _mm_store_si128( reinterpret_cast<__m128i*>(d2), dst_y );
+                    }
+                    for( WORD* d3=reinterpret_cast<WORD*>(d2); s2 < s2end; s2++, sa++, d3++)
+                    {
+                        d2[0] = ((d2[0]*sa[0])>>8) + (s2[0]<<8);
+                    }
+                }
+            }
+            else //fix me: only a workaround for non-mod-16 size video
             {
                 for(int i=0; i<h; i++, s += src.pitch, d += dst.pitch)
                 {
@@ -857,95 +844,108 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                         //if(s2[3] < 0xff)
                         {
                             //					d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];
-                            if(i==21)
-                            {
-                                //XY_LOG_INFO( d2[0]<<" "<<sa[0]<<" "<<s2[0] );
-                            }
                             d2[0] = ((d2[0]*sa[0])>>8) + (s2[0]<<8);
                         }
                     }
                 }
             }
-            // equivalent:
-            //   if( (reinterpret_cast<intptr_t>(s2)&15)==0 && (reinterpret_cast<intptr_t>(sa2)&15)==0 
-            //       && (reinterpret_cast<intptr_t>(d2)&7)==0 )
-            //if( ((reinterpret_cast<intptr_t>(ss[0]) | reinterpret_cast<intptr_t>(ss[1]) | 
-            //    reinterpret_cast<intptr_t>(ddUV) | 
-            //    reinterpret_cast<intptr_t>(src_origin) | static_cast<intptr_t>(src.pitch) |
-            //    (static_cast<intptr_t>(dst.pitchUV)&7) ) & 15 )==0 )
-            //{
-            //    BYTE* s_u = ss[0];
-            //    BYTE* s_v = ss[1];
-            //    BYTE* sa = src_origin;
-            //    BYTE* d = ddUV;
-            //    int pitch = src.pitch;
-            //    for(int j = 0; j < h2; j++, s_u += src.pitch*2, s_v += src.pitch*2, sa += src.pitch*2, d += dst.pitchUV)
-            //    {
-            //        BYTE* s_u2 = s_u;
-            //        BYTE* sa2 = sa;
-            //        BYTE* s_u2end_mod16 = s_u2 + (w&~15);
-            //        BYTE* s_u2end = s_u2 + w;
-            //        BYTE* d2 = d;
-            //        BYTE* s_v2 = s_v;
-
-            //        __m128i zero = _mm_setzero_si128();                    
-            //        for(; s_u2 < s_u2end_mod16; s_u2 += 8, s_v2+=8, sa2 += 8, d2+=16)
-            //        {
-            //            __m128i dst = _mm_load_si128( reinterpret_cast<const __m128i*>(d2) );
-            //            __m128i su1 = _mm_loadl_epi64( reinterpret_cast<const __m128i*>(s_u2) );
-            //            __m128i su2 = _mm_loadl_epi64( reinterpret_cast<const __m128i*>(s_u2+src.pitch) );
-            //            __m128i sv1 = _mm_loadl_epi64( reinterpret_cast<const __m128i*>(s_v2) );
-            //            __m128i sv2 = _mm_loadl_epi64( reinterpret_cast<const __m128i*>(s_u2+src.pitch) );
-            //            __m128i alpha = _mm_loadl_epi64( reinterpret_cast<const __m128i*>(sa2) );
-            //            __m128i alpha2 = _mm_loadl_epi64( reinterpret_cast<const __m128i*>(sa2+src.pitch) );
-
-            //            su1 = _mm_unpacklo_epi8(su1, zero);
-            //            su2 = _mm_unpacklo_epi8(su2, zero);
-            //            sv1 = _mm_unpacklo_epi8(sv1, zero);
-            //            sv2 = _mm_unpacklo_epi8(sv2, zero);
-            //            alpha = _mm_unpacklo_epi8(alpha, zero);
-            //            alpha2 = _mm_unpacklo_epi8(alpha2, zero);
-            //            
-            //            su1 = _mm_adds_epu16(su1, su2);                        
-            //            sv1 = _mm_adds_epu16(sv1, sv2);
-            //            alpha = _mm_adds_epu16(alpha, alpha2);
-
-            //            su2 = _mm_srli_epi32(su1, 16);
-            //            sv2 = _mm_srli_epi32(sv1, 16);
-            //            alpha2 = _mm_srli_epi32(alpha, 16);
-
-            //            su1 = _mm_adds_epu16(su1,su2);
-            //            sv1 = _mm_adds_epu16(sv1,sv2);
-            //            alpha = _mm_adds_epu16(alpha,alpha2);
-
-            //            su1 = _mm_srai_epi32(su1, 16);
-            //            sv1 = _mm_srai_epi32(sv1, 16);
-            //            sv1 = _mm_srli_epi32(sv1, 16);
-
-            //            su1 = _mm_add_epi32(su1,sv1);
-
-            //            alpha2 = _mm_srai_epi32(alpha, 16);
-            //            alpha = _mm_srli_epi32(alpha2, 16);
-            //            alpha = _mm_add_epi32(alpha,alpha2);
-            //            alpha = _mm_srli_epi16(alpha, 6);
-
-            //            dst = _mm_mulhi_epu16(dst, alpha);
-            //            dst = _mm_adds_epu16(dst, su1);
-            //            _mm_store_si128( reinterpret_cast<__m128i*>(d2), dst );                        
-            //        }
-            //        for( WORD* d3=reinterpret_cast<WORD*>(d2); s_u2 < s_u2end; s_u2+=2, s_v2+=2, sa2+=2, d3++)
-            //        {
-            //            unsigned int ia = ( sa2[0]+          sa2[1]+
-            //                                sa2[0+src.pitch]+sa2[1+src.pitch]);
-            //            *d3 = (((*d3)*ia)>>8) + ((s_u2[0] +       s_u2[1]+
-            //                                      s_u2[src.pitch]+s_u2[1+src.pitch] ));
-            //            d3++;
-            //            *d3 = (((*d3)*ia)>>8) + ((s_v2[0] +       s_v2[1]+
-            //                                      s_v2[src.pitch]+s_v2[1+src.pitch] ));
-            //        }
-            //    }
-            //}
-            //else//fix me: only a workaround for non-mod-16 size video
+//            // equivalent:
+//            //   if( (reinterpret_cast<intptr_t>(s2)&15)==0 && (reinterpret_cast<intptr_t>(sa2)&15)==0 
+//            //       && (reinterpret_cast<intptr_t>(d2)&7)==0 )
+//            if( ((reinterpret_cast<intptr_t>(ss[0]) | reinterpret_cast<intptr_t>(ss[1]) | 
+//                reinterpret_cast<intptr_t>(ddUV) | 
+//                reinterpret_cast<intptr_t>(src_origin) | static_cast<intptr_t>(src.pitch) |
+//                (static_cast<intptr_t>(dst.pitchUV)&7) ) & 15 )==0 )
+//            {
+//                BYTE* s_u = ss[0];
+//                BYTE* s_v = ss[1];
+//                BYTE* sa = src_origin;
+//                BYTE* d = ddUV;
+//                int pitch = src.pitch;
+//                for(int j = 0; j < h2; j++, s_u += src.pitch*2, s_v += src.pitch*2, sa += src.pitch*2, d += dst.pitchUV)
+//                {
+//                    BYTE* s_u2 = s_u;
+//                    BYTE* sa2 = sa;
+//                    BYTE* s_u2end_mod16 = s_u2 + (w&~15);
+//                    BYTE* s_u2end = s_u2 + w;
+//                    BYTE* d2 = d;
+//                    BYTE* s_v2 = s_v;
+//                                                           
+//                    for(; s_u2 < s_u2end_mod16; s_u2 += 8, s_v2+=8, sa2 += 8, d2+=16)
+//                    {
+//                        __m128i dst = _mm_load_si128( reinterpret_cast<const __m128i*>(d2) );
+//                        __m128i alpha1 = _mm_load_si128( reinterpret_cast<const __m128i*>(sa2) );
+//                        __m128i alpha2 = _mm_load_si128( reinterpret_cast<const __m128i*>(sa2+src.pitch) );
+//
+//                        __m128i temp1 = _mm_setzero_si128();
+//                        temp1 = _mm_unpacklo_epi8(alpha1, temp1);
+//                        __m128i temp2 = _mm_setzero_si128();
+//                        temp2 = _mm_unpacklo_epi8(alpha1, temp2);
+//
+//                        temp1 = _mm_adds_epu16(temp1, temp2);
+//
+//                        temp2 = _mm_srai_epi32(temp1, 16);
+//                        temp1 = _mm_adds_epu16(temp1, temp2);
+//                        temp1 = _mm_srli_epi32(temp1, 22);
+//                        temp2 = _mm_srai_epi32(temp1, 16);
+//                        temp1 = _mm_adds_epu16(temp1, temp2);
+//                                                
+//                        dst = _mm_mulhi_epu16(dst, temp1);
+//
+//
+//                        __m128i su1 = _mm_load_si128( reinterpret_cast<const __m128i*>(s_u2) );
+//                        __m128i su2 = _mm_load_si128( reinterpret_cast<const __m128i*>(s_u2+src.pitch) );
+//                        __m128i sv1 = _mm_load_si128( reinterpret_cast<const __m128i*>(s_v2) );
+//                        __m128i sv2 = _mm_load_si128( reinterpret_cast<const __m128i*>(s_u2+src.pitch) );
+//
+///*
+//                        su1 = _mm_unpacklo_epi8(su1, zero);
+//                        su2 = _mm_unpacklo_epi8(su2, zero);
+//                        sv1 = _mm_unpacklo_epi8(sv1, zero);
+//                        sv2 = _mm_unpacklo_epi8(sv2, zero);
+//                        alpha = _mm_unpacklo_epi8(alpha, zero);
+//                        alpha2 = _mm_unpacklo_epi8(alpha2, zero);
+//                        
+//                        su1 = _mm_adds_epu16(su1, su2);                        
+//                        sv1 = _mm_adds_epu16(sv1, sv2);
+//                        alpha = _mm_adds_epu16(alpha, alpha2);
+//
+//                        su2 = _mm_srli_epi32(su1, 16);
+//                        sv2 = _mm_srli_epi32(sv1, 16);
+//                        alpha2 = _mm_srli_epi32(alpha, 16);
+//
+//                        su1 = _mm_adds_epu16(su1,su2);
+//                        sv1 = _mm_adds_epu16(sv1,sv2);
+//                        alpha = _mm_adds_epu16(alpha,alpha2);
+//
+//                        su1 = _mm_srai_epi32(su1, 16);
+//                        sv1 = _mm_srai_epi32(sv1, 16);
+//                        sv1 = _mm_srli_epi32(sv1, 16);
+//
+//                        su1 = _mm_add_epi32(su1,sv1);
+//
+//                        alpha2 = _mm_srai_epi32(alpha, 16);
+//                        alpha = _mm_srli_epi32(alpha2, 16);
+//                        alpha = _mm_add_epi32(alpha,alpha2);
+//                        alpha = _mm_srli_epi16(alpha, 6);
+//
+//                        dst = _mm_mulhi_epu16(dst, alpha);
+//                        dst = _mm_adds_epu16(dst, su1);
+//                        _mm_store_si128( reinterpret_cast<__m128i*>(d2), dst );     */                   
+//                    }
+//                    for( WORD* d3=reinterpret_cast<WORD*>(d2); s_u2 < s_u2end; s_u2+=2, s_v2+=2, sa2+=2, d3++)
+//                    {
+//                        unsigned int ia = ( sa2[0]+          sa2[1]+
+//                                            sa2[0+src.pitch]+sa2[1+src.pitch]);
+//                        *d3 = (((*d3)*ia)>>8) + ((s_u2[0] +       s_u2[1]+
+//                                                  s_u2[src.pitch]+s_u2[1+src.pitch] ));
+//                        d3++;
+//                        *d3 = (((*d3)*ia)>>8) + ((s_v2[0] +       s_v2[1]+
+//                                                  s_v2[src.pitch]+s_v2[1+src.pitch] ));
+//                    }
+//                }
+//            }
+//            else//fix me: only a workaround for non-mod-16 size video
             {
                 BYTE* s_u = ss[0];
                 BYTE* s_v = ss[1];
