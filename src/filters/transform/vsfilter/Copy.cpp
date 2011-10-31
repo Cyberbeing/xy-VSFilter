@@ -561,15 +561,23 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
         //print cache info
         CachesInfo caches_info;
         get_CachesInfo(&caches_info);
-        tmp.Format(_T("Cache :stored_num/hit_count/query_count\n")\
+        tmp.Format(
+            _T("Cache :stored_num/hit_count/query_count\n")\
+            _T("  Parser cache 1:%ld/%ld/%ld\n")\
+            _T("  Parser cache 2:%ld/%ld/%ld\n")\
+            _T("\n")\
             _T("  LV 4:%ld/%ld/%ld\n")\
             _T("  LV 3:%ld/%ld/%ld\n")\
             _T("  LV 2:%ld/%ld/%ld\n")\
-            _T("  LV 1:%ld/%ld/%ld\n"),            
+            _T("  LV 1:%ld/%ld/%ld\n")\
+            _T("  LV 0:%ld/%ld/%ld\n"),
+            caches_info.text_info_cache_cur_item_num, caches_info.text_info_cache_hit_count, caches_info.text_info_cache_query_count,
+            caches_info.word_info_cache_cur_item_num, caches_info.word_info_cache_hit_count, caches_info.word_info_cache_query_count,
             caches_info.path_cache_cur_item_num,     caches_info.path_cache_hit_count,     caches_info.path_cache_query_count,
             caches_info.scanline_cache_cur_item_num, caches_info.scanline_cache_hit_count, caches_info.scanline_cache_query_count,
             caches_info.non_blur_cache_cur_item_num, caches_info.non_blur_cache_hit_count, caches_info.non_blur_cache_query_count,
-            caches_info.overlay_cache_cur_item_num,  caches_info.overlay_cache_hit_count,  caches_info.overlay_cache_query_count);
+            caches_info.overlay_cache_cur_item_num,  caches_info.overlay_cache_hit_count,  caches_info.overlay_cache_query_count,
+            caches_info.interpolate_cache_cur_item_num, caches_info.interpolate_cache_hit_count, caches_info.interpolate_cache_query_count);
         msg += tmp;
 	}
 

@@ -559,6 +559,15 @@ STDMETHODIMP CDirectVobSub::get_CachesInfo(CachesInfo* caches_info)
         caches_info->overlay_cache_cur_item_num = 0;
         caches_info->overlay_cache_hit_count    = 0;
         caches_info->overlay_cache_query_count  = 0;
+        caches_info->interpolate_cache_cur_item_num = 0;
+        caches_info->interpolate_cache_query_count  = 0;
+        caches_info->interpolate_cache_hit_count    = 0;
+        caches_info->text_info_cache_cur_item_num   = 0;
+        caches_info->text_info_cache_query_count    = 0;
+        caches_info->text_info_cache_hit_count      = 0;
+        caches_info->word_info_cache_cur_item_num   = 0;
+        caches_info->word_info_cache_query_count    = 0;
+        caches_info->word_info_cache_hit_count      = 0;
         return S_OK;
     }
     else 

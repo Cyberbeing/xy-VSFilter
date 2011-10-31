@@ -292,7 +292,10 @@ extern "C" {
             std::size_t path_cache_cur_item_num, path_cache_query_count,path_cache_hit_count,
                 scanline_cache_cur_item_num, scanline_cache_query_count,scanline_cache_hit_count,
                 non_blur_cache_cur_item_num, non_blur_cache_query_count,non_blur_cache_hit_count,
-                overlay_cache_cur_item_num, overlay_cache_query_count,overlay_cache_hit_count;
+                overlay_cache_cur_item_num, overlay_cache_query_count,overlay_cache_hit_count,
+                interpolate_cache_cur_item_num, interpolate_cache_query_count,interpolate_cache_hit_count,
+                text_info_cache_cur_item_num, text_info_cache_query_count, text_info_cache_hit_count,
+                word_info_cache_cur_item_num, word_info_cache_query_count, word_info_cache_hit_count;
         };
         STDMETHOD(get_CachesInfo) (THIS_
             CachesInfo* cache_info
