@@ -60,3 +60,5 @@ issue 24: incorrect color with P010/P016. (fixed)
 ==============================================================
 issue 25: \t tags not working, e.g. in 23.ass.(fixed)
 ==============================================================
+issue 26: \frx and \fry rotations are reversed. Associated script: 24.ass.
+==============================================================
