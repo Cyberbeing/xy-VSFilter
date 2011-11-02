@@ -382,12 +382,12 @@ bool CWord::NeedTransform()
 
 void CWord::Transform(SharedPtrPathData path_data, const CPoint& org)
 {
-	// CPUID from VDub
-	bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
+	//// CPUID from VDub
+	//bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
 
-	if(fSSE2) {	// SSE code
-		Transform_SSE2(path_data, org);
-	} else		// C-code
+	//if(fSSE2) {	// SSE code
+	//	Transform_SSE2(path_data, org);
+	//} else		// C-code
 		Transform_C(path_data, org);
 }
 
