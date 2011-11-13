@@ -50,7 +50,7 @@ protected:
     CStringW m_str;
     FwSTSStyle m_style;
 
-    friend std::size_t hash_value(const PathDataCacheKey& key);
+    friend class PathDataCacheKeyTraits;
 };
 
 class ScanLineDataCacheKey: public PathDataCacheKey
@@ -62,7 +62,9 @@ public:
         :PathDataCacheKey(style, str),m_org(org) { }
     bool operator==(const ScanLineDataCacheKey& key)const;
 
-    POINT m_org;  
+    POINT m_org;
+
+    friend class ScanLineDataCacheKeyTraits;
 };
 
 class OverlayNoBlurKey: public ScanLineDataCacheKey
@@ -90,7 +92,12 @@ public:
 
 std::size_t hash_value(const TextInfoCacheKey& key);
 std::size_t hash_value(const CWord& key);
-std::size_t hash_value(const PathDataCacheKey& key);
+
+class PathDataCacheKeyTraits:public CElementTraits<PathDataCacheKey>
+{
+public:
+    static ULONG Hash(const PathDataCacheKey& key);
+};
 
 class ScanLineDataCacheKeyTraits:public CElementTraits<ScanLineDataCacheKey>
 {
@@ -140,24 +147,6 @@ struct CWordMruItem
     SharedPtrCWord word;
 };
 
-struct PathDataMruItem
-{
-    PathDataMruItem(const PathDataCacheKey& path_data_key_, const SharedPtrConstPathData& path_data_):
-        path_data_key(path_data_key_),path_data(path_data_){}
-
-    PathDataCacheKey path_data_key;
-    SharedPtrConstPathData path_data;
-};
-
-struct ScanLineDataMruItem
-{
-    ScanLineDataMruItem(const ScanLineDataCacheKey& scan_line_data_key_, const SharedPtrConstScanLineData& scan_line_data_):
-        scan_line_data_key(scan_line_data_key_),scan_line_data(scan_line_data_){}
-
-    ScanLineDataCacheKey scan_line_data_key;
-    SharedPtrConstScanLineData scan_line_data;
-};
-
 typedef enhanced_mru_list<
     TextInfoMruItem, 
     boost::multi_index::member<TextInfoMruItem, 
@@ -190,13 +179,7 @@ typedef enhanced_mru_list<
     >
 > CWordMruCache;
 
-typedef enhanced_mru_list<
-    PathDataMruItem, 
-    boost::multi_index::member<PathDataMruItem, 
-    PathDataCacheKey, 
-    &PathDataMruItem::path_data_key
-    >
-> PathDataMruCache;
+typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, PathDataCacheKeyTraits> PathDataMruCache;
 
 typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
 

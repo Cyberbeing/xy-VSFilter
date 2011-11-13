@@ -572,7 +572,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
     ColorConvTable::SetDefaultYUVType(m_fUseBT709?ColorConvTable::BT709:ColorConvTable::BT601);
-    CacheManager::GetPathDataMruCache()->set_max_num_items(m_path_data_cache_max_item_num);
+    CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
     CacheManager::GetScanLineDataMruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
     CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
     CacheManager::GetOverlayMruCache()->set_max_num_items(m_overlay_cache_max_item_num);
@@ -1132,7 +1132,7 @@ STDMETHODIMP CDirectVobSubFilter::put_PathDataCacheMaxItemNum(int path_data_cach
 
     if(hr == NOERROR)
     {
-        CacheManager::GetPathDataMruCache()->set_max_num_items(m_path_data_cache_max_item_num);
+        CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
     }
 
     return hr;
@@ -1156,9 +1156,9 @@ STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
     CAutoLock cAutoLock(&m_csQueueLock);
     HRESULT hr = CDirectVobSub::get_CachesInfo(caches_info);
 
-    caches_info->path_cache_cur_item_num    = CacheManager::GetPathDataMruCache()->get_cur_items_num();
-    caches_info->path_cache_hit_count       = CacheManager::GetPathDataMruCache()->get_cache_hit();
-    caches_info->path_cache_query_count     = CacheManager::GetPathDataMruCache()->get_query_count();
+    caches_info->path_cache_cur_item_num    = CacheManager::GetPathDataMruCache()->GetCurItemNum();
+    caches_info->path_cache_hit_count       = CacheManager::GetPathDataMruCache()->GetCacheHitCount();
+    caches_info->path_cache_query_count     = CacheManager::GetPathDataMruCache()->GetQueryCount();
     caches_info->scanline_cache_cur_item_num= CacheManager::GetScanLineDataMruCache()->GetCurItemNum();
     caches_info->scanline_cache_hit_count   = CacheManager::GetScanLineDataMruCache()->GetCacheHitCount();
     caches_info->scanline_cache_query_count = CacheManager::GetScanLineDataMruCache()->GetQueryCount();
