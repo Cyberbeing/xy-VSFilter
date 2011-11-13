@@ -134,6 +134,7 @@ bool PathDataCacheKey::CompareSTSStyle( const STSStyle& lhs, const STSStyle& rhs
     return lhs.charSet==rhs.charSet &&
         lhs.fontName==rhs.fontName &&
         lhs.fontSize==rhs.fontSize &&
+        lhs.fontSpacing==rhs.fontSpacing &&
         lhs.fontWeight==rhs.fontWeight &&
         lhs.fItalic==rhs.fItalic &&
         lhs.fUnderline==rhs.fUnderline &&
