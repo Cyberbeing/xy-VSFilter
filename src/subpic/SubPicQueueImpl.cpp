@@ -639,7 +639,7 @@ STDMETHODIMP_(bool) CSubPicQueueNoThread::LookupSubPicEx(REFERENCE_TIME rtNow, I
 {
     if(!ppSubPic)
         return(false);
-
+    
     *ppSubPic = NULL;
 
     CComPtr<ISubPicEx> pSubPic;
@@ -674,12 +674,6 @@ STDMETHODIMP_(bool) CSubPicQueueNoThread::LookupSubPicEx(REFERENCE_TIME rtNow, I
                 REFERENCE_TIME rtStart = pSubPicProvider->GetStart(pos, fps);
                 REFERENCE_TIME rtStop = pSubPicProvider->GetStop(pos, fps);
 
-                if(pSubPicProvider->IsAnimated(pos))
-                {
-                    rtStart = rtNow;
-                    rtStop = rtNow+1;
-                }
-
                 if(rtStart <= rtNow && rtNow < rtStop)
                 {
                     SIZE	MaxTextureSize, VirtualSize;
@@ -692,13 +686,13 @@ STDMETHODIMP_(bool) CSubPicQueueNoThread::LookupSubPicEx(REFERENCE_TIME rtNow, I
                     {
                         CComPtr<ISubPicEx> pStatic;
                         if(SUCCEEDED(m_pAllocator->GetStaticEx(&pStatic))
-                            && SUCCEEDED(RenderTo(pStatic, rtStart, rtStop, fps, true))
+                            && SUCCEEDED(RenderTo(pStatic, rtNow, rtNow+1, fps, true))
                             && SUCCEEDED(pStatic->CopyTo(pSubPic)))
                             (*ppSubPic = pSubPic)->AddRef();
                     }
                     else
                     {
-                        if(SUCCEEDED(RenderTo(m_pSubPic, rtStart, rtStop, fps, true)))
+                        if(SUCCEEDED(RenderTo(m_pSubPic, rtNow, rtNow+1, fps, true)))
                             (*ppSubPic = pSubPic)->AddRef();
                     }
                 }
@@ -714,7 +708,6 @@ STDMETHODIMP_(bool) CSubPicQueueNoThread::LookupSubPicEx(REFERENCE_TIME rtNow, I
             }
         }
     }
-
     return(!!*ppSubPic);
 }
 
