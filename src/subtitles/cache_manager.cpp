@@ -45,10 +45,9 @@ std::size_t hash_value( const ScanLineDataCacheKey& key )
     return  hash;
 }
 
-std::size_t hash_value( const OverlayNoBlurKey& key )
+ULONG OverlayNoBlurKeyTraits::Hash( const OverlayNoBlurKey& key )
 {
-    //return hash_value(static_cast<ScanLineDataCacheKey>(key)) ^ key.m_p.x ^ key.m_p.y;
-    size_t hash = hash_value(static_cast<const ScanLineDataCacheKey&>(key));
+    ULONG hash = hash_value(static_cast<const ScanLineDataCacheKey&>(key));
     hash += (hash<<5);
     hash += key.m_p.x;
     hash += (hash<<5);
@@ -58,7 +57,7 @@ std::size_t hash_value( const OverlayNoBlurKey& key )
 
 std::size_t hash_value(const OverlayKey& key)
 {
-    size_t hash = hash_value(static_cast<const OverlayNoBlurKey&>(key));
+    size_t hash = OverlayNoBlurKeyTraits::Hash(static_cast<const OverlayNoBlurKey&>(key));
     hash += (hash<<5);
     hash += key.m_style.get().fBlur;
     hash += (hash<<5);

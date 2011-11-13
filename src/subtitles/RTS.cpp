@@ -273,10 +273,10 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
 {
     //overlay->reset(new Overlay());
     OverlayNoBlurMruCache* overlay_no_blur_cache = CacheManager::GetOverlayNoBlurMruCache();
-    OverlayNoBlurMruCache::hashed_cache_const_iterator iter = overlay_no_blur_cache->hash_find(key);
+    POSITION pos = overlay_no_blur_cache->Lookup(key);
 
     SharedPtrOverlay raterize_result;
-    if(iter==overlay_no_blur_cache->hash_end())
+    if(pos==NULL)
     {
         raterize_result.reset(new Overlay());
 
@@ -346,13 +346,12 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             return false;
         }
 
-        OverlayNoBlurMruItem item(key, raterize_result);
-        overlay_no_blur_cache->update_cache(item);
+        overlay_no_blur_cache->UpdateCache(key, raterize_result);
     }
     else
     {
-        raterize_result = iter->overlay;
-        overlay_no_blur_cache->update_cache( *iter );
+        raterize_result = overlay_no_blur_cache->GetAt(pos);            
+        overlay_no_blur_cache->UpdateCache( pos );
     }    
     if( m_style.get().fBlur>0 || m_style.get().fGaussianBlur>0.000001 )
     {
@@ -1872,7 +1871,7 @@ void CRenderedTextSubtitle::Deinit()
     CacheManager::GetCWordMruCache()->clear();
     CacheManager::GetPathDataMruCache()->clear();
     CacheManager::GetScanLineDataMruCache()->clear();
-    CacheManager::GetOverlayNoBlurMruCache()->clear();
+    CacheManager::GetOverlayNoBlurMruCache()->RemoveAll();
     CacheManager::GetOverlayMruCache()->clear();
 }
 

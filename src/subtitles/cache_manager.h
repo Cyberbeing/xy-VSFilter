@@ -6,6 +6,7 @@
 #define __CACHE_MANAGER_H_310C134F_844C_4590_A4D2_AD30165AF10A__
 
 #include "RTS.h"
+#include "mru_cache.h"
 
 class TextInfoCacheKey
 {
@@ -91,7 +92,13 @@ std::size_t hash_value(const TextInfoCacheKey& key);
 std::size_t hash_value(const CWord& key);
 std::size_t hash_value(const PathDataCacheKey& key);
 std::size_t hash_value(const ScanLineDataCacheKey& key);
-std::size_t hash_value(const OverlayNoBlurKey& key);
+
+class OverlayNoBlurKeyTraits:public CElementTraits<OverlayNoBlurKey>
+{
+public:
+    static ULONG Hash(const OverlayNoBlurKey& key);
+};
+
 std::size_t hash_value(const OverlayKey& key);
 std::size_t hash_value(const CWordCacheKey& key);
 
@@ -146,15 +153,6 @@ struct ScanLineDataMruItem
     SharedPtrConstScanLineData scan_line_data;
 };
 
-struct OverlayNoBlurMruItem
-{
-    OverlayNoBlurMruItem(const OverlayNoBlurKey& key_, const SharedPtrOverlay& overlay_)
-        :key(key_),overlay(overlay_){}
-
-    OverlayNoBlurKey key;
-    SharedPtrOverlay overlay;
-};
-
 typedef enhanced_mru_list<
     TextInfoMruItem, 
     boost::multi_index::member<TextInfoMruItem, 
@@ -203,13 +201,7 @@ typedef enhanced_mru_list<
     >
 > ScanLineDataMruCache;
 
-typedef enhanced_mru_list<
-    OverlayNoBlurMruItem, 
-    boost::multi_index::member<OverlayNoBlurMruItem, 
-    OverlayNoBlurKey, 
-    &OverlayNoBlurMruItem::key
-    >
-> OverlayNoBlurMruCache;
+typedef EnhancedXyMru<OverlayNoBlurKey, SharedPtrOverlay, OverlayNoBlurKeyTraits> OverlayNoBlurMruCache;
 
 class CacheManager
 {
