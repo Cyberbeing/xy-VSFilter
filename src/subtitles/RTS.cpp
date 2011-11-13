@@ -1936,7 +1936,8 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             POSITION pos = word_mru_cache->Lookup(word_cache_key);
             if( pos != NULL )            
             {
-                sub->m_words.AddTail( word_mru_cache->GetAt(pos) );                
+                sub->m_words.AddTail( word_mru_cache->GetAt(pos) );    
+                word_mru_cache->UpdateCache(pos);
             }
             else if(PCWord tmp_ptr = new CText(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend))
             {
@@ -1957,6 +1958,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             if( pos != NULL )            
             {
                 sub->m_words.AddTail( word_mru_cache->GetAt(pos) );
+                word_mru_cache->UpdateCache(pos);
             }
             else if(PCWord tmp_ptr = new CText(style, CStringW(), m_ktype, m_kstart, m_kend))
             {
@@ -1977,6 +1979,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             if( pos != NULL ) 
             {
                 sub->m_words.AddTail( word_mru_cache->GetAt(pos) );
+                word_mru_cache->UpdateCache(pos);
             }
             else if(PCWord tmp_ptr = new CText(style, CStringW(c), m_ktype, m_kstart, m_kend))
             {
