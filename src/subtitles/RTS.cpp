@@ -1923,8 +1923,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
     if(!sub) return;
     str.Replace(L"\\N", L"\n");
     str.Replace(L"\\n", (sub->m_wrapStyle < 2 || sub->m_wrapStyle == 3) ? L" " : L"\n");
-    str.Replace(L"\\h", L"\x00A0");
-    CWordMruCache* word_mru_cache=CacheManager::GetCWordMruCache();
+    str.Replace(L"\\h", L"\x00A0");    
     for(int ite = 0, j = 0, len = str.GetLength(); j <= len; j++)
     {
         WCHAR c = str[j];
@@ -1932,18 +1931,10 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             continue;
         if(ite < j)
         {
-            CWordCacheKey word_cache_key(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend);                        
-            POSITION pos = word_mru_cache->Lookup(word_cache_key);
-            if( pos != NULL )            
-            {
-                sub->m_words.AddTail( word_mru_cache->GetAt(pos) );    
-                word_mru_cache->UpdateCache(pos);
-            }
-            else if(PCWord tmp_ptr = new CText(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend))
+            if(PCWord tmp_ptr = new CText(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend))
             {
                 SharedPtrCWord w(tmp_ptr);
                 sub->m_words.AddTail(w);
-                word_mru_cache->UpdateCache(word_cache_key, w);
             }
             else
             {
@@ -1953,18 +1944,10 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
         }
         if(c == L'\n')
         {
-            CWordCacheKey word_cache_key(style, CStringW(), m_ktype, m_kstart, m_kend);
-            POSITION pos = word_mru_cache->Lookup(word_cache_key);
-            if( pos != NULL )            
-            {
-                sub->m_words.AddTail( word_mru_cache->GetAt(pos) );
-                word_mru_cache->UpdateCache(pos);
-            }
-            else if(PCWord tmp_ptr = new CText(style, CStringW(), m_ktype, m_kstart, m_kend))
+            if(PCWord tmp_ptr = new CText(style, CStringW(), m_ktype, m_kstart, m_kend))
             {
                 SharedPtrCWord w(tmp_ptr);
                 sub->m_words.AddTail(w);
-                word_mru_cache->UpdateCache(word_cache_key, w);
             }
             else
             {
@@ -1974,18 +1957,10 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
         }
         else if(c == L' ' || c == L'\x00A0')
         {
-            CWordCacheKey word_cache_key(style, CStringW(c), m_ktype, m_kstart, m_kend);            
-            POSITION pos = word_mru_cache->Lookup(word_cache_key);
-            if( pos != NULL ) 
-            {
-                sub->m_words.AddTail( word_mru_cache->GetAt(pos) );
-                word_mru_cache->UpdateCache(pos);
-            }
-            else if(PCWord tmp_ptr = new CText(style, CStringW(c), m_ktype, m_kstart, m_kend))
+            if(PCWord tmp_ptr = new CText(style, CStringW(c), m_ktype, m_kstart, m_kend))
             {
                 SharedPtrCWord w(tmp_ptr);
                 sub->m_words.AddTail(w);
-                word_mru_cache->UpdateCache(word_cache_key, w);
             }
             else
             {
