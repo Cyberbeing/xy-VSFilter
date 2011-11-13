@@ -14,6 +14,8 @@ public:
     CStringW m_str;
     FwSTSStyle m_style;
     bool operator==(const TextInfoCacheKey& key)const;
+
+    friend class TextInfoCacheKeyTraits;
 };
 
 class CWordCacheKey
@@ -92,8 +94,13 @@ public:
     friend std::size_t hash_value(const OverlayKey& key);
 };
 
-std::size_t hash_value(const TextInfoCacheKey& key);
 std::size_t hash_value(const CWord& key);
+
+class TextInfoCacheKeyTraits:public CElementTraits<TextInfoCacheKey>
+{
+public:
+    static ULONG Hash(const TextInfoCacheKey& key);
+};
 
 class CWordCacheKeyTraits:public CElementTraits<CWordCacheKey>
 {
@@ -131,23 +138,6 @@ struct OverlayMruItem
     SharedPtrOverlay overlay;
 };
 
-struct TextInfoMruItem
-{
-    TextInfoMruItem(const TextInfoCacheKey& text_info_key_, const CText::SharedPtrTextInfo& text_info_ )
-        :text_info_key(text_info_key_), text_info(text_info_){}
-
-    TextInfoCacheKey text_info_key;
-    CText::SharedPtrTextInfo text_info;
-};
-
-typedef enhanced_mru_list<
-    TextInfoMruItem, 
-    boost::multi_index::member<TextInfoMruItem, 
-    TextInfoCacheKey, 
-    &TextInfoMruItem::text_info_key
-    >
-> TextInfoMruCache;
-
 typedef enhanced_mru_list<
     OverlayMruItem, 
     boost::multi_index::member<OverlayMruItem, 
@@ -155,6 +145,12 @@ typedef enhanced_mru_list<
     &OverlayMruItem::overlay_key
     >
 > OverlayMruCache;
+
+typedef EnhancedXyMru<
+    TextInfoCacheKey, 
+    CText::SharedPtrTextInfo, 
+    TextInfoCacheKeyTraits
+> TextInfoMruCache;
 
 typedef EnhancedXyMru<
     CStringW, 

@@ -5,9 +5,14 @@
 #include "StdAfx.h"
 #include "cache_manager.h"
 
-std::size_t hash_value( const TextInfoCacheKey& key )
+std::size_t hash_value(const CWord& key)
 {
-    size_t hash = CStringElementTraits<CString>::Hash(key.m_str);
+    return( CStringElementTraits<CString>::Hash(key.m_str) );
+}
+
+ULONG TextInfoCacheKeyTraits::Hash( const TextInfoCacheKey& key )
+{
+    ULONG hash = CStringElementTraits<CString>::Hash(key.m_str);
     hash += (hash<<5);
     hash += hash_value( static_cast<const STSStyleBase&>(key.m_style.get()) );
     hash += (hash<<5);
@@ -18,12 +23,6 @@ std::size_t hash_value( const TextInfoCacheKey& key )
     hash += hash_value( key.m_style.get().fontSpacing );
     return hash;
 }
-
-std::size_t hash_value(const CWord& key)
-{
-    return( CStringElementTraits<CString>::Hash(key.m_str) );
-}
-
 
 ULONG CWordCacheKeyTraits::Hash( const CWordCacheKey& key )
 {
