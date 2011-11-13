@@ -123,12 +123,6 @@ std::size_t hash_value(const OverlayKey& key);
 
 //shouldn't use std::pair, or else VC complaining error C2440
 //typedef std::pair<OverlayKey, SharedPtrOverlay> OverlayMruItem; 
-struct AssTagListMruItem
-{
-    CStringW script;
-    CRenderedTextSubtitle::SharedPtrConstAssTagList tag_list;
-};
-
 struct OverlayMruItem
 {
     OverlayMruItem(const OverlayKey& overlay_key_, const SharedPtrOverlay& overlay_):overlay_key(overlay_key_),overlay(overlay_){}
@@ -155,20 +149,18 @@ typedef enhanced_mru_list<
 > TextInfoMruCache;
 
 typedef enhanced_mru_list<
-    AssTagListMruItem, 
-    boost::multi_index::member<AssTagListMruItem, 
-    CStringW, 
-    &AssTagListMruItem::script
-    >
-> AssTagListMruCache;
-
-typedef enhanced_mru_list<
     OverlayMruItem, 
     boost::multi_index::member<OverlayMruItem, 
     OverlayKey, 
     &OverlayMruItem::overlay_key
     >
 > OverlayMruCache;
+
+typedef EnhancedXyMru<
+    CStringW, 
+    CRenderedTextSubtitle::SharedPtrConstAssTagList, 
+    CStringElementTraits<CStringW>
+> AssTagListMruCache;
 
 typedef EnhancedXyMru<CWordCacheKey, SharedPtrCWord, CWordCacheKeyTraits> CWordMruCache;
 

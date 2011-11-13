@@ -2692,20 +2692,18 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STS
 
     SharedPtrConstAssTagList assTags;
     AssTagListMruCache *ass_tag_cache = CacheManager::GetAssTagListMruCache();
-    AssTagListMruCache::hashed_cache_const_iterator iter = ass_tag_cache->hash_find(str);
-    if (iter==ass_tag_cache->hash_end())
+    POSITION pos = ass_tag_cache->Lookup(str);
+    if (pos==NULL)
     {
         AssTagList *tmp = new AssTagList();
         ParseSSATag(tmp, str);
         assTags.reset(tmp);
-        AssTagListMruItem item;
-        item.script = str; item.tag_list = assTags;
-        ass_tag_cache->update_cache( item );
+        ass_tag_cache->UpdateCache(str, assTags);
     }
     else
     {
-        assTags = iter->tag_list;
-        ass_tag_cache->update_cache( *iter );
+        assTags = ass_tag_cache->GetAt(pos);
+        ass_tag_cache->UpdateCache( pos );
     }
     return ParseSSATag(sub, *assTags, style, org, fAnimate);
 }

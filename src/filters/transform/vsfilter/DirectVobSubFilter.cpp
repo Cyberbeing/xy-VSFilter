@@ -1172,13 +1172,13 @@ STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
     caches_info->interpolate_cache_cur_item_num = CacheManager::GetSubpixelVarianceCache()->get_cur_items_num();
     caches_info->interpolate_cache_hit_count    = CacheManager::GetSubpixelVarianceCache()->get_cache_hit();
     caches_info->interpolate_cache_query_count  = CacheManager::GetSubpixelVarianceCache()->get_query_count();    
-    caches_info->text_info_cache_cur_item_num   = CacheManager::GetAssTagListMruCache()->get_cur_items_num();
-    caches_info->text_info_cache_hit_count      = CacheManager::GetAssTagListMruCache()->get_cache_hit();
-    caches_info->text_info_cache_query_count    = CacheManager::GetAssTagListMruCache()->get_query_count();
+    caches_info->text_info_cache_cur_item_num   = CacheManager::GetAssTagListMruCache()->GetCurItemNum();
+    caches_info->text_info_cache_hit_count      = CacheManager::GetAssTagListMruCache()->GetCacheHitCount();
+    caches_info->text_info_cache_query_count    = CacheManager::GetAssTagListMruCache()->GetQueryCount();
     
-    caches_info->word_info_cache_cur_item_num   = CacheManager::GetAssTagListMruCache()->get_cur_items_num();
-    caches_info->word_info_cache_hit_count      = CacheManager::GetAssTagListMruCache()->get_cache_hit();
-    caches_info->word_info_cache_query_count    = CacheManager::GetAssTagListMruCache()->get_query_count();    
+    caches_info->word_info_cache_cur_item_num   = CacheManager::GetAssTagListMruCache()->GetCurItemNum();
+    caches_info->word_info_cache_hit_count      = CacheManager::GetAssTagListMruCache()->GetCacheHitCount();
+    caches_info->word_info_cache_query_count    = CacheManager::GetAssTagListMruCache()->GetQueryCount();    
 
     return hr;
 }
