@@ -1172,9 +1172,9 @@ STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
     caches_info->interpolate_cache_cur_item_num = CacheManager::GetSubpixelVarianceCache()->GetCurItemNum();
     caches_info->interpolate_cache_hit_count    = CacheManager::GetSubpixelVarianceCache()->GetCacheHitCount();
     caches_info->interpolate_cache_query_count  = CacheManager::GetSubpixelVarianceCache()->GetQueryCount();    
-    caches_info->text_info_cache_cur_item_num   = CacheManager::GetAssTagListMruCache()->GetCurItemNum();
-    caches_info->text_info_cache_hit_count      = CacheManager::GetAssTagListMruCache()->GetCacheHitCount();
-    caches_info->text_info_cache_query_count    = CacheManager::GetAssTagListMruCache()->GetQueryCount();
+    caches_info->text_info_cache_cur_item_num   = CacheManager::GetTextInfoCache()->GetCurItemNum();
+    caches_info->text_info_cache_hit_count      = CacheManager::GetTextInfoCache()->GetCacheHitCount();
+    caches_info->text_info_cache_query_count    = CacheManager::GetTextInfoCache()->GetQueryCount();
     
     caches_info->word_info_cache_cur_item_num   = CacheManager::GetAssTagListMruCache()->GetCurItemNum();
     caches_info->word_info_cache_hit_count      = CacheManager::GetAssTagListMruCache()->GetCacheHitCount();
