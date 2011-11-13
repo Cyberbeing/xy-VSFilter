@@ -575,7 +575,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
     CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
     CacheManager::GetScanLineDataMruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
     CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
-    CacheManager::GetOverlayMruCache()->set_max_num_items(m_overlay_cache_max_item_num);
+    CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_overlay_cache_max_item_num);
     SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_subpixel_pos_level) );
 
 	m_pSubPicQueue = NULL;
@@ -1106,7 +1106,7 @@ STDMETHODIMP CDirectVobSubFilter::put_OverlayCacheMaxItemNum( int overlay_cache_
 
     if(hr == NOERROR)
     {
-        CacheManager::GetOverlayMruCache()->set_max_num_items(m_overlay_cache_max_item_num);
+        CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_overlay_cache_max_item_num);
     }
 
     return hr;
@@ -1165,13 +1165,13 @@ STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
     caches_info->non_blur_cache_cur_item_num= CacheManager::GetOverlayNoBlurMruCache()->GetCurItemNum();
     caches_info->non_blur_cache_hit_count   = CacheManager::GetOverlayNoBlurMruCache()->GetCacheHitCount();
     caches_info->non_blur_cache_query_count = CacheManager::GetOverlayNoBlurMruCache()->GetQueryCount();
-    caches_info->overlay_cache_cur_item_num = CacheManager::GetOverlayMruCache()->get_cur_items_num();
-    caches_info->overlay_cache_hit_count    = CacheManager::GetOverlayMruCache()->get_cache_hit();
-    caches_info->overlay_cache_query_count  = CacheManager::GetOverlayMruCache()->get_query_count();
+    caches_info->overlay_cache_cur_item_num = CacheManager::GetOverlayMruCache()->GetCurItemNum();
+    caches_info->overlay_cache_hit_count    = CacheManager::GetOverlayMruCache()->GetCacheHitCount();
+    caches_info->overlay_cache_query_count  = CacheManager::GetOverlayMruCache()->GetQueryCount();
 
-    caches_info->interpolate_cache_cur_item_num = CacheManager::GetSubpixelVarianceCache()->get_cur_items_num();
-    caches_info->interpolate_cache_hit_count    = CacheManager::GetSubpixelVarianceCache()->get_cache_hit();
-    caches_info->interpolate_cache_query_count  = CacheManager::GetSubpixelVarianceCache()->get_query_count();    
+    caches_info->interpolate_cache_cur_item_num = CacheManager::GetSubpixelVarianceCache()->GetCurItemNum();
+    caches_info->interpolate_cache_hit_count    = CacheManager::GetSubpixelVarianceCache()->GetCacheHitCount();
+    caches_info->interpolate_cache_query_count  = CacheManager::GetSubpixelVarianceCache()->GetQueryCount();    
     caches_info->text_info_cache_cur_item_num   = CacheManager::GetAssTagListMruCache()->GetCurItemNum();
     caches_info->text_info_cache_hit_count      = CacheManager::GetAssTagListMruCache()->GetCacheHitCount();
     caches_info->text_info_cache_query_count    = CacheManager::GetAssTagListMruCache()->GetQueryCount();

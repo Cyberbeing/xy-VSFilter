@@ -91,7 +91,7 @@ public:
 
     bool operator==(const OverlayKey& key)const;
 
-    friend std::size_t hash_value(const OverlayKey& key);
+    friend class OverlayKeyTraits;
 };
 
 std::size_t hash_value(const CWord& key);
@@ -126,25 +126,11 @@ public:
     static ULONG Hash(const OverlayNoBlurKey& key);
 };
 
-std::size_t hash_value(const OverlayKey& key);
-
-//shouldn't use std::pair, or else VC complaining error C2440
-//typedef std::pair<OverlayKey, SharedPtrOverlay> OverlayMruItem; 
-struct OverlayMruItem
+class OverlayKeyTraits:public CElementTraits<OverlayKey>
 {
-    OverlayMruItem(const OverlayKey& overlay_key_, const SharedPtrOverlay& overlay_):overlay_key(overlay_key_),overlay(overlay_){}
-
-    OverlayKey overlay_key;
-    SharedPtrOverlay overlay;
+public:
+    static ULONG Hash(const OverlayKey& key);
 };
-
-typedef enhanced_mru_list<
-    OverlayMruItem, 
-    boost::multi_index::member<OverlayMruItem, 
-    OverlayKey, 
-    &OverlayMruItem::overlay_key
-    >
-> OverlayMruCache;
 
 typedef EnhancedXyMru<
     TextInfoCacheKey, 
@@ -165,6 +151,8 @@ typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, PathDataCacheKey
 typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
 
 typedef EnhancedXyMru<OverlayNoBlurKey, SharedPtrOverlay, OverlayNoBlurKeyTraits> OverlayNoBlurMruCache;
+
+typedef EnhancedXyMru<OverlayKey, SharedPtrOverlay, OverlayKeyTraits> OverlayMruCache;
 
 class CacheManager
 {

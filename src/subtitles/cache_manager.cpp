@@ -55,9 +55,9 @@ ULONG OverlayNoBlurKeyTraits::Hash( const OverlayNoBlurKey& key )
     return  hash;
 }
 
-std::size_t hash_value(const OverlayKey& key)
+ULONG OverlayKeyTraits::Hash( const OverlayKey& key )
 {
-    size_t hash = OverlayNoBlurKeyTraits::Hash(static_cast<const OverlayNoBlurKey&>(key));
+    ULONG hash = OverlayNoBlurKeyTraits::Hash(static_cast<const OverlayNoBlurKey&>(key));
     hash += (hash<<5);
     hash += key.m_style.get().fBlur;
     hash += (hash<<5);

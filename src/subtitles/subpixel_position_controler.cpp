@@ -30,7 +30,6 @@ SubpixelPositionControler::SUBPIXEL_LEVEL SubpixelPositionControler::SetSubpixel
             break;
         }
         _subpixel_level = subpixel_level;
-        CacheManager::GetOverlayMruCache()->clear();
     }
     return subpixel_level;
 }

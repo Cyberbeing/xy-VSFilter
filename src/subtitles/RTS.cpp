@@ -210,11 +210,11 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
 
             OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();
 
-            OverlayMruCache::hashed_cache_const_iterator iter = overlay_cache->hash_find(sub_key);
-            if(iter!=overlay_cache->hash_end()) 
+            POSITION pos = overlay_cache->Lookup(sub_key);
+            if(pos!=NULL) 
             {
-                overlay_list->overlay = iter->overlay;
-                overlay_cache->update_cache( *iter );
+                overlay_list->overlay = overlay_cache->GetAt(pos);
+                overlay_cache->UpdateCache( pos );
             }
         }
         if( !overlay_list->overlay )
@@ -222,21 +222,20 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
             CPoint psub = SubpixelPositionControler::GetGlobalControler().GetSubpixel(p);
             OverlayKey overlay_key(*word, psub, trans_org);
             OverlayMruCache* overlay_cache = CacheManager::GetOverlayMruCache();
-            OverlayMruCache::hashed_cache_const_iterator iter = overlay_cache->hash_find(overlay_key);
-            if(iter==overlay_cache->hash_end())    
+            POSITION pos = overlay_cache->Lookup(overlay_key);
+            if(pos==NULL)
             {
                 if( !word->DoPaint(psub, trans_org, &(overlay_list->overlay), overlay_key) )
                 {
                     error = true;
                     break;
                 }
-                OverlayMruItem item(overlay_key, overlay_list->overlay);
-                overlay_cache->update_cache(item);
+                overlay_cache->UpdateCache(overlay_key, overlay_list->overlay);
             }
             else
             {
-                overlay_list->overlay = iter->overlay;
-                overlay_cache->update_cache( *iter );
+                overlay_list->overlay = overlay_cache->GetAt(pos);
+                overlay_cache->UpdateCache( pos );
             }
             if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() 
                 && (psub.x!=(p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) 
@@ -246,9 +245,8 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
                     (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.y));
                 CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
                 OverlayKey sub_key(*word, psub_true, trans_org);
-                OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();
-                OverlayMruItem item(sub_key, overlay_list->overlay);
-                overlay_cache->update_cache(item);
+                OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();                
+                overlay_cache->UpdateCache(sub_key, overlay_list->overlay);
             }
         }
 
@@ -1869,7 +1867,7 @@ void CRenderedTextSubtitle::Deinit()
     CacheManager::GetPathDataMruCache()->RemoveAll();
     CacheManager::GetScanLineDataMruCache()->RemoveAll();
     CacheManager::GetOverlayNoBlurMruCache()->RemoveAll();
-    CacheManager::GetOverlayMruCache()->clear();
+    CacheManager::GetOverlayMruCache()->RemoveAll();
 }
 
 void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
