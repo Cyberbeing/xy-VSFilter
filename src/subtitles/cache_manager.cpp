@@ -24,9 +24,10 @@ std::size_t hash_value(const CWord& key)
     return( CStringElementTraits<CString>::Hash(key.m_str) );
 }
 
-std::size_t hash_value(const CWordCacheKey& key)
+
+ULONG CWordCacheKeyTraits::Hash( const CWordCacheKey& key )
 {
-    return( CStringElementTraits<CString>::Hash(key.m_str) );
+    return( CStringElementTraits<CString>::Hash(key.m_str) );//fix me
 }
 
 ULONG PathDataCacheKeyTraits::Hash( const PathDataCacheKey& key )

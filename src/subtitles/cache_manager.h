@@ -28,6 +28,8 @@ public:
     CStringW m_str;
     FwSTSStyle m_style;
     int m_ktype, m_kstart, m_kend;
+
+    friend class CWordCacheKeyTraits;
 };
 
 class PathDataCacheKey
@@ -93,6 +95,12 @@ public:
 std::size_t hash_value(const TextInfoCacheKey& key);
 std::size_t hash_value(const CWord& key);
 
+class CWordCacheKeyTraits:public CElementTraits<CWordCacheKey>
+{
+public:
+    static ULONG Hash(const CWordCacheKey& key);
+};
+
 class PathDataCacheKeyTraits:public CElementTraits<PathDataCacheKey>
 {
 public:
@@ -112,7 +120,6 @@ public:
 };
 
 std::size_t hash_value(const OverlayKey& key);
-std::size_t hash_value(const CWordCacheKey& key);
 
 //shouldn't use std::pair, or else VC complaining error C2440
 //typedef std::pair<OverlayKey, SharedPtrOverlay> OverlayMruItem; 
@@ -139,14 +146,6 @@ struct TextInfoMruItem
     CText::SharedPtrTextInfo text_info;
 };
 
-struct CWordMruItem
-{
-    CWordMruItem(const CWordCacheKey& word_key_, const SharedPtrCWord& word_):word_key(word_key_),word(word_){}
-
-    CWordCacheKey word_key;
-    SharedPtrCWord word;
-};
-
 typedef enhanced_mru_list<
     TextInfoMruItem, 
     boost::multi_index::member<TextInfoMruItem, 
@@ -171,13 +170,7 @@ typedef enhanced_mru_list<
     >
 > OverlayMruCache;
 
-typedef enhanced_mru_list<
-    CWordMruItem, 
-    boost::multi_index::member<CWordMruItem, 
-    CWordCacheKey, 
-    &CWordMruItem::word_key
-    >
-> CWordMruCache;
+typedef EnhancedXyMru<CWordCacheKey, SharedPtrCWord, CWordCacheKeyTraits> CWordMruCache;
 
 typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, PathDataCacheKeyTraits> PathDataMruCache;
 
