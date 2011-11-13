@@ -17,6 +17,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subpic", "..\..\..\subpic\s
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsfilter_2010", "vsfilter_2010\vsfilter_2010.vcxproj", "{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}"
 	ProjectSection(ProjectDependencies) = postProject
+		{54DDA60F-E528-4D07-A152-960A1E818680} = {54DDA60F-E528-4D07-A152-960A1E818680}
 		{D514EA4D-EAFB-47A9-A437-A582CA571251} = {D514EA4D-EAFB-47A9-A437-A582CA571251}
 		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4} = {5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}
 	EndProjectSection
@@ -30,6 +31,9 @@ Global
 		Debug Unicode|Win32 = Debug Unicode|Win32
 		Debug Unicode|Win64 (AMD64) = Debug Unicode|Win64 (AMD64)
 		Debug Unicode|x64 = Debug Unicode|x64
+		Release Unicode log|Win32 = Release Unicode log|Win32
+		Release Unicode log|Win64 (AMD64) = Release Unicode log|Win64 (AMD64)
+		Release Unicode log|x64 = Release Unicode log|x64
 		Release Unicode|Win32 = Release Unicode|Win32
 		Release Unicode|Win64 (AMD64) = Release Unicode|Win64 (AMD64)
 		Release Unicode|x64 = Release Unicode|x64
@@ -39,6 +43,10 @@ Global
 		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}.Debug Unicode|Win32.Build.0 = Debug Unicode|Win32
 		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}.Debug Unicode|Win64 (AMD64).ActiveCfg = Debug Unicode|Win32
 		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}.Debug Unicode|x64.ActiveCfg = Debug Unicode|Win32
+		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}.Release Unicode log|Win32.ActiveCfg = Release Unicode log|Win32
+		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}.Release Unicode log|Win32.Build.0 = Release Unicode log|Win32
+		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}.Release Unicode log|Win64 (AMD64).ActiveCfg = Release Unicode log|Win32
+		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}.Release Unicode log|x64.ActiveCfg = Release Unicode log|Win32
 		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}.Release Unicode|Win32.ActiveCfg = Release Unicode|Win32
 		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}.Release Unicode|Win32.Build.0 = Release Unicode|Win32
 		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}.Release Unicode|Win64 (AMD64).ActiveCfg = Release Unicode|Win32
@@ -47,6 +55,10 @@ Global
 		{54DDA60F-E528-4D07-A152-960A1E818680}.Debug Unicode|Win32.Build.0 = Debug Unicode lib|Win32
 		{54DDA60F-E528-4D07-A152-960A1E818680}.Debug Unicode|Win64 (AMD64).ActiveCfg = Debug Unicode lib|Win32
 		{54DDA60F-E528-4D07-A152-960A1E818680}.Debug Unicode|x64.ActiveCfg = Debug Unicode lib|Win32
+		{54DDA60F-E528-4D07-A152-960A1E818680}.Release Unicode log|Win32.ActiveCfg = Release Unicode log|Win32
+		{54DDA60F-E528-4D07-A152-960A1E818680}.Release Unicode log|Win32.Build.0 = Release Unicode log|Win32
+		{54DDA60F-E528-4D07-A152-960A1E818680}.Release Unicode log|Win64 (AMD64).ActiveCfg = Release Unicode log|Win32
+		{54DDA60F-E528-4D07-A152-960A1E818680}.Release Unicode log|x64.ActiveCfg = Release Unicode log|Win32
 		{54DDA60F-E528-4D07-A152-960A1E818680}.Release Unicode|Win32.ActiveCfg = Release Unicode lib|Win32
 		{54DDA60F-E528-4D07-A152-960A1E818680}.Release Unicode|Win32.Build.0 = Release Unicode lib|Win32
 		{54DDA60F-E528-4D07-A152-960A1E818680}.Release Unicode|Win64 (AMD64).ActiveCfg = Release Unicode lib|Win32
@@ -55,6 +67,9 @@ Global
 		{DD9D2D92-2241-408A-859E-B85D444B7E3C}.Debug Unicode|Win32.Build.0 = Debug Unicode|Win32
 		{DD9D2D92-2241-408A-859E-B85D444B7E3C}.Debug Unicode|Win64 (AMD64).ActiveCfg = Debug Unicode|Win32
 		{DD9D2D92-2241-408A-859E-B85D444B7E3C}.Debug Unicode|x64.ActiveCfg = Debug Unicode|Win32
+		{DD9D2D92-2241-408A-859E-B85D444B7E3C}.Release Unicode log|Win32.ActiveCfg = Release Unicode|Win32
+		{DD9D2D92-2241-408A-859E-B85D444B7E3C}.Release Unicode log|Win64 (AMD64).ActiveCfg = Release Unicode|Win32
+		{DD9D2D92-2241-408A-859E-B85D444B7E3C}.Release Unicode log|x64.ActiveCfg = Release Unicode|Win32
 		{DD9D2D92-2241-408A-859E-B85D444B7E3C}.Release Unicode|Win32.ActiveCfg = Release Unicode|Win32
 		{DD9D2D92-2241-408A-859E-B85D444B7E3C}.Release Unicode|Win32.Build.0 = Release Unicode|Win32
 		{DD9D2D92-2241-408A-859E-B85D444B7E3C}.Release Unicode|Win64 (AMD64).ActiveCfg = Release Unicode|Win32
@@ -63,6 +78,9 @@ Global
 		{FC70988B-1AE5-4381-866D-4F405E28AC42}.Debug Unicode|Win32.Build.0 = Debug Unicode|Win32
 		{FC70988B-1AE5-4381-866D-4F405E28AC42}.Debug Unicode|Win64 (AMD64).ActiveCfg = Debug Unicode|Win32
 		{FC70988B-1AE5-4381-866D-4F405E28AC42}.Debug Unicode|x64.ActiveCfg = Debug Unicode|Win32
+		{FC70988B-1AE5-4381-866D-4F405E28AC42}.Release Unicode log|Win32.ActiveCfg = Release Unicode|Win32
+		{FC70988B-1AE5-4381-866D-4F405E28AC42}.Release Unicode log|Win64 (AMD64).ActiveCfg = Release Unicode|Win32
+		{FC70988B-1AE5-4381-866D-4F405E28AC42}.Release Unicode log|x64.ActiveCfg = Release Unicode|Win32
 		{FC70988B-1AE5-4381-866D-4F405E28AC42}.Release Unicode|Win32.ActiveCfg = Release Unicode|Win32
 		{FC70988B-1AE5-4381-866D-4F405E28AC42}.Release Unicode|Win32.Build.0 = Release Unicode|Win32
 		{FC70988B-1AE5-4381-866D-4F405E28AC42}.Release Unicode|Win64 (AMD64).ActiveCfg = Release Unicode|Win32
@@ -71,6 +89,10 @@ Global
 		{D514EA4D-EAFB-47A9-A437-A582CA571251}.Debug Unicode|Win32.Build.0 = Debug Unicode|Win32
 		{D514EA4D-EAFB-47A9-A437-A582CA571251}.Debug Unicode|Win64 (AMD64).ActiveCfg = Debug Unicode|Win32
 		{D514EA4D-EAFB-47A9-A437-A582CA571251}.Debug Unicode|x64.ActiveCfg = Debug Unicode|Win32
+		{D514EA4D-EAFB-47A9-A437-A582CA571251}.Release Unicode log|Win32.ActiveCfg = Release Unicode log|Win32
+		{D514EA4D-EAFB-47A9-A437-A582CA571251}.Release Unicode log|Win32.Build.0 = Release Unicode log|Win32
+		{D514EA4D-EAFB-47A9-A437-A582CA571251}.Release Unicode log|Win64 (AMD64).ActiveCfg = Release Unicode log|Win32
+		{D514EA4D-EAFB-47A9-A437-A582CA571251}.Release Unicode log|x64.ActiveCfg = Release Unicode log|Win32
 		{D514EA4D-EAFB-47A9-A437-A582CA571251}.Release Unicode|Win32.ActiveCfg = Release Unicode|Win32
 		{D514EA4D-EAFB-47A9-A437-A582CA571251}.Release Unicode|Win32.Build.0 = Release Unicode|Win32
 		{D514EA4D-EAFB-47A9-A437-A582CA571251}.Release Unicode|Win64 (AMD64).ActiveCfg = Release Unicode|Win32
@@ -79,6 +101,10 @@ Global
 		{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}.Debug Unicode|Win32.Build.0 = Debug Unicode|Win32
 		{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}.Debug Unicode|Win64 (AMD64).ActiveCfg = Debug Unicode|Win32
 		{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}.Debug Unicode|x64.ActiveCfg = Debug Unicode|Win32
+		{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}.Release Unicode log|Win32.ActiveCfg = Release Unicode log|Win32
+		{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}.Release Unicode log|Win32.Build.0 = Release Unicode log|Win32
+		{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}.Release Unicode log|Win64 (AMD64).ActiveCfg = Release Unicode log|Win32
+		{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}.Release Unicode log|x64.ActiveCfg = Release Unicode log|Win32
 		{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}.Release Unicode|Win32.ActiveCfg = Release Unicode|Win32
 		{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}.Release Unicode|Win32.Build.0 = Release Unicode|Win32
 		{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}.Release Unicode|Win64 (AMD64).ActiveCfg = Release Unicode|Win32
@@ -87,6 +113,9 @@ Global
 		{F558E2B6-62CF-4D1D-A6EA-448D159E5675}.Debug Unicode|Win32.Build.0 = Debug Unicode|Win32
 		{F558E2B6-62CF-4D1D-A6EA-448D159E5675}.Debug Unicode|Win64 (AMD64).ActiveCfg = Debug Unicode|Win32
 		{F558E2B6-62CF-4D1D-A6EA-448D159E5675}.Debug Unicode|x64.ActiveCfg = Debug Unicode|Win32
+		{F558E2B6-62CF-4D1D-A6EA-448D159E5675}.Release Unicode log|Win32.ActiveCfg = Release Unicode|Win32
+		{F558E2B6-62CF-4D1D-A6EA-448D159E5675}.Release Unicode log|Win64 (AMD64).ActiveCfg = Release Unicode|Win32
+		{F558E2B6-62CF-4D1D-A6EA-448D159E5675}.Release Unicode log|x64.ActiveCfg = Release Unicode|Win32
 		{F558E2B6-62CF-4D1D-A6EA-448D159E5675}.Release Unicode|Win32.ActiveCfg = Release Unicode|Win32
 		{F558E2B6-62CF-4D1D-A6EA-448D159E5675}.Release Unicode|Win32.Build.0 = Release Unicode|Win32
 		{F558E2B6-62CF-4D1D-A6EA-448D159E5675}.Release Unicode|Win64 (AMD64).ActiveCfg = Release Unicode|Win32
@@ -95,6 +124,9 @@ Global
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Debug Unicode|Win64 (AMD64).ActiveCfg = Debug|x64
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Debug Unicode|x64.ActiveCfg = Debug|x64
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Debug Unicode|x64.Build.0 = Debug|x64
+		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release Unicode log|Win32.ActiveCfg = Release|Win32
+		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release Unicode log|Win64 (AMD64).ActiveCfg = Release|Win32
+		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release Unicode log|x64.ActiveCfg = Release|Win32
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release Unicode|Win32.ActiveCfg = Release_Unicode|Win32
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release Unicode|Win64 (AMD64).ActiveCfg = Release|x64
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release Unicode|x64.ActiveCfg = Release|x64

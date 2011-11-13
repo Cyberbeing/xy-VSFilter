@@ -34,7 +34,7 @@ static void LogSubPicStartStop( const REFERENCE_TIME& rtStart, const REFERENCE_T
     static REFERENCE_TIME s_rtStart = -1, s_rtStop = -1;
     if(s_rtStart!=rtStart || s_rtStop!=rtStop)
     {
-        XY_LOG_INFO(tmp.GetString());
+        XY_LOG_INFO(msg.GetString());
         s_rtStart=rtStart;
         s_rtStop=rtStop;
     }
