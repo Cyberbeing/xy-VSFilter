@@ -91,7 +91,12 @@ public:
 std::size_t hash_value(const TextInfoCacheKey& key);
 std::size_t hash_value(const CWord& key);
 std::size_t hash_value(const PathDataCacheKey& key);
-std::size_t hash_value(const ScanLineDataCacheKey& key);
+
+class ScanLineDataCacheKeyTraits:public CElementTraits<ScanLineDataCacheKey>
+{
+public:
+    static ULONG Hash(const ScanLineDataCacheKey& key);
+};
 
 class OverlayNoBlurKeyTraits:public CElementTraits<OverlayNoBlurKey>
 {
@@ -193,13 +198,7 @@ typedef enhanced_mru_list<
     >
 > PathDataMruCache;
 
-typedef enhanced_mru_list<
-    ScanLineDataMruItem,
-    boost::multi_index::member<ScanLineDataMruItem, 
-    ScanLineDataCacheKey, 
-    &ScanLineDataMruItem::scan_line_data_key
-    >
-> ScanLineDataMruCache;
+typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
 
 typedef EnhancedXyMru<OverlayNoBlurKey, SharedPtrOverlay, OverlayNoBlurKeyTraits> OverlayNoBlurMruCache;
 

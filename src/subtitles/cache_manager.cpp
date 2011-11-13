@@ -34,7 +34,7 @@ std::size_t hash_value( const PathDataCacheKey& key )
     return( CStringElementTraits<CString>::Hash(key.m_str) ); 
 }
 
-std::size_t hash_value( const ScanLineDataCacheKey& key )
+ULONG ScanLineDataCacheKeyTraits::Hash( const ScanLineDataCacheKey& key )
 {
     //return hash_value(static_cast<PathDataCacheKey>(key)) ^ key.m_org.x ^ key.m_org.y;
     size_t hash = hash_value(static_cast<const PathDataCacheKey&>(key));
@@ -47,7 +47,7 @@ std::size_t hash_value( const ScanLineDataCacheKey& key )
 
 ULONG OverlayNoBlurKeyTraits::Hash( const OverlayNoBlurKey& key )
 {
-    ULONG hash = hash_value(static_cast<const ScanLineDataCacheKey&>(key));
+    ULONG hash = ScanLineDataCacheKeyTraits::Hash(static_cast<const ScanLineDataCacheKey&>(key));
     hash += (hash<<5);
     hash += key.m_p.x;
     hash += (hash<<5);

@@ -282,8 +282,8 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
 
         SharedPtrConstScanLineData scan_line_data;
         ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
-        ScanLineDataMruCache::hashed_cache_const_iterator iter = scan_line_data_cache->hash_find(key);
-        if(iter==scan_line_data_cache->hash_end())
+        POSITION pos_scan_line_data = scan_line_data_cache->Lookup(key);
+        if(pos_scan_line_data==NULL)
         {
             //get outline path, if not cached, create it and cache a copy, else copy from cache
             SharedPtrPathData path_data(new PathData());        
@@ -332,14 +332,13 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
                 }
             }
 
-            ScanLineDataMruItem item(key, tmp);
-            scan_line_data_cache->update_cache(item); 
+            scan_line_data_cache->UpdateCache(key, tmp); 
             scan_line_data = tmp;
         }
         else
         {
-            scan_line_data = iter->scan_line_data;
-            scan_line_data_cache->update_cache( *iter );
+            scan_line_data = scan_line_data_cache->GetAt(pos_scan_line_data);
+            scan_line_data_cache->UpdateCache( pos_scan_line_data );
         }
         if(!Rasterizer::Rasterize(*scan_line_data, psub.x, psub.y, raterize_result)) 
         {     
@@ -1870,7 +1869,7 @@ void CRenderedTextSubtitle::Deinit()
 
     CacheManager::GetCWordMruCache()->clear();
     CacheManager::GetPathDataMruCache()->clear();
-    CacheManager::GetScanLineDataMruCache()->clear();
+    CacheManager::GetScanLineDataMruCache()->RemoveAll();
     CacheManager::GetOverlayNoBlurMruCache()->RemoveAll();
     CacheManager::GetOverlayMruCache()->clear();
 }
