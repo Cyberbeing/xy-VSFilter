@@ -64,7 +64,7 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">$(ProjectName)RU</TargetName>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">../../lib/</OutDir>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">$(SolutionDir)\..\..\BaseClasses;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">$(WindowsSdkDir)include;D:\DXSDK_9_0b\Include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(FrameworkSDKDir)\include;$(VCInstallDir)PlatformSDK\include</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
     <ClCompile>

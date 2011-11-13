@@ -44,14 +44,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">
     <TargetExt>.lib</TargetExt>
     <OutDir>$(SolutionDir)..\..\..\..\lib\</OutDir>
-    <IncludePath>$(WindowsSdkDir)include;../;D:\DXSDK_9_0b\Include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(FrameworkSDKDir)\include;$(VCInstallDir)PlatformSDK\include</IncludePath>
+    <IncludePath>$(SolutionDir)\..\..\BaseClasses;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
-    <OutDir>$(ProjectDir)\..\..\..\lib\</OutDir>
+    <OutDir>$(SolutionDir)..\..\..\..\lib\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
     <TargetName>strmbaseDU</TargetName>
-    <IncludePath>$(WindowsSdkDir)include;../;D:\DXSDK_9_0b\Include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(FrameworkSDKDir)\include;$(VCInstallDir)PlatformSDK\include</IncludePath>
+    <IncludePath>$(SolutionDir)\..\..\BaseClasses;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
     <ClCompile>

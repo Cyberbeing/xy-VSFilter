@@ -58,7 +58,7 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">..\..\..\lib\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">..\..\..\lib\</OutDir>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">$(SolutionDir)\..\..\BaseClasses;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">D:\DXSDK_9_0b\Samples\C++\DirectShow\BaseClasses;$(WindowsSdkDir)include;D:\DXSDK_9_0b\Include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(FrameworkSDKDir)\include;$(VCInstallDir)PlatformSDK\include</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">$(SolutionDir)\..\..\BaseClasses;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
     <ClCompile>

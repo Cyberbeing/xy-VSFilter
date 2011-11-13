@@ -57,7 +57,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
     <TargetExt>.dll</TargetExt>
-    <IncludePath>D:\DXSDK_9_0b\Samples\C++\DirectShow\BaseClasses;$(WindowsSdkDir)include;D:\DXSDK_9_0b\Include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(FrameworkSDKDir)\include;$(VCInstallDir)PlatformSDK\include</IncludePath>
+    <IncludePath>$(SolutionDir)\..\..\BaseClasses;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(SolutionDir)\..\..\..\log4cplus\include\;$(IncludePath)</IncludePath>
     <TargetName>vsfilter</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">
