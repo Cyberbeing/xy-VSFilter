@@ -5,11 +5,6 @@
 #include "StdAfx.h"
 #include "cache_manager.h"
 
-std::size_t hash_value(const CWord& key)
-{
-    return( CStringElementTraits<CString>::Hash(key.m_str) );
-}
-
 ULONG TextInfoCacheKeyTraits::Hash( const TextInfoCacheKey& key )
 {
     ULONG hash = CStringElementTraits<CString>::Hash(key.m_str);

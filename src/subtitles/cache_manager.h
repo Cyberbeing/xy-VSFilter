@@ -94,8 +94,6 @@ public:
     friend class OverlayKeyTraits;
 };
 
-std::size_t hash_value(const CWord& key);
-
 class TextInfoCacheKeyTraits:public CElementTraits<TextInfoCacheKey>
 {
 public:
