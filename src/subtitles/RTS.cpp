@@ -1868,6 +1868,9 @@ void CRenderedTextSubtitle::Deinit()
     CacheManager::GetScanLineDataMruCache()->RemoveAll();
     CacheManager::GetOverlayNoBlurMruCache()->RemoveAll();
     CacheManager::GetOverlayMruCache()->RemoveAll();
+    CacheManager::GetAssTagListMruCache()->RemoveAll();
+    CacheManager::GetSubpixelVarianceCache()->RemoveAll();
+    CacheManager::GetTextInfoCache()->RemoveAll();
 }
 
 void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
