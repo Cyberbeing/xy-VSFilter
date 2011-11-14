@@ -494,13 +494,28 @@ static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int st
     }
     memset(col_pix_buf_base, 0, w*sizeof(WORD));
     memset(col_sum_buf_base, 0, w*sizeof(WORD));
+    WORD *col_pix_buf = col_pix_buf_base-2;//for aligment;
+    WORD *col_sum_buf = col_sum_buf_base-2;//for aligment;
+    {
+        int y = 0;
+        unsigned char *src=buf+y*stride;
 
+        int x = 2;
+        int old_pix = src[x-1];
+        int old_sum = old_pix + src[x-2];
+        for ( ; x < w; x++) {
+            int temp1 = src[x];
+            int temp2 = old_pix + temp1;
+            old_pix = temp1;
+            temp1 = old_sum + temp2;
+            old_sum = temp2;
+            col_pix_buf[x] = temp1;
+        }
+    }
     {
         int y = 1;
         unsigned char *src=buf+y*stride;
 
-        WORD *col_pix_buf = col_pix_buf_base-2;//for aligment;
-        WORD *col_sum_buf = col_sum_buf_base-2;//for aligment;
 
         int x = 2;
         int old_pix = src[x-1];
@@ -524,13 +539,11 @@ static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int st
         unsigned char *src=buf+y*stride;
         unsigned char *dst=buf+(y-1)*stride;
 
-        WORD *col_pix_buf = col_pix_buf_base-2;//for aligment;
-        WORD *col_sum_buf = col_sum_buf_base-2;//for aligment;
                 
         int x = 2;
         __m128i old_pix_128 = _mm_cvtsi32_si128(src[1]);
         __m128i old_sum_128 = _mm_cvtsi32_si128(src[0]+src[1]);
-        for ( ; x < (w&(~7)); x+=8) {
+        for ( ; x < ((w-2)&(~7)); x+=8) {
             __m128i new_pix = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(src+x));
             new_pix = _mm_unpacklo_epi8(new_pix, _mm_setzero_si128());
             __m128i temp = _mm_slli_si128(new_pix,2);
