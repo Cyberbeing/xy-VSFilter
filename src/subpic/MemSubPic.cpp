@@ -90,6 +90,52 @@ static __forceinline void pix_alpha_blend_yv12_chroma(byte* dst, const byte* src
         src[src_pitch]+src[1+src_pitch] )>>2);
 }
 
+static void AlphaBltYv12Luma(byte* dst, int dst_pitch,
+    int w, int h,
+    const byte* sub, const byte* alpha, int sub_pitch)
+{
+    if( ((reinterpret_cast<intptr_t>(alpha) | static_cast<intptr_t>(sub_pitch) |
+        reinterpret_cast<intptr_t>(dst) | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 )
+    {
+        for(int i=0; i<h; i++, dst += dst_pitch, alpha += sub_pitch, sub += sub_pitch)
+        {
+            const BYTE* sa = alpha;
+            const BYTE* s2 = sub;
+            const BYTE* s2end_mod16 = s2 + (w&~15);
+            const BYTE* s2end = s2 + w;
+            BYTE* d2 = dst;
+
+            for(; s2 < s2end_mod16; s2+=16, sa+=16, d2+=16)
+            {
+                pix_alpha_blend_yv12_luma_sse2(d2, sa, s2);                        
+            }
+            for(; s2 < s2end; s2++, sa++, d2++)
+            {
+                d2[0] = (((d2[0])*sa[0])>>8) + s2[0];
+            }
+        }
+    }
+    else //fix me: only a workaround for non-mod-16 size video
+    {
+        for(int i=0; i<h; i++, dst += dst_pitch, alpha += sub_pitch, sub += sub_pitch)
+        {
+            const BYTE* sa = alpha;
+            const BYTE* s2 = sub;
+            const BYTE* s2end_mod16 = s2 + (w&~15);
+            const BYTE* s2end = s2 + w;
+            BYTE* d2 = dst;
+            for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
+            {
+                //if(s2[3] < 0xff)
+                {
+                    //					d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];  
+                    d2[0] = (((d2[0])*sa[0])>>8) + s2[0];                        
+                }
+            }
+        }
+    }
+}
+
 //
 // CMemSubPic
 //
@@ -633,49 +679,8 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
             ss[0] = src_origin + src.pitch*src.h*2;//U
             ss[1] = src_origin + src.pitch*src.h*3;//V
 
-            //equivalent:                
-            //  if( (reinterpret_cast<intptr_t>(s2)&15)==0 && (reinterpret_cast<intptr_t>(sa)&15)==0 
-            //    && (reinterpret_cast<intptr_t>(d2)&15)==0 )
-            if( ((reinterpret_cast<intptr_t>(s) | static_cast<intptr_t>(src.pitch) |
-                reinterpret_cast<intptr_t>(d) | static_cast<intptr_t>(dst.pitch) ) & 15 )==0 )
-            {
-                for(int i=0; i<h; i++, s += src.pitch, d += dst.pitch)
-                {
-                    BYTE* sa = s;
-                    BYTE* s2 = s + src.pitch*src.h;
-                    BYTE* s2end_mod16 = s2 + (w&~15);
-                    BYTE* s2end = s2 + w;
-                    BYTE* d2 = d;
+            AlphaBltYv12Luma( d, dst.pitch, w, h, s + src.pitch*src.h, s, src.pitch );
 
-                    for(; s2 < s2end_mod16; s2+=16, sa+=16, d2+=16)
-                    {
-                        pix_alpha_blend_yv12_luma_sse2(d2, sa, s2);                        
-                    }
-                    for(; s2 < s2end; s2++, sa++, d2++)
-                    {
-                        d2[0] = (((d2[0])*sa[0])>>8) + s2[0];
-                    }
-               }
-            }
-            else //fix me: only a workaround for non-mod-16 size video
-            {
-                for(int i=0; i<h; i++, s += src.pitch, d += dst.pitch)
-                {
-                    BYTE* sa = s;
-                    BYTE* s2 = s + src.pitch*src.h;
-                    BYTE* s2end_mod16 = s2 + (w&~15);
-                    BYTE* s2end = s2 + w;
-                    BYTE* d2 = d;
-                    for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
-                    {
-                        //if(s2[3] < 0xff)
-                        {
-                            //					d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];  
-                            d2[0] = (((d2[0])*sa[0])>>8) + s2[0];                        
-                        }
-                    }
-                }
-            }
             //equivalent:
             //  if( (reinterpret_cast<intptr_t>(s2)&15)==0 && (reinterpret_cast<intptr_t>(sa2)&15)==0 
             //      && (reinterpret_cast<intptr_t>(d2)&7)==0 )
