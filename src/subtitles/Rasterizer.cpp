@@ -529,12 +529,12 @@ static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int st
 
             temp2 = col_pix_buf[x] + temp1;
             col_pix_buf[x] = temp1;
-            //dst[x-1] = (col_sum_buf[x] + temp2 + 8) >> 4;
+            //dst[x-1] = (col_sum_buf[x] + temp2) >> 4;
             col_sum_buf[x] = temp2;
         }
     }
 
-    __m128i round = _mm_set1_epi16(8);
+    //__m128i round = _mm_set1_epi16(8);
     for (int y = 2; y < h; y++) {
         unsigned char *src=buf+y*stride;
         unsigned char *dst=buf+(y-1)*stride;
@@ -563,7 +563,7 @@ static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int st
             _mm_storeu_si128( reinterpret_cast<__m128i*>(col_sum_buf+x), temp );
 
             old_col_sum = _mm_add_epi16(old_col_sum, temp);
-            old_col_sum = _mm_add_epi16(old_col_sum, round);
+            //old_col_sum = _mm_add_epi16(old_col_sum, round);
             old_col_sum = _mm_srli_epi16(old_col_sum, 4);
             old_col_sum = _mm_packus_epi16(old_col_sum, old_col_sum);
             _mm_storel_epi64( reinterpret_cast<__m128i*>(dst+x-1), old_col_sum );
@@ -579,7 +579,7 @@ static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int st
 
             temp2 = col_pix_buf[x] + temp1;
             col_pix_buf[x] = temp1;
-            dst[x-1] = (col_sum_buf[x] + temp2 + 8) >> 4;
+            dst[x-1] = (col_sum_buf[x] + temp2) >> 4;
             col_sum_buf[x] = temp2;
         }
     }
