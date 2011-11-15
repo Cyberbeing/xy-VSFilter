@@ -23,59 +23,39 @@
 #include "MemSubPic.h"
 #include "color_conv_table.h"
 
-#define MIX_4_PIX_YV12(dst, zero_128i, c_128i, a_128i) \
-{ \
-    __m128i d_128i = _mm_cvtsi32_si128(*dst);    \
-	_MIX_4_PIX_YV12(d_128i, zero_128i, c_128i, a_128i) \
-    *dst = (DWORD)_mm_cvtsi128_si32(d_128i); \
+#define AVERAGE_4_PIX_INTRINSICS(m128_1, m128_2) \
+    m128_1 = _mm_avg_epu8(m128_1, m128_2); \
+    m128_2 = _mm_slli_epi16(m128_1, 8); \
+    m128_1 = _mm_srli_epi16(m128_1, 8); \
+    m128_2 = _mm_srli_epi16(m128_2, 8); \
+    m128_1 = _mm_avg_epu8(m128_1, m128_2);
+
+/***
+ * output not exactly identical to pix_alpha_blend_yv12_chroma
+ */
+static inline void pix_alpha_blend_yv12_chroma_sse2(byte* dst, const byte* src, const byte* alpha, int src_pitch)
+{
+    __m128i zero = _mm_setzero_si128();
+    __m128i alpha128_1 = _mm_load_si128( reinterpret_cast<const __m128i*>(alpha) );
+    __m128i alpha128_2 = _mm_load_si128( reinterpret_cast<const __m128i*>(alpha+src_pitch) );
+    __m128i dst128 = _mm_loadl_epi64( reinterpret_cast<const __m128i*>(dst) );
+
+    __m128i sub128_1 = _mm_load_si128( reinterpret_cast<const __m128i*>(src) );
+    __m128i sub128_2 = _mm_load_si128( reinterpret_cast<const __m128i*>(src+src_pitch) );
+
+    AVERAGE_4_PIX_INTRINSICS(alpha128_1, alpha128_2);
+
+    dst128 = _mm_unpacklo_epi8(dst128, zero);
+    dst128 = _mm_mullo_epi16(dst128, alpha128_1);
+    dst128 = _mm_srli_epi16(dst128, 8);
+
+    AVERAGE_4_PIX_INTRINSICS(sub128_1, sub128_2);
+
+    dst128 = _mm_adds_epi16(dst128, sub128_1);
+    //dst128 = alpha128_1;
+    dst128 = _mm_packus_epi16(dst128, dst128);
+    _mm_storel_epi64( reinterpret_cast<__m128i*>(dst), dst128 );
 }
-
-#define _MIX_4_PIX_YV12(dst_128i, zero_128i, c_128i, a_128i) \
-{ \
-	dst_128i = _mm_unpacklo_epi8(dst_128i, zero_128i);    \
-	dst_128i = _mm_unpacklo_epi16(dst_128i, c_128i); \
-	dst_128i = _mm_madd_epi16(dst_128i, a_128i);   \
-	dst_128i = _mm_srli_epi32(dst_128i, 8);   \
-	dst_128i = _mm_packs_epi32(dst_128i, dst_128i);  \
-	dst_128i = _mm_packus_epi16(dst_128i, dst_128i); \
-}
-
-#define AVERAGE_4_PIX(a,b)      \
-    __asm    pavgb       a, b   \
-    __asm    movaps      b, a   \
-    __asm    psrlw       a, 8   \
-    __asm    psllw       b, 8   \
-    __asm    psrlw       b, 8   \
-    __asm    pavgw       a, b
-
-#define SSE2_ALPHA_BLT_UV(dst, alpha_mask, src, src_pitch) \
-    __asm    mov         eax,src_pitch                  \
-                                                        \
-    __asm    xorps       XMM0,XMM0                      \
-    __asm    mov         esi, alpha_mask                \
-    __asm    movaps      XMM1,[esi]                     \
-    __asm    add         esi, eax                       \
-    __asm    movaps      XMM2,[esi]                     \
-                                                        \
-    __asm    AVERAGE_4_PIX(XMM1, XMM2)                  \
-    __asm    mov         edi, dst                       \
-    __asm    movlps      XMM3,[edi]                     \
-    __asm    punpcklbw   XMM3,XMM0                      \
-    __asm    pmullw      XMM3,XMM1                      \
-    __asm    psrlw       XMM3,8                         \
-                                                        \
-    __asm    mov         esi, src                       \
-    __asm    movaps      XMM1,[esi]                     \
-    __asm    add         esi, eax                       \
-    __asm    movaps      XMM2,[esi]                     \
-    __asm    AVERAGE_4_PIX(XMM1, XMM2)                  \
-                                                        \
-    __asm    paddw       XMM3,XMM1                      \
-    __asm    packuswb    XMM3,XMM0                      \
-                                                        \
-    __asm    movdq2q     MM0, XMM3                      \
-    __asm    movq        [edi],MM0
-
 
 static inline void pix_alpha_blend_yv12_chroma(byte* dst, const byte* src, const byte* alpha, int src_pitch)
 {
@@ -722,7 +702,7 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
 
                         for(; s2 < s2end_mod16; s2 += 16, sa2 += 16, d2+=8)
                         {
-                            SSE2_ALPHA_BLT_UV(d2, sa2, s2, pitch)
+                            pix_alpha_blend_yv12_chroma_sse2(d2, s2, sa2, pitch);
                         }
                         for(; s2 < s2end; s2+=2, sa2+=2, d2++)
                         {
