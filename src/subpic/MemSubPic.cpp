@@ -717,7 +717,7 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                         }
                         for(; s2 < s2end; s2+=2, sa2+=2, d2++)
                         {
-                            unsigned int ia = (sa2[0]+         +sa2[1]+
+                            unsigned int ia = (sa2[0]          +sa2[1]+
                                                sa2[0+src.pitch]+sa2[1+src.pitch])>>2;
                             *d2 = (((*d2)*ia)>>8) + ((s2[0]        +s2[1]+
                                                       s2[src.pitch]+s2[1+src.pitch] )>>2);
@@ -742,7 +742,7 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                         BYTE* d2 = d;
                         for(; s2 < s2end; s2 += 2, sa2 += 2, d2++)
                         {
-                            unsigned int ia = (sa2[0]+         +sa2[1]+
+                            unsigned int ia = (sa2[0]         +sa2[1]+
                                 sa2[0+src.pitch]+sa2[1+src.pitch])>>2;
                             //if(ia < 0xff)
                             {
