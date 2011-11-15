@@ -136,6 +136,51 @@ static void AlphaBltYv12Luma(byte* dst, int dst_pitch,
     }
 }
 
+static void AlphaBltYv12Chroma(byte* dst, int dst_pitch,
+    int w, int chroma_h,
+    const byte* sub_chroma, const byte* alpha, int sub_pitch)
+{
+    if( ((reinterpret_cast<intptr_t>(sub_chroma) |
+        reinterpret_cast<intptr_t>(dst) | 
+        reinterpret_cast<intptr_t>(alpha) | static_cast<intptr_t>(sub_pitch) |
+        (static_cast<intptr_t>(dst_pitch)&7) ) & 15 )==0 )
+    {
+        int pitch = sub_pitch;
+        for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
+        {
+            const BYTE* s2 = sub_chroma;
+            const BYTE* sa2 = alpha;
+            const BYTE* s2end_mod16 = s2 + (w&~15);
+            const BYTE* s2end = s2 + w;
+            BYTE* d2 = dst;
+
+            for(; s2 < s2end_mod16; s2 += 16, sa2 += 16, d2+=8)
+            {
+                pix_alpha_blend_yv12_chroma_sse2(d2, s2, sa2, sub_pitch);
+            }
+            for(; s2 < s2end; s2+=2, sa2+=2, d2++)
+            {
+                pix_alpha_blend_yv12_chroma(d2, s2, sa2, sub_pitch);
+            }
+        }
+    }
+    else//fix me: only a workaround for non-mod-16 size video
+    {
+        for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
+        {
+            const BYTE* s2 = sub_chroma;
+            const BYTE* sa2 = alpha;
+            const BYTE* s2end_mod16 = s2 + (w&~15);
+            const BYTE* s2end = s2 + w;
+            BYTE* d2 = dst;
+            for(; s2 < s2end; s2 += 2, sa2 += 2, d2++)
+            {                            
+                pix_alpha_blend_yv12_chroma(d2, s2, sa2, sub_pitch);
+            }
+        }
+    }
+}
+
 //
 // CMemSubPic
 //
@@ -672,70 +717,17 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                 dst.pitchUV = -dst.pitchUV;
             }
 
-            BYTE* src_origin= (BYTE*)src.bits + src.pitch*rs.top + rs.left;
-            BYTE *s = src_origin;
+            BYTE* src_origin= (BYTE*)src.bits + src.pitch*rs.top + rs.left;            
 
             BYTE* ss[2];
             ss[0] = src_origin + src.pitch*src.h*2;//U
             ss[1] = src_origin + src.pitch*src.h*3;//V
 
-            AlphaBltYv12Luma( d, dst.pitch, w, h, s + src.pitch*src.h, s, src.pitch );
+            AlphaBltYv12Luma( d, dst.pitch, w, h, src_origin + src.pitch*src.h, src_origin, src.pitch );
 
-            //equivalent:
-            //  if( (reinterpret_cast<intptr_t>(s2)&15)==0 && (reinterpret_cast<intptr_t>(sa2)&15)==0 
-            //      && (reinterpret_cast<intptr_t>(d2)&7)==0 )
-            if( ((reinterpret_cast<intptr_t>(ss[0]) | reinterpret_cast<intptr_t>(ss[1]) | 
-                  reinterpret_cast<intptr_t>(dd[0]) | reinterpret_cast<intptr_t>(dd[1]) | 
-                  reinterpret_cast<intptr_t>(src_origin) | static_cast<intptr_t>(src.pitch) |
-                  (static_cast<intptr_t>(dst.pitchUV)&7) ) & 15 )==0 )
-            {
-                for(int i = 0; i < 2; i++)
-                {
-                    BYTE* s_uv = ss[i];
-                    BYTE* sa = src_origin;
-                    d = dd[i];
-                    int pitch = src.pitch;
-                    for(int j = 0; j < h2; j++, s_uv += src.pitch*2, sa += src.pitch*2, d += dst.pitchUV)
-                    {
-                        BYTE* s2 = s_uv;
-                        BYTE* sa2 = sa;
-                        BYTE* s2end_mod16 = s2 + (w&~15);
-                        BYTE* s2end = s2 + w;
-                        BYTE* d2 = d;
+            AlphaBltYv12Chroma( dd[0], dst.pitchUV, w, h2, ss[0], src_origin, src.pitch);
+            AlphaBltYv12Chroma( dd[1], dst.pitchUV, w, h2, ss[1], src_origin, src.pitch);
 
-                        for(; s2 < s2end_mod16; s2 += 16, sa2 += 16, d2+=8)
-                        {
-                            pix_alpha_blend_yv12_chroma_sse2(d2, s2, sa2, pitch);
-                        }
-                        for(; s2 < s2end; s2+=2, sa2+=2, d2++)
-                        {
-                            pix_alpha_blend_yv12_chroma(d2, s2, sa2, src.pitch);
-                        }
-                    }
-                }
-            }
-            else//fix me: only a workaround for non-mod-16 size video
-            {
-                for(int i = 0; i < 2; i++)
-                {
-                    BYTE* s_uv = ss[i];
-                    BYTE* sa = src_origin;
-                    d = dd[i];
-                    int pitch = src.pitch;
-                    for(int j = 0; j < h2; j++, s_uv += src.pitch*2, sa += src.pitch*2, d += dst.pitchUV)
-                    {
-                        BYTE* s2 = s_uv;
-                        BYTE* sa2 = sa;
-                        BYTE* s2end_mod16 = s2 + (w&~15);
-                        BYTE* s2end = s2 + w;
-                        BYTE* d2 = d;
-                        for(; s2 < s2end; s2 += 2, sa2 += 2, d2++)
-                        {                            
-                            pix_alpha_blend_yv12_chroma(d2, s2, sa2, src.pitch);
-                        }
-                    }
-                }
-            }
             __asm emms;
         }
         break;
