@@ -62,3 +62,5 @@ issue 25: \t tags not working, e.g. in 23.ass.(fixed)
 ==============================================================
 issue 26: \frx and \fry rotations are reversed, associated script: 24.ass. Introduced in Commit:844c17a1664ebe874a760fc3186c719445e1c5bf.(fixed)
 ==============================================================
+issue 27: \be behaviour changed. Associated script: 7.ass.
+==============================================================
