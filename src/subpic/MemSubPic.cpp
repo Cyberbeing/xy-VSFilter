@@ -30,6 +30,31 @@
     m128_2 = _mm_srli_epi16(m128_2, 8); \
     m128_1 = _mm_avg_epu8(m128_1, m128_2);
 
+static inline void pix_alpha_blend_yv12_luma_sse2(byte* dst, const byte* alpha, const byte* sub)
+{
+    __m128i dst128 = _mm_load_si128( reinterpret_cast<const __m128i*>(dst) );
+    __m128i alpha128 = _mm_load_si128( reinterpret_cast<const __m128i*>(alpha) );
+    __m128i sub128 = _mm_load_si128( reinterpret_cast<const __m128i*>(sub) );
+    __m128i zero = _mm_setzero_si128();
+
+    __m128i dst_lo128 = _mm_unpacklo_epi8(dst128, zero);
+    __m128i alpha_lo128 = _mm_unpacklo_epi8(alpha128, zero);
+    //__m128i ones = _mm_set1_epi16(1);
+    //alpha_lo128 = _mm_add_epi16(alpha_lo128, ones);
+    dst_lo128 = _mm_mullo_epi16(dst_lo128, alpha_lo128);
+    dst_lo128 = _mm_srli_epi16(dst_lo128, 8);
+
+    dst128 = _mm_unpackhi_epi8(dst128, zero);
+    alpha128 = _mm_unpackhi_epi8(alpha128, zero);
+    //alpha128 = _mm_adds_epi16(alpha128, ones);
+    dst128 = _mm_mullo_epi16(dst128, alpha128);
+    dst128 = _mm_srli_epi16(dst128, 8);
+    dst_lo128 = _mm_packus_epi16(dst_lo128, dst128);
+
+    dst_lo128 = _mm_add_epi8(dst_lo128, sub128);
+    _mm_store_si128( reinterpret_cast<__m128i*>(dst), dst_lo128 );
+}
+
 /***
  * output not exactly identical to pix_alpha_blend_yv12_chroma
  */
@@ -624,34 +649,7 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
 
                     for(; s2 < s2end_mod16; s2+=16, sa+=16, d2+=16)
                     {
-                        __asm
-                        {
-                            //important!
-                            mov			edi, d2
-                                mov         esi, sa
-
-                                movaps      XMM3,[edi]
-                            xorps       XMM0,XMM0
-                                movaps      XMM4,XMM3
-                                punpcklbw   XMM4,XMM0
-
-                                movaps      XMM1,[esi]
-                            movaps      XMM5,XMM1
-                                punpcklbw   XMM5,XMM0
-                                pmullw      XMM4,XMM5
-                                psrlw       XMM4,8
-
-                                punpckhbw   XMM1,XMM0
-                                punpckhbw   XMM3,XMM0
-                                pmullw      XMM1,XMM3
-                                psrlw       XMM1,8
-
-                                packuswb    XMM4,XMM1
-                                mov         esi, s2
-                                movaps      XMM3,[esi]
-                            paddusb     XMM4,XMM3
-                                movntps     [edi],XMM4
-                        }
+                        pix_alpha_blend_yv12_luma_sse2(d2, sa, s2);                        
                     }
                     for(; s2 < s2end; s2++, sa++, d2++)
                     {
