@@ -76,6 +76,15 @@
     __asm    movdq2q     MM0, XMM3                      \
     __asm    movq        [edi],MM0
 
+
+static inline void pix_alpha_blend_yv12_chroma(byte* dst, const byte* src, const byte* alpha, int src_pitch)
+{
+    unsigned int ia = (alpha[0]+alpha[1]+
+        alpha[0+src_pitch]+alpha[1+src_pitch])>>2;
+    *dst= (((*dst)*ia)>>8) + ((src[0]        +src[1]+
+        src[src_pitch]+src[1+src_pitch] )>>2);
+}
+
 //
 // CMemSubPic
 //
@@ -717,10 +726,7 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                         }
                         for(; s2 < s2end; s2+=2, sa2+=2, d2++)
                         {
-                            unsigned int ia = (sa2[0]          +sa2[1]+
-                                               sa2[0+src.pitch]+sa2[1+src.pitch])>>2;
-                            *d2 = (((*d2)*ia)>>8) + ((s2[0]        +s2[1]+
-                                                      s2[src.pitch]+s2[1+src.pitch] )>>2);
+                            pix_alpha_blend_yv12_chroma(d2, s2, sa2, src.pitch);
                         }
                     }
                 }
@@ -741,16 +747,8 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                         BYTE* s2end = s2 + w;
                         BYTE* d2 = d;
                         for(; s2 < s2end; s2 += 2, sa2 += 2, d2++)
-                        {
-                            unsigned int ia = (sa2[0]         +sa2[1]+
-                                sa2[0+src.pitch]+sa2[1+src.pitch])>>2;
-                            //if(ia < 0xff)
-                            {
-                                //                        *d2 = (((*d2-0x80)*ia)>>8) + ((s2[0]        +s2[1]
-                                //                                                       s2[src.pitch]+s2[1+src.pitch] )>>2);
-                                *d2 = (((*d2)*ia)>>8) + ((s2[0]        +s2[1]+
-                                    s2[src.pitch]+s2[1+src.pitch] )>>2);
-                            }
+                        {                            
+                            pix_alpha_blend_yv12_chroma(d2, s2, sa2, src.pitch);
                         }
                     }
                 }
