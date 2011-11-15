@@ -30,7 +30,7 @@
     m128_2 = _mm_srli_epi16(m128_2, 8); \
     m128_1 = _mm_avg_epu8(m128_1, m128_2);
 
-static inline void pix_alpha_blend_yv12_luma_sse2(byte* dst, const byte* alpha, const byte* sub)
+static __forceinline void pix_alpha_blend_yv12_luma_sse2(byte* dst, const byte* alpha, const byte* sub)
 {
     __m128i dst128 = _mm_load_si128( reinterpret_cast<const __m128i*>(dst) );
     __m128i alpha128 = _mm_load_si128( reinterpret_cast<const __m128i*>(alpha) );
@@ -58,7 +58,7 @@ static inline void pix_alpha_blend_yv12_luma_sse2(byte* dst, const byte* alpha, 
 /***
  * output not exactly identical to pix_alpha_blend_yv12_chroma
  */
-static inline void pix_alpha_blend_yv12_chroma_sse2(byte* dst, const byte* src, const byte* alpha, int src_pitch)
+static __forceinline void pix_alpha_blend_yv12_chroma_sse2(byte* dst, const byte* src, const byte* alpha, int src_pitch)
 {
     __m128i zero = _mm_setzero_si128();
     __m128i alpha128_1 = _mm_load_si128( reinterpret_cast<const __m128i*>(alpha) );
@@ -82,7 +82,7 @@ static inline void pix_alpha_blend_yv12_chroma_sse2(byte* dst, const byte* src, 
     _mm_storel_epi64( reinterpret_cast<__m128i*>(dst), dst128 );
 }
 
-static inline void pix_alpha_blend_yv12_chroma(byte* dst, const byte* src, const byte* alpha, int src_pitch)
+static __forceinline void pix_alpha_blend_yv12_chroma(byte* dst, const byte* src, const byte* alpha, int src_pitch)
 {
     unsigned int ia = (alpha[0]+alpha[1]+
         alpha[0+src_pitch]+alpha[1+src_pitch])>>2;
