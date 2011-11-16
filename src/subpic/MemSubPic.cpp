@@ -39,15 +39,19 @@ static __forceinline void pix_alpha_blend_yv12_luma_sse2(byte* dst, const byte* 
 
     __m128i dst_lo128 = _mm_unpacklo_epi8(dst128, zero);
     __m128i alpha_lo128 = _mm_unpacklo_epi8(alpha128, zero);
-    __m128i ones = _mm_set1_epi16(1);
-    alpha_lo128 = _mm_add_epi16(alpha_lo128, ones);
+    //__m128i ones = _mm_set1_epi16(1);
+    //alpha_lo128 = _mm_add_epi16(alpha_lo128, ones);
+    __m128i dst128_2 = dst_lo128;
     dst_lo128 = _mm_mullo_epi16(dst_lo128, alpha_lo128);
+    dst_lo128 = _mm_adds_epu16(dst_lo128, dst128_2);
     dst_lo128 = _mm_srli_epi16(dst_lo128, 8);
 
     dst128 = _mm_unpackhi_epi8(dst128, zero);
     alpha128 = _mm_unpackhi_epi8(alpha128, zero);
-    alpha128 = _mm_adds_epi16(alpha128, ones);
-    dst128 = _mm_mullo_epi16(dst128, alpha128);
+    //alpha128 = _mm_adds_epi16(alpha128, ones);
+    dst128_2 = dst128;
+    dst128 = _mm_mullo_epi16(dst128, alpha128);    
+    dst128 = _mm_adds_epu16(dst128, dst128_2);
     dst128 = _mm_srli_epi16(dst128, 8);
     dst_lo128 = _mm_packus_epi16(dst_lo128, dst128);
 
@@ -68,13 +72,15 @@ static __forceinline void pix_alpha_blend_yv12_chroma_sse2(byte* dst, const byte
     __m128i sub128_1 = _mm_load_si128( reinterpret_cast<const __m128i*>(src) );
     __m128i sub128_2 = _mm_load_si128( reinterpret_cast<const __m128i*>(src+src_pitch) );
 
-    __m128i ones = _mm_set1_epi16(1);
+    //__m128i ones = _mm_set1_epi16(1);
     AVERAGE_4_PIX_INTRINSICS(alpha128_1, alpha128_2);
     
-    alpha128_1 = _mm_add_epi16(alpha128_1, ones);
+    //alpha128_1 = _mm_add_epi16(alpha128_1, ones);
 
     dst128 = _mm_unpacklo_epi8(dst128, zero);
+    __m128i dst128_2 = dst128;
     dst128 = _mm_mullo_epi16(dst128, alpha128_1);
+    dst128 = _mm_adds_epu16(dst128, dst128_2);
     dst128 = _mm_srli_epi16(dst128, 8);
 
     AVERAGE_4_PIX_INTRINSICS(sub128_1, sub128_2);
