@@ -778,27 +778,43 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                     BYTE* s2end_mod16 = s2 + (w&~15);
                     BYTE* s2end = s2 + w;
                     BYTE* d2 = d;
-
+                                        
                     for(; s2 < s2end_mod16; s2+=16, sa+=16, d2+=16)
                     {
                         //important!
                         __m128i alpha = _mm_load_si128( reinterpret_cast<const __m128i*>(sa) );
                         __m128i src_y = _mm_load_si128( reinterpret_cast<const __m128i*>(s2) );
-                        __m128i dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(d2) );
-                        __m128i lo = _mm_setzero_si128();
+                        __m128i dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(d2) );                        
                         
-                        lo = _mm_unpacklo_epi8(lo, alpha);                        
-                        dst_y = _mm_mulhi_epu16(dst_y, lo); 
+                        //__m128i lo = _mm_setzero_si128();                        
+                        __m128i lo = _mm_cmpeq_epi32(lo,lo);                        
+                        lo = _mm_unpacklo_epi8(lo, alpha);//(alpha<<8)+0x100 will overflow
+                                                          //so we do it another way
+                                                          //first, (alpha<<8)+0xff
+                        __m128i ones = _mm_setzero_si128();
+                        ones = _mm_cmpgt_epi16(dst_y, ones);
+                        ones = _mm_srli_epi16(ones, 15);
+
+                        dst_y = _mm_mulhi_epu16(dst_y, lo);
+                        dst_y = _mm_adds_epu16(dst_y, ones);//then add one if necessary
+
                         lo = _mm_setzero_si128();
                         lo = _mm_unpacklo_epi8(lo, src_y);
-                        dst_y = _mm_adds_epu16(dst_y, lo);                            
+                        dst_y = _mm_adds_epu16(dst_y, lo);                        
                         _mm_store_si128( reinterpret_cast<__m128i*>(d2), dst_y );
 
                         d2 += 16;
                         dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(d2) );
-                        lo = _mm_setzero_si128();
+                        lo = _mm_cmpeq_epi32(lo,lo);
                         lo = _mm_unpackhi_epi8(lo, alpha);
+
+                        ones = _mm_setzero_si128();
+                        ones = _mm_cmpgt_epi16(dst_y, ones);
+                        ones = _mm_srli_epi16(ones, 15);
+
                         dst_y = _mm_mulhi_epu16(dst_y, lo); 
+                        dst_y = _mm_adds_epu16(dst_y, ones);
+
                         lo = _mm_setzero_si128();
                         lo = _mm_unpackhi_epi8(lo, src_y);
                         dst_y = _mm_adds_epu16(dst_y, lo);
@@ -806,7 +822,10 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                     }
                     for( WORD* d3=reinterpret_cast<WORD*>(d2); s2 < s2end; s2++, sa++, d3++)
                     {
-                        d2[0] = ((d2[0]*sa[0])>>8) + (s2[0]<<8);
+                        if(sa[0] < 0xff)
+                        {                            
+                            d2[0] = ((d2[0]*(sa[0]+1))>>8) + (s2[0]<<8);
+                        }
                     }
                 }
             }
@@ -821,10 +840,9 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                     WORD* d2 = reinterpret_cast<WORD*>(d);
                     for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
                     {
-                        //if(s2[3] < 0xff)
-                        {
-                            //					d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];
-                            d2[0] = ((d2[0]*sa[0])>>8) + (s2[0]<<8);
+                        if(sa[0] < 0xff)
+                        {                            
+                            d2[0] = ((d2[0]*(sa[0]+1))>>8) + (s2[0]<<8);
                         }
                     }
                 }
@@ -945,14 +963,17 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                     {
                         unsigned int ia = ( 
                             sa2[0]+          sa2[1]+
-                            sa2[0+src.pitch]+sa2[1+src.pitch]);                        
-                        *d3 = (((*d3)*ia)>>10) + ((
-                            s_u2[0] +       s_u2[1]+
-                            s_u2[src.pitch]+s_u2[1+src.pitch] )<<6);
-                        d3++;
-                        *d3 = (((*d3)*ia)>>10) + ((
-                            s_v2[0] +       s_v2[1]+
-                            s_v2[src.pitch]+s_v2[1+src.pitch] )<<6);
+                            sa2[0+src.pitch]+sa2[1+src.pitch]+4);
+                        if( ia!=0x400 )
+                        {
+                            *d3 = (((*d3)*ia)>>10) + ((
+                                s_u2[0] +       s_u2[1]+
+                                s_u2[src.pitch]+s_u2[1+src.pitch] )<<6);
+                            d3++;
+                            *d3 = (((*d3)*ia)>>10) + ((
+                                s_v2[0] +       s_v2[1]+
+                                s_v2[src.pitch]+s_v2[1+src.pitch] )<<6);
+                        }                        
                     }
                 }
             }
