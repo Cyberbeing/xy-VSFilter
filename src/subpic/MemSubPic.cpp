@@ -39,14 +39,14 @@ static __forceinline void pix_alpha_blend_yv12_luma_sse2(byte* dst, const byte* 
 
     __m128i dst_lo128 = _mm_unpacklo_epi8(dst128, zero);
     __m128i alpha_lo128 = _mm_unpacklo_epi8(alpha128, zero);
-    //__m128i ones = _mm_set1_epi16(1);
-    //alpha_lo128 = _mm_add_epi16(alpha_lo128, ones);
+    __m128i ones = _mm_set1_epi16(1);
+    alpha_lo128 = _mm_add_epi16(alpha_lo128, ones);
     dst_lo128 = _mm_mullo_epi16(dst_lo128, alpha_lo128);
     dst_lo128 = _mm_srli_epi16(dst_lo128, 8);
 
     dst128 = _mm_unpackhi_epi8(dst128, zero);
     alpha128 = _mm_unpackhi_epi8(alpha128, zero);
-    //alpha128 = _mm_adds_epi16(alpha128, ones);
+    alpha128 = _mm_adds_epi16(alpha128, ones);
     dst128 = _mm_mullo_epi16(dst128, alpha128);
     dst128 = _mm_srli_epi16(dst128, 8);
     dst_lo128 = _mm_packus_epi16(dst_lo128, dst128);
@@ -68,7 +68,10 @@ static __forceinline void pix_alpha_blend_yv12_chroma_sse2(byte* dst, const byte
     __m128i sub128_1 = _mm_load_si128( reinterpret_cast<const __m128i*>(src) );
     __m128i sub128_2 = _mm_load_si128( reinterpret_cast<const __m128i*>(src+src_pitch) );
 
+    __m128i ones = _mm_set1_epi16(1);
     AVERAGE_4_PIX_INTRINSICS(alpha128_1, alpha128_2);
+    
+    alpha128_1 = _mm_add_epi16(alpha128_1, ones);
 
     dst128 = _mm_unpacklo_epi8(dst128, zero);
     dst128 = _mm_mullo_epi16(dst128, alpha128_1);
@@ -76,8 +79,7 @@ static __forceinline void pix_alpha_blend_yv12_chroma_sse2(byte* dst, const byte
 
     AVERAGE_4_PIX_INTRINSICS(sub128_1, sub128_2);
 
-    dst128 = _mm_adds_epi16(dst128, sub128_1);
-    //dst128 = alpha128_1;
+    dst128 = _mm_adds_epi16(dst128, sub128_1);    
     dst128 = _mm_packus_epi16(dst128, dst128);
     _mm_storel_epi64( reinterpret_cast<__m128i*>(dst), dst128 );
 }
@@ -86,7 +88,7 @@ static __forceinline void pix_alpha_blend_yv12_chroma(byte* dst, const byte* src
 {
     unsigned int ia = (alpha[0]+alpha[1]+
         alpha[0+src_pitch]+alpha[1+src_pitch])>>2;
-    *dst= (((*dst)*ia)>>8) + ((src[0]        +src[1]+
+    *dst= (((*dst)*(ia+1))>>8) + ((src[0]        +src[1]+
         src[src_pitch]+src[1+src_pitch] )>>2);
 }
 
@@ -111,7 +113,10 @@ static void AlphaBltYv12Luma(byte* dst, int dst_pitch,
             }
             for(; s2 < s2end; s2++, sa++, d2++)
             {
-                d2[0] = (((d2[0])*sa[0])>>8) + s2[0];
+                if(sa[0] < 0xff)
+                {                    
+                    d2[0] = ((d2[0]*(sa[0]+1))>>8) + s2[0];
+                }
             }
         }
     }
@@ -126,10 +131,10 @@ static void AlphaBltYv12Luma(byte* dst, int dst_pitch,
             BYTE* d2 = dst;
             for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
             {
-                //if(s2[3] < 0xff)
+                if(sa[0] < 0xff)
                 {
                     //					d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];  
-                    d2[0] = (((d2[0])*sa[0])>>8) + s2[0];                        
+                    d2[0] = ((d2[0]*(sa[0]+1))>>8) + s2[0];                        
                 }
             }
         }
@@ -141,9 +146,10 @@ static void AlphaBltYv12Chroma(byte* dst, int dst_pitch,
     const byte* sub_chroma, const byte* alpha, int sub_pitch)
 {
     if( ((reinterpret_cast<intptr_t>(sub_chroma) |
-        reinterpret_cast<intptr_t>(dst) | 
-        reinterpret_cast<intptr_t>(alpha) | static_cast<intptr_t>(sub_pitch) |
-        (static_cast<intptr_t>(dst_pitch)&7) ) & 15 )==0 )
+        //reinterpret_cast<intptr_t>(dst) | 
+        reinterpret_cast<intptr_t>(alpha) | static_cast<intptr_t>(sub_pitch) 
+        //| (static_cast<intptr_t>(dst_pitch)&7) 
+        ) & 15 )==0 )
     {
         int pitch = sub_pitch;
         for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
