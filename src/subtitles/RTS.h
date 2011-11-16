@@ -188,9 +188,7 @@ public:
     void AddWord2Tail(SharedPtrCWord words);
     bool IsEmpty();
 
-    CRect PaintShadow(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha);
-    CRect PaintOutline(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha);
-    CRect PaintBody(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha);
+    CRect PaintAll(CompositeDrawItemList* output, SubPicDesc& spd, const CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, const CPoint& org, const int time, const int alpha);
 };
 
 enum eftype

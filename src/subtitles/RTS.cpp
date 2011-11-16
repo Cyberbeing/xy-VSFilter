@@ -1202,7 +1202,8 @@ void CLine::Compact()
     }
 }
 
-CRect CLine::PaintShadow(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
+CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRect& clipRect, 
+    SharedArrayByte pAlphaMask, CPoint p, const CPoint& org, const int time, const int alpha )
 {
     CRect bbox(0, 0, 0, 0);
     POSITION pos = GetHeadPosition();
@@ -1211,167 +1212,145 @@ CRect CLine::PaintShadow(CompositeDrawItemList* output, SubPicDesc& spd, CRect& 
     {
         SharedPtrCWord w = GetNext(pos);
         CompositeDrawItem& outputItem = output->GetNext(outputPos);
-
         if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
-        if(w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0)
-        {
-            int x = p.x + (int)(w->m_style.get().shadowDepthX+0.5);
-            int y = p.y + m_ascent - w->m_ascent + (int)(w->m_style.get().shadowDepthY+0.5);
-            DWORD a = 0xff - w->m_style.get().alpha[3];
-            if(alpha > 0) a = MulDiv(a, 0xff - alpha, 0xff);
-            COLORREF shadow = revcolor(w->m_style.get().colors[3]) | (a<<24);
-            DWORD sw[6] = {shadow, -1};
-            //xy
-            if(spd.type == MSP_AUYV)
+        //shadow
+        {            
+            if(w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0)
             {
-                sw[0] =rgb2yuv(sw[0], XY_AUYV);
-            }
-            else if(spd.type == MSP_AYUV || spd.type == MSP_AY11)
-            {
-                sw[0] =rgb2yuv(sw[0], XY_AYUV);
-            }
-            OverlayList overlay_list;
-            CWord::Paint(w, CPoint(x, y), org, &overlay_list);
-            if(w->m_style.get().borderStyle == 0)
-            {
-                outputItem.shadow.reset( 
-                    Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw,
+                int x = p.x + (int)(w->m_style.get().shadowDepthX+0.5);
+                int y = p.y + m_ascent - w->m_ascent + (int)(w->m_style.get().shadowDepthY+0.5);
+                DWORD a = 0xff - w->m_style.get().alpha[3];
+                if(alpha > 0) a = MulDiv(a, 0xff - alpha, 0xff);
+                COLORREF shadow = revcolor(w->m_style.get().colors[3]) | (a<<24);
+                DWORD sw[6] = {shadow, -1};
+                //xy
+                if(spd.type == MSP_AUYV)
+                {
+                    sw[0] =rgb2yuv(sw[0], XY_AUYV);
+                }
+                else if(spd.type == MSP_AYUV || spd.type == MSP_AY11)
+                {
+                    sw[0] =rgb2yuv(sw[0], XY_AYUV);
+                }
+                OverlayList overlay_list;
+                CWord::Paint(w, CPoint(x, y), org, &overlay_list);
+                if(w->m_style.get().borderStyle == 0)
+                {
+                    outputItem.shadow.reset( 
+                        Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw,
                         w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
                         (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart))
-                );
-                bbox |= Rasterizer::DryDraw(spd, *outputItem.shadow);
-            }
-            else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
-            {
-                outputItem.shadow.reset( 
-                    Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false)
-                );
-                bbox |= Rasterizer::DryDraw(spd, *outputItem.shadow);
+                        );
+                    bbox |= Rasterizer::DryDraw(spd, *outputItem.shadow);
+                }
+                else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
+                {
+                    outputItem.shadow.reset( 
+                        Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false)
+                        );
+                    bbox |= Rasterizer::DryDraw(spd, *outputItem.shadow);
+                }
             }
         }
-        p.x += w->m_width;
-    }
-    return(bbox);
-}
-
-CRect CLine::PaintOutline(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
-{
-    CRect bbox(0, 0, 0, 0);
-    POSITION pos = GetHeadPosition();
-    POSITION outputPos = output->GetHeadPosition();
-    while(pos)
-    {
-        SharedPtrCWord w = GetNext(pos);
-        CompositeDrawItem& outputItem = output->GetNext(outputPos);
-        if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
-        if(w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0 && !(w->m_ktype == 2 && time < w->m_kstart))
-        {
+        //outline
+        {   
+            if(w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0 && !(w->m_ktype == 2 && time < w->m_kstart))
+            {
+                int x = p.x;
+                int y = p.y + m_ascent - w->m_ascent;
+                DWORD aoutline = w->m_style.get().alpha[2];
+                if(alpha > 0) aoutline += MulDiv(alpha, 0xff - w->m_style.get().alpha[2], 0xff);
+                COLORREF outline = revcolor(w->m_style.get().colors[2]) | ((0xff-aoutline)<<24);
+                DWORD sw[6] = {outline, -1};
+                //xy
+                if(spd.type == MSP_AUYV)
+                {
+                    sw[0] =rgb2yuv(sw[0], XY_AUYV);
+                }
+                else if(spd.type == MSP_AYUV || spd.type == MSP_AY11)
+                {
+                    sw[0] =rgb2yuv(sw[0], XY_AYUV);
+                }
+                OverlayList overlay_list;
+                CWord::Paint(w, CPoint(x, y), org, &overlay_list);
+                if(w->m_style.get().borderStyle == 0)
+                {
+                    outputItem.outline.reset( 
+                        Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
+                        );
+                    bbox |= Rasterizer::DryDraw(spd, *outputItem.outline);
+                }
+                else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
+                {
+                    outputItem.outline.reset( 
+                        Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false)
+                        );
+                    bbox |= Rasterizer::DryDraw(spd, *outputItem.outline);
+                }
+            }
+        }
+        //body
+        {            
             int x = p.x;
             int y = p.y + m_ascent - w->m_ascent;
-            DWORD aoutline = w->m_style.get().alpha[2];
-            if(alpha > 0) aoutline += MulDiv(alpha, 0xff - w->m_style.get().alpha[2], 0xff);
-            COLORREF outline = revcolor(w->m_style.get().colors[2]) | ((0xff-aoutline)<<24);
-            DWORD sw[6] = {outline, -1};
+            // colors
+            DWORD aprimary = w->m_style.get().alpha[0];
+            if(alpha > 0) aprimary += MulDiv(alpha, 0xff - w->m_style.get().alpha[0], 0xff);
+            COLORREF primary = revcolor(w->m_style.get().colors[0]) | ((0xff-aprimary)<<24);
+            DWORD asecondary = w->m_style.get().alpha[1];
+            if(alpha > 0) asecondary += MulDiv(alpha, 0xff - w->m_style.get().alpha[1], 0xff);
+            COLORREF secondary = revcolor(w->m_style.get().colors[1]) | ((0xff-asecondary)<<24);
+            DWORD sw[6] = {primary, 0, secondary};
+            // karaoke
+            double t;
+            if(w->m_ktype == 0 || w->m_ktype == 2)
+            {
+                t = time < w->m_kstart ? 0 : 1;
+            }
+            else if(w->m_ktype == 1)
+            {
+                if(time < w->m_kstart) t = 0;
+                else if(time < w->m_kend)
+                {
+                    t = 1.0 * (time - w->m_kstart) / (w->m_kend - w->m_kstart);
+                    double angle = fmod(w->m_style.get().fontAngleZ, 360.0);
+                    if(angle > 90 && angle < 270)
+                    {
+                        t = 1-t;
+                        COLORREF tmp = sw[0];
+                        sw[0] = sw[2];
+                        sw[2] = tmp;
+                    }
+                }
+                else t = 1.0;
+            }
+            if(t >= 1)
+            {
+                sw[1] = 0xffffffff;
+            }
+            sw[3] = (int)(w->m_style.get().outlineWidthX + t*w->m_width) >> 3;
+            sw[4] = sw[2];
+            sw[5] = 0x00ffffff;
             //xy
             if(spd.type == MSP_AUYV)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AUYV);
+                sw[2] =rgb2yuv(sw[2], XY_AUYV);
+                sw[4] =rgb2yuv(sw[4], XY_AUYV);
             }
             else if(spd.type == MSP_AYUV || spd.type == MSP_AY11)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AYUV);
+                sw[2] =rgb2yuv(sw[2], XY_AYUV);
+                sw[4] =rgb2yuv(sw[4], XY_AYUV);
             }
             OverlayList overlay_list;
             CWord::Paint(w, CPoint(x, y), org, &overlay_list);
-            if(w->m_style.get().borderStyle == 0)
-            {
-                outputItem.outline.reset( 
-                    Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
+            outputItem.body.reset( 
+                Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, true, false)
                 );
-                bbox |= Rasterizer::DryDraw(spd, *outputItem.outline);
-            }
-            else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
-            {
-                outputItem.outline.reset( 
-                    Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false)
-                );
-                bbox |= Rasterizer::DryDraw(spd, *outputItem.outline);
-            }
+            bbox |= Rasterizer::DryDraw(spd, *outputItem.body);            
         }
-        p.x += w->m_width;
-    }
-    return(bbox);
-}
-
-CRect CLine::PaintBody(CompositeDrawItemList* output, SubPicDesc& spd, CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, CPoint org, int time, int alpha)
-{
-    CRect bbox(0, 0, 0, 0);
-    POSITION pos = GetHeadPosition();
-    POSITION outputPos = output->GetHeadPosition();
-    while(pos)
-    {
-        SharedPtrCWord w = GetNext(pos);
-        CompositeDrawItem& outputItem = output->GetNext(outputPos);
-        if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
-        int x = p.x;
-        int y = p.y + m_ascent - w->m_ascent;
-        // colors
-        DWORD aprimary = w->m_style.get().alpha[0];
-        if(alpha > 0) aprimary += MulDiv(alpha, 0xff - w->m_style.get().alpha[0], 0xff);
-        COLORREF primary = revcolor(w->m_style.get().colors[0]) | ((0xff-aprimary)<<24);
-        DWORD asecondary = w->m_style.get().alpha[1];
-        if(alpha > 0) asecondary += MulDiv(alpha, 0xff - w->m_style.get().alpha[1], 0xff);
-        COLORREF secondary = revcolor(w->m_style.get().colors[1]) | ((0xff-asecondary)<<24);
-        DWORD sw[6] = {primary, 0, secondary};
-        // karaoke
-        double t;
-        if(w->m_ktype == 0 || w->m_ktype == 2)
-        {
-            t = time < w->m_kstart ? 0 : 1;
-        }
-        else if(w->m_ktype == 1)
-        {
-            if(time < w->m_kstart) t = 0;
-            else if(time < w->m_kend)
-            {
-                t = 1.0 * (time - w->m_kstart) / (w->m_kend - w->m_kstart);
-                double angle = fmod(w->m_style.get().fontAngleZ, 360.0);
-                if(angle > 90 && angle < 270)
-                {
-                    t = 1-t;
-                    COLORREF tmp = sw[0];
-                    sw[0] = sw[2];
-                    sw[2] = tmp;
-                }
-            }
-            else t = 1.0;
-        }
-        if(t >= 1)
-        {
-            sw[1] = 0xffffffff;
-        }
-        sw[3] = (int)(w->m_style.get().outlineWidthX + t*w->m_width) >> 3;
-        sw[4] = sw[2];
-        sw[5] = 0x00ffffff;
-        //xy
-        if(spd.type == MSP_AUYV)
-        {
-            sw[0] =rgb2yuv(sw[0], XY_AUYV);
-            sw[2] =rgb2yuv(sw[2], XY_AUYV);
-            sw[4] =rgb2yuv(sw[4], XY_AUYV);
-        }
-        else if(spd.type == MSP_AYUV || spd.type == MSP_AY11)
-        {
-            sw[0] =rgb2yuv(sw[0], XY_AYUV);
-            sw[2] =rgb2yuv(sw[2], XY_AYUV);
-            sw[4] =rgb2yuv(sw[4], XY_AYUV);
-        }
-        OverlayList overlay_list;
-        CWord::Paint(w, CPoint(x, y), org, &overlay_list);
-        outputItem.body.reset( 
-            Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, true, false)
-        );
-        bbox |= Rasterizer::DryDraw(spd, *outputItem.body);
         p.x += w->m_width;
     }
     return(bbox);
@@ -1391,7 +1370,6 @@ int CLine::GetWordCount()
 {
     return GetCount();
 }
-
 
 // CSubtitle
 
@@ -3281,21 +3259,11 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                     tmpDrawItemList.AddTail();
                     tmpDrawItemList.AddTail();
                     tmpDrawItemList.AddTail();
-                }
-                bbox2 |= l->PaintShadow(&tmpDrawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(&tmpDrawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(&tmpDrawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintShadow(&tmpDrawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
-
-                bbox2 |= l->PaintOutline(&tmpDrawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(&tmpDrawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(&tmpDrawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintOutline(&tmpDrawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
-
-                bbox2 |= l->PaintBody(&tmpDrawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(&tmpDrawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(&tmpDrawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintBody(&tmpDrawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
+                }                
+                bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
             }
             else
             {
@@ -3303,11 +3271,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                 {
                     tmpDrawItemList.AddTail();
                 }
-                bbox2 |= l->PaintShadow(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
-
-                bbox2 |= l->PaintOutline(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
-
-                bbox2 |= l->PaintBody(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
+                bbox2 |= l->PaintAll(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
             }
 
             drawItemList.AddTailList(&tmpDrawItemList);
