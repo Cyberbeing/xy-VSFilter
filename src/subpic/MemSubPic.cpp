@@ -51,7 +51,7 @@ static __forceinline void pix_alpha_blend_yv12_luma_sse2(byte* dst, const byte* 
     dst128 = _mm_srli_epi16(dst128, 8);
     dst_lo128 = _mm_packus_epi16(dst_lo128, dst128);
 
-    dst_lo128 = _mm_add_epi8(dst_lo128, sub128);
+    dst_lo128 = _mm_adds_epu8(dst_lo128, sub128);
     _mm_store_si128( reinterpret_cast<__m128i*>(dst), dst_lo128 );
 }
 
@@ -786,7 +786,8 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                         __m128i src_y = _mm_load_si128( reinterpret_cast<const __m128i*>(s2) );
                         __m128i dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(d2) );
                         __m128i lo = _mm_setzero_si128();
-                        lo = _mm_unpacklo_epi8(lo, alpha);
+                        
+                        lo = _mm_unpacklo_epi8(lo, alpha);                        
                         dst_y = _mm_mulhi_epu16(dst_y, lo); 
                         lo = _mm_setzero_si128();
                         lo = _mm_unpacklo_epi8(lo, src_y);
