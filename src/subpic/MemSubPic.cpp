@@ -801,18 +801,20 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                         __m128i alpha = _mm_load_si128( reinterpret_cast<const __m128i*>(sa) );
                         __m128i src_y = _mm_load_si128( reinterpret_cast<const __m128i*>(s2) );
                         __m128i dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(d2) );                        
-                        
-                        //__m128i lo = _mm_setzero_si128();                        
-                        __m128i lo = _mm_cmpeq_epi32(lo,lo);                        
-                        lo = _mm_unpacklo_epi8(lo, alpha);//(alpha<<8)+0x100 will overflow
-                                                          //so we do it another way
-                                                          //first, (alpha<<8)+0xff
+
+                        __m128i alpha_ff = _mm_cmpeq_epi32(alpha_ff,alpha_ff);
+                        alpha_ff = _mm_cmpeq_epi8(alpha_ff, alpha);                                           
+
+                        __m128i lo = _mm_unpacklo_epi8(alpha_ff, alpha);//(alpha<<8)+0x100 will overflow
+                                                                        //so we do it another way
+                                                                        //first, (alpha<<8)+0xff
                         __m128i ones = _mm_setzero_si128();
                         ones = _mm_cmpeq_epi16(dst_y, ones);
-                        __m128i ones2 = _mm_cmpeq_epi32(ones2, ones2);
-                        ones = _mm_xor_si128(ones, ones2);
                         
+                        __m128i ones2 = _mm_cmpeq_epi32(ones2,ones2);
+                        ones = _mm_xor_si128(ones, ones2);                            
                         ones = _mm_srli_epi16(ones, 15);
+                        ones = _mm_and_si128(ones, lo);
 
                         dst_y = _mm_mulhi_epu16(dst_y, lo);
                         dst_y = _mm_adds_epu16(dst_y, ones);//then add one if necessary
@@ -824,14 +826,14 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
 
                         d2 += 16;
                         dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(d2) );
-                        lo = _mm_cmpeq_epi32(lo,lo);
-                        lo = _mm_unpackhi_epi8(lo, alpha);
+
+                        lo = _mm_unpackhi_epi8(alpha_ff, alpha);
 
                         ones = _mm_setzero_si128();
                         ones = _mm_cmpeq_epi16(dst_y, ones);
-                        ones2 = _mm_cmpeq_epi32(ones2, ones2);
-                        ones = _mm_xor_si128(ones, ones2);
+                        ones = _mm_xor_si128(ones, ones2);  
                         ones = _mm_srli_epi16(ones, 15);
+                        ones = _mm_and_si128(ones, lo);    
 
                         dst_y = _mm_mulhi_epu16(dst_y, lo); 
                         dst_y = _mm_adds_epu16(dst_y, ones);
@@ -845,7 +847,7 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                     {
                         if(sa[0] < 0xff)
                         {                            
-                            d2[0] = ((d2[0]*(sa[0]+1))>>8) + (s2[0]<<8);
+                            d2[0] = ((d2[0]*sa[0])>>8) + (s2[0]<<8);
                         }
                     }
                 }
@@ -863,7 +865,7 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                     {
                         if(sa[0] < 0xff)
                         {                            
-                            d2[0] = ((d2[0]*(sa[0]+1))>>8) + (s2[0]<<8);
+                            d2[0] = ((d2[0]*sa[0])>>8) + (s2[0]<<8);
                         }
                     }
                 }
@@ -984,8 +986,8 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                     {
                         unsigned int ia = ( 
                             sa2[0]+          sa2[1]+
-                            sa2[0+src.pitch]+sa2[1+src.pitch]+4);
-                        if( ia!=0x400 )
+                            sa2[0+src.pitch]+sa2[1+src.pitch]);
+                        if( ia!=0xFF*4 )
                         {
                             *d3 = (((*d3)*ia)>>10) + ((
                                 s_u2[0] +       s_u2[1]+
