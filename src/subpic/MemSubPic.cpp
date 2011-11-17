@@ -798,7 +798,10 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                                                           //so we do it another way
                                                           //first, (alpha<<8)+0xff
                         __m128i ones = _mm_setzero_si128();
-                        ones = _mm_cmpgt_epi16(dst_y, ones);
+                        ones = _mm_cmpeq_epi16(dst_y, ones);
+                        __m128i ones2 = _mm_cmpeq_epi32(ones2, ones2);
+                        ones = _mm_xor_si128(ones, ones2);
+                        
                         ones = _mm_srli_epi16(ones, 15);
 
                         dst_y = _mm_mulhi_epu16(dst_y, lo);
@@ -815,7 +818,9 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                         lo = _mm_unpackhi_epi8(lo, alpha);
 
                         ones = _mm_setzero_si128();
-                        ones = _mm_cmpgt_epi16(dst_y, ones);
+                        ones = _mm_cmpeq_epi16(dst_y, ones);
+                        ones2 = _mm_cmpeq_epi32(ones2, ones2);
+                        ones = _mm_xor_si128(ones, ones2);
                         ones = _mm_srli_epi16(ones, 15);
 
                         dst_y = _mm_mulhi_epu16(dst_y, lo); 
@@ -965,7 +970,7 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                     BYTE* d2 = d;
                     BYTE* s_v2 = s_v;
 
-                    for( WORD* d3=reinterpret_cast<WORD*>(d2); s_u2 < s_u2end; s_u2+=2, s_v2+=2, sa2+=2, d3++)
+                    for( WORD* d3=reinterpret_cast<WORD*>(d2); s_u2 < s_u2end; s_u2+=2, s_v2+=2, sa2+=2, d3+=2)
                     {
                         unsigned int ia = ( 
                             sa2[0]+          sa2[1]+
@@ -974,12 +979,11 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
                         {
                             *d3 = (((*d3)*ia)>>10) + ((
                                 s_u2[0] +       s_u2[1]+
-                                s_u2[src.pitch]+s_u2[1+src.pitch] )<<6);
-                            d3++;
-                            *d3 = (((*d3)*ia)>>10) + ((
+                                s_u2[src.pitch]+s_u2[1+src.pitch] )<<6);                            
+                            d3[1] = (((d3[1])*ia)>>10) + ((
                                 s_v2[0] +       s_v2[1]+
                                 s_v2[src.pitch]+s_v2[1+src.pitch] )<<6);
-                        }                        
+                        }
                     }
                 }
             }
