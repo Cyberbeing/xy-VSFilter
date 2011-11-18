@@ -3110,7 +3110,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     }
     qsort(subs.GetData(), subs.GetCount(), sizeof(LSub), lscomp);
 
-    CompositeDrawItemList drawItemList;
+    CompositeDrawItemListList drawItemListList;    
     for(int i = 0, j = subs.GetCount(); i < j; i++)
     {
         int entry = subs[i].idx;
@@ -3243,6 +3243,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
         int dbgTest = 0;
         bbox2 = CRect(0,0,0,0);
         pos = s->GetHeadLinePosition();
+        CompositeDrawItemList& tmpDrawItemList = drawItemListList.GetAt(drawItemListList.AddTail());
         while(pos)
         {
             CLine* l = s->GetNextLine(pos);
@@ -3250,7 +3251,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                   : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
                   :                            org.x - (l->m_width/2);
             
-            CompositeDrawItemList tmpDrawItemList;
+            
             if (s->m_clipInverse)
             {              
                 for (int i=0;i<l->GetWordCount();i++)
@@ -3274,13 +3275,12 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                 bbox2 |= l->PaintAll(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
             }
 
-            drawItemList.AddTailList(&tmpDrawItemList);
             p.y += l->m_ascent + l->m_descent;
         }
         rectList.AddTail(bbox2);
     }
 
-    Draw(spd, drawItemList);
+    Draw(spd, drawItemListList);
     return (subs.GetCount() && !rectList.IsEmpty()) ? S_OK : S_FALSE;
 }
 
@@ -3354,27 +3354,32 @@ STDMETHODIMP_(bool) CRenderedTextSubtitle::IsColorTypeSupported( int type )
            type==MSP_RGBA;
 }
 
-void CRenderedTextSubtitle::Draw( SubPicDesc& spd, CompositeDrawItemList& drawItemList )
+void CRenderedTextSubtitle::Draw( SubPicDesc& spd, CompositeDrawItemListList& drawItemListList )
 {
-    POSITION pos = drawItemList.GetHeadPosition();
-    while(pos)
+    POSITION list_pos = drawItemListList.GetHeadPosition();
+    while(list_pos)
     {
-        CompositeDrawItem& draw_item = drawItemList.GetNext(pos);
-        if(draw_item.shadow)
-            Rasterizer::Draw( spd, *draw_item.shadow );
-    }
-    pos = drawItemList.GetHeadPosition();
-    while(pos)
-    {
-        CompositeDrawItem& draw_item = drawItemList.GetNext(pos);
-        if(draw_item.outline)
-            Rasterizer::Draw( spd, *draw_item.outline );
-    }
-    pos = drawItemList.GetHeadPosition();
-    while(pos)
-    {
-        CompositeDrawItem& draw_item = drawItemList.GetNext(pos);
-        if(draw_item.body)
-            Rasterizer::Draw( spd, *draw_item.body );
+        CompositeDrawItemList& drawItemList = drawItemListList.GetNext(list_pos);
+        POSITION item_pos = drawItemList.GetHeadPosition();
+        while(item_pos)
+        {
+            CompositeDrawItem& draw_item = drawItemList.GetNext(item_pos);
+            if(draw_item.shadow)
+                Rasterizer::Draw( spd, *draw_item.shadow );
+        }
+        item_pos = drawItemList.GetHeadPosition();
+        while(item_pos)
+        {
+            CompositeDrawItem& draw_item = drawItemList.GetNext(item_pos);
+            if(draw_item.outline)
+                Rasterizer::Draw( spd, *draw_item.outline );
+        }
+        item_pos = drawItemList.GetHeadPosition();
+        while(item_pos)
+        {
+            CompositeDrawItem& draw_item = drawItemList.GetNext(item_pos);
+            if(draw_item.body)
+                Rasterizer::Draw( spd, *draw_item.body );
+        }
     }
 }

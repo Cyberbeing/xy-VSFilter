@@ -68,6 +68,7 @@ struct CompositeDrawItem
 };
 
 typedef CAtlList<CompositeDrawItem> CompositeDrawItemList;
+typedef CAtlList<CompositeDrawItemList> CompositeDrawItemListList;
 
 class CWord;
 typedef CWord* PCWord;
@@ -372,7 +373,7 @@ private:
 
     double CalcAnimation(double dst, double src, bool fAnimate);
 
-    void Draw(SubPicDesc& spd, CompositeDrawItemList& drawItemList);
+    void Draw(SubPicDesc& spd, CompositeDrawItemListList& drawItemListList);
     
     CSubtitle* GetSubtitle(int entry);
 
