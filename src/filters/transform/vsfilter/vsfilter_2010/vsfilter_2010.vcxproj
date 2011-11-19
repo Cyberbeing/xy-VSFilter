@@ -73,16 +73,16 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir)\..\..\BaseClasses;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(SolutionDir)\..\..\..\log4cplus\include\;$(IncludePath)</IncludePath>
-    <TargetName>vsfilter</TargetName>
+    <TargetName>VSFilter</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">
     <TargetExt>.dll</TargetExt>
-    <TargetName>vsfilter</TargetName>
+    <TargetName>VSFilter</TargetName>
     <IncludePath>$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\BaseClasses;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Unicode log|Win32'">
     <TargetExt>.dll</TargetExt>
-    <TargetName>vsfilter</TargetName>
+    <TargetName>VSFilter</TargetName>
     <IncludePath>$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\BaseClasses;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
