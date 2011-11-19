@@ -90,7 +90,7 @@ protected:
 
     virtual bool CreatePath(const SharedPtrPathData& path_data) = 0;
 
-    bool DoPaint(const CPoint& p, const CPoint& org, SharedPtrOverlay* overlay, const OverlayKey& key);
+    bool DoPaint(const CPoint& p, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key);
 public:
     bool m_fWhiteSpaceChar, m_fLineBreak;
 

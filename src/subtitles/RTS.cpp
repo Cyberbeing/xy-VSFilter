@@ -189,24 +189,24 @@ bool CWord::Append(const SharedPtrCWord& w)
     return(true);
 }
 
-void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, OverlayList* overlay_list )
+void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& trans_org, OverlayList* overlay_list )
 {
     if(!word->m_str || overlay_list==NULL) return;
     bool error = false;
     do 
     {
-        CPoint trans_org = org - p;    
+        CPoint trans_org2 = trans_org;    
         bool need_transform = word->NeedTransform();
         if(!need_transform)
         {
-            trans_org.x=0;
-            trans_org.y=0;
+            trans_org2.x=0;
+            trans_org2.y=0;
         }
 
         if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() )
         {
             CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
-            OverlayKey sub_key(*word, psub_true, trans_org);
+            OverlayKey sub_key(*word, psub_true, trans_org2);
 
             OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();
 
@@ -220,12 +220,12 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
         if( !overlay_list->overlay )
         {
             CPoint psub = SubpixelPositionControler::GetGlobalControler().GetSubpixel(p);
-            OverlayKey overlay_key(*word, psub, trans_org);
+            OverlayKey overlay_key(*word, psub, trans_org2);
             OverlayMruCache* overlay_cache = CacheManager::GetOverlayMruCache();
             POSITION pos = overlay_cache->Lookup(overlay_key);
             if(pos==NULL)
             {
-                if( !word->DoPaint(psub, trans_org, &(overlay_list->overlay), overlay_key) )
+                if( !word->DoPaint(psub, trans_org2, &(overlay_list->overlay), overlay_key) )
                 {
                     error = true;
                     break;
@@ -244,7 +244,7 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
                 overlay_list->overlay.reset(overlay_list->overlay->GetSubpixelVariance((p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.x, 
                     (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.y));
                 CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
-                OverlayKey sub_key(*word, psub_true, trans_org);
+                OverlayKey sub_key(*word, psub_true, trans_org2);
                 OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();                
                 overlay_cache->UpdateCache(sub_key, overlay_list->overlay);
             }
@@ -258,7 +258,7 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& org, Over
                 break;
             }
             overlay_list->next = new OverlayList();
-            Paint(word->m_pOpaqueBox, p, org, overlay_list->next);
+            Paint(word->m_pOpaqueBox, p, trans_org, overlay_list->next);
         }
     } while(false);
     if(error)
@@ -1213,12 +1213,15 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
         SharedPtrCWord w = GetNext(pos);
         CompositeDrawItem& outputItem = output->GetNext(outputPos);
         if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
+        CPoint shadowPos, outlinePos, bodyPos;
+        shadowPos.x = p.x + static_cast<int>(w->m_style.get().shadowDepthX+0.5);
+        shadowPos.y = p.y + m_ascent - w->m_ascent + static_cast<int>(w->m_style.get().shadowDepthY+0.5);
+        outlinePos = CPoint(p.x, p.y + m_ascent - w->m_ascent);
+        bodyPos = CPoint(p.x, p.y + m_ascent - w->m_ascent);
         //shadow
         {            
             if(w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0)
             {
-                int x = p.x + (int)(w->m_style.get().shadowDepthX+0.5);
-                int y = p.y + m_ascent - w->m_ascent + (int)(w->m_style.get().shadowDepthY+0.5);
                 DWORD a = 0xff - w->m_style.get().alpha[3];
                 if(alpha > 0) a = MulDiv(a, 0xff - alpha, 0xff);
                 COLORREF shadow = revcolor(w->m_style.get().colors[3]) | (a<<24);
@@ -1233,11 +1236,11 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                     sw[0] =rgb2yuv(sw[0], XY_AYUV);
                 }
                 OverlayList overlay_list;
-                CWord::Paint(w, CPoint(x, y), org, &overlay_list);
+                CWord::Paint(w, shadowPos, org-shadowPos, &overlay_list);
                 if(w->m_style.get().borderStyle == 0)
                 {
                     outputItem.shadow.reset( 
-                        Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw,
+                        Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, shadowPos.x, shadowPos.y, sw,
                         w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
                         (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart))
                         );
@@ -1246,7 +1249,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                 else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
                 {
                     outputItem.shadow.reset( 
-                        Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false)
+                        Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, shadowPos.x, shadowPos.y, sw, true, false)
                         );
                     bbox |= Rasterizer::DryDraw(spd, *outputItem.shadow);
                 }
@@ -1255,9 +1258,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
         //outline
         {   
             if(w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0 && !(w->m_ktype == 2 && time < w->m_kstart))
-            {
-                int x = p.x;
-                int y = p.y + m_ascent - w->m_ascent;
+            {                
                 DWORD aoutline = w->m_style.get().alpha[2];
                 if(alpha > 0) aoutline += MulDiv(alpha, 0xff - w->m_style.get().alpha[2], 0xff);
                 COLORREF outline = revcolor(w->m_style.get().colors[2]) | ((0xff-aoutline)<<24);
@@ -1272,18 +1273,18 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                     sw[0] =rgb2yuv(sw[0], XY_AYUV);
                 }
                 OverlayList overlay_list;
-                CWord::Paint(w, CPoint(x, y), org, &overlay_list);
+                CWord::Paint(w, outlinePos, org-outlinePos, &overlay_list);
                 if(w->m_style.get().borderStyle == 0)
                 {
                     outputItem.outline.reset( 
-                        Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
+                        Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, outlinePos.x, outlinePos.y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
                         );
                     bbox |= Rasterizer::DryDraw(spd, *outputItem.outline);
                 }
                 else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
                 {
                     outputItem.outline.reset( 
-                        Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, x, y, sw, true, false)
+                        Rasterizer::CreateDrawItem(spd, overlay_list.next->overlay, clipRect, pAlphaMask, outlinePos.x, outlinePos.y, sw, true, false)
                         );
                     bbox |= Rasterizer::DryDraw(spd, *outputItem.outline);
                 }
@@ -1291,8 +1292,6 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
         }
         //body
         {            
-            int x = p.x;
-            int y = p.y + m_ascent - w->m_ascent;
             // colors
             DWORD aprimary = w->m_style.get().alpha[0];
             if(alpha > 0) aprimary += MulDiv(alpha, 0xff - w->m_style.get().alpha[0], 0xff);
@@ -1345,9 +1344,9 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                 sw[4] =rgb2yuv(sw[4], XY_AYUV);
             }
             OverlayList overlay_list;
-            CWord::Paint(w, CPoint(x, y), org, &overlay_list);
+            CWord::Paint(w, bodyPos, org-bodyPos, &overlay_list);
             outputItem.body.reset( 
-                Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, x, y, sw, true, false)
+                Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, bodyPos.x, bodyPos.y, sw, true, false)
                 );
             bbox |= Rasterizer::DryDraw(spd, *outputItem.body);            
         }
