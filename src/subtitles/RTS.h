@@ -111,6 +111,9 @@ public:
     
     //use static func instead of obj member to avoid constructing a shared_ptr from this 
     //shared_from_this may cause a exception if the obj is not owned by a shared_ptr
+    static void PaintAll(SharedPtrCWord word, 
+        const CPoint& shadowPos, const CPoint& outlinePos, const CPoint& bodyPos, const CPoint& org,
+        OverlayList* shadow, OverlayList* outline, OverlayList* body);
     static void Paint(SharedPtrCWord word, const CPoint& psub, const CPoint& trans_org, OverlayList* overlay_list);    
     
     //friend class CWordCache;
