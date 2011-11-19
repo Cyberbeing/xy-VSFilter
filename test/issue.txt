@@ -67,5 +67,5 @@ issue 27: \be behaviour changed. Associated script: 7.ass. Introduced in Commit:
 ==============================================================
 issue 28: Semi-transparent box visable. Associated script: 25.ass. Associated video clip: 25.mkv.(fixed)
 ==============================================================
-issue 29: incorrect with transform effect. Associated script: 26.ass.(direction of shadow reversed)(Introduced in Commit:eaf70dbe6c3756fd57788c9bb40686ddffb6e178)
+issue 29: incorrect with transform effect. Associated script: 26.ass.(direction of shadow reversed)(Introduced in Commit:eaf70dbe6c3756fd57788c9bb40686ddffb6e178)(fixed)
 ==============================================================

@@ -1213,11 +1213,25 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
         SharedPtrCWord w = GetNext(pos);
         CompositeDrawItem& outputItem = output->GetNext(outputPos);
         if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
-        CPoint shadowPos, outlinePos, bodyPos;
+        CPoint shadowPos, outlinePos, bodyPos, transOrg;
         shadowPos.x = p.x + static_cast<int>(w->m_style.get().shadowDepthX+0.5);
         shadowPos.y = p.y + m_ascent - w->m_ascent + static_cast<int>(w->m_style.get().shadowDepthY+0.5);
         outlinePos = CPoint(p.x, p.y + m_ascent - w->m_ascent);
         bodyPos = CPoint(p.x, p.y + m_ascent - w->m_ascent);
+        if(w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0) 
+        {
+            //has shadow
+            transOrg = org - shadowPos;
+        }
+        else if(w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0 && !(w->m_ktype == 2 && time < w->m_kstart))
+        {
+            //has outline
+            transOrg = org - outlinePos;
+        }
+        else
+        {
+            transOrg = org - bodyPos;
+        }
         //shadow
         {            
             if(w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0)
@@ -1236,7 +1250,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                     sw[0] =rgb2yuv(sw[0], XY_AYUV);
                 }
                 OverlayList overlay_list;
-                CWord::Paint(w, shadowPos, org-shadowPos, &overlay_list);
+                CWord::Paint(w, shadowPos, transOrg, &overlay_list);
                 if(w->m_style.get().borderStyle == 0)
                 {
                     outputItem.shadow.reset( 
@@ -1273,7 +1287,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                     sw[0] =rgb2yuv(sw[0], XY_AYUV);
                 }
                 OverlayList overlay_list;
-                CWord::Paint(w, outlinePos, org-outlinePos, &overlay_list);
+                CWord::Paint(w, outlinePos, transOrg, &overlay_list);
                 if(w->m_style.get().borderStyle == 0)
                 {
                     outputItem.outline.reset( 
@@ -1344,7 +1358,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                 sw[4] =rgb2yuv(sw[4], XY_AYUV);
             }
             OverlayList overlay_list;
-            CWord::Paint(w, bodyPos, org-bodyPos, &overlay_list);
+            CWord::Paint(w, bodyPos, transOrg, &overlay_list);
             outputItem.body.reset( 
                 Rasterizer::CreateDrawItem(spd, overlay_list.overlay, clipRect, pAlphaMask, bodyPos.x, bodyPos.y, sw, true, false)
                 );
