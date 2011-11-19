@@ -3243,7 +3243,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
         int dbgTest = 0;
         bbox2 = CRect(0,0,0,0);
         pos = s->GetHeadLinePosition();
-        CompositeDrawItemList& tmpDrawItemList = drawItemListList.GetAt(drawItemListList.AddTail());
+        CompositeDrawItemList& drawItemList = drawItemListList.GetAt(drawItemListList.AddTail());
         while(pos)
         {
             CLine* l = s->GetNextLine(pos);
@@ -3251,7 +3251,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                   : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
                   :                            org.x - (l->m_width/2);
             
-            
+            CompositeDrawItemList tmpDrawItemList;
             if (s->m_clipInverse)
             {              
                 for (int i=0;i<l->GetWordCount();i++)
@@ -3274,7 +3274,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                 }
                 bbox2 |= l->PaintAll(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
             }
-
+            drawItemList.AddTailList(&tmpDrawItemList);
             p.y += l->m_ascent + l->m_descent;
         }
         rectList.AddTail(bbox2);
