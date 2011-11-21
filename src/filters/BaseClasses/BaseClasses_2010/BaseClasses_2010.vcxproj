@@ -63,6 +63,7 @@
       <CallingConvention>StdCall</CallingConvention>
       <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
