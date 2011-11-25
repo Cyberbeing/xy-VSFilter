@@ -26,7 +26,7 @@
 #include "../../../Subtitles/VobSubFile.h"
 #include "../../../Subtitles/RTS.h"
 #include "../../../Subtitles/SSF.h"
-#include "../../../SubPic/MemSubPic.h"
+#include "../../../SubPic/PooledSubPic.h"
 #include "../../../SubPic/SubPicQueueImpl.h"
 #include "vfr.h"
 
@@ -65,8 +65,8 @@ public:
 
 		if(!m_pSubPicQueue)
 		{
-			CComPtr<ISubPicExAllocator> pAllocator = new CMemSubPicAllocator(dst.type, size);
-
+            CComPtr<ISubPicExAllocator> pAllocator = new CPooledSubPicAllocator(dst.type, size, 2);
+                        
 			HRESULT hr;
 			if(!(m_pSubPicQueue = new CSubPicQueueNoThread(pAllocator, &hr)) || FAILED(hr))
 			{
