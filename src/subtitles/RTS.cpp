@@ -3152,7 +3152,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
             int start = TranslateStart(entry, fps);
             m_time = t - start;
             m_delay = TranslateEnd(entry, fps) - start;
-        }
+        }        
         CSubtitle* s = GetSubtitle(entry);
         if(!s) continue;
         stss->animated |= s->m_fAnimated2;
@@ -3261,62 +3261,70 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
         org.x = (s->m_scrAlignment%3) == 1 ? r.left : (s->m_scrAlignment%3) == 2 ? r.CenterPoint().x : r.right;
         org.y = s->m_scrAlignment <= 3 ? r.bottom : s->m_scrAlignment <= 6 ? r.CenterPoint().y : r.top;
         if(!fOrgOverride) org2 = org;
-        SharedArrayByte pAlphaMask;
-        if( s->m_pClipper )
-            pAlphaMask = s->m_pClipper->m_pAlphaMask;
-        CPoint p, p2(0, r.top);
-        POSITION pos;
-        p = p2;
+        CPoint p2(0, r.top);
         // Rectangles for inverse clip
-        CRect iclipRect[4];
-        iclipRect[0] = CRect(0, 0, spd.w, clipRect.top);
-        iclipRect[1] = CRect(0, clipRect.top, clipRect.left, clipRect.bottom);
-        iclipRect[2] = CRect(clipRect.right, clipRect.top, spd.w, clipRect.bottom);
-        iclipRect[3] = CRect(0, clipRect.bottom, spd.w, spd.h);
-        int dbgTest = 0;
-        bbox2 = CRect(0,0,0,0);
-        pos = s->GetHeadLinePosition();
+
         CompositeDrawItemList& drawItemList = drawItemListList.GetAt(drawItemListList.AddTail());
-        while(pos)
-        {
-            CLine* l = s->GetNextLine(pos);
-            p.x = (s->m_scrAlignment%3) == 1 ? org.x
-                  : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
-                  :                            org.x - (l->m_width/2);
-            
-            CompositeDrawItemList tmpDrawItemList;
-            if (s->m_clipInverse)
-            {              
-                for (int i=0;i<l->GetWordCount();i++)
-                {
-                    tmpDrawItemList.AddTail();
-                    tmpDrawItemList.AddTail();
-                    tmpDrawItemList.AddTail();
-                    tmpDrawItemList.AddTail();
-                }                
-                bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
-                bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
-            }
-            else
-            {
-                for (int i=0;i<l->GetWordCount();i++)
-                {
-                    tmpDrawItemList.AddTail();
-                }
-                bbox2 |= l->PaintAll(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
-            }
-            drawItemList.AddTailList(&tmpDrawItemList);
-            p.y += l->m_ascent + l->m_descent;
-        }
-        rectList.AddTail(bbox2);
+        RenderOneSubtitle(spd, s, clipRect, org, org2, p2, alpha, rectList, drawItemList);
     }
 
     Draw(spd, drawItemListList);
     return (subs.GetCount() && !rectList.IsEmpty()) ? S_OK : S_FALSE;
 }
 
+void CRenderedTextSubtitle::RenderOneSubtitle(SubPicDesc& spd,
+    CSubtitle* s,/*input*/
+    const CRect& clipRect, const CPoint& org, const CPoint& org2, const CPoint& p2, int alpha, 
+    CAtlList<CRect>& rectList, CompositeDrawItemList& drawItemList /*output*/)
+{    
+    if(!s) return;
+
+    SharedArrayByte pAlphaMask;
+    if( s->m_pClipper )
+        pAlphaMask = s->m_pClipper->m_pAlphaMask;
+    CRect iclipRect[4];
+    iclipRect[0] = CRect(0, 0, spd.w, clipRect.top);
+    iclipRect[1] = CRect(0, clipRect.top, clipRect.left, clipRect.bottom);
+    iclipRect[2] = CRect(clipRect.right, clipRect.top, spd.w, clipRect.bottom);
+    iclipRect[3] = CRect(0, clipRect.bottom, spd.w, spd.h);        
+    CRect bbox2(0,0,0,0);
+    POSITION pos = s->GetHeadLinePosition();       
+    CPoint p = p2;
+    while(pos)
+    {
+        CLine* l = s->GetNextLine(pos);
+        p.x = (s->m_scrAlignment%3) == 1 ? org.x
+            : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
+            :                            org.x - (l->m_width/2);
+
+        CompositeDrawItemList tmpDrawItemList;
+        if (s->m_clipInverse)
+        {              
+            for (int i=0;i<l->GetWordCount();i++)
+            {
+                tmpDrawItemList.AddTail();
+                tmpDrawItemList.AddTail();
+                tmpDrawItemList.AddTail();
+                tmpDrawItemList.AddTail();
+            }                
+            bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[0], pAlphaMask, p, org2, m_time, alpha);
+            bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[1], pAlphaMask, p, org2, m_time, alpha);
+            bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[2], pAlphaMask, p, org2, m_time, alpha);
+            bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[3], pAlphaMask, p, org2, m_time, alpha);
+        }
+        else
+        {
+            for (int i=0;i<l->GetWordCount();i++)
+            {
+                tmpDrawItemList.AddTail();
+            }
+            bbox2 |= l->PaintAll(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, m_time, alpha);
+        }
+        drawItemList.AddTailList(&tmpDrawItemList);
+        p.y += l->m_ascent + l->m_descent;
+    }
+    rectList.AddTail(bbox2);
+}
 
 STDMETHODIMP CRenderedTextSubtitle::Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox)
 {

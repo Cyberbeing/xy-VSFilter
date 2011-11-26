@@ -407,7 +407,9 @@ public:
     STDMETHODIMP_(bool) IsAnimated(POSITION pos);
     STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox);
     STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
-
+    void RenderOneSubtitle(SubPicDesc& spd, CSubtitle* s,/*input*/ 
+        const CRect& clipRect, const CPoint& org, const CPoint& org2, const CPoint& p, int alpha, 
+        CAtlList<CRect>& rectList, CompositeDrawItemList& drawItemList /*output*/);
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
 
     // IPersist
@@ -418,5 +420,5 @@ public:
     STDMETHODIMP GetStreamInfo(int i, WCHAR** ppName, LCID* pLCID);
     STDMETHODIMP_(int) GetStream();
     STDMETHODIMP SetStream(int iStream);
-    STDMETHODIMP Reload();
+    STDMETHODIMP Reload();    
 };
