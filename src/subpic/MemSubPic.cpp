@@ -343,7 +343,9 @@ STDMETHODIMP CMemSubPic::Unlock( CAtlList<CRect>* dirtyRectList )
     else if(src_type==MSP_RGBA && (dst_type == MSP_YUY2 ||  
                                    dst_type == MSP_AYUV || //ToDo: fix me MSP_AYUV
                                    dst_type == MSP_IYUV ||
-                                   dst_type == MSP_YV12))
+                                   dst_type == MSP_YV12 ||
+                                   dst_type == MSP_P010 ||
+                                   dst_type == MSP_P016))
     {
         return UnlockRGBA_YUV(dirtyRectList);
     }
@@ -442,7 +444,11 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
         BYTE* top = (BYTE*)m_spd.bits + m_spd.pitch*cRect.top + cRect.left*4;
         BYTE* bottom = top + m_spd.pitch*h;
 
-        if(m_alpha_blt_dst_type == MSP_YUY2 || m_alpha_blt_dst_type == MSP_YV12 || m_alpha_blt_dst_type == MSP_IYUV) {
+        if( m_alpha_blt_dst_type == MSP_YUY2 || 
+            m_alpha_blt_dst_type == MSP_YV12 || 
+            m_alpha_blt_dst_type == MSP_IYUV ||
+            m_alpha_blt_dst_type == MSP_P010 ||
+            m_alpha_blt_dst_type == MSP_P016) {
             for(; top < bottom ; top += m_spd.pitch) {
                 BYTE* s = top;
                 BYTE* e = s + w*4;
@@ -522,6 +528,11 @@ STDMETHODIMP CMemSubPic::AlphaBlt( const RECT* pSrc, const RECT* pDst, SubPicDes
                                     dst_type == MSP_YV12)) 
     {
         return AlphaBltAyuv_Yv12(pSrc, pDst, pTarget);
+    }
+    else if( src_type==MSP_RGBA && (dst_type == MSP_P010 ||
+                                    dst_type == MSP_P016))
+    {
+        return AlphaBltAyuv_P010(pSrc, pDst, pTarget);
     }
     return E_NOTIMPL;
 }
@@ -1009,6 +1020,91 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
 
     //emms要40个cpu周期
     //__asm emms;
+    return S_OK;
+}
+
+STDMETHODIMP CMemSubPic::AlphaBltAyuv_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
+{
+    const SubPicDesc& src = m_spd;
+    SubPicDesc dst = *pTarget; // copy, because we might modify it
+
+    CRect rs(*pSrc), rd(*pDst);
+
+    if(dst.h < 0) {
+        dst.h = -dst.h;
+        rd.bottom = dst.h - rd.bottom;
+        rd.top = dst.h - rd.top;
+    }
+
+    if(rs.Width() != rd.Width() || rs.Height() != abs(rd.Height())) {
+        return E_INVALIDARG;
+    }
+
+    int w = rs.Width(), h = rs.Height();
+
+    //Y
+    BYTE* s = static_cast<BYTE*>(src.bits) + src.pitch*rs.top + ((rs.left*src.bpp)>>3);
+    BYTE* d = static_cast<BYTE*>(dst.bits) + dst.pitch*rd.top + rd.left*2;
+
+    if(rd.top > rd.bottom) {
+        d = (BYTE*)dst.bits + dst.pitch*(rd.top-1) + rd.left;
+
+        dst.pitch = -dst.pitch;
+    }
+    
+    for(ptrdiff_t i=0; i<h; i++, s += src.pitch, d += dst.pitch)
+    {
+        BYTE* s2 = s;
+        BYTE* s2end = s2 + w*4;
+        WORD* d2 = reinterpret_cast<WORD*>(d);
+        for(; s2 < s2end; s2 += 4, d2++)
+        {
+            if(s2[3] < 0xff) {
+                d2[0] = ((d2[0]*s2[3])>>8) + (s2[1]<<8);
+            }
+        }
+    }
+
+    //UV
+    int h2 = h/2;
+    if(!dst.pitchUV)
+    {
+        dst.pitchUV = abs(dst.pitch);
+    }
+    if(!dst.bitsU || !dst.bitsV)
+    {
+        dst.bitsU = static_cast<BYTE*>(dst.bits) + abs(dst.pitch)*dst.h;
+        dst.bitsV = dst.bitsU + 2;
+    }
+    BYTE* ddUV = dst.bitsU + dst.pitchUV*rd.top/2 + rd.left*2;
+    if(rd.top > rd.bottom)
+    {
+        ddUV = dst.bitsU + dst.pitchUV*(rd.top/2-1) + rd.left*2;
+        dst.pitchUV = -dst.pitchUV;
+    }
+        
+    s = static_cast<BYTE*>(src.bits) + src.pitch*rs.top + ((rs.left*src.bpp)>>3);
+
+    d = ddUV;
+    int pitch = src.pitch;
+    for(int j = 0; j < h2; j++, s += 2*src.pitch, d += dst.pitchUV )        
+    {        
+        BYTE* s2 = s;
+        WORD* d2=reinterpret_cast<WORD*>(d);
+        WORD* d2_end = reinterpret_cast<WORD*>(d+2*w);
+        for( ; d2<d2_end; s2+=8, d2+=2)
+        {
+            unsigned int ia = ( 
+                s2[3]+          s2[3+4]+
+                s2[3+src.pitch]+s2[3+4+src.pitch]);
+            if( ia!=0xFF*4 )
+            {
+                d2[0] = (((d2[0])*ia)>>10) + ((s2[0] + s2[0+src.pitch])<<7);
+                d2[1] = (((d2[1])*ia)>>10) + ((s2[4] + s2[4+src.pitch])<<7);
+            }
+        }
+    }
+
     return S_OK;
 }
 
