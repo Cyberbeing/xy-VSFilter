@@ -268,6 +268,26 @@ public:
     CLine* GetNextLine(POSITION& pos);
 };
 
+struct CSubtitle2
+{
+    CSubtitle2():s(NULL){}
+
+    CSubtitle2(CSubtitle* s_,const CRect& clipRect_, const CPoint& org_, const CPoint& org2_, const CPoint& p_, 
+        int alpha_, int time_)
+        : s(s_), clipRect(clipRect_), org(org_), org2(org2_), p(p_), alpha(alpha_), time(time_)
+    {
+
+    }
+
+    CSubtitle *s;
+    const CRect clipRect;
+    const CPoint org;
+    const CPoint org2;
+    const CPoint p;
+    int alpha; 
+    int time;
+};
+
 class CScreenLayoutAllocator
 {
     typedef struct
@@ -422,8 +442,7 @@ public:
     STDMETHODIMP_(bool) IsAnimated(POSITION pos);
     STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox);
     STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
-    void RenderOneSubtitle(SubPicDesc& spd, CSubtitle* s,/*input*/ 
-        const CRect& clipRect, const CPoint& org, const CPoint& org2, const CPoint& p, int alpha, 
+    static void RenderOneSubtitle(SubPicDesc& spd, const CSubtitle2& sub2, 
         CAtlList<CRect>& rectList, CompositeDrawItemList& drawItemList /*output*/);
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
 
