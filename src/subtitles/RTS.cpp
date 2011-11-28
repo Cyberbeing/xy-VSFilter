@@ -1140,17 +1140,26 @@ bool CPolygon::CreatePath(const SharedPtrPathData& path_data)
 
 CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse)
     : m_polygon( new CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0) )
+    , m_size(size), m_inverse(inverse)
+    , m_effectType(-1), m_painted(false)
 {    
-    m_size.cx = m_size.cy = 0;
+    
+}
+
+CClipper::~CClipper()
+{    
+    m_pAlphaMask.reset(NULL);
+}
+
+void CClipper::PaintBaseClipper()
+{
     //m_pAlphaMask = NULL;
-    if(size.cx < 0 || size.cy < 0)
+    if(m_size.cx < 0 || m_size.cy < 0)
         return;
-    m_pAlphaMask.reset(new BYTE[size.cx*size.cy]);
+    m_pAlphaMask.reset(new BYTE[m_size.cx*m_size.cy]);
     if( !m_pAlphaMask )
         return;
-    m_size = size;
-    m_inverse = inverse;
-    memset( m_pAlphaMask.get(), 0, size.cx*size.cy);
+    memset( m_pAlphaMask.get(), 0, m_size.cx*m_size.cy);
     OverlayList overlay_list;
     CWord::Paint( m_polygon, CPoint(0, 0), CPoint(0, 0), &overlay_list );
     int w = overlay_list.overlay->mOverlayWidth, h = overlay_list.overlay->mOverlayHeight;
@@ -1171,17 +1180,108 @@ CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool 
         src += overlay_list.overlay->mOverlayPitch;
         dst += m_size.cx;
     }
-    if(inverse)
+    if(m_inverse)
     {
         BYTE* dst = m_pAlphaMask.get();
-        for(int i = size.cx*size.cy; i>0; --i, ++dst)
+        for(int i = m_size.cx*m_size.cy; i>0; --i, ++dst)
             *dst = 0x40 - *dst; // mask is 6 bit
     }
 }
 
-CClipper::~CClipper()
-{    
-    m_pAlphaMask.reset(NULL);
+void CClipper::PaintBannerClipper()
+{
+    int width = m_effect.param[2];
+    int w = m_size.cx, h = m_size.cy;
+
+    PaintBaseClipper();    
+    int da = (64<<8)/width;
+    BYTE* am = m_pAlphaMask.get();
+    for(int j = 0; j < h; j++, am += w)
+    {
+        int a = 0;
+        int k = min(width, w);
+        for(int i = 0; i < k; i++, a += da)
+            am[i] = (am[i]*a)>>14;
+        a = 0x40<<8;
+        k = w-width;
+        if(k < 0) {a -= -k*da; k = 0;}
+        for(int i = k; i < w; i++, a -= da)
+            am[i] = (am[i]*a)>>14;
+    }
+}
+
+void CClipper::PaintScrollClipper()
+{
+    int height = m_effect.param[4];
+    int w = m_size.cx, h = m_size.cy;
+    
+    PaintBaseClipper();
+
+    int da = (64<<8)/height;
+    int a = 0;
+    int k = m_effect.param[0]>>3;
+    int l = k+height;
+    if(k < 0) {a += -k*da; k = 0;}
+    if(l > h) {l = h;}
+    if(k < h)
+    {
+        BYTE* am = &m_pAlphaMask[k*w];
+        memset(m_pAlphaMask.get(), 0, am - m_pAlphaMask.get());
+        for(int j = k; j < l; j++, a += da)
+        {
+            for(int i = 0; i < w; i++, am++)
+                *am = ((*am)*a)>>14;
+        }
+    }
+    da = -(64<<8)/height;
+    a = 0x40<<8;
+    l = m_effect.param[1]>>3;
+    k = l-height;
+    if(k < 0) {a += -k*da; k = 0;}
+    if(l > h) {l = h;}
+    if(k < h)
+    {
+        BYTE* am = &m_pAlphaMask[k*w];
+        int j = k;
+        for(; j < l; j++, a += da)
+        {
+            for(int i = 0; i < w; i++, am++)
+                *am = ((*am)*a)>>14;
+        }
+        memset(am, 0, (h-j)*w);
+    }
+}
+
+void CClipper::Paint()
+{
+    if(!m_painted)
+    {
+        m_painted=true;
+        switch(m_effectType)
+        {
+        case -1:
+            PaintBaseClipper();
+            break;
+        case EF_BANNER:
+            PaintBannerClipper();
+            break;
+        case EF_SCROLL:
+            PaintScrollClipper();
+            break;
+        }
+    }
+}
+
+void CClipper::SetEffect( const Effect& effect, int effectType )
+{
+    m_effectType = effectType;
+    m_effect = effect;
+}
+
+const SharedArrayByte& CClipper::GetAlphaMask()
+{
+    Paint();
+    return m_pAlphaMask;
 }
 
 // CLine
@@ -1542,29 +1642,15 @@ void CSubtitle::CreateClippers(CSize size)
     size.cy >>= 3;
     if(m_effects[EF_BANNER] && m_effects[EF_BANNER]->param[2])
     {
-        int width = m_effects[EF_BANNER]->param[2];
         int w = size.cx, h = size.cy;
         if(!m_pClipper)
         {
             CStringW str;
             str.Format(L"m %d %d l %d %d %d %d %d %d", 0, 0, w, 0, w, h, 0, h);
-            m_pClipper = new CClipper(str, size, 1, 1, false);
+            m_pClipper = new CClipper(str, size, 1, 1, false);            
             if(!m_pClipper) return;
         }
-        int da = (64<<8)/width;
-        BYTE* am = m_pClipper->m_pAlphaMask.get();
-        for(int j = 0; j < h; j++, am += w)
-        {
-            int a = 0;
-            int k = min(width, w);
-            for(int i = 0; i < k; i++, a += da)
-                am[i] = (am[i]*a)>>14;
-            a = 0x40<<8;
-            k = w-width;
-            if(k < 0) {a -= -k*da; k = 0;}
-            for(int i = k; i < w; i++, a -= da)
-                am[i] = (am[i]*a)>>14;
-        }
+        m_pClipper->SetEffect( *m_effects[EF_BANNER], EF_BANNER );
     }
     else if(m_effects[EF_SCROLL] && m_effects[EF_SCROLL]->param[4])
     {
@@ -1574,42 +1660,10 @@ void CSubtitle::CreateClippers(CSize size)
         {
             CStringW str;
             str.Format(L"m %d %d l %d %d %d %d %d %d", 0, 0, w, 0, w, h, 0, h);
-            m_pClipper = new CClipper(str, size, 1, 1, false);
+            m_pClipper = new CClipper(str, size, 1, 1, false);            
             if(!m_pClipper) return;
         }
-        int da = (64<<8)/height;
-        int a = 0;
-        int k = m_effects[EF_SCROLL]->param[0]>>3;
-        int l = k+height;
-        if(k < 0) {a += -k*da; k = 0;}
-        if(l > h) {l = h;}
-        if(k < h)
-        {
-            BYTE* am = &m_pClipper->m_pAlphaMask[k*w];
-            memset(m_pClipper->m_pAlphaMask.get(), 0, am - m_pClipper->m_pAlphaMask.get());
-            for(int j = k; j < l; j++, a += da)
-            {
-                for(int i = 0; i < w; i++, am++)
-                    *am = ((*am)*a)>>14;
-            }
-        }
-        da = -(64<<8)/height;
-        a = 0x40<<8;
-        l = m_effects[EF_SCROLL]->param[1]>>3;
-        k = l-height;
-        if(k < 0) {a += -k*da; k = 0;}
-        if(l > h) {l = h;}
-        if(k < h)
-        {
-            BYTE* am = &m_pClipper->m_pAlphaMask[k*w];
-            int j = k;
-            for(; j < l; j++, a += da)
-            {
-                for(int i = 0; i < w; i++, am++)
-                    *am = ((*am)*a)>>14;
-            }
-            memset(am, 0, (h-j)*w);
-        }
+        m_pClipper->SetEffect(*m_effects[EF_SCROLL], EF_SCROLL);
     }
 }
 
@@ -2281,7 +2335,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 bool invert = (cmd_type == CMD_iclip);
                 if(params.GetCount() == 1 && !sub->m_pClipper)
                 {
-                    sub->m_pClipper = new CClipper(params[0], CSize(m_size.cx>>3, m_size.cy>>3), sub->m_scalex, sub->m_scaley, invert);
+                    sub->m_pClipper = new CClipper(params[0], CSize(m_size.cx>>3, m_size.cy>>3), sub->m_scalex, sub->m_scaley, invert);                    
                 }
                 else if(params.GetCount() == 2 && !sub->m_pClipper)
                 {
@@ -3281,7 +3335,7 @@ void CRenderedTextSubtitle::RenderOneSubtitle(SubPicDesc& spd,
 
     SharedArrayByte pAlphaMask;
     if( s->m_pClipper )
-        pAlphaMask = s->m_pClipper->m_pAlphaMask;
+        pAlphaMask = s->m_pClipper->GetAlphaMask();
     CRect iclipRect[4];
     iclipRect[0] = CRect(0, 0, spd.w, clipRect.top);
     iclipRect[1] = CRect(0, clipRect.top, clipRect.left, clipRect.bottom);

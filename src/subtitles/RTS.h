@@ -166,35 +166,6 @@ public:
     virtual bool Append(const SharedPtrCWord& w);
 };
 
-class CClipper
-{
-private:
-    SharedPtrCPolygon m_polygon;
-public:
-    CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse);
-    virtual ~CClipper();
-
-    CSize m_size;
-    bool m_inverse;
-    SharedArrayByte m_pAlphaMask;
-};
-
-class CLine: private CAtlList<SharedPtrCWord>
-{
-public:
-    int m_width, m_ascent, m_descent, m_borderX, m_borderY;
-
-    virtual ~CLine();
-
-    void Compact();
-
-    int GetWordCount();
-    void AddWord2Tail(SharedPtrCWord words);
-    bool IsEmpty();
-
-    CRect PaintAll(CompositeDrawItemList* output, SubPicDesc& spd, const CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, const CPoint& org, const int time, const int alpha);
-};
-
 enum eftype
 {
     EF_MOVE = 0,    // {\move(x1=param[0], y1=param[1], x2=param[2], y2=param[3], t1=t[0], t2=t[1])} or {\pos(x=param[0], y=param[1])}
@@ -212,6 +183,50 @@ public:
     enum eftype type;
     int param[8];
     int t[4];
+};
+
+class CClipper
+{
+private:
+    SharedPtrCPolygon m_polygon;
+
+    CSize m_size;
+    bool m_inverse;
+    
+    Effect m_effect;
+    int m_effectType;
+
+    bool m_painted;
+        
+    SharedArrayByte m_pAlphaMask;
+
+    void PaintBaseClipper();
+    void PaintBannerClipper();
+    void PaintScrollClipper();  
+
+    void Paint();
+public:
+    CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse);    
+    void SetEffect(const Effect& effect, int effectType);
+    virtual ~CClipper();
+
+    const SharedArrayByte& GetAlphaMask();
+};
+
+class CLine: private CAtlList<SharedPtrCWord>
+{
+public:
+    int m_width, m_ascent, m_descent, m_borderX, m_borderY;
+
+    virtual ~CLine();
+
+    void Compact();
+
+    int GetWordCount();
+    void AddWord2Tail(SharedPtrCWord words);
+    bool IsEmpty();
+
+    CRect PaintAll(CompositeDrawItemList* output, SubPicDesc& spd, const CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, const CPoint& org, const int time, const int alpha);
 };
 
 class CSubtitle: private CAtlList<CLine*>
