@@ -445,70 +445,75 @@ row_loop3:
 	__asm emms;
 }
 
+HRESULT Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, int bpp, const GUID& subtype, DWORD black)
+{
+    int wIn = in.cx, hIn = in.cy, pitchIn = wIn*bpp>>3;
+    int wSub = sub.cx, hSub = sub.cy, pitchSub = wSub*bpp>>3;
+    bool fScale2x = wIn*2 <= wSub;
+
+    if(fScale2x) wIn <<= 1, hIn <<= 1;
+
+    int left = ((wSub - wIn)>>1)&~1;
+    int mid = wIn;
+    int right = left + ((wSub - wIn)&1);
+
+    int dpLeft = left*bpp>>3;
+    int dpMid = mid*bpp>>3;
+    int dpRight = right*bpp>>3;
+
+    ASSERT(wSub >= wIn);
+
+    {
+        int i = 0, j = 0;
+
+        j += (hSub - hIn) >> 1;
+
+        for(; i < j; i++, pSub += pitchSub)
+        {
+            memsetd(pSub, black, dpLeft+dpMid+dpRight);
+        }
+
+        j += hIn;
+
+        if(hIn > hSub)
+            pIn += pitchIn * ((hIn - hSub) >> (fScale2x?2:1));
+
+        if(fScale2x)
+        {
+            Scale2x(subtype, 
+                pSub + dpLeft, pitchSub, pIn, pitchIn, 
+                in.cx, (min(j, hSub) - i) >> 1);
+
+            for(int k = min(j, hSub); i < k; i++, pIn += pitchIn, pSub += pitchSub)
+            {
+                memsetd(pSub, black, dpLeft);
+                memsetd(pSub + dpLeft+dpMid, black, dpRight);
+            }
+        }
+        else
+        {
+            for(int k = min(j, hSub); i < k; i++, pIn += pitchIn, pSub += pitchSub)
+            {
+                memsetd(pSub, black, dpLeft);
+                memcpy(pSub + dpLeft, pIn, dpMid);
+                memsetd(pSub + dpLeft+dpMid, black, dpRight);
+            }
+        }
+
+        j = hSub;
+
+        for(; i < j; i++, pSub += pitchSub)
+        {
+            memsetd(pSub, black, dpLeft+dpMid+dpRight);
+        }
+    }
+
+    return NOERROR;
+}
+
 HRESULT CDirectVobSubFilter::Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, int bpp, const GUID& subtype, DWORD black)
 {
-	int wIn = in.cx, hIn = in.cy, pitchIn = wIn*bpp>>3;
-	int wSub = sub.cx, hSub = sub.cy, pitchSub = wSub*bpp>>3;
-	bool fScale2x = wIn*2 <= wSub;
-
-	if(fScale2x) wIn <<= 1, hIn <<= 1;
-
-	int left = ((wSub - wIn)>>1)&~1;
-	int mid = wIn;
-	int right = left + ((wSub - wIn)&1);
-
-	int dpLeft = left*bpp>>3;
-	int dpMid = mid*bpp>>3;
-	int dpRight = right*bpp>>3;
-
-	ASSERT(wSub >= wIn);
-
-	{
-		int i = 0, j = 0;
-
-		j += (hSub - hIn) >> 1;
-
-		for(; i < j; i++, pSub += pitchSub)
-		{
-			memsetd(pSub, black, dpLeft+dpMid+dpRight);
-		}
-
-		j += hIn;
-
-		if(hIn > hSub)
-			pIn += pitchIn * ((hIn - hSub) >> (fScale2x?2:1));
-
-		if(fScale2x)
-		{
-			Scale2x(subtype, 
-				pSub + dpLeft, pitchSub, pIn, pitchIn, 
-				in.cx, (min(j, hSub) - i) >> 1);
-            
-			for(int k = min(j, hSub); i < k; i++, pIn += pitchIn, pSub += pitchSub)
-			{
-				memsetd(pSub, black, dpLeft);
-				memsetd(pSub + dpLeft+dpMid, black, dpRight);
-			}
-		}
-		else
-		{
-			for(int k = min(j, hSub); i < k; i++, pIn += pitchIn, pSub += pitchSub)
-			{
-				memsetd(pSub, black, dpLeft);
-				memcpy(pSub + dpLeft, pIn, dpMid);
-				memsetd(pSub + dpLeft+dpMid, black, dpRight);
-			}
-		}
-
-		j = hSub;
-
-		for(; i < j; i++, pSub += pitchSub)
-		{
-			memsetd(pSub, black, dpLeft+dpMid+dpRight);
-		}
-	}
-
-	return NOERROR;
+    return ::Copy(pSub, pIn, sub, in, bpp, subtype, black);	
 }
 
 void CDirectVobSubFilter::PrintMessages(BYTE* pOut)

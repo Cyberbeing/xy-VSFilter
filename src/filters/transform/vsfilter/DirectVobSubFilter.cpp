@@ -182,6 +182,54 @@ void CDirectVobSubFilter::GetOutputSize(int& w, int& h, int& arx, int& ary)
 	}
 }
 
+HRESULT CDirectVobSubFilter::TryNotCopy(IMediaSample* pIn, const CMediaType& mt, const BITMAPINFOHEADER& bihIn )
+{
+    CSize sub(m_w, m_h);
+    CSize in(bihIn.biWidth, bihIn.biHeight);
+    BYTE* pDataIn = NULL;
+    if(FAILED(pIn->GetPointer(&pDataIn)) || !pDataIn)
+        return S_FALSE;
+    if( sub==in )
+    {
+        m_spd.bits = pDataIn;
+    }
+    else
+    {
+        m_spd.bits = static_cast<BYTE*>(m_pTempPicBuff);
+        bool fYV12 = (mt.subtype == MEDIASUBTYPE_YV12 || mt.subtype == MEDIASUBTYPE_I420 || mt.subtype == MEDIASUBTYPE_IYUV);	
+        bool fP010 = (mt.subtype == MEDIASUBTYPE_P010 || mt.subtype == MEDIASUBTYPE_P016);
+
+        int bpp = fP010 ? 16 : fYV12 ? 8 : bihIn.biBitCount;
+        DWORD black = fP010 ? 0x10001000 : fYV12 ? 0x10101010 : (bihIn.biCompression == '2YUY') ? 0x80108010 : 0;
+
+
+        if(FAILED(Copy((BYTE*)m_pTempPicBuff, pDataIn, sub, in, bpp, mt.subtype, black)))
+            return E_FAIL;
+
+        if(fYV12)
+        {
+            BYTE* pSubV = (BYTE*)m_pTempPicBuff + (sub.cx*bpp>>3)*sub.cy;
+            BYTE* pInV = pDataIn + (in.cx*bpp>>3)*in.cy;
+            sub.cx >>= 1; sub.cy >>= 1; in.cx >>= 1; in.cy >>= 1;
+            BYTE* pSubU = pSubV + (sub.cx*bpp>>3)*sub.cy;
+            BYTE* pInU = pInV + (in.cx*bpp>>3)*in.cy;
+            if(FAILED(Copy(pSubV, pInV, sub, in, bpp, mt.subtype, 0x80808080)))
+                return E_FAIL;
+            if(FAILED(Copy(pSubU, pInU, sub, in, bpp, mt.subtype, 0x80808080)))
+                return E_FAIL;
+        }
+        else if (fP010)
+        {
+            BYTE* pSubUV = (BYTE*)m_pTempPicBuff + (sub.cx*bpp>>3)*sub.cy;
+            BYTE* pInUV = pDataIn + (in.cx*bpp>>3)*in.cy;
+            sub.cy >>= 1; in.cy >>= 1;
+            if(FAILED(Copy(pSubUV, pInUV, sub, in, bpp, mt.subtype, 0x80008000)))
+                return E_FAIL;
+        }
+    }    
+    return S_OK;
+}
+
 HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 {
 	XY_LOG_ONCE(0, _T("CDirectVobSubFilter::Transform"));
@@ -219,49 +267,17 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	}
 
 	//
+    const CMediaType& mt = m_pInput->CurrentMediaType();
 
-	BYTE* pDataIn = NULL;
-	if(FAILED(pIn->GetPointer(&pDataIn)) || !pDataIn)
-		return S_FALSE;
+    BITMAPINFOHEADER bihIn;
+    ExtractBIH(&mt, &bihIn);
 
-	const CMediaType& mt = m_pInput->CurrentMediaType();
-
-	BITMAPINFOHEADER bihIn;
-	ExtractBIH(&mt, &bihIn);
-
-	bool fYV12 = (mt.subtype == MEDIASUBTYPE_YV12 || mt.subtype == MEDIASUBTYPE_I420 || mt.subtype == MEDIASUBTYPE_IYUV);	
-    bool fP010 = (mt.subtype == MEDIASUBTYPE_P010 || mt.subtype == MEDIASUBTYPE_P016);
-                
-    int bpp = fP010 ? 16 : fYV12 ? 8 : bihIn.biBitCount;
-    DWORD black = fP010 ? 0x10001000 : fYV12 ? 0x10101010 : (bihIn.biCompression == '2YUY') ? 0x80108010 : 0;
-
-	CSize sub(m_w, m_h);
-	CSize in(bihIn.biWidth, bihIn.biHeight);
-
-	if(FAILED(Copy((BYTE*)m_pTempPicBuff, pDataIn, sub, in, bpp, mt.subtype, black)))
-		return E_FAIL;
-
-	if(fYV12)
-	{
-		BYTE* pSubV = (BYTE*)m_pTempPicBuff + (sub.cx*bpp>>3)*sub.cy;
-		BYTE* pInV = pDataIn + (in.cx*bpp>>3)*in.cy;
-		sub.cx >>= 1; sub.cy >>= 1; in.cx >>= 1; in.cy >>= 1;
-		BYTE* pSubU = pSubV + (sub.cx*bpp>>3)*sub.cy;
-		BYTE* pInU = pInV + (in.cx*bpp>>3)*in.cy;
-		if(FAILED(Copy(pSubV, pInV, sub, in, bpp, mt.subtype, 0x80808080)))
-			return E_FAIL;
-		if(FAILED(Copy(pSubU, pInU, sub, in, bpp, mt.subtype, 0x80808080)))
-			return E_FAIL;
-	}
-    else if (fP010)
+    hr = TryNotCopy(pIn, mt, bihIn); 
+    if( hr!=S_OK )
     {
-        BYTE* pSubUV = (BYTE*)m_pTempPicBuff + (sub.cx*bpp>>3)*sub.cy;
-        BYTE* pInUV = pDataIn + (in.cx*bpp>>3)*in.cy;
-        sub.cy >>= 1; in.cy >>= 1;
-        if(FAILED(Copy(pSubUV, pInUV, sub, in, bpp, mt.subtype, 0x80008000)))
-            return E_FAIL;
+        //fix me: log error
+        return hr;
     }
-
 	//
 
 	SubPicDesc spd = m_spd;
@@ -271,14 +287,11 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	if(FAILED(hr = GetDeliveryBuffer(spd.w, spd.h, &pOut))
 	|| FAILED(hr = pOut->GetPointer(&pDataOut)))
 		return hr;
-
 	pOut->SetTime(&rtStart, &rtStop);
 	pOut->SetMediaTime(NULL, NULL);
-
 	pOut->SetDiscontinuity(pIn->IsDiscontinuity() == S_OK);
 	pOut->SetSyncPoint(pIn->IsSyncPoint() == S_OK);
 	pOut->SetPreroll(pIn->IsPreroll() == S_OK);
-
 	//
 
 	BITMAPINFOHEADER bihOut;
@@ -332,6 +345,8 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 			}
 		}
 	}
+
+
 	CopyBuffer(pDataOut, (BYTE*)spd.bits, spd.w, abs(spd.h)*(fFlip?-1:1), spd.pitch, mt.subtype);
 
 	PrintMessages(pDataOut);
@@ -691,7 +706,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	CComPtr<ISubPicExAllocator> pSubPicAllocator = new CPooledSubPicAllocator(m_spd.type, CSize(m_w, m_h), MAX_SUBPIC_QUEUE_LENGTH + 1);
     if(pSubPicAllocator==NULL)
     {
-        MessageBox(NULL, _T("FUCK!"), _T("FUCK!"), 0);
+        //fix me: log error
     }
 
 	CSize video(bihIn.biWidth, bihIn.biHeight), window = video;

@@ -55,10 +55,10 @@ class CDirectVobSubFilter
 
 	bool AdjustFrameSize(CSize& s);
 
+    HRESULT TryNotCopy( IMediaSample* pIn, const CMediaType& mt, const BITMAPINFOHEADER& bihIn );
 protected:
 	void GetOutputSize(int& w, int& h, int& arx, int& ary);
-	HRESULT Transform(IMediaSample* pIn);
-
+	HRESULT Transform(IMediaSample* pIn);    
 public:
     CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid = __uuidof(CDirectVobSubFilter));
 	virtual ~CDirectVobSubFilter();
@@ -140,7 +140,6 @@ protected:
 /* ResX2 */
 	CAutoVectorPtr<BYTE> m_pTempPicBuff;
 	HRESULT Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, int bpp, const GUID& subtype, DWORD black);
-
 	// segment start time, absolute time
 	CRefTime m_tPrev;
 	REFERENCE_TIME CalcCurrentTime();
