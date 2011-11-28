@@ -37,7 +37,8 @@ protected:
 
 protected:
 	STDMETHODIMP_(void*) GetObject() const; // returns SubPicDesc*
-        
+    
+    STDMETHODIMP AlphaBltAyuv_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
     STDMETHODIMP AlphaBltAyuv_Yv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
     STDMETHODIMP AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
     
@@ -57,8 +58,7 @@ public:
     // ISubPicEx
 	STDMETHODIMP CopyTo(ISubPicEx* pSubPic);
 	STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList);
-	STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);
-
+	STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);    
 };
 
 // CMemSubPicAllocator

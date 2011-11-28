@@ -471,8 +471,11 @@ HRESULT CDirectVobSubFilter::CheckConnect(PIN_DIRECTION dir, IPin* pPin)
 
 HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePin)
 {
+    bool reconnected = false;
 	if(dir == PINDIR_INPUT)
 	{
+        DbgLog((LOG_TRACE, 3, TEXT("connect input")));
+        DumpGraph(m_pGraph,0);
 		CComPtr<IBaseFilter> pFilter;
 
 		// needed when we have a decoder with a version number of 3.x
@@ -486,32 +489,105 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
 		}
 	}
 	else if(dir == PINDIR_OUTPUT)
-	{
-		if(!m_hSystrayThread)
-		{
-			m_tbid.graph = m_pGraph;
-			m_tbid.dvs = static_cast<IDirectVobSub*>(this);
+	{        
+        DbgLog((LOG_TRACE, 3, TEXT("connect output")));
+        DumpGraph(m_pGraph,0);
+        const CMediaType* mtIn = &(m_pInput->CurrentMediaType());
+        const CMediaType* mtOut = &(m_pOutput->CurrentMediaType());
+        CMediaType desiredMt;        
 
-			DWORD tid;
-			m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
-		}
+        if( (mtIn->subtype == MEDIASUBTYPE_P010 || mtIn->subtype == MEDIASUBTYPE_P016)
+            && (mtOut->subtype != mtIn->subtype ) )
+        {   
+            DbgLog((LOG_TRACE, 3, TEXT("Try reconnect!")));
+            DbgLog((LOG_TRACE, 3, TEXT("Trying media type:")));
+            DbgLog((LOG_TRACE, 3, TEXT("    major type:  %hs"),
+                GuidNames[*mtOut->Type()]));
+            DbgLog((LOG_TRACE, 3, TEXT("    sub type  :  %hs"),
+                GuidNames[*mtOut->Subtype()]));
+                    
+            int position = 0;
+            HRESULT hr;
+            do
+            {
+                hr = GetMediaType(position, &desiredMt);
+                ++position;
+                //if( FAILED(hr) )
+                if( hr!=S_OK )
+                    break;
 
-		// HACK: triggers CBaseVideoFilter::SetMediaType to adjust m_w/m_h/.. and InitSubPicQueue() to realloc buffers
-		m_pInput->SetMediaType(&m_pInput->CurrentMediaType());
+                DbgLog((LOG_TRACE, 3, TEXT("Trying reconnect with media type:")));
+                DbgLog((LOG_TRACE, 3, TEXT("    in major type:  %hs"),
+                    GuidNames[*(desiredMt.Type())]));
+                DbgLog((LOG_TRACE, 3, TEXT("    in sub type  :  %hs"),
+                    GuidNames[*(desiredMt.Subtype())]));
+                DbgLog((LOG_TRACE, 3, TEXT("    out major type:  %hs"),
+                    GuidNames[*mtOut->Type()]));
+                DbgLog((LOG_TRACE, 3, TEXT("    out sub type  :  %hs"),
+                    GuidNames[*mtOut->Subtype()]));
+
+                if( desiredMt.subtype==MEDIASUBTYPE_P010 || 
+                    desiredMt.subtype==MEDIASUBTYPE_P016 ||
+                    FAILED( DoCheckTransform(&desiredMt, mtOut, true) ) )
+                {
+                    continue;
+                }
+                else
+                {
+                    break;
+                }
+            } while ( true );
+            if (hr==S_OK && //SUCCEEDED(hr) && 
+                SUCCEEDED(m_pInput->GetConnected()->QueryAccept(&desiredMt)))
+            {
+                if (SUCCEEDED(ReconnectPin(m_pInput, &desiredMt)))
+                {
+                    reconnected = true;
+                    DumpGraph(m_pGraph,0);
+                    //m_pInput->SetMediaType(&desiredMt);
+                    DbgLog((LOG_TRACE, 3, TEXT("reconnected succeed!")));
+                }
+                else
+                {
+                    DbgLog((LOG_TRACE, 3, TEXT("Failed to reconnect!")));
+                    return VFW_E_TYPE_NOT_ACCEPTED;
+                }
+            }
+            else
+            {
+                DbgLog((LOG_TRACE, 3, TEXT("Failed to agree reconnect type!")));
+                return VFW_E_TYPE_NOT_ACCEPTED;
+            }
+        }
 	}
+    if (!reconnected && m_pOutput->IsConnected())
+    {
+        if(!m_hSystrayThread)
+        {
+            m_tbid.graph = m_pGraph;
+            m_tbid.dvs = static_cast<IDirectVobSub*>(this);
 
-	return __super::CompleteConnect(dir, pReceivePin);
+            DWORD tid;
+            m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
+        }
+        m_pInput->SetMediaType( &m_pInput->CurrentMediaType() );
+    }
+
+    HRESULT hr = __super::CompleteConnect(dir, pReceivePin);
+    DbgLog((LOG_TRACE, 3, TEXT("connect fininshed!")));
+    DumpGraph(m_pGraph,0);
+	return hr;    
 }
 
 HRESULT CDirectVobSubFilter::BreakConnect(PIN_DIRECTION dir)
 {
 	if(dir == PINDIR_INPUT)
 	{
-		if(m_pOutput->IsConnected())
-		{
-			m_pOutput->GetConnected()->Disconnect();
-			m_pOutput->Disconnect();
-		}
+		//if(m_pOutput->IsConnected())
+		//{
+		//	m_pOutput->GetConnected()->Disconnect();
+		//	m_pOutput->Disconnect();
+		//}
 	}
 	else if(dir == PINDIR_OUTPUT)
 	{

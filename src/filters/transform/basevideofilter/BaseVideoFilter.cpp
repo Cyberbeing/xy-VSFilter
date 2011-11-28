@@ -342,11 +342,11 @@ HRESULT CBaseVideoFilter::CheckInputType(const CMediaType* mtIn)
 	ExtractBIH(mtIn, &bih);
 
 	return mtIn->majortype == MEDIATYPE_Video 
-		&& (mtIn->subtype == MEDIASUBTYPE_YV12 
+		&& (mtIn->subtype == MEDIASUBTYPE_P016
+			|| mtIn->subtype == MEDIASUBTYPE_P010
+			|| mtIn->subtype == MEDIASUBTYPE_YV12
 		 || mtIn->subtype == MEDIASUBTYPE_I420 
 		 || mtIn->subtype == MEDIASUBTYPE_IYUV
-         || mtIn->subtype == MEDIASUBTYPE_P010
-         || mtIn->subtype == MEDIASUBTYPE_P016
 		 || mtIn->subtype == MEDIASUBTYPE_YUY2
 		 || mtIn->subtype == MEDIASUBTYPE_ARGB32
 		 || mtIn->subtype == MEDIASUBTYPE_RGB32
@@ -359,55 +359,116 @@ HRESULT CBaseVideoFilter::CheckInputType(const CMediaType* mtIn)
 		: VFW_E_TYPE_NOT_ACCEPTED;
 }
 
-HRESULT CBaseVideoFilter::CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut)
+HRESULT CBaseVideoFilter::DoCheckTransform( const CMediaType* mtIn, const CMediaType* mtOut, bool checkReconnection )
 {
-	if(FAILED(CheckInputType(mtIn)) || mtOut->majortype != MEDIATYPE_Video)
-		return VFW_E_TYPE_NOT_ACCEPTED;
+    DbgLog((LOG_TRACE, 3, __FUNCTIONW__));
+    DumpGraph(m_pGraph, 0);
+    if(FAILED(CheckInputType(mtIn)) || mtOut->majortype != MEDIATYPE_Video)
+        return VFW_E_TYPE_NOT_ACCEPTED;
 
-	if(mtIn->majortype == MEDIATYPE_Video 
-	&& (mtIn->subtype == MEDIASUBTYPE_YV12 
-	 || mtIn->subtype == MEDIASUBTYPE_I420 
-	 || mtIn->subtype == MEDIASUBTYPE_IYUV))
-	{
-		if(mtOut->subtype != MEDIASUBTYPE_YV12
-		&& mtOut->subtype != MEDIASUBTYPE_I420
-		&& mtOut->subtype != MEDIASUBTYPE_IYUV
-		&& mtOut->subtype != MEDIASUBTYPE_YUY2
-		&& mtOut->subtype != MEDIASUBTYPE_ARGB32
-		&& mtOut->subtype != MEDIASUBTYPE_RGB32
-		&& mtOut->subtype != MEDIASUBTYPE_RGB24
-		&& mtOut->subtype != MEDIASUBTYPE_RGB565)
-			return VFW_E_TYPE_NOT_ACCEPTED;
+    if(mtIn->majortype == MEDIATYPE_Video 
+        && (mtIn->subtype == MEDIASUBTYPE_YV12 
+        || mtIn->subtype == MEDIASUBTYPE_I420 
+        || mtIn->subtype == MEDIASUBTYPE_IYUV))
+    {
+        if(mtOut->subtype != MEDIASUBTYPE_YV12
+            && mtOut->subtype != MEDIASUBTYPE_I420
+            && mtOut->subtype != MEDIASUBTYPE_IYUV
+            && mtOut->subtype != MEDIASUBTYPE_YUY2
+            && mtOut->subtype != MEDIASUBTYPE_ARGB32
+            && mtOut->subtype != MEDIASUBTYPE_RGB32
+            && mtOut->subtype != MEDIASUBTYPE_RGB24
+            && mtOut->subtype != MEDIASUBTYPE_RGB565)
+            return VFW_E_TYPE_NOT_ACCEPTED;
     }
     else if(mtIn->subtype == MEDIASUBTYPE_P010 
-         || mtIn->subtype == MEDIASUBTYPE_P016) {
-        if(mtOut->subtype != mtIn->subtype)
-        return VFW_E_TYPE_NOT_ACCEPTED;
-    }
-	else if(mtIn->majortype == MEDIATYPE_Video 
-	&& (mtIn->subtype == MEDIASUBTYPE_YUY2))
-	{
-		if(mtOut->subtype != MEDIASUBTYPE_YUY2
-		&& mtOut->subtype != MEDIASUBTYPE_ARGB32
-		&& mtOut->subtype != MEDIASUBTYPE_RGB32
-		&& mtOut->subtype != MEDIASUBTYPE_RGB24
-		&& mtOut->subtype != MEDIASUBTYPE_RGB565)
-			return VFW_E_TYPE_NOT_ACCEPTED;
-	}
-	else if(mtIn->majortype == MEDIATYPE_Video 
-	&& (mtIn->subtype == MEDIASUBTYPE_ARGB32
-	|| mtIn->subtype == MEDIASUBTYPE_RGB32
-	|| mtIn->subtype == MEDIASUBTYPE_RGB24
-	|| mtIn->subtype == MEDIASUBTYPE_RGB565))
-	{
-		if(mtOut->subtype != MEDIASUBTYPE_ARGB32
-		&& mtOut->subtype != MEDIASUBTYPE_RGB32
-		&& mtOut->subtype != MEDIASUBTYPE_RGB24
-		&& mtOut->subtype != MEDIASUBTYPE_RGB565)
-			return VFW_E_TYPE_NOT_ACCEPTED;
-	}
+        || mtIn->subtype == MEDIASUBTYPE_P016) {
+        DbgLog((LOG_TRACE, 3, TEXT("10 bit input accpeted")));
+        if( !checkReconnection && 
+            mtOut->subtype != mtIn->subtype )
+        {            
+            CMediaType desiredMt;
+            int position = 0;
+            HRESULT hr;
+            do
+            {
+                hr = GetMediaType(position, &desiredMt);
+                ++position;
+                //if( FAILED(hr) )
+                if( hr!=S_OK )
+                    break;
+                
+                DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
+                DbgLog((LOG_TRACE, 3, TEXT("    in major type:  %hs"),
+                    GuidNames[*(desiredMt.Type())]));
+                DbgLog((LOG_TRACE, 3, TEXT("    in sub type  :  %hs"),
+                    GuidNames[*(desiredMt.Subtype())]));
+                DbgLog((LOG_TRACE, 3, TEXT("    out major type:  %hs"),
+                    GuidNames[*mtOut->Type()]));
+                DbgLog((LOG_TRACE, 3, TEXT("    out sub type  :  %hs"),
+                    GuidNames[*mtOut->Subtype()]));
 
-	return S_OK;
+                if( desiredMt.subtype==MEDIASUBTYPE_P010 || 
+                    desiredMt.subtype==MEDIASUBTYPE_P016 ||
+                    FAILED( DoCheckTransform(&desiredMt, mtOut, true) ) )
+                {
+                    continue;
+                }
+                else
+                {
+                    break;
+                }
+            } while ( true );
+
+            if (hr==S_OK && //SUCCEEDED(hr) &&
+                SUCCEEDED(m_pInput->GetConnected()->QueryAccept(&desiredMt)))
+            {
+                DbgLog((LOG_TRACE, 3, TEXT("8 bit output accpeted")));
+            }
+            else
+            {
+                DbgLog((LOG_TRACE, 3, TEXT("8 bit output not accpeted")));
+                return VFW_E_TYPE_NOT_ACCEPTED;
+            }
+        }        
+        else if (checkReconnection)
+        {
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        }
+        else
+        {
+            DbgLog((LOG_TRACE, 3, TEXT("10 bit output accpeted")));
+        }        
+    }
+    else if(mtIn->majortype == MEDIATYPE_Video 
+        && (mtIn->subtype == MEDIASUBTYPE_YUY2))
+    {
+        if(mtOut->subtype != MEDIASUBTYPE_YUY2
+            && mtOut->subtype != MEDIASUBTYPE_ARGB32
+            && mtOut->subtype != MEDIASUBTYPE_RGB32
+            && mtOut->subtype != MEDIASUBTYPE_RGB24
+            && mtOut->subtype != MEDIASUBTYPE_RGB565)
+            return VFW_E_TYPE_NOT_ACCEPTED;
+    }
+    else if(mtIn->majortype == MEDIATYPE_Video 
+        && (mtIn->subtype == MEDIASUBTYPE_ARGB32
+        || mtIn->subtype == MEDIASUBTYPE_RGB32
+        || mtIn->subtype == MEDIASUBTYPE_RGB24
+        || mtIn->subtype == MEDIASUBTYPE_RGB565))
+    {
+        if(mtOut->subtype != MEDIASUBTYPE_ARGB32
+            && mtOut->subtype != MEDIASUBTYPE_RGB32
+            && mtOut->subtype != MEDIASUBTYPE_RGB24
+            && mtOut->subtype != MEDIASUBTYPE_RGB565)
+            return VFW_E_TYPE_NOT_ACCEPTED;
+    }
+
+    return S_OK;
+}
+
+HRESULT CBaseVideoFilter::CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut)
+{
+    return DoCheckTransform(mtIn, mtOut, false);
 }
 
 HRESULT CBaseVideoFilter::CheckOutputType(const CMediaType& mtOut)
@@ -448,13 +509,13 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 {
     if(m_pInput->IsConnected() == FALSE) return E_UNEXPECTED;
 
-	struct {const GUID* subtype; WORD biPlanes, biBitCount; DWORD biCompression;} fmts[] =
+	const struct {const GUID* subtype; WORD biPlanes, biBitCount; DWORD biCompression;} fmts[] =
 	{
+        {&MEDIASUBTYPE_P010, 2, 24, '010P'},
+        {&MEDIASUBTYPE_P016, 2, 24, '610P'},
 		{&MEDIASUBTYPE_YV12, 3, 12, '21VY'},
 		{&MEDIASUBTYPE_I420, 3, 12, '024I'},
 		{&MEDIASUBTYPE_IYUV, 3, 12, 'VUYI'},
-        {&MEDIASUBTYPE_P010, 2, 24, '010P'},
-        {&MEDIASUBTYPE_P016, 2, 24, '610P'},
 		{&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
 		{&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
 		{&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},
