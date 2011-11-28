@@ -28,6 +28,8 @@
 #include "../../../Subtitles/SSF.h"
 #include "../../../SubPic/PooledSubPic.h"
 #include "../../../SubPic/SubPicQueueImpl.h"
+#include "../../../subpic/color_conv_table.h"
+#include "DirectVobSub.h"
 #include "vfr.h"
 
 //
@@ -37,7 +39,7 @@
 namespace Plugin
 {
 
-class CFilter : public CAMThread, public CCritSec
+class CFilter : public CUnknown, public CDirectVobSub, public CAMThread, public CCritSec
 {
 private:
 	CString m_fn;
@@ -50,9 +52,31 @@ protected:
 	DWORD_PTR m_SubPicProviderId;
 
 public:
-	CFilter() : m_fps(-1), m_SubPicProviderId(0) {CAMThread::Create();}
+    CFilter() : CUnknown(NAME("CFilter"), NULL), m_fps(-1), m_SubPicProviderId(0) 
+    {
+        //fix me: should not do init here
+        ColorConvTable::SetDefaultYUVType(m_fUseBT709?ColorConvTable::BT709:ColorConvTable::BT601);
+        CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
+        CacheManager::GetScanLineDataMruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
+        CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
+        CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_overlay_cache_max_item_num);
+        SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_subpixel_pos_level) );
+        
+        CAMThread::Create();
+    }
 	virtual ~CFilter() {CAMThread::CallWorker(0);}
 
+    DECLARE_IUNKNOWN;
+    STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv)
+    {
+        CheckPointer(ppv, E_POINTER);
+        
+        return QI(IDirectVobSub)
+            QI(IDirectVobSub2)
+            QI(IFilterVersion)
+            __super::NonDelegatingQueryInterface(riid, ppv);
+    }
+    
 	CString GetFileName() {CAutoLock cAutoLock(this); return m_fn;}
 	void SetFileName(CString fn) {CAutoLock cAutoLock(this); m_fn = fn;}
 
