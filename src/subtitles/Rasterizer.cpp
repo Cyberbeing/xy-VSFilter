@@ -974,11 +974,14 @@ static const __int64 _00ff00ff00ff00ff = 0x00ff00ff00ff00ffi64;
 //    switchpts[i*2] contains a colour and switchpts[i*2+1] contains the coordinate to use that colour from
 // fBody tells whether to render the body of the subs.
 // fBorder tells whether to render the border of the subs.
-CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, byte* pAlphaMask, 
-    int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder)
+SharedPtrByte Rasterizer::CompositeAlphaMask(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, byte* pAlphaMask, 
+    int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
+    CRect *outputDirtyRect)
 {
-    CRect bbox(0, 0, 0, 0);
-    if(!switchpts || !fBody && !fBorder) return(bbox);
+    //fix me: check and log error
+    SharedPtrByte result;
+    *outputDirtyRect = CRect(0, 0, 0, 0);
+    if(!switchpts || !fBody && !fBorder) return(result);
 
     // clip
     // Limit drawn area to intersection of rendering surface and rectangular clip area
@@ -986,8 +989,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
     r &= clipRect;
     // Remember that all subtitle coordinates are specified in 1/8 pixels
     // (x+4)>>3 rounds to nearest whole pixel.
-    // ??? What is xsub, ysub, mOffsetX and mOffsetY ?
-    int overlayPitch = overlay->mOverlayPitch;
+    // ??? What is xsub, ysub, mOffsetX and mOffsetY ?    
     int x = (xsub + overlay->mOffsetX + 4)>>3;
     int y = (ysub + overlay->mOffsetY + 4)>>3;
     int w = overlay->mOverlayWidth;
@@ -999,42 +1001,17 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
     if(x+w > r.right) w = r.right-x;
     if(y+h > r.bottom) h = r.bottom-y;
     // Check if there's actually anything to render
-    if(w <= 0 || h <= 0) return(bbox);
-    bbox.SetRect(x, y, x+w, y+h);
-    bbox &= CRect(0, 0, spd.w, spd.h);
-    
-    struct DM
-    {
-        enum
-        {
-            SSE2 = 1,
-            ALPHA_MASK = 1<<1,
-            SINGLE_COLOR = 1<<2,
-            BODY = 1<<3,
-            YV12 = 1<<4
-        };
-    };
-    // CPUID from VDub
-    bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
+    if(w <= 0 || h <= 0) return(result);
+    outputDirtyRect->SetRect(x, y, x+w, y+h);
+    *outputDirtyRect &= CRect(0, 0, spd.w, spd.h);
+
     bool fSingleColor = (switchpts[1]==0xffffffff);
-    bool fYV12 = (spd.type==MSP_AY11);
-    int draw_method = 0;
-    //	if(pAlphaMask)
-    //		draw_method |= DM::ALPHA_MASK;
-    if(fSingleColor)
-        draw_method |= DM::SINGLE_COLOR;
-    //	if(fBody)
-    //		draw_method |= DM::BODY;
-    if(fSSE2)
-        draw_method |= DM::SSE2;
-    if(fYV12)
-        draw_method |= DM::YV12;
-    
+
     // draw
     // Grab the first colour
     DWORD color = switchpts[0];
     byte* s_base = (byte*)xy_malloc(overlay->mOverlayPitch * overlay->mOverlayHeight);
-        
+    
     if(fSingleColor)
     {
         overlay->FillAlphaMash(s_base, fBody, fBorder, xo, yo, w, h, 
@@ -1061,8 +1038,66 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
             sw += 2;
         }
     }
+    result.reset( s_base, xy_free );
+    return result;
+}
 
-    const byte* s = s_base + overlay->mOverlayPitch*yo + xo;
+CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, byte* pAlphaMask, 
+    int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder)
+{
+    CRect bbox(0,0,0,0);    
+    if(!switchpts || !fBody && !fBorder) return(bbox);
+
+    // clip
+    // Limit drawn area to intersection of rendering surface and rectangular clip area
+    CRect r(0, 0, spd.w, spd.h);
+    r &= clipRect;
+    // Remember that all subtitle coordinates are specified in 1/8 pixels
+    // (x+4)>>3 rounds to nearest whole pixel.
+    // ??? What is xsub, ysub, mOffsetX and mOffsetY ?
+    int overlayPitch = overlay->mOverlayPitch;
+    int x = (xsub + overlay->mOffsetX + 4)>>3;
+    int y = (ysub + overlay->mOffsetY + 4)>>3;
+    int w = overlay->mOverlayWidth;
+    int h = overlay->mOverlayHeight;
+    int xo = 0, yo = 0;
+    // Again, limiting?
+    if(x < r.left) {xo = r.left-x; w -= r.left-x; x = r.left;}
+    if(y < r.top) {yo = r.top-y; h -= r.top-y; y = r.top;}
+    if(x+w > r.right) w = r.right-x;
+    if(y+h > r.bottom) h = r.bottom-y;
+    // Check if there's actually anything to render
+    if(w <= 0 || h <= 0) return(bbox);
+    
+    struct DM
+    {
+        enum
+        {
+            SSE2 = 1,
+            ALPHA_MASK = 1<<1,
+            SINGLE_COLOR = 1<<2,
+            BODY = 1<<3,
+            YV12 = 1<<4
+        };
+    };
+    // CPUID from VDub
+    bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
+    bool fSingleColor = (switchpts[1]==0xffffffff);
+    bool fYV12 = (spd.type==MSP_AY11);
+    int draw_method = 0;
+    if(fSingleColor)
+        draw_method |= DM::SINGLE_COLOR;
+    if(fSSE2)
+        draw_method |= DM::SSE2;
+    if(fYV12)
+        draw_method |= DM::YV12;
+    
+    // draw
+    // Grab the first colour
+    DWORD color = switchpts[0];
+    SharedPtrByte s_base = CompositeAlphaMask(spd, overlay, clipRect, pAlphaMask, xsub, ysub, switchpts, 
+        fBody, fBorder, &bbox);
+    const byte* s = s_base.get() + overlay->mOverlayPitch*yo + xo;
 
     // How would this differ from src?
     unsigned long* dst = (unsigned long *)(((char *)spd.bits + spd.pitch * y) + ((x*spd.bpp)>>3));
@@ -1237,7 +1272,6 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
     // Remember to EMMS!
     // Rendering fails in funny ways if we don't do this.
     _mm_empty();
-    xy_free(s_base);
     return bbox;
 }
 

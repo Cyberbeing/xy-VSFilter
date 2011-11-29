@@ -112,6 +112,8 @@ public:
 typedef ::boost::shared_ptr<const ScanLineData> SharedPtrConstScanLineData;
 typedef ::boost::shared_ptr<ScanLineData> SharedPtrScanLineData;
 
+typedef ::boost::shared_ptr<BYTE> SharedPtrByte;
+
 struct Overlay
 {
 public:
@@ -187,6 +189,9 @@ public:
         int xsub, int ysub, 
         const DWORD* switchpts, bool fBody, bool fBorder);
 
+    static SharedPtrByte CompositeAlphaMask(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, byte* pAlphaMask, 
+        int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
+        CRect *outputDirtyRect);
     static CRect Draw(SubPicDesc& spd, DrawItem& draw_item);
 
     static CRect DryDraw(SubPicDesc& spd, DrawItem& draw_item);
