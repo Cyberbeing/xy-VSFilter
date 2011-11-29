@@ -288,6 +288,8 @@ struct CSubtitle2
     int time;
 };
 
+typedef CAtlList<CSubtitle2> CSubtitle2List;
+
 class CScreenLayoutAllocator
 {
     typedef struct
@@ -417,7 +419,7 @@ private:
 
 protected:
     virtual void OnChanged();
-
+    
 public:
     CRenderedTextSubtitle(CCritSec* pLock);
     virtual ~CRenderedTextSubtitle();
@@ -442,8 +444,11 @@ public:
     STDMETHODIMP_(bool) IsAnimated(POSITION pos);
     STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox);
     STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
+    STDMETHODIMP ParseScript(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List );
+    static void DoRender( SubPicDesc& spd, const CSubtitle2List& sub2List, 
+        CAtlList<CRect> *rectList, CompositeDrawItemListList *drawItemListList /*output*/);
     static void RenderOneSubtitle(SubPicDesc& spd, const CSubtitle2& sub2, 
-        CAtlList<CRect>& rectList, CompositeDrawItemList& drawItemList /*output*/);
+        CAtlList<CRect>* rectList, CompositeDrawItemList* drawItemList /*output*/);
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
 
     // IPersist

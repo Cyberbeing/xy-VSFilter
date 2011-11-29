@@ -3158,11 +3158,9 @@ static int lscomp(const void* ls1, const void* ls2)
     return(ret);
 }
 
-STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList)
+STDMETHODIMP CRenderedTextSubtitle::ParseScript(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List )
 {
-    CRect bbox2(0,0,0,0);
-    if(m_size != CSize(spd.w*8, spd.h*8) || m_vidrect != CRect(spd.vidrect.left*8, spd.vidrect.top*8, spd.vidrect.right*8, spd.vidrect.bottom*8))
-        Init(CSize(spd.w, spd.h), spd.vidrect);
+    //fix me: check input and log error
     int t = (int)(rt / 10000);
     int segment;
     //const
@@ -3196,8 +3194,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
         subs.Add(ls);
     }
     qsort(subs.GetData(), subs.GetCount(), sizeof(LSub), lscomp);
-
-    CompositeDrawItemListList drawItemListList;    
+        
     for(int i = 0, j = subs.GetCount(); i < j; i++)
     {
         int entry = subs[i].idx;
@@ -3241,9 +3238,9 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                     }
                     else p = p2;
                     r = CRect(
-                            CPoint((s->m_scrAlignment%3) == 1 ? p.x : (s->m_scrAlignment%3) == 0 ? p.x - spaceNeeded.cx : p.x - (spaceNeeded.cx+1)/2,
-                                   s->m_scrAlignment <= 3 ? p.y - spaceNeeded.cy : s->m_scrAlignment <= 6 ? p.y - (spaceNeeded.cy+1)/2 : p.y),
-                            spaceNeeded);
+                        CPoint((s->m_scrAlignment%3) == 1 ? p.x : (s->m_scrAlignment%3) == 0 ? p.x - spaceNeeded.cx : p.x - (spaceNeeded.cx+1)/2,
+                        s->m_scrAlignment <= 3 ? p.y - spaceNeeded.cy : s->m_scrAlignment <= 6 ? p.y - (spaceNeeded.cy+1)/2 : p.y),
+                        spaceNeeded);
                     if(s->m_relativeTo == 1)
                         r.OffsetRect(m_vidrect.TopLeft());
                     fPosOverride = true;
@@ -3282,8 +3279,8 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                     int left = s->m_relativeTo == 1 ? m_vidrect.left : 0,
                         right = s->m_relativeTo == 1 ? m_vidrect.right : m_size.cx;
                     r.left = !!s->m_effects[k]->param[1]
-                             ? (left/*marginRect.left*/ - spaceNeeded.cx) + (int)(m_time*8.0/s->m_effects[k]->param[0])
-                             : (right /*- marginRect.right*/) - (int)(m_time*8.0/s->m_effects[k]->param[0]);
+                    ? (left/*marginRect.left*/ - spaceNeeded.cx) + (int)(m_time*8.0/s->m_effects[k]->param[0])
+                        : (right /*- marginRect.right*/) - (int)(m_time*8.0/s->m_effects[k]->param[0]);
                     r.right = r.left + spaceNeeded.cx;
                     clipRect &= CRect(left>>3, clipRect.top, right>>3, clipRect.bottom);
                     fPosOverride = true;
@@ -3292,15 +3289,15 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
             case EF_SCROLL: // Scroll up/down(toptobottom=param[3]);top=param[0];bottom=param[1];delay=param[2][;fadeawayheight=param[4]]
                 {
                     r.top = !!s->m_effects[k]->param[3]
-                            ? s->m_effects[k]->param[0] + (int)(m_time*8.0/s->m_effects[k]->param[2]) - spaceNeeded.cy
-                            : s->m_effects[k]->param[1] - (int)(m_time*8.0/s->m_effects[k]->param[2]);
+                    ? s->m_effects[k]->param[0] + (int)(m_time*8.0/s->m_effects[k]->param[2]) - spaceNeeded.cy
+                        : s->m_effects[k]->param[1] - (int)(m_time*8.0/s->m_effects[k]->param[2]);
                     r.bottom = r.top + spaceNeeded.cy;
                     CRect cr(0, (s->m_effects[k]->param[0] + 4) >> 3, spd.w, (s->m_effects[k]->param[1] + 4) >> 3);
                     if(s->m_relativeTo == 1)
                         r.top += m_vidrect.top,
-                                 r.bottom += m_vidrect.top,
-                                             cr.top += m_vidrect.top>>3,
-                                                       cr.bottom += m_vidrect.top>>3;
+                        r.bottom += m_vidrect.top,
+                        cr.top += m_vidrect.top>>3,
+                        cr.bottom += m_vidrect.top>>3;
                     clipRect &= cr;
                     fPosOverride = true;
                 }
@@ -3318,16 +3315,45 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
         CPoint p2(0, r.top);
         // Rectangles for inverse clip
 
-        CompositeDrawItemList& drawItemList = drawItemListList.GetAt(drawItemListList.AddTail());
-        RenderOneSubtitle(spd, CSubtitle2(s, clipRect, org, org2, p2, alpha, m_time), rectList, drawItemList);
+        CSubtitle2& sub2 = outputSub2List->GetAt(outputSub2List->AddTail( CSubtitle2(s, clipRect, org, org2, p2, alpha, m_time) ));
     }
 
+    return (subs.GetCount()) ? S_OK : S_FALSE;
+}
+
+STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList)
+{
+    if(m_size != CSize(spd.w*8, spd.h*8) || m_vidrect != CRect(spd.vidrect.left*8, spd.vidrect.top*8, spd.vidrect.right*8, spd.vidrect.bottom*8))
+        Init(CSize(spd.w, spd.h), spd.vidrect);
+
+    CSubtitle2List sub2List;
+    HRESULT hr = ParseScript(spd, rt, fps, &sub2List);
+    if(hr!=S_OK)
+    {
+        return hr;
+    }
+
+    CompositeDrawItemListList drawItemListList;   
+    DoRender(spd, sub2List, &rectList, &drawItemListList);
     Draw(spd, drawItemListList);
-    return (subs.GetCount() && !rectList.IsEmpty()) ? S_OK : S_FALSE;
+    return (!rectList.IsEmpty()) ? S_OK : S_FALSE;
+}
+
+void CRenderedTextSubtitle::DoRender( SubPicDesc& spd, const CSubtitle2List& sub2List, 
+    CAtlList<CRect> *rectList, CompositeDrawItemListList *drawItemListList /*output*/)
+{
+    //check input and log error
+    POSITION pos=sub2List.GetHeadPosition();
+    while ( pos!=NULL )
+    {
+        const CSubtitle2& sub2 = sub2List.GetNext(pos);
+        CompositeDrawItemList& drawItemList = drawItemListList->GetAt(drawItemListList->AddTail());
+        RenderOneSubtitle(spd, sub2, rectList, &drawItemList);
+    }
 }
 
 void CRenderedTextSubtitle::RenderOneSubtitle( SubPicDesc& spd, const CSubtitle2& sub2, 
-    CAtlList<CRect>& rectList, CompositeDrawItemList& drawItemList /*output*/)
+    CAtlList<CRect>* rectList, CompositeDrawItemList* drawItemList /*output*/)
 {   
     CSubtitle* s = sub2.s;
     const CRect& clipRect = sub2.clipRect;
@@ -3379,10 +3405,10 @@ void CRenderedTextSubtitle::RenderOneSubtitle( SubPicDesc& spd, const CSubtitle2
             }
             bbox2 |= l->PaintAll(&tmpDrawItemList, spd, clipRect, pAlphaMask, p, org2, time, alpha);
         }
-        drawItemList.AddTailList(&tmpDrawItemList);
+        drawItemList->AddTailList(&tmpDrawItemList);
         p.y += l->m_ascent + l->m_descent;
     }
-    rectList.AddTail(bbox2);
+    rectList->AddTail(bbox2);
 }
 
 STDMETHODIMP CRenderedTextSubtitle::Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox)
