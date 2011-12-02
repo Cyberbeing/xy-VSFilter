@@ -201,8 +201,7 @@ BEGIN
     LTEXT           " (reloading is disabled while showing the property pages)",IDC_STATIC,26,123,182,8
     CONTROL         "&Save full path into .grf",IDC_SAVEFULLPATH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,136,91,10
     CONTROL         "Appl&y changes immediately",IDC_INSTANTUPDATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,153,104,10
-    CONTROL         "use &BT709 for subpic yuv conv(default BT601)",IDC_USEBT709,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,96,187,10
+    COMBOBOX        IDC_COMBO_COLOUR_SPACE,17,94,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_DVSPATHSPAGE DIALOGEX 0, 0, 247, 188
@@ -555,7 +554,7 @@ BEGIN
     IDS_RG_EXTERNALLOAD     "ExtLoad"
     IDS_RG_WEBLOAD          "WebLoad"
     IDS_RG_EMBEDDEDLOAD     "EmbLoad"
-    IDS_RG_USE_BT709        "Use BT709"
+    IDS_RG_COLOUR_SPACE     "Colour Space"
     IDS_R_PERFORMANCE       "Performance"
 END
 
@@ -626,6 +625,8 @@ BEGIN
     IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM "Path_cache_max_item_num"
     IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM 
                             "Overlay_no_blur_cache_max_item_num"
+    IDS_RG_BT601_WIDTH      "bt.601 width(for guess)"
+    IDS_RG_BT601_HEIGHT     "bt.601 height(for guess)"
 END
 
 STRINGTABLE

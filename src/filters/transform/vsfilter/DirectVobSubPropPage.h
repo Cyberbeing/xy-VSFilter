@@ -117,9 +117,12 @@ public:
 [uuid("A8B25C0E-0894-4531-B668-AB1599FAF7F6")]
 class CDVSMiscPPage : public CDVSBasePPage
 {
-	bool m_fFlipPicture, m_fFlipSubtitles, m_fHideSubtitles, m_fOSD, m_fDoPreBuffering, m_fUseBT709, m_fReloaderDisabled, m_fSaveFullPath;
+	bool m_fFlipPicture, m_fFlipSubtitles, m_fHideSubtitles, m_fOSD, m_fDoPreBuffering, m_fReloaderDisabled, m_fSaveFullPath;
 
-	CButton m_flippic, m_flipsub, m_hidesub, m_showosd, m_prebuff, m_use_bt709, m_autoreload, m_savefullpath, m_instupd;
+    int m_colourSpace;
+
+	CButton m_flippic, m_flipsub, m_hidesub, m_showosd, m_prebuff, m_autoreload, m_savefullpath, m_instupd;
+    CComboBox m_colourSpaceDropList;
 
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);

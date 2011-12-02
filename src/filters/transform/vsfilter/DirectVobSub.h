@@ -26,6 +26,14 @@
 
 class CDirectVobSub : public IDirectVobSub2, public IFilterVersion
 {
+public:
+    enum ColourSpaceOption
+    {
+        BT_601 = 0,
+        BT_709,
+        AUTO_GUESS
+    };
+
 protected:
 	CDirectVobSub();
 	virtual ~CDirectVobSub();
@@ -37,7 +45,10 @@ protected:
 	int m_iSelectedLanguage;
 	bool m_fHideSubtitles;
 	bool m_fDoPreBuffering;
-    bool m_fUseBT709;
+
+    int m_colourSpace;
+    int m_bt601Width, m_bt601Height;//for AUTO_GUESS
+
 	bool m_fOverridePlacement;
 	int	m_PlacementXperc, m_PlacementYperc;
 	bool m_fBufferVobSub, m_fOnlyShowForcedVobSubs, m_fPolygonize;
@@ -79,8 +90,8 @@ public:
     STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
     STDMETHODIMP get_PreBuffering(bool* fDoPreBuffering);
     STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
-    STDMETHODIMP get_UseBT709(bool* fUseBT709);
-    STDMETHODIMP put_UseBT709(bool fUseBT709);
+    STDMETHODIMP get_ColourSpace(int* colourSpace);
+    STDMETHODIMP put_ColourSpace(int colourSpace);
     STDMETHODIMP get_Placement(bool* fOverridePlacement, int* xperc, int* yperc);
     STDMETHODIMP put_Placement(bool fOverridePlacement, int xperc, int yperc);
     STDMETHODIMP get_VobSubSettings(bool* fBuffer, bool* fOnlyShowForcedSubs, bool* fPolygonize);

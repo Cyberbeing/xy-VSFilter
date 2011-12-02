@@ -589,7 +589,7 @@ CDVSMiscPPage::CDVSMiscPPage(LPUNKNOWN pUnk, HRESULT* phr) :
 	BindControl(IDC_HIDE, m_hidesub);
 	BindControl(IDC_SHOWOSDSTATS, m_showosd);
 	//BindControl(IDC_PREBUFFERING, m_prebuff);
-    BindControl(IDC_USEBT709, m_use_bt709);
+    BindControl(IDC_COMBO_COLOUR_SPACE, m_colourSpaceDropList);
 	BindControl(IDC_AUTORELOAD, m_autoreload);
 	BindControl(IDC_SAVEFULLPATH, m_savefullpath);
 	BindControl(IDC_INSTANTUPDATE, m_instupd);
@@ -629,7 +629,7 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->put_HideSubtitles(m_fHideSubtitles);
 		m_pDirectVobSub->put_OSD(m_fOSD);
 		m_pDirectVobSub->put_PreBuffering(m_fDoPreBuffering);
-        m_pDirectVobSub->put_UseBT709(m_fUseBT709);
+        m_pDirectVobSub->put_ColourSpace(m_colourSpace);
 		m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
 		m_pDirectVobSub->put_SaveFullPath(m_fSaveFullPath);
 	}
@@ -638,8 +638,8 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->get_Flip(&m_fFlipPicture, &m_fFlipSubtitles);
 		m_pDirectVobSub->get_HideSubtitles(&m_fHideSubtitles);
 		m_pDirectVobSub->get_OSD(&m_fOSD);
-		m_pDirectVobSub->get_PreBuffering(&m_fDoPreBuffering);
-        m_pDirectVobSub->get_UseBT709(&m_fUseBT709);
+		m_pDirectVobSub->get_PreBuffering(&m_fDoPreBuffering);        
+        m_pDirectVobSub->get_ColourSpace(&m_colourSpace);
 		m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
 		m_pDirectVobSub->get_SaveFullPath(&m_fSaveFullPath);
 	}
@@ -654,7 +654,15 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
 		m_fHideSubtitles = !!m_hidesub.GetCheck();
 		m_fSaveFullPath = !!m_savefullpath.GetCheck();
 		//m_fDoPreBuffering = !!m_prebuff.GetCheck();
-        m_fUseBT709 = !!m_use_bt709.GetCheck();
+
+        if (m_colourSpaceDropList.GetCurSel() != CB_ERR)
+        {
+            m_colourSpace = m_colourSpaceDropList.GetCurSel();
+        }
+        else
+        {
+            m_colourSpace = CDirectVobSub::BT_601;
+        }
 
 		m_fOSD = !!m_showosd.GetCheck();
 		m_fReloaderDisabled = !m_autoreload.GetCheck();
@@ -666,7 +674,23 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
 		m_hidesub.SetCheck(m_fHideSubtitles);
 		m_savefullpath.SetCheck(m_fSaveFullPath);
 		//m_prebuff.SetCheck(m_fDoPreBuffering);
-        m_use_bt709.SetCheck(m_fUseBT709);
+
+        CString str;str.Format(_T("m_colourSpace:%d"),m_colourSpace);
+        if( m_colourSpace != CDirectVobSub::AUTO_GUESS && 
+            m_colourSpace != CDirectVobSub::BT_601 && 
+            m_colourSpace != CDirectVobSub::BT_709 )
+        {
+            m_colourSpace = CDirectVobSub::BT_601;
+        }
+        m_colourSpaceDropList.ResetContent();
+        m_colourSpaceDropList.AddString( CString(_T("BT.601")) ); 
+        m_colourSpaceDropList.SetItemData( CDirectVobSub::BT_601, CDirectVobSub::BT_601 );
+        m_colourSpaceDropList.AddString( CString(_T("BT.709")) ); 
+        m_colourSpaceDropList.SetItemData( CDirectVobSub::BT_709, CDirectVobSub::BT_709);
+        m_colourSpaceDropList.AddString( CString(_T("Auto Guess")) );
+        m_colourSpaceDropList.SetItemData( CDirectVobSub::AUTO_GUESS, CDirectVobSub::AUTO_GUESS );        
+        m_colourSpaceDropList.SetCurSel( m_colourSpace ); 
+
 		m_showosd.SetCheck(m_fOSD);
 		m_autoreload.SetCheck(!m_fReloaderDisabled);
 		m_instupd.SetCheck(!!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), 1));

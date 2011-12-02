@@ -33,7 +33,17 @@ CDirectVobSub::CDirectVobSub()
     m_iSelectedLanguage = 0;
     m_fHideSubtitles = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), 0);
 	m_fDoPreBuffering = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), 1);
-    m_fUseBT709 = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USE_BT709), 0);
+    
+    m_colourSpace = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOUR_SPACE), 0);
+    if( m_colourSpace!=ColourSpaceOption::AUTO_GUESS && 
+        m_colourSpace!=ColourSpaceOption::BT_601 && 
+        m_colourSpace!=ColourSpaceOption::BT_709 )
+    {
+        m_colourSpace = ColourSpaceOption::BT_601;
+    }
+    m_bt601Width = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
+    m_bt601Height = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_HEIGHT), 600);
+
 	m_fOverridePlacement = !!theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), 0);
 	m_PlacementXperc = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), 50);
 	m_PlacementYperc = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), 90);
@@ -195,20 +205,20 @@ STDMETHODIMP CDirectVobSub::put_PreBuffering(bool fDoPreBuffering)
 	return S_OK;
 }
 
-STDMETHODIMP CDirectVobSub::get_UseBT709(bool* fUseBT709)
+STDMETHODIMP CDirectVobSub::get_ColourSpace(int* colourSpace)
 {
     CAutoLock cAutoLock(&m_propsLock);
 
-    return fUseBT709 ? *fUseBT709 = m_fUseBT709, S_OK : E_POINTER;
+    return colourSpace ? *colourSpace = m_colourSpace, S_OK : E_POINTER;
 }
 
-STDMETHODIMP CDirectVobSub::put_UseBT709(bool fUseBT709)
+STDMETHODIMP CDirectVobSub::put_ColourSpace(int colourSpace)
 {
     CAutoLock cAutoLock(&m_propsLock);
 
-    if(m_fUseBT709 == fUseBT709) return S_FALSE;
+    if(m_colourSpace == colourSpace) return S_FALSE;
 
-    m_fUseBT709 = fUseBT709;
+    m_colourSpace = colourSpace;
 
     return S_OK;
 }
@@ -603,7 +613,11 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), m_fHideSubtitles);
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), m_fDoPreBuffering);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USE_BT709), m_fUseBT709);
+
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOUR_SPACE), m_colourSpace);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_HEIGHT), 600);
+
 	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), m_fOverridePlacement);
 	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), m_PlacementXperc);
 	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), m_PlacementYperc);

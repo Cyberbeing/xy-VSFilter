@@ -51,11 +51,11 @@ protected:
 	CComPtr<ISubPicProvider> m_pSubPicProvider;
 	DWORD_PTR m_SubPicProviderId;
 
+    bool m_fLazyInit;
 public:
-    CFilter() : CUnknown(NAME("CFilter"), NULL), m_fps(-1), m_SubPicProviderId(0) 
+    CFilter() : CUnknown(NAME("CFilter"), NULL), m_fps(-1), m_SubPicProviderId(0), m_fLazyInit(false)
     {
         //fix me: should not do init here
-        ColorConvTable::SetDefaultYUVType(m_fUseBT709?ColorConvTable::BT709:ColorConvTable::BT601);
         CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
         CacheManager::GetScanLineDataMruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
         CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
@@ -85,6 +85,23 @@ public:
 		if(!m_pSubPicProvider)
 			return(false);
 
+        if(!m_fLazyInit)
+        {
+            m_fLazyInit = true;
+            switch(m_colourSpace)
+            {
+            case ColourSpaceOption::BT_601:
+                ColorConvTable::SetDefaultYUVType(ColorConvTable::BT601);
+                break;
+            case ColourSpaceOption::BT_709:
+                ColorConvTable::SetDefaultYUVType(ColorConvTable::BT709);
+                break;
+            case ColourSpaceOption::AUTO_GUESS:
+                ColorConvTable::SetDefaultYUVType( (dst.w > m_bt601Width || dst.h > m_bt601Height) ?
+                    ColorConvTable::BT709 : ColorConvTable::BT601 );
+                break;
+            }
+        }
 		CSize size(dst.w, dst.h);
 
 		if(!m_pSubPicQueue)

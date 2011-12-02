@@ -71,12 +71,12 @@ extern "C" {
 					bool fDoPreBuffering
                  ) PURE;
         
-        STDMETHOD(get_UseBT709) (THIS_
-                    bool* fUseBT709
+        STDMETHOD(get_ColourSpace) (THIS_
+                    int* colourSpace
                  ) PURE;
 
-        STDMETHOD(put_UseBT709) (THIS_
-                    bool fUseBT709
+        STDMETHOD(put_ColourSpace) (THIS_
+                    int colourSpace
                 ) PURE;
 
         STDMETHOD(get_Placement) (THIS_

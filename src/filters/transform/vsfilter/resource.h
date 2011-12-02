@@ -45,6 +45,7 @@
 #define IDS_RG_WEBLOAD                  140
 #define IDS_RG_EMBEDDEDLOAD             141
 #define IDS_RG_USE_BT709                142
+#define IDS_RG_COLOUR_SPACE             142
 #define IDS_R_PERFORMANCE               143
 #define IDS_R_TIMING                    144
 #define IDS_RTM_SUBTITLEDELAY           145
@@ -78,10 +79,12 @@
 #define IDS_RT_PAR_DOWNSCALE            173
 #define IDS_RT_PAR_ACCURATE_SIZE        174
 #define IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM 175
-#define IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM  176
+#define IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM 176
 #define IDS_RP_SUBPIXEL_POS_LEVEL       177
 #define IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM 178
 #define IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM 179
+#define IDS_RG_BT601_WIDTH              180
+#define IDS_RG_BT601_HEIGHT             181
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
@@ -171,6 +174,7 @@
 #define IDC_EDITOverlayNoBlurCache      325
 #define IDC_SPINOverlayNoBlurCache      326
 #define IDC_CACHES_INFO_BTN             327
+#define IDC_COMBO_COLOUR_SPACE          328
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
 #define IDC_LABLE_OVERLAY_CACHE         403
@@ -205,7 +209,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        232
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         328
+#define _APS_NEXT_CONTROL_VALUE         329
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif

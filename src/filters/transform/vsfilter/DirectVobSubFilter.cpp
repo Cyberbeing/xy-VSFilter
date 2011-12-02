@@ -662,7 +662,20 @@ REFERENCE_TIME CDirectVobSubFilter::CalcCurrentTime()
 void CDirectVobSubFilter::InitSubPicQueue()
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
-    ColorConvTable::SetDefaultYUVType(m_fUseBT709?ColorConvTable::BT709:ColorConvTable::BT601);
+
+    switch(m_colourSpace)
+    {
+    case CDirectVobSub::BT_601:
+        ColorConvTable::SetDefaultYUVType(ColorConvTable::BT601);
+        break;
+    case CDirectVobSub::BT_709:
+        ColorConvTable::SetDefaultYUVType(ColorConvTable::BT709);
+        break;
+    case CDirectVobSub::AUTO_GUESS:
+        ColorConvTable::SetDefaultYUVType( (m_w > m_bt601Width || m_h > m_bt601Height) ?
+            ColorConvTable::BT709 : ColorConvTable::BT601 );
+        break;
+    }
     CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
     CacheManager::GetScanLineDataMruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
     CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
@@ -1124,14 +1137,26 @@ STDMETHODIMP CDirectVobSubFilter::put_PreBuffering(bool fDoPreBuffering)
 	return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::put_UseBT709(bool fUseBT709)
+STDMETHODIMP CDirectVobSubFilter::put_ColourSpace(int colourSpace)
 {
     CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::put_UseBT709(fUseBT709);
+    HRESULT hr = CDirectVobSub::put_ColourSpace(colourSpace);
 
     if(hr == NOERROR)
     {
-        ColorConvTable::SetDefaultYUVType( m_fUseBT709?ColorConvTable::BT709:ColorConvTable::BT601 );
+        switch(m_colourSpace)
+        {
+        case ColourSpaceOption::BT_601:
+            ColorConvTable::SetDefaultYUVType(ColorConvTable::BT601);
+            break;
+        case ColourSpaceOption::BT_709:
+            ColorConvTable::SetDefaultYUVType(ColorConvTable::BT709);
+            break;
+        case ColourSpaceOption::AUTO_GUESS:
+            ColorConvTable::SetDefaultYUVType( (m_w > m_bt601Width || m_h > m_bt601Height) ?
+                ColorConvTable::BT709 : ColorConvTable::BT601 );
+            break;
+        }
     }
 
     return hr;

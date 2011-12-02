@@ -19,6 +19,7 @@ struct ColorConvTable
     static const ColorConvTable* GetColorConvTable(const YUV_Type& yuv_type);
     static void DestroyColorConvTable(const YUV_Type& yuv_type);
     static YUV_Type SetDefaultYUVType(const YUV_Type& yuv_type) { return s_default_yuv_type = yuv_type; }
+    static YUV_Type GetDefaultYUVType() { return s_default_yuv_type; };
     static const ColorConvTable* GetDefaultColorConvTable() { return GetColorConvTable(s_default_yuv_type); }
 
     YUV_Type yuv_type;

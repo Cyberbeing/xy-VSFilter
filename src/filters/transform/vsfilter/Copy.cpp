@@ -562,6 +562,12 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 			}
             LogSubPicStartStop(rtStart, rtStop, tmp);
 		}
+        
+        //colour space
+        tmp.Format( _T("Colourspace: %ls (%ls)\n"), 
+            ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT601 ? _T("BT.601"):_T("BT.709"),
+            m_colourSpace==CDirectVobSub::AUTO_GUESS ? _T("Guessed") : _T("forced") );
+        msg += tmp;
 
         //print cache info
         CachesInfo caches_info;
