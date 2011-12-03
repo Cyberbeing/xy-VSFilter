@@ -884,7 +884,7 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         m_combo_subpixel_pos.AddString( CString(_T("2x2")) );m_combo_subpixel_pos.SetItemData(1, 1);
         m_combo_subpixel_pos.AddString( CString(_T("4x4")) );m_combo_subpixel_pos.SetItemData(2, 2);
         m_combo_subpixel_pos.AddString( CString(_T("8x8(vsfiler2.39 default)")) );m_combo_subpixel_pos.SetItemData(3, 3);
-        m_combo_subpixel_pos.AddString( CString(_T("8x8 fast")) );m_combo_subpixel_pos.SetItemData(4, 4);
+        m_combo_subpixel_pos.AddString( CString(_T("8x8(bilinear)")) );m_combo_subpixel_pos.SetItemData(4, 4);
 
         m_combo_subpixel_pos.SetCurSel( temp );        
     }
