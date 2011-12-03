@@ -1369,11 +1369,11 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             COLORREF shadow = revcolor(w->m_style.get().colors[3]) | (a<<24);
             DWORD sw[6] = {shadow, -1};
             //xy
-            if(spd.type == MSP_AUYV)
+            if(spd.type == MSP_XY_AUYV)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AUYV);
             }
-            else if(spd.type == MSP_AYUV || spd.type == MSP_AY11)
+            else if(spd.type == MSP_AYUV || spd.type == MSP_AYUV_PLANAR)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AYUV);
             }            
@@ -1402,11 +1402,11 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             COLORREF outline = revcolor(w->m_style.get().colors[2]) | ((0xff-aoutline)<<24);
             DWORD sw[6] = {outline, -1};
             //xy
-            if(spd.type == MSP_AUYV)
+            if(spd.type == MSP_XY_AUYV)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AUYV);
             }
-            else if(spd.type == MSP_AYUV || spd.type == MSP_AY11)
+            else if(spd.type == MSP_AYUV || spd.type == MSP_AYUV_PLANAR)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AYUV);
             }
@@ -1467,13 +1467,13 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             sw[4] = sw[2];
             sw[5] = 0x00ffffff;
             //xy
-            if(spd.type == MSP_AUYV)
+            if(spd.type == MSP_XY_AUYV)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AUYV);
                 sw[2] =rgb2yuv(sw[2], XY_AUYV);
                 sw[4] =rgb2yuv(sw[4], XY_AUYV);
             }
-            else if(spd.type == MSP_AYUV || spd.type == MSP_AY11)
+            else if(spd.type == MSP_AYUV || spd.type == MSP_AYUV_PLANAR)
             {
                 sw[0] =rgb2yuv(sw[0], XY_AYUV);
                 sw[2] =rgb2yuv(sw[2], XY_AYUV);
@@ -3474,9 +3474,9 @@ STDMETHODIMP CRenderedTextSubtitle::Reload()
 
 STDMETHODIMP_(bool) CRenderedTextSubtitle::IsColorTypeSupported( int type )
 {
-    return type==MSP_AY11 ||
+    return type==MSP_AYUV_PLANAR ||
            type==MSP_AYUV ||
-           type==MSP_AUYV ||
+           type==MSP_XY_AUYV ||
            type==MSP_RGBA;
 }
 

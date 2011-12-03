@@ -1077,20 +1077,20 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
             ALPHA_MASK = 1<<1,
             SINGLE_COLOR = 1<<2,
             BODY = 1<<3,
-            YV12 = 1<<4
+            AYUV_PLANAR = 1<<4
         };
     };
     // CPUID from VDub
     bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
     bool fSingleColor = (switchpts[1]==0xffffffff);
-    bool fYV12 = (spd.type==MSP_AY11);
+    bool AYUV_PLANAR = (spd.type==MSP_AYUV_PLANAR);
     int draw_method = 0;
     if(fSingleColor)
         draw_method |= DM::SINGLE_COLOR;
     if(fSSE2)
         draw_method |= DM::SSE2;
-    if(fYV12)
-        draw_method |= DM::YV12;
+    if(AYUV_PLANAR)
+        draw_method |= DM::AYUV_PLANAR;
     
     // draw
     // Grab the first colour
@@ -1105,7 +1105,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
     // Every remaining line in the bitmap to be rendered...
     switch(draw_method)
     {
-    case   DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::YV12 :
+    case   DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::AYUV_PLANAR :
     {
         while(h--)
         {
@@ -1119,7 +1119,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
         }
     }
     break;
-    case   DM::SINGLE_COLOR | 0*DM::SSE2 | 0*DM::YV12 :
+    case   DM::SINGLE_COLOR | 0*DM::SSE2 | 0*DM::AYUV_PLANAR :
     {
         while(h--)
         {
@@ -1130,7 +1130,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
         }
     }
     break;
-    case 0*DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::YV12 :
+    case 0*DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::AYUV_PLANAR :
     {
         while(h--)
         {
@@ -1148,7 +1148,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
         }
     }
     break;
-    case 0*DM::SINGLE_COLOR | 0*DM::SSE2 | 0*DM::YV12 :
+    case 0*DM::SINGLE_COLOR | 0*DM::SSE2 | 0*DM::AYUV_PLANAR :
     {
         while(h--)
         {
@@ -1163,7 +1163,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
         }
     }
     break;
-    case   DM::SINGLE_COLOR |   DM::SSE2 |   DM::YV12 :
+    case   DM::SINGLE_COLOR |   DM::SSE2 |   DM::AYUV_PLANAR :
     {
         unsigned char* dst_A = (unsigned char*)dst;
         unsigned char* dst_Y = dst_A + spd.pitch*spd.h;
@@ -1176,7 +1176,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
         AlphaBlt(dst_A, s, 0, h, w, overlayPitch, spd.pitch);
     }
     break;
-    case 0*DM::SINGLE_COLOR |   DM::SSE2 |   DM::YV12 :
+    case 0*DM::SINGLE_COLOR |   DM::SSE2 |   DM::AYUV_PLANAR :
     {
         unsigned char* dst_A = (unsigned char*)dst;
         unsigned char* dst_Y = dst_A + spd.pitch*spd.h;
@@ -1204,7 +1204,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
         }
     }
     break;
-    case   DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::YV12 :
+    case   DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::AYUV_PLANAR :
     {
 //        char * debug_dst=(char*)dst;int h2 = h;
 //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", (char*)&color, sizeof(color)) );
@@ -1244,7 +1244,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
 //        XY_DO_ONCE( xy_logger::write_file("G:\\a2_rt", debug_dst, (h2-1)*spd.pitch) );
     }
     break;
-    case 0*DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::YV12 :
+    case 0*DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::AYUV_PLANAR :
     {
         unsigned char* dst_A = (unsigned char*)dst;
         unsigned char* dst_Y = dst_A + spd.pitch*spd.h;

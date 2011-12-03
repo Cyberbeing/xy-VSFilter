@@ -82,7 +82,7 @@ CPooledSubPicAllocator::CPooledSubPicAllocator( int alpha_blt_dst_type, SIZE max
         switch(alpha_blt_dst_type)
         {
         case MSP_YUY2:
-            _type = MSP_AUYV;
+            _type = MSP_XY_AUYV;
             break;
         case MSP_AYUV:
             _type = MSP_AYUV;
@@ -91,7 +91,7 @@ CPooledSubPicAllocator::CPooledSubPicAllocator( int alpha_blt_dst_type, SIZE max
         case MSP_YV12:
         case MSP_P010:
         case MSP_P016:
-            _type = MSP_AY11;
+            _type = MSP_AYUV_PLANAR;
             break;
         default:
             _type = MSP_RGBA;
@@ -169,11 +169,11 @@ STDMETHODIMP_(bool) CPooledSubPicAllocator::IsSpdColorTypeSupported( int type )
 {
     if( (type==MSP_RGBA) 
         ||
-        (type==MSP_AUYV &&  _alpha_blt_dst_type == MSP_YUY2)
+        (type==MSP_XY_AUYV &&  _alpha_blt_dst_type == MSP_YUY2)
         ||
         (type==MSP_AYUV &&  _alpha_blt_dst_type == MSP_AYUV)//ToDo: fix me MSP_AYUV 
         ||
-        (type==MSP_AY11 && (_alpha_blt_dst_type == MSP_IYUV ||
+        (type==MSP_AYUV_PLANAR && (_alpha_blt_dst_type == MSP_IYUV ||
                             _alpha_blt_dst_type == MSP_YV12 ||
                             _alpha_blt_dst_type == MSP_P010 ||
                             _alpha_blt_dst_type == MSP_P016)) )
@@ -190,11 +190,11 @@ CPooledSubPic* CPooledSubPicAllocator::DoAlloc()
     spd.w = _maxsize.cx;
     spd.h = _maxsize.cy;
     //		spd.bpp = 32;
-    spd.bpp = (_type == MSP_AY11) ? 8 : 32;
+    spd.bpp = (_type == MSP_AYUV_PLANAR) ? 8 : 32;
     spd.pitch = (spd.w*spd.bpp)>>3;
 
     //		if(!(spd.bits = new BYTE[spd.pitch*spd.h]))
-    if(_type == MSP_AY11)
+    if(_type == MSP_AYUV_PLANAR)
     {
         spd.bits = xy_malloc(spd.pitch*spd.h*4);
     }

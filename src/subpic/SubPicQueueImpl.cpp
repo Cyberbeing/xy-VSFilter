@@ -57,9 +57,9 @@ CSubPicQueueImpl::CSubPicQueueImpl(ISubPicExAllocator* pAllocator, HRESULT* phr,
     }
     if(m_prefered_colortype.IsEmpty())
     {
-        m_prefered_colortype.AddTail(MSP_AY11);
+        m_prefered_colortype.AddTail(MSP_AYUV_PLANAR);
         m_prefered_colortype.AddTail(MSP_AYUV);
-        m_prefered_colortype.AddTail(MSP_AUYV);
+        m_prefered_colortype.AddTail(MSP_XY_AUYV);
         m_prefered_colortype.AddTail(MSP_RGBA);
     }
 }

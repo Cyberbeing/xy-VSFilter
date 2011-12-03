@@ -276,7 +276,7 @@ STDMETHODIMP CMemSubPic::ClearDirtyRect(DWORD color)
         CRect& dirtyRect = m_rectListDirty.RemoveTail();
         BYTE* p = (BYTE*)m_spd.bits + m_spd.pitch*(dirtyRect.top) + dirtyRect.left*(m_spd.bpp>>3);
         int w = dirtyRect.Width();
-        if(m_spd.type!=MSP_AY11)
+        if(m_spd.type!=MSP_AYUV_PLANAR)
         {
             for(int j = 0, h = dirtyRect.Height(); j < h; j++, p += m_spd.pitch)
             {
@@ -329,11 +329,11 @@ STDMETHODIMP CMemSubPic::Unlock( CAtlList<CRect>* dirtyRectList )
                                 dst_type == MSP_RGB16 ||
                                 dst_type == MSP_RGB15)) 
         ||
-        (src_type==MSP_AUYV &&  dst_type == MSP_YUY2)//ToDo: fix me MSP_AYUV
+        (src_type==MSP_XY_AUYV &&  dst_type == MSP_YUY2)//ToDo: fix me MSP_AYUV
         ||
         (src_type==MSP_AYUV &&  dst_type == MSP_AYUV) 
         ||
-        (src_type==MSP_AY11 && (dst_type == MSP_IYUV ||
+        (src_type==MSP_AYUV_PLANAR && (dst_type == MSP_IYUV ||
                                 dst_type == MSP_YV12 ||
                                 dst_type == MSP_P010 ||
                                 dst_type == MSP_P016)))
@@ -513,11 +513,11 @@ STDMETHODIMP CMemSubPic::AlphaBlt( const RECT* pSrc, const RECT* pDst, SubPicDes
                                 dst_type == MSP_YUY2 ||//ToDo: fix me MSP_RGBA changed into AxYU AxYV after unlock, may be confusing
                                 dst_type == MSP_AYUV )) 
         ||
-        (src_type==MSP_AUYV &&  dst_type == MSP_YUY2)//ToDo: fix me MSP_AYUV
+        (src_type==MSP_XY_AUYV &&  dst_type == MSP_YUY2)//ToDo: fix me MSP_AYUV
         ||
         (src_type==MSP_AYUV &&  dst_type == MSP_AYUV) 
         ||
-        (src_type==MSP_AY11 && (dst_type == MSP_IYUV ||
+        (src_type==MSP_AYUV_PLANAR && (dst_type == MSP_IYUV ||
                                 dst_type == MSP_YV12 ||
                                 dst_type == MSP_P010 ||
                                 dst_type == MSP_P016 )) )
@@ -1206,7 +1206,7 @@ STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
     if(dirtyRectList!=NULL)
     {
         POSITION pos = dirtyRectList->GetHeadPosition();
-        if(m_spd.type == MSP_AY11 || m_alpha_blt_dst_type==MSP_IYUV || m_alpha_blt_dst_type==MSP_YV12 
+        if(m_spd.type == MSP_AYUV_PLANAR || m_alpha_blt_dst_type==MSP_IYUV || m_alpha_blt_dst_type==MSP_YV12 
             || m_alpha_blt_dst_type==MSP_P010 || m_alpha_blt_dst_type==MSP_P016)
         {
             while(pos!=NULL)
@@ -1218,7 +1218,7 @@ STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
                 cRectSrc.bottom = (cRectSrc.bottom+1)&~1;
             }
         }
-        else if(m_spd.type == MSP_AUYV || m_alpha_blt_dst_type==MSP_YUY2)
+        else if(m_spd.type == MSP_XY_AUYV || m_alpha_blt_dst_type==MSP_YUY2)
         {
             while(pos!=NULL)
             {
@@ -1246,14 +1246,14 @@ CMemSubPicAllocator::CMemSubPicAllocator(int alpha_blt_dst_type, SIZE maxsize, i
         switch(alpha_blt_dst_type)
         {
         case MSP_YUY2:
-            m_type = MSP_AUYV;
+            m_type = MSP_XY_AUYV;
             break;
         case MSP_AYUV:
             m_type = MSP_AYUV;
             break;
         case MSP_IYUV:
         case MSP_YV12:
-            m_type = MSP_AY11;
+            m_type = MSP_AYUV_PLANAR;
             break;
         default:
             m_type = MSP_RGBA;

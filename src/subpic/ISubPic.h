@@ -35,8 +35,8 @@ enum ColorType {
     MSP_IYUV,
     MSP_AYUV,
     MSP_RGBA,
-    MSP_AY11, //AYUV in planar form
-    MSP_AUYV,
+    MSP_AYUV_PLANAR, //AYUV in planar form
+    MSP_XY_AUYV,
     MSP_P010,
     MSP_P016,
 };
