@@ -501,44 +501,57 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
         {   
             DbgLog((LOG_TRACE, 3, TEXT("Try reconnect!")));
             DbgLog((LOG_TRACE, 3, TEXT("Trying media type:")));
-            DbgLog((LOG_TRACE, 3, TEXT("    major type:  %hs"),
-                GuidNames[*mtOut->Type()]));
-            DbgLog((LOG_TRACE, 3, TEXT("    sub type  :  %hs"),
-                GuidNames[*mtOut->Subtype()]));
-                    
+            DisplayType(0, mtOut);
+
+            bool can_reconnect = false;
+            CMediaType desiredMt;
             int position = 0;
             HRESULT hr;
-            do
+
+            position = GetMediaSubTypePosition(mtOut->subtype);
+            if(position>0)
             {
-                hr = GetMediaType(position, &desiredMt);
-                ++position;
-                //if( FAILED(hr) )
-                if( hr!=S_OK )
-                    break;
+                hr = GetMediaType(position, &desiredMt);                
+                DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
+                DisplayType(0, desiredMt);
 
-                DbgLog((LOG_TRACE, 3, TEXT("Trying reconnect with media type:")));
-                DbgLog((LOG_TRACE, 3, TEXT("    in major type:  %hs"),
-                    GuidNames[*(desiredMt.Type())]));
-                DbgLog((LOG_TRACE, 3, TEXT("    in sub type  :  %hs"),
-                    GuidNames[*(desiredMt.Subtype())]));
-                DbgLog((LOG_TRACE, 3, TEXT("    out major type:  %hs"),
-                    GuidNames[*mtOut->Type()]));
-                DbgLog((LOG_TRACE, 3, TEXT("    out sub type  :  %hs"),
-                    GuidNames[*mtOut->Subtype()]));
+                if (hr==S_OK && //SUCCEEDED(hr) &&
+                    SUCCEEDED(m_pInput->GetConnected()->QueryAccept(&desiredMt)))
+                {
+                    can_reconnect = true;
+                    DbgLog((LOG_TRACE, 3, TEXT("8 bit output accpeted")));
+                }
+            }
+            else
+            {
+                do
+                {
+                    position = 0;
+                    hr = GetMediaType(position, &desiredMt);
+                    ++position;
+                    //if( FAILED(hr) )
+                    if( hr!=S_OK )
+                        break;
 
-                if( desiredMt.subtype==MEDIASUBTYPE_P010 || 
-                    desiredMt.subtype==MEDIASUBTYPE_P016 ||
-                    FAILED( DoCheckTransform(&desiredMt, mtOut, true) ) )
-                {
-                    continue;
-                }
-                else
-                {
-                    break;
-                }
-            } while ( true );
-            if (hr==S_OK && //SUCCEEDED(hr) && 
-                SUCCEEDED(m_pInput->GetConnected()->QueryAccept(&desiredMt)))
+                    DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
+                    DisplayType(0, desiredMt);
+
+                    if( desiredMt.subtype==MEDIASUBTYPE_P010 || 
+                        desiredMt.subtype==MEDIASUBTYPE_P016 ||
+                        FAILED( DoCheckTransform(&desiredMt, mtOut, true) ) ||
+                        FAILED(m_pInput->GetConnected()->QueryAccept(&desiredMt)) )
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        can_reconnect = true;
+                        break;
+                    }
+                } while ( true );
+            }            
+
+            if ( can_reconnect )
             {
                 if (SUCCEEDED(ReconnectPin(m_pInput, &desiredMt)))
                 {

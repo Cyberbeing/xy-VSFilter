@@ -47,6 +47,7 @@ protected:
 	virtual HRESULT IsVideoInterlaced() {return false;}
 
     HRESULT DoCheckTransform(const CMediaType* mtIn, const CMediaType* mtOut, bool checkReconnection);
+    int GetMediaSubTypePosition(const GUID& subtype);
 public:
 	CBaseVideoFilter(TCHAR* pName, LPUNKNOWN lpunk, HRESULT* phr, REFCLSID clsid, long cBuffers = 1);
 	virtual ~CBaseVideoFilter();
@@ -58,7 +59,7 @@ public:
 	HRESULT CheckOutputType(const CMediaType& mtOut);
     HRESULT CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut);
     HRESULT DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_PROPERTIES* pProperties);
-    HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);
+    HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);    
 	HRESULT SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt);
 };
 
