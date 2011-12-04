@@ -44,6 +44,8 @@ protected:
     
     STDMETHODIMP UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList);
     STDMETHODIMP UnlockOther(CAtlList<CRect>* dirtyRectList);
+
+    void SubsampleAndInterlace( const CRect& cRect );
 public:
 
 	CMemSubPic(SubPicDesc& spd, int alpha_blt_dst_type);
