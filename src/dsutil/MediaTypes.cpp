@@ -53,6 +53,26 @@ VIH vihs[] =
         VIH_NORMAL,														// size
         &MEDIASUBTYPE_P016												// subtype
     },
+    // NV12
+    {
+        {
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('N','V','1','2'), 0, 0, 0, 0, 0}		// bmiHeader
+        },
+        {0, 0, 0},														// mask[3]
+        VIH_NORMAL,														// size
+        &MEDIASUBTYPE_NV12												// subtype
+    },
+    // NV21
+    {
+        {
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('N','V','2','1'), 0, 0, 0, 0, 0}		// bmiHeader
+        },
+        {0, 0, 0},														// mask[3]
+        VIH_NORMAL,														// size
+        &MEDIASUBTYPE_NV21												// subtype
+    },
 	// YUY2
 	{
 		{					
@@ -216,6 +236,26 @@ VIH2 vih2s[] =
         {0, 0, 0},														// mask[3]
         VIH2_NORMAL,													// size
         &MEDIASUBTYPE_P016												// subtype
+    },
+    // NV12
+    {
+        {
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('N','V','1','2'), 0, 0, 0, 0, 0}		// bmiHeader
+        },
+        {0, 0, 0},														// mask[3]
+        VIH2_NORMAL,													// size
+        &MEDIASUBTYPE_NV12												// subtype
+    },
+    // NV21
+    {
+        {
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('N','V','2','1'), 0, 0, 0, 0, 0}		// bmiHeader
+        },
+        {0, 0, 0},														// mask[3]
+        VIH2_NORMAL,													// size
+        &MEDIASUBTYPE_NV21												// subtype
     },
     // YUY2
 	{

@@ -47,6 +47,7 @@ protected:
 	virtual HRESULT IsVideoInterlaced() {return false;}
 
     HRESULT DoCheckTransform(const CMediaType* mtIn, const CMediaType* mtOut, bool checkReconnection);
+    HRESULT CheckReconnect(const CMediaType* mtIn, const CMediaType* mtOut);
 public:
 	CBaseVideoFilter(TCHAR* pName, LPUNKNOWN lpunk, HRESULT* phr, REFCLSID clsid, long cBuffers = 1);
 	virtual ~CBaseVideoFilter();

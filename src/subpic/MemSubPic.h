@@ -40,12 +40,13 @@ protected:
     
     STDMETHODIMP AlphaBltAyuv_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
     STDMETHODIMP AlphaBltAyuv_Yv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+    STDMETHODIMP AlphaBltAyuv_Nv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
     STDMETHODIMP AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
     
     STDMETHODIMP UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList);
     STDMETHODIMP UnlockOther(CAtlList<CRect>* dirtyRectList);
 
-    void SubsampleAndInterlace( const CRect& cRect );
+    void SubsampleAndInterlace( const CRect& cRect, bool u_first );
 public:
 
 	CMemSubPic(SubPicDesc& spd, int alpha_blt_dst_type);

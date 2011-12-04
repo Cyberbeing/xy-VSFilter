@@ -39,6 +39,8 @@ enum ColorType {
     MSP_XY_AUYV,
     MSP_P010,
     MSP_P016,
+    MSP_NV12,
+    MSP_NV21
 };
 
 #pragma pack(push, 1)

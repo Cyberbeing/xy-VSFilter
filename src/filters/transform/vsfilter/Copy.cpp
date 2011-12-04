@@ -44,7 +44,8 @@ static void LogSubPicStartStop( const REFERENCE_TIME& rtStart, const REFERENCE_T
 void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
 {
     const ColorConvTable* color_conv_table = ColorConvTable::GetDefaultColorConvTable();
-	if(subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV)
+	if(subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV 
+        || subtype == MEDIASUBTYPE_NV12 || subtype == MEDIASUBTYPE_NV21)
 	{
         //TODO: Fix ME!
 		BYTE* db = (BYTE*)d;
@@ -143,7 +144,8 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
 /* ResX2 */
 void Scale2x(const GUID& subtype, BYTE* d, int dpitch, BYTE* s, int spitch, int w, int h)
 {
-	if(subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV)
+	if(subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV 
+        || subtype == MEDIASUBTYPE_NV12 || subtype == MEDIASUBTYPE_NV21)
 	{
 		BYTE* s1;
 		BYTE* s2;

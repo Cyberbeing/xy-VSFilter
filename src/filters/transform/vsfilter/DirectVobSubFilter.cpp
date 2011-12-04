@@ -197,10 +197,11 @@ HRESULT CDirectVobSubFilter::TryNotCopy(IMediaSample* pIn, const CMediaType& mt,
     {
         m_spd.bits = static_cast<BYTE*>(m_pTempPicBuff);
         bool fYV12 = (mt.subtype == MEDIASUBTYPE_YV12 || mt.subtype == MEDIASUBTYPE_I420 || mt.subtype == MEDIASUBTYPE_IYUV);	
+        bool fNV12 = (mt.subtype == MEDIASUBTYPE_NV12 || mt.subtype == MEDIASUBTYPE_NV21);        
         bool fP010 = (mt.subtype == MEDIASUBTYPE_P010 || mt.subtype == MEDIASUBTYPE_P016);
 
-        int bpp = fP010 ? 16 : fYV12 ? 8 : bihIn.biBitCount;
-        DWORD black = fP010 ? 0x10001000 : fYV12 ? 0x10101010 : (bihIn.biCompression == '2YUY') ? 0x80108010 : 0;
+        int bpp = fP010 ? 16 : (fYV12||fNV12) ? 8 : bihIn.biBitCount;
+        DWORD black = fP010 ? 0x10001000 : (fYV12||fNV12) ? 0x10101010 : (bihIn.biCompression == '2YUY') ? 0x80108010 : 0;
 
 
         if(FAILED(Copy((BYTE*)m_pTempPicBuff, pDataIn, sub, in, bpp, mt.subtype, black)))
@@ -224,6 +225,14 @@ HRESULT CDirectVobSubFilter::TryNotCopy(IMediaSample* pIn, const CMediaType& mt,
             BYTE* pInUV = pDataIn + (in.cx*bpp>>3)*in.cy;
             sub.cy >>= 1; in.cy >>= 1;
             if(FAILED(Copy(pSubUV, pInUV, sub, in, bpp, mt.subtype, 0x80008000)))
+                return E_FAIL;
+        }
+        else if(fNV12) {
+            BYTE* pSubUV = (BYTE*)m_pTempPicBuff + (sub.cx*bpp>>3)*sub.cy;
+            BYTE* pInUV = pDataIn + (in.cx*bpp>>3)*in.cy;
+            sub.cy >>= 1;
+            in.cy >>= 1;
+            if(FAILED(Copy(pSubUV, pInUV, sub, in, bpp, mt.subtype, 0x80808080)))
                 return E_FAIL;
         }
     }    
@@ -511,7 +520,8 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
         const CMediaType* mtOut = &(m_pOutput->CurrentMediaType());
         CMediaType desiredMt;        
 
-        if( (mtIn->subtype == MEDIASUBTYPE_P010 || mtIn->subtype == MEDIASUBTYPE_P016)
+        if( (mtIn->subtype == MEDIASUBTYPE_P010 || mtIn->subtype == MEDIASUBTYPE_P016
+            || mtIn->subtype == MEDIASUBTYPE_NV12 || mtIn->subtype == MEDIASUBTYPE_NV21)
             && (mtOut->subtype != mtIn->subtype ) )
         {   
             DbgLog((LOG_TRACE, 3, TEXT("Try reconnect!")));
@@ -541,8 +551,7 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
                 DbgLog((LOG_TRACE, 3, TEXT("    out sub type  :  %hs"),
                     GuidNames[*mtOut->Subtype()]));
 
-                if( desiredMt.subtype==MEDIASUBTYPE_P010 || 
-                    desiredMt.subtype==MEDIASUBTYPE_P016 ||
+                if( desiredMt.subtype==mtIn->subtype || 
                     FAILED( DoCheckTransform(&desiredMt, mtOut, true) ) )
                 {
                     continue;
@@ -700,10 +709,13 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	else if(subtype == MEDIASUBTYPE_RGB24) m_spd.type = MSP_RGB24;
 	else if(subtype == MEDIASUBTYPE_RGB565) m_spd.type = MSP_RGB16;
 	else if(subtype == MEDIASUBTYPE_RGB555) m_spd.type = MSP_RGB15;
+    else if(subtype == MEDIASUBTYPE_NV12) m_spd.type = MSP_NV12;
+    else if(subtype == MEDIASUBTYPE_NV21) m_spd.type = MSP_NV21;
 
 	m_spd.w = m_w;
 	m_spd.h = m_h;
-	m_spd.bpp = (m_spd.type == MSP_P010 || m_spd.type == MSP_P016) ? 16 : (m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV) ? 8 : bihIn.biBitCount;
+	m_spd.bpp = (m_spd.type == MSP_P010 || m_spd.type == MSP_P016) ? 16 :
+        (m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV || m_spd.type == MSP_NV12 || m_spd.type == MSP_NV21) ? 8 : bihIn.biBitCount;
 	m_spd.pitch = m_spd.w*m_spd.bpp>>3;
 
     m_pTempPicBuff.Free();

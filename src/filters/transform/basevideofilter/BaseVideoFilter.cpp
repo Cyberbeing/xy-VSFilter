@@ -292,6 +292,14 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
         BitBltFromYUY2ToYUY2(w*2, h, pOut, bihOut.biWidth*2, ppIn[0], pitchIn);
         BitBltFromYUY2ToYUY2(w*2, h/2, pOut+bihOut.biWidth*2*h, bihOut.biWidth*2, ppIn[1], pitchIn);
     }
+    else if(subtype == MEDIASUBTYPE_NV12 || subtype == MEDIASUBTYPE_NV21) 
+    {
+        if (bihOut.biCompression != subtype.Data1)
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        //TODO: FIX ME!
+        BitBltFromYUY2ToYUY2(w/2, h, pOut, bihOut.biWidth, ppIn[0], pitchIn);
+        BitBltFromYUY2ToYUY2(w/2, h/2, pOut+bihOut.biWidth*h, bihOut.biWidth, ppIn[1], pitchIn);
+    }
     else if(subtype == MEDIASUBTYPE_YUY2)
     {
         if(bihOut.biCompression == '2YUY')
@@ -344,6 +352,8 @@ HRESULT CBaseVideoFilter::CheckInputType(const CMediaType* mtIn)
 	return mtIn->majortype == MEDIATYPE_Video 
 		&& (mtIn->subtype == MEDIASUBTYPE_P016
 			|| mtIn->subtype == MEDIASUBTYPE_P010
+            || mtIn->subtype == MEDIASUBTYPE_NV12
+            || mtIn->subtype == MEDIASUBTYPE_NV21
 			|| mtIn->subtype == MEDIASUBTYPE_YV12
 		 || mtIn->subtype == MEDIASUBTYPE_I420 
 		 || mtIn->subtype == MEDIASUBTYPE_IYUV
@@ -382,54 +392,15 @@ HRESULT CBaseVideoFilter::DoCheckTransform( const CMediaType* mtIn, const CMedia
             return VFW_E_TYPE_NOT_ACCEPTED;
     }
     else if(mtIn->subtype == MEDIASUBTYPE_P010 
-        || mtIn->subtype == MEDIASUBTYPE_P016) {
+        || mtIn->subtype == MEDIASUBTYPE_P016
+        || mtIn->subtype == MEDIASUBTYPE_NV12
+        || mtIn->subtype == MEDIASUBTYPE_NV21) {
         DbgLog((LOG_TRACE, 3, TEXT("10 bit input accpeted")));
         if( !checkReconnection && 
             mtOut->subtype != mtIn->subtype )
         {            
-            CMediaType desiredMt;
-            int position = 0;
-            HRESULT hr;
-            do
-            {
-                hr = GetMediaType(position, &desiredMt);
-                ++position;
-                //if( FAILED(hr) )
-                if( hr!=S_OK )
-                    break;
-                
-                DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
-                DbgLog((LOG_TRACE, 3, TEXT("    in major type:  %hs"),
-                    GuidNames[*(desiredMt.Type())]));
-                DbgLog((LOG_TRACE, 3, TEXT("    in sub type  :  %hs"),
-                    GuidNames[*(desiredMt.Subtype())]));
-                DbgLog((LOG_TRACE, 3, TEXT("    out major type:  %hs"),
-                    GuidNames[*mtOut->Type()]));
-                DbgLog((LOG_TRACE, 3, TEXT("    out sub type  :  %hs"),
-                    GuidNames[*mtOut->Subtype()]));
-
-                if( desiredMt.subtype==MEDIASUBTYPE_P010 || 
-                    desiredMt.subtype==MEDIASUBTYPE_P016 ||
-                    FAILED( DoCheckTransform(&desiredMt, mtOut, true) ) )
-                {
-                    continue;
-                }
-                else
-                {
-                    break;
-                }
-            } while ( true );
-
-            if (hr==S_OK && //SUCCEEDED(hr) &&
-                SUCCEEDED(m_pInput->GetConnected()->QueryAccept(&desiredMt)))
-            {
-                DbgLog((LOG_TRACE, 3, TEXT("8 bit output accpeted")));
-            }
-            else
-            {
-                DbgLog((LOG_TRACE, 3, TEXT("8 bit output not accpeted")));
+            if( FAILED(CheckReconnect(mtIn, mtOut)) )
                 return VFW_E_TYPE_NOT_ACCEPTED;
-            }
         }        
         else if (checkReconnection)
         {
@@ -437,8 +408,8 @@ HRESULT CBaseVideoFilter::DoCheckTransform( const CMediaType* mtIn, const CMedia
         }
         else
         {
-            DbgLog((LOG_TRACE, 3, TEXT("10 bit output accpeted")));
-        }        
+            DbgLog((LOG_TRACE, 3, TEXT("output accpeted")));
+        }
     }
     else if(mtIn->majortype == MEDIATYPE_Video 
         && (mtIn->subtype == MEDIASUBTYPE_YUY2))
@@ -464,6 +435,52 @@ HRESULT CBaseVideoFilter::DoCheckTransform( const CMediaType* mtIn, const CMedia
     }
 
     return S_OK;
+}
+
+
+HRESULT CBaseVideoFilter::CheckReconnect(const CMediaType* mtIn, const CMediaType* mtOut)
+{
+    CMediaType desiredMt;
+    int position = 0;
+    HRESULT hr;
+    do
+    {
+        hr = GetMediaType(position, &desiredMt);
+        ++position;
+        //if( FAILED(hr) )
+        if( hr!=S_OK )
+            break;
+
+        DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
+        DbgLog((LOG_TRACE, 3, TEXT("    in major type:  %hs"),
+            GuidNames[*(desiredMt.Type())]));
+        DbgLog((LOG_TRACE, 3, TEXT("    in sub type  :  %hs"),
+            GuidNames[*(desiredMt.Subtype())]));
+        DbgLog((LOG_TRACE, 3, TEXT("    out major type:  %hs"),
+            GuidNames[*mtOut->Type()]));
+        DbgLog((LOG_TRACE, 3, TEXT("    out sub type  :  %hs"),
+            GuidNames[*mtOut->Subtype()]));
+
+        if( desiredMt.subtype==mtIn->subtype ||
+            FAILED( DoCheckTransform(&desiredMt, mtOut, true) ) )
+        {
+            continue;
+        }
+        else
+        {
+            break;
+        }
+    } while ( true );
+
+    if (hr==S_OK && //SUCCEEDED(hr) &&
+        SUCCEEDED(m_pInput->GetConnected()->QueryAccept(&desiredMt)))
+    {
+        return S_OK;
+    }
+    else
+    {
+        return VFW_E_TYPE_NOT_ACCEPTED;
+    }
 }
 
 HRESULT CBaseVideoFilter::CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut)
@@ -513,6 +530,8 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 	{
         {&MEDIASUBTYPE_P010, 2, 24, '010P'},
         {&MEDIASUBTYPE_P016, 2, 24, '610P'},
+        {&MEDIASUBTYPE_NV12, 2, 12, '21VN'},
+        {&MEDIASUBTYPE_NV21, 2, 12, '12VN'},
 		{&MEDIASUBTYPE_YV12, 3, 12, '21VY'},
 		{&MEDIASUBTYPE_I420, 3, 12, '024I'},
 		{&MEDIASUBTYPE_IYUV, 3, 12, 'VUYI'},

@@ -369,7 +369,9 @@ STDMETHODIMP CMemSubPic::Unlock( CAtlList<CRect>* dirtyRectList )
         (src_type==MSP_AYUV_PLANAR && (dst_type == MSP_IYUV ||
                                 dst_type == MSP_YV12 ||
                                 dst_type == MSP_P010 ||
-                                dst_type == MSP_P016)))
+                                dst_type == MSP_P016 ||
+                                dst_type == MSP_NV12 ||
+                                dst_type == MSP_NV21)))
     {
         return UnlockOther(dirtyRectList);        
     }
@@ -377,6 +379,8 @@ STDMETHODIMP CMemSubPic::Unlock( CAtlList<CRect>* dirtyRectList )
                                    dst_type == MSP_AYUV || //ToDo: fix me MSP_AYUV
                                    dst_type == MSP_IYUV ||
                                    dst_type == MSP_YV12 ||
+                                   dst_type == MSP_NV12 ||
+                                   dst_type == MSP_NV21 ||
                                    dst_type == MSP_P010 ||
                                    dst_type == MSP_P016))
     {
@@ -446,9 +450,14 @@ STDMETHODIMP CMemSubPic::UnlockOther(CAtlList<CRect>* dirtyRectList)
         {
             //nothing to do
         }
-        else if ( m_alpha_blt_dst_type == MSP_P010 || m_alpha_blt_dst_type == MSP_P016 )
+        else if ( m_alpha_blt_dst_type == MSP_P010 || m_alpha_blt_dst_type == MSP_P016 
+            || m_alpha_blt_dst_type == MSP_NV12 )
         {
-            SubsampleAndInterlace(cRect);
+            SubsampleAndInterlace(cRect, true);
+        }
+        else if( m_alpha_blt_dst_type == MSP_NV21 )
+        {
+            SubsampleAndInterlace(cRect, false);
         }
     }
     return S_OK;
@@ -484,7 +493,9 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
             m_alpha_blt_dst_type == MSP_YV12 || 
             m_alpha_blt_dst_type == MSP_IYUV ||
             m_alpha_blt_dst_type == MSP_P010 ||
-            m_alpha_blt_dst_type == MSP_P016) {
+            m_alpha_blt_dst_type == MSP_P016 ||
+            m_alpha_blt_dst_type == MSP_NV12 ||
+            m_alpha_blt_dst_type == MSP_NV21) {
             for(; top < bottom ; top += m_spd.pitch) {
                 BYTE* s = top;
                 BYTE* e = s + w*4;
@@ -533,7 +544,7 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
     return S_OK;
 }
 
-void CMemSubPic::SubsampleAndInterlace( const CRect& cRect )
+void CMemSubPic::SubsampleAndInterlace( const CRect& cRect, bool u_first )
 {
     //fix me: check alignment and log error
     int w = cRect.Width(), h = cRect.Height();
@@ -541,6 +552,12 @@ void CMemSubPic::SubsampleAndInterlace( const CRect& cRect )
     BYTE* u_start = u_plan + m_spd.pitch*(cRect.top)+ cRect.left;
     BYTE* v_start = u_start + m_spd.pitch*m_spd.h;
     BYTE* dst = u_start; 
+    if(!u_first)
+    {
+        BYTE* tmp = v_start;
+        v_start = u_start;
+        u_start = tmp;
+    }
     for (int i=0;i<h;i+=2)
     {
         subsample_and_interlace_2_line_sse2(dst, u_start, v_start, w, m_spd.pitch);
@@ -573,7 +590,9 @@ STDMETHODIMP CMemSubPic::AlphaBlt( const RECT* pSrc, const RECT* pDst, SubPicDes
         (src_type==MSP_AYUV_PLANAR && (dst_type == MSP_IYUV ||
                                 dst_type == MSP_YV12 ||
                                 dst_type == MSP_P010 ||
-                                dst_type == MSP_P016 )) )
+                                dst_type == MSP_P016 ||
+                                dst_type == MSP_NV12 ||
+                                dst_type == MSP_NV21)) )
     {
         return AlphaBltOther(pSrc, pDst, pTarget);        
     }
@@ -581,6 +600,11 @@ STDMETHODIMP CMemSubPic::AlphaBlt( const RECT* pSrc, const RECT* pDst, SubPicDes
                                     dst_type == MSP_YV12)) 
     {
         return AlphaBltAyuv_Yv12(pSrc, pDst, pTarget);
+    }
+    else if( src_type==MSP_RGBA && (dst_type == MSP_NV12||
+                                    dst_type == MSP_NV21)) 
+    {
+        return AlphaBltAyuv_Nv12(pSrc, pDst, pTarget);
     }
     else if( src_type==MSP_RGBA && (dst_type == MSP_P010 ||
                                     dst_type == MSP_P016))
@@ -813,6 +837,64 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
 
             AlphaBltYv12Chroma( dd[0], dst.pitchUV, w, h2, ss[0], src_origin, src.pitch);
             AlphaBltYv12Chroma( dd[1], dst.pitchUV, w, h2, ss[1], src_origin, src.pitch);
+
+            __asm emms;
+        }
+        break;
+    case MSP_NV12:
+    case MSP_NV21:
+        {
+            //dst.pitch = abs(dst.pitch);
+            int h2 = h/2;
+            if(!dst.pitchUV)
+            {
+                dst.pitchUV = abs(dst.pitch);
+            }
+            if(!dst.bitsU)
+            {
+                dst.bitsU = (BYTE*)dst.bits + abs(dst.pitch)*dst.h;                
+            }
+            BYTE* ddUV = dst.bitsU + dst.pitchUV*rd.top/2 + rd.left;            
+            if(rd.top > rd.bottom)
+            {
+                ddUV = dst.bitsU + dst.pitchUV*(rd.top/2-1) + rd.left;
+                dst.pitchUV = -dst.pitchUV;
+            }
+
+            BYTE* src_origin= (BYTE*)src.bits + src.pitch*rs.top + rs.left;            
+
+            BYTE* ss[2];
+            ss[0] = src_origin + src.pitch*src.h*2;//U
+            ss[1] = src_origin + src.pitch*src.h*3;//V
+
+            AlphaBltYv12Luma( d, dst.pitch, w, h, src_origin + src.pitch*src.h, src_origin, src.pitch );
+            
+            {
+                BYTE* s_u = ss[0];
+                BYTE* sa = src_origin;
+                BYTE* d = ddUV;
+                int pitch = src.pitch;
+                for(int j = 0; j < h2; j++, s_u += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
+                {
+                    BYTE* s_u2 = s_u;
+                    BYTE* sa2 = sa;
+                    BYTE* s_u2end_mod16 = s_u2 + (w&~15);
+                    BYTE* s_u2end = s_u2 + w;
+                    BYTE* d2 = d;
+
+                    for( BYTE* d3=d2; s_u2 < s_u2end; s_u2+=2, sa2+=2, d3+=2)
+                    {
+                        unsigned int ia = ( 
+                            sa2[0]+          sa2[1]+
+                            sa2[0+src.pitch]+sa2[1+src.pitch]);
+                        if( ia!=0xFF*4 )
+                        {
+                            d3[0] = (((d3[0])*ia)>>10) + s_u2[0];
+                            d3[1] = (((d3[1])*ia)>>10) + s_u2[1];
+                        }
+                    }
+                }
+            }
 
             __asm emms;
         }
@@ -1247,6 +1329,98 @@ STDMETHODIMP CMemSubPic::AlphaBltAyuv_Yv12(const RECT* pSrc, const RECT* pDst, S
     return S_OK;
 }
 
+STDMETHODIMP CMemSubPic::AlphaBltAyuv_Nv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
+{
+    const SubPicDesc& src = m_spd;
+    SubPicDesc dst = *pTarget; // copy, because we might modify it
+
+    CRect rs(*pSrc), rd(*pDst);
+
+    if(dst.h < 0) {
+        dst.h = -dst.h;
+        rd.bottom = dst.h - rd.bottom;
+        rd.top = dst.h - rd.top;
+    }
+
+    if(rs.Width() != rd.Width() || rs.Height() != abs(rd.Height())) {
+        return E_INVALIDARG;
+    }
+
+    int w = rs.Width(), h = rs.Height();
+
+    BYTE* s = (BYTE*)src.bits + src.pitch*rs.top + ((rs.left*src.bpp)>>3);
+    BYTE* d = (BYTE*)dst.bits + dst.pitch*rd.top + rd.left;
+
+    if(rd.top > rd.bottom) {
+        d = (BYTE*)dst.bits + dst.pitch*(rd.top-1) + rd.left;
+
+        dst.pitch = -dst.pitch;
+    }
+
+    for(ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
+        BYTE* s2 = s;
+        BYTE* s2end = s2 + w*4;
+        BYTE* d2 = d;
+        for(; s2 < s2end; s2 += 4, d2++) {
+            if(s2[3] < 0xff) {
+                d2[0] = ((d2[0]*s2[3])>>8) + s2[1];
+            }
+        }
+    }
+    dst.pitch = abs(dst.pitch);
+
+    int h2 = h/2;
+
+    if(!dst.pitchUV) {
+        dst.pitchUV = dst.pitch;
+    }
+
+    BYTE* ss[2];
+    ss[0] = (BYTE*)src.bits + src.pitch*rs.top + rs.left*4;
+    ss[1] = ss[0] + 4;
+
+    if(!dst.bitsU || !dst.bitsV) {
+        dst.bitsU = (BYTE*)dst.bits + dst.pitch*dst.h;
+        dst.bitsV = dst.bitsU + 1;
+
+        if(dst.type == MSP_NV21) {
+            BYTE* p = dst.bitsU;
+            dst.bitsU = dst.bitsV;
+            dst.bitsV = p;
+        }
+    }
+
+    BYTE* dd[2];
+    dd[0] = dst.bitsU + dst.pitchUV*rd.top/2 + rd.left;
+    dd[1] = dd[0]+1;
+
+    if(rd.top > rd.bottom) {
+        dd[0] = dst.bitsU + dst.pitchUV*(rd.top/2-1) + rd.left;
+        dd[1] = dd[0]+1;
+        dst.pitchUV = -dst.pitchUV;
+    }
+
+    for(ptrdiff_t i = 0; i < 2; i++) {
+        s = ss[i];
+        d = dd[i];
+        BYTE* is = ss[1-i];
+        for(ptrdiff_t j = 0; j < h2; j++, s += src.pitch*2, d += dst.pitchUV, is += src.pitch*2) {
+            BYTE* s2 = s;
+            BYTE* s2end = s2 + w*4;
+            BYTE* d2 = d;
+            BYTE* is2 = is;
+            for(; s2 < s2end; s2 += 8, d2+=2, is2 += 8) {
+                unsigned int ia = (s2[3]+s2[3+src.pitch]+is2[3]+is2[3+src.pitch])>>2;
+                if(ia < 0xff) {
+                    *d2 = ((*d2*ia)>>8) + ((s2[0]+s2[src.pitch])>>1);
+                }
+            }
+        }
+    }
+
+    return S_OK;
+}
+
 STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
 {
     //if(m_spd.type == MSP_YUY2 || m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV || m_spd.type == MSP_AYUV)
@@ -1254,7 +1428,8 @@ STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
     {
         POSITION pos = dirtyRectList->GetHeadPosition();
         if(m_spd.type == MSP_AYUV_PLANAR || m_alpha_blt_dst_type==MSP_IYUV || m_alpha_blt_dst_type==MSP_YV12 
-            || m_alpha_blt_dst_type==MSP_P010 || m_alpha_blt_dst_type==MSP_P016)
+            || m_alpha_blt_dst_type==MSP_P010 || m_alpha_blt_dst_type==MSP_P016 
+            || m_alpha_blt_dst_type==MSP_NV12 || m_alpha_blt_dst_type==MSP_NV21 )
         {
             while(pos!=NULL)
             {
@@ -1300,6 +1475,10 @@ CMemSubPicAllocator::CMemSubPicAllocator(int alpha_blt_dst_type, SIZE maxsize, i
             break;
         case MSP_IYUV:
         case MSP_YV12:
+        case MSP_P010:
+        case MSP_P016:
+        case MSP_NV12:
+        case MSP_NV21:
             m_type = MSP_AYUV_PLANAR;
             break;
         default:
