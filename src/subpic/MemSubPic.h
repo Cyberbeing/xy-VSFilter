@@ -38,9 +38,10 @@ protected:
 protected:
 	STDMETHODIMP_(void*) GetObject() const; // returns SubPicDesc*
     
-    STDMETHODIMP AlphaBltAyuv_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
-    STDMETHODIMP AlphaBltAyuv_Yv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
-    STDMETHODIMP AlphaBltAyuv_Nv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+    STDMETHODIMP AlphaBltAxyuAxyv_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+    STDMETHODIMP AlphaBltAxyuAxyv_Yv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+    STDMETHODIMP AlphaBltAxyuAxyv_Nv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+    STDMETHODIMP AlphaBltAnv12_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);       
     STDMETHODIMP AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
     
     STDMETHODIMP UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList);
