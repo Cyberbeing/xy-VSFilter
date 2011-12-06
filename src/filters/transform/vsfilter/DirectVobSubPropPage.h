@@ -196,11 +196,11 @@ class CDVSColorPPage : public CDVSBasePPage
     CListCtrl m_outputFmtList, m_inputFmtList;
     
     static const int MAX_COLOR_SPACE = 256;
-    ColorSpace m_outputColorSpace[MAX_COLOR_SPACE];
+    ColorSpaceId m_outputColorSpace[MAX_COLOR_SPACE];
     bool m_selectedOutputColorSpace[MAX_COLOR_SPACE];
     UINT m_outputColorSpaceCount;
 
-    ColorSpace m_inputColorSpace[MAX_COLOR_SPACE];
+    ColorSpaceId m_inputColorSpace[MAX_COLOR_SPACE];
     bool m_selectedInputColorSpace[MAX_COLOR_SPACE];
     UINT m_inputColorSpaceCount;
 protected:

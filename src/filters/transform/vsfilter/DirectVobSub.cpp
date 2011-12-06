@@ -79,7 +79,7 @@ CDirectVobSub::CDirectVobSub()
     {
         for (int i=0;i<nSize/2;i++)
         {
-            m_outputColorSpace[i] = static_cast<ColorSpace>(pData[2*i]);
+            m_outputColorSpace[i] = static_cast<ColorSpaceId>(pData[2*i]);
             m_selectedOutputColorSpace[i] = static_cast<bool>(pData[2*i+1]);
         }        
     }
@@ -87,7 +87,7 @@ CDirectVobSub::CDirectVobSub()
     {
         for (int i=0;i<GetOutputColorSpaceNumber();i++)
         {
-            m_outputColorSpace[i] = static_cast<ColorSpace>(i);
+            m_outputColorSpace[i] = static_cast<ColorSpaceId>(i);
             m_selectedOutputColorSpace[i] = true;
         }
     }
@@ -103,7 +103,7 @@ CDirectVobSub::CDirectVobSub()
     {
         for (int i=0;i<nSize/2;i++)
         {
-            m_inputColorSpace[i] = static_cast<ColorSpace>(pData[2*i]);
+            m_inputColorSpace[i] = static_cast<ColorSpaceId>(pData[2*i]);
             m_selectedInputColorSpace[i] = static_cast<bool>(pData[2*i+1]);
         }        
     }
@@ -111,7 +111,7 @@ CDirectVobSub::CDirectVobSub()
     {
         for (int i=0;i<GetOutputColorSpaceNumber();i++)
         {
-            m_inputColorSpace[i] = static_cast<ColorSpace>(i);
+            m_inputColorSpace[i] = static_cast<ColorSpaceId>(i);
             m_selectedInputColorSpace[i] = true;
         }
     }
@@ -522,7 +522,7 @@ STDMETHODIMP CDirectVobSub::put_ZoomRect(NORMALIZEDRECT* rect)
 	return S_OK;
 }
 
-STDMETHODIMP CDirectVobSub::get_OutputColorFormat(ColorSpace* preferredOrder, bool* fSelected, UINT* count)
+STDMETHODIMP CDirectVobSub::get_OutputColorFormat(ColorSpaceId* preferredOrder, bool* fSelected, UINT* count)
 {
     CAutoLock cAutoLock(&m_propsLock);
     if(count)
@@ -541,7 +541,7 @@ STDMETHODIMP CDirectVobSub::get_OutputColorFormat(ColorSpace* preferredOrder, bo
     return S_OK;
 }
 
-STDMETHODIMP CDirectVobSub::put_OutputColorFormat( const ColorSpace* preferredOrder, const bool* fSelected, UINT count )
+STDMETHODIMP CDirectVobSub::put_OutputColorFormat( const ColorSpaceId* preferredOrder, const bool* fSelected, UINT count )
 {
     CAutoLock cAutoLock(&m_propsLock);
 
@@ -558,7 +558,7 @@ STDMETHODIMP CDirectVobSub::put_OutputColorFormat( const ColorSpace* preferredOr
     return S_OK;
 }
 
-STDMETHODIMP CDirectVobSub::get_InputColorFormat( ColorSpace* preferredOrder, bool* fSelected, UINT* count )
+STDMETHODIMP CDirectVobSub::get_InputColorFormat( ColorSpaceId* preferredOrder, bool* fSelected, UINT* count )
 {
     CAutoLock cAutoLock(&m_propsLock);
     if(count)
@@ -577,7 +577,7 @@ STDMETHODIMP CDirectVobSub::get_InputColorFormat( ColorSpace* preferredOrder, bo
     return S_OK;
 }
 
-STDMETHODIMP CDirectVobSub::put_InputColorFormat( const ColorSpace* preferredOrder, const bool* fSelected, UINT count )
+STDMETHODIMP CDirectVobSub::put_InputColorFormat( const ColorSpaceId* preferredOrder, const bool* fSelected, UINT count )
 {
     CAutoLock cAutoLock(&m_propsLock);
 

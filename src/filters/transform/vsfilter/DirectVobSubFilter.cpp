@@ -508,12 +508,12 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
             int position = 0;
             HRESULT hr;
 
-            position = GetMediaSubTypePosition(mtOut->subtype);
+            position = GetOutputSubtypePosition(mtOut->subtype);
             if(position>0)
             {
                 hr = GetMediaType(position, &desiredMt);                
                 DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
-                DisplayType(0, desiredMt);
+                DisplayType(0, &desiredMt);
 
                 if (hr==S_OK && //SUCCEEDED(hr) &&
                     SUCCEEDED(m_pInput->GetConnected()->QueryAccept(&desiredMt)))
@@ -534,7 +534,7 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
                         break;
 
                     DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
-                    DisplayType(0, desiredMt);
+                    DisplayType(0, &desiredMt);
 
                     if( desiredMt.subtype==MEDIASUBTYPE_P010 || 
                         desiredMt.subtype==MEDIASUBTYPE_P016 ||
@@ -2063,4 +2063,48 @@ DWORD CDirectVobSubFilter::ThreadProc()
 	return 0;
 }
 
+void CDirectVobSubFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
+{
+    ColorSpaceId colorspace[MAX_COLOR_SPACE_NUM];
+    bool selected[MAX_COLOR_SPACE_NUM];
+    UINT tempCount;
+    if( get_InputColorFormat(colorspace, selected, &tempCount)==S_OK )
+    {
+        *count = 0;
+        for (int i=0;i<tempCount;i++)
+        {
+            if(selected[i])
+            {
+                preferredOrder[*count] = colorspace[i];
+                (*count)++;
+            }
+        }
+    }
+    else
+    {
+        CBaseVideoFilter::GetInputColorspaces(preferredOrder, count);
+    }
+}
 
+void CDirectVobSubFilter::GetOutputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
+{
+    ColorSpaceId colorspace[MAX_COLOR_SPACE_NUM];
+    bool selected[MAX_COLOR_SPACE_NUM];
+    UINT tempCount;
+    if( get_OutputColorFormat(colorspace, selected, &tempCount)==S_OK )
+    {
+        *count = 0;
+        for (int i=0;i<tempCount;i++)
+        {
+            if(selected[i])
+            {
+                preferredOrder[*count] = colorspace[i];
+                (*count)++;
+            }
+        }
+    }
+    else
+    {
+        CBaseVideoFilter::GetInputColorspaces(preferredOrder, count);
+    }
+}

@@ -983,6 +983,10 @@ CDVSColorPPage::CDVSColorPPage(LPUNKNOWN pUnk, HRESULT* phr) :
 	BindControl(IDC_INPUT_FORMAT_LIST, m_inputFmtList);
 	
 	m_fDisableInstantUpdate = true;
+
+    //donot know how to detect check event of CListCtrl's checkboxes
+    //use this to false a update
+    m_bDirty = true;
 }
 
 bool CDVSColorPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1074,11 +1078,20 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
 		{
             for(int i = 0; i < m_outputColorSpaceCount; i++)
             {
-                m_outputColorSpace[i] = static_cast<ColorSpace>(m_outputFmtList.GetItemData(i));
+                m_outputColorSpace[i] = static_cast<ColorSpaceId>(m_outputFmtList.GetItemData(i));
                 m_selectedOutputColorSpace[i] = static_cast<bool>(m_outputFmtList.GetCheck(i));                
             }
 		}
 		else ASSERT(0);
+        if(m_inputFmtList.GetItemCount() == m_inputColorSpaceCount)
+        {
+            for(int i = 0; i < m_inputColorSpaceCount; i++)
+            {
+                m_inputColorSpace[i] = static_cast<ColorSpaceId>(m_inputFmtList.GetItemData(i));
+                m_selectedInputColorSpace[i] = static_cast<bool>(m_inputFmtList.GetCheck(i));                
+            }
+        }
+        else ASSERT(0);
 	}
 	else
 	{   

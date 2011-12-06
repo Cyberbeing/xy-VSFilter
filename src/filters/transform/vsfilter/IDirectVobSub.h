@@ -182,24 +182,24 @@ extern "C" {
         //
 
         STDMETHOD(get_OutputColorFormat) (THIS_
-                    ColorSpace* preferredOrder,
+                    ColorSpaceId* preferredOrder,
                     bool* fSelected,
                     UINT* count
                  ) PURE;
         STDMETHOD(put_OutputColorFormat) (THIS_
-                    const ColorSpace* preferredOrder,
+                    const ColorSpaceId* preferredOrder,
                     const bool* fSelected,
                     UINT count
                  ) PURE;
 		//
 
         STDMETHOD(get_InputColorFormat) (THIS_
-                    ColorSpace* preferredOrder,
+                    ColorSpaceId* preferredOrder,
                     bool* fSelected,
                     UINT* count
                 ) PURE;
         STDMETHOD(put_InputColorFormat) (THIS_
-                    const ColorSpace* preferredOrder,
+                    const ColorSpaceId* preferredOrder,
                     const bool* fSelected,
                     UINT count
                 ) PURE;

@@ -85,6 +85,10 @@ public:
 
     CAtlArray<CTextInputPin*> m_pTextInput;
 
+    //CBaseVideoFilter
+    void GetInputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
+    void GetOutputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
+
     // IDirectVobSub
     STDMETHODIMP put_FileName(WCHAR* fn);
 	STDMETHODIMP get_LanguageCount(int* nLangs);
