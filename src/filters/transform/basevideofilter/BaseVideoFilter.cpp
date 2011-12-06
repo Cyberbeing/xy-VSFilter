@@ -28,6 +28,59 @@
 #include <initguid.h>
 #include "..\..\..\..\include\moreuuids.h"
 
+const GUID* InputFmts[] =
+{
+    &MEDIASUBTYPE_P010,
+    &MEDIASUBTYPE_P016, 
+    &MEDIASUBTYPE_YV12, 
+    &MEDIASUBTYPE_I420, 
+    &MEDIASUBTYPE_IYUV, 
+    &MEDIASUBTYPE_YUY2, 
+    &MEDIASUBTYPE_ARGB32, 
+    &MEDIASUBTYPE_RGB32,
+    &MEDIASUBTYPE_RGB24,
+    &MEDIASUBTYPE_RGB565, 
+    &MEDIASUBTYPE_RGB555
+};
+
+const struct {const GUID* subtype; WORD biPlanes, biBitCount; DWORD biCompression;} OutputFmts[] =
+{
+    {&MEDIASUBTYPE_P010, 2, 24, '010P'},
+    {&MEDIASUBTYPE_P016, 2, 24, '610P'},
+    {&MEDIASUBTYPE_YV12, 3, 12, '21VY'},
+    {&MEDIASUBTYPE_I420, 3, 12, '024I'},
+    {&MEDIASUBTYPE_IYUV, 3, 12, 'VUYI'},
+    {&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
+    {&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
+    {&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},
+    {&MEDIASUBTYPE_RGB24, 1, 24, BI_RGB},
+    {&MEDIASUBTYPE_RGB565, 1, 16, BI_RGB},
+    {&MEDIASUBTYPE_RGB555, 1, 16, BI_RGB},
+    {&MEDIASUBTYPE_ARGB32, 1, 32, BI_BITFIELDS},
+    {&MEDIASUBTYPE_RGB32, 1, 32, BI_BITFIELDS},
+    {&MEDIASUBTYPE_RGB24, 1, 24, BI_BITFIELDS},
+    {&MEDIASUBTYPE_RGB565, 1, 16, BI_BITFIELDS},
+    {&MEDIASUBTYPE_RGB555, 1, 16, BI_BITFIELDS},
+};
+
+CString GetColorSpaceName(ColorSpace colorSpace, ColorSpaceDir inputOrOutput)
+{
+    if(inputOrOutput==INPUT_COLOR_SPACE)
+        return Subtype2String(*InputFmts[colorSpace]);
+    else
+        return Subtype2String(*OutputFmts[colorSpace].subtype);
+}
+
+UINT GetOutputColorSpaceNumber()
+{
+    return countof(OutputFmts);
+}
+
+UINT GetInputColorSpaceNumber()
+{
+    return countof(InputFmts);
+}
+
 //
 // CBaseVideoFilter
 //
@@ -520,26 +573,6 @@ HRESULT CBaseVideoFilter::DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_
 		: NOERROR;
 }
 
-const struct {const GUID* subtype; WORD biPlanes, biBitCount; DWORD biCompression;} fmts[] =
-{
-    {&MEDIASUBTYPE_P010, 2, 24, '010P'},
-    {&MEDIASUBTYPE_P016, 2, 24, '610P'},
-    {&MEDIASUBTYPE_YV12, 3, 12, '21VY'},
-    {&MEDIASUBTYPE_I420, 3, 12, '024I'},
-    {&MEDIASUBTYPE_IYUV, 3, 12, 'VUYI'},
-    {&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
-    {&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
-    {&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},
-    {&MEDIASUBTYPE_RGB24, 1, 24, BI_RGB},
-    {&MEDIASUBTYPE_RGB565, 1, 16, BI_RGB},
-    {&MEDIASUBTYPE_RGB555, 1, 16, BI_RGB},
-    {&MEDIASUBTYPE_ARGB32, 1, 32, BI_BITFIELDS},
-    {&MEDIASUBTYPE_RGB32, 1, 32, BI_BITFIELDS},
-    {&MEDIASUBTYPE_RGB24, 1, 24, BI_BITFIELDS},
-    {&MEDIASUBTYPE_RGB565, 1, 16, BI_BITFIELDS},
-    {&MEDIASUBTYPE_RGB555, 1, 16, BI_BITFIELDS},
-};
-
 HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 {
     if(m_pInput->IsConnected() == FALSE) return E_UNEXPECTED;
@@ -559,10 +592,10 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 	//
 
 	if(iPosition < 0) return E_INVALIDARG;
-	if(iPosition >= 2*countof(fmts)) return VFW_S_NO_MORE_ITEMS;
+	if(iPosition >= 2*countof(OutputFmts)) return VFW_S_NO_MORE_ITEMS;
 
 	pmt->majortype = MEDIATYPE_Video;
-	pmt->subtype = *fmts[iPosition/2].subtype;
+	pmt->subtype = *OutputFmts[iPosition/2].subtype;
 
 	int w = m_win, h = m_hin, arx = m_arxin, ary = m_aryin;
 	GetOutputSize(w, h, arx, ary);
@@ -572,9 +605,9 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 	bihOut.biSize = sizeof(bihOut);
 	bihOut.biWidth = w;
 	bihOut.biHeight = h;
-	bihOut.biPlanes = fmts[iPosition/2].biPlanes;
-	bihOut.biBitCount = fmts[iPosition/2].biBitCount;
-	bihOut.biCompression = fmts[iPosition/2].biCompression;
+	bihOut.biPlanes = OutputFmts[iPosition/2].biPlanes;
+	bihOut.biBitCount = OutputFmts[iPosition/2].biBitCount;
+	bihOut.biCompression = OutputFmts[iPosition/2].biCompression;
 	bihOut.biSizeImage = w*h*bihOut.biBitCount>>3;
 
 	if(iPosition&1)
@@ -611,10 +644,10 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 
 int CBaseVideoFilter::GetMediaSubTypePosition( const GUID& subtype )
 {
-    int i=countof(fmts)-1;
+    int i=countof(OutputFmts)-1;
     while(i>=0)
     {
-        if (*(fmts[i].subtype)==subtype)
+        if (*(OutputFmts[i].subtype)==subtype)
         {
             break;
         }

@@ -21,7 +21,8 @@
 
 #pragma once
 
-#include "..\..\..\subtitles\STS.h"
+#include "../../../subtitles/STS.h"
+#include "../BaseVideoFilter/BaseVideoFilter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -178,8 +179,31 @@ extern "C" {
         STDMETHOD(put_ColorFormat) (THIS_
 					int iPosition
                  ) PURE;
+        //
 
+        STDMETHOD(get_OutputColorFormat) (THIS_
+                    ColorSpace* preferredOrder,
+                    bool* fSelected,
+                    UINT* count
+                 ) PURE;
+        STDMETHOD(put_OutputColorFormat) (THIS_
+                    const ColorSpace* preferredOrder,
+                    const bool* fSelected,
+                    UINT count
+                 ) PURE;
 		//
+
+        STDMETHOD(get_InputColorFormat) (THIS_
+                    ColorSpace* preferredOrder,
+                    bool* fSelected,
+                    UINT* count
+                ) PURE;
+        STDMETHOD(put_InputColorFormat) (THIS_
+                    const ColorSpace* preferredOrder,
+                    const bool* fSelected,
+                    UINT count
+                ) PURE;
+        //
 
         STDMETHOD(get_ZoomRect) (THIS_
 					NORMALIZEDRECT* rect

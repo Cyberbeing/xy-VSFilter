@@ -21,6 +21,16 @@
 
 #pragma once
 
+typedef int ColorSpace;
+enum ColorSpaceDir
+{
+    INPUT_COLOR_SPACE = 0,
+    OUTPUT_COLOR_SPACE = 1
+};
+CString GetColorSpaceName(ColorSpace colorSpace, ColorSpaceDir inputOrOutput);
+UINT GetOutputColorSpaceNumber();
+UINT GetInputColorSpaceNumber();
+
 class CBaseVideoFilter : public CTransformFilter
 {
 private:

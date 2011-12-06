@@ -27,8 +27,8 @@ CDirectVobSub::CDirectVobSub()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-	BYTE* pData;
-	UINT nSize;
+	BYTE* pData = NULL;
+	UINT nSize = 0;
 
     m_iSelectedLanguage = 0;
     m_fHideSubtitles = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), 0);
@@ -68,17 +68,74 @@ CDirectVobSub::CDirectVobSub()
     if(m_subpixel_pos_level<0) m_subpixel_pos_level=0;
     else if(m_subpixel_pos_level>=SubpixelPositionControler::MAX_COUNT) m_subpixel_pos_level=SubpixelPositionControler::EIGHT_X_EIGHT;
 
-    pData = NULL;
+    // get output colorspace config
+    if(pData)
+    {
+        delete [] pData;
+        pData = NULL;
+    }
+    if(theApp.GetProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_OUTPUT_COLORFORMATS), &pData, &nSize)
+        && pData && nSize == 2*GetOutputColorSpaceNumber())
+    {
+        for (int i=0;i<nSize/2;i++)
+        {
+            m_outputColorSpace[i] = static_cast<ColorSpace>(pData[2*i]);
+            m_selectedOutputColorSpace[i] = static_cast<bool>(pData[2*i+1]);
+        }        
+    }
+    else
+    {
+        for (int i=0;i<GetOutputColorSpaceNumber();i++)
+        {
+            m_outputColorSpace[i] = static_cast<ColorSpace>(i);
+            m_selectedOutputColorSpace[i] = true;
+        }
+    }
+
+    // get input colorspace config
+    if(pData)
+    {
+        delete [] pData;
+        pData = NULL;
+    }
+    if(theApp.GetProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INPUT_COLORFORMATS), &pData, &nSize)
+        && pData && nSize == 2*GetInputColorSpaceNumber())
+    {
+        for (int i=0;i<nSize/2;i++)
+        {
+            m_inputColorSpace[i] = static_cast<ColorSpace>(pData[2*i]);
+            m_selectedInputColorSpace[i] = static_cast<bool>(pData[2*i+1]);
+        }        
+    }
+    else
+    {
+        for (int i=0;i<GetOutputColorSpaceNumber();i++)
+        {
+            m_inputColorSpace[i] = static_cast<ColorSpace>(i);
+            m_selectedInputColorSpace[i] = true;
+        }
+    }
+
+    //
+    if(pData)
+    {
+        delete [] pData;
+        pData = NULL;
+    }
 	if(theApp.GetProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), &pData, &nSize) && pData)
 	{
 		if(nSize != sizeof(m_MediaFPS)) m_MediaFPS = 25.0;
 		else memcpy(&m_MediaFPS, pData, sizeof(m_MediaFPS));
-		delete [] pData;
 	}
 	m_ZoomRect.left = m_ZoomRect.top = 0;
 	m_ZoomRect.right = m_ZoomRect.bottom = 1;
 
 	m_fForced = false;
+    if(pData)
+    {
+        delete [] pData;
+        pData = NULL;
+    }
 }
 
 CDirectVobSub::~CDirectVobSub()
@@ -465,6 +522,78 @@ STDMETHODIMP CDirectVobSub::put_ZoomRect(NORMALIZEDRECT* rect)
 	return S_OK;
 }
 
+STDMETHODIMP CDirectVobSub::get_OutputColorFormat(ColorSpace* preferredOrder, bool* fSelected, UINT* count)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+    if(count)
+    {
+        *count = GetOutputColorSpaceNumber();
+    }
+    if(preferredOrder)
+    {
+        memcpy(preferredOrder, m_outputColorSpace, GetOutputColorSpaceNumber()*sizeof(*preferredOrder));
+    }
+    if(fSelected)
+    {
+        memcpy(fSelected, m_selectedOutputColorSpace, GetOutputColorSpaceNumber()*sizeof(*fSelected));
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::put_OutputColorFormat( const ColorSpace* preferredOrder, const bool* fSelected, UINT count )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if( count!=GetOutputColorSpaceNumber() )
+        return S_FALSE;
+    if( (preferredOrder==NULL || !memcmp(preferredOrder, m_outputColorSpace, count*sizeof(*preferredOrder)))
+        && (fSelected==NULL || !memcmp(fSelected, m_selectedOutputColorSpace, count*sizeof(*fSelected))) )
+        return S_FALSE;
+    if(preferredOrder)
+        memcpy(m_outputColorSpace, preferredOrder, count*sizeof(*preferredOrder));
+    if(fSelected)
+        memcpy(m_selectedOutputColorSpace, fSelected, count*sizeof(*fSelected));
+
+    return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::get_InputColorFormat( ColorSpace* preferredOrder, bool* fSelected, UINT* count )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+    if(count)
+    {
+        *count = GetInputColorSpaceNumber();
+    }
+    if(preferredOrder)
+    {
+        memcpy(preferredOrder, m_inputColorSpace, GetOutputColorSpaceNumber()*sizeof(*preferredOrder));
+    }
+    if(fSelected)
+    {
+        memcpy(fSelected, m_selectedInputColorSpace, GetOutputColorSpaceNumber()*sizeof(*fSelected));
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::put_InputColorFormat( const ColorSpace* preferredOrder, const bool* fSelected, UINT count )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if( count!=GetInputColorSpaceNumber() )
+        return S_FALSE;
+    if( (preferredOrder==NULL || !memcmp(preferredOrder, m_inputColorSpace, count*sizeof(*preferredOrder)))
+        && (fSelected==NULL || !memcmp(fSelected, m_selectedInputColorSpace, count*sizeof(*fSelected))) )
+        return S_FALSE;
+    if(preferredOrder)
+        memcpy(m_inputColorSpace, preferredOrder, count*sizeof(*preferredOrder));
+    if(fSelected)
+        memcpy(m_selectedInputColorSpace, fSelected, count*sizeof(*fSelected));
+
+    return S_OK;
+}
+
 STDMETHODIMP CDirectVobSub::get_OverlayCacheMaxItemNum(int* overlay_cache_max_item_num)
 {
     CAutoLock cAutoLock(&m_propsLock);
@@ -628,6 +757,36 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM), m_scan_line_data_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), m_path_data_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), m_subpixel_pos_level);
+
+    //save output color config
+    {
+        int count = GetOutputColorSpaceNumber();
+        BYTE* pData = new BYTE[2*count];
+        for(int i = 0; i < count; i++)
+        {
+            pData[2*i] = static_cast<BYTE>(m_outputColorSpace[i]);
+            pData[2*i+1] = static_cast<BYTE>(m_selectedOutputColorSpace[i]);
+        }
+        theApp.WriteProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_OUTPUT_COLORFORMATS), pData, 2*count);
+
+        delete [] pData;
+    }
+
+    //save input color config
+    {
+        int count = GetInputColorSpaceNumber();
+        BYTE* pData = new BYTE[2*count];
+        for(int i = 0; i < count; i++)
+        {
+            pData[2*i] = static_cast<BYTE>(m_inputColorSpace[i]);
+            pData[2*i+1] = static_cast<BYTE>(m_selectedInputColorSpace[i]);
+        }
+        theApp.WriteProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INPUT_COLORFORMATS), pData, 2*count);
+
+        delete [] pData;
+    }
+
+    //
 	return S_OK;
 }
 

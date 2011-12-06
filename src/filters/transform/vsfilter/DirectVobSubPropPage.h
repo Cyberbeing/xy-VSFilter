@@ -193,9 +193,16 @@ public:
 [uuid("C2D6D98F-09CA-4524-AF64-1049B5665C9C")]
 class CDVSColorPPage : public CDVSBasePPage
 {
-	CListBox m_preflist, m_dynchglist;
-	CButton m_forcergb;
+    CListCtrl m_outputFmtList, m_inputFmtList;
+    
+    static const int MAX_COLOR_SPACE = 256;
+    ColorSpace m_outputColorSpace[MAX_COLOR_SPACE];
+    bool m_selectedOutputColorSpace[MAX_COLOR_SPACE];
+    UINT m_outputColorSpaceCount;
 
+    ColorSpace m_inputColorSpace[MAX_COLOR_SPACE];
+    bool m_selectedInputColorSpace[MAX_COLOR_SPACE];
+    UINT m_inputColorSpaceCount;
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual void UpdateControlData(bool fSave);

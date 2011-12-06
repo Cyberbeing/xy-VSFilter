@@ -122,16 +122,13 @@ IDD_DVSCOLORPAGE DIALOGEX 0, 0, 247, 188
 STYLE DS_SETFONT | WS_CHILD
 FONT 8, "MS Sans Serif", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Preference Order",IDC_STATIC,7,7,70,156
-    GROUPBOX        "Dynamic Change",IDC_STATIC,84,7,70,156
-    LISTBOX         IDC_PREFLIST,15,19,53,115,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    LISTBOX         IDC_DYNCHGLIST,92,19,53,115,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Dynamic format change may only work under Windows XP using the Video Mixing Render and only into color formats supported by the video card or the desktop color depth.",IDC_DYNCHGWARNING,160,19,72,75
-    LTEXT           "For the old renderer you have to adjust the preference list and re-open the video file.",IDC_DYNCHGWARNING2,160,96,71,42
-    PUSHBUTTON      "&Up",IDC_COLORUP,16,141,25,12
-    PUSHBUTTON      "&Down",IDC_COLORDOWN,41,141,25,12
-    PUSHBUTTON      "&Change!",IDC_COLORCHANGE,102,141,33,12
-    CONTROL         "&Force RGB",IDC_FORCERGBCHK,"Button",BS_AUTOCHECKBOX | BS_LEFT | WS_TABSTOP,170,142,51,10
+    GROUPBOX        "Input",IDC_STATIC,7,7,70,156
+    GROUPBOX        "Output",IDC_STATIC,84,7,70,156
+    LTEXT           "To force an specific input/output format, uncheck all formats except the one you want.",IDC_DYNCHGWARNING,160,19,72,75
+    PUSHBUTTON      "&Up",IDC_COLORUP,90,141,25,12
+    PUSHBUTTON      "&Down",IDC_COLORDOWN,118,141,25,12
+    CONTROL         "",IDC_OUTPUT_FORMAT_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,85,19,62,115
+    CONTROL         "",IDC_INPUT_FORMAT_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,19,63,115
 END
 
 IDD_DVSGENERALPAGE DIALOGEX 0, 0, 247, 188
@@ -394,7 +391,7 @@ BEGIN
         VERTGUIDE, 118
         VERTGUIDE, 160
         TOPMARGIN, 7
-        BOTTOMMARGIN, 181
+        BOTTOMMARGIN, 180
         HORZGUIDE, 19
         HORZGUIDE, 134
         HORZGUIDE, 147
@@ -569,7 +566,6 @@ BEGIN
     IDS_ORGHEIGHT           "Original height"
     IDS_RG_VMRZOOMENABLED   "VMRZoomEnabled"
     IDS_RTM_SUBTITLESPEEDDIV "Subtitle Speeddiv"
-    IDS_RG_COLORFORMATS     "Color Formats"
     IDS_EXTTO169            "Extend to 16:9"
     IDS_RG_FORCERGB         "ForceRGB"
     IDS_RG_ENABLEZPICON     "EnableZPIcon"
@@ -626,6 +622,8 @@ BEGIN
     IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM "Path_cache_max_item_num"
     IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM 
                             "Overlay_no_blur_cache_max_item_num"
+    IDS_RG_OUTPUT_COLORFORMATS "Output Color Format"
+    IDS_RG_INPUT_COLORFORMATS "Input Color Format"
 END
 
 STRINGTABLE
