@@ -41,7 +41,8 @@ protected:
     STDMETHODIMP AlphaBltAxyuAxyv_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
     STDMETHODIMP AlphaBltAxyuAxyv_Yv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
     STDMETHODIMP AlphaBltAxyuAxyv_Nv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
-    STDMETHODIMP AlphaBltAnv12_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);       
+    STDMETHODIMP AlphaBltAnv12_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);   
+    STDMETHODIMP AlphaBltAnv12_Nvxx(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
     STDMETHODIMP AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
     
     STDMETHODIMP UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList);

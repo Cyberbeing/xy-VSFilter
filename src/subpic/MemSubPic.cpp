@@ -381,6 +381,58 @@ void mix_16_uv_p010_c(BYTE* dst, const BYTE* src, const BYTE* src_alpha, int pit
     }
 }
 
+__forceinline void mix_16_uv_nvxx_sse2(BYTE* dst, const BYTE* src, const BYTE* src_alpha, int pitch)
+{
+    __m128i dst128 = _mm_load_si128( reinterpret_cast<const __m128i*>(dst) );
+    __m128i alpha128_1 = _mm_load_si128( reinterpret_cast<const __m128i*>(src_alpha) );
+    __m128i alpha128_2 = _mm_load_si128( reinterpret_cast<const __m128i*>(src_alpha+pitch) );
+    __m128i sub128 = _mm_load_si128( reinterpret_cast<const __m128i*>(src) );
+
+    AVERAGE_4_PIX_INTRINSICS_2(alpha128_1, alpha128_2);
+    __m128i zero = _mm_setzero_si128();
+
+    __m128i ones = _mm_cmpeq_epi32(ones,ones);
+    ones = _mm_cmpeq_epi8(ones,alpha128_1);
+
+    __m128i dst_lo128 = _mm_unpacklo_epi8(dst128, zero);
+    alpha128_2 = _mm_unpacklo_epi8(alpha128_1, zero);
+
+    __m128i ones2 = _mm_unpacklo_epi8(ones, zero);    
+
+    dst_lo128 = _mm_mullo_epi16(dst_lo128, alpha128_2);
+    dst_lo128 = _mm_adds_epu16(dst_lo128, ones2);
+    dst_lo128 = _mm_srli_epi16(dst_lo128, 8);
+
+    dst128 = _mm_unpackhi_epi8(dst128, zero);
+    alpha128_1 = _mm_unpackhi_epi8(alpha128_1, zero);
+
+    ones2 = _mm_unpackhi_epi8(ones, zero);
+
+    dst128 = _mm_mullo_epi16(dst128, alpha128_1);
+    dst128 = _mm_adds_epu16(dst128, ones2);
+    dst128 = _mm_srli_epi16(dst128, 8);
+    dst_lo128 = _mm_packus_epi16(dst_lo128, dst128);
+
+    dst_lo128 = _mm_adds_epu8(dst_lo128, sub128);
+    _mm_store_si128( reinterpret_cast<__m128i*>(dst), dst_lo128 );
+}
+
+//for test only
+void mix_16_uv_nvxx_c(BYTE* dst, const BYTE* src, const BYTE* src_alpha, int pitch)
+{
+    for (int i=0;i<8;i++, src_alpha+=2, src+=2, dst+=2)
+    {
+        unsigned int ia = ( 
+            (src_alpha[0]+src_alpha[0+pitch]+1)/2+
+            (src_alpha[1]+src_alpha[1+pitch]+1)/2+1)/2;
+        if( ia!=0xFF )
+        {
+            dst[0] = (((dst[0])*ia)>>8) + src[0];            
+            dst[1] = (((dst[1])*ia)>>8) + src[1];
+        }
+    }
+}
+
 //
 // CMemSubPic
 //
@@ -733,12 +785,16 @@ STDMETHODIMP CMemSubPic::AlphaBlt( const RECT* pSrc, const RECT* pDst, SubPicDes
         (src_type==MSP_AYUV &&  dst_type == MSP_AYUV) 
         ||
         (src_type==MSP_AYUV_PLANAR && (dst_type == MSP_IYUV ||
-                                dst_type == MSP_YV12 ||                                
-                                dst_type == MSP_NV12 ||
-                                dst_type == MSP_NV21)) )
+                                dst_type == MSP_YV12)) )
     {
         return AlphaBltOther(pSrc, pDst, pTarget);        
     }
+    else if ( src_type==MSP_AYUV_PLANAR && (dst_type == MSP_NV12 ||
+                                            dst_type == MSP_NV21 ) )
+    {
+        return AlphaBltAnv12_Nvxx(pSrc, pDst, pTarget);
+    }
+    
     else if( src_type==MSP_AYUV_PLANAR && (dst_type == MSP_P010 ||
                                            dst_type == MSP_P016 ) )
     {
@@ -985,64 +1041,6 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
 
             AlphaBltYv12Chroma( dd[0], dst.pitchUV, w, h2, ss[0], src_origin, src.pitch);
             AlphaBltYv12Chroma( dd[1], dst.pitchUV, w, h2, ss[1], src_origin, src.pitch);
-
-            __asm emms;
-        }
-        break;
-    case MSP_NV12:
-    case MSP_NV21:
-        {
-            //dst.pitch = abs(dst.pitch);
-            int h2 = h/2;
-            if(!dst.pitchUV)
-            {
-                dst.pitchUV = abs(dst.pitch);
-            }
-            if(!dst.bitsU)
-            {
-                dst.bitsU = (BYTE*)dst.bits + abs(dst.pitch)*dst.h;                
-            }
-            BYTE* ddUV = dst.bitsU + dst.pitchUV*rd.top/2 + rd.left;            
-            if(rd.top > rd.bottom)
-            {
-                ddUV = dst.bitsU + dst.pitchUV*(rd.top/2-1) + rd.left;
-                dst.pitchUV = -dst.pitchUV;
-            }
-
-            BYTE* src_origin= (BYTE*)src.bits + src.pitch*rs.top + rs.left;            
-
-            BYTE* ss[2];
-            ss[0] = src_origin + src.pitch*src.h*2;//U
-            ss[1] = src_origin + src.pitch*src.h*3;//V
-
-            AlphaBltYv12Luma( d, dst.pitch, w, h, src_origin + src.pitch*src.h, src_origin, src.pitch );
-            
-            {
-                BYTE* s_u = ss[0];
-                BYTE* sa = src_origin;
-                BYTE* d = ddUV;
-                int pitch = src.pitch;
-                for(int j = 0; j < h2; j++, s_u += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
-                {
-                    BYTE* s_u2 = s_u;
-                    BYTE* sa2 = sa;
-                    BYTE* s_u2end_mod16 = s_u2 + (w&~15);
-                    BYTE* s_u2end = s_u2 + w;
-                    BYTE* d2 = d;
-
-                    for( BYTE* d3=d2; s_u2 < s_u2end; s_u2+=2, sa2+=2, d3+=2)
-                    {
-                        unsigned int ia = ( 
-                            sa2[0]+          sa2[1]+
-                            sa2[0+src.pitch]+sa2[1+src.pitch]);
-                        if( ia!=0xFF*4 )
-                        {
-                            d3[0] = (((d3[0])*ia)>>10) + s_u2[0];
-                            d3[1] = (((d3[1])*ia)>>10) + s_u2[1];
-                        }
-                    }
-                }
-            }
 
             __asm emms;
         }
@@ -1469,6 +1467,113 @@ STDMETHODIMP CMemSubPic::AlphaBltAnv12_P010( const RECT* pSrc, const RECT* pDst,
             }
         }
     }
+    __asm emms;
+}
+
+STDMETHODIMP CMemSubPic::AlphaBltAnv12_Nvxx( const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget )
+{
+    //fix me: check colorspace and log error
+    const SubPicDesc& src = m_spd;
+    SubPicDesc dst = *pTarget; // copy, because we might modify it
+
+    CRect rs(*pSrc), rd(*pDst);
+    if(dst.h < 0)
+    {
+        dst.h = -dst.h;
+        rd.bottom = dst.h - rd.bottom;
+        rd.top = dst.h - rd.top;
+    }
+    if(rs.Width() != rd.Width() || rs.Height() != abs(rd.Height())) {
+        return E_INVALIDARG;
+    }
+    int w = rs.Width(), h = rs.Height();
+    bool bottom_down = rs.top > rd.bottom;
+
+    BYTE* d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*rd.top + rd.left;
+    if(bottom_down)
+    {
+        d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*(rd.top-1) + rd.left;
+        dst.pitch = -dst.pitch;
+    }
+
+    //dst.pitch = abs(dst.pitch);
+    int h2 = h/2;
+    if(!dst.pitchUV)
+    {
+        dst.pitchUV = abs(dst.pitch);
+    }
+    if(!dst.bitsU)
+    {
+        dst.bitsU = reinterpret_cast<BYTE*>(dst.bits) + abs(dst.pitch)*dst.h;                
+    }
+    BYTE* ddUV = dst.bitsU + dst.pitchUV*rd.top/2 + rd.left;            
+    if(bottom_down)
+    {
+        ddUV = dst.bitsU + dst.pitchUV*(rd.top/2-1) + rd.left;
+        dst.pitchUV = -dst.pitchUV;
+    }
+
+    BYTE* sa= reinterpret_cast<BYTE*>(src.bits) + src.pitch*rs.top + rs.left;            
+
+    BYTE* s_uv = sa + src.pitch*src.h*2;//UV    
+
+    AlphaBltYv12Luma( d, dst.pitch, w, h, sa + src.pitch*src.h, sa, src.pitch );
+    if( ((reinterpret_cast<intptr_t>(sa) | static_cast<intptr_t>(src.pitch) |
+        reinterpret_cast<intptr_t>(ddUV) | static_cast<intptr_t>(dst.pitchUV) ) & 15 )==0 )
+    {
+        BYTE* d = ddUV;
+        int pitch = src.pitch;
+        for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
+        {
+            BYTE* s_u2 = s_uv;
+            BYTE* sa2 = sa;
+            BYTE* s_u2end_mod16 = s_u2 + (w&~15);
+            BYTE* s_u2end = s_u2 + w;
+            BYTE* d2 = d;
+
+            for(; s_u2 < s_u2end_mod16; s_u2+=16, sa2+=16, d2+=16)
+            {
+                mix_16_uv_nvxx_sse2(d2, s_u2, sa2, src.pitch);
+            }
+            for( BYTE* d3=d2; s_u2 < s_u2end; s_u2+=2, sa2+=2, d3+=2)
+            {
+                unsigned int ia = ( 
+                    sa2[0]+          sa2[1]+
+                    sa2[0+src.pitch]+sa2[1+src.pitch]);
+                if( ia!=0xFF*4 )
+                {
+                    d3[0] = (((d3[0])*ia)>>10) + s_u2[0];
+                    d3[1] = (((d3[1])*ia)>>10) + s_u2[1];
+                }
+            }
+        }
+    }
+    else
+    {
+        BYTE* d = ddUV;
+        int pitch = src.pitch;
+        for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
+        {
+            BYTE* s_u2 = s_uv;
+            BYTE* sa2 = sa;
+            BYTE* s_u2end_mod16 = s_u2 + (w&~15);
+            BYTE* s_u2end = s_u2 + w;
+            BYTE* d2 = d;
+
+            for( BYTE* d3=d2; s_u2 < s_u2end; s_u2+=2, sa2+=2, d3+=2)
+            {
+                unsigned int ia = ( 
+                    sa2[0]+          sa2[1]+
+                    sa2[0+src.pitch]+sa2[1+src.pitch]);
+                if( ia!=0xFF*4 )
+                {
+                    d3[0] = (((d3[0])*ia)>>10) + s_u2[0];
+                    d3[1] = (((d3[1])*ia)>>10) + s_u2[1];
+                }
+            }
+        }
+    }
+
     __asm emms;
 }
 
