@@ -23,5 +23,11 @@
     <ClInclude Include="test_subsample_and_interlace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="subpic_alphablend_test_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_alphablend.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

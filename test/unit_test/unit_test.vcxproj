@@ -95,6 +95,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="subpic_alphablend_test_data.h" />
+    <ClInclude Include="test_alphablend.h" />
     <ClInclude Include="test_subsample_and_interlace.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
 //#include "test_interlaced_uv_alphablend.h"
-#include "test_subsample_and_interlace.h"
+//#include "test_subsample_and_interlace.h"
+#include "test_alphablend.h"
 
 int main(int argc, char ** argv)
 {
