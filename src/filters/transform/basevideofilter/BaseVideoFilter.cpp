@@ -450,7 +450,7 @@ HRESULT CBaseVideoFilter::DoCheckTransform( const CMediaType* mtIn, const CMedia
             int position = 0;
             HRESULT hr;
             position = GetOutputSubtypePosition(mtOut->subtype);
-            if(position>0)
+            if(position>=0)
             {
                 hr = GetMediaType(position, &desiredMt);                
                 DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
@@ -465,19 +465,17 @@ HRESULT CBaseVideoFilter::DoCheckTransform( const CMediaType* mtIn, const CMedia
             }
             else
             {
+                position = 0;
                 do
-                {
-                    position = 0;
+                {                    
                     hr = GetMediaType(position, &desiredMt);
                     ++position;
                     if( hr!=S_OK )
                         break;
                     DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
                     DisplayType(0, &desiredMt);
-                    if( desiredMt.subtype==MEDIASUBTYPE_P010 || 
-                        desiredMt.subtype==MEDIASUBTYPE_P016 ||
-                        FAILED( DoCheckTransform(&desiredMt, mtOut, true) ) ||
-                        FAILED(m_pInput->GetConnected()->QueryAccept(&desiredMt)) )
+                    if( DoCheckTransform(&desiredMt, mtOut, true)!=S_OK ||
+                        m_pInput->GetConnected()->QueryAccept(&desiredMt)!=S_OK )
                     {
                         continue;
                     }
@@ -670,16 +668,15 @@ int CBaseVideoFilter::GetOutputSubtypePosition( const GUID& subtype )
     {
         InitInputOutputColorSpaces();
     }
-    int i=m_outputFmtCount-1;
-    while(i>=0)
+    int i=0;
+    for(i=0;i<m_outputFmtCount;i++)
     {
         if (*(m_outputFmt[i]->subtype)==subtype)
         {
             break;
         }
-        i--;
     }
-    return i;
+    return i<m_outputFmtCount?i:-1;
 }
 
 HRESULT CBaseVideoFilter::SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt)

@@ -509,14 +509,14 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
             HRESULT hr;
 
             position = GetOutputSubtypePosition(mtOut->subtype);
-            if(position>0)
+            if(position>=0)
             {
                 hr = GetMediaType(position, &desiredMt);                
                 DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
                 DisplayType(0, &desiredMt);
 
                 if (hr==S_OK && //SUCCEEDED(hr) &&
-                    SUCCEEDED(m_pInput->GetConnected()->QueryAccept(&desiredMt)))
+                    m_pInput->GetConnected()->QueryAccept(&desiredMt)==S_OK)
                 {
                     can_reconnect = true;
                     DbgLog((LOG_TRACE, 3, TEXT("8 bit output accpeted")));
@@ -524,9 +524,9 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
             }
             else
             {
+                position = 0;
                 do
-                {
-                    position = 0;
+                {                    
                     hr = GetMediaType(position, &desiredMt);
                     ++position;
                     //if( FAILED(hr) )
@@ -536,10 +536,8 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
                     DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
                     DisplayType(0, &desiredMt);
 
-                    if( desiredMt.subtype==MEDIASUBTYPE_P010 || 
-                        desiredMt.subtype==MEDIASUBTYPE_P016 ||
-                        FAILED( DoCheckTransform(&desiredMt, mtOut, true) ) ||
-                        FAILED(m_pInput->GetConnected()->QueryAccept(&desiredMt)) )
+                    if( DoCheckTransform(&desiredMt, mtOut, true)!=S_OK ||
+                        m_pInput->GetConnected()->QueryAccept(&desiredMt)!=S_OK )
                     {
                         continue;
                     }
