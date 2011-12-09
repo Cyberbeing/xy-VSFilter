@@ -495,80 +495,101 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
         const CMediaType* mtIn = &(m_pInput->CurrentMediaType());
         const CMediaType* mtOut = &(m_pOutput->CurrentMediaType());
         CMediaType desiredMt;        
+        int position = 0;
+        HRESULT hr;
 
-        if( (mtIn->subtype == MEDIASUBTYPE_P010 || mtIn->subtype == MEDIASUBTYPE_P016)
-            && (mtOut->subtype != mtIn->subtype ) )
+        bool can_reconnect = false;
+        bool can_transform = (DoCheckTransform(mtIn, mtOut, true)==S_OK);
+        if( mtIn->subtype!=mtOut->subtype )
         {   
-            DbgLog((LOG_TRACE, 3, TEXT("Try reconnect!")));
-            DbgLog((LOG_TRACE, 3, TEXT("Trying media type:")));
-            DisplayType(0, mtOut);
-
-            bool can_reconnect = false;
-            CMediaType desiredMt;
-            int position = 0;
-            HRESULT hr;
-
             position = GetOutputSubtypePosition(mtOut->subtype);
             if(position>=0)
             {
-                hr = GetMediaType(position, &desiredMt);                
-                DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
-                DisplayType(0, &desiredMt);
-
-                if (hr==S_OK && //SUCCEEDED(hr) &&
-                    m_pInput->GetConnected()->QueryAccept(&desiredMt)==S_OK)
+                hr = GetMediaType(position, &desiredMt);  
+                if (hr!=S_OK)
                 {
-                    can_reconnect = true;
-                    DbgLog((LOG_TRACE, 3, TEXT("8 bit output accpeted")));
-                }
-            }
-            else
-            {
-                position = 0;
-                do
-                {                    
-                    hr = GetMediaType(position, &desiredMt);
-                    ++position;
-                    //if( FAILED(hr) )
-                    if( hr!=S_OK )
-                        break;
-
-                    DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
-                    DisplayType(0, &desiredMt);
-
-                    if( DoCheckTransform(&desiredMt, mtOut, true)!=S_OK ||
-                        m_pInput->GetConnected()->QueryAccept(&desiredMt)!=S_OK )
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        can_reconnect = true;
-                        break;
-                    }
-                } while ( true );
-            }            
-
-            if ( can_reconnect )
-            {
-                if (SUCCEEDED(ReconnectPin(m_pInput, &desiredMt)))
-                {
-                    reconnected = true;
-                    DumpGraph(m_pGraph,0);
-                    //m_pInput->SetMediaType(&desiredMt);
-                    DbgLog((LOG_TRACE, 3, TEXT("reconnected succeed!")));
+                    DbgLog((LOG_ERROR, 3, TEXT("Unexpected error when GetMediaType, position:%d"), position));
                 }
                 else
                 {
-                    DbgLog((LOG_TRACE, 3, TEXT("Failed to reconnect!")));
-                    return VFW_E_TYPE_NOT_ACCEPTED;
+                    hr = DoCheckTransform(&desiredMt, mtOut, true);
+                    if (hr!=S_OK)
+                    {
+                        DbgLog((LOG_TRACE, 3, TEXT("Transform not accept:")));
+                        DisplayType(0,&desiredMt);
+                        DisplayType(0,mtOut);
+                    }
+                    else
+                    {
+                        hr = m_pInput->GetConnected()->QueryAccept(&desiredMt);
+                        if(hr!=S_OK)
+                        {
+                            DbgLog((LOG_TRACE, 3, TEXT("Upstream not accept:")));
+                            DisplayType(0, &desiredMt);
+                        }
+                        else
+                        {
+                            can_reconnect = true;
+                            DbgLog((LOG_ERROR, 3, TEXT("Can use the same subtype!")));
+                        }
+                    }
                 }
             }
             else
             {
-                DbgLog((LOG_TRACE, 3, TEXT("Failed to agree reconnect type!")));
-                return VFW_E_TYPE_NOT_ACCEPTED;
+                DbgLog((LOG_ERROR, 3, TEXT("Cannot use the same subtype!")));
             }
+        }
+        if(!can_reconnect && !can_transform)
+        {
+            position = 0;
+            do
+            {                
+                hr = GetMediaType(position, &desiredMt);
+                ++position;
+                //if( FAILED(hr) )
+                if( hr!=S_OK )
+                    break;
+
+                DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
+                DisplayType(0, &desiredMt);
+
+                if( DoCheckTransform(&desiredMt, mtOut, true)!=S_OK ||
+                    m_pInput->GetConnected()->QueryAccept(&desiredMt)!=S_OK )
+                {
+                    continue;
+                }
+                else
+                {
+                    can_reconnect = true;
+                    break;
+                }
+            } while ( true );
+        }
+        if ( can_reconnect )
+        {
+            if (SUCCEEDED(ReconnectPin(m_pInput, &desiredMt)))
+            {
+                reconnected = true;
+                DumpGraph(m_pGraph,0);
+                //m_pInput->SetMediaType(&desiredMt);
+                DbgLog((LOG_TRACE, 3, TEXT("reconnected succeed!")));
+            }
+        }
+        else if(!can_transform)
+        {
+            DbgLog((LOG_TRACE, 3, TEXT("Failed to agree reconnect type!")));
+            if(m_pInput->IsConnected())
+            {
+                m_pInput->GetConnected()->Disconnect();
+                m_pInput->Disconnect();
+            }
+            if(m_pOutput->IsConnected())
+            {
+                m_pOutput->GetConnected()->Disconnect();
+                m_pOutput->Disconnect();
+            }
+            return VFW_E_TYPE_NOT_ACCEPTED;
         }
 	}
     if (!reconnected && m_pOutput->IsConnected())
