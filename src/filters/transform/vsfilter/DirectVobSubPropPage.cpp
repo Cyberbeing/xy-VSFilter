@@ -1098,8 +1098,8 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
         m_outputFmtList.ShowScrollBar(SB_HORZ, FALSE);
         m_outputFmtList.DeleteAllItems();
         m_outputFmtList.DeleteColumn(0);
-        m_outputFmtList.SetExtendedStyle(m_outputFmtList.GetStyle()|LVS_EX_CHECKBOXES);
-        m_outputFmtList.InsertColumn(0, _T("output"), LVCFMT_LEFT, 150);
+        m_outputFmtList.SetExtendedStyle( (m_outputFmtList.GetStyle()|LVS_EX_CHECKBOXES) & ~LVS_EX_GRIDLINES );
+        m_outputFmtList.InsertColumn(0, _T("output"), LVCFMT_LEFT, 110);
         for(int i = 0; i < static_cast<int>(m_outputColorSpaceCount); i++)
         {
             m_outputFmtList.InsertItem(i, GetColorSpaceName(m_outputColorSpace[i],OUTPUT_COLOR_SPACE));
