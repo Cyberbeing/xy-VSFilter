@@ -28,6 +28,74 @@
 #include <initguid.h>
 #include "..\..\..\..\include\moreuuids.h"
 
+const GUID* InputFmts[] =
+{
+    &MEDIASUBTYPE_P010,
+    &MEDIASUBTYPE_P016,
+    &MEDIASUBTYPE_NV12,
+    &MEDIASUBTYPE_NV21,
+    &MEDIASUBTYPE_YV12, 
+    &MEDIASUBTYPE_I420, 
+    &MEDIASUBTYPE_IYUV, 
+    &MEDIASUBTYPE_YUY2, 
+    &MEDIASUBTYPE_ARGB32, 
+    &MEDIASUBTYPE_RGB32,
+    &MEDIASUBTYPE_RGB24,
+    &MEDIASUBTYPE_RGB565, 
+    //&MEDIASUBTYPE_RGB555
+};
+
+const OutputFormatBase OutputFmts[] =
+{
+    {&MEDIASUBTYPE_P010, 2, 24, '010P'},
+    {&MEDIASUBTYPE_P016, 2, 24, '610P'},
+    {&MEDIASUBTYPE_NV12, 2, 12, '21VN'},
+    {&MEDIASUBTYPE_NV21, 2, 12, '12VN'},
+    {&MEDIASUBTYPE_YV12, 3, 12, '21VY'},
+    {&MEDIASUBTYPE_I420, 3, 12, '024I'},
+    {&MEDIASUBTYPE_IYUV, 3, 12, 'VUYI'},
+    {&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
+    {&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
+    {&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},
+    {&MEDIASUBTYPE_RGB24, 1, 24, BI_RGB},
+    {&MEDIASUBTYPE_RGB565, 1, 16, BI_RGB},
+    //{&MEDIASUBTYPE_RGB555, 1, 16, BI_RGB},
+    {&MEDIASUBTYPE_ARGB32, 1, 32, BI_BITFIELDS},
+    {&MEDIASUBTYPE_RGB32, 1, 32, BI_BITFIELDS},
+    {&MEDIASUBTYPE_RGB24, 1, 24, BI_BITFIELDS},
+    {&MEDIASUBTYPE_RGB565, 1, 16, BI_BITFIELDS},
+    //{&MEDIASUBTYPE_RGB555, 1, 16, BI_BITFIELDS},
+};
+
+//fixme: use the same function for by input and output
+CString OutputFmt2String(const OutputFormatBase& fmt)
+{
+    CString ret = CString(GuidNames[*fmt.subtype]);
+    if(!ret.Left(13).CompareNoCase(_T("MEDIASUBTYPE_"))) ret = ret.Mid(13);
+    if(fmt.biCompression == 3) ret += _T(" BITF");
+    if(*fmt.subtype == MEDIASUBTYPE_I420) ret = _T("I420"); // FIXME
+    else if(*fmt.subtype == MEDIASUBTYPE_NV21) ret = _T("NV21"); // FIXME
+    return(ret);
+}
+
+CString GetColorSpaceName(ColorSpaceId colorSpace, ColorSpaceDir inputOrOutput)
+{
+    if(inputOrOutput==INPUT_COLOR_SPACE)
+        return Subtype2String(*InputFmts[colorSpace]);
+    else
+        return OutputFmt2String(OutputFmts[colorSpace]);
+}
+
+UINT GetOutputColorSpaceNumber()
+{
+    return countof(OutputFmts);
+}
+
+UINT GetInputColorSpaceNumber()
+{
+    return countof(InputFmts);
+}
+
 //
 // CBaseVideoFilter
 //
@@ -35,6 +103,7 @@
 CBaseVideoFilter::CBaseVideoFilter(TCHAR* pName, LPUNKNOWN lpunk, HRESULT* phr, REFCLSID clsid, long cBuffers) 
 	: CTransformFilter(pName, lpunk, clsid)
 	, m_cBuffers(cBuffers)
+    , m_inputFmtCount(-1),m_outputFmtCount(-1)
 {
 	if(phr) *phr = S_OK;
 
@@ -348,22 +417,10 @@ HRESULT CBaseVideoFilter::CheckInputType(const CMediaType* mtIn)
 {
 	BITMAPINFOHEADER bih;
 	ExtractBIH(mtIn, &bih);
-
+    
 	return mtIn->majortype == MEDIATYPE_Video 
-		&& (mtIn->subtype == MEDIASUBTYPE_P016
-			|| mtIn->subtype == MEDIASUBTYPE_P010
-            || mtIn->subtype == MEDIASUBTYPE_NV12
-            || mtIn->subtype == MEDIASUBTYPE_NV21
-			|| mtIn->subtype == MEDIASUBTYPE_YV12
-		 || mtIn->subtype == MEDIASUBTYPE_I420 
-		 || mtIn->subtype == MEDIASUBTYPE_IYUV
-		 || mtIn->subtype == MEDIASUBTYPE_YUY2
-		 || mtIn->subtype == MEDIASUBTYPE_ARGB32
-		 || mtIn->subtype == MEDIASUBTYPE_RGB32
-		 || mtIn->subtype == MEDIASUBTYPE_RGB24
- 		 || mtIn->subtype == MEDIASUBTYPE_RGB565)
-		&& (mtIn->formattype == FORMAT_VideoInfo 
-		 || mtIn->formattype == FORMAT_VideoInfo2)
+		&& GetInputSubtypePosition(mtIn->subtype)!=-1        
+		&& (mtIn->formattype == FORMAT_VideoInfo || mtIn->formattype == FORMAT_VideoInfo2)
 		&& bih.biHeight > 0
 		? S_OK
 		: VFW_E_TYPE_NOT_ACCEPTED;
@@ -372,16 +429,74 @@ HRESULT CBaseVideoFilter::CheckInputType(const CMediaType* mtIn)
 HRESULT CBaseVideoFilter::DoCheckTransform( const CMediaType* mtIn, const CMediaType* mtOut, bool checkReconnection )
 {
     DbgLog((LOG_TRACE, 3, __FUNCTIONW__));
-    DumpGraph(m_pGraph, 0);
-    if(FAILED(CheckInputType(mtIn)) || mtOut->majortype != MEDIATYPE_Video)
+    //DumpGraph(m_pGraph, 0);
+    if( FAILED(CheckInputType(mtIn)) || mtOut->majortype != MEDIATYPE_Video || 
+        GetOutputSubtypePosition(mtOut->subtype)==-1 )
         return VFW_E_TYPE_NOT_ACCEPTED;
 
-    if(mtIn->majortype == MEDIATYPE_Video 
-        && (mtIn->subtype == MEDIASUBTYPE_YV12 
-        || mtIn->subtype == MEDIASUBTYPE_I420 
-        || mtIn->subtype == MEDIASUBTYPE_IYUV))
+    if( !checkReconnection && 
+        mtOut->subtype != mtIn->subtype )
+    {            
+        bool can_reconnect = false;
+        CMediaType desiredMt;
+        int position = 0;
+        HRESULT hr;
+
+        position = GetOutputSubtypePosition(mtOut->subtype);
+        if(position>=0)
+        {
+            hr = GetMediaType(position, &desiredMt);  
+            if (hr!=S_OK)
+            {
+                DbgLog((LOG_ERROR, 3, TEXT("Unexpected error when GetMediaType, position:%d"), position));
+            }
+            else
+            {
+                hr = DoCheckTransform(&desiredMt, mtOut, true);
+                if (hr!=S_OK)
+                {
+                    DbgLog((LOG_TRACE, 3, TEXT("Transform not accept:")));
+                    DisplayType(0,&desiredMt);
+                    DisplayType(0,mtOut);
+                }
+                else
+                {
+                    hr = m_pInput->GetConnected()->QueryAccept(&desiredMt);
+                    if(hr!=S_OK)
+                    {
+                        DbgLog((LOG_TRACE, 3, TEXT("Upstream not accept:")));
+                        DisplayType(0, &desiredMt);
+                    }
+                    else
+                    {
+                        can_reconnect = true;
+                    }
+                }
+            }
+        }          
+
+        if ( can_reconnect )
+        {
+            DbgLog((LOG_TRACE, 3, TEXT("agree input media type:")));
+            DisplayType(0, &desiredMt);
+            return S_OK;
+        }
+    }   
+
+    bool can_transform = true;
+    if ( mtIn->subtype == MEDIASUBTYPE_P010 
+        || mtIn->subtype == MEDIASUBTYPE_P016
+        || mtIn->subtype == MEDIASUBTYPE_NV12
+        || mtIn->subtype == MEDIASUBTYPE_NV21 )
     {
-        if(mtOut->subtype != MEDIASUBTYPE_YV12
+        if( mtOut->subtype!=mtIn->subtype )
+            can_transform = false;
+    }
+    else if( mtIn->subtype == MEDIASUBTYPE_YV12 
+        || mtIn->subtype == MEDIASUBTYPE_I420 
+        || mtIn->subtype == MEDIASUBTYPE_IYUV )
+    {
+        if( mtOut->subtype != MEDIASUBTYPE_YV12
             && mtOut->subtype != MEDIASUBTYPE_I420
             && mtOut->subtype != MEDIASUBTYPE_IYUV
             && mtOut->subtype != MEDIASUBTYPE_YUY2
@@ -389,98 +504,66 @@ HRESULT CBaseVideoFilter::DoCheckTransform( const CMediaType* mtIn, const CMedia
             && mtOut->subtype != MEDIASUBTYPE_RGB32
             && mtOut->subtype != MEDIASUBTYPE_RGB24
             && mtOut->subtype != MEDIASUBTYPE_RGB565)
-            return VFW_E_TYPE_NOT_ACCEPTED;
+            can_transform = false;
     }
-    else if(mtIn->subtype == MEDIASUBTYPE_P010 
-        || mtIn->subtype == MEDIASUBTYPE_P016
-        || mtIn->subtype == MEDIASUBTYPE_NV12
-        || mtIn->subtype == MEDIASUBTYPE_NV21) {
-        DbgLog((LOG_TRACE, 3, TEXT("10 bit input accpeted")));
-        if( !checkReconnection && 
-            mtOut->subtype != mtIn->subtype )
-        {            
-            if( FAILED(CheckReconnect(mtIn, mtOut)) )
-                return VFW_E_TYPE_NOT_ACCEPTED;
-        }        
-        else if (checkReconnection)
-        {
-            return VFW_E_TYPE_NOT_ACCEPTED;
-        }
-        else
-        {
-            DbgLog((LOG_TRACE, 3, TEXT("output accpeted")));
-        }
-    }
-    else if(mtIn->majortype == MEDIATYPE_Video 
-        && (mtIn->subtype == MEDIASUBTYPE_YUY2))
+    else if( mtIn->subtype == MEDIASUBTYPE_YUY2 )
     {
-        if(mtOut->subtype != MEDIASUBTYPE_YUY2
+        if( mtOut->subtype != MEDIASUBTYPE_YUY2
             && mtOut->subtype != MEDIASUBTYPE_ARGB32
             && mtOut->subtype != MEDIASUBTYPE_RGB32
             && mtOut->subtype != MEDIASUBTYPE_RGB24
             && mtOut->subtype != MEDIASUBTYPE_RGB565)
-            return VFW_E_TYPE_NOT_ACCEPTED;
+            can_transform = false;
     }
-    else if(mtIn->majortype == MEDIATYPE_Video 
-        && (mtIn->subtype == MEDIASUBTYPE_ARGB32
+    else if( mtIn->subtype == MEDIASUBTYPE_ARGB32
         || mtIn->subtype == MEDIASUBTYPE_RGB32
         || mtIn->subtype == MEDIASUBTYPE_RGB24
-        || mtIn->subtype == MEDIASUBTYPE_RGB565))
+        || mtIn->subtype == MEDIASUBTYPE_RGB565 )
     {
         if(mtOut->subtype != MEDIASUBTYPE_ARGB32
             && mtOut->subtype != MEDIASUBTYPE_RGB32
             && mtOut->subtype != MEDIASUBTYPE_RGB24
             && mtOut->subtype != MEDIASUBTYPE_RGB565)
-            return VFW_E_TYPE_NOT_ACCEPTED;
+            can_transform = false;
     }
 
-    return S_OK;
-}
-
-
-HRESULT CBaseVideoFilter::CheckReconnect(const CMediaType* mtIn, const CMediaType* mtOut)
-{
-    CMediaType desiredMt;
-    int position = 0;
-    HRESULT hr;
-    do
+    if (!can_transform && !checkReconnection)
     {
-        hr = GetMediaType(position, &desiredMt);
-        ++position;
-        //if( FAILED(hr) )
-        if( hr!=S_OK )
-            break;
-
-        DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
-        DbgLog((LOG_TRACE, 3, TEXT("    in major type:  %hs"),
-            GuidNames[*(desiredMt.Type())]));
-        DbgLog((LOG_TRACE, 3, TEXT("    in sub type  :  %hs"),
-            GuidNames[*(desiredMt.Subtype())]));
-        DbgLog((LOG_TRACE, 3, TEXT("    out major type:  %hs"),
-            GuidNames[*mtOut->Type()]));
-        DbgLog((LOG_TRACE, 3, TEXT("    out sub type  :  %hs"),
-            GuidNames[*mtOut->Subtype()]));
-
-        if( desiredMt.subtype==mtIn->subtype ||
-            FAILED( DoCheckTransform(&desiredMt, mtOut, true) ) )
+        bool can_reconnect = false;
+        CMediaType desiredMt;
+        int position = 0;
+        HRESULT hr;
+        do
+        {            
+            hr = GetMediaType(position, &desiredMt);
+            ++position;
+            if( hr!=S_OK )
+                break;
+            DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
+            DisplayType(0, &desiredMt);
+            if( DoCheckTransform(&desiredMt, mtOut, true)!=S_OK ||
+                m_pInput->GetConnected()->QueryAccept(&desiredMt)!=S_OK )
+            {
+                continue;
+            }
+            else
+            {
+                can_reconnect = true;
+                break;
+            }
+        } while ( true );
+        if ( can_reconnect )
         {
-            continue;
+            DbgLog((LOG_TRACE, 3, TEXT("agree input media type:")));
+            DisplayType(0, &desiredMt);
+            return S_OK;
         }
-        else
-        {
-            break;
-        }
-    } while ( true );
-
-    if (hr==S_OK && //SUCCEEDED(hr) &&
-        SUCCEEDED(m_pInput->GetConnected()->QueryAccept(&desiredMt)))
+    }
+    else if(can_transform)
     {
         return S_OK;
     }
-    else
-    {
-        return VFW_E_TYPE_NOT_ACCEPTED;
-    }
+    return VFW_E_TYPE_NOT_ACCEPTED;
 }
 
 HRESULT CBaseVideoFilter::CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut)
@@ -524,30 +607,12 @@ HRESULT CBaseVideoFilter::DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_
 
 HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 {
+    if(m_inputFmtCount<0 || m_outputFmtCount <0)
+    {
+        InitInputOutputColorSpaces();
+    }
     if(m_pInput->IsConnected() == FALSE) return E_UNEXPECTED;
-
-	const struct {const GUID* subtype; WORD biPlanes, biBitCount; DWORD biCompression;} fmts[] =
-	{
-        {&MEDIASUBTYPE_P010, 2, 24, '010P'},
-        {&MEDIASUBTYPE_P016, 2, 24, '610P'},
-        {&MEDIASUBTYPE_NV12, 2, 12, '21VN'},
-        {&MEDIASUBTYPE_NV21, 2, 12, '12VN'},
-		{&MEDIASUBTYPE_YV12, 3, 12, '21VY'},
-		{&MEDIASUBTYPE_I420, 3, 12, '024I'},
-		{&MEDIASUBTYPE_IYUV, 3, 12, 'VUYI'},
-		{&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
-		{&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
-		{&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},
-		{&MEDIASUBTYPE_RGB24, 1, 24, BI_RGB},
-		{&MEDIASUBTYPE_RGB565, 1, 16, BI_RGB},
-		{&MEDIASUBTYPE_RGB555, 1, 16, BI_RGB},
-		{&MEDIASUBTYPE_ARGB32, 1, 32, BI_BITFIELDS},
-		{&MEDIASUBTYPE_RGB32, 1, 32, BI_BITFIELDS},
-		{&MEDIASUBTYPE_RGB24, 1, 24, BI_BITFIELDS},
-		{&MEDIASUBTYPE_RGB565, 1, 16, BI_BITFIELDS},
-		{&MEDIASUBTYPE_RGB555, 1, 16, BI_BITFIELDS},
-	};
-
+    
 	// this will make sure we won't connect to the old renderer in dvd mode
 	// that renderer can't switch the format dynamically
 
@@ -563,10 +628,10 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 	//
 
 	if(iPosition < 0) return E_INVALIDARG;
-	if(iPosition >= 2*countof(fmts)) return VFW_S_NO_MORE_ITEMS;
+	if(iPosition >= 2*m_outputFmtCount) return VFW_S_NO_MORE_ITEMS;
 
 	pmt->majortype = MEDIATYPE_Video;
-	pmt->subtype = *fmts[iPosition/2].subtype;
+	pmt->subtype = *m_outputFmt[iPosition/2]->subtype;
 
 	int w = m_win, h = m_hin, arx = m_arxin, ary = m_aryin;
 	GetOutputSize(w, h, arx, ary);
@@ -576,9 +641,9 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 	bihOut.biSize = sizeof(bihOut);
 	bihOut.biWidth = w;
 	bihOut.biHeight = h;
-	bihOut.biPlanes = fmts[iPosition/2].biPlanes;
-	bihOut.biBitCount = fmts[iPosition/2].biBitCount;
-	bihOut.biCompression = fmts[iPosition/2].biCompression;
+	bihOut.biPlanes = m_outputFmt[iPosition/2]->biPlanes;
+	bihOut.biBitCount = m_outputFmt[iPosition/2]->biBitCount;
+	bihOut.biCompression = m_outputFmt[iPosition/2]->biCompression;
 	bihOut.biSizeImage = w*h*bihOut.biBitCount>>3;
 
 	if(iPosition&1)
@@ -613,6 +678,41 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 	return S_OK;
 }
 
+int CBaseVideoFilter::GetInputSubtypePosition( const GUID& subtype )
+{
+    if(m_inputFmtCount<0 || m_outputFmtCount <0)
+    {
+        InitInputOutputColorSpaces();
+    }
+
+    int i=0;
+    for (i=0;i<m_inputFmtCount;i++)
+    {
+        if (*m_inputFmt[i]==subtype)
+        {
+            break;
+        }
+    }
+    return i<m_inputFmtCount ? i : -1;
+}
+
+int CBaseVideoFilter::GetOutputSubtypePosition( const GUID& subtype )
+{
+    if(m_inputFmtCount<0 || m_outputFmtCount <0)
+    {
+        InitInputOutputColorSpaces();
+    }
+    int i=0;
+    for(i=0;i<m_outputFmtCount;i++)
+    {
+        if (*(m_outputFmt[i]->subtype)==subtype)
+        {
+            break;
+        }
+    }
+    return i<m_outputFmtCount ? i:-1;
+}
+
 HRESULT CBaseVideoFilter::SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt)
 {
 	if(dir == PINDIR_INPUT)
@@ -643,6 +743,42 @@ HRESULT CBaseVideoFilter::SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt)
 	}
 
 	return __super::SetMediaType(dir, pmt);
+}
+
+void CBaseVideoFilter::InitInputOutputColorSpaces()
+{
+    ColorSpaceId preferredOrder[MAX_COLOR_SPACE_NUM];
+    UINT count = 0;
+    GetInputColorspaces(preferredOrder, &count);
+    m_inputFmtCount = count;
+    for (int i=0;i<count;i++)
+    {
+        m_inputFmt[i] = InputFmts[preferredOrder[i]];
+    }
+    GetOutputColorspaces(preferredOrder, &count);
+    m_outputFmtCount = count;
+    for (int i=0;i<count;i++)
+    {
+        m_outputFmt[i] = OutputFmts + preferredOrder[i];
+    }
+}
+
+void CBaseVideoFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
+{
+    *count = GetInputColorSpaceNumber();
+    for (int i=0;i<*count;i++)
+    {
+        preferredOrder[i] = i;
+    }    
+}
+
+void CBaseVideoFilter::GetOutputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
+{
+    *count = GetOutputColorSpaceNumber();
+    for (int i=0;i<*count;i++)
+    {
+        preferredOrder[i] = i;
+    }    
 }
 
 //

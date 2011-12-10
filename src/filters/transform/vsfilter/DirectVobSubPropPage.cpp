@@ -908,7 +908,7 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         m_combo_subpixel_pos.AddString( CString(_T("2x2")) );m_combo_subpixel_pos.SetItemData(1, 1);
         m_combo_subpixel_pos.AddString( CString(_T("4x4")) );m_combo_subpixel_pos.SetItemData(2, 2);
         m_combo_subpixel_pos.AddString( CString(_T("8x8(vsfiler2.39 default)")) );m_combo_subpixel_pos.SetItemData(3, 3);
-        m_combo_subpixel_pos.AddString( CString(_T("8x8 fast")) );m_combo_subpixel_pos.SetItemData(4, 4);
+        m_combo_subpixel_pos.AddString( CString(_T("8x8(bilinear)")) );m_combo_subpixel_pos.SetItemData(4, 4);
 
         m_combo_subpixel_pos.SetCurSel( temp );        
     }
@@ -1003,11 +1003,14 @@ void CDVSZoomPPage::UpdateObjectData(bool fSave)
 CDVSColorPPage::CDVSColorPPage(LPUNKNOWN pUnk, HRESULT* phr) :
     CDVSBasePPage(NAME("DirectVobSub Color Property Page"), pUnk, IDD_DVSCOLORPAGE, IDD_DVSCOLORPAGE)
 {
-	BindControl(IDC_PREFLIST, m_preflist);
-	BindControl(IDC_DYNCHGLIST, m_dynchglist);
-	BindControl(IDC_FORCERGBCHK, m_forcergb);
-
+	BindControl(IDC_OUTPUT_FORMAT_LIST, m_outputFmtList);
+	BindControl(IDC_INPUT_FORMAT_LIST, m_inputFmtList);
+	
 	m_fDisableInstantUpdate = true;
+
+    //donot know how to detect check event of CListCtrl's checkboxes
+    //use this to false a update
+    m_bDirty = true;
 }
 
 bool CDVSColorPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1018,63 +1021,52 @@ bool CDVSColorPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
 			switch(HIWORD(wParam))
 			{
-				case LBN_DBLCLK:
-					if((HWND)lParam == m_dynchglist.m_hWnd)
-					{
-						int old = -1; 
-						m_pDirectVobSub->get_ColorFormat(&old);
-						if(FAILED(m_pDirectVobSub->put_ColorFormat(m_dynchglist.GetCurSel())))
-							m_dynchglist.SetCurSel(old);
-
-						return(true);
-					}
-				break;
-
 				case BN_CLICKED:
 				{
 					switch(LOWORD(wParam))
 					{
-						case IDC_COLORCHANGE:
-						{
-							int old = -1; 
-							m_pDirectVobSub->get_ColorFormat(&old);
-							if(FAILED(m_pDirectVobSub->put_ColorFormat(m_dynchglist.GetCurSel())))
-								m_dynchglist.SetCurSel(old);
-
-							return(true);
-						}
 						case IDC_COLORUP:
 						{
-							int sel = m_preflist.GetCurSel();
-							if(sel > 0)
-							{
-								CString str;
-								m_preflist.GetText(sel, str);
-								int iPos = (int)m_preflist.GetItemData(sel);
-								m_preflist.DeleteString(sel);
-								sel--;
-								m_preflist.InsertString(sel, str);
-								m_preflist.SetItemData(sel, iPos);
-								m_preflist.SetCurSel(sel);
-							}
-
+                            int sel = m_outputFmtList.GetSelectionMark();
+                            if(sel>0)
+                            {
+                                CString str = m_outputFmtList.GetItemText(sel,0);
+                                int iPos = static_cast<int>(m_outputFmtList.GetItemData(sel));
+                                BOOL checked = m_outputFmtList.GetCheck(sel);
+                                m_outputFmtList.DeleteItem(sel);								
+                                sel--;
+                                m_outputFmtList.InsertItem(sel, str);	
+                                m_outputFmtList.SetItemData(sel, iPos);
+                                m_outputFmtList.SetItemState(sel, LVIS_SELECTED,LVIS_SELECTED);
+                                m_outputFmtList.SetCheck(sel, checked);
+                                m_outputFmtList.SetSelectionMark(sel);                                
+                            }
+                            if(sel>=0 && sel < m_outputFmtList.GetItemCount())
+                            {
+                                m_outputFmtList.SetFocus();
+                            }
 							return(true);
 						}
 						case IDC_COLORDOWN:
 						{
-							int sel = m_preflist.GetCurSel();
-							if(sel >= 0 && sel < m_preflist.GetCount()-1)
-							{
-								CString str;
-								m_preflist.GetText(sel, str);
-								int iPos = (int)m_preflist.GetItemData(sel);
-								m_preflist.DeleteString(sel);
-								sel++;
-								m_preflist.InsertString(sel, str);
-								m_preflist.SetItemData(sel, iPos);
-								m_preflist.SetCurSel(sel);
+                            int sel = m_outputFmtList.GetSelectionMark();
+                            if(sel>=0 && sel < m_outputFmtList.GetItemCount()-1)
+                            {
+                                CString str = m_outputFmtList.GetItemText(sel,0);
+                                int iPos = static_cast<int>(m_outputFmtList.GetItemData(sel));
+                                BOOL checked = m_outputFmtList.GetCheck(sel);
+                                m_outputFmtList.DeleteItem(sel);								
+                                sel++;
+                                m_outputFmtList.InsertItem(sel, str);	
+                                m_outputFmtList.SetItemData(sel, iPos);
+                                m_outputFmtList.SetItemState(sel, LVIS_SELECTED,LVIS_SELECTED);
+                                m_outputFmtList.SetCheck(sel, checked);
+                                m_outputFmtList.SetSelectionMark(sel);                                
 							}
-
+                            if(sel>=0 && sel < m_outputFmtList.GetItemCount())
+                            {
+                                m_outputFmtList.SetFocus();
+                            }
 							return(true);
 						}
 					}
@@ -1092,9 +1084,13 @@ void CDVSColorPPage::UpdateObjectData(bool fSave)
 {
 	if(fSave)
 	{
+        m_pDirectVobSub->put_OutputColorFormat(m_outputColorSpace, m_selectedOutputColorSpace, m_outputColorSpaceCount);
+        m_pDirectVobSub->put_InputColorFormat(m_inputColorSpace, m_selectedInputColorSpace, m_inputColorSpaceCount);
 	}
 	else
-	{
+	{        
+        m_pDirectVobSub->get_OutputColorFormat(m_outputColorSpace, m_selectedOutputColorSpace, &m_outputColorSpaceCount);
+        m_pDirectVobSub->get_InputColorFormat(m_inputColorSpace, m_selectedInputColorSpace, &m_inputColorSpaceCount);
 	}
 }
 
@@ -1102,57 +1098,50 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
 {
 	if(fSave)
 	{
-		if(m_preflist.GetCount() == VIHSIZE)
+		if(m_outputFmtList.GetItemCount() == m_outputColorSpaceCount)
 		{
-			BYTE* pData = new BYTE[VIHSIZE];
-
-			for(int i = 0; i < m_preflist.GetCount(); i++)
-				pData[i] = (BYTE)m_preflist.GetItemData(i);
-
-			theApp.WriteProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLORFORMATS), pData, VIHSIZE);
-
-			delete [] pData;
+            for(int i = 0; i < m_outputColorSpaceCount; i++)
+            {
+                m_outputColorSpace[i] = static_cast<ColorSpaceId>(m_outputFmtList.GetItemData(i));
+                m_selectedOutputColorSpace[i] = static_cast<bool>(m_outputFmtList.GetCheck(i));                
+            }
 		}
 		else ASSERT(0);
-
-		theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FORCERGB), !!m_forcergb.GetCheck());
+        if(m_inputFmtList.GetItemCount() == m_inputColorSpaceCount)
+        {
+            for(int i = 0; i < m_inputColorSpaceCount; i++)
+            {
+                m_inputColorSpace[i] = static_cast<ColorSpaceId>(m_inputFmtList.GetItemData(i));
+                m_selectedInputColorSpace[i] = static_cast<bool>(m_inputFmtList.GetCheck(i));                
+            }
+        }
+        else ASSERT(0);
 	}
 	else
-	{
-		m_preflist.ResetContent();
-		m_dynchglist.ResetContent();
+	{   
+        m_outputFmtList.ShowScrollBar(SB_HORZ, FALSE);
+        m_outputFmtList.DeleteAllItems();
+        m_outputFmtList.DeleteColumn(0);
+        m_outputFmtList.SetExtendedStyle(m_outputFmtList.GetStyle()|LVS_EX_CHECKBOXES);
+        m_outputFmtList.InsertColumn(0, _T("output"), LVCFMT_LEFT, 150);
+        for(int i = 0; i < static_cast<int>(m_outputColorSpaceCount); i++)
+        {
+            m_outputFmtList.InsertItem(i, GetColorSpaceName(m_outputColorSpace[i],OUTPUT_COLOR_SPACE));
+            m_outputFmtList.SetItemData(i, m_outputColorSpace[i]);
+            m_outputFmtList.SetCheck(i, static_cast<BOOL>(m_selectedOutputColorSpace[i]));
+        }
 
-		BYTE* pData = NULL;
-		UINT nSize;
-		
-		if(!theApp.GetProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLORFORMATS), &pData, &nSize)
-		|| !pData || nSize != VIHSIZE)
-		{
-			if(pData) delete [] pData, pData = NULL;
-
-			nSize = VIHSIZE;
-			pData = new BYTE[VIHSIZE];
-			for(int i = 0; i < VIHSIZE; i++) pData[i] = i;
-		}
-
-		if(pData)
-		{
-			for(int i = 0; i < (int)nSize; i++)
-			{
-				m_dynchglist.AddString(VIH2String(pData[i]));
-				m_dynchglist.SetItemData(i, pData[i]);
-				m_preflist.AddString(VIH2String(pData[i]));
-				m_preflist.SetItemData(i, pData[i]);
-			}
-
-			int iPosition = -1;
-			m_pDirectVobSub->get_ColorFormat(&iPosition);
-			m_dynchglist.SetCurSel(iPosition);
-
-			delete [] pData;
-		}
-
-		m_forcergb.SetCheck(theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FORCERGB), 0)?BST_CHECKED:BST_UNCHECKED);
+        m_inputFmtList.ShowScrollBar(SB_HORZ, FALSE);
+        m_inputFmtList.DeleteAllItems();
+        m_inputFmtList.DeleteColumn(0);
+        m_inputFmtList.SetExtendedStyle(m_inputFmtList.GetStyle()|LVS_EX_CHECKBOXES);
+        m_inputFmtList.InsertColumn(0, _T("input"), LVCFMT_LEFT, 150);		
+        for(int i = 0; i < static_cast<int>(m_inputColorSpaceCount); i++)
+        {
+            m_inputFmtList.InsertItem(i, GetColorSpaceName(m_inputColorSpace[i],INPUT_COLOR_SPACE));
+            m_inputFmtList.SetItemData(i, m_inputColorSpace[i]);
+            m_inputFmtList.SetCheck(i, static_cast<BOOL>(m_selectedInputColorSpace[i]));
+        }
 	}
 }
 

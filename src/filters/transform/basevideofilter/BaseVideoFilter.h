@@ -21,6 +21,23 @@
 
 #pragma once
 
+struct OutputFormatBase
+{
+    const GUID* subtype; 
+    WORD biPlanes, biBitCount; 
+    DWORD biCompression;
+};
+
+typedef int ColorSpaceId;
+enum ColorSpaceDir
+{
+    INPUT_COLOR_SPACE = 0,
+    OUTPUT_COLOR_SPACE = 1
+};
+CString GetColorSpaceName(ColorSpaceId colorSpace, ColorSpaceDir inputOrOutput);
+UINT GetOutputColorSpaceNumber();
+UINT GetInputColorSpaceNumber();
+
 class CBaseVideoFilter : public CTransformFilter
 {
 private:
@@ -38,6 +55,13 @@ protected:
 
 	int m_w, m_h, m_arx, m_ary;
 
+    static const int MAX_COLOR_SPACE_NUM = 256;
+    const GUID* m_inputFmt[MAX_COLOR_SPACE_NUM];
+    int m_inputFmtCount;
+
+    const OutputFormatBase* m_outputFmt[MAX_COLOR_SPACE_NUM];
+    int m_outputFmtCount;
+
 	HRESULT GetDeliveryBuffer(int w, int h, IMediaSample** ppOut);
 	HRESULT CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int pitchIn, const GUID& subtype, bool fInterlaced = false);
 	HRESULT CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int pitchIn, const GUID& subtype, bool fInterlaced = false);
@@ -46,8 +70,13 @@ protected:
 	virtual HRESULT Transform(IMediaSample* pIn) = 0;
 	virtual HRESULT IsVideoInterlaced() {return false;}
 
+    void InitInputOutputColorSpaces();
+    virtual void GetInputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
+    virtual void GetOutputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
+        
     HRESULT DoCheckTransform(const CMediaType* mtIn, const CMediaType* mtOut, bool checkReconnection);
-    HRESULT CheckReconnect(const CMediaType* mtIn, const CMediaType* mtOut);
+    int GetInputSubtypePosition(const GUID& subtype);
+    int GetOutputSubtypePosition(const GUID& subtype);
 public:
 	CBaseVideoFilter(TCHAR* pName, LPUNKNOWN lpunk, HRESULT* phr, REFCLSID clsid, long cBuffers = 1);
 	virtual ~CBaseVideoFilter();
@@ -59,7 +88,7 @@ public:
 	HRESULT CheckOutputType(const CMediaType& mtOut);
     HRESULT CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut);
     HRESULT DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_PROPERTIES* pProperties);
-    HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);
+    HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);    
 	HRESULT SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt);
 };
 

@@ -54,6 +54,13 @@ protected:
 	bool m_fBufferVobSub, m_fOnlyShowForcedVobSubs, m_fPolygonize;
 	CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;
 
+    static int const MAX_COLOR_SPACE = 256;
+    ColorSpaceId m_outputColorSpace[MAX_COLOR_SPACE];
+    bool m_selectedOutputColorSpace[MAX_COLOR_SPACE];
+
+    ColorSpaceId m_inputColorSpace[MAX_COLOR_SPACE];
+    bool m_selectedInputColorSpace[MAX_COLOR_SPACE];
+
     int m_overlay_cache_max_item_num;
     int m_scan_line_data_cache_max_item_num;
     int m_path_data_cache_max_item_num;
@@ -112,6 +119,12 @@ public:
     STDMETHODIMP put_ZoomRect(NORMALIZEDRECT* rect);
 	STDMETHODIMP get_ColorFormat(int* iPosition) {return E_NOTIMPL;}
     STDMETHODIMP put_ColorFormat(int iPosition) {return E_NOTIMPL;}
+    
+    STDMETHODIMP get_OutputColorFormat(ColorSpaceId* preferredOrder, bool* fSelected, UINT* count);
+    STDMETHODIMP put_OutputColorFormat(const ColorSpaceId* preferredOrder, const bool* fSelected, UINT count);
+
+    STDMETHODIMP get_InputColorFormat(ColorSpaceId* preferredOrder, bool* fSelected, UINT* count);
+    STDMETHODIMP put_InputColorFormat(const ColorSpaceId* preferredOrder, const bool* fSelected, UINT count);
 
     STDMETHODIMP get_OverlayCacheMaxItemNum(int* overlay_cache_max_item_num);
     STDMETHODIMP put_OverlayCacheMaxItemNum(int overlay_cache_max_item_num);

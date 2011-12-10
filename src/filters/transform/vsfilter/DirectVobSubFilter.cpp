@@ -276,10 +276,12 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	}
 
 	//
-    const CMediaType& mt = m_pInput->CurrentMediaType();
 
-    BITMAPINFOHEADER bihIn;
-    ExtractBIH(&mt, &bihIn);
+
+	const CMediaType& mt = m_pInput->CurrentMediaType();
+
+	BITMAPINFOHEADER bihIn;
+	ExtractBIH(&mt, &bihIn);
 
     hr = TryNotCopy(pIn, mt, bihIn); 
     if( hr!=S_OK )
@@ -354,8 +356,6 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 			}
 		}
 	}
-
-
 	CopyBuffer(pDataOut, (BYTE*)spd.bits, spd.w, abs(spd.h)*(fFlip?-1:1), spd.pitch, mt.subtype);
 
 	PrintMessages(pDataOut);
@@ -519,69 +519,101 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
         const CMediaType* mtIn = &(m_pInput->CurrentMediaType());
         const CMediaType* mtOut = &(m_pOutput->CurrentMediaType());
         CMediaType desiredMt;        
+        int position = 0;
+        HRESULT hr;
 
-        if( (mtIn->subtype == MEDIASUBTYPE_P010 || mtIn->subtype == MEDIASUBTYPE_P016
-            || mtIn->subtype == MEDIASUBTYPE_NV12 || mtIn->subtype == MEDIASUBTYPE_NV21)
-            && (mtOut->subtype != mtIn->subtype ) )
+        bool can_reconnect = false;
+        bool can_transform = (DoCheckTransform(mtIn, mtOut, true)==S_OK);
+        if( mtIn->subtype!=mtOut->subtype )
         {   
-            DbgLog((LOG_TRACE, 3, TEXT("Try reconnect!")));
-            DbgLog((LOG_TRACE, 3, TEXT("Trying media type:")));
-            DbgLog((LOG_TRACE, 3, TEXT("    major type:  %hs"),
-                GuidNames[*mtOut->Type()]));
-            DbgLog((LOG_TRACE, 3, TEXT("    sub type  :  %hs"),
-                GuidNames[*mtOut->Subtype()]));
-                    
-            int position = 0;
-            HRESULT hr;
-            do
+            position = GetOutputSubtypePosition(mtOut->subtype);
+            if(position>=0)
             {
+                hr = GetMediaType(position, &desiredMt);  
+                if (hr!=S_OK)
+                {
+                    DbgLog((LOG_ERROR, 3, TEXT("Unexpected error when GetMediaType, position:%d"), position));
+                }
+                else
+                {
+                    hr = DoCheckTransform(&desiredMt, mtOut, true);
+                    if (hr!=S_OK)
+                    {
+                        DbgLog((LOG_TRACE, 3, TEXT("Transform not accept:")));
+                        DisplayType(0,&desiredMt);
+                        DisplayType(0,mtOut);
+                    }
+                    else
+                    {
+                        hr = m_pInput->GetConnected()->QueryAccept(&desiredMt);
+                        if(hr!=S_OK)
+                        {
+                            DbgLog((LOG_TRACE, 3, TEXT("Upstream not accept:")));
+                            DisplayType(0, &desiredMt);
+                        }
+                        else
+                        {
+                            can_reconnect = true;
+                            DbgLog((LOG_ERROR, 3, TEXT("Can use the same subtype!")));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                DbgLog((LOG_ERROR, 3, TEXT("Cannot use the same subtype!")));
+            }
+        }
+        if(!can_reconnect && !can_transform)
+        {
+            position = 0;
+            do
+            {                
                 hr = GetMediaType(position, &desiredMt);
                 ++position;
                 //if( FAILED(hr) )
                 if( hr!=S_OK )
                     break;
 
-                DbgLog((LOG_TRACE, 3, TEXT("Trying reconnect with media type:")));
-                DbgLog((LOG_TRACE, 3, TEXT("    in major type:  %hs"),
-                    GuidNames[*(desiredMt.Type())]));
-                DbgLog((LOG_TRACE, 3, TEXT("    in sub type  :  %hs"),
-                    GuidNames[*(desiredMt.Subtype())]));
-                DbgLog((LOG_TRACE, 3, TEXT("    out major type:  %hs"),
-                    GuidNames[*mtOut->Type()]));
-                DbgLog((LOG_TRACE, 3, TEXT("    out sub type  :  %hs"),
-                    GuidNames[*mtOut->Subtype()]));
+                DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
+                DisplayType(0, &desiredMt);
 
-                if( desiredMt.subtype==mtIn->subtype || 
-                    FAILED( DoCheckTransform(&desiredMt, mtOut, true) ) )
+                if( DoCheckTransform(&desiredMt, mtOut, true)!=S_OK ||
+                    m_pInput->GetConnected()->QueryAccept(&desiredMt)!=S_OK )
                 {
                     continue;
                 }
                 else
                 {
+                    can_reconnect = true;
                     break;
                 }
             } while ( true );
-            if (hr==S_OK && //SUCCEEDED(hr) && 
-                SUCCEEDED(m_pInput->GetConnected()->QueryAccept(&desiredMt)))
+        }
+        if ( can_reconnect )
+        {
+            if (SUCCEEDED(ReconnectPin(m_pInput, &desiredMt)))
             {
-                if (SUCCEEDED(ReconnectPin(m_pInput, &desiredMt)))
-                {
-                    reconnected = true;
-                    DumpGraph(m_pGraph,0);
-                    //m_pInput->SetMediaType(&desiredMt);
-                    DbgLog((LOG_TRACE, 3, TEXT("reconnected succeed!")));
-                }
-                else
-                {
-                    DbgLog((LOG_TRACE, 3, TEXT("Failed to reconnect!")));
-                    return VFW_E_TYPE_NOT_ACCEPTED;
-                }
+                reconnected = true;
+                DumpGraph(m_pGraph,0);
+                //m_pInput->SetMediaType(&desiredMt);
+                DbgLog((LOG_TRACE, 3, TEXT("reconnected succeed!")));
             }
-            else
+        }
+        else if(!can_transform)
+        {
+            DbgLog((LOG_TRACE, 3, TEXT("Failed to agree reconnect type!")));
+            if(m_pInput->IsConnected())
             {
-                DbgLog((LOG_TRACE, 3, TEXT("Failed to agree reconnect type!")));
-                return VFW_E_TYPE_NOT_ACCEPTED;
+                m_pInput->GetConnected()->Disconnect();
+                m_pInput->Disconnect();
             }
+            if(m_pOutput->IsConnected())
+            {
+                m_pOutput->GetConnected()->Disconnect();
+                m_pOutput->Disconnect();
+            }
+            return VFW_E_TYPE_NOT_ACCEPTED;
         }
 	}
     if (!reconnected && m_pOutput->IsConnected())
@@ -671,7 +703,6 @@ REFERENCE_TIME CDirectVobSubFilter::CalcCurrentTime()
 void CDirectVobSubFilter::InitSubPicQueue()
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
-
     switch(m_colourSpace)
     {
     case CDirectVobSub::BT_601:
@@ -2102,4 +2133,48 @@ DWORD CDirectVobSubFilter::ThreadProc()
 	return 0;
 }
 
+void CDirectVobSubFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
+{
+    ColorSpaceId colorspace[MAX_COLOR_SPACE_NUM];
+    bool selected[MAX_COLOR_SPACE_NUM];
+    UINT tempCount;
+    if( get_InputColorFormat(colorspace, selected, &tempCount)==S_OK )
+    {
+        *count = 0;
+        for (int i=0;i<tempCount;i++)
+        {
+            if(selected[i])
+            {
+                preferredOrder[*count] = colorspace[i];
+                (*count)++;
+            }
+        }
+    }
+    else
+    {
+        CBaseVideoFilter::GetInputColorspaces(preferredOrder, count);
+    }
+}
 
+void CDirectVobSubFilter::GetOutputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
+{
+    ColorSpaceId colorspace[MAX_COLOR_SPACE_NUM];
+    bool selected[MAX_COLOR_SPACE_NUM];
+    UINT tempCount;
+    if( get_OutputColorFormat(colorspace, selected, &tempCount)==S_OK )
+    {
+        *count = 0;
+        for (int i=0;i<tempCount;i++)
+        {
+            if(selected[i])
+            {
+                preferredOrder[*count] = colorspace[i];
+                (*count)++;
+            }
+        }
+    }
+    else
+    {
+        CBaseVideoFilter::GetInputColorspaces(preferredOrder, count);
+    }
+}
