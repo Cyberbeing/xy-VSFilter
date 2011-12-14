@@ -118,6 +118,8 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 
 	memset(&m_CurrentVIH2, 0, sizeof(VIDEOINFOHEADER2));
 
+    m_donot_follow_upstream_preferred_order = !m_fFollowUpstreamPreferredOrder;
+
 	m_time_alphablt = m_time_rasterization = 0;
 }
 
@@ -1299,6 +1301,19 @@ STDMETHODIMP CDirectVobSubFilter::put_SubpixelPositionLevel(int subpixel_pos_lev
     if(hr == NOERROR)
     {
         SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(subpixel_pos_level) );
+    }
+
+    return hr;
+}
+
+STDMETHODIMP CDirectVobSubFilter::put_FollowUpstreamPreferredOrder( bool fFollowUpstreamPreferredOrder )
+{
+    CAutoLock cAutolock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::put_FollowUpstreamPreferredOrder(fFollowUpstreamPreferredOrder);
+
+    if(hr == NOERROR)
+    {
+        m_donot_follow_upstream_preferred_order = !m_fFollowUpstreamPreferredOrder;
     }
 
     return hr;

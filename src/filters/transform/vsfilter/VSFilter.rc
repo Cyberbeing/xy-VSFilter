@@ -123,12 +123,14 @@ STYLE DS_SETFONT | WS_CHILD
 FONT 8, "MS Sans Serif", 400, 0, 0x1
 BEGIN
     GROUPBOX        "Input",IDC_STATIC,7,7,70,156,NOT WS_VISIBLE
-    GROUPBOX        "Output",IDC_STATIC,54,7,103,156
-    LTEXT           "To force an specific output format, uncheck all formats except the one you want. You need to reload xy-VSFilter to apply the changes.",IDC_DYNCHGWARNING,160,19,72,75
-    PUSHBUTTON      "&Up",IDC_COLORUP,73,141,25,12
-    PUSHBUTTON      "&Down",IDC_COLORDOWN,108,141,25,12
-    CONTROL         "",IDC_OUTPUT_FORMAT_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,62,19,91,115
-    CONTROL         "",IDC_INPUT_FORMAT_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | NOT WS_VISIBLE | WS_BORDER | WS_TABSTOP,7,19,63,115
+    GROUPBOX        "Output",IDC_STATIC,43,7,103,156
+    LTEXT           "To force an specific output format, uncheck all formats except the one you want. You need to reload xy-VSFilter to apply the changes.",IDC_DYNCHGWARNING,157,63,72,69
+    PUSHBUTTON      "&Up",IDC_COLORUP,64,141,25,12
+    PUSHBUTTON      "&Down",IDC_COLORDOWN,99,141,25,12
+    CONTROL         "",IDC_OUTPUT_FORMAT_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,49,19,91,115
+    CONTROL         "",IDC_CHECK_FOLLOW_UPSTREAM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,155,29,8,10
+    LTEXT           "Follow preferred order of upstream filter",IDC_STATIC,168,22,68,25
+    CONTROL         "",IDC_INPUT_FORMAT_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | NOT WS_VISIBLE | WS_BORDER | WS_TABSTOP,11,21,12,115
 END
 
 IDD_DVSGENERALPAGE DIALOGEX 0, 0, 247, 188
@@ -389,7 +391,7 @@ BEGIN
         RIGHTMARGIN, 239
         VERTGUIDE, 41
         VERTGUIDE, 118
-        VERTGUIDE, 160
+        VERTGUIDE, 146
         TOPMARGIN, 7
         BOTTOMMARGIN, 180
         HORZGUIDE, 19
@@ -566,6 +568,8 @@ BEGIN
     IDS_ORGHEIGHT           "Original height"
     IDS_RG_VMRZOOMENABLED   "VMRZoomEnabled"
     IDS_RTM_SUBTITLESPEEDDIV "Subtitle Speeddiv"
+    IDS_RG_USE_UPSTREAM_PREFERRED_ORDER 
+                            "Use Upstream filter's preferred order"
     IDS_EXTTO169            "Extend to 16:9"
     IDS_RG_FORCERGB         "ForceRGB"
     IDS_RG_ENABLEZPICON     "EnableZPIcon"

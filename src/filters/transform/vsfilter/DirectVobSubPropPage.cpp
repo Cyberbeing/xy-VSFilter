@@ -981,7 +981,10 @@ CDVSColorPPage::CDVSColorPPage(LPUNKNOWN pUnk, HRESULT* phr) :
 {
 	BindControl(IDC_OUTPUT_FORMAT_LIST, m_outputFmtList);
 	BindControl(IDC_INPUT_FORMAT_LIST, m_inputFmtList);
-	
+	BindControl(IDC_CHECK_FOLLOW_UPSTREAM, m_followUpstreamPreferredOrder);
+    BindControl(IDC_COLORUP, m_btnColorUp);
+    BindControl(IDC_COLORDOWN, m_btnColorDown);
+
 	m_fDisableInstantUpdate = true;
 
     //donot know how to detect check event of CListCtrl's checkboxes
@@ -1045,6 +1048,13 @@ bool CDVSColorPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                             }
 							return(true);
 						}
+                        case IDC_CHECK_FOLLOW_UPSTREAM:
+                        {
+                            AFX_MANAGE_STATE(AfxGetStaticModuleState());
+                            m_btnColorUp.EnableWindow(!m_followUpstreamPreferredOrder.GetCheck());
+                            m_btnColorDown.EnableWindow(!m_followUpstreamPreferredOrder.GetCheck());
+                            return true;
+                        }
 					}
 				}
 				break;
@@ -1060,11 +1070,13 @@ void CDVSColorPPage::UpdateObjectData(bool fSave)
 {
 	if(fSave)
 	{
+        m_pDirectVobSub->put_FollowUpstreamPreferredOrder(m_fFollowUpstream);
         m_pDirectVobSub->put_OutputColorFormat(m_outputColorSpace, m_selectedOutputColorSpace, m_outputColorSpaceCount);
         m_pDirectVobSub->put_InputColorFormat(m_inputColorSpace, m_selectedInputColorSpace, m_inputColorSpaceCount);
 	}
 	else
 	{        
+        m_pDirectVobSub->get_FollowUpstreamPreferredOrder(&m_fFollowUpstream);
         m_pDirectVobSub->get_OutputColorFormat(m_outputColorSpace, m_selectedOutputColorSpace, &m_outputColorSpaceCount);
         m_pDirectVobSub->get_InputColorFormat(m_inputColorSpace, m_selectedInputColorSpace, &m_inputColorSpaceCount);
 	}
@@ -1092,9 +1104,15 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
             }
         }
         else ASSERT(0);
+
+        m_fFollowUpstream = !!m_followUpstreamPreferredOrder.GetCheck();
 	}
 	else
 	{   
+        m_followUpstreamPreferredOrder.SetCheck(m_fFollowUpstream);
+        m_btnColorUp.EnableWindow(!m_fFollowUpstream);
+        m_btnColorDown.EnableWindow(!m_fFollowUpstream);
+
         m_outputFmtList.ShowScrollBar(SB_HORZ, FALSE);
         m_outputFmtList.DeleteAllItems();
         m_outputFmtList.DeleteColumn(0);
