@@ -27,6 +27,7 @@
 
 #include <initguid.h>
 #include "..\..\..\..\include\moreuuids.h"
+#include <algorithm>
 
 const GUID* InputFmts[] =
 {
@@ -91,6 +92,20 @@ UINT GetInputColorSpaceNumber()
     return countof(InputFmts);
 }
 
+ColorSpaceId Subtype2OutputColorSpaceId( const GUID& subtype, ColorSpaceId startId /*=0 */ )
+{
+    ColorSpaceId i=startId;
+    UINT num = GetOutputColorSpaceNumber();
+    for(i=startId;i<num;i++)
+    {
+        if (*(OutputFmts[i].subtype)==subtype)
+        {
+            break;
+        }
+    }
+    return i<num ? i:-1;
+}
+
 //
 // CBaseVideoFilter
 //
@@ -99,9 +114,9 @@ CBaseVideoFilter::CBaseVideoFilter(TCHAR* pName, LPUNKNOWN lpunk, HRESULT* phr, 
 	: CTransformFilter(pName, lpunk, clsid)
 	, m_cBuffers(cBuffers)
     , m_inputFmtCount(-1),m_outputFmtCount(-1)
+    , m_donot_follow_upstream_preferred_order(false)
 {
 	if(phr) *phr = S_OK;
-
 	if(!(m_pInput = new CBaseVideoInputPin(NAME("CBaseVideoInputPin"), this, phr, L"Video"))) *phr = E_OUTOFMEMORY;
 	if(FAILED(*phr)) return;
 
@@ -562,6 +577,7 @@ HRESULT CBaseVideoFilter::CheckOutputType(const CMediaType& mtOut)
 	return ExtractDim(&mtOut, wout, hout, arxout, aryout)
 		&& m_h == abs((int)hout)
 		&& mtOut.subtype != MEDIASUBTYPE_ARGB32
+        && GetOutputSubtypePosition(mtOut.subtype)!=-1
 		? S_OK
 		: VFW_E_TYPE_NOT_ACCEPTED;
 }
@@ -592,9 +608,9 @@ HRESULT CBaseVideoFilter::DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_
 
 HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 {
-    if(m_inputFmtCount<0 || m_outputFmtCount <0)
+    if(m_outputFmtCount <0)
     {
-        InitInputOutputColorSpaces();
+        InitOutputColorSpaces();
     }
     if(m_pInput->IsConnected() == FALSE) return E_UNEXPECTED;
     
@@ -665,9 +681,9 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 
 int CBaseVideoFilter::GetInputSubtypePosition( const GUID& subtype )
 {
-    if(m_inputFmtCount<0 || m_outputFmtCount <0)
+    if(m_inputFmtCount<0)
     {
-        InitInputOutputColorSpaces();
+        InitInputColorSpaces();
     }
 
     int i=0;
@@ -681,14 +697,14 @@ int CBaseVideoFilter::GetInputSubtypePosition( const GUID& subtype )
     return i<m_inputFmtCount ? i : -1;
 }
 
-int CBaseVideoFilter::GetOutputSubtypePosition( const GUID& subtype )
+int CBaseVideoFilter::GetOutputSubtypePosition( const GUID& subtype, int startPos /*=0*/ )
 {
-    if(m_inputFmtCount<0 || m_outputFmtCount <0)
+    if(m_outputFmtCount <0)
     {
-        InitInputOutputColorSpaces();
+        InitOutputColorSpaces();
     }
-    int i=0;
-    for(i=0;i<m_outputFmtCount;i++)
+    int i=startPos;
+    for(i=startPos;i<m_outputFmtCount;i++)
     {
         if (*(m_outputFmt[i]->subtype)==subtype)
         {
@@ -730,7 +746,7 @@ HRESULT CBaseVideoFilter::SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt)
 	return __super::SetMediaType(dir, pmt);
 }
 
-void CBaseVideoFilter::InitInputOutputColorSpaces()
+void CBaseVideoFilter::InitInputColorSpaces()
 {
     ColorSpaceId preferredOrder[MAX_COLOR_SPACE_NUM];
     UINT count = 0;
@@ -740,11 +756,24 @@ void CBaseVideoFilter::InitInputOutputColorSpaces()
     {
         m_inputFmt[i] = InputFmts[preferredOrder[i]];
     }
+}
+
+void CBaseVideoFilter::InitOutputColorSpaces()
+{
+    ColorSpaceId preferredOrder[MAX_COLOR_SPACE_NUM];
+    UINT count = 0;
     GetOutputColorspaces(preferredOrder, &count);
-    m_outputFmtCount = count;
-    for (int i=0;i<count;i++)
+    if( CombineOutputPriority(preferredOrder, &count)==S_OK )
     {
-        m_outputFmt[i] = OutputFmts + preferredOrder[i];
+        m_outputFmtCount = count;
+        for (int i=0;i<count;i++)
+        {
+            m_outputFmt[i] = OutputFmts + preferredOrder[i];
+        }
+    }
+    else
+    {
+        m_outputFmtCount = -1;
     }
 }
 
@@ -763,7 +792,97 @@ void CBaseVideoFilter::GetOutputColorspaces( ColorSpaceId *preferredOrder, UINT 
     for (int i=0;i<*count;i++)
     {
         preferredOrder[i] = i;
-    }    
+    }
+}
+
+HRESULT CBaseVideoFilter::GetUpstreamOutputPriority( int *priorities, UINT count )
+{    
+    memset(priorities, 0, count*sizeof(priorities[0]));
+
+    if( ! m_pInput->IsConnected() )
+        return VFW_E_ALREADY_CONNECTED;
+
+    int priority = count;
+    CComPtr<IEnumMediaTypes> pEnumMediaTypes = NULL;
+    HRESULT hr;
+    hr = m_pInput->GetConnected()->EnumMediaTypes( &pEnumMediaTypes );
+    if (FAILED(hr)) {
+        return hr;
+    }
+    ASSERT(pEnumMediaTypes);     
+    
+    hr = pEnumMediaTypes->Reset();
+    if (FAILED(hr)) {
+        return hr;
+    }
+    CMediaType *pMediaType = NULL;
+    ULONG ulMediaCount = 0;
+
+    // attempt to remember a specific error code if there is one
+    HRESULT hrFailure = S_OK;
+    
+    for (;;) {
+
+        /* Retrieve the next media type NOTE each time round the loop the
+           enumerator interface will allocate another AM_MEDIA_TYPE structure
+           If we are successful then we copy it into our output object, if
+           not then we must delete the memory allocated before returning */
+
+        hr = pEnumMediaTypes->Next(1, (AM_MEDIA_TYPE**)&pMediaType,&ulMediaCount);
+        if (hr != S_OK) {
+            if (S_OK == hrFailure) {
+                hrFailure = VFW_E_NO_ACCEPTABLE_TYPES;
+            }
+            return hrFailure;
+        }
+        ASSERT(ulMediaCount == 1);
+        ASSERT(pMediaType);
+
+        ColorSpaceId pos = Subtype2OutputColorSpaceId(pMediaType->subtype, 0);
+        while(pos>=0 && pos<count)
+        {
+            priorities[pos] = priority;
+            priority--;
+            pos = Subtype2OutputColorSpaceId(pMediaType->subtype, pos+1);
+        }
+
+        DeleteMediaType(pMediaType);
+    }
+    return S_OK;
+}
+
+HRESULT CBaseVideoFilter::CombineOutputPriority( ColorSpaceId *preferredOrder, UINT *count )
+{   
+    if (!m_donot_follow_upstream_preferred_order)
+    {
+        int priorities1[MAX_COLOR_SPACE_NUM];
+        UINT total_count = GetOutputColorSpaceNumber();
+        
+        if( GetUpstreamOutputPriority(priorities1, total_count) == VFW_E_ALREADY_CONNECTED )
+        {
+            *count = 0;
+            return VFW_E_ALREADY_CONNECTED;
+        }
+
+        for (int i=0;i<*count;i++)
+        {
+            int c = preferredOrder[i];
+            priorities1[c] = ((priorities1[c]+1)<<16) + c;
+        }
+        std::sort(priorities1, priorities1+total_count);
+        for (int i=total_count-1;i>=0;i--)
+        {
+            if( priorities1[i]>=(1<<16) )//enabled 
+            {
+                preferredOrder[total_count-1-i] = (priorities1[i] & 0xffff);
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+    return S_OK;
 }
 
 //
@@ -886,3 +1005,15 @@ HRESULT CBaseVideoOutputPin::CheckMediaType(const CMediaType* mtOut)
 
 	return __super::CheckMediaType(mtOut);
 }
+
+//// EnumMediaTypes
+//// - pass through to our upstream filter
+//STDMETHODIMP CBaseVideoOutputPin::EnumMediaTypes( IEnumMediaTypes **ppEnum )
+//{
+//    // Can only pass through if connected.
+//    if( ! reinterpret_cast<CBaseVideoFilter*>(m_pFilter)->m_pInput->IsConnected() )
+//        return VFW_E_NOT_CONNECTED;
+//
+//    return reinterpret_cast<CBaseVideoFilter*>(m_pFilter)->m_pInput->GetConnected()->EnumMediaTypes( ppEnum );
+//
+//} // EnumMediaTypes

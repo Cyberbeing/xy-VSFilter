@@ -37,6 +37,7 @@ enum ColorSpaceDir
 CString GetColorSpaceName(ColorSpaceId colorSpace, ColorSpaceDir inputOrOutput);
 UINT GetOutputColorSpaceNumber();
 UINT GetInputColorSpaceNumber();
+ColorSpaceId Subtype2OutputColorSpaceId( const GUID& subtype, ColorSpaceId startPos =0 );
 
 class CBaseVideoFilter : public CTransformFilter
 {
@@ -52,6 +53,7 @@ private:
 
 protected:
 	CCritSec m_csReceive;
+    bool m_donot_follow_upstream_preferred_order;
 
 	int m_w, m_h, m_arx, m_ary;
 
@@ -70,13 +72,15 @@ protected:
 	virtual HRESULT Transform(IMediaSample* pIn) = 0;
 	virtual HRESULT IsVideoInterlaced() {return false;}
 
-    void InitInputOutputColorSpaces();
+    void InitInputColorSpaces();
+    void InitOutputColorSpaces();
     virtual void GetInputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
     virtual void GetOutputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
-        
+    HRESULT GetUpstreamOutputPriority(int *priorities, UINT count);
+    HRESULT CombineOutputPriority( ColorSpaceId *preferredOrder, UINT *count );
     HRESULT DoCheckTransform(const CMediaType* mtIn, const CMediaType* mtOut, bool checkReconnection);
     int GetInputSubtypePosition(const GUID& subtype);
-    int GetOutputSubtypePosition(const GUID& subtype);
+    int GetOutputSubtypePosition( const GUID& subtype, int startPos =0 );    
 public:
 	CBaseVideoFilter(TCHAR* pName, LPUNKNOWN lpunk, HRESULT* phr, REFCLSID clsid, long cBuffers = 1);
 	virtual ~CBaseVideoFilter();
@@ -90,6 +94,8 @@ public:
     HRESULT DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_PROPERTIES* pProperties);
     HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);    
 	HRESULT SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt);
+    
+    friend class CBaseVideoOutputPin;
 };
 
 class CBaseVideoInputAllocator : public CMemAllocator
@@ -120,4 +126,5 @@ public:
 	CBaseVideoOutputPin(TCHAR* pObjectName, CBaseVideoFilter* pFilter, HRESULT* phr, LPCWSTR pName);
 
     HRESULT CheckMediaType(const CMediaType* mtOut);
+    //STDMETHODIMP EnumMediaTypes( IEnumMediaTypes **ppEnum );
 };
