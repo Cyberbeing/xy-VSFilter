@@ -90,13 +90,13 @@ public:
             m_fLazyInit = true;
             switch(m_colourSpace)
             {
-            case ColourSpaceOption::BT_601:
+            case CDirectVobSub::BT_601:
                 ColorConvTable::SetDefaultYUVType(ColorConvTable::BT601);
                 break;
-            case ColourSpaceOption::BT_709:
+            case CDirectVobSub::BT_709:
                 ColorConvTable::SetDefaultYUVType(ColorConvTable::BT709);
                 break;
-            case ColourSpaceOption::AUTO_GUESS:
+            case CDirectVobSub::AUTO_GUESS:
                 ColorConvTable::SetDefaultYUVType( (dst.w > m_bt601Width || dst.h > m_bt601Height) ?
                     ColorConvTable::BT709 : ColorConvTable::BT601 );
                 break;

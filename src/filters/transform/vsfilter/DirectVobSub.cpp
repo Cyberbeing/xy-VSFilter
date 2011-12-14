@@ -35,11 +35,11 @@ CDirectVobSub::CDirectVobSub()
 	m_fDoPreBuffering = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), 1);
     
     m_colourSpace = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOUR_SPACE), 0);
-    if( m_colourSpace!=ColourSpaceOption::AUTO_GUESS && 
-        m_colourSpace!=ColourSpaceOption::BT_601 && 
-        m_colourSpace!=ColourSpaceOption::BT_709 )
+    if( m_colourSpace!=CDirectVobSub::AUTO_GUESS && 
+        m_colourSpace!=CDirectVobSub::BT_601 && 
+        m_colourSpace!=CDirectVobSub::BT_709 )
     {
-        m_colourSpace = ColourSpaceOption::BT_601;
+        m_colourSpace = CDirectVobSub::BT_601;
     }
     m_bt601Width = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
     m_bt601Height = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_HEIGHT), 600);
