@@ -333,6 +333,15 @@ extern "C" {
         STDMETHOD(put_SubpixelPositionLevel) (THIS_
             int subpixel_pos_level
             ) PURE;
+
+        //
+        STDMETHOD(get_FollowUpstreamPreferredOrder) (THIS_
+            bool *fFollowUpstreamPreferredOrder
+            ) PURE;
+
+        STDMETHOD(put_FollowUpstreamPreferredOrder) (THIS_
+            bool fFollowUpstreamPreferredOrder
+            ) PURE;
 	};
 
     [uuid("FE6EC6A0-21CA-4970-9EF0-B296F7F38AF0")]

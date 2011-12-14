@@ -68,6 +68,8 @@ protected:
 
     int m_subpixel_pos_level;
 
+    bool m_fFollowUpstreamPreferredOrder;
+
 	STSStyle m_defStyle;
 
 	bool m_fAdvancedRenderer;
@@ -142,6 +144,9 @@ public:
 
     STDMETHODIMP get_SubpixelPositionLevel(int* subpixel_pos_level);
     STDMETHODIMP put_SubpixelPositionLevel(int subpixel_pos_level);
+
+    STDMETHODIMP get_FollowUpstreamPreferredOrder(bool *fFollowUpstreamPreferredOrder);
+    STDMETHODIMP put_FollowUpstreamPreferredOrder(bool fFollowUpstreamPreferredOrder);
 
 	STDMETHODIMP UpdateRegistry();
 

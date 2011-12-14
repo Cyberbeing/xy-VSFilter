@@ -111,6 +111,8 @@ public:
 
     STDMETHODIMP put_SubpixelPositionLevel(int subpixel_pos_level);
 
+    STDMETHODIMP put_FollowUpstreamPreferredOrder(bool fFollowUpstreamPreferredOrder);
+
     STDMETHODIMP get_MediaFPS(bool* fEnabled, double* fps);
     STDMETHODIMP put_MediaFPS(bool fEnabled, double fps);
     STDMETHODIMP get_ZoomRect(NORMALIZEDRECT* rect);

@@ -78,6 +78,7 @@ CDirectVobSub::CDirectVobSub()
     if(m_subpixel_pos_level<0) m_subpixel_pos_level=0;
     else if(m_subpixel_pos_level>=SubpixelPositionControler::MAX_COUNT) m_subpixel_pos_level=SubpixelPositionControler::EIGHT_X_EIGHT;
 
+    m_fFollowUpstreamPreferredOrder = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USE_UPSTREAM_PREFERRED_ORDER), true);
     // get output colorspace config
     if(pData)
     {
@@ -734,6 +735,25 @@ STDMETHODIMP CDirectVobSub::put_SubpixelPositionLevel(int subpixel_pos_level)
     return S_OK;
 }
 
+STDMETHODIMP CDirectVobSub::get_FollowUpstreamPreferredOrder( bool *fFollowUpstreamPreferredOrder )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(fFollowUpstreamPreferredOrder) *fFollowUpstreamPreferredOrder=m_fFollowUpstreamPreferredOrder;
+
+    return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::put_FollowUpstreamPreferredOrder( bool fFollowUpstreamPreferredOrder )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(m_fFollowUpstreamPreferredOrder == fFollowUpstreamPreferredOrder) return S_FALSE;
+    m_fFollowUpstreamPreferredOrder = fFollowUpstreamPreferredOrder;
+
+    return S_OK;
+}
+
 STDMETHODIMP CDirectVobSub::UpdateRegistry()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
@@ -771,6 +791,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM), m_scan_line_data_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), m_path_data_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), m_subpixel_pos_level);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USE_UPSTREAM_PREFERRED_ORDER), m_fFollowUpstreamPreferredOrder);
 
     //save output color config
     {

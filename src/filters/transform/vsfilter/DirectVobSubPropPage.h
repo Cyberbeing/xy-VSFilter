@@ -197,6 +197,7 @@ public:
 class CDVSColorPPage : public CDVSBasePPage
 {
     CListCtrl m_outputFmtList, m_inputFmtList;
+    CButton m_followUpstreamPreferredOrder, m_btnColorUp, m_btnColorDown;
     
     static const int MAX_COLOR_SPACE = 256;
     ColorSpaceId m_outputColorSpace[MAX_COLOR_SPACE];
@@ -206,6 +207,8 @@ class CDVSColorPPage : public CDVSBasePPage
     ColorSpaceId m_inputColorSpace[MAX_COLOR_SPACE];
     bool m_selectedInputColorSpace[MAX_COLOR_SPACE];
     UINT m_inputColorSpaceCount;
+
+    bool m_fFollowUpstream;
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual void UpdateControlData(bool fSave);
