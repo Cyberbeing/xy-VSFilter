@@ -23,6 +23,7 @@
 
 #include <afxcmn.h>
 #include "IDirectVobSub.h"
+#include "IDirectVobSubXy.h"
 
 class CDVSBasePPage : public CBasePropertyPage
 {
@@ -33,6 +34,7 @@ public:
 
 protected:
 	CComQIPtr<IDirectVobSub2> m_pDirectVobSub;
+    CComQIPtr<IDirectVobSubXy> m_pDirectVobSubXy;
 
 	virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {return(false);}
 	virtual void UpdateObjectData(bool fSave) {}

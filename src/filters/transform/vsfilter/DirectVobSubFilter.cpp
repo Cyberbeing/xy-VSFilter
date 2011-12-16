@@ -156,6 +156,7 @@ STDMETHODIMP CDirectVobSubFilter::NonDelegatingQueryInterface(REFIID riid, void*
     return
 		QI(IDirectVobSub)
 		QI(IDirectVobSub2)
+        QI(IDirectVobSubXy)
 		QI(IFilterVersion)
 		QI(ISpecifyPropertyPages)
 		QI(IAMStreamSelect)

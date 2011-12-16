@@ -73,6 +73,7 @@ public:
         
         return QI(IDirectVobSub)
             QI(IDirectVobSub2)
+            QI(IDirectVobSubXy)
             QI(IFilterVersion)
             __super::NonDelegatingQueryInterface(riid, ppv);
     }

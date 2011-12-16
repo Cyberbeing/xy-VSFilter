@@ -22,9 +22,10 @@
 #pragma once
 
 #include "IDirectVobSub.h"
+#include "IDirectVobSubXy.h"
 #include "..\..\..\..\include\IFilterVersion.h"
 
-class CDirectVobSub : public IDirectVobSub2, public IFilterVersion
+class CDirectVobSub : public IDirectVobSub2, public IDirectVobSubXy, public IFilterVersion
 {
 public:
     enum ColourSpaceOption

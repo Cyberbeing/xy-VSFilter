@@ -231,6 +231,7 @@
     <ClInclude Include="..\DirectVobSubFilter.h" />
     <ClInclude Include="..\DirectVobSubPropPage.h" />
     <ClInclude Include="..\IDirectVobSub.h" />
+    <ClInclude Include="..\IDirectVobSubXy.h" />
     <ClInclude Include="..\once_logger.h" />
     <ClInclude Include="..\resource.h" />
     <ClInclude Include="..\StdAfx.h" />

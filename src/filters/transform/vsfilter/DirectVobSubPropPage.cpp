@@ -159,6 +159,7 @@ BOOL CDVSBasePPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 HRESULT CDVSBasePPage::OnConnect(IUnknown* pUnknown)
 {
     if(!(m_pDirectVobSub = pUnknown)) return E_NOINTERFACE;
+    if(!(m_pDirectVobSubXy = pUnknown)) return E_NOINTERFACE;
 
 	m_pDirectVobSub->LockSubtitleReloader(true); // *
 
@@ -629,7 +630,7 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->put_HideSubtitles(m_fHideSubtitles);
 		m_pDirectVobSub->put_OSD(m_fOSD);
 		m_pDirectVobSub->put_PreBuffering(m_fDoPreBuffering);
-        m_pDirectVobSub->put_ColourSpace(m_colourSpace);
+        m_pDirectVobSubXy->put_ColourSpace(m_colourSpace);
 		m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
 		m_pDirectVobSub->put_SaveFullPath(m_fSaveFullPath);
 	}
@@ -639,7 +640,7 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->get_HideSubtitles(&m_fHideSubtitles);
 		m_pDirectVobSub->get_OSD(&m_fOSD);
 		m_pDirectVobSub->get_PreBuffering(&m_fDoPreBuffering);        
-        m_pDirectVobSub->get_ColourSpace(&m_colourSpace);
+        m_pDirectVobSubXy->get_ColourSpace(&m_colourSpace);
 		m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
 		m_pDirectVobSub->get_SaveFullPath(&m_fSaveFullPath);
 	}
@@ -815,8 +816,8 @@ bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                     {
                         AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-                        IDirectVobSub::CachesInfo caches_info;
-                        m_pDirectVobSub->get_CachesInfo(&caches_info);
+                        IDirectVobSubXy::CachesInfo caches_info;
+                        m_pDirectVobSubXy->get_CachesInfo(&caches_info);
                         CString msg;
                         msg.Format(_T("Cache LV 4(path cache)\n")\
                                    _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)\n")\
@@ -851,19 +852,19 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
 {
     if(fSave)
     {
-        m_pDirectVobSub->put_OverlayCacheMaxItemNum(m_overlay_cache_max_item_num);
-        m_pDirectVobSub->put_OverlayNoBlurCacheMaxItemNum(m_overlay_no_blur_cache_max_item_num);
-        m_pDirectVobSub->put_ScanLineDataCacheMaxItemNum(m_scan_line_data_cache_max_item_num);
-        m_pDirectVobSub->put_PathDataCacheMaxItemNum(m_path_cache_max_item_num);
-        m_pDirectVobSub->put_SubpixelPositionLevel(m_subpixel_pos_level);
+        m_pDirectVobSubXy->put_OverlayCacheMaxItemNum(m_overlay_cache_max_item_num);
+        m_pDirectVobSubXy->put_OverlayNoBlurCacheMaxItemNum(m_overlay_no_blur_cache_max_item_num);
+        m_pDirectVobSubXy->put_ScanLineDataCacheMaxItemNum(m_scan_line_data_cache_max_item_num);
+        m_pDirectVobSubXy->put_PathDataCacheMaxItemNum(m_path_cache_max_item_num);
+        m_pDirectVobSubXy->put_SubpixelPositionLevel(m_subpixel_pos_level);
     }
     else
     {
-        m_pDirectVobSub->get_OverlayCacheMaxItemNum(&m_overlay_cache_max_item_num);
-        m_pDirectVobSub->get_OverlayNoBlurCacheMaxItemNum(&m_overlay_no_blur_cache_max_item_num);
-        m_pDirectVobSub->get_ScanLineDataCacheMaxItemNum(&m_scan_line_data_cache_max_item_num);
-        m_pDirectVobSub->get_PathDataCacheMaxItemNum(&m_path_cache_max_item_num);
-        m_pDirectVobSub->get_SubpixelPositionLevel(&m_subpixel_pos_level);
+        m_pDirectVobSubXy->get_OverlayCacheMaxItemNum(&m_overlay_cache_max_item_num);
+        m_pDirectVobSubXy->get_OverlayNoBlurCacheMaxItemNum(&m_overlay_no_blur_cache_max_item_num);
+        m_pDirectVobSubXy->get_ScanLineDataCacheMaxItemNum(&m_scan_line_data_cache_max_item_num);
+        m_pDirectVobSubXy->get_PathDataCacheMaxItemNum(&m_path_cache_max_item_num);
+        m_pDirectVobSubXy->get_SubpixelPositionLevel(&m_subpixel_pos_level);
     }
 }
 
@@ -1094,15 +1095,15 @@ void CDVSColorPPage::UpdateObjectData(bool fSave)
 {
 	if(fSave)
 	{
-        m_pDirectVobSub->put_FollowUpstreamPreferredOrder(m_fFollowUpstream);
-        m_pDirectVobSub->put_OutputColorFormat(m_outputColorSpace, m_selectedOutputColorSpace, m_outputColorSpaceCount);
-        m_pDirectVobSub->put_InputColorFormat(m_inputColorSpace, m_selectedInputColorSpace, m_inputColorSpaceCount);
+        m_pDirectVobSubXy->put_FollowUpstreamPreferredOrder(m_fFollowUpstream);
+        m_pDirectVobSubXy->put_OutputColorFormat(m_outputColorSpace, m_selectedOutputColorSpace, m_outputColorSpaceCount);
+        m_pDirectVobSubXy->put_InputColorFormat(m_inputColorSpace, m_selectedInputColorSpace, m_inputColorSpaceCount);
 	}
 	else
 	{        
-        m_pDirectVobSub->get_FollowUpstreamPreferredOrder(&m_fFollowUpstream);
-        m_pDirectVobSub->get_OutputColorFormat(m_outputColorSpace, m_selectedOutputColorSpace, &m_outputColorSpaceCount);
-        m_pDirectVobSub->get_InputColorFormat(m_inputColorSpace, m_selectedInputColorSpace, &m_inputColorSpaceCount);
+        m_pDirectVobSubXy->get_FollowUpstreamPreferredOrder(&m_fFollowUpstream);
+        m_pDirectVobSubXy->get_OutputColorFormat(m_outputColorSpace, m_selectedOutputColorSpace, &m_outputColorSpaceCount);
+        m_pDirectVobSubXy->get_InputColorFormat(m_inputColorSpace, m_selectedInputColorSpace, &m_inputColorSpaceCount);
 	}
 }
 

@@ -112,6 +112,9 @@
     <ClInclude Include="..\once_logger.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\IDirectVobSubXy.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\VSFilter.def">
