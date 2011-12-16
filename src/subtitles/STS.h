@@ -152,6 +152,7 @@ protected:
 
 public:
 	CString m_name;
+	LCID m_lcid;
 	tmode m_mode;
 	CTextFile::enc m_encoding;
 	CString m_path;

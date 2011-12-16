@@ -209,5 +209,8 @@ public:
         byte* pAlphaMask, 
         int xsub, int ysub, 
         const DWORD* switchpts, bool fBody, bool fBorder);
+		
+	static void FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nHeight, DWORD lColor);
+	
 };
 

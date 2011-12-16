@@ -150,15 +150,20 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BaseSub.cpp" />
     <ClCompile Include="cache_manager.cpp" />
     <ClCompile Include="CCDecoder.cpp" />
+    <ClCompile Include="CompositionObject.cpp" />
+    <ClCompile Include="DVBSub.cpp" />
     <ClCompile Include="GFN.cpp" />
+    <ClCompile Include="HdmvSub.cpp" />
     <ClCompile Include="Rasterizer.cpp">
       <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">AssemblyAndSourceCode</AssemblerOutput>
       <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">AssemblyAndSourceCode</AssemblerOutput>
       <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Release Unicode log|Win32'">AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="RealTextParser.cpp" />
+    <ClCompile Include="RenderedHdmvSubtitle.cpp" />
     <ClCompile Include="RTS.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
       </PrecompiledHeader>
@@ -205,13 +210,18 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BaseSub.h" />
     <ClInclude Include="cache_manager.h" />
     <ClInclude Include="CCDecoder.h" />
+    <ClInclude Include="CompositionObject.h" />
+    <ClInclude Include="DVBSub.h" />
     <ClInclude Include="flyweight_base_types.h" />
     <ClInclude Include="GFN.h" />
+    <ClInclude Include="HdmvSub.h" />
     <ClInclude Include="mru_cache.h" />
     <ClInclude Include="Rasterizer.h" />
     <ClInclude Include="RealTextParser.h" />
+    <ClInclude Include="RenderedHdmvSubtitle.h" />
     <ClInclude Include="RTS.h" />
     <ClInclude Include="SeparableFilter.h" />
     <ClInclude Include="SSF.h" />

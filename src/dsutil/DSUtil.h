@@ -41,6 +41,8 @@
 #include "vd.h"
 #include "text.h"
 
+#define LCID_NOSUBTITLES -1
+
 extern void DumpStreamConfig(TCHAR* fn, IAMStreamConfig* pAMVSCCap);
 extern int CountPins(IBaseFilter* pBF, int& nIn, int& nOut, int& nInC, int& nOutC);
 extern bool IsSplitter(IBaseFilter* pBF, bool fCountConnectedOnly = false);
@@ -102,6 +104,8 @@ extern CStringW UTF8To16(LPCSTR utf8);
 extern CStringA UTF16To8(LPCWSTR utf16);
 extern CString ISO6391ToLanguage(LPCSTR code);
 extern CString ISO6392ToLanguage(LPCSTR code);
+extern LCID    ISO6391ToLcid(LPCSTR code);
+extern LCID    ISO6392ToLcid(LPCSTR code);
 extern CString ISO6391To6392(LPCSTR code);
 extern CString ISO6392To6391(LPCSTR code);
 extern CString LanguageToISO6392(LPCTSTR lang);
@@ -113,6 +117,22 @@ extern bool SetRegKeyValue(LPCTSTR pszKey, LPCTSTR pszSubkey, LPCTSTR pszValue);
 extern void RegisterSourceFilter(const CLSID& clsid, const GUID& subtype2, LPCTSTR chkbytes, LPCTSTR ext = NULL, ...);
 extern void RegisterSourceFilter(const CLSID& clsid, const GUID& subtype2, const CAtlList<CString>& chkbytes, LPCTSTR ext = NULL, ...);
 extern void UnRegisterSourceFilter(const GUID& subtype);
+extern LPCTSTR GetDXVAMode(const GUID* guidDecoder);
+extern void DumpBuffer(BYTE* pBuffer, int nSize);
+extern CString ReftimeToString(const REFERENCE_TIME& rtVal);
+extern CString ReftimeToString2(const REFERENCE_TIME& rtVal);
+extern CString DVDtimeToString(const DVD_HMSF_TIMECODE& rtVal, bool bAlwaysShowHours=false);
+REFERENCE_TIME StringToReftime(LPCTSTR strVal);
+extern COLORREF YCrCbToRGB_Rec601(BYTE Y, BYTE Cr, BYTE Cb);
+extern COLORREF YCrCbToRGB_Rec709(BYTE Y, BYTE Cr, BYTE Cb);
+extern DWORD	YCrCbToRGB_Rec601(BYTE A, BYTE Y, BYTE Cr, BYTE Cb);
+extern DWORD	YCrCbToRGB_Rec709(BYTE A, BYTE Y, BYTE Cr, BYTE Cb);
+extern void		TraceFilterInfo(IBaseFilter* pBF);
+extern void		TracePinInfo(IPin* pPin);
+extern void		SetThreadName( DWORD dwThreadID, LPCSTR szThreadName);
+extern void		HexDump(CString fName, BYTE* buf, int size);
+extern DWORD	GetDefChannelMask(WORD nChannels);
+extern void		CorrectComboListWidth(CComboBox& m_pComboBox);
 
 class CPinInfo : public PIN_INFO
 {
@@ -195,4 +215,21 @@ static CUnknown* WINAPI CreateInstance(LPUNKNOWN lpunk, HRESULT* phr)
     CUnknown* punk = new T(lpunk, phr);
     if(punk == NULL) *phr = E_OUTOFMEMORY;
 	return punk;
+}
+#define SAFE_DELETE(p)       { if(p) { delete (p);     (p)=NULL; } }
+#define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);   (p)=NULL; } }
+#define SAFE_RELEASE(p)      { if(p) { (p)->Release(); (p)=NULL; } }
+inline int LNKO(int a, int b)
+{
+	if(a == 0 || b == 0) {
+		return(1);
+	}
+	while(a != b) {
+		if(a < b) {
+			b -= a;
+		} else if(a > b) {
+			a -= b;
+		}
+	}
+	return(a);
 }

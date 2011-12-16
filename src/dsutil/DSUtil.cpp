@@ -24,8 +24,15 @@
 #include "..\..\include\winddk\devioctl.h"
 #include "..\..\include\winddk\ntddcdrm.h"
 #include "DSUtil.h"
-#include "..\..\include\moreuuids.h"
+#include "Mpeg2Def.h"
+#include "vd.h"
+#include "..\..\..\include\moreuuids.h"
 #include <emmintrin.h>
+#include <math.h>
+#include <InitGuid.h>
+#include <d3d9types.h>
+#include <dxva.h>
+#include <dxva2api.h>
 
 void DumpStreamConfig(TCHAR* fn, IAMStreamConfig* pAMVSCCap)
 {
@@ -1480,35 +1487,37 @@ CStringA UTF16To8(LPCWSTR utf16)
 	return str;
 }
 
-static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] = 
-{
+static struct {
+	LPCSTR name, iso6392, iso6391;
+	LCID lcid;
+} s_isolangs[] = {	// TODO : fill LCID !!!
 	{"Abkhazian", "abk", "ab"},
 	{"Achinese", "ace", ""},
 	{"Acoli", "ach", ""},
 	{"Adangme", "ada", ""},
 	{"Afar", "aar", "aa"},
 	{"Afrihili", "afh", ""},
-	{"Afrikaans", "afr", "af"},
+	{"Afrikaans", "afr", "af",					MAKELCID( MAKELANGID(LANG_AFRIKAANS, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Afro-Asiatic (Other)", "afa", ""},
 	{"Akan", "aka", "ak"},
 	{"Akkadian", "akk", ""},
 	{"Albanian", "alb", "sq"},
-	{"Albanian", "sqi", "sq"},
+	{"Albanian", "sqi", "sq",					MAKELCID( MAKELANGID(LANG_ALBANIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Aleut", "ale", ""},
 	{"Algonquian languages", "alg", ""},
 	{"Altaic (Other)", "tut", ""},
 	{"Amharic", "amh", "am"},
 	{"Apache languages", "apa", ""},
-	{"Arabic", "ara", "ar"},
+	{"Arabic", "ara", "ar",						MAKELCID( MAKELANGID(LANG_ARABIC, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Aragonese", "arg", "an"},
 	{"Aramaic", "arc", ""},
 	{"Arapaho", "arp", ""},
 	{"Araucanian", "arn", ""},
 	{"Arawak", "arw", ""},
-	{"Armenian", "arm", "hy"},
-	{"Armenian", "hye", "hy"},
+	{"Armenian", "arm", "hy",					MAKELCID( MAKELANGID(LANG_ARMENIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Armenian", "hye", "hy",					MAKELCID( MAKELANGID(LANG_ARMENIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Artificial (Other)", "art", ""},
-	{"Assamese", "asm", "as"},
+	{"Assamese", "asm", "as",					MAKELCID( MAKELANGID(LANG_ASSAMESE, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Asturian; Bable", "ast", ""},
 	{"Athapascan languages", "ath", ""},
 	{"Australian languages", "aus", ""},
@@ -1517,7 +1526,7 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Avestan", "ave", "ae"},
 	{"Awadhi", "awa", ""},
 	{"Aymara", "aym", "ay"},
-	{"Azerbaijani", "aze", "az"},
+	{"Azerbaijani", "aze", "az",				MAKELCID( MAKELANGID(LANG_AZERI, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Bable; Asturian", "ast", ""},
 	{"Balinese", "ban", ""},
 	{"Baltic (Other)", "bat", ""},
@@ -1527,14 +1536,14 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Banda", "bad", ""},
 	{"Bantu (Other)", "bnt", ""},
 	{"Basa", "bas", ""},
-	{"Bashkir", "bak", "ba"},
-	{"Basque", "baq", "eu"},
-	{"Basque", "eus", "eu"},
+	{"Bashkir", "bak", "ba",					MAKELCID( MAKELANGID(LANG_BASHKIR, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Basque", "baq", "eu",						MAKELCID( MAKELANGID(LANG_BASQUE, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Basque", "eus", "eu",						MAKELCID( MAKELANGID(LANG_BASQUE, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Batak (Indonesia)", "btk", ""},
 	{"Beja", "bej", ""},
-	{"Belarusian", "bel", "be"},
+	{"Belarusian", "bel", "be",					MAKELCID( MAKELANGID(LANG_BELARUSIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Bemba", "bem", ""},
-	{"Bengali", "ben", "bn"},
+	{"Bengali", "ben", "bn",					MAKELCID( MAKELANGID(LANG_BENGALI, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Berber (Other)", "ber", ""},
 	{"Bhojpuri", "bho", ""},
 	{"Bihari", "bih", "bh"},
@@ -1544,16 +1553,16 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Bokmål, Norwegian; Norwegian Bokmål", "nob", "nb"},
 	{"Bosnian", "bos", "bs"},
 	{"Braj", "bra", ""},
-	{"Breton", "bre", "br"},
+	{"Breton", "bre", "br",						MAKELCID( MAKELANGID(LANG_BRETON, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Buginese", "bug", ""},
-	{"Bulgarian", "bul", "bg"},
+	{"Bulgarian", "bul", "bg",					MAKELCID( MAKELANGID(LANG_BULGARIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Buriat", "bua", ""},
 	{"Burmese", "bur", "my"},
 	{"Burmese", "mya", "my"},
 	{"Caddo", "cad", ""},
 	{"Carib", "car", ""},
-	{"Spanish; Castilian", "spa", "es"},
-	{"Catalan", "cat", "ca"},
+	{"Spanish; Castilian", "spa", "es",			MAKELCID( MAKELANGID(LANG_SPANISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Catalan", "cat", "ca",					MAKELCID( MAKELANGID(LANG_CATALAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Caucasian (Other)", "cau", ""},
 	{"Cebuano", "ceb", ""},
 	{"Celtic (Other)", "cel", ""},
@@ -1567,7 +1576,7 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Cheyenne", "chy", ""},
 	{"Chibcha", "chb", ""},
 	{"Chichewa; Chewa; Nyanja", "nya", "ny"},
-	{"Chinese", "chi", "zh"},
+	{"Chinese", "chi", "zh",					MAKELCID( MAKELANGID(LANG_CHINESE, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Chinese", "zho", "zh"},
 	{"Chinook jargon", "chn", ""},
 	{"Chipewyan", "chp", ""},
@@ -1582,7 +1591,7 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Chuvash", "chv", "cv"},
 	{"Coptic", "cop", ""},
 	{"Cornish", "cor", "kw"},
-	{"Corsican", "cos", "co"},
+	{"Corsican", "cos", "co",					MAKELCID( MAKELANGID(LANG_CORSICAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Cree", "cre", "cr"},
 	{"Creek", "mus", ""},
 	{"Creoles and pidgins (Other)", "crp", ""},
@@ -1592,24 +1601,24 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	//   {"French-based (Other)", "", ""},
 	{"Creoles and pidgins,", "cpp", ""},
 	//   {"Portuguese-based (Other)", "", ""},
-	{"Croatian", "scr", "hr"},
-	{"Croatian", "hrv", "hr"},
+	{"Croatian", "scr", "hr",					MAKELCID( MAKELANGID(LANG_CROATIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Croatian", "hrv", "hr",					MAKELCID( MAKELANGID(LANG_CROATIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Cushitic (Other)", "cus", ""},
-	{"Czech", "cze", "cs"},
-	{"Czech", "ces", "cs"},
+	{"Czech", "cze", "cs",						MAKELCID( MAKELANGID(LANG_CZECH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Czech", "ces", "cs",						MAKELCID( MAKELANGID(LANG_CZECH, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Dakota", "dak", ""},
-	{"Danish", "dan", "da"},
+	{"Danish", "dan", "da",						MAKELCID( MAKELANGID(LANG_DANISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Dargwa", "dar", ""},
 	{"Dayak", "day", ""},
 	{"Delaware", "del", ""},
 	{"Dinka", "din", ""},
-	{"Divehi", "div", "dv"},
+	{"Divehi", "div", "dv",						MAKELCID( MAKELANGID(LANG_DIVEHI, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Dogri", "doi", ""},
 	{"Dogrib", "dgr", ""},
 	{"Dravidian (Other)", "dra", ""},
 	{"Duala", "dua", ""},
-	{"Dutch; Flemish", "dut", "nl"},
-	{"Dutch; Flemish", "nld", "nl"},
+	{"Dutch; Flemish", "dut", "nl",				MAKELCID( MAKELANGID(LANG_DUTCH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Dutch; Flemish", "nld", "nl",				MAKELCID( MAKELANGID(LANG_DUTCH, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Dutch, Middle (ca. 1050-1350)", "dum", ""},
 	{"Dyula", "dyu", ""},
 	{"Dzongkha", "dzo", "dz"},
@@ -1617,40 +1626,41 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Egyptian (Ancient)", "egy", ""},
 	{"Ekajuk", "eka", ""},
 	{"Elamite", "elx", ""},
-	{"English", "eng", "en"},
+	{"English", "eng", "en",					MAKELCID( MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"English, Middle (1100-1500)", "enm", ""},
 	{"English, Old (ca.450-1100)", "ang", ""},
 	{"Esperanto", "epo", "eo"},
-	{"Estonian", "est", "et"},
+	{"Estonian", "est", "et",					MAKELCID( MAKELANGID(LANG_ESTONIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Ewe", "ewe", "ee"},
 	{"Ewondo", "ewo", ""},
 	{"Fang", "fan", ""},
 	{"Fanti", "fat", ""},
-	{"Faroese", "fao", "fo"},
+	{"Faroese", "fao", "fo",					MAKELCID( MAKELANGID(LANG_FAEROESE, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Fijian", "fij", "fj"},
-	{"Finnish", "fin", "fi"},
+	{"Finnish", "fin", "fi",					MAKELCID( MAKELANGID(LANG_FINNISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Finno-Ugrian (Other)", "fiu", ""},
 	{"Flemish; Dutch", "dut", "nl"},
 	{"Flemish; Dutch", "nld", "nl"},
 	{"Fon", "fon", ""},
-	{"French", "fre", "fr"},
-	{"French", "fra*", "fr"},
+	{"French", "fre", "fr",						MAKELCID( MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"French", "fra*", "fr",					MAKELCID( MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"French", "fra", "fr",						MAKELCID( MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"French, Middle (ca.1400-1600)", "frm", ""},
 	{"French, Old (842-ca.1400)", "fro", ""},
-	{"Frisian", "fry", "fy"},
+	{"Frisian", "fry", "fy",					MAKELCID( MAKELANGID(LANG_FRISIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Friulian", "fur", ""},
 	{"Fulah", "ful", "ff"},
 	{"Ga", "gaa", ""},
-	{"Gaelic; Scottish Gaelic", "gla", "gd"},
+	{"Gaelic; Scottish Gaelic", "gla", "gd",	MAKELCID( MAKELANGID(LANG_GALICIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Gallegan", "glg", "gl"},
 	{"Ganda", "lug", "lg"},
 	{"Gayo", "gay", ""},
 	{"Gbaya", "gba", ""},
 	{"Geez", "gez", ""},
-	{"Georgian", "geo", "ka"},
-	{"Georgian", "kat", "ka"},
-	{"German", "ger", "de"},
-	{"German", "deu", "de"},
+	{"Georgian", "geo", "ka",					MAKELCID( MAKELANGID(LANG_GEORGIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Georgian", "kat", "ka",					MAKELCID( MAKELANGID(LANG_GEORGIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"German", "ger", "de",						MAKELCID( MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"German", "deu", "de",						MAKELCID( MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"German, Low; Saxon, Low; Low German; Low Saxon", "nds", ""},
 	{"German, Middle High (ca.1050-1500)", "gmh", ""},
 	{"German, Old High (ca.750-1050)", "goh", ""},
@@ -1661,50 +1671,50 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Gorontalo", "gor", ""},
 	{"Gothic", "got", ""},
 	{"Grebo", "grb", ""},
-	{"Greek, Ancient (to 1453)", "grc", ""},
-	{"Greek, Modern (1453-)", "gre", "el"},
-	{"Greek, Modern (1453-)", "ell", "el"},
-	{"Greenlandic; Kalaallisut", "kal", "kl"},
+	{"Greek, Ancient (to 1453)", "grc", "",		MAKELCID( MAKELANGID(LANG_GREEK, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Greek, Modern (1453-)", "gre", "el",		MAKELCID( MAKELANGID(LANG_GREEK, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Greek, Modern (1453-)", "ell", "el",		MAKELCID( MAKELANGID(LANG_GREEK, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Greenlandic; Kalaallisut", "kal", "kl",	MAKELCID( MAKELANGID(LANG_GREENLANDIC, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Guarani", "grn", "gn"},
-	{"Gujarati", "guj", "gu"},
+	{"Gujarati", "guj", "gu",					MAKELCID( MAKELANGID(LANG_GUJARATI, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Gwich´in", "gwi", ""},
 	{"Haida", "hai", ""},
-	{"Hausa", "hau", "ha"},
+	{"Hausa", "hau", "ha",						MAKELCID( MAKELANGID(LANG_HAUSA, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Hawaiian", "haw", ""},
-	{"Hebrew", "heb", "he"},
+	{"Hebrew", "heb", "he",						MAKELCID( MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Herero", "her", "hz"},
 	{"Hiligaynon", "hil", ""},
 	{"Himachali", "him", ""},
-	{"Hindi", "hin", "hi"},
+	{"Hindi", "hin", "hi",						MAKELCID( MAKELANGID(LANG_HINDI, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Hiri Motu", "hmo", "ho"},
 	{"Hittite", "hit", ""},
 	{"Hmong", "hmn", ""},
-	{"Hungarian", "hun", "hu"},
+	{"Hungarian", "hun", "hu",					MAKELCID( MAKELANGID(LANG_HUNGARIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Hupa", "hup", ""},
 	{"Iban", "iba", ""},
-	{"Icelandic", "ice", "is"},
-	{"Icelandic", "isl", "is"},
+	{"Icelandic", "ice", "is",					MAKELCID( MAKELANGID(LANG_ICELANDIC, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Icelandic", "isl", "is",					MAKELCID( MAKELANGID(LANG_ICELANDIC, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Ido", "ido", "io"},
-	{"Igbo", "ibo", "ig"},
+	{"Igbo", "ibo", "ig",						MAKELCID( MAKELANGID(LANG_IGBO, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Ijo", "ijo", ""},
 	{"Iloko", "ilo", ""},
 	{"Inari Sami", "smn", ""},
 	{"Indic (Other)", "inc", ""},
 	{"Indo-European (Other)", "ine", ""},
-	{"Indonesian", "ind", "id"},
+	{"Indonesian", "ind", "id",					MAKELCID( MAKELANGID(LANG_INDONESIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Ingush", "inh", ""},
 	{"Interlingua (International", "ina", "ia"},
 	//   {"Auxiliary Language Association)", "", ""},
 	{"Interlingue", "ile", "ie"},
-	{"Inuktitut", "iku", "iu"},
+	{"Inuktitut", "iku", "iu",					MAKELCID( MAKELANGID(LANG_INUKTITUT, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Inupiaq", "ipk", "ik"},
 	{"Iranian (Other)", "ira", ""},
-	{"Irish", "gle", "ga"},
-	{"Irish, Middle (900-1200)", "mga", ""},
-	{"Irish, Old (to 900)", "sga", ""},
+	{"Irish", "gle", "ga",						MAKELCID( MAKELANGID(LANG_IRISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Irish, Middle (900-1200)", "mga", "",		MAKELCID( MAKELANGID(LANG_IRISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Irish, Old (to 900)", "sga", "",			MAKELCID( MAKELANGID(LANG_IRISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Iroquoian languages", "iro", ""},
-	{"Italian", "ita", "it"},
-	{"Japanese", "jpn", "ja"},
+	{"Italian", "ita", "it",					MAKELCID( MAKELANGID(LANG_ITALIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Japanese", "jpn", "ja",					MAKELCID( MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Javanese", "jav", "jv"},
 	{"Judeo-Arabic", "jrb", ""},
 	{"Judeo-Persian", "jpr", ""},
@@ -1713,25 +1723,25 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Kachin", "kac", ""},
 	{"Kalaallisut; Greenlandic", "kal", "kl"},
 	{"Kamba", "kam", ""},
-	{"Kannada", "kan", "kn"},
+	{"Kannada", "kan", "kn",					MAKELCID( MAKELANGID(LANG_KANNADA, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Kanuri", "kau", "kr"},
 	{"Kara-Kalpak", "kaa", ""},
 	{"Karen", "kar", ""},
-	{"Kashmiri", "kas", "ks"},
+	{"Kashmiri", "kas", "ks",					MAKELCID( MAKELANGID(LANG_KASHMIRI, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Kawi", "kaw", ""},
-	{"Kazakh", "kaz", "kk"},
+	{"Kazakh", "kaz", "kk",						MAKELCID( MAKELANGID(LANG_KAZAK, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Khasi", "kha", ""},
-	{"Khmer", "khm", "km"},
+	{"Khmer", "khm", "km",						MAKELCID( MAKELANGID(LANG_KHMER, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Khoisan (Other)", "khi", ""},
 	{"Khotanese", "kho", ""},
 	{"Kikuyu; Gikuyu", "kik", "ki"},
 	{"Kimbundu", "kmb", ""},
-	{"Kinyarwanda", "kin", "rw"},
+	{"Kinyarwanda", "kin", "rw",				MAKELCID( MAKELANGID(LANG_KINYARWANDA, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Kirghiz", "kir", "ky"},
 	{"Komi", "kom", "kv"},
 	{"Kongo", "kon", "kg"},
-	{"Konkani", "kok", ""},
-	{"Korean", "kor", "ko"},
+	{"Konkani", "kok", "",						MAKELCID( MAKELANGID(LANG_KONKANI, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Korean", "kor", "ko",						MAKELCID( MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Kosraean", "kos", ""},
 	{"Kpelle", "kpe", ""},
 	{"Kru", "kro", ""},
@@ -1744,16 +1754,16 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Ladino", "lad", ""},
 	{"Lahnda", "lah", ""},
 	{"Lamba", "lam", ""},
-	{"Lao", "lao", "lo"},
+	{"Lao", "lao", "lo",						MAKELCID( MAKELANGID(LANG_LAO, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Latin", "lat", "la"},
-	{"Latvian", "lav", "lv"},
+	{"Latvian", "lav", "lv",					MAKELCID( MAKELANGID(LANG_LATVIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Letzeburgesch; Luxembourgish", "ltz", "lb"},
 	{"Lezghian", "lez", ""},
 	{"Limburgan; Limburger; Limburgish", "lim", "li"},
 	{"Limburger; Limburgan; Limburgish;", "lim", "li"},
 	{"Limburgish; Limburger; Limburgan", "lim", "li"},
 	{"Lingala", "lin", "ln"},
-	{"Lithuanian", "lit", "lt"},
+	{"Lithuanian", "lit", "lt",					MAKELCID( MAKELANGID(LANG_LITHUANIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Low German; Low Saxon; German, Low; Saxon, Low", "nds", ""},
 	{"Low Saxon; Low German; Saxon, Low; German, Low", "nds", ""},
 	{"Lozi", "loz", ""},
@@ -1764,27 +1774,27 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Lunda", "lun", ""},
 	{"Luo (Kenya and Tanzania)", "luo", ""},
 	{"Lushai", "lus", ""},
-	{"Luxembourgish; Letzeburgesch", "ltz", "lb"},
-	{"Macedonian", "mac", "mk"},
-	{"Macedonian", "mkd", "mk"},
+	{"Luxembourgish; Letzeburgesch", "ltz", "lb",	MAKELCID( MAKELANGID(LANG_LUXEMBOURGISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Macedonian", "mac", "mk",					MAKELCID( MAKELANGID(LANG_MACEDONIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Macedonian", "mkd", "mk",					MAKELCID( MAKELANGID(LANG_MACEDONIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Madurese", "mad", ""},
 	{"Magahi", "mag", ""},
 	{"Maithili", "mai", ""},
 	{"Makasar", "mak", ""},
 	{"Malagasy", "mlg", "mg"},
-	{"Malay", "may", "ms"},
-	{"Malay", "msa", "ms"},
-	{"Malayalam", "mal", "ml"},
-	{"Maltese", "mlt", "mt"},
+	{"Malay", "may", "ms",						MAKELCID( MAKELANGID(LANG_MALAY, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Malay", "msa", "ms",						MAKELCID( MAKELANGID(LANG_MALAY, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Malayalam", "mal", "ml",					MAKELCID( MAKELANGID(LANG_MALAYALAM, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Maltese", "mlt", "mt",					MAKELCID( MAKELANGID(LANG_MALTESE, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Manchu", "mnc", ""},
 	{"Mandar", "mdr", ""},
 	{"Mandingo", "man", ""},
-	{"Manipuri", "mni", ""},
+	{"Manipuri", "mni", "",						MAKELCID( MAKELANGID(LANG_MANIPURI, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Manobo languages", "mno", ""},
 	{"Manx", "glv", "gv"},
-	{"Maori", "mao", "mi"},
-	{"Maori", "mri", "mi"},
-	{"Marathi", "mar", "mr"},
+	{"Maori", "mao", "mi",						MAKELCID( MAKELANGID(LANG_MAORI, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Maori", "mri", "mi",						MAKELCID( MAKELANGID(LANG_MAORI, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Marathi", "mar", "mr",					MAKELCID( MAKELANGID(LANG_MARATHI, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Mari", "chm", ""},
 	{"Marshallese", "mah", "mh"},
 	{"Marwari", "mwr", ""},
@@ -1794,11 +1804,11 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Micmac", "mic", ""},
 	{"Minangkabau", "min", ""},
 	{"Miscellaneous languages", "mis", ""},
-	{"Mohawk", "moh", ""},
+	{"Mohawk", "moh", "",						MAKELCID( MAKELANGID(LANG_MOHAWK, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Moldavian", "mol", "mo"},
 	{"Mon-Khmer (Other)", "mkh", ""},
 	{"Mongo", "lol", ""},
-	{"Mongolian", "mon", "mn"},
+	{"Mongolian", "mon", "mn",					MAKELCID( MAKELANGID(LANG_MONGOLIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Mossi", "mos", ""},
 	{"Multiple languages", "mul", ""},
 	{"Munda languages", "mun", ""},
@@ -1810,7 +1820,7 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Ndebele, South", "nbl", "nr"},
 	{"Ndonga", "ndo", "ng"},
 	{"Neapolitan", "nap", ""},
-	{"Nepali", "nep", "ne"},
+	{"Nepali", "nep", "ne",						MAKELCID( MAKELANGID(LANG_NEPALI, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Newari", "new", ""},
 	{"Nias", "nia", ""},
 	{"Niger-Kordofanian (Other)", "nic", ""},
@@ -1820,9 +1830,9 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"North American Indian (Other)", "nai", ""},
 	{"Northern Sami", "sme", "se"},
 	{"North Ndebele", "nde", "nd"},
-	{"Norwegian", "nor", "no"},
-	{"Norwegian Bokmål; Bokmål, Norwegian", "nob", "nb"},
-	{"Norwegian Nynorsk; Nynorsk, Norwegian", "nno", "nn"},
+	{"Norwegian", "nor", "no",					MAKELCID( MAKELANGID(LANG_NORWEGIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Norwegian Bokmål; Bokmål, Norwegian", "nob", "nb",	MAKELCID( MAKELANGID(LANG_NORWEGIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Norwegian Nynorsk; Nynorsk, Norwegian", "nno", "nn",	MAKELCID( MAKELANGID(LANG_NORWEGIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Nubian languages", "nub", ""},
 	{"Nyamwezi", "nym", ""},
 	{"Nyanja; Chichewa; Chewa", "nya", "ny"},
@@ -1830,7 +1840,7 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Nynorsk, Norwegian; Norwegian Nynorsk", "nno", "nn"},
 	{"Nyoro", "nyo", ""},
 	{"Nzima", "nzi", ""},
-	{"Occitan (post 1500},; Provençal", "oci", "oc"},
+	{"Occitan (post 1500},; Provençal", "oci", "oc",		MAKELCID( MAKELANGID(LANG_OCCITAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Ojibwa", "oji", "oj"},
 	{"Old Bulgarian; Old Slavonic; Church Slavonic;", "chu", "cu"},
 	{"Oriya", "ori", "or"},
@@ -1847,37 +1857,37 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Panjabi", "pan", "pa"},
 	{"Papiamento", "pap", ""},
 	{"Papuan (Other)", "paa", ""},
-	{"Persian", "per", "fa"},
-	{"Persian", "fas", "fa"},
+	{"Persian", "per", "fa",				MAKELCID( MAKELANGID(LANG_PERSIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Persian", "fas", "fa",				MAKELCID( MAKELANGID(LANG_PERSIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Persian, Old (ca.600-400 B.C.)", "peo", ""},
 	{"Philippine (Other)", "phi", ""},
 	{"Phoenician", "phn", ""},
 	{"Pohnpeian", "pon", ""},
-	{"Polish", "pol", "pl"},
-	{"Portuguese", "por", "pt"},
+	{"Polish", "pol", "pl",					MAKELCID( MAKELANGID(LANG_POLISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Portuguese", "por", "pt",				MAKELCID( MAKELANGID(LANG_PORTUGUESE, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Prakrit languages", "pra", ""},
 	{"Provençal; Occitan (post 1500)", "oci", "oc"},
 	{"Provençal, Old (to 1500)", "pro", ""},
 	{"Pushto", "pus", "ps"},
-	{"Quechua", "que", "qu"},
+	{"Quechua", "que", "qu",				MAKELCID( MAKELANGID(LANG_QUECHUA, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Raeto-Romance", "roh", "rm"},
 	{"Rajasthani", "raj", ""},
 	{"Rapanui", "rap", ""},
 	{"Rarotongan", "rar", ""},
 	{"Reserved for local use", "qaa-qtz", ""},
 	{"Romance (Other)", "roa", ""},
-	{"Romanian", "rum", "ro"},
-	{"Romanian", "ron", "ro"},
+	{"Romanian", "rum", "ro",				MAKELCID( MAKELANGID(LANG_ROMANIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Romanian", "ron", "ro",				MAKELCID( MAKELANGID(LANG_ROMANIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Romany", "rom", ""},
 	{"Rundi", "run", "rn"},
-	{"Russian", "rus", "ru"},
+	{"Russian", "rus", "ru",				MAKELCID( MAKELANGID(LANG_RUSSIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Salishan languages", "sal", ""},
 	{"Samaritan Aramaic", "sam", ""},
 	{"Sami languages (Other)", "smi", ""},
 	{"Samoan", "smo", "sm"},
 	{"Sandawe", "sad", ""},
 	{"Sango", "sag", "sg"},
-	{"Sanskrit", "san", "sa"},
+	{"Sanskrit", "san", "sa",				MAKELCID( MAKELANGID(LANG_SANSKRIT, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Santali", "sat", ""},
 	{"Sardinian", "srd", "sc"},
 	{"Sasak", "sas", ""},
@@ -1886,8 +1896,8 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Scottish Gaelic; Gaelic", "gla", "gd"},
 	{"Selkup", "sel", ""},
 	{"Semitic (Other)", "sem", ""},
-	{"Serbian", "scc", "sr"},
-	{"Serbian", "srp", "sr"},
+	{"Serbian", "scc", "sr",				MAKELCID( MAKELANGID(LANG_SERBIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Serbian", "srp", "sr",				MAKELCID( MAKELANGID(LANG_SERBIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Serer", "srr", ""},
 	{"Shan", "shn", ""},
 	{"Shona", "sna", "sn"},
@@ -1895,50 +1905,50 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Sidamo", "sid", ""},
 	{"Sign languages", "sgn", ""},
 	{"Siksika", "bla", ""},
-	{"Sindhi", "snd", "sd"},
-	{"Sinhalese", "sin", "si"},
+	{"Sindhi", "snd", "sd",					MAKELCID( MAKELANGID(LANG_SINDHI, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Sinhalese", "sin", "si",				MAKELCID( MAKELANGID(LANG_SINHALESE, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Sino-Tibetan (Other)", "sit", ""},
 	{"Siouan languages", "sio", ""},
 	{"Skolt Sami", "sms", ""},
 	{"Slave (Athapascan)", "den", ""},
 	{"Slavic (Other)", "sla", ""},
-	{"Slovak", "slo", "sk"},
-	{"Slovak", "slk", "sk"},
-	{"Slovenian", "slv", "sl"},
+	{"Slovak", "slo", "sk",					MAKELCID( MAKELANGID(LANG_SLOVAK, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Slovak", "slk", "sk",					MAKELCID( MAKELANGID(LANG_SLOVAK, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Slovenian", "slv", "sl",				MAKELCID( MAKELANGID(LANG_SLOVENIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Sogdian", "sog", ""},
 	{"Somali", "som", "so"},
 	{"Songhai", "son", ""},
 	{"Soninke", "snk", ""},
 	{"Sorbian languages", "wen", ""},
-	{"Sotho, Northern", "nso", ""},
-	{"Sotho, Southern", "sot", "st"},
+	{"Sotho, Northern", "nso", "",			MAKELCID( MAKELANGID(LANG_SOTHO, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Sotho, Southern", "sot", "st",		MAKELCID( MAKELANGID(LANG_SOTHO, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"South American Indian (Other)", "sai", ""},
 	{"Southern Sami", "sma", ""},
 	{"South Ndebele", "nbl", "nr"},
-	{"Spanish; Castilian", "spa", "es"},
+	{"Spanish; Castilian", "spa", "es",		MAKELCID( MAKELANGID(LANG_SPANISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Sukuma", "suk", ""},
 	{"Sumerian", "sux", ""},
 	{"Sundanese", "sun", "su"},
 	{"Susu", "sus", ""},
-	{"Swahili", "swa", "sw"},
+	{"Swahili", "swa", "sw",				MAKELCID( MAKELANGID(LANG_SWAHILI, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Swati", "ssw", "ss"},
-	{"Swedish", "swe", "sv"},
-	{"Syriac", "syr", ""},
+	{"Swedish", "swe", "sv",				MAKELCID( MAKELANGID(LANG_SWEDISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Syriac", "syr", "",					MAKELCID( MAKELANGID(LANG_SYRIAC, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Tagalog", "tgl", "tl"},
 	{"Tahitian", "tah", "ty"},
 	{"Tai (Other)", "tai", ""},
-	{"Tajik", "tgk", "tg"},
+	{"Tajik", "tgk", "tg",					MAKELCID( MAKELANGID(LANG_TAJIK, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Tamashek", "tmh", ""},
-	{"Tamil", "tam", "ta"},
-	{"Tatar", "tat", "tt"},
-	{"Telugu", "tel", "te"},
+	{"Tamil", "tam", "ta",					MAKELCID( MAKELANGID(LANG_TAMIL, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Tatar", "tat", "tt",					MAKELCID( MAKELANGID(LANG_TATAR, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Telugu", "tel", "te",					MAKELCID( MAKELANGID(LANG_TELUGU, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Tereno", "ter", ""},
 	{"Tetum", "tet", ""},
-	{"Thai", "tha", "th"},
-	{"Tibetan", "tib", "bo"},
-	{"Tibetan", "bod", "bo"},
+	{"Thai", "tha", "th",					MAKELCID( MAKELANGID(LANG_THAI, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Tibetan", "tib", "bo",				MAKELCID( MAKELANGID(LANG_TIBETAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Tibetan", "bod", "bo",				MAKELCID( MAKELANGID(LANG_TIBETAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Tigre", "tig", ""},
-	{"Tigrinya", "tir", "ti"},
+	{"Tigrinya", "tir", "ti",				MAKELCID( MAKELANGID(LANG_TIGRIGNA, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Timne", "tem", ""},
 	{"Tiv", "tiv", ""},
 	{"Tlingit", "tli", ""},
@@ -1948,47 +1958,47 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Tonga (Tonga Islands)", "ton", "to"},
 	{"Tsimshian", "tsi", ""},
 	{"Tsonga", "tso", "ts"},
-	{"Tswana", "tsn", "tn"},
+	{"Tswana", "tsn", "tn",					MAKELCID( MAKELANGID(LANG_TSWANA, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Tumbuka", "tum", ""},
 	{"Tupi languages", "tup", ""},
-	{"Turkish", "tur", "tr"},
-	{"Turkish, Ottoman (1500-1928)", "ota", ""},
-	{"Turkmen", "tuk", "tk"},
+	{"Turkish", "tur", "tr",				MAKELCID( MAKELANGID(LANG_TURKISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Turkish, Ottoman (1500-1928)", "ota", "",	MAKELCID( MAKELANGID(LANG_TURKISH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Turkmen", "tuk", "tk",				MAKELCID( MAKELANGID(LANG_TURKMEN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Tuvalu", "tvl", ""},
 	{"Tuvinian", "tyv", ""},
 	{"Twi", "twi", "tw"},
 	{"Ugaritic", "uga", ""},
-	{"Uighur", "uig", "ug"},
-	{"Ukrainian", "ukr", "uk"},
+	{"Uighur", "uig", "ug",					MAKELCID( MAKELANGID(LANG_UIGHUR, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Ukrainian", "ukr", "uk",				MAKELCID( MAKELANGID(LANG_UKRAINIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Umbundu", "umb", ""},
 	{"Undetermined", "und", ""},
-	{"Urdu", "urd", "ur"},
-	{"Uzbek", "uzb", "uz"},
+	{"Urdu", "urd", "ur",					MAKELCID( MAKELANGID(LANG_URDU, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Uzbek", "uzb", "uz",					MAKELCID( MAKELANGID(LANG_UZBEK, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Vai", "vai", ""},
 	{"Venda", "ven", "ve"},
-	{"Vietnamese", "vie", "vi"},
-	{"Volapük", "vol", "vo"},
+	{"Vietnamese", "vie", "vi",				MAKELCID( MAKELANGID(LANG_VIETNAMESE, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Volapuk", "vol", "vo"},
 	{"Votic", "vot", ""},
 	{"Wakashan languages", "wak", ""},
 	{"Walamo", "wal", ""},
 	{"Walloon", "wln", "wa"},
 	{"Waray", "war", ""},
 	{"Washo", "was", ""},
-	{"Welsh", "wel", "cy"},
-	{"Welsh", "cym", "cy"},
-	{"Wolof", "wol", "wo"},
-	{"Xhosa", "xho", "xh"},
-	{"Yakut", "sah", ""},
+	{"Welsh", "wel", "cy",					MAKELCID( MAKELANGID(LANG_WELSH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Welsh", "cym", "cy",					MAKELCID( MAKELANGID(LANG_WELSH, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Wolof", "wol", "wo",					MAKELCID( MAKELANGID(LANG_WOLOF, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Xhosa", "xho", "xh",					MAKELCID( MAKELANGID(LANG_XHOSA, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Yakut", "sah", "",					MAKELCID( MAKELANGID(LANG_YAKUT, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Yao", "yao", ""},
 	{"Yapese", "yap", ""},
 	{"Yiddish", "yid", "yi"},
-	{"Yoruba", "yor", "yo"},
+	{"Yoruba", "yor", "yo",					MAKELCID( MAKELANGID(LANG_YORUBA, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Yupik languages", "ypk", ""},
 	{"Zande", "znd", ""},
 	{"Zapotec", "zap", ""},
 	{"Zenaga", "zen", ""},
 	{"Zhuang; Chuang", "zha", "za"},
-	{"Zulu", "zul", "zu"},
+	{"Zulu", "zul", "zu",					MAKELCID( MAKELANGID(LANG_ZULU, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Zuni", "zun", ""},
 	{"Classical Newari", "nwc", ""},
 	{"Klingon", "tlh", ""},
@@ -2009,6 +2019,7 @@ static struct {LPCSTR name, iso6392, iso6391;} s_isolangs[] =
 	{"Haitian", "hat", "ht"},
 	{"Kalmyk", "xal", ""},
 	{"", "", ""},
+	{"No subtitles", "---", "", (LCID)LCID_NOSUBTITLES},
 };
 
 CString ISO6391ToLanguage(LPCSTR code)
@@ -2044,7 +2055,35 @@ CString ISO6392ToLanguage(LPCSTR code)
 			return ret;
 		}
 	}
-	return _T("");
+	return CString(code);
+}
+
+LCID ISO6391ToLcid(LPCSTR code)
+{
+	CHAR tmp[3+1];
+	strncpy_s(tmp, code, 3);
+	tmp[3] = 0;
+	_strlwr_s(tmp);
+	for(ptrdiff_t i = 0, j = countof(s_isolangs); i < j; i++) {
+		if(!strcmp(s_isolangs[i].iso6391, code)) {
+			return s_isolangs[i].lcid;
+		}
+	}
+	return 0;
+}
+
+LCID ISO6392ToLcid(LPCSTR code)
+{
+	CHAR tmp[3+1];
+	strncpy_s(tmp, code, 3);
+	tmp[3] = 0;
+	_strlwr_s(tmp);
+	for(ptrdiff_t i = 0, j = countof(s_isolangs); i < j; i++) {
+		if(!strcmp(s_isolangs[i].iso6392, tmp)) {
+			return s_isolangs[i].lcid;
+		}
+	}
+	return 0;
 }
 
 CString ISO6391To6392(LPCSTR code)
@@ -2253,4 +2292,104 @@ void RegisterSourceFilter(const CLSID& clsid, const GUID& subtype2, const CAtlLi
 void UnRegisterSourceFilter(const GUID& subtype)
 {
 	DeleteRegKey(_T("Media Type\\") + CStringFromGUID(MEDIATYPE_Stream), CStringFromGUID(subtype));
+}
+
+// hour, minute, second, millisec
+CString ReftimeToString(const REFERENCE_TIME& rtVal)
+{
+	CString		strTemp;
+	LONGLONG	llTotalMs =  ConvertToMilliseconds (rtVal);
+	int			lHour	  = (int)(llTotalMs  / (1000*60*60));
+	int			lMinute	  = (llTotalMs / (1000*60)) % 60;
+	int			lSecond	  = (llTotalMs /  1000) % 60;
+	int			lMillisec = llTotalMs  %  1000;
+	strTemp.Format (_T("%02d:%02d:%02d,%03d"), lHour, lMinute, lSecond, lMillisec);
+	return strTemp;
+}
+
+// hour, minute, second (round)
+CString ReftimeToString2(const REFERENCE_TIME& rtVal)
+{
+	CString		strTemp;
+	LONGLONG	seconds =  (rtVal + 5000000) / 10000000;
+	int			lHour	  = (int)(seconds / 3600);
+	int			lMinute	  = (int)(seconds / 60 % 60);
+	int			lSecond	  = (int)(seconds % 60);
+
+	strTemp.Format (_T("%02d:%02d:%02d"), lHour, lMinute, lSecond);
+	return strTemp;
+}
+
+CString DVDtimeToString(const DVD_HMSF_TIMECODE& rtVal, bool bAlwaysShowHours)
+{
+	CString	strTemp;
+	if (rtVal.bHours > 0 || bAlwaysShowHours) {
+		strTemp.Format(_T("%02d:%02d:%02d"), rtVal.bHours, rtVal.bMinutes, rtVal.bSeconds);
+	} else {
+		strTemp.Format(_T("%02d:%02d"), rtVal.bMinutes, rtVal.bSeconds);
+	}
+	return strTemp;
+}
+
+REFERENCE_TIME StringToReftime(LPCTSTR strVal)
+{
+	REFERENCE_TIME	rt			= 0;
+	int				lHour		= 0;
+	int				lMinute		= 0;
+	int				lSecond		= 0;
+	int				lMillisec	= 0;
+
+	if (_stscanf_s (strVal, _T("%02d:%02d:%02d,%03d"), &lHour, &lMinute, &lSecond, &lMillisec) == 4) {
+		rt = ( (((lHour*24)+lMinute)*60 + lSecond) * MILLISECONDS + lMillisec ) * (UNITS/MILLISECONDS);
+	}
+
+	return rt;
+}
+
+const double Rec601_Kr = 0.299;
+const double Rec601_Kb = 0.114;
+const double Rec601_Kg = 0.587;
+COLORREF YCrCbToRGB_Rec601(BYTE Y, BYTE Cr, BYTE Cb)
+{
+
+	double rp = Y + 2*(Cr-128)*(1.0-Rec601_Kr);
+	double gp = Y - 2*(Cb-128)*(1.0-Rec601_Kb)*Rec601_Kb/Rec601_Kg - 2*(Cr-128)*(1.0-Rec601_Kr)*Rec601_Kr/Rec601_Kg;
+	double bp = Y + 2*(Cb-128)*(1.0-Rec601_Kb);
+
+	return RGB (fabs(rp), fabs(gp), fabs(bp));
+}
+
+DWORD YCrCbToRGB_Rec601(BYTE A, BYTE Y, BYTE Cr, BYTE Cb)
+{
+
+	double rp = Y + 2*(Cr-128)*(1.0-Rec601_Kr);
+	double gp = Y - 2*(Cb-128)*(1.0-Rec601_Kb)*Rec601_Kb/Rec601_Kg - 2*(Cr-128)*(1.0-Rec601_Kr)*Rec601_Kr/Rec601_Kg;
+	double bp = Y + 2*(Cb-128)*(1.0-Rec601_Kb);
+
+	return D3DCOLOR_ARGB(A, (BYTE)fabs(rp), (BYTE)fabs(gp), (BYTE)fabs(bp));
+}
+
+
+const double Rec709_Kr = 0.2125;
+const double Rec709_Kb = 0.0721;
+const double Rec709_Kg = 0.7154;
+
+COLORREF YCrCbToRGB_Rec709(BYTE Y, BYTE Cr, BYTE Cb)
+{
+
+	double rp = Y + 2*(Cr-128)*(1.0-Rec709_Kr);
+	double gp = Y - 2*(Cb-128)*(1.0-Rec709_Kb)*Rec709_Kb/Rec709_Kg - 2*(Cr-128)*(1.0-Rec709_Kr)*Rec709_Kr/Rec709_Kg;
+	double bp = Y + 2*(Cb-128)*(1.0-Rec709_Kb);
+
+	return RGB (fabs(rp), fabs(gp), fabs(bp));
+}
+
+DWORD YCrCbToRGB_Rec709(BYTE A, BYTE Y, BYTE Cr, BYTE Cb)
+{
+
+	double rp = Y + 2*(Cr-128)*(1.0-Rec709_Kr);
+	double gp = Y - 2*(Cb-128)*(1.0-Rec709_Kb)*Rec709_Kb/Rec709_Kg - 2*(Cr-128)*(1.0-Rec709_Kr)*Rec709_Kr/Rec709_Kg;
+	double bp = Y + 2*(Cb-128)*(1.0-Rec709_Kb);
+
+	return D3DCOLOR_ARGB (A, (BYTE)fabs(rp), (BYTE)fabs(gp), (BYTE)fabs(bp));
 }

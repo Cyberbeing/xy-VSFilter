@@ -24,6 +24,7 @@
 #include "VobSubFile.h"
 #include "RTS.h"
 #include "SSF.h"
+#include "RenderedHdmvSubtitle.h"
 
 #include <initguid.h>
 #include "..\..\include\moreuuids.h"
@@ -62,6 +63,7 @@ HRESULT CSubtitleInputPin::CheckMediaType(const CMediaType* pmt)
 		|| pmt->majortype == MEDIATYPE_Subtitle && (pmt->subtype == MEDIASUBTYPE_SSA || pmt->subtype == MEDIASUBTYPE_ASS || pmt->subtype == MEDIASUBTYPE_ASS2)
 		|| pmt->majortype == MEDIATYPE_Subtitle && pmt->subtype == MEDIASUBTYPE_SSF
 		|| pmt->majortype == MEDIATYPE_Subtitle && (pmt->subtype == MEDIASUBTYPE_VOBSUB)
+        || IsHdmvSub(pmt)
 		? S_OK 
 		: E_FAIL;
 }
@@ -80,11 +82,26 @@ HRESULT CSubtitleInputPin::CompleteConnect(IPin* pReceivePin)
 	else if(m_mt.majortype == MEDIATYPE_Subtitle)
 	{
 		SUBTITLEINFO* psi = (SUBTITLEINFO*)m_mt.pbFormat;
-		DWORD dwOffset = psi->dwOffset;
+		DWORD			dwOffset	= 0;
+		CString			name;
+		LCID			lcid = 0;
 
-		CString name = ISO6392ToLanguage(psi->IsoLang);
-		if(name.IsEmpty()) name = _T("English");
-		if(wcslen(psi->TrackName) > 0) name += _T(" (") + CString(psi->TrackName) + _T(")");
+		if (psi != NULL) {
+			dwOffset = psi->dwOffset;
+
+			name = ISO6392ToLanguage(psi->IsoLang);
+			lcid = ISO6392ToLcid(psi->IsoLang);
+
+			if(wcslen(psi->TrackName) > 0) {
+				name += (!name.IsEmpty() ? _T(", ") : _T("")) + CString(psi->TrackName);
+			}
+			if(name.IsEmpty()) {
+				name = _T("Unknown");
+			}
+		}
+
+		name.Replace(_T(""), _T(""));//CAUTION: VS may show name.Replace(_T(""),_T("")), however there is a character in the first _T("")
+		name.Replace(_T(""), _T(""));//CAUTION: VS may show name.Replace(_T(""),_T("")), however there is a character in the first _T("")
 
 		if(m_mt.subtype == MEDIASUBTYPE_UTF8 
 		/*|| m_mt.subtype == MEDIASUBTYPE_USF*/
@@ -95,6 +112,7 @@ HRESULT CSubtitleInputPin::CompleteConnect(IPin* pReceivePin)
             CRenderedTextSubtitle* pRTS = new CRenderedTextSubtitle(m_pSubLock);
 			if(!(m_pSubStream = pRTS)) return E_FAIL;
 			pRTS->m_name = name;
+			pRTS->m_lcid = lcid;
 			pRTS->m_dstScreenSize = CSize(384, 288);
 			pRTS->CreateDefaultStyle(DEFAULT_CHARSET);
 
@@ -127,6 +145,12 @@ HRESULT CSubtitleInputPin::CompleteConnect(IPin* pReceivePin)
             CVobSubStream* pVSS = new CVobSubStream(m_pSubLock);
 			if(!(m_pSubStream = pVSS)) return E_FAIL;			
 			pVSS->Open(name, m_mt.pbFormat + dwOffset, m_mt.cbFormat - dwOffset);
+		}
+		else if (IsHdmvSub(&m_mt)) 
+		{
+			if(!(m_pSubStream = DNew CRenderedHdmvSubtitle(m_pSubLock, (m_mt.subtype == MEDIASUBTYPE_DVB_SUBTITLES) ? ST_DVB : ST_HDMV, name, lcid))) {
+				return E_FAIL;
+			}
 		}
 	}
 
@@ -192,9 +216,21 @@ STDMETHODIMP CSubtitleInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME
 		CVobSubStream* pVSS = dynamic_cast<CVobSubStream*>(static_cast<ISubStream*>(m_pSubStream));
 		pVSS->RemoveAll();
 	}
-
+	else if (IsHdmvSub(&m_mt)) 
+	{
+		CAutoLock cAutoLock(m_pSubLock);
+		CRenderedHdmvSubtitle* pHdmvSubtitle = (CRenderedHdmvSubtitle*)(ISubStream*)m_pSubStream;
+		pHdmvSubtitle->NewSegment (tStart, tStop, dRate);
+	}
 	return __super::NewSegment(tStart, tStop, dRate);
 }
+
+interface __declspec(uuid("D3D92BC3-713B-451B-9122-320095D51EA5"))
+IMpeg2DemultiplexerTesting :
+public IUnknown {
+	STDMETHOD(GetMpeg2StreamType)(ULONG* plType) = NULL;
+	STDMETHOD(toto)() = NULL;
+};
 
 STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
 {
@@ -359,6 +395,12 @@ STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
 			CVobSubStream* pVSS = dynamic_cast<CVobSubStream*>(static_cast<ISubStream*>(m_pSubStream));
 			pVSS->Add(tStart, tStop, pData, len);
 		}
+		else if (IsHdmvSub(&m_mt)) 
+		{
+			CAutoLock cAutoLock(m_pSubLock);
+			CRenderedHdmvSubtitle* pHdmvSubtitle = (CRenderedHdmvSubtitle*)(ISubStream*)m_pSubStream;
+			pHdmvSubtitle->ParseSample (pSample);
+		}
 	}
 
 	if(fInvalidate)
@@ -373,3 +415,11 @@ STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
     return hr;
 }
 
+bool CSubtitleInputPin::IsHdmvSub(const CMediaType* pmt)
+{
+	return pmt->majortype == MEDIATYPE_Subtitle && (pmt->subtype == MEDIASUBTYPE_HDMVSUB ||			// Blu ray presentation graphics
+			pmt->subtype == MEDIASUBTYPE_DVB_SUBTITLES ||	// DVB subtitles
+			(pmt->subtype == MEDIASUBTYPE_NULL && pmt->formattype == FORMAT_SubtitleInfo)) // Workaround : support for Haali PGS
+		   ? true
+		   : false;
+}
