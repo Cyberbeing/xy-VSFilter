@@ -252,7 +252,7 @@ HRESULT CDVBSub::ParseSample (IMediaSample* pSample)
 						if (pPage->PageState == DPS_ACQUISITION) {
 							m_pCurrentPage = pPage;
 							m_pCurrentPage->rtStart = m_rtStart;
-							TRACE_DVB ("DVB - Page started  %S\n", ReftimeToString(m_rtStart));
+							TRACE_DVB ("DVB - Page started  %S\n", ReftimeToCString(m_rtStart));
 							m_rtStart = INVALID_TIME;
 						} else {
 							TRACE_DVB ("DVB - Page update\n");
@@ -277,7 +277,7 @@ HRESULT CDVBSub::ParseSample (IMediaSample* pSample)
 					case END_OF_DISPLAY :
 						if (m_pCurrentPage != NULL && m_rtStart != INVALID_TIME) {
 							m_pCurrentPage->rtStop = m_rtStart;
-							TRACE_DVB ("DVB - End display %S - %S\n", ReftimeToString(m_pCurrentPage->rtStart), ReftimeToString(m_pCurrentPage->rtStop));
+							TRACE_DVB ("DVB - End display %S - %S\n", ReftimeToCString(m_pCurrentPage->rtStart), ReftimeToCString(m_pCurrentPage->rtStop));
 							m_Pages.AddTail (m_pCurrentPage.Detach());
 						}
 						break;
@@ -351,11 +351,11 @@ POSITION CDVBSub::GetStartPosition(REFERENCE_TIME rt, double fps)
 		pPage = m_Pages.GetHead();
 		if (pPage->rtStop < rt) {
 			if (!pPage->Rendered) {
-				TRACE_DVB ("DVB - remove unrendered object, %S - %S\n", ReftimeToString(pPage->rtStart), ReftimeToString(pPage->rtStop));
+				TRACE_DVB ("DVB - remove unrendered object, %S - %S\n", ReftimeToCString(pPage->rtStart), ReftimeToCString(pPage->rtStop));
 			}
 
 			//TRACE_HDMVSUB ("CHdmvSub:HDMV remove object %d  %S => %S (rt=%S)\n", pPage->GetRLEDataSize(),
-			//			   ReftimeToString (pPage->rtStart), ReftimeToString(pPage->rtStop), ReftimeToString(rt));
+			//			   ReftimeToCString (pPage->rtStart), ReftimeToCString(pPage->rtStop), ReftimeToCString(rt));
 			m_Pages.RemoveHead();
 			delete pPage;
 		} else {

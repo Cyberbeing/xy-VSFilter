@@ -24,12 +24,11 @@
 #include "HdmvSub.h"
 #include "../DSUtil/GolombBuffer.h"
 
-#if (0)		// Set to 1 to activate HDMV subtitles traces
-	#define TRACE_HDMVSUB		TRACE
+#if (1)		// Set to 1 to activate HDMV subtitles traces
+#define TRACE_HDMVSUB(_x_)		{CString tmp;tmp.Format _x_; XY_LOG_INFO( tmp.GetString() );}
 #else
-	#define TRACE_HDMVSUB
+	#define TRACE_HDMVSUB(_x_)
 #endif
-
 
 CHdmvSub::CHdmvSub(void)
 	: CBaseSub(ST_HDMV)
@@ -72,13 +71,13 @@ void CHdmvSub::AllocSegment(int nSize)
 POSITION CHdmvSub::GetStartPosition(REFERENCE_TIME rt, double fps)
 {
 	CompositionObject*	pObject;
-
+    TRACE_HDMVSUB( (_T("CHdmvSub:GetStartPosition rt=%lS\n"), ReftimeToCString(rt)) );
 	// Cleanup old PG
 	while (m_pObjects.GetCount()>0) {
 		pObject = m_pObjects.GetHead();
 		if (pObject->m_rtStop < rt) {
-			TRACE_HDMVSUB ("CHdmvSub:HDMV remove object %d  %S => %S (rt=%S)\n", pObject->GetRLEDataSize(),
-						   ReftimeToString (pObject->m_rtStart), ReftimeToString(pObject->m_rtStop), ReftimeToString(rt));
+			TRACE_HDMVSUB( (_T("CHdmvSub:HDMV remove object %d  %lS => %lS (rt=%lS)\n"), pObject->GetRLEDataSize(),
+						   ReftimeToCString (pObject->m_rtStart), ReftimeToCString(pObject->m_rtStop), ReftimeToCString(rt)));
 			m_pObjects.RemoveHead();
 			delete pObject;
 		} else {
@@ -146,25 +145,25 @@ HRESULT CHdmvSub::ParseSample(IMediaSample* pSample)
 
 					switch (m_nCurSegment) {
 						case PALETTE :
-							TRACE_HDMVSUB ("CHdmvSub:PALETTE            rtStart=%10I64d\n", rtStart);
+							TRACE_HDMVSUB( (_T("CHdmvSub:PALETTE            rtStart=%10I64d\n"), rtStart));
 							ParsePalette(&SegmentBuffer, m_nSegSize);
 							break;
 						case OBJECT :
-							TRACE_HDMVSUB ("CHdmvSub:OBJECT             %S\n", ReftimeToString(rtStart));
+							TRACE_HDMVSUB( (_T("CHdmvSub:OBJECT             %lS\n"), ReftimeToCString(rtStart)));
 							ParseObject(&SegmentBuffer, m_nSegSize);
 							break;
 						case PRESENTATION_SEG :
-							TRACE_HDMVSUB ("CHdmvSub:PRESENTATION_SEG   %S (size=%d)\n", ReftimeToString(rtStart), m_nSegSize);
+							TRACE_HDMVSUB( (_T("CHdmvSub:PRESENTATION_SEG   %lS (size=%d)\n"), ReftimeToCString(rtStart), m_nSegSize));
 
 							if (m_pCurrentObject) {
-								TRACE_HDMVSUB ("CHdmvSub:PRESENTATION_SEG   %d\n", m_pCurrentObject->m_nObjectNumber);
+								TRACE_HDMVSUB( (_T("CHdmvSub:PRESENTATION_SEG   %d\n"), m_pCurrentObject->m_nObjectNumber));
 								if(m_pCurrentObject->m_nObjectNumber > 1) {
 									m_pCurrentObject->m_nObjectNumber--;
 									break;
 								}
 								m_pCurrentObject->m_rtStop = rtStart;
 								m_pObjects.AddTail (m_pCurrentObject);
-								TRACE_HDMVSUB ("CHdmvSub:HDMV : %S => %S\n", ReftimeToString (m_pCurrentObject->m_rtStart), ReftimeToString(rtStart));
+								TRACE_HDMVSUB( (_T("CHdmvSub:HDMV : %lS => %lS\n"), ReftimeToCString (m_pCurrentObject->m_rtStart), ReftimeToCString(rtStart)));
 								m_pCurrentObject = NULL;
 							}
 
@@ -174,13 +173,13 @@ HRESULT CHdmvSub::ParseSample(IMediaSample* pSample)
 							}
 							break;
 						case WINDOW_DEF :
-							// TRACE_HDMVSUB ("CHdmvSub:WINDOW_DEF         %S\n", ReftimeToString(rtStart));
+							// TRACE_HDMVSUB( (_T("CHdmvSub:WINDOW_DEF         %S\n", ReftimeToCString(rtStart));
 							break;
 						case END_OF_DISPLAY :
-							// TRACE_HDMVSUB ("CHdmvSub:END_OF_DISPLAY     %S\n", ReftimeToString(rtStart));
+							// TRACE_HDMVSUB( (_T("CHdmvSub:END_OF_DISPLAY     %S\n", ReftimeToCString(rtStart));
 							break;
 						default :
-							TRACE_HDMVSUB ("CHdmvSub:UNKNOWN Seg %d     rtStart=0x%10dd\n", m_nCurSegment, rtStart);
+							TRACE_HDMVSUB( (_T("CHdmvSub:UNKNOWN Seg %d     rtStart=0x%10dd\n"), m_nCurSegment, rtStart));
 					}
 
 					m_nCurSegment = NO_SEGMENT;
@@ -205,7 +204,7 @@ int CHdmvSub::ParsePresentationSegment(CGolombBuffer* pGBuffer)
 	pGBuffer->ReadByte(); //palette_id_ref		= pGBuffer->ReadByte();
 	nObjectNumber		= pGBuffer->ReadByte();
 
-	TRACE_HDMVSUB( "CHdmvSub::ParsePresentationSegment Size = %d, nObjectNumber = %d\n", pGBuffer->GetSize(), nObjectNumber);
+	TRACE_HDMVSUB( (_T("CHdmvSub::ParsePresentationSegment Size = %d, nObjectNumber = %d\n"), pGBuffer->GetSize(), nObjectNumber));
 
 	if (nObjectNumber > 0) {
 		delete m_pCurrentObject;
@@ -262,8 +261,8 @@ void CHdmvSub::ParseObject(CGolombBuffer* pGBuffer, USHORT nUnitSize)	// #498
 
 			m_pCurrentObject->SetRLEData (pGBuffer->GetBufferPos(), nUnitSize-11, object_data_length-4);
 
-			TRACE_HDMVSUB ("CHdmvSub:NewObject	size=%ld, total obj=%d, %dx%d\n", object_data_length, m_pObjects.GetCount(),
-						   m_pCurrentObject->m_width, m_pCurrentObject->m_height);
+			TRACE_HDMVSUB( (_T("CHdmvSub:NewObject	size=%ld, total obj=%d, %dx%d\n"), object_data_length, m_pObjects.GetCount(),
+						   m_pCurrentObject->m_width, m_pCurrentObject->m_height));
 		} else {
 			m_pCurrentObject->AppendRLEData (pGBuffer->GetBufferPos(), nUnitSize-4);
 		}
@@ -315,8 +314,8 @@ void CHdmvSub::Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox)
 			pObject->SetPalette (m_nDefaultPaletteNbEntry, m_pDefaultPalette, m_VideoDescriptor.nVideoWidth>720);
 		}
 
-		TRACE_HDMVSUB ("CHdmvSub:Render	    size=%ld,  ObjRes=%dx%d,  SPDRes=%dx%d\n", pObject->GetRLEDataSize(),
-					   pObject->m_width, pObject->m_height, spd.w, spd.h);
+		TRACE_HDMVSUB( (_T("CHdmvSub:Render	    size=%ld,  ObjRes=%dx%d,  SPDRes=%dx%d\n"), pObject->GetRLEDataSize(),
+					   pObject->m_width, pObject->m_height, spd.w, spd.h));
 		pObject->RenderHdmv(spd);
 
 		bbox.left	= pObject->m_horizontal_position;

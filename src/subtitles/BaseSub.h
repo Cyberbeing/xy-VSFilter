@@ -25,6 +25,8 @@
 
 #include "CompositionObject.h"
 
+#define  ReftimeToCString(rt) ReftimeToString(rt).GetString()
+
 enum SUBTITLE_TYPE {
 	ST_DVB,
 	ST_HDMV
