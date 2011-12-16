@@ -249,18 +249,20 @@ STDMETHODIMP CDirectVobSub::get_PreBuffering(bool* fDoPreBuffering)
 {
 	CAutoLock cAutoLock(&m_propsLock);
 
-	return fDoPreBuffering ? *fDoPreBuffering = m_fDoPreBuffering, S_OK : E_POINTER;
+	//return fDoPreBuffering ? *fDoPreBuffering = m_fDoPreBuffering, S_OK : E_POINTER;
+    return fDoPreBuffering ? *fDoPreBuffering = false, S_OK : E_POINTER;
 }
 
 STDMETHODIMP CDirectVobSub::put_PreBuffering(bool fDoPreBuffering)
 {
-	CAutoLock cAutoLock(&m_propsLock);
+    return E_NOTIMPL;
+	//CAutoLock cAutoLock(&m_propsLock);
 
-	if(m_fDoPreBuffering == fDoPreBuffering) return S_FALSE;
+	//if(m_fDoPreBuffering == fDoPreBuffering) return S_FALSE;
 
-	m_fDoPreBuffering = fDoPreBuffering;
+	//m_fDoPreBuffering = fDoPreBuffering;
 
-	return S_OK;
+	//return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::get_ColourSpace(int* colourSpace)
