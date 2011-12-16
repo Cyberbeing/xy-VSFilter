@@ -102,6 +102,22 @@ public:
     STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
     STDMETHODIMP get_ColourSpace(int* colourSpace);
     STDMETHODIMP put_ColourSpace(int colourSpace);
+    STDMETHODIMP get_SubPictToBuffer(unsigned int* uSubPictToBuffer)
+    {
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP put_SubPictToBuffer(unsigned int uSubPictToBuffer)
+    {
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP get_AnimWhenBuffering(bool* fAnimWhenBuffering)
+    {
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP put_AnimWhenBuffering(bool fAnimWhenBuffering)
+    {
+        return E_NOTIMPL;
+    }
     STDMETHODIMP get_Placement(bool* fOverridePlacement, int* xperc, int* yperc);
     STDMETHODIMP put_Placement(bool fOverridePlacement, int xperc, int yperc);
     STDMETHODIMP get_VobSubSettings(bool* fBuffer, bool* fOnlyShowForcedSubs, bool* fPolygonize);
