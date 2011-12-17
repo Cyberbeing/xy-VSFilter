@@ -84,8 +84,34 @@ POSITION CHdmvSub::GetStartPosition(REFERENCE_TIME rt, double fps)
 			break;
 		}
 	}
+ // log first 2 objects
+ //   {
+ //       POSITION pos = m_pObjects.GetHeadPosition();
+ //       for (int i=0;i<2 && pos!=NULL; i++)
+ //       {
+ //           CompositionObject*	pObject = m_pObjects.GetNext(pos);
+ //           TRACE_HDMVSUB( (_T("CHdmvSub:HDMV cur %d object %d  %lS => %lS\n"), i, pObject->GetRLEDataSize(),
+ //               ReftimeToCString (pObject->m_rtStart), ReftimeToCString(pObject->m_rtStop)));
+ //       }
+ //   }    
 
-	return m_pObjects.GetHeadPosition();
+    POSITION	pos = m_pObjects.GetHeadPosition();
+
+    while (pos) {
+        CompositionObject*	pObject = m_pObjects.GetAt (pos);
+
+        if (rt >= pObject->m_rtStart && rt < pObject->m_rtStop) {
+            break;
+        }
+        else if( rt < pObject->m_rtStart )
+        {
+            pos = NULL;
+            break;
+        }
+
+        m_pObjects.GetNext(pos);
+    }
+    return pos;
 }
 
 HRESULT CHdmvSub::ParseSample(IMediaSample* pSample)
