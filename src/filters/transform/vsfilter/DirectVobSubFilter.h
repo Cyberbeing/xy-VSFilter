@@ -59,6 +59,7 @@ class CDirectVobSubFilter
 protected:
 	void GetOutputSize(int& w, int& h, int& arx, int& ary);
 	HRESULT Transform(IMediaSample* pIn);    
+    HRESULT GetIsEmbeddedSubStream(int iSelected, bool *fIsEmbedded);
 public:
     CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid = __uuidof(CDirectVobSubFilter));
 	virtual ~CDirectVobSubFilter();
@@ -164,7 +165,10 @@ protected:
 	void UpdatePreferedLanguages(CString lang);
 
 	CCritSec m_csSubLock;
-	CInterfaceList<ISubStream> m_pSubStreams;
+
+	CInterfaceList<ISubStream> m_pSubStreams;    
+    CAtlList<bool> m_fIsSubStreamEmbeded;
+
 	DWORD_PTR m_nSubtitleId;
 	void UpdateSubtitle(bool fApplyDefStyle = true);
 	void SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyle = true);

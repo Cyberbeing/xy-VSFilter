@@ -997,6 +997,7 @@ STDMETHODIMP CDirectVobSubFilter::Enable(long lIndex, DWORD dwFlags)
 STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlags, LCID* plcid, DWORD* pdwGroup, WCHAR** ppszName, IUnknown** ppObject, IUnknown** ppUnk)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+    const int EMBEDDED_GROUP = 0x648E51;
 
 	int nLangs = 0;
 	get_LanguageCount(&nLangs);
@@ -1024,7 +1025,7 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 
 	if(plcid) *plcid = 0;
 
-	if(pdwGroup) *pdwGroup = 0x648E51;
+	if(pdwGroup) *pdwGroup = EMBEDDED_GROUP;
 
 	if(ppszName)
 	{
@@ -1032,10 +1033,36 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 
 		CStringW str;
 		if(i == -1) str = ResStr(IDS_M_SHOWSUBTITLES);
-		else if(i >= 0 && i < nLangs) get_LanguageName(i, ppszName);
+		else if(i >= 0 && i < nLangs)
+        {
+            get_LanguageName(i, ppszName);
+            if(pdwGroup)
+            {
+                bool isEmbedded = false;
+                if( SUCCEEDED(GetIsEmbeddedSubStream(i, &isEmbedded)) )
+                {
+                    if(isEmbedded)
+                    {
+                        *pdwGroup = EMBEDDED_GROUP;
+                    }
+                    else
+                    {
+                        *pdwGroup = EMBEDDED_GROUP - 1;
+                    }
+                }
+            }            
+        }
 		else if(i == nLangs) str = ResStr(IDS_M_HIDESUBTITLES);
-		else if(i == nLangs+1) {str = ResStr(IDS_M_ORIGINALPICTURE); if(pdwGroup) (*pdwGroup)++;}
-		else if(i == nLangs+2) {str = ResStr(IDS_M_FLIPPEDPICTURE); if(pdwGroup) (*pdwGroup)++;}
+		else if(i == nLangs+1)
+        {
+            str = ResStr(IDS_M_ORIGINALPICTURE); 
+            if(pdwGroup) *pdwGroup = EMBEDDED_GROUP+1;
+        }
+		else if(i == nLangs+2)
+        {
+            str = ResStr(IDS_M_FLIPPEDPICTURE);
+            if(pdwGroup) *pdwGroup = EMBEDDED_GROUP+1;
+        }
 
 		if(!str.IsEmpty())
 		{
@@ -1743,6 +1770,7 @@ bool CDirectVobSubFilter::Open()
 	CAutoLock cAutolock(&m_csQueueLock);
 
 	m_pSubStreams.RemoveAll();
+    m_fIsSubStreamEmbeded.RemoveAll();
 
 	m_frd.files.RemoveAll();
 
@@ -1802,6 +1830,7 @@ bool CDirectVobSubFilter::Open()
 		if(pSubStream)
 		{
 			m_pSubStreams.AddTail(pSubStream);
+            m_fIsSubStreamEmbeded.AddTail(false);
 			m_frd.files.AddTail(ret[i].fn);
 		}
 	}
@@ -1809,7 +1838,10 @@ bool CDirectVobSubFilter::Open()
 	for(int i = 0; i < m_pTextInput.GetCount(); i++)
 	{
 		if(m_pTextInput[i]->IsConnected())
+        {
 			m_pSubStreams.AddTail(m_pTextInput[i]->GetSubStream());
+            m_fIsSubStreamEmbeded.AddTail(true);
+        }
 	}
 
 	if(S_FALSE == put_SelectedLanguage(FindPreferedLanguage()))
@@ -1971,7 +2003,11 @@ void CDirectVobSubFilter::AddSubStream(ISubStream* pSubStream)
 	CAutoLock cAutoLock(&m_csQueueLock);
 
 	POSITION pos = m_pSubStreams.Find(pSubStream);
-	if(!pos) m_pSubStreams.AddTail(pSubStream);
+	if(!pos)
+    {
+        m_pSubStreams.AddTail(pSubStream);
+        m_fIsSubStreamEmbeded.AddTail(true);//todo: fix me
+    }
 
 	int len = m_pTextInput.GetCount();
 	for(int i = 0; i < m_pTextInput.GetCount(); i++)
@@ -1988,8 +2024,22 @@ void CDirectVobSubFilter::RemoveSubStream(ISubStream* pSubStream)
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
 
-	POSITION pos = m_pSubStreams.Find(pSubStream);
-	if(pos) m_pSubStreams.RemoveAt(pos);
+    POSITION pos = m_pSubStreams.GetHeadPosition();
+    POSITION pos2 = m_fIsSubStreamEmbeded.GetHeadPosition();
+    while(pos!=NULL)
+    {
+        if( m_pSubStreams.GetAt(pos)==pSubStream )
+        {
+            m_pSubStreams.RemoveAt(pos);
+            m_fIsSubStreamEmbeded.RemoveAt(pos2);
+            break;
+        }
+        else
+        {
+            m_pSubStreams.GetNext(pos);
+            m_fIsSubStreamEmbeded.GetNext(pos2);
+        }
+    }
 }
 
 void CDirectVobSubFilter::Post_EC_OLE_EVENT(CString str, DWORD_PTR nSubtitleId)
@@ -2193,4 +2243,35 @@ void CDirectVobSubFilter::GetOutputColorspaces( ColorSpaceId *preferredOrder, UI
     {
         CBaseVideoFilter::GetInputColorspaces(preferredOrder, count);
     }
+}
+
+HRESULT CDirectVobSubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
+{
+    CAutoLock cAutolock(&m_csQueueLock);
+
+    HRESULT hr = E_INVALIDARG;
+    if (!fIsEmbedded)
+    {
+        return S_FALSE;
+    }
+
+    int i = iSelected;
+    *fIsEmbedded = false;
+
+    POSITION pos = m_pSubStreams.GetHeadPosition();
+    POSITION pos2 = m_fIsSubStreamEmbeded.GetHeadPosition();
+    while(i >= 0 && pos)
+    {
+        CComPtr<ISubStream> pSubStream = m_pSubStreams.GetNext(pos);
+        bool isEmbedded = m_fIsSubStreamEmbeded.GetNext(pos2);
+        if(i < pSubStream->GetStreamCount())
+        {
+            hr = NOERROR;
+            *fIsEmbedded = isEmbedded;
+            break;
+        }
+
+        i -= pSubStream->GetStreamCount();
+    }
+    return hr;
 }
