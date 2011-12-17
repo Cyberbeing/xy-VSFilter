@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "color_conv_table.h"
 #include <string.h>
 
@@ -128,6 +129,75 @@ void ColorConvTable::ColorConvInit()
         y2c_gu[i] = y2c_cgu*(i-128);
         y2c_gv[i] = y2c_cgv*(i-128);
         y2c_rv[i] = y2c_crv*(i-128);
+    }
+}
+
+DWORD ColorConvTable::Argb2Auyv( DWORD argb )
+{
+    const ColorConvTable* color_conv_table = ColorConvTable::GetDefaultColorConvTable();
+    DWORD axxv;
+    int r = (argb & 0x00ff0000) >> 16;
+    int g = (argb & 0x0000ff00) >> 8;
+    int b = (argb & 0x000000ff);
+    int y = (color_conv_table->c2y_cyb * b + color_conv_table->c2y_cyg * g + color_conv_table->c2y_cyr * r + 0x108000) >> 16;
+    int scaled_y = (y-16) * color_conv_table->cy_cy;
+    int u = ((((b<<16) - scaled_y) >> 10) * color_conv_table->c2y_cu + 0x800000 + 0x8000) >> 16;
+    int v = ((((r<<16) - scaled_y) >> 10) * color_conv_table->c2y_cv + 0x800000 + 0x8000) >> 16;
+    u *= (u>0);
+    u = 255 - (255-u)*(u<256);
+    v *= (v>0);
+    v = 255 - (255-v)*(v<256);
+
+    axxv = (argb & 0xff000000) | (y<<8) | (u<<16) | v;
+
+    return axxv;
+}
+
+DWORD ColorConvTable::Argb2Ayuv( DWORD argb )
+{
+    const ColorConvTable* color_conv_table = ColorConvTable::GetDefaultColorConvTable();
+    DWORD axxv;
+    int r = (argb & 0x00ff0000) >> 16;
+    int g = (argb & 0x0000ff00) >> 8;
+    int b = (argb & 0x000000ff);
+    int y = (color_conv_table->c2y_cyb * b + color_conv_table->c2y_cyg * g + color_conv_table->c2y_cyr * r + 0x108000) >> 16;
+    int scaled_y = (y-16) * color_conv_table->cy_cy;
+    int u = ((((b<<16) - scaled_y) >> 10) * color_conv_table->c2y_cu + 0x800000 + 0x8000) >> 16;
+    int v = ((((r<<16) - scaled_y) >> 10) * color_conv_table->c2y_cv + 0x800000 + 0x8000) >> 16;
+    u *= (u>0);
+    u = 255 - (255-u)*(u<256);
+    v *= (v>0);
+    v = 255 - (255-v)*(v<256);
+
+    axxv = (argb & 0xff000000) | (y<<16) | (u<<8) | v;
+
+    return axxv;    
+}
+
+DWORD ColorConvTable::Ayuv2Argb_BT601( DWORD ayuv )
+{
+    return YCrCbToRGB_Rec601( ayuv>>24, (ayuv>>16)&0xff, (ayuv>>8)&0xff, ayuv&0xff ); //todo: fix me
+}
+
+DWORD ColorConvTable::Ayuv2Argb_BT709( DWORD ayuv )
+{
+    return YCrCbToRGB_Rec709( ayuv>>24, (ayuv>>16)&0xff, (ayuv>>8)&0xff, ayuv&0xff ); //todo: fix me
+}
+
+DWORD ColorConvTable::Ayuv2Argb( DWORD ayuv )
+{
+    switch(s_default_yuv_type)
+    {
+    case BT601:
+        return Ayuv2Argb_BT601(ayuv);
+        break;
+    case BT709:
+        return Ayuv2Argb_BT709(ayuv);
+        break;
+    case NONE:
+        //todo fixme: log error
+        ASSERT(0);
+        break;
     }
 }
 

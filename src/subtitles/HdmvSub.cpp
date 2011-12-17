@@ -339,7 +339,7 @@ void CHdmvSub::Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox)
 		if (!pObject->HavePalette()) {
 			pObject->SetPalette (m_nDefaultPaletteNbEntry, m_pDefaultPalette, m_VideoDescriptor.nVideoWidth>720);
 		}
-
+        pObject->InitColor(spd);
 		TRACE_HDMVSUB( (_T("CHdmvSub:Render	    size=%ld,  ObjRes=%dx%d,  SPDRes=%dx%d\n"), pObject->GetRLEDataSize(),
 					   pObject->m_width, pObject->m_height, spd.w, spd.h));
 		pObject->RenderHdmv(spd);

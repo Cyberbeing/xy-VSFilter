@@ -7,6 +7,8 @@
 #ifndef __COLOR_CONV_TABLE_H_53D078BB_BBA1_441B_9728_67E29A1CB521__
 #define __COLOR_CONV_TABLE_H_53D078BB_BBA1_441B_9728_67E29A1CB521__
 
+#include <WTypes.h>
+
 struct ColorConvTable
 {
     enum YUV_Type
@@ -21,6 +23,11 @@ struct ColorConvTable
     static YUV_Type SetDefaultYUVType(const YUV_Type& yuv_type) { return s_default_yuv_type = yuv_type; }
     static YUV_Type GetDefaultYUVType() { return s_default_yuv_type; };
     static const ColorConvTable* GetDefaultColorConvTable() { return GetColorConvTable(s_default_yuv_type); }
+    static DWORD Argb2Ayuv(DWORD argb);
+    static DWORD Argb2Auyv(DWORD argb);
+    static DWORD Ayuv2Argb(DWORD ayuv);
+    static DWORD Ayuv2Argb_BT601(DWORD ayuv);
+    static DWORD Ayuv2Argb_BT709(DWORD ayuv);
 
     YUV_Type yuv_type;
 

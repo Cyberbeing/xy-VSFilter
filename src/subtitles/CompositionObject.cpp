@@ -23,7 +23,7 @@
 #include "stdafx.h"
 #include "CompositionObject.h"
 #include "../DSUtil/GolombBuffer.h"
-
+#include "../subpic/color_conv_table.h"
 
 
 CompositionObject::CompositionObject()
@@ -33,7 +33,7 @@ CompositionObject::CompositionObject()
 	m_pRLEData		= NULL;
 	m_nRLEDataSize	= 0;
 	m_nRLEPos		= 0;
-	m_nColorNumber	= 0;
+	
 	memsetd (m_Colors, 0xFF000000, sizeof(m_Colors));
 }
 
@@ -43,22 +43,126 @@ CompositionObject::~CompositionObject()
 }
 
 void CompositionObject::SetPalette (int nNbEntry, HDMV_PALETTE* pPalette, bool bIsHD)
-{
-	m_nColorNumber	= nNbEntry;
+{ 
+    m_OriginalColorType = bIsHD ? YUV_Rec709 : YUV_Rec601;
 
-	for (int i=0; i<m_nColorNumber; i++) {
-		//		if (pPalette[i].T != 0)	// Prevent ugly background when Alpha=0 (but RGB different from 0)
-		{
-			if (bIsHD) {
-				m_Colors[pPalette[i].entry_id] = YCrCbToRGB_Rec709 (pPalette[i].T, pPalette[i].Y, pPalette[i].Cr, pPalette[i].Cb);
-			} else {
-				m_Colors[pPalette[i].entry_id] = YCrCbToRGB_Rec601 (pPalette[i].T, pPalette[i].Y, pPalette[i].Cr, pPalette[i].Cb);
-			}
-		}
-		//		TRACE_HDMVSUB ("%03d : %08x\n", pPalette[i].entry_id, m_Colors[pPalette[i].entry_id]);
-	}
+    m_colorType = -1;
+
+    m_Palette.SetCount(nNbEntry>0?nNbEntry:0);
+    if(nNbEntry>0)
+    {        
+        memcpy(m_Palette.GetData(), pPalette, nNbEntry*sizeof(pPalette[0]));
+    }
 }
 
+void CompositionObject::InitColor(const SubPicDesc& spd)
+{
+#define COMBINE_AYUV(a, y, u, v) ((((((((int)(a))<<8)|y)<<8)|u)<<8)|v)
+    //fix me: move all color conv function into color_conv_table or dsutil
+
+    int paletteNumber = m_Palette.GetCount();
+    if (m_colorType!=spd.type)
+    {
+        m_colorType = -1;
+        if(m_OriginalColorType!=NONE)
+        {
+            m_colorType = spd.type;
+            switch(spd.type)
+            {
+            case MSP_AYUV_PLANAR:
+            case MSP_AYUV:
+                if ((m_OriginalColorType==YUV_Rec709 && ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT709) ||
+                    (m_OriginalColorType==YUV_Rec601 && ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT601))
+                {
+                    for (int i=0;i<paletteNumber;i++)
+                    {
+                        m_Colors[m_Palette[i].entry_id] = COMBINE_AYUV(m_Palette[i].T, m_Palette[i].Y, m_Palette[i].Cr, m_Palette[i].Cb);
+                    }
+                }
+                else if (m_OriginalColorType==YUV_Rec709)
+                {
+                    for (int i=0;i<paletteNumber;i++)
+                    {
+                        DWORD argb = YCrCbToRGB_Rec709(m_Palette[i].T, m_Palette[i].Y, m_Palette[i].Cr, m_Palette[i].Cb);
+                        m_Colors[m_Palette[i].entry_id] = ColorConvTable::Argb2Ayuv(argb);
+                    }                    
+                }
+                else if (m_OriginalColorType==YUV_Rec601)
+                {
+                    for (int i=0;i<paletteNumber;i++)
+                    {
+                        DWORD argb = YCrCbToRGB_Rec601(m_Palette[i].T, m_Palette[i].Y, m_Palette[i].Cr, m_Palette[i].Cb);
+                        m_Colors[m_Palette[i].entry_id] = ColorConvTable::Argb2Ayuv(argb);
+                    }
+                }
+                else
+                {
+                    m_colorType = -1;
+                }
+                break;
+            case MSP_XY_AUYV:
+                if ((m_OriginalColorType==YUV_Rec709 && ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT709) ||
+                    (m_OriginalColorType==YUV_Rec601 && ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT601))
+                {
+                    for (int i=0;i<paletteNumber;i++)
+                    {
+                        m_Colors[m_Palette[i].entry_id] = COMBINE_AYUV(m_Palette[i].T, m_Palette[i].Cr, m_Palette[i].Y, m_Palette[i].Cb);
+                    }
+                }
+                else if (m_OriginalColorType==YUV_Rec709)
+                {
+                    for (int i=0;i<paletteNumber;i++)
+                    {
+                        DWORD argb = YCrCbToRGB_Rec709(m_Palette[i].T, m_Palette[i].Y, m_Palette[i].Cr, m_Palette[i].Cb);
+                        m_Colors[m_Palette[i].entry_id] = ColorConvTable::Argb2Auyv(argb);
+                    }                    
+                }
+                else if (m_OriginalColorType==YUV_Rec601)
+                {
+                    for (int i=0;i<paletteNumber;i++)
+                    {
+                        DWORD argb = YCrCbToRGB_Rec601(m_Palette[i].T, m_Palette[i].Y, m_Palette[i].Cr, m_Palette[i].Cb);
+                        m_Colors[m_Palette[i].entry_id] = ColorConvTable::Argb2Auyv(argb);
+                    }
+                }
+                else
+                {
+                    m_colorType = -1;
+                }
+                break;
+            case MSP_RGBA:
+                if (m_OriginalColorType==YUV_Rec709)
+                {
+                    for (int i=0;i<paletteNumber;i++)
+                    {
+                        DWORD argb = YCrCbToRGB_Rec709(m_Palette[i].T, m_Palette[i].Y, m_Palette[i].Cr, m_Palette[i].Cb);
+                        m_Colors[m_Palette[i].entry_id] = argb;
+                    }                    
+                }
+                else if (m_OriginalColorType==YUV_Rec601)
+                {
+                    for (int i=0;i<paletteNumber;i++)
+                    {
+                        DWORD argb = YCrCbToRGB_Rec601(m_Palette[i].T, m_Palette[i].Y, m_Palette[i].Cr, m_Palette[i].Cb);
+                        m_Colors[m_Palette[i].entry_id] = argb;
+                    }
+                }
+                else
+                {
+                    m_colorType = -1;
+                }
+                break;
+            default:
+                m_colorType = -1;
+                break;
+            }
+        }
+        if (m_colorType == -1)
+        {
+            //todo fixme: log error
+        }
+    }
+}
 
 void CompositionObject::SetRLEData(BYTE* pBuffer, int nSize, int nTotalSize)
 {

@@ -177,3 +177,11 @@ HRESULT CRenderedHdmvSubtitle::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME 
 	m_rtStart = tStart;
 	return S_OK;
 }
+
+STDMETHODIMP_(bool) CRenderedHdmvSubtitle::IsColorTypeSupported( int type )
+{
+    return type==MSP_AYUV_PLANAR ||
+        type==MSP_AYUV ||
+        type==MSP_XY_AUYV ||
+        type==MSP_RGBA;
+}

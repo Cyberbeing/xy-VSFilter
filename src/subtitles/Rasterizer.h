@@ -177,7 +177,20 @@ typedef ::boost::shared_ptr<DrawItem> SharedPtrDrawItem;
 
 class Rasterizer
 {
+private:
     typedef unsigned char byte;
+    
+    struct DM
+    {
+        enum
+        {
+            SSE2 = 1,
+            ALPHA_MASK = 1<<1,
+            SINGLE_COLOR = 1<<2,
+            BODY = 1<<3,
+            AYUV_PLANAR = 1<<4
+        };
+    };
 public:    
     static bool Rasterize(const ScanLineData& scan_line_data, int xsub, int ysub, SharedPtrOverlay overlay);
     static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);

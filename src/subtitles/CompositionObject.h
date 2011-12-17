@@ -73,18 +73,30 @@ public :
 	void				RenderHdmv(SubPicDesc& spd);
 	void				RenderDvb(SubPicDesc& spd, SHORT nX, SHORT nY);
 	void				WriteSeg (SubPicDesc& spd, SHORT nX, SHORT nY, SHORT nCount, SHORT nPaletteIndex);
+    void                InitColor(const SubPicDesc& spd);
 	void				SetPalette (int nNbEntry, HDMV_PALETTE* pPalette, bool bIsHD);
 	void				SetPalette (int nNbEntry, DWORD* dwColors);
 	bool				HavePalette() {
-		return m_nColorNumber>0;
+		return !m_Palette.IsEmpty();
 	};
 
 private :
 	BYTE*		m_pRLEData;
 	int			m_nRLEDataSize;
 	int			m_nRLEPos;
-	int			m_nColorNumber;
-	DWORD		m_Colors[256];
+
+    CAtlArray<HDMV_PALETTE> m_Palette;
+    enum ColorType 
+    {
+        NONE,
+        YUV_Rec601,
+        YUV_Rec709,
+        RGB       
+    };
+    ColorType   m_OriginalColorType;
+
+	DWORD		m_Colors[256];    
+    int         m_colorType;
 
 	void		DvbRenderField(SubPicDesc& spd, CGolombBuffer& gb, SHORT nXStart, SHORT nYStart, SHORT nLength);
 	void		Dvb2PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb, SHORT& nX, SHORT& nY);

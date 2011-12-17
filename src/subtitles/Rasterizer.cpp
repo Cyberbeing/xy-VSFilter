@@ -960,6 +960,98 @@ void AlphaBlt(byte* pY,
     //__asm emms;
 }
 
+/***
+ * No aligned requirement
+ * 
+ **/
+void AlphaBlt(byte* pY,
+    const byte alpha, 
+    const byte Y, 
+    int h, int w, int dst_stride)
+{   
+    int yPremul = Y*(alpha+1);
+    int dstAlpha = 0x100 - alpha;
+    if( w>32 )//IMPORTANT! The result of the following code is undefined with w<15.
+    {
+        __m128i zero = _mm_setzero_si128();
+        __m128i s = _mm_set1_epi16(yPremul);    //s = c  0  c  0  c  0  c  0  c  0  c  0  c  0  c  0            
+        __m128i ia = _mm_set1_epi16(dstAlpha);
+        for( ; h>0; h--, pY += dst_stride )
+        {   
+            BYTE* dy = pY;
+            const BYTE* dy_first_mod16 = reinterpret_cast<BYTE*>((reinterpret_cast<int>(pY)+15)&~15);  //IMPORTANT! w must >= 15
+            const BYTE* dy_end_mod16 = reinterpret_cast<BYTE*>(reinterpret_cast<int>(pY+w)&~15);
+            const BYTE* dy_end = pY + w;   
+
+            for(;dy < dy_first_mod16; dy++)
+            {
+                *dy = (*dy * dstAlpha + yPremul)>>8;
+            }
+            for(; dy < dy_end_mod16; dy+=16)
+            {
+                //Y
+                __m128i d = _mm_load_si128(reinterpret_cast<const __m128i*>(dy));
+                __m128i dl = _mm_unpacklo_epi8(d,zero);        //d    = b0 0  b1 0  b2 0  b3 0  b4 0  b5 0  b6 0  b7 0                 
+
+                dl = _mm_mullo_epi16(dl,ia);                   //d    = b0*~a0 b1*~a1 ... b7*~a7
+                dl = _mm_adds_epu16(dl,s);                     //d   = d + s
+                dl = _mm_srli_epi16(dl, 8);                    //d   = d>>8
+                
+                d = _mm_unpackhi_epi8(d,zero);                
+                d = _mm_mullo_epi16(d,ia);
+                d = _mm_adds_epu16(d,s);
+                d = _mm_srli_epi16(d, 8);
+
+                dl = _mm_packus_epi16(dl,d);
+                
+                _mm_store_si128(reinterpret_cast<__m128i*>(dy), dl);
+            }
+            for(;dy < dy_end; dy++)
+            {
+                *dy = (*dy * dstAlpha + yPremul)>>8;
+            }
+        }
+    }
+    else
+    {
+        for( ; h>0; h--, pY += dst_stride )
+        {   
+            BYTE* dy = pY;
+            const BYTE* dy_end = pY + w;
+
+            for(;dy < dy_end; dy++)
+            {
+                *dy = (*dy * dstAlpha + yPremul)>>8;
+            }
+        }
+    }
+    //__asm emms;
+}
+
+/***
+ * No aligned requirement
+ * 
+ **/
+void AlphaBltC(byte* pY,
+    const byte alpha, 
+    const byte Y, 
+    int h, int w, int dst_stride)
+{   
+    int yPremul = Y*(alpha+1);
+    int dstAlpha = 0x100 - alpha;
+
+    for( ; h>0; h--, pY += dst_stride )
+    {
+        BYTE* dy = pY;
+        const BYTE* dy_end = pY + w;
+
+        for(;dy < dy_end; dy++)
+        {
+            *dy = (*dy * dstAlpha + yPremul)>>8;
+        }
+    }
+}
+
 // For CPUID usage in Rasterizer::Draw
 #include "../dsutil/vd.h"
 
@@ -1068,18 +1160,7 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
     if(y+h > r.bottom) h = r.bottom-y;
     // Check if there's actually anything to render
     if(w <= 0 || h <= 0) return(bbox);
-    
-    struct DM
-    {
-        enum
-        {
-            SSE2 = 1,
-            ALPHA_MASK = 1<<1,
-            SINGLE_COLOR = 1<<2,
-            BODY = 1<<3,
-            AYUV_PLANAR = 1<<4
-        };
-    };
+
     // CPUID from VDub
     bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
     bool fSingleColor = (switchpts[1]==0xffffffff);
@@ -1332,6 +1413,69 @@ CRect Rasterizer::DryDraw( SubPicDesc& spd, DrawItem& draw_item )
     return DryDraw(spd, draw_item.overlay, draw_item.clip_rect, draw_item.alpha_mask.get(), 
         draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
 }
+
+void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nHeight, DWORD argb)
+{
+    bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
+    bool AYUV_PLANAR = (spd.type==MSP_AYUV_PLANAR);
+    int draw_method = 0;
+    if(fSSE2)
+        draw_method |= DM::SSE2;
+    if(AYUV_PLANAR)
+        draw_method |= DM::AYUV_PLANAR;
+
+    switch (draw_method)
+    {
+    case   DM::SSE2 | 0*DM::AYUV_PLANAR :
+    {
+        for (int wy=y; wy<y+nHeight; wy++) {
+            DWORD* dst = (DWORD*)((BYTE*)spd.bits + spd.pitch * wy) + x;
+            for(int wt=0; wt<nWidth; ++wt) {
+                pixmix_sse2(&dst[wt], argb, argb>>24);
+            }
+        }
+    }
+    break;
+    case 0*DM::SSE2 | 0*DM::AYUV_PLANAR :
+    {
+        for (int wy=y; wy<y+nHeight; wy++) {
+            DWORD* dst = (DWORD*)((BYTE*)spd.bits + spd.pitch * wy) + x;
+            for(int wt=0; wt<nWidth; ++wt) {
+                pixmix(&dst[wt], argb,  argb>>24);
+            }
+        }
+    }
+    break;
+    case   DM::SSE2 |   DM::AYUV_PLANAR :
+    {
+        BYTE* dst = reinterpret_cast<BYTE*>(spd.bits) + spd.pitch * y + x;
+        BYTE* dst_A = dst;
+        BYTE* dst_Y = dst_A + spd.pitch*spd.h;
+        BYTE* dst_U = dst_Y + spd.pitch*spd.h;
+        BYTE* dst_V = dst_U + spd.pitch*spd.h;
+        AlphaBlt(dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt(dst_U, argb>>24, ((argb)>>8)&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt(dst_V, argb>>24, ((argb))&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt(dst_A, argb>>24, 0, nHeight, nWidth, spd.pitch);
+    }
+    break;
+    case 0*DM::SSE2 |   DM::AYUV_PLANAR :
+    {
+        BYTE* dst = reinterpret_cast<BYTE*>(spd.bits) + spd.pitch * y + x;
+        BYTE* dst_A = dst;
+        BYTE* dst_Y = dst_A + spd.pitch*spd.h;
+        BYTE* dst_U = dst_Y + spd.pitch*spd.h;
+        BYTE* dst_V = dst_U + spd.pitch*spd.h;
+        AlphaBltC(dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBltC(dst_U, argb>>24, ((argb)>>8)&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBltC(dst_V, argb>>24, ((argb))&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBltC(dst_A, argb>>24, 0, nHeight, nWidth, spd.pitch);
+    }
+    break;
+    }
+    _mm_empty();
+}
+
 ///////////////////////////////////////////////////////////////
 
 // Overlay
@@ -2257,25 +2401,4 @@ void ScanLineData::DeleteOutlines()
 {
     mWideOutline.clear();
     mOutline.clear();
-}
-
-void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nHeight, DWORD lColor)
-{
-    bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
-
-    if(fSSE2) {
-        for (int wy=y; wy<y+nHeight; wy++) {
-            DWORD* dst = (DWORD*)((BYTE*)spd.bits + spd.pitch * wy) + x;
-            for(int wt=0; wt<nWidth; ++wt) {
-                pixmix_sse2(&dst[wt], lColor, lColor>>24);
-            }
-        }
-    } else {
-        for (int wy=y; wy<y+nHeight; wy++) {
-            DWORD* dst = (DWORD*)((BYTE*)spd.bits + spd.pitch * wy) + x;
-            for(int wt=0; wt<nWidth; ++wt) {
-                pixmix(&dst[wt], lColor,  lColor>>24);
-            }
-        }
-    }
 }

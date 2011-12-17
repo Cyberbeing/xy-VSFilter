@@ -311,6 +311,7 @@ void CDVBSub::Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox)
 					pObject->m_width  = pRegion->width;
 					pObject->m_height = pRegion->height;
 					pObject->SetPalette(pRegion->Clut.Size, pRegion->Clut.Palette, false);
+                    pObject->InitColor(spd);
 					pObject->RenderDvb(spd, nX, nY);
 				}
 			}
