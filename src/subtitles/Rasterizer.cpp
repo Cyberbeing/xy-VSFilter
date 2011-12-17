@@ -800,7 +800,7 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianB
 
 static __forceinline void pixmix(DWORD *dst, DWORD color, DWORD alpha)
 {
-    int a = (((alpha)*(color>>24))>>6)&0xff;
+    int a = alpha;
     // Make sure both a and ia are in range 1..256 for the >>8 operations below to be correct
     int ia = 256-a;
     a+=1;
@@ -2274,7 +2274,7 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
         for (int wy=y; wy<y+nHeight; wy++) {
             DWORD* dst = (DWORD*)((BYTE*)spd.bits + spd.pitch * wy) + x;
             for(int wt=0; wt<nWidth; ++wt) {
-                pixmix(&dst[wt], lColor, 0x40);
+                pixmix(&dst[wt], lColor,  lColor>>24);
             }
         }
     }
