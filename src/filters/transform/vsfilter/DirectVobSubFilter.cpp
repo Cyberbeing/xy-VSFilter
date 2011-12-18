@@ -997,7 +997,12 @@ STDMETHODIMP CDirectVobSubFilter::Enable(long lIndex, DWORD dwFlags)
 STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlags, LCID* plcid, DWORD* pdwGroup, WCHAR** ppszName, IUnknown** ppObject, IUnknown** ppUnk)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-    const int EMBEDDED_GROUP = 0x648E51;
+    const int COMMAND_FLAG = 2;
+    const int EXTERNAL_SUB_FLAG = 1;
+    const int CMD_HIDE_SHOW_SUB_GROUP = 0x648E4F; // & COMMAND_FLAG = 1
+    const int EMBEDDED_GROUP = 0x648E50; // & (COMMAND_FLAG|EXTERNAL_SUB_FLAG) = 0
+    const int EXTERNAL_GROUP = 0x648E51; // & (COMMAND_FLAG|EXTERNAL_SUB_FLAG) = EXTERNAL_SUB_FLAG    
+    const int CMD_FLIP_GROUP = 0x648E52; // & COMMAND_FLAG = 1
 
 	int nLangs = 0;
 	get_LanguageCount(&nLangs);
@@ -1025,7 +1030,41 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 
 	if(plcid) *plcid = 0;
 
-	if(pdwGroup) *pdwGroup = EMBEDDED_GROUP;
+	if(pdwGroup)
+    {
+        *pdwGroup = EXTERNAL_GROUP;
+        if(i == -1)
+        {
+            *pdwGroup = CMD_HIDE_SHOW_SUB_GROUP;
+        }
+        else if(i >= 0 && i < nLangs)
+        {
+            bool isEmbedded = false;
+            if( SUCCEEDED(GetIsEmbeddedSubStream(i, &isEmbedded)) )
+            {
+                if(isEmbedded)
+                {
+                    *pdwGroup = EMBEDDED_GROUP;
+                }
+                else
+                {
+                    *pdwGroup = EXTERNAL_GROUP;
+                }
+            }            
+        }
+        else if(i == nLangs)
+        {
+            *pdwGroup = CMD_HIDE_SHOW_SUB_GROUP;
+        }
+        else if(i == nLangs+1)
+        {
+            *pdwGroup = CMD_FLIP_GROUP;
+        }
+        else if(i == nLangs+2)
+        {
+            *pdwGroup = CMD_FLIP_GROUP;
+        }
+    }
 
 	if(ppszName)
 	{
@@ -1036,32 +1075,18 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 		else if(i >= 0 && i < nLangs)
         {
             get_LanguageName(i, ppszName);
-            if(pdwGroup)
-            {
-                bool isEmbedded = false;
-                if( SUCCEEDED(GetIsEmbeddedSubStream(i, &isEmbedded)) )
-                {
-                    if(isEmbedded)
-                    {
-                        *pdwGroup = EMBEDDED_GROUP;
-                    }
-                    else
-                    {
-                        *pdwGroup = EMBEDDED_GROUP - 1;
-                    }
-                }
-            }            
         }
-		else if(i == nLangs) str = ResStr(IDS_M_HIDESUBTITLES);
+		else if(i == nLangs)
+        {
+            str = ResStr(IDS_M_HIDESUBTITLES);
+        }
 		else if(i == nLangs+1)
         {
-            str = ResStr(IDS_M_ORIGINALPICTURE); 
-            if(pdwGroup) *pdwGroup = EMBEDDED_GROUP+1;
+            str = ResStr(IDS_M_ORIGINALPICTURE);
         }
 		else if(i == nLangs+2)
         {
             str = ResStr(IDS_M_FLIPPEDPICTURE);
-            if(pdwGroup) *pdwGroup = EMBEDDED_GROUP+1;
         }
 
 		if(!str.IsEmpty())
