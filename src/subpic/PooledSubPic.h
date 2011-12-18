@@ -13,7 +13,7 @@ interface IPooledAllocator
 	STDMETHOD_(void, OnItemDestruct)(void* Item) PURE;
 };
 
-class CPooledSubPicAllocator : public CSubPicExAllocatorImpl, public IPooledAllocator
+class CPooledSubPicAllocator : public CSubPicExAllocatorImpl//, public IPooledAllocator
 {
 public:
 	STDMETHODIMP_(void) ReleaseItem(void* Item);
@@ -36,6 +36,7 @@ private:
     CPooledSubPic* DoAlloc();
 	virtual bool AllocEx(bool fStatic, ISubPicEx** ppSubPic);
 
+    void CollectUnUsedItem();
     STDMETHODIMP_(int) SetSpdColorType(int color_type);
     STDMETHODIMP_(bool) IsSpdColorTypeSupported(int type);
 };
@@ -46,10 +47,8 @@ class CPooledSubPic : public CMemSubPic
 public:
 	CPooledSubPic(SubPicDesc& spd, int alpha_blt_dst_type, CPooledSubPicAllocator* pool):CMemSubPic(spd, alpha_blt_dst_type),_pool(pool){}
 	virtual ~CPooledSubPic();
-
-	STDMETHODIMP_(ULONG) Release(void);
-
+    
 private:
 	CCritSec _csLock;
-	IPooledAllocator* _pool;
+	CPooledSubPicAllocator* _pool;
 };

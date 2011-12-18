@@ -100,7 +100,6 @@ CPooledSubPicAllocator::CPooledSubPicAllocator( int alpha_blt_dst_type, SIZE max
             break;
         }
     }
-
 	_capacity = 0;
 	InitPool(capacity);
 }
@@ -114,6 +113,7 @@ bool CPooledSubPicAllocator::AllocEx( bool fStatic, ISubPicEx** ppSubPic )
     }
 	{
 		CAutoLock lock(&_poolLock);
+        CollectUnUsedItem();
 		if(!_free.IsEmpty())
 		{
 			CPooledSubPic *item = _free.RemoveHead();
@@ -146,14 +146,20 @@ CPooledSubPicAllocator::~CPooledSubPicAllocator()
 	for(POSITION pos = _free.GetHeadPosition(); pos!=NULL; )
 	{
 		item = _free.GetNext(pos);
-		item->_pool = NULL;
-		item->Release();
+        if(item!=NULL)
+        {
+		    item->_pool = NULL;
+		    item->Release();
+        }
 	}
 	for(POSITION pos = _using.GetHeadPosition(); pos!=NULL; )
 	{
 		item = _using.GetNext(pos);
-		item->_pool = NULL;
-		item->Release();
+        if(item!=NULL)
+        {
+		    item->_pool = NULL;
+		    item->Release();
+        }
 	}
 }
 
@@ -212,26 +218,30 @@ CPooledSubPic* CPooledSubPicAllocator::DoAlloc()
         return(NULL);
     }
     CPooledSubPic* temp = NULL;
-    if(!(temp = new CPooledSubPic(spd, _alpha_blt_dst_type, this)))
+    if(!(temp = DNew CPooledSubPic(spd, _alpha_blt_dst_type, this)))
     {
-        delete[] spd.bits;
+        xy_free(spd.bits);
         ASSERT(0);
         return(NULL);
     }
     return temp;
 }
 
-STDMETHODIMP_(ULONG) CPooledSubPic::Release( void )
+void CPooledSubPicAllocator::CollectUnUsedItem()
 {
-	ULONG count = 0;
-	{
-		CAutoLock lock(&_csLock);
-		count = __super::Release();
-		//DbgLog((LOG_TRACE, 3, "SubPicRelease:%x:%d", this, count));
-	}
-	if(count==1 && _pool!=NULL)
-		_pool->ReleaseItem(this);
-	return count;
+    POSITION pos = _using.GetHeadPosition();
+    if(pos)
+    {
+        CPooledSubPic* item = _using.RemoveHead();
+        if (item->m_cRef==1)
+        {
+            _free.AddTail(item);
+        }
+        else
+        {
+            _using.AddTail(item);
+        }
+    }
 }
 
 CPooledSubPic::~CPooledSubPic()
