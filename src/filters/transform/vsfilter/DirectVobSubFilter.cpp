@@ -997,7 +997,12 @@ STDMETHODIMP CDirectVobSubFilter::Enable(long lIndex, DWORD dwFlags)
 STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlags, LCID* plcid, DWORD* pdwGroup, WCHAR** ppszName, IUnknown** ppObject, IUnknown** ppUnk)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-    const int EMBEDDED_GROUP = 0x648E51;
+    const int FLAG_CMD = 1;
+    const int FLAG_EXTERNAL_SUB = 2;
+    const int FLAG_PICTURE_CMD = 4;
+    const int FLAG_VISIBILITY_CMD = 8;
+    
+    const int GROUP_NUM_BASE = 0x648E40;//random number
 
 	int nLangs = 0;
 	get_LanguageCount(&nLangs);
@@ -1025,7 +1030,41 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 
 	if(plcid) *plcid = 0;
 
-	if(pdwGroup) *pdwGroup = EMBEDDED_GROUP;
+	if(pdwGroup)
+    {
+        *pdwGroup = GROUP_NUM_BASE;
+        if(i == -1)
+        {
+            *pdwGroup = GROUP_NUM_BASE | FLAG_CMD | FLAG_VISIBILITY_CMD;
+        }
+        else if(i >= 0 && i < nLangs)
+        {
+            bool isEmbedded = false;
+            if( SUCCEEDED(GetIsEmbeddedSubStream(i, &isEmbedded)) )
+            {
+                if(isEmbedded)
+                {
+                    *pdwGroup = GROUP_NUM_BASE & ~(FLAG_CMD | FLAG_EXTERNAL_SUB);
+                }
+                else
+                {
+                    *pdwGroup = (GROUP_NUM_BASE & ~FLAG_CMD) | FLAG_EXTERNAL_SUB;
+                }
+            }            
+        }
+        else if(i == nLangs)
+        {
+            *pdwGroup = GROUP_NUM_BASE | FLAG_CMD | FLAG_VISIBILITY_CMD;
+        }
+        else if(i == nLangs+1)
+        {
+            *pdwGroup = GROUP_NUM_BASE | FLAG_CMD | FLAG_PICTURE_CMD;
+        }
+        else if(i == nLangs+2)
+        {
+            *pdwGroup = GROUP_NUM_BASE | FLAG_CMD | FLAG_PICTURE_CMD;
+        }
+    }
 
 	if(ppszName)
 	{
@@ -1036,32 +1075,18 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 		else if(i >= 0 && i < nLangs)
         {
             get_LanguageName(i, ppszName);
-            if(pdwGroup)
-            {
-                bool isEmbedded = false;
-                if( SUCCEEDED(GetIsEmbeddedSubStream(i, &isEmbedded)) )
-                {
-                    if(isEmbedded)
-                    {
-                        *pdwGroup = EMBEDDED_GROUP;
-                    }
-                    else
-                    {
-                        *pdwGroup = EMBEDDED_GROUP - 1;
-                    }
-                }
-            }            
         }
-		else if(i == nLangs) str = ResStr(IDS_M_HIDESUBTITLES);
+		else if(i == nLangs)
+        {
+            str = ResStr(IDS_M_HIDESUBTITLES);
+        }
 		else if(i == nLangs+1)
         {
-            str = ResStr(IDS_M_ORIGINALPICTURE); 
-            if(pdwGroup) *pdwGroup = EMBEDDED_GROUP+1;
+            str = ResStr(IDS_M_ORIGINALPICTURE);
         }
 		else if(i == nLangs+2)
         {
             str = ResStr(IDS_M_FLIPPEDPICTURE);
-            if(pdwGroup) *pdwGroup = EMBEDDED_GROUP+1;
         }
 
 		if(!str.IsEmpty())
