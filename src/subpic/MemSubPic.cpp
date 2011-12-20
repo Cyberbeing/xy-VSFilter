@@ -755,12 +755,28 @@ void CMemSubPic::SubsampleAndInterlace( const CRect& cRect, bool u_first )
         v_start = u_start;
         u_start = tmp;
     }
-    for (int i=0;i<h;i+=2)
+
+    //Todo: fix me. 
+    //Walkarround for alignment
+    if ( (m_spd.pitch&15) == 0 ) 
     {
-        subsample_and_interlace_2_line_sse2(dst, u_start, v_start, w, m_spd.pitch);
-        u_start += 2*m_spd.pitch;
-        v_start += 2*m_spd.pitch;
-        dst += m_spd.pitch;
+        for (int i=0;i<h;i+=2)
+        {
+            subsample_and_interlace_2_line_sse2(dst, u_start, v_start, w, m_spd.pitch);
+            u_start += 2*m_spd.pitch;
+            v_start += 2*m_spd.pitch;
+            dst += m_spd.pitch;
+        }
+    }
+    else
+    {
+        for (int i=0;i<h;i+=2)
+        {
+            subsample_and_interlace_2_line_c(dst, u_start, v_start, w, m_spd.pitch);
+            u_start += 2*m_spd.pitch;
+            v_start += 2*m_spd.pitch;
+            dst += m_spd.pitch;
+        }
     }
 }
 
@@ -1592,6 +1608,10 @@ STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
                 CRect& cRectSrc = dirtyRectList->GetNext(pos);
                 cRectSrc.left &= ~15;
                 cRectSrc.right = (cRectSrc.right+15)&~15;
+                if(cRectSrc.right>m_spd.w)
+                {
+                    cRectSrc.right = m_spd.w;
+                }
                 cRectSrc.top &= ~1;
                 cRectSrc.bottom = (cRectSrc.bottom+1)&~1;
             }
