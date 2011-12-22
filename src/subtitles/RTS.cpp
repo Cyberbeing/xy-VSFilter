@@ -3013,8 +3013,21 @@ STDMETHODIMP CRenderedTextSubtitle::NonDelegatingQueryInterface(REFIID riid, voi
 
 STDMETHODIMP_(POSITION) CRenderedTextSubtitle::GetStartPosition(REFERENCE_TIME rt, double fps)
 {
+    
+
     //DbgLog((LOG_TRACE, 3, "rt:%lu", (ULONG)rt/10000));
     m_fps = fps;//fix me: check is fps changed and do some re-init thing
+    if (m_fps>0)
+    {
+        m_period = 1000/m_fps;
+    }
+    else
+    {
+        //Todo: fix me. max has been defined as a macro. Use #define NOMINMAX to fix it.
+        //std::numeric_limits<int>::max(); 
+        m_period = INT_MAX;
+    }
+
     int iSegment;
     int subIndex = 1;//If a segment has animate effect then it corresponds to several subpics.
     //subIndex, 1 based, indicates which subpic the result corresponds to.
@@ -3026,7 +3039,7 @@ STDMETHODIMP_(POSITION) CRenderedTextSubtitle::GetStartPosition(REFERENCE_TIME r
     {
         int start = TranslateSegmentStart(iSegment, fps);
         if(rt > start)
-            subIndex = (rt-start)/RTS_ANIMATE_SUBPIC_DUR + 1;
+            subIndex = (rt-start)/m_period + 1;
     }
     //DbgLog((LOG_TRACE, 3, "animated:%d seg:%d idx:%d DUR:%d rt:%lu", stss->animated, iSegment, subIndex, RTS_ANIMATE_SUBPIC_DUR, (ULONG)rt/10000));
     return (POSITION)(subIndex | (iSegment<<RTS_POS_SEGMENT_INDEX_BITS));
@@ -3050,7 +3063,7 @@ STDMETHODIMP_(POSITION) CRenderedTextSubtitle::GetNext(POSITION pos)
     {
         int start, end;
         TranslateSegmentStartEnd(iSegment, m_fps, start, end);
-        if(start+RTS_ANIMATE_SUBPIC_DUR*subIndex < end)
+        if(start+m_period*subIndex < end)
             subIndex++;
         else
         {
@@ -3077,7 +3090,7 @@ STDMETHODIMP_(REFERENCE_TIME) CRenderedTextSubtitle::GetStart(POSITION pos, doub
     const STSSegment *stss = GetSegment(iSegment);
     if(stss!=NULL)
     {
-        return (start + (subIndex-1)*RTS_ANIMATE_SUBPIC_DUR)*10000i64;
+        return (start + (subIndex-1)*m_period)*10000i64;
     }
     else
     {
@@ -3100,7 +3113,7 @@ STDMETHODIMP_(REFERENCE_TIME) CRenderedTextSubtitle::GetStop(POSITION pos, doubl
             ret = end;
         else
         {
-            ret = start+subIndex*RTS_ANIMATE_SUBPIC_DUR;
+            ret = start+subIndex*m_period;
             if(ret > end)
                 ret = end;
         }
@@ -3124,9 +3137,9 @@ STDMETHODIMP_(VOID) CRenderedTextSubtitle::GetStartStop(POSITION pos, double fps
     {
         if(stss->animated)
         {
-            start += (subIndex-1)*RTS_ANIMATE_SUBPIC_DUR;
-            if(start+RTS_ANIMATE_SUBPIC_DUR < stop)
-                stop = start+RTS_ANIMATE_SUBPIC_DUR;
+            start += (subIndex-1)*m_period;
+            if(start+m_period < stop)
+                stop = start+m_period;
         }
         //DbgLog((LOG_TRACE, 3, "animated:%d seg:%d idx:%d start:%d stop:%lu", stss->animated, iSegment, subIndex, (ULONG)start, (ULONG)stop));
         start *= 10000i64;

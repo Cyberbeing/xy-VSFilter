@@ -31,7 +31,6 @@
 
 #define RTS_POS_SEGMENT_INDEX_BITS  16
 #define RTS_POS_SUB_INDEX_MASK      ((1<<RTS_POS_SEGMENT_INDEX_BITS)-1)
-#define RTS_ANIMATE_SUBPIC_DUR      ((int)(1000/23.976))
 
 class CMyFont : public CFont
 {
@@ -399,6 +398,7 @@ private:
     int m_nPolygon;
     int m_polygonBaselineOffset;
     double m_fps;
+    int m_period;//1000/m_fps
 
     static void InitCmdMap();
 
