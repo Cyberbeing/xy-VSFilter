@@ -753,8 +753,8 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	m_spd.pitch = m_spd.w*m_spd.bpp>>3;
 
     m_pTempPicBuff.Free();
-    if(m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV)
-        m_pTempPicBuff.Allocate(4*m_spd.pitch*m_spd.h);
+    if(m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV || m_spd.type == MSP_NV12 || m_spd.type == MSP_NV21)
+        m_pTempPicBuff.Allocate(4*m_spd.pitch*m_spd.h);//fix me: can be smaller
     else if(m_spd.type == MSP_P010 || m_spd.type == MSP_P016)
         m_pTempPicBuff.Allocate(m_spd.pitch*m_spd.h+m_spd.pitch*m_spd.h/2);
     else
@@ -762,8 +762,8 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	m_spd.bits = (void*)m_pTempPicBuff;
 
 	//CComPtr<ISubPicExAllocator> pSubPicAllocator = new CMemSubPicAllocator(m_spd.type, CSize(m_w, m_h));    
-	CComPtr<ISubPicExAllocator> pSubPicAllocator = new CPooledSubPicAllocator(m_spd.type, CSize(m_w, m_h), MAX_SUBPIC_QUEUE_LENGTH + 1);
-    if(pSubPicAllocator==NULL)
+	CPooledSubPicAllocator *pooled_subpic_allocator = new CPooledSubPicAllocator(m_spd.type, CSize(m_w, m_h), MAX_SUBPIC_QUEUE_LENGTH + 1);
+    if(pooled_subpic_allocator ==NULL)
     {
         //fix me: log error
     }
@@ -772,8 +772,10 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	if(AdjustFrameSize(window)) video += video;
 	ASSERT(window == CSize(m_w, m_h));
 
-	pSubPicAllocator->SetCurSize(window);
-	pSubPicAllocator->SetCurVidRect(CRect(CPoint((window.cx - video.cx)/2, (window.cy - video.cy)/2), video));
+	pooled_subpic_allocator->SetCurSize(window);
+	pooled_subpic_allocator->SetCurVidRect(CRect(CPoint((window.cx - video.cx)/2, (window.cy - video.cy)/2), video));
+
+    CComPtr<ISubPicExAllocator> pSubPicAllocator = pooled_subpic_allocator;
 
 	HRESULT hr = S_OK;
 	//m_pSubPicQueue = m_fDoPreBuffering
