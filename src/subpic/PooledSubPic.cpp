@@ -37,7 +37,8 @@ bool STDMETHODCALLTYPE CPooledSubPicAllocator::InitPool( int capacity )
 	if(capacity<0)
 		capacity = 0;
 
-	while(capacity<_capacity)
+	//while(capacity<_capacity)
+    while(_capacity>0)
 	{
 		if(!_free.IsEmpty())
 		{
