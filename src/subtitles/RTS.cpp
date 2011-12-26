@@ -3012,14 +3012,15 @@ STDMETHODIMP CRenderedTextSubtitle::NonDelegatingQueryInterface(REFIID riid, voi
 // ISubPicProvider
 
 STDMETHODIMP_(POSITION) CRenderedTextSubtitle::GetStartPosition(REFERENCE_TIME rt, double fps)
-{
-    
-
-    //DbgLog((LOG_TRACE, 3, "rt:%lu", (ULONG)rt/10000));
-    m_fps = fps;//fix me: check is fps changed and do some re-init thing
+{    
+    m_fps = fps;
     if (m_fps>0)
     {
         m_period = 1000/m_fps;
+        if(m_period<=0)
+        {
+            m_period = 1;
+        }
     }
     else
     {
