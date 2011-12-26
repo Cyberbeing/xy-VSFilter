@@ -1388,7 +1388,7 @@ STDMETHODIMP CMemSubPic::AlphaBltAnv12_P010( const RECT* pSrc, const RECT* pDst,
         return E_INVALIDARG;
     }
     int w = rs.Width(), h = rs.Height();
-    bool bottom_down = rs.top > rd.bottom;
+    bool bottom_down = rd.top > rd.bottom;
 
     BYTE* d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*rd.top + rd.left*2;
     if(bottom_down)
@@ -1534,7 +1534,7 @@ STDMETHODIMP CMemSubPic::AlphaBltAnv12_Nvxx( const RECT* pSrc, const RECT* pDst,
         return E_INVALIDARG;
     }
     int w = rs.Width(), h = rs.Height();
-    bool bottom_down = rs.top > rd.bottom;
+    bool bottom_down = rd.top > rd.bottom;
 
     BYTE* d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*rd.top + rd.left;
     if(bottom_down)
