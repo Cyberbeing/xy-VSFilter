@@ -331,8 +331,17 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
 	{
 		h = -h;
 		ppIn[0] += pitchIn*(h-1);
-		ppIn[1] += (pitchIn>>1)*((h>>1)-1);
-		ppIn[2] += (pitchIn>>1)*((h>>1)-1);
+
+        if(subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV || subtype == MEDIASUBTYPE_YV12)
+        {
+            ppIn[1] += (pitchIn>>1)*((h>>1)-1);
+		    ppIn[2] += (pitchIn>>1)*((h>>1)-1);
+        }
+        else if(subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016 
+            || subtype == MEDIASUBTYPE_NV12 || subtype == MEDIASUBTYPE_NV21)
+        {
+            ppIn[1] += pitchIn*((h>>1)-1);
+        }
 		pitchIn = -pitchIn;
 	}
 
