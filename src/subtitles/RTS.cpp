@@ -2378,6 +2378,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
         case CMD_fade:
         case CMD_fad:
             {
+                sub->m_fAnimated2 = true;
                 if(params.GetCount() == 7 && !sub->m_effects[EF_FADE])// {\fade(a1=param[0], a2=param[1], a3=param[2], t1=t[0], t2=t[1], t3=t[2], t4=t[3])
                 {
                     if(Effect* e = new Effect)
@@ -2400,6 +2401,10 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                         e->t[0] = e->t[3] = -1; // will be substituted with "start" and "end"
                         sub->m_effects[EF_FADE] = e;
                     }
+                }
+                else
+                {
+                    sub->m_fAnimated2 = false;
                 }
                 break;
             }
@@ -2570,6 +2575,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                                 e->t[i] = wcstol(params[4+i], NULL, 10);
                         }
                         sub->m_effects[EF_MOVE] = e;
+                        sub->m_fAnimated2 = true;
                     }
                 }
                 break;
@@ -2676,6 +2682,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 }
                 ParseSSATag(sub, assTag.embeded, style, org, true);
                 sub->m_fAnimated = true;
+                sub->m_fAnimated2 = true;
                 break;
             }
         case CMD_u:
@@ -2963,10 +2970,8 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
             ParseString(sub, str.Left(i), fw_tmp);
         }
         str = str.Mid(i);
-    }
-    sub->m_fAnimated2 |= sub->m_fAnimated;
-    if( sub->m_effects[EF_FADE] || sub->m_effects[EF_BANNER] || sub->m_effects[EF_SCROLL]
-            || sub->m_effects[EF_MOVE] )
+    }    
+    if( sub->m_effects[EF_BANNER] || sub->m_effects[EF_SCROLL] )
         sub->m_fAnimated2 = true;
     // just a "work-around" solution... in most cases nobody will want to use \org together with moving but without rotating the subs
     if(sub->m_effects[EF_ORG] && (sub->m_effects[EF_MOVE] || sub->m_effects[EF_BANNER] || sub->m_effects[EF_SCROLL]))
