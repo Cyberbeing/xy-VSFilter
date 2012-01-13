@@ -132,7 +132,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>delayimp.lib;strmbaseRU.lib;dsutilRU.lib;subtitlesRU.lib;subpicRU.lib;basevideofilterRU.lib;libssfRU.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;strmbaseRU.lib;dsutilRU.lib;subtitlesRU.lib;subpicRU.lib;basevideofilterRU.lib;libssfRU.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>$(SolutionDir)VSFilter.def</ModuleDefinitionFile>
@@ -160,7 +160,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>delayimp.lib;strmbaseRU.lib;dsutilRU.lib;subtitlesRU.lib;subpicRU.lib;basevideofilterRU.lib;libssfRU.lib;log4cplus_staticRU.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;strmbaseRU.lib;dsutilRU.lib;subtitlesRU.lib;subpicRU.lib;basevideofilterRU.lib;libssfRU.lib;log4cplus_staticRU.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>$(SolutionDir)VSFilter.def</ModuleDefinitionFile>
@@ -194,6 +194,17 @@
     <ResourceCompile Include="..\VSFilter.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\thirdparty\mfc\afxctrlcontainer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\thirdparty\mfc\afxglobals.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\thirdparty\mfc\winmdi.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release Unicode log|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\Copy.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode log|Win32'">NotUsing</PrecompiledHeader>
