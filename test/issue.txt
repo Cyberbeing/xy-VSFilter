@@ -69,3 +69,4 @@ issue 28: Semi-transparent box visable. Associated script: 25.ass. Associated vi
 ==============================================================
 issue 29: incorrect with transform effect. Associated script: 26.ass.(direction of shadow reversed)(Introduced in Commit:eaf70dbe6c3756fd57788c9bb40686ddffb6e178)(fixed)
 ==============================================================
+issue 30: Invalid lines containing unclosed parentheses cause xy-VSFilter tothrow an exception and crash. Associated script: 27.ass.
