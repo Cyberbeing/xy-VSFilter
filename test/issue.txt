@@ -70,3 +70,9 @@ issue 28: Semi-transparent box visable. Associated script: 25.ass. Associated vi
 issue 29: incorrect with transform effect. Associated script: 26.ass.(direction of shadow reversed)(Introduced in Commit:eaf70dbe6c3756fd57788c9bb40686ddffb6e178)(fixed)
 ==============================================================
 issue 30: Invalid lines containing unclosed parentheses cause xy-VSFilter tothrow an exception and crash. Associated script: 27.ass.(fixed)
+==============================================================
+issue 31: \iclip animation fails. Associated script: 28.ass.
+==============================================================
+issue 32: Vector drawing fails if used alone inside text. Associated script: 29.ass.(Introduced in Commit:1fe0ea63406157ecf68e27323f5f7e651367b029)
+==============================================================
+issue 33: Multiple instances of simple fade \fad(t1,t2) on one line break 3.0.0.2 animation detection. Associated script: 30.ass.(Introduced in Commit:139b6d9ae7b0ab49bb66281864116251c57d70cc)
