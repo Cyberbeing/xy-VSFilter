@@ -71,7 +71,7 @@ issue 29: incorrect with transform effect. Associated script: 26.ass.(direction 
 ==============================================================
 issue 30: Invalid lines containing unclosed parentheses cause xy-VSFilter tothrow an exception and crash. Associated script: 27.ass.(fixed)
 ==============================================================
-issue 31: \iclip animation fails. Associated script: 28.ass.
+issue 31: \iclip animation fails. Associated script: 28.ass.(fixed)
 ==============================================================
 issue 32: Vector drawing fails if used alone inside text. Associated script: 29.ass.(Introduced in Commit:1fe0ea63406157ecf68e27323f5f7e651367b029)
 ==============================================================

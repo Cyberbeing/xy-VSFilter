@@ -3404,18 +3404,23 @@ void CRenderedTextSubtitle::RenderOneSubtitle( SubPicDesc& spd, const CSubtitle2
 
         CompositeDrawItemList tmpDrawItemList;
         if (s->m_clipInverse)
-        {              
+        {
+            CompositeDrawItemList tmp1,tmp2,tmp3,tmp4;              
             for (int i=0;i<l->GetWordCount();i++)
             {
-                tmpDrawItemList.AddTail();
-                tmpDrawItemList.AddTail();
-                tmpDrawItemList.AddTail();
-                tmpDrawItemList.AddTail();
+                tmp1.AddTail();
+                tmp2.AddTail();
+                tmp3.AddTail();
+                tmp4.AddTail();
             }                
-            bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[0], pAlphaMask, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[1], pAlphaMask, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[2], pAlphaMask, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmpDrawItemList, spd, iclipRect[3], pAlphaMask, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp1, spd, iclipRect[0], pAlphaMask, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp2, spd, iclipRect[1], pAlphaMask, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp3, spd, iclipRect[2], pAlphaMask, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp4, spd, iclipRect[3], pAlphaMask, p, org2, time, alpha);
+            tmpDrawItemList.AddTailList(&tmp1);
+            tmpDrawItemList.AddTailList(&tmp2);
+            tmpDrawItemList.AddTailList(&tmp3);
+            tmpDrawItemList.AddTailList(&tmp4);
         }
         else
         {
