@@ -75,4 +75,4 @@ issue 31: \iclip animation fails. Associated script: 28.ass.(fixed)
 ==============================================================
 issue 32: Vector drawing fails if used alone inside text. Associated script: 29.ass.(Introduced in Commit:1fe0ea63406157ecf68e27323f5f7e651367b029)(fixed)
 ==============================================================
-issue 33: Multiple instances of simple fade \fad(t1,t2) on one line break 3.0.0.2 animation detection. Associated script: 30.ass.(Introduced in Commit:139b6d9ae7b0ab49bb66281864116251c57d70cc)
+issue 33: Multiple instances of simple fade \fad(t1,t2) on one line break 3.0.0.2 animation detection. Associated script: 30.ass.(Introduced in Commit:139b6d9ae7b0ab49bb66281864116251c57d70cc)(fixed)

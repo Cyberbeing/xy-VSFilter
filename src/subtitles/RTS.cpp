@@ -2403,10 +2403,6 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                         sub->m_effects[EF_FADE] = e;
                     }
                 }
-                else
-                {
-                    sub->m_fAnimated2 = false;
-                }
                 break;
             }
         case CMD_fax:
