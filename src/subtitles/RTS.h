@@ -424,7 +424,6 @@ public:
     CRenderedTextSubtitle(CCritSec* pLock);
     virtual ~CRenderedTextSubtitle();
 
-    virtual void Copy(CRenderedTextSubtitle& rts);
     virtual void Copy(CSimpleTextSubtitle& sts);
     virtual void Empty();
 

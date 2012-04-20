@@ -69,8 +69,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,0,0,4
- PRODUCTVERSION 3,0,0,4
+ FILEVERSION 3,0,0,5
+ PRODUCTVERSION 3,0,0,5
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -88,12 +88,12 @@ BEGIN
             VALUE "Comments", "http://code.google.com/p/xy-vsfilter/"
             VALUE "CompanyName", "xy-VSFilter Team"
             VALUE "FileDescription", "VobSub & TextSub filter for DirectShow/VirtualDub/Avisynth"
-            VALUE "FileVersion", "3, 0, 0, 4"
+            VALUE "FileVersion", "3, 0, 0, 5"
             VALUE "InternalName", "VSFilter"
             VALUE "LegalCopyright", "Copyright (C) 2001-2012 Yu Zhuohuang, Gabest et. al."
             VALUE "OriginalFilename", "VSFilter.dll"
             VALUE "ProductName", "VSFilter"
-            VALUE "ProductVersion", "3, 0, 0, 4"
+            VALUE "ProductVersion", "3, 0, 0, 5"
         END
     END
     BLOCK "VarFileInfo"

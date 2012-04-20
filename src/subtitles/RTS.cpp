@@ -855,7 +855,8 @@ SharedPtrCWord CText::Copy()
 
 bool CText::Append(const SharedPtrCWord& w)
 {
-    return (w && CWord::Append(w));
+    boost::shared_ptr<CText> p = boost::dynamic_pointer_cast<CText>(w);
+    return (p && CWord::Append(w));
 }
 
 bool CText::CreatePath(const SharedPtrPathData& path_data)
@@ -1872,15 +1873,14 @@ void CRenderedTextSubtitle::InitCmdMap()
     }
 }
 
-void CRenderedTextSubtitle::Copy(CRenderedTextSubtitle& rts)
-{
-	__super::Copy(rts);
-    m_size = rts.m_size;
-}
-
 void CRenderedTextSubtitle::Copy(CSimpleTextSubtitle& sts)
 {
     __super::Copy(sts);
+    m_size = CSize(0, 0);
+    if(CRenderedTextSubtitle* pRTS = dynamic_cast<CRenderedTextSubtitle*>(&sts))
+    {
+        m_size = pRTS->m_size;
+    }
 }
 
 void CRenderedTextSubtitle::Empty()
