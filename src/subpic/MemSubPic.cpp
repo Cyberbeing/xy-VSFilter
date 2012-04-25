@@ -23,6 +23,95 @@
 #include "MemSubPic.h"
 #include "color_conv_table.h"
 
+#if 0
+#include <fstream>
+//
+// debug functions
+// 
+static void SaveRect2File(const CRect& cRect, const char * filename)
+{
+    std::ofstream os(filename);
+    os<<cRect.left<<","<<cRect.top<<","<<cRect.right<<","<<cRect.bottom;
+}
+static void SaveAxxx2File(SubPicDesc& spd, const CRect& cRect, const char * filename)
+{
+    std::ofstream axxx(filename);
+    int w = cRect.Width(), h = cRect.Height();
+
+    BYTE* top = (BYTE*)spd.bits + spd.pitch*cRect.top + cRect.left*4;
+    BYTE* bottom = top + spd.pitch*h;
+
+    for(; top < bottom ; top += spd.pitch) {
+        BYTE* s = top;
+        BYTE* e = s + w*4;
+        for(; s < e; s+=4) { // ARGB ARGB -> AxYU AxYV
+            axxx<<(int)s[0]<<","<<(int)s[1]<<","<<(int)s[2]<<","<<(int)s[3];
+            if(s+4>=e)
+            {
+                axxx<<std::endl;
+            }
+            else
+            {
+                axxx<<",";
+            }
+        }
+    }
+    axxx.close();
+}
+static void SaveArgb2File(SubPicDesc& spd, const CRect& cRect, const char * filename)
+{
+    SaveAxxx2File(spd, cRect, filename);
+}
+static void SaveAyuv2File(SubPicDesc& spd, const CRect& cRect, const char * filename)
+{
+    SaveAxxx2File(spd, cRect, filename);
+}
+static void SaveNvxx2File(SubPicDesc& spd, const CRect& cRect, const char * filename)
+{
+    std::ofstream os(filename);
+    int w = cRect.Width(), h = cRect.Height();
+
+    BYTE* top = (BYTE*)spd.bits;
+    BYTE* bottom = top + spd.pitch*h;
+
+    for(; top < bottom ; top += spd.pitch) {
+        BYTE* s = top;
+        BYTE* e = s + w;
+
+        BYTE* sY = s + spd.pitch*spd.h;
+        BYTE* sU = sY + spd.pitch*spd.h;
+        BYTE* sV = sU + 1;
+        for(; s < e; s++, sY++, sU+=2,sV+=2) {
+            os<<(int)s[0]<<","<<(int)sY[0]<<","<<(int)sU[0]<<","<<(int)sV[0];
+            if(s+1>=e)
+            {
+                os<<std::endl;
+            }
+            else
+            {
+                os<<",";
+            }
+        }
+    }
+    os.close();
+}
+
+#define ONCER(expr) {\
+    static bool entered=false;\
+    if(!entered)\
+    {\
+        entered=true;\
+        expr;\
+    }\
+}
+#else
+#define ONCER(expr) 
+#endif
+
+//
+// alpha blend functions
+// 
+
 #define AVERAGE_4_PIX_INTRINSICS(m128_1, m128_2) \
     m128_1 = _mm_avg_epu8(m128_1, m128_2); \
     m128_2 = _mm_slli_epi16(m128_1, 8); \
@@ -693,7 +782,13 @@ STDMETHODIMP CMemSubPic::UnlockOther(CAtlList<CRect>* dirtyRectList)
 
 STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
 {
+    //debug
+    ONCER( SaveRect2File(dirtyRectList->GetHead(), "F:/mplayer_MinGW_full/MinGW/home/Administrator/xy_vsfilter/debug.rect") );
+    ONCER( SaveArgb2File(m_spd, CRect(CPoint(0,0), m_size), "F:/mplayer_MinGW_full/MinGW/home/Administrator/xy_vsfilter/debug.argb") );
+
     SetDirtyRectEx(dirtyRectList);
+
+    ONCER( SaveRect2File(dirtyRectList->GetHead(), "F:/mplayer_MinGW_full/MinGW/home/Administrator/xy_vsfilter/debug.rect2") );
     if(m_rectListDirty.IsEmpty()) {
         return S_OK;
     }
@@ -728,15 +823,17 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
                 BYTE* s = top;
                 BYTE* e = s + w*4;
                 for(; s < e; s+=8) { // ARGB ARGB -> AxYU AxYV
-                    if((s[3]+s[7]) < 0x1fe) {
+                    if((s[3]+s[7]) < 0x1fe) {                        
+                        int tmp1 = c2y_yb[s[0]] + c2y_yg[s[1]] + c2y_yr[s[2]];
+                        int tmp2 = c2y_yb[s[4]] + c2y_yg[s[5]] + c2y_yr[s[6]];
+                        s[1] = (tmp1 - (s[3]<<12) + 0x108000) >> 16;//== (tmp1 - 0x10*(s[3]<<8) + 0x108000) >> 16
+                        s[5] = (tmp2 - (s[7]<<12) + 0x108000) >> 16;
+
+                        int scaled_y = ((tmp1+tmp2+0x8000)>>16) * cy_cy2;
+                        
                         int a = 0x200 - (s[3]+s[7]);
                         a <<= 7;
                         // 0 <= a <= 0x10000
-                        s[1] = (c2y_yb[s[0]] + c2y_yg[s[1]] + c2y_yr[s[2]] + 0x10*a  + 0x8000) >> 16;
-                        s[5] = (c2y_yb[s[4]] + c2y_yg[s[5]] + c2y_yr[s[6]] + 0x10*a  + 0x8000) >> 16;
-
-                        int scaled_y = (s[1]+s[5]-32) * cy_cy2;
-
                         s[0] = Clip[(((((s[0]+s[4])<<15) - scaled_y) >> 10) * c2y_cu + 0x80*a + 0x8000) >> 16];
                         s[4] = Clip[(((((s[2]+s[6])<<15) - scaled_y) >> 10) * c2y_cv + 0x80*a + 0x8000) >> 16];
                     } else {
@@ -769,6 +866,8 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
             }
         }
     }
+    
+    ONCER( SaveAxxx2File(m_spd, CRect(CPoint(0,0), m_size), "F:/mplayer_MinGW_full/MinGW/home/Administrator/xy_vsfilter/debug.axuv") );
     return S_OK;
 }
 
@@ -812,7 +911,7 @@ void CMemSubPic::SubsampleAndInterlace( const CRect& cRect, bool u_first )
 }
 
 STDMETHODIMP CMemSubPic::AlphaBlt( const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget )
-{
+{    
     if(!pSrc || !pDst || !pTarget) {
         return E_POINTER;
     }
@@ -1281,6 +1380,7 @@ STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_Yv12(const RECT* pSrc, const RECT* pDs
 
 STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_Nv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
 {
+    ONCER( SaveArgb2File(*pTarget, CRect(CPoint(0,0), m_size), "F:/mplayer_MinGW_full/MinGW/home/Administrator/xy_vsfilter/debug.nv12") );
     const SubPicDesc& src = m_spd;
     SubPicDesc dst = *pTarget; // copy, because we might modify it
 
@@ -1367,7 +1467,8 @@ STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_Nv12(const RECT* pSrc, const RECT* pDs
             }
         }
     }
-
+    
+    ONCER( SaveArgb2File(*pTarget, CRect(CPoint(0,0), m_size), "F:/mplayer_MinGW_full/MinGW/home/Administrator/xy_vsfilter/debug.nv12_2") );
     return S_OK;
 }
 
