@@ -1992,7 +1992,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
     for(int ite = 0, j = 0, len = str.GetLength(); j <= len; j++)
     {
         WCHAR c = str[j];
-        if(c != L'\n' && c != L' ' && c != L'\x00A0' && c != 0)
+        if(c != L'\n' && c != L' ' && c != 0)
             continue;
         if(ite < j)
         {
@@ -2020,7 +2020,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             }
             m_kstart = m_kend;
         }
-        else if(c == L' ' || c == L'\x00A0')
+        else if(c == L' ')
         {
             if(PCWord tmp_ptr = new CText(style, CStringW(c), m_ktype, m_kstart, m_kend))
             {

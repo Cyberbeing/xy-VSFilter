@@ -79,3 +79,5 @@ issue 33: Multiple instances of simple fade \fad(t1,t2) on one line break 3.0.0.
 ==============================================================
 issue 34: purple fringing on some VOBSUBs. Associated script: 31.sub/31.idx. (Introduced in Commit:faa1a23abcc2e94d0eef72a4225c2f5a75aa65f5)(fixed)
 ==============================================================
+issue 35: \h tag with GB2312 encoded non-unicode fonts produces ugly result. Associated script: 32.ass. (*fixed*)
+==============================================================
