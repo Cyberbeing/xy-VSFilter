@@ -28,8 +28,6 @@
 
 #include "CAutoTiming.h"
 
-#include "xy_buffered_reader.h"
-#include "text_reader.h"
 #include <algorithm>
 #include <vector>
 #include "xy_logger.h"
@@ -1384,21 +1382,12 @@ static bool LoadUUEFont(CTextFile* file)
 
 static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
 {
-    using namespace xy_utils;
     bool fRet = false;
 
     int version = 3, sver = 3;
 
     CStringW buff;
-    BufferedReader<CTextFile> buffered_reader;
-    if(!buffered_reader.Init(file, file->GetLength()))
-    {
-        DbgLog(( LOG_ERROR, 1, "init buffered_reader failed. buffsize:%d", file->GetLength() ));
-        return false;
-    }
-    TextReader<BufferedReader<CTextFile>> text_reader(buffered_reader, (TextReader<BufferedReader<CTextFile>>::Encoding)file->GetEncoding());
-
-    while(text_reader.ReadLine(&buff))
+    while(file->ReadString(buff))
     {
         buff.Trim();
         if(buff.IsEmpty() || buff.GetAt(0) == ';') continue;

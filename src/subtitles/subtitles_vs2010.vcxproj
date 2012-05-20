@@ -230,12 +230,10 @@
     <ClInclude Include="subpixel_position_controler.h" />
     <ClInclude Include="SubtitleInputPin.h" />
     <ClInclude Include="TextFile.h" />
-    <ClInclude Include="text_reader.h" />
     <ClInclude Include="USFSubtitles.h" />
     <ClInclude Include="VobSubFile.h" />
     <ClInclude Include="VobSubFileRipper.h" />
     <ClInclude Include="VobSubImage.h" />
-    <ClInclude Include="xy_buffered_reader.h" />
     <ClInclude Include="xy_malloc.h" />
     <ClInclude Include="xy_sse_api.h" />
   </ItemGroup>
