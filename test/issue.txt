@@ -81,3 +81,4 @@ issue 34: purple fringing on some VOBSUBs. Associated script: 31.sub/31.idx. (In
 ==============================================================
 issue 35: \h tag with GB2312 encoded non-unicode fonts produces ugly result. Associated script: 32.ass. (*fixed*)
 ==============================================================
+issue 36: Corruption Bug. Associated script: 33.ass.(fixed)

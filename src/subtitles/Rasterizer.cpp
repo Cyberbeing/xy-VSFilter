@@ -1272,6 +1272,8 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
             int new_x = sw[3] < w+xo ? sw[3] : w+xo;
             color = sw[0];
             sw += 2;
+            if( new_x < last_x )
+                continue;
             AlphaBlt(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, spd.pitch);
             AlphaBlt(dst_U, s + last_x - xo, (color>>8)&0xff, h, new_x-last_x, overlayPitch, spd.pitch);
             AlphaBlt(dst_V, s + last_x - xo, (color)&0xff, h, new_x-last_x, overlayPitch, spd.pitch);
