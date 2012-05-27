@@ -309,10 +309,12 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
                 Transform(path_data, CPoint(trans_org.x*8, trans_org.y*8));
 
             SharedPtrScanLineData tmp(new ScanLineData());
+            
             if(!tmp->ScanConvert(path_data))
             {
                 return false;
             }
+
             if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
             {
                 if(!tmp->CreateWidenedRegion(static_cast<int>(m_style.get().outlineWidthX+0.5), 
@@ -954,17 +956,18 @@ bool CPolygon::Append(const SharedPtrCWord& w)
     return(false);
 }
 
-bool CPolygon::GetLONG(CStringW& str, LONG& ret)
+bool CPolygon::Get6BitFixedPoint(CStringW& str, LONG& ret)
 {
     LPWSTR s = (LPWSTR)(LPCWSTR)str, e = s;
-    ret = wcstol(str, &e, 10);
-    str = str.Mid(e - s);
+    ret = wcstod(str, &e) * 64;
+    str.Delete(0,e-s); 
+    XY_LOG_INFO(ret);
     return(e > s);
 }
 
 bool CPolygon::GetPOINT(CStringW& str, POINT& ret)
 {
-    return(GetLONG(str, ret.x) && GetLONG(str, ret.y));
+    return(Get6BitFixedPoint(str, ret.x) && Get6BitFixedPoint(str, ret.y));
 }
 
 bool CPolygon::ParseStr()
@@ -990,32 +993,69 @@ bool CPolygon::ParseStr()
         {
         case 'm':
             lastmoveto = m_pathTypesOrg.GetCount();
-            if(firstmoveto == -1) firstmoveto = lastmoveto;
-            while(GetPOINT(s, p)) {m_pathTypesOrg.Add(PT_MOVETO); m_pathPointsOrg.Add(p);}
+            if(firstmoveto == -1) 
+                firstmoveto = lastmoveto;
+            while(GetPOINT(s, p)) {
+                m_pathTypesOrg.Add(PT_MOVETO); 
+                m_pathPointsOrg.Add(p);
+            }
             break;
         case 'n':
-            while(GetPOINT(s, p)) {m_pathTypesOrg.Add(PT_MOVETONC); m_pathPointsOrg.Add(p);}
+            while(GetPOINT(s, p)) {
+                m_pathTypesOrg.Add(PT_MOVETONC);
+                m_pathPointsOrg.Add(p);
+            }
             break;
         case 'l':
-            while(GetPOINT(s, p)) {m_pathTypesOrg.Add(PT_LINETO); m_pathPointsOrg.Add(p);}
+            if (m_pathPointsOrg.GetCount() < 1) {
+                break;
+            }
+            while(GetPOINT(s, p)) {
+                m_pathTypesOrg.Add(PT_LINETO);
+                m_pathPointsOrg.Add(p);
+            }
             break;
         case 'b':
             j = m_pathTypesOrg.GetCount();
-            while(GetPOINT(s, p)) {m_pathTypesOrg.Add(PT_BEZIERTO); m_pathPointsOrg.Add(p); j++;}
+            if (j < 1) {
+                break;
+            }
+            while(GetPOINT(s, p)) {
+                m_pathTypesOrg.Add(PT_BEZIERTO);
+                m_pathPointsOrg.Add(p);
+                j++;
+            }
             j = m_pathTypesOrg.GetCount() - ((m_pathTypesOrg.GetCount()-j)%3);
             m_pathTypesOrg.SetCount(j);
             m_pathPointsOrg.SetCount(j);
             break;
         case 's':
+            if (m_pathPointsOrg.GetCount() < 1) {
+                break;
+            }
             {
                 j = lastsplinestart = m_pathTypesOrg.GetCount();
                 int i = 3;
-                while(i-- && GetPOINT(s, p)) {m_pathTypesOrg.Add(PT_BSPLINETO); m_pathPointsOrg.Add(p); j++;}
-                if(m_pathTypesOrg.GetCount()-lastsplinestart < 3) {m_pathTypesOrg.SetCount(lastsplinestart); m_pathPointsOrg.SetCount(lastsplinestart); lastsplinestart = -1;}
+                while(i-- && GetPOINT(s, p)) {
+                    m_pathTypesOrg.Add(PT_BSPLINETO);
+                    m_pathPointsOrg.Add(p);
+                    j++;
+                }
+                if(m_pathTypesOrg.GetCount()-lastsplinestart < 3) {
+                    m_pathTypesOrg.SetCount(lastsplinestart);
+                    m_pathPointsOrg.SetCount(lastsplinestart);
+                    lastsplinestart = -1;
+                }
             }            
             // no break here
         case 'p':
-            while(GetPOINT(s, p)) {m_pathTypesOrg.Add(PT_BSPLINEPATCHTO); m_pathPointsOrg.Add(p); j++;}
+            if (m_pathPointsOrg.GetCount() < 3) {
+                break;
+            }
+            while(GetPOINT(s, p)) {
+                m_pathTypesOrg.Add(PT_BSPLINEPATCHTO);
+                m_pathPointsOrg.Add(p);
+            }
             break;
         case 'c':
             if(lastsplinestart > 0)
@@ -1036,64 +1076,6 @@ bool CPolygon::ParseStr()
             break;
         }
     }
-    /*
-        LPCWSTR str = m_str;
-        while(*str)
-        {
-            while(*str && *str != 'm' && *str != 'n' && *str != 'l' && *str != 'b' && *str != 's' && *str != 'p' && *str != 'c') str++;
-
-            if(!*str) break;
-
-            switch(*str++)
-            {
-            case 'm':
-                lastmoveto = m_pathTypesOrg.GetCount();
-                if(firstmoveto == -1) firstmoveto = lastmoveto;
-                while(GetPOINT(str, p)) {m_pathTypesOrg.Add(PT_MOVETO); m_pathPointsOrg.Add(p);}
-                break;
-            case 'n':
-                while(GetPOINT(str, p)) {m_pathTypesOrg.Add(PT_MOVETONC); m_pathPointsOrg.Add(p);}
-                break;
-            case 'l':
-                while(GetPOINT(str, p)) {m_pathTypesOrg.Add(PT_LINETO); m_pathPointsOrg.Add(p);}
-                break;
-            case 'b':
-                j = m_pathTypesOrg.GetCount();
-                while(GetPOINT(str, p)) {m_pathTypesOrg.Add(PT_BEZIERTO); m_pathPointsOrg.Add(p); j++;}
-                j = m_pathTypesOrg.GetCount() - ((m_pathTypesOrg.GetCount()-j)%3);
-                m_pathTypesOrg.SetCount(j); m_pathPointsOrg.SetCount(j);
-                break;
-            case 's':
-                j = lastsplinestart = m_pathTypesOrg.GetCount();
-                i = 3;
-                while(i-- && GetPOINT(str, p)) {m_pathTypesOrg.Add(PT_BSPLINETO); m_pathPointsOrg.Add(p); j++;}
-                if(m_pathTypesOrg.GetCount()-lastsplinestart < 3) {m_pathTypesOrg.SetCount(lastsplinestart); m_pathPointsOrg.SetCount(lastsplinestart); lastsplinestart = -1;}
-                // no break here
-            case 'p':
-                while(GetPOINT(str, p)) {m_pathTypesOrg.Add(PT_BSPLINEPATCHTO); m_pathPointsOrg.Add(p); j++;}
-                break;
-            case 'c':
-                if(lastsplinestart > 0)
-                {
-                    m_pathTypesOrg.Add(PT_BSPLINEPATCHTO);
-                    m_pathTypesOrg.Add(PT_BSPLINEPATCHTO);
-                    m_pathTypesOrg.Add(PT_BSPLINEPATCHTO);
-                    p = m_pathPointsOrg[lastsplinestart-1]; // we need p for temp storage, because operator [] will return a reference to CPoint and Add() may reallocate its internal buffer (this is true for MFC 7.0 but not for 6.0, hehe)
-                    m_pathPointsOrg.Add(p);
-                    p = m_pathPointsOrg[lastsplinestart];
-                    m_pathPointsOrg.Add(p);
-                    p = m_pathPointsOrg[lastsplinestart+1];
-                    m_pathPointsOrg.Add(p);
-                    lastsplinestart = -1;
-                }
-                break;
-            default:
-                break;
-            }
-
-            if(firstmoveto > 0) break;
-        }
-    */
     if(lastmoveto == -1 || firstmoveto > 0)
     {
         m_pathTypesOrg.RemoveAll();
@@ -1103,8 +1085,8 @@ bool CPolygon::ParseStr()
     int minx = INT_MAX, miny = INT_MAX, maxx = -INT_MAX, maxy = -INT_MAX;
     for(size_t i = 0; i < m_pathTypesOrg.GetCount(); i++)
     {
-        m_pathPointsOrg[i].x = (int)(64 * m_scalex * m_pathPointsOrg[i].x);
-        m_pathPointsOrg[i].y = (int)(64 * m_scaley * m_pathPointsOrg[i].y);
+        m_pathPointsOrg[i].x = (int)(m_scalex * m_pathPointsOrg[i].x);
+        m_pathPointsOrg[i].y = (int)(m_scaley * m_pathPointsOrg[i].y);
         if(minx > m_pathPointsOrg[i].x) minx = m_pathPointsOrg[i].x;
         if(miny > m_pathPointsOrg[i].y) miny = m_pathPointsOrg[i].y;
         if(maxx < m_pathPointsOrg[i].x) maxx = m_pathPointsOrg[i].x;

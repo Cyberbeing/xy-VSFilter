@@ -143,7 +143,7 @@ public:
 
 class CPolygon : public CWord
 {
-    bool GetLONG(CStringW& str, LONG& ret);
+    bool Get6BitFixedPoint(CStringW& str, LONG& ret);
     bool GetPOINT(CStringW& str, POINT& ret);
     bool ParseStr();
 

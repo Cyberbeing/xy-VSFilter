@@ -14,7 +14,7 @@
 #ifdef __DO_LOG
 extern int g_log_once_id;
 
-#define XY_LOG_INFO(msg) LOG4CPLUS_INFO(xy_logger::g_logger, msg)
+#define XY_LOG_INFO(msg) LOG4CPLUS_INFO(xy_logger::g_logger, __FUNCTION__<<"\t:"<<msg)
 #define XY_AUTO_TIMING(msg) TimingLogger(xy_logger::g_logger, msg, __FILE__, __LINE__)
 #define XY_LOG_ONCE(id, msg) OnceLogger(id, xy_logger::g_logger, msg, __FILE__, __LINE__)
 #define XY_LOG_ONCE2(msg) {\
