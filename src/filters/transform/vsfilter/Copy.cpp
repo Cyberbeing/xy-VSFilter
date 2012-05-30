@@ -43,7 +43,6 @@ static void LogSubPicStartStop( const REFERENCE_TIME& rtStart, const REFERENCE_T
 
 void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
 {
-    const ColorConvTable* color_conv_table = ColorConvTable::GetDefaultColorConvTable();
 	if(subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV 
         || subtype == MEDIASUBTYPE_NV12 || subtype == MEDIASUBTYPE_NV21)
 	{
@@ -55,7 +54,7 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
 		{
 			if(sub[3] < 0xff)
 			{
-				int y = (color_conv_table->c2y_yb[sub[0]] + color_conv_table->c2y_yg[sub[1]] + color_conv_table->c2y_yr[sub[2]] + 0x108000) >> 16; 
+				int y = ColorConvTable::Rgb2Y(sub[2], sub[1], sub[0]);
 				*db = y; // w/o colors 
 			}
 		}
@@ -70,7 +69,7 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
         {
             if(sub[3] < 0xff)
             {
-                int y = (color_conv_table->c2y_yb[sub[0]] + color_conv_table->c2y_yg[sub[1]] + color_conv_table->c2y_yr[sub[2]] + 0x108000) >> 14;
+                int y = ColorConvTable::Rgb2Y(sub[2], sub[1], sub[0])<<2;
                 *db = y<<8; // w/o colors 
             }
         }
@@ -84,7 +83,7 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
 		{
 			if(sub[3] < 0xff)
 			{
-				int y = (color_conv_table->c2y_yb[sub[0]] + color_conv_table->c2y_yg[sub[1]] + color_conv_table->c2y_yr[sub[2]] + 0x108000) >> 16; 
+				int y = ColorConvTable::Rgb2Y(sub[2], sub[1], sub[0]);
 				*ds = 0x8000|y; // w/o colors 
 			}
 		}

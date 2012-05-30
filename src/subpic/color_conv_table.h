@@ -11,65 +11,38 @@
 
 struct ColorConvTable
 {
-    enum YUV_Type
+    enum YuvMatrixType
     {
-        NONE,
-        BT601,
-        BT709,
+        NONE
+        , BT601
+        , BT709
+    };
+
+    enum YuvRangeType 
+    {
+        RANGE_NONE
+        , RANGE_TV
+        , RANGE_PC
     };
     
-    static const ColorConvTable* GetColorConvTable(const YUV_Type& yuv_type);
-    static void DestroyColorConvTable(const YUV_Type& yuv_type);
-    static YUV_Type SetDefaultYUVType(const YUV_Type& yuv_type) { return s_default_yuv_type = yuv_type; }
-    static YUV_Type GetDefaultYUVType() { return s_default_yuv_type; };
-    static const ColorConvTable* GetDefaultColorConvTable() { return GetColorConvTable(s_default_yuv_type); }
+    static void SetDefaultYUVType(YuvMatrixType yuv_type) { SetDefaultConvType(yuv_type, RANGE_TV); }
+    static void SetDefaultConvType(YuvMatrixType yuv_type, YuvRangeType range);
+
+    static YuvMatrixType GetDefaultYUVType();
+    static YuvRangeType GetDefaultRangeType();
+
     static DWORD Argb2Ayuv(DWORD argb);
     static DWORD Argb2Auyv(DWORD argb);
+    static DWORD Rgb2Y(int r8, int g8, int b8);
+    static DWORD PreMulArgb2Ayuv( int a8, int r8, int g8, int b8 );
+
     static DWORD Ayuv2Argb(DWORD ayuv);
-    static DWORD Ayuv2Argb_BT601(DWORD ayuv);
-    static DWORD Ayuv2Argb_BT709(DWORD ayuv);
-
-    YUV_Type yuv_type;
-
-    unsigned char Clip_base[256*3];
-    const unsigned char* Clip;
-
-    int c2y_cyb;
-    int c2y_cyg;
-    int c2y_cyr;
-    int c2y_cu;
-    int c2y_cv;
-
-    int c2y_yb[256];
-    int c2y_yg[256];
-    int c2y_yr[256];
-
-    int y2c_cbu;
-    int y2c_cgu;
-    int y2c_cgv;
-    int y2c_crv;
-    int y2c_bu[256];
-    int y2c_gu[256];
-    int y2c_gv[256];
-    int y2c_rv[256];
-
-    int cy_cy;
-    int cy_cy2;
-
+    static DWORD Ayuv2Argb_TV_BT601(DWORD ayuv);
+    static DWORD A8Y8U8V8_To_ARGB_TV_BT601( int a8, int y8, int u8, int v8 );
+    static DWORD Ayuv2Argb_TV_BT709(DWORD ayuv);    
+    static DWORD A8Y8U8V8_To_ARGB_TV_BT709( int a8, int y8, int u8, int v8 );
 private:
-    ColorConvTable(){}
-
-    bool InitColorConvTable(const YUV_Type& yuv_type);
-
-    void InitBT601ColorConvTable();
-
-    void InitBT709ColorConvTable();
-
-    void ColorConvInit();
-
-    static ColorConvTable* s_color_table_bt601;
-    static ColorConvTable* s_color_table_bt709;
-    static YUV_Type s_default_yuv_type;
+    ColorConvTable();
 };
 
 #endif // end of __COLOR_CONV_TABLE_H_53D078BB_BBA1_441B_9728_67E29A1CB521__

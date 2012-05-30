@@ -177,6 +177,20 @@ public:
 	EPARCompensationType m_ePARCompensationType;
 	double m_dPARCompensation;
 
+    enum YCbCrMatrix
+    {
+        YCbCrMatrix_BT601,
+        YCbCrMatrix_BT709,
+        YCbCrMatrix_AUTO
+    };
+    enum YCbCrRange
+    {
+        YCbCrRange_PC,
+        YCbCrRange_TV,
+        YCbCrRange_AUTO
+    };
+    YCbCrMatrix m_eYCbCrMatrix;
+    YCbCrRange m_eYCbCrRange;
 public:
 	CSimpleTextSubtitle();
 	virtual ~CSimpleTextSubtitle();

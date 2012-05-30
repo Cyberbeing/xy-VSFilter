@@ -792,16 +792,6 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
     if(m_rectListDirty.IsEmpty()) {
         return S_OK;
     }
-    
-    const ColorConvTable *conv_table = ColorConvTable::GetDefaultColorConvTable();
-    const int *c2y_yb = conv_table->c2y_yb;
-    const int *c2y_yg = conv_table->c2y_yg;
-    const int *c2y_yr = conv_table->c2y_yr;
-    const int cy_cy2 = conv_table->cy_cy2;
-    const int c2y_cu = conv_table->c2y_cu;
-    const int c2y_cv = conv_table->c2y_cv;
-    const int cy_cy = conv_table->cy_cy;
-    const unsigned char* Clip = conv_table->Clip;
 
     POSITION pos = m_rectListDirty.GetHeadPosition();
     while(pos!=NULL)
@@ -823,19 +813,15 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
                 BYTE* s = top;
                 BYTE* e = s + w*4;
                 for(; s < e; s+=8) { // ARGB ARGB -> AxYU AxYV
-                    if((s[3]+s[7]) < 0x1fe) {                        
-                        int tmp1 = c2y_yb[s[0]] + c2y_yg[s[1]] + c2y_yr[s[2]];
-                        int tmp2 = c2y_yb[s[4]] + c2y_yg[s[5]] + c2y_yr[s[6]];
-                        s[1] = (tmp1 - (s[3]<<12) + 0x108000) >> 16;//== (tmp1 - 0x10*(s[3]<<8) + 0x108000) >> 16
-                        s[5] = (tmp2 - (s[7]<<12) + 0x108000) >> 16;
+                    if((s[3]+s[7]) < 0x1fe) {
+                        int tmp1 = ColorConvTable::PreMulArgb2Ayuv(s[3], s[2], s[1], s[0]);
+                        int tmp2 = ColorConvTable::PreMulArgb2Ayuv(s[7], s[6], s[5], s[4]);
 
-                        int scaled_y = ((tmp1+tmp2+0x8000)>>16) * cy_cy2;
-                        
-                        int a = 0x200 - (s[3]+s[7]);
-                        a <<= 7;
-                        // 0 <= a <= 0x10000
-                        s[0] = Clip[(((((s[0]+s[4])<<15) - scaled_y) >> 10) * c2y_cu + 0x80*a + 0x8000) >> 16];
-                        s[4] = Clip[(((((s[2]+s[6])<<15) - scaled_y) >> 10) * c2y_cv + 0x80*a + 0x8000) >> 16];
+                        s[1] = (tmp1>>16)&0xff;
+                        s[5] = (tmp2>>16)&0xff;
+
+                        s[0] = (((tmp1>>8)&0xff) + ((tmp2>>8)&0xff) + 1)/2;
+                        s[4] = ((tmp1&0xff) + (tmp2&0xff) + 1)/2;
                     } else {
                         s[1] = s[5] = 0;
                         s[0] = s[4] = 0;
@@ -849,15 +835,7 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
                 BYTE* e = s + w*4;
                 for(; s < e; s+=4) { // ARGB -> AYUV
                     if(s[3] < 0xff) {
-                        int a = 0x100 - s[3];
-                        a <<= 8;
-                        // 0 <= a <= 0x10000
-
-                        int y = (c2y_yb[s[0]] + c2y_yg[s[1]] + c2y_yr[s[2]] + 0x10*a + 0x8000) >> 16;
-                        int scaled_y = (y-32) * cy_cy;
-                        s[1] = Clip[((((s[0]<<16) - scaled_y) >> 10) * c2y_cu + 0x80*a + 0x8000) >> 16];
-                        s[0] = Clip[((((s[2]<<16) - scaled_y) >> 10) * c2y_cv + 0x80*a + 0x8000) >> 16];
-                        s[2] = y;
+                        *((DWORD*)s) = ColorConvTable::PreMulArgb2Ayuv(s[3], s[2], s[1], s[0]);
                     } else {
                         s[0] = s[1] = 0;
                         s[2] = 0;

@@ -1401,7 +1401,7 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
 
         entry.MakeLower();
 
-        if(entry == _T("dialogue"))
+        if(entry == L"dialogue")
         {
             try
             {
@@ -1583,57 +1583,39 @@ if(sver <= 4)   style->scrAlignment = (style->scrAlignment&4) ? ((style->scrAlig
         {
             fRet = true;
         }
-//      else if(entry == _T("dialogue"))
-//      {
-//          try
-//          {
-//                CStringW::PXSTR __buff = buff.GetBuffer();
-//              int hh1, mm1, ss1, ms1_div10, hh2, mm2, ss2, ms2_div10, layer = 0;
-//              CString Style, Actor, Effect;
-//              CRect marginRect;
-//
-//if(version <= 4){NextStr(&__buff, '='); NextInt(&__buff);} /* Marked = */
-//if(version >= 5)layer = NextInt(&__buff);
-//                hh1 = NextInt(&__buff, ':');
-//                mm1 = NextInt(&__buff, ':');
-//              ss1 = NextInt(&__buff, '.');
-//              ms1_div10 = NextInt(&__buff);
-//              hh2 = NextInt(&__buff, ':');
-//              mm2 = NextInt(&__buff, ':');
-//              ss2 = NextInt(&__buff, '.');
-//              ms2_div10 = NextInt(&__buff);
-//              Style = WToT(NextStr(&__buff));
-//              Actor = WToT(NextStr(&__buff));
-//              marginRect.left = NextInt(&__buff);
-//              marginRect.right = NextInt(&__buff);
-//              marginRect.top = marginRect.bottom = NextInt(&__buff);
-//if(version >= 6)marginRect.bottom = NextInt(&__buff);
-//              Effect = WToT(NextStr(&__buff));
-//
-//              int len = min(Effect.GetLength(), buff.GetLength());
-//              if(Effect.Left(len) == WToT(buff.Left(len))) Effect.Empty();
-//
-//              Style.TrimLeft('*');
-//              if(!Style.CompareNoCase(_T("Default"))) Style = _T("Default");
-//
-//                ret.AddSTSEntryOnly(__buff,
-//                    file->IsUnicode(),
-//                    (((hh1*60 + mm1)*60) + ss1)*1000 + ms1_div10*10,
-//                    (((hh2*60 + mm2)*60) + ss2)*1000 + ms2_div10*10,
-//                    Style, Actor, Effect,
-//                    marginRect,
-//                    layer);
-//          }
-//          catch(...)
-//          {
-////                ASSERT(0);
-////                throw;
-//              return(false);
-//          }
-//      }
         else if(entry == L"fontname")
         {
             LoadUUEFont(file);
+        }
+        else if(entry == L"ycbcr matrix")
+        {
+            buff = GetStr(buff);
+            buff.MakeLower();
+            if (buff=="none")
+            {
+                ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
+                ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_AUTO;
+            }
+            else if (buff=="tv.601")
+            {
+                ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT601;
+                ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_TV;
+            }
+            else if (buff=="tv.709")
+            {
+                ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT709;
+                ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_TV;
+            }
+            else if (buff=="pc.601")
+            {
+                ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT601;
+                ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_PC;
+            }
+            else if (buff=="pc.709")
+            {
+                ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT709;
+                ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_PC;
+            }
         }
     }
 //    ret.Sort();
@@ -1892,6 +1874,8 @@ CSimpleTextSubtitle::CSimpleTextSubtitle()
     m_encoding = CTextFile::ASCII;
     m_ePARCompensationType = EPCTDisabled;
     m_dPARCompensation = 1.0;
+    m_eYCbCrMatrix = YCbCrMatrix_BT601;
+    m_eYCbCrRange = YCbCrRange_TV;
 }
 
 CSimpleTextSubtitle::~CSimpleTextSubtitle()
