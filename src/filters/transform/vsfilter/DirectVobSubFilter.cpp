@@ -121,6 +121,9 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
     m_donot_follow_upstream_preferred_order = !m_fFollowUpstreamPreferredOrder;
 
 	m_time_alphablt = m_time_rasterization = 0;
+
+    m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
+    m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
 }
 
 CDirectVobSubFilter::~CDirectVobSubFilter()
@@ -707,34 +710,6 @@ void CDirectVobSubFilter::InitSubPicQueue()
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
 
-    ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
-    ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
-    switch(m_colourSpace)
-    {
-    case CDirectVobSub::BT_601:
-        yuv_matrix = ColorConvTable::BT601;
-        break;
-    case CDirectVobSub::BT_709:
-        yuv_matrix = ColorConvTable::BT709;
-        break;
-    case CDirectVobSub::AUTO_GUESS:
-        yuv_matrix = (m_w > m_bt601Width || m_h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
-        break;
-    }
-    switch(m_yuvRange)
-    {
-    case CDirectVobSub::YuvRange_TV:
-        yuv_range = ColorConvTable::RANGE_TV;
-        break;
-    case CDirectVobSub::YuvRange_PC:
-        yuv_range = ColorConvTable::RANGE_PC;
-        break;
-    case CDirectVobSub::YuvRange_Auto:
-        yuv_range = ColorConvTable::RANGE_TV;
-        break;
-    }
-    ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
-
     CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
     CacheManager::GetScanLineDataMruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
     CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
@@ -1260,33 +1235,7 @@ STDMETHODIMP CDirectVobSubFilter::put_ColourSpace(int colourSpace)
 
     if(hr == NOERROR)
     {
-        ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
-        ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
-        switch(m_colourSpace)
-        {
-        case CDirectVobSub::BT_601:
-            yuv_matrix = ColorConvTable::BT601;
-            break;
-        case CDirectVobSub::BT_709:
-            yuv_matrix = ColorConvTable::BT709;
-            break;
-        case CDirectVobSub::AUTO_GUESS:
-            yuv_matrix = (m_w > m_bt601Width || m_h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
-            break;
-        }
-        switch(m_yuvRange)
-        {
-        case CDirectVobSub::YuvRange_TV:
-            yuv_range = ColorConvTable::RANGE_TV;
-            break;
-        case CDirectVobSub::YuvRange_PC:
-            yuv_range = ColorConvTable::RANGE_PC;
-            break;
-        case CDirectVobSub::YuvRange_Auto:
-            yuv_range = ColorConvTable::RANGE_TV;
-            break;
-        }
-        ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
+        SetYuvMatrix();
     }
 
     return hr;
@@ -1299,33 +1248,7 @@ STDMETHODIMP CDirectVobSubFilter::put_YuvRange( int yuvRange )
 
     if(hr == NOERROR)
     {
-        ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
-        ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
-        switch(m_colourSpace)
-        {
-        case CDirectVobSub::BT_601:
-            yuv_matrix = ColorConvTable::BT601;
-            break;
-        case CDirectVobSub::BT_709:
-            yuv_matrix = ColorConvTable::BT709;
-            break;
-        case CDirectVobSub::AUTO_GUESS:
-            yuv_matrix = (m_w > m_bt601Width || m_h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
-            break;
-        }
-        switch(m_yuvRange)
-        {
-        case CDirectVobSub::YuvRange_TV:
-            yuv_range = ColorConvTable::RANGE_TV;
-            break;
-        case CDirectVobSub::YuvRange_PC:
-            yuv_range = ColorConvTable::RANGE_PC;
-            break;
-        case CDirectVobSub::YuvRange_Auto:
-            yuv_range = ColorConvTable::RANGE_TV;
-            break;
-        }
-        ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
+        SetYuvMatrix();
     }
 
     return hr;
@@ -1994,6 +1917,8 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 	DbgLog((LOG_TRACE, 3, "\tpSubStream:%x fApplyDefStyle:%d", pSubStream, (int)fApplyDefStyle));
     CAutoLock cAutolock(&m_csQueueLock);
 
+    m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
+    m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
 	if(pSubStream)
 	{
 		CAutoLock cAutolock(&m_csSubLock);
@@ -2057,6 +1982,8 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 				pRTS->m_dPARCompensation = 1.00;
 			}
 
+            m_script_selected_yuv = pRTS->m_eYCbCrMatrix;
+            m_script_selected_range = pRTS->m_eYCbCrRange;
 			pRTS->Deinit();
 		}
 	}
@@ -2081,6 +2008,8 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 	}
 
 	m_nSubtitleId = reinterpret_cast<DWORD_PTR>(pSubStream);
+
+    SetYuvMatrix();
 
 	if(m_pSubPicQueue)
 		m_pSubPicQueue->SetSubPicProviderEx(CComQIPtr<ISubPicProviderEx>(pSubStream));
@@ -2378,4 +2307,77 @@ HRESULT CDirectVobSubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmb
         i -= pSubStream->GetStreamCount();
     }
     return hr;
+}
+
+void CDirectVobSubFilter::SetYuvMatrix()
+{
+    ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
+    ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
+
+    if ( m_colourSpace!=CDirectVobSub::BT_601 && m_colourSpace!=CDirectVobSub::BT_709 )
+    {
+        switch(m_script_selected_yuv)
+        {
+        case CSimpleTextSubtitle::YCbCrMatrix_BT601:
+            yuv_matrix = ColorConvTable::BT601;
+            break;
+        case CSimpleTextSubtitle::YCbCrMatrix_BT709:
+            yuv_matrix = ColorConvTable::BT709;
+            break;
+        case CSimpleTextSubtitle::YCbCrMatrix_AUTO:
+        default:        
+            yuv_matrix = (m_w > m_bt601Width || m_h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
+            break;
+        }
+    }
+    else
+    {
+        switch(m_colourSpace)
+        {
+        case CDirectVobSub::BT_601:
+            yuv_matrix = ColorConvTable::BT601;
+            break;
+        case CDirectVobSub::BT_709:
+            yuv_matrix = ColorConvTable::BT709;
+            break;
+        case CDirectVobSub::AUTO_GUESS:
+        default:        
+            yuv_matrix = (m_w > m_bt601Width || m_h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
+            break;
+        }
+    }
+
+    if( m_yuvRange!=CDirectVobSub::YuvRange_TV && m_yuvRange!=CDirectVobSub::YuvRange_PC)
+    {
+        switch(m_script_selected_range)
+        {
+        case CSimpleTextSubtitle::YCbCrRange_PC:
+            yuv_range = ColorConvTable::RANGE_PC;
+            break;
+        case CSimpleTextSubtitle::YCbCrRange_TV:
+            yuv_range = ColorConvTable::RANGE_TV;
+            break;
+        case CSimpleTextSubtitle::YCbCrMatrix_AUTO:
+        default:        
+            yuv_range = ColorConvTable::RANGE_TV;
+            break;
+        }
+    }
+    else
+    {
+        switch(m_yuvRange)
+        {
+        case CDirectVobSub::YuvRange_TV:
+            yuv_range = ColorConvTable::RANGE_TV;
+            break;
+        case CDirectVobSub::YuvRange_PC:
+            yuv_range = ColorConvTable::RANGE_PC;
+            break;
+        case CDirectVobSub::YuvRange_Auto:
+            yuv_range = ColorConvTable::RANGE_TV;
+            break;
+        }
+    }
+
+    ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
 }

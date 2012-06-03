@@ -693,14 +693,14 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
             m_colourSpace != CDirectVobSub::BT_601 && 
             m_colourSpace != CDirectVobSub::BT_709 )
         {
-            m_colourSpace = CDirectVobSub::BT_601;
+            m_colourSpace = CDirectVobSub::AUTO_GUESS;
         }
         m_colourSpaceDropList.ResetContent();
         m_colourSpaceDropList.AddString( CString(_T("BT.601")) ); 
         m_colourSpaceDropList.SetItemData( CDirectVobSub::BT_601, CDirectVobSub::BT_601 );
         m_colourSpaceDropList.AddString( CString(_T("BT.709")) ); 
         m_colourSpaceDropList.SetItemData( CDirectVobSub::BT_709, CDirectVobSub::BT_709);
-        m_colourSpaceDropList.AddString( CString(_T("Auto Guess")) );
+        m_colourSpaceDropList.AddString( CString(_T("Auto")) );
         m_colourSpaceDropList.SetItemData( CDirectVobSub::AUTO_GUESS, CDirectVobSub::AUTO_GUESS );        
         m_colourSpaceDropList.SetCurSel( m_colourSpace ); 
 

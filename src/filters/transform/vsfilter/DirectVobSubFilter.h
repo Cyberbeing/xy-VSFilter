@@ -56,6 +56,10 @@ class CDirectVobSubFilter
 	bool AdjustFrameSize(CSize& s);
 
     HRESULT TryNotCopy( IMediaSample* pIn, const CMediaType& mt, const BITMAPINFOHEADER& bihIn );
+
+    CSimpleTextSubtitle::YCbCrMatrix m_script_selected_yuv;
+    CSimpleTextSubtitle::YCbCrRange m_script_selected_range;
+    void SetYuvMatrix();
 protected:
 	void GetOutputSize(int& w, int& h, int& arx, int& ary);
 	HRESULT Transform(IMediaSample* pIn);    

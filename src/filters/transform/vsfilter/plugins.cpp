@@ -51,6 +51,9 @@ protected:
 	CComPtr<ISubPicProvider> m_pSubPicProvider;
 	DWORD_PTR m_SubPicProviderId;
 
+    CSimpleTextSubtitle::YCbCrMatrix m_script_selected_yuv;
+    CSimpleTextSubtitle::YCbCrRange m_script_selected_range;
+
     bool m_fLazyInit;
 public:
     CFilter() : CUnknown(NAME("CFilter"), NULL), m_fps(-1), m_SubPicProviderId(0), m_fLazyInit(false)
@@ -62,6 +65,9 @@ public:
         CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_overlay_cache_max_item_num);
         SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_subpixel_pos_level) );
         
+        m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
+        m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
+
         CAMThread::Create();
     }
 	virtual ~CFilter() {CAMThread::CallWorker(0);}
@@ -81,17 +87,29 @@ public:
 	CString GetFileName() {CAutoLock cAutoLock(this); return m_fn;}
 	void SetFileName(CString fn) {CAutoLock cAutoLock(this); m_fn = fn;}
 
-	bool Render(SubPicDesc& dst, REFERENCE_TIME rt, float fps)
-	{
-		if(!m_pSubPicProvider)
-			return(false);
+    void SetYuvMatrix(SubPicDesc& dst)
+    {
+        ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
+        ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
 
-        if(!m_fLazyInit)
+        if ( m_colourSpace!=CDirectVobSub::BT_601 && m_colourSpace!=CDirectVobSub::BT_709 )
         {
-            m_fLazyInit = true;
-
-            ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
-            ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
+            switch(m_script_selected_yuv)
+            {
+            case CSimpleTextSubtitle::YCbCrMatrix_BT601:
+                yuv_matrix = ColorConvTable::BT601;
+                break;
+            case CSimpleTextSubtitle::YCbCrMatrix_BT709:
+                yuv_matrix = ColorConvTable::BT709;
+                break;
+            case CSimpleTextSubtitle::YCbCrMatrix_AUTO:
+            default:        
+                yuv_matrix = (dst.w > m_bt601Width || dst.h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
+                break;
+            }
+        }
+        else
+        {
             switch(m_colourSpace)
             {
             case CDirectVobSub::BT_601:
@@ -100,10 +118,27 @@ public:
             case CDirectVobSub::BT_709:
                 yuv_matrix = ColorConvTable::BT709;
                 break;
-            case CDirectVobSub::AUTO_GUESS:
-                yuv_matrix = (dst.w > m_bt601Width || dst.h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
+            }
+        }
+
+        if( m_yuvRange!=CDirectVobSub::YuvRange_TV && m_yuvRange!=CDirectVobSub::YuvRange_PC)
+        {
+            switch(m_script_selected_range)
+            {
+            case CSimpleTextSubtitle::YCbCrRange_PC:
+                yuv_range = ColorConvTable::RANGE_PC;
+                break;
+            case CSimpleTextSubtitle::YCbCrRange_TV:
+                yuv_range = ColorConvTable::RANGE_TV;
+                break;
+            case CSimpleTextSubtitle::YCbCrMatrix_AUTO:
+            default:        
+                yuv_range = ColorConvTable::RANGE_TV;
                 break;
             }
+        }
+        else
+        {
             switch(m_yuvRange)
             {
             case CDirectVobSub::YuvRange_TV:
@@ -116,7 +151,21 @@ public:
                 yuv_range = ColorConvTable::RANGE_TV;
                 break;
             }
-            ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
+        }
+
+        ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
+    }
+
+	bool Render(SubPicDesc& dst, REFERENCE_TIME rt, float fps)
+	{
+		if(!m_pSubPicProvider)
+			return(false);
+
+        if(!m_fLazyInit)
+        {
+            m_fLazyInit = true;
+
+            SetYuvMatrix(dst);
         }
 		CSize size(dst.w, dst.h);
 
@@ -286,6 +335,9 @@ public:
 				m_pSubPicProvider = (ISubPicProvider*)rts;
 				if(rts->Open(CString(fn), CharSet)) SetFileName(fn);
 				else m_pSubPicProvider = NULL;
+
+                m_script_selected_yuv = rts->m_eYCbCrMatrix;
+                m_script_selected_range = rts->m_eYCbCrRange;
 			}
 		}
 

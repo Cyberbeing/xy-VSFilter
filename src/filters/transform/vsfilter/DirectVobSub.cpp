@@ -34,14 +34,14 @@ CDirectVobSub::CDirectVobSub()
     m_fHideSubtitles = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), 0);
 	m_fDoPreBuffering = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), 1);
     
-    m_colourSpace = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOUR_SPACE), 0);
+    m_colourSpace = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOUR_SPACE), CDirectVobSub::AUTO_GUESS);
     if( m_colourSpace!=CDirectVobSub::AUTO_GUESS && 
         m_colourSpace!=CDirectVobSub::BT_601 && 
         m_colourSpace!=CDirectVobSub::BT_709 )
     {
-        m_colourSpace = CDirectVobSub::BT_601;
+        m_colourSpace = CDirectVobSub::AUTO_GUESS;
     }
-    m_yuvRange = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), 0);
+    m_yuvRange = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), CDirectVobSub::YuvRange_Auto);
     if( m_yuvRange!=CDirectVobSub::YuvRange_Auto && 
         m_yuvRange!=CDirectVobSub::YuvRange_PC && 
         m_yuvRange!=CDirectVobSub::YuvRange_TV )
