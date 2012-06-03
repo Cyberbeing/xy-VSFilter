@@ -98,6 +98,7 @@ public:
     STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
 	STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
     STDMETHODIMP put_ColourSpace(int colourSpace);
+    STDMETHODIMP put_YuvRange(int yuvRange);
     STDMETHODIMP put_Placement(bool fOverridePlacement, int xperc, int yperc);
     STDMETHODIMP put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fPolygonize);
     STDMETHODIMP put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer);

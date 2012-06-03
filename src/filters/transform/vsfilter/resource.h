@@ -88,6 +88,7 @@
 #define IDS_RG_INPUT_COLORFORMATS       181
 #define IDS_RG_BT601_WIDTH              182
 #define IDS_RG_BT601_HEIGHT             183
+#define IDS_RG_YUV_RANGE                184
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
@@ -181,6 +182,7 @@
 #define IDC_CACHES_INFO_BTN             327
 #define IDC_CHECK_FOLLOW_UPSTREAM       329
 #define IDC_COMBO_COLOUR_SPACE          330
+#define IDC_COMBO_YUV_RANGE             332
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
 #define IDC_LABLE_OVERLAY_CACHE         403

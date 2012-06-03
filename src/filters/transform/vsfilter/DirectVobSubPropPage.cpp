@@ -591,6 +591,7 @@ CDVSMiscPPage::CDVSMiscPPage(LPUNKNOWN pUnk, HRESULT* phr) :
 	BindControl(IDC_SHOWOSDSTATS, m_showosd);
 	//BindControl(IDC_PREBUFFERING, m_prebuff);
     BindControl(IDC_COMBO_COLOUR_SPACE, m_colourSpaceDropList);
+    BindControl(IDC_COMBO_YUV_RANGE, m_yuvRangeDropList);
 	BindControl(IDC_AUTORELOAD, m_autoreload);
 	BindControl(IDC_SAVEFULLPATH, m_savefullpath);
 	BindControl(IDC_INSTANTUPDATE, m_instupd);
@@ -631,6 +632,7 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->put_OSD(m_fOSD);
 		m_pDirectVobSub->put_PreBuffering(m_fDoPreBuffering);
         m_pDirectVobSubXy->put_ColourSpace(m_colourSpace);
+        m_pDirectVobSubXy->put_YuvRange(m_yuvRange);
 		m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
 		m_pDirectVobSub->put_SaveFullPath(m_fSaveFullPath);
 	}
@@ -641,6 +643,7 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->get_OSD(&m_fOSD);
 		m_pDirectVobSub->get_PreBuffering(&m_fDoPreBuffering);        
         m_pDirectVobSubXy->get_ColourSpace(&m_colourSpace);
+        m_pDirectVobSubXy->get_YuvRange(&m_yuvRange);
 		m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
 		m_pDirectVobSub->get_SaveFullPath(&m_fSaveFullPath);
 	}
@@ -665,6 +668,15 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
             m_colourSpace = CDirectVobSub::BT_601;
         }
 
+        if (m_yuvRangeDropList.GetCurSel() != CB_ERR)
+        {
+            m_yuvRange = m_yuvRangeDropList.GetCurSel();
+        }
+        else
+        {
+            m_yuvRange = CDirectVobSub::YuvRange_Auto;
+        }
+
 		m_fOSD = !!m_showosd.GetCheck();
 		m_fReloaderDisabled = !m_autoreload.GetCheck();
 	}
@@ -676,7 +688,7 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
 		m_savefullpath.SetCheck(m_fSaveFullPath);
 		//m_prebuff.SetCheck(m_fDoPreBuffering);
 
-        CString str;str.Format(_T("m_colourSpace:%d"),m_colourSpace);
+        //CString str;str.Format(_T("m_colourSpace:%d"),m_colourSpace);
         if( m_colourSpace != CDirectVobSub::AUTO_GUESS && 
             m_colourSpace != CDirectVobSub::BT_601 && 
             m_colourSpace != CDirectVobSub::BT_709 )
@@ -691,6 +703,21 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
         m_colourSpaceDropList.AddString( CString(_T("Auto Guess")) );
         m_colourSpaceDropList.SetItemData( CDirectVobSub::AUTO_GUESS, CDirectVobSub::AUTO_GUESS );        
         m_colourSpaceDropList.SetCurSel( m_colourSpace ); 
+
+        if( m_yuvRange != CDirectVobSub::YuvRange_Auto &&
+            m_yuvRange != CDirectVobSub::YuvRange_PC &&
+            m_yuvRange != CDirectVobSub::YuvRange_TV )
+        {
+            m_yuvRange = CDirectVobSub::YuvRange_Auto;
+        }
+        m_yuvRangeDropList.ResetContent();
+        m_yuvRangeDropList.AddString( CString(_T("TV")) );
+        m_yuvRangeDropList.SetItemData( CDirectVobSub::YuvRange_TV, CDirectVobSub::YuvRange_TV );
+        m_yuvRangeDropList.AddString( CString(_T("PC")) );
+        m_yuvRangeDropList.SetItemData( CDirectVobSub::YuvRange_PC, CDirectVobSub::YuvRange_PC );
+        m_yuvRangeDropList.AddString( CString(_T("Auto")) );
+        m_yuvRangeDropList.SetItemData( CDirectVobSub::YuvRange_Auto, CDirectVobSub::YuvRange_Auto );
+        m_yuvRangeDropList.SetCurSel( m_yuvRange ); 
 
 		m_showosd.SetCheck(m_fOSD);
 		m_autoreload.SetCheck(!m_fReloaderDisabled);

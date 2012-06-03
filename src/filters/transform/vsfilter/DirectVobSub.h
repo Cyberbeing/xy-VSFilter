@@ -34,7 +34,12 @@ public:
         BT_709,
         AUTO_GUESS
     };
-
+    enum YuvRange
+    {
+        YuvRange_TV = 0,
+        YuvRange_PC,
+        YuvRange_Auto
+    };
 protected:
 	CDirectVobSub();
 	virtual ~CDirectVobSub();
@@ -47,7 +52,7 @@ protected:
 	bool m_fHideSubtitles;
 	bool m_fDoPreBuffering;
 
-    int m_colourSpace;
+    int m_colourSpace, m_yuvRange;
     int m_bt601Width, m_bt601Height;//for AUTO_GUESS
 
 	bool m_fOverridePlacement;
@@ -102,6 +107,8 @@ public:
     STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
     STDMETHODIMP get_ColourSpace(int* colourSpace);
     STDMETHODIMP put_ColourSpace(int colourSpace);
+    STDMETHODIMP get_YuvRange(int* yuvRange);
+    STDMETHODIMP put_YuvRange(int yuvRange);
     STDMETHODIMP get_SubPictToBuffer(unsigned int* uSubPictToBuffer)
     {
         return E_NOTIMPL;

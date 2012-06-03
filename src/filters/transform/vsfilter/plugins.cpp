@@ -89,19 +89,34 @@ public:
         if(!m_fLazyInit)
         {
             m_fLazyInit = true;
+
+            ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
+            ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
             switch(m_colourSpace)
             {
             case CDirectVobSub::BT_601:
-                ColorConvTable::SetDefaultYUVType(ColorConvTable::BT601);
+                yuv_matrix = ColorConvTable::BT601;
                 break;
             case CDirectVobSub::BT_709:
-                ColorConvTable::SetDefaultYUVType(ColorConvTable::BT709);
+                yuv_matrix = ColorConvTable::BT709;
                 break;
             case CDirectVobSub::AUTO_GUESS:
-                ColorConvTable::SetDefaultYUVType( (dst.w > m_bt601Width || dst.h > m_bt601Height) ?
-                    ColorConvTable::BT709 : ColorConvTable::BT601 );
+                yuv_matrix = (dst.w > m_bt601Width || dst.h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
                 break;
             }
+            switch(m_yuvRange)
+            {
+            case CDirectVobSub::YuvRange_TV:
+                yuv_range = ColorConvTable::RANGE_TV;
+                break;
+            case CDirectVobSub::YuvRange_PC:
+                yuv_range = ColorConvTable::RANGE_PC;
+                break;
+            case CDirectVobSub::YuvRange_Auto:
+                yuv_range = ColorConvTable::RANGE_TV;
+                break;
+            }
+            ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
         }
 		CSize size(dst.w, dst.h);
 

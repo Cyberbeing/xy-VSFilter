@@ -565,7 +565,8 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 		}
         
         //colour space
-        tmp.Format( _T("Colourspace: %ls (%ls)\n"), 
+        tmp.Format( _T("Colourspace: %ls.%ls(%ls)\n"), 
+            ColorConvTable::GetDefaultRangeType()==ColorConvTable::RANGE_PC ? _T("PC"):_T("TV"),
             ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT601 ? _T("BT.601"):_T("BT.709"),
             m_colourSpace==CDirectVobSub::AUTO_GUESS ? _T("Guessed") : _T("forced") );
         msg += tmp;

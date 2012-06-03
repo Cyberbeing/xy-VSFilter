@@ -706,19 +706,35 @@ REFERENCE_TIME CDirectVobSubFilter::CalcCurrentTime()
 void CDirectVobSubFilter::InitSubPicQueue()
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
+
+    ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
+    ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
     switch(m_colourSpace)
     {
     case CDirectVobSub::BT_601:
-        ColorConvTable::SetDefaultYUVType(ColorConvTable::BT601);
+        yuv_matrix = ColorConvTable::BT601;
         break;
     case CDirectVobSub::BT_709:
-        ColorConvTable::SetDefaultYUVType(ColorConvTable::BT709);
+        yuv_matrix = ColorConvTable::BT709;
         break;
     case CDirectVobSub::AUTO_GUESS:
-        ColorConvTable::SetDefaultYUVType( (m_w > m_bt601Width || m_h > m_bt601Height) ?
-            ColorConvTable::BT709 : ColorConvTable::BT601 );
+        yuv_matrix = (m_w > m_bt601Width || m_h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
         break;
     }
+    switch(m_yuvRange)
+    {
+    case CDirectVobSub::YuvRange_TV:
+        yuv_range = ColorConvTable::RANGE_TV;
+        break;
+    case CDirectVobSub::YuvRange_PC:
+        yuv_range = ColorConvTable::RANGE_PC;
+        break;
+    case CDirectVobSub::YuvRange_Auto:
+        yuv_range = ColorConvTable::RANGE_TV;
+        break;
+    }
+    ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
+
     CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
     CacheManager::GetScanLineDataMruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
     CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
@@ -1244,19 +1260,72 @@ STDMETHODIMP CDirectVobSubFilter::put_ColourSpace(int colourSpace)
 
     if(hr == NOERROR)
     {
+        ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
+        ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
         switch(m_colourSpace)
         {
         case CDirectVobSub::BT_601:
-            ColorConvTable::SetDefaultYUVType(ColorConvTable::BT601);
+            yuv_matrix = ColorConvTable::BT601;
             break;
         case CDirectVobSub::BT_709:
-            ColorConvTable::SetDefaultYUVType(ColorConvTable::BT709);
+            yuv_matrix = ColorConvTable::BT709;
             break;
         case CDirectVobSub::AUTO_GUESS:
-            ColorConvTable::SetDefaultYUVType( (m_w > m_bt601Width || m_h > m_bt601Height) ?
-                ColorConvTable::BT709 : ColorConvTable::BT601 );
+            yuv_matrix = (m_w > m_bt601Width || m_h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
             break;
         }
+        switch(m_yuvRange)
+        {
+        case CDirectVobSub::YuvRange_TV:
+            yuv_range = ColorConvTable::RANGE_TV;
+            break;
+        case CDirectVobSub::YuvRange_PC:
+            yuv_range = ColorConvTable::RANGE_PC;
+            break;
+        case CDirectVobSub::YuvRange_Auto:
+            yuv_range = ColorConvTable::RANGE_TV;
+            break;
+        }
+        ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
+    }
+
+    return hr;
+}
+
+STDMETHODIMP CDirectVobSubFilter::put_YuvRange( int yuvRange )
+{
+    CAutoLock cAutolock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::put_YuvRange(yuvRange);
+
+    if(hr == NOERROR)
+    {
+        ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
+        ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
+        switch(m_colourSpace)
+        {
+        case CDirectVobSub::BT_601:
+            yuv_matrix = ColorConvTable::BT601;
+            break;
+        case CDirectVobSub::BT_709:
+            yuv_matrix = ColorConvTable::BT709;
+            break;
+        case CDirectVobSub::AUTO_GUESS:
+            yuv_matrix = (m_w > m_bt601Width || m_h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
+            break;
+        }
+        switch(m_yuvRange)
+        {
+        case CDirectVobSub::YuvRange_TV:
+            yuv_range = ColorConvTable::RANGE_TV;
+            break;
+        case CDirectVobSub::YuvRange_PC:
+            yuv_range = ColorConvTable::RANGE_PC;
+            break;
+        case CDirectVobSub::YuvRange_Auto:
+            yuv_range = ColorConvTable::RANGE_TV;
+            break;
+        }
+        ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
     }
 
     return hr;

@@ -69,8 +69,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,0,0,12
- PRODUCTVERSION 3,0,0,12
+ FILEVERSION 3,0,0,13
+ PRODUCTVERSION 3,0,0,13
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -88,12 +88,12 @@ BEGIN
             VALUE "Comments", "http://code.google.com/p/xy-vsfilter/"
             VALUE "CompanyName", "xy-VSFilter Team"
             VALUE "FileDescription", "VobSub & TextSub filter for DirectShow/VirtualDub/Avisynth"
-            VALUE "FileVersion", "3, 0, 0, 12"
+            VALUE "FileVersion", "3, 0, 0, 13"
             VALUE "InternalName", "VSFilter"
             VALUE "LegalCopyright", "Copyright (C) 2001-2012 Yu Zhuohuang, Gabest et. al."
             VALUE "OriginalFilename", "VSFilter.dll"
             VALUE "ProductName", "VSFilter"
-            VALUE "ProductVersion", "3, 0, 0, 12"
+            VALUE "ProductVersion", "3, 0, 0, 13"
         END
     END
     BLOCK "VarFileInfo"
@@ -202,6 +202,7 @@ BEGIN
     CONTROL         "&Save full path into .grf",IDC_SAVEFULLPATH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,136,91,10
     CONTROL         "Appl&y changes immediately",IDC_INSTANTUPDATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,153,104,10
     COMBOBOX        IDC_COMBO_COLOUR_SPACE,17,92,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_YUV_RANGE,85,92,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_DVSPATHSPAGE DIALOGEX 0, 0, 247, 188
@@ -630,6 +631,7 @@ BEGIN
     IDS_RG_INPUT_COLORFORMATS "Input Color Format"
     IDS_RG_BT601_WIDTH      "bt.601 width(for guess)"
     IDS_RG_BT601_HEIGHT     "bt.601 height(for guess)"
+    IDS_RG_YUV_RANGE        "Yuv Range"
 END
 
 STRINGTABLE
@@ -647,6 +649,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

@@ -20,6 +20,16 @@ extern "C" {
 
         //
 
+        STDMETHOD(get_YuvRange) (THIS_
+            int* yuvRange
+            ) PURE;
+
+        STDMETHOD(put_YuvRange) (THIS_
+            int yuvRange
+            ) PURE;
+
+        //
+
         STDMETHOD(get_OutputColorFormat) (THIS_
                     ColorSpaceId* preferredOrder,
                     bool* fSelected,

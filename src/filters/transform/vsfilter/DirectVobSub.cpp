@@ -41,6 +41,14 @@ CDirectVobSub::CDirectVobSub()
     {
         m_colourSpace = CDirectVobSub::BT_601;
     }
+    m_yuvRange = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), 0);
+    if( m_yuvRange!=CDirectVobSub::YuvRange_Auto && 
+        m_yuvRange!=CDirectVobSub::YuvRange_PC && 
+        m_yuvRange!=CDirectVobSub::YuvRange_TV )
+    {
+        m_yuvRange = CDirectVobSub::YuvRange_Auto;
+    }
+
     m_bt601Width = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
     m_bt601Height = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_HEIGHT), 600);
 
@@ -282,6 +290,25 @@ STDMETHODIMP CDirectVobSub::put_ColourSpace(int colourSpace)
 
     return S_OK;
 }
+
+STDMETHODIMP CDirectVobSub::get_YuvRange(int* yuvRange)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    return yuvRange ? *yuvRange = m_yuvRange, S_OK : E_POINTER;
+}
+
+STDMETHODIMP CDirectVobSub::put_YuvRange(int yuvRange)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(m_yuvRange == yuvRange) return S_FALSE;
+
+    m_yuvRange = yuvRange;
+
+    return S_OK;
+}
+
 STDMETHODIMP CDirectVobSub::get_Placement(bool* fOverridePlacement, int* xperc, int* yperc)
 {
 	CAutoLock cAutoLock(&m_propsLock);
@@ -764,6 +791,8 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), m_fHideSubtitles);
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), m_fDoPreBuffering);
+
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), m_yuvRange);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOUR_SPACE), m_colourSpace);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);

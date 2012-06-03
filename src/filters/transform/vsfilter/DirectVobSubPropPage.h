@@ -121,10 +121,10 @@ class CDVSMiscPPage : public CDVSBasePPage
 {
 	bool m_fFlipPicture, m_fFlipSubtitles, m_fHideSubtitles, m_fOSD, m_fDoPreBuffering, m_fReloaderDisabled, m_fSaveFullPath;
 
-    int m_colourSpace;
+    int m_colourSpace, m_yuvRange;
 
 	CButton m_flippic, m_flipsub, m_hidesub, m_showosd, m_prebuff, m_autoreload, m_savefullpath, m_instupd;
-    CComboBox m_colourSpaceDropList;
+    CComboBox m_colourSpaceDropList, m_yuvRangeDropList;
 
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
