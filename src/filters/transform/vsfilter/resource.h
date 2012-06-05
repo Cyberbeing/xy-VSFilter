@@ -90,6 +90,8 @@
 #define IDS_RG_BT601_HEIGHT             183
 #define IDS_RG_YUV_RANGE                184
 #define IDS_RG_HIDE_TRAY_ICON           185
+#define IDS_RG_SUPPORTED_VERSION        186
+#define IDS_RG_VERSION                  187
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202

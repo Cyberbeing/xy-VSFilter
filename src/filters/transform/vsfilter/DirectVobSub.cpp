@@ -30,18 +30,21 @@ CDirectVobSub::CDirectVobSub()
 	BYTE* pData = NULL;
 	UINT nSize = 0;
 
+    m_supported_filter_verion = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), 0);
+    m_config_info_version = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), 0);
+
     m_iSelectedLanguage = 0;
     m_fHideSubtitles = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), 0);
 	m_fDoPreBuffering = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), 1);
     
-    m_colourSpace = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOUR_SPACE), CDirectVobSub::AUTO_GUESS);
+    m_colourSpace = GetCompatibleProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOUR_SPACE), CDirectVobSub::AUTO_GUESS);
     if( m_colourSpace!=CDirectVobSub::AUTO_GUESS && 
         m_colourSpace!=CDirectVobSub::BT_601 && 
         m_colourSpace!=CDirectVobSub::BT_709 )
     {
         m_colourSpace = CDirectVobSub::AUTO_GUESS;
     }
-    m_yuvRange = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), CDirectVobSub::YuvRange_Auto);
+    m_yuvRange = GetCompatibleProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), CDirectVobSub::YuvRange_Auto);
     if( m_yuvRange!=CDirectVobSub::YuvRange_Auto && 
         m_yuvRange!=CDirectVobSub::YuvRange_PC && 
         m_yuvRange!=CDirectVobSub::YuvRange_TV )
@@ -873,6 +876,8 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
         delete [] pData;
     }
 
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), CUR_SUPPORTED_FILTER_VERSION);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), XY_VSFILTER_VERSION_COMMIT);
     //
 	return S_OK;
 }
@@ -1089,4 +1094,28 @@ STDMETHODIMP CDirectVobSub::put_AspectRatioSettings(CSimpleTextSubtitle::EPARCom
 STDMETHODIMP_(DWORD) CDirectVobSub::GetFilterVersion()
 {
 	return 0x0234;
+}
+
+bool CDirectVobSub::is_compatible()
+{
+    bool compatible = false;
+    if ( m_config_info_version>XY_VSFILTER_VERSION_COMMIT )
+    {
+        compatible = m_supported_filter_verion<=XY_VSFILTER_VERSION_COMMIT;
+    }
+    else
+    {
+        compatible = REQUIRED_CONFIG_VERSION<=m_config_info_version;
+    }
+    return compatible;
+}
+
+UINT CDirectVobSub::GetCompatibleProfileInt( LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault )
+{
+    UINT result = nDefault;
+    if (is_compatible())
+    {
+        result = theApp.GetProfileInt(lpszSection, lpszEntry, nDefault);
+    }
+    return result;
 }
