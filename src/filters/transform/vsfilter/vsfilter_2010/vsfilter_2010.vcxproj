@@ -250,6 +250,7 @@
     <ClInclude Include="..\Systray.h" />
     <ClInclude Include="..\TextInputPin.h" />
     <ClInclude Include="..\Timing_Logger.h" />
+    <ClInclude Include="..\version.h" />
     <ClInclude Include="..\vfr.h" />
     <ClInclude Include="..\VSFilter.h" />
     <ClInclude Include="..\xy_logger.h" />
