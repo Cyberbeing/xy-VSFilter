@@ -636,6 +636,8 @@ BEGIN
     IDS_RG_BT601_WIDTH      "bt.601 width(for guess)"
     IDS_RG_BT601_HEIGHT     "bt.601 height(for guess)"
     IDS_RG_YUV_RANGE        "Yuv Range"
+    IDS_RG_SUPPORTED_VERSION "Supported Version"
+    IDS_RG_VERSION          "Version"
 END
 
 STRINGTABLE

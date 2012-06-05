@@ -24,6 +24,7 @@
 #include "IDirectVobSub.h"
 #include "IDirectVobSubXy.h"
 #include "..\..\..\..\include\IFilterVersion.h"
+#include "version.h"
 
 class CDirectVobSub : public IDirectVobSub2, public IDirectVobSubXy, public IFilterVersion
 {
@@ -40,10 +41,15 @@ public:
         YuvRange_PC,
         YuvRange_Auto
     };
+
+    static const int REQUIRED_CONFIG_VERSION = 16;
+    static const int CUR_SUPPORTED_FILTER_VERSION = 0;
 protected:
 	CDirectVobSub();
 	virtual ~CDirectVobSub();
 
+    bool is_compatible();
+    UINT GetCompatibleProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault);
 protected:
     CCritSec m_propsLock;
 
@@ -87,6 +93,9 @@ protected:
 	double m_MediaFPS;
 	bool m_fSaveFullPath;
 	NORMALIZEDRECT m_ZoomRect;
+
+    int m_supported_filter_verion;
+    int m_config_info_version;
 
 	CComPtr<ISubClock> m_pSubClock;
 	bool m_fForced;
