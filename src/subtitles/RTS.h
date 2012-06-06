@@ -78,16 +78,16 @@ class OverlayKey;
 class CWord
 {
     bool NeedTransform();
-    void Transform(SharedPtrPathData path_data, const CPoint& org);
+    void Transform(PathData* path_data, const CPoint& org);
 
-	void Transform_C(const SharedPtrPathData& path_data, const CPoint &org );
-	void Transform_SSE2(const SharedPtrPathData& path_data, const CPoint &org );
+	void Transform_C(PathData* path_data, const CPoint &org );
+	void Transform_SSE2(PathData* path_data, const CPoint &org );
     bool CreateOpaqueBox();
 
 protected:
     CStringW m_str;
 
-    virtual bool CreatePath(const SharedPtrPathData& path_data) = 0;
+    virtual bool CreatePath(PathData* path_data) = 0;
 
     bool DoPaint(const CPoint& p, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key);
 public:
@@ -113,8 +113,9 @@ public:
     static void PaintAll(SharedPtrCWord word, 
         const CPoint& shadowPos, const CPoint& outlinePos, const CPoint& bodyPos, const CPoint& org,
         OverlayList* shadow, OverlayList* outline, OverlayList* body);
-    static void Paint(SharedPtrCWord word, const CPoint& psub, const CPoint& trans_org, OverlayList* overlay_list);    
-    
+    static void Paint(SharedPtrCWord word, const CPoint& psub, const CPoint& trans_org, OverlayList* overlay_list);
+    static void PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay);
+
     //friend class CWordCache;
     friend class CWordCacheKey;
     friend class PathDataCacheKey;
@@ -130,7 +131,7 @@ public:
     };
     typedef ::boost::shared_ptr<TextInfo> SharedPtrTextInfo;
 protected:
-    virtual bool CreatePath(const SharedPtrPathData& path_data);
+    virtual bool CreatePath(PathData* path_data);
 
     static void GetTextInfo(TextInfo *output, const FwSTSStyle& style, const CStringW& str);
 public:
@@ -154,7 +155,7 @@ protected:
     CAtlArray<BYTE> m_pathTypesOrg;
     CAtlArray<CPoint> m_pathPointsOrg;
 
-    virtual bool CreatePath(const SharedPtrPathData& path_data);
+    virtual bool CreatePath(PathData* path_data);
 
 public:
     CPolygon(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline);
