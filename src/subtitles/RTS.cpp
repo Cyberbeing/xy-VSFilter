@@ -211,8 +211,7 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& trans_org
                 {
                     error = true;
                     break;
-                }
-                overlay_cache->UpdateCache(overlay_key, overlay_list->overlay);
+                }                
             }
             else
             {
@@ -253,6 +252,24 @@ void CWord::PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayK
             overlay_cache->UpdateCache(subpixel_variance_key, overlay);
         }
     }
+}
+
+void CWord::PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const OverlayKey& overlay_key, SharedPtrOverlay* overlay)
+{
+    if( m_style.get().fBlur>0 || m_style.get().fGaussianBlur>0.000001 )
+    {
+        overlay->reset(new Overlay());
+        if(!Rasterizer::Blur(*raterize_result, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
+        {
+            *overlay = raterize_result;
+        }
+    }
+    else
+    {
+        *overlay = raterize_result;
+    }
+    OverlayMruCache* overlay_cache = CacheManager::GetOverlayMruCache();
+    overlay_cache->UpdateCache(overlay_key, *overlay);
 }
 
 bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key)
@@ -339,19 +356,8 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     {
         raterize_result = overlay_no_blur_cache->GetAt(pos);            
         overlay_no_blur_cache->UpdateCache( pos );
-    }    
-    if( m_style.get().fBlur>0 || m_style.get().fGaussianBlur>0.000001 )
-    {
-        overlay->reset(new Overlay());
-        if(!Rasterizer::Blur(*raterize_result, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
-        {
-            *overlay = raterize_result;
-        }
     }
-    else
-    {
-        *overlay = raterize_result;
-    }
+    PaintFromNoneBluredOverlay(raterize_result, key, overlay);
     return true;
 }
 
