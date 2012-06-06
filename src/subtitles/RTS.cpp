@@ -335,52 +335,43 @@ bool CWord::PaintFromRawData( const CPoint& psub, const CPoint& trans_org, const
 
 bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key)
 {
-    //overlay->reset(new Overlay());
+    bool result = true;
     OverlayNoBlurMruCache* overlay_no_blur_cache = CacheManager::GetOverlayNoBlurMruCache();
     POSITION pos = overlay_no_blur_cache->Lookup(key);
 
-    if(pos==NULL)
-    {
-        ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
-        POSITION pos_scan_line_data = scan_line_data_cache->Lookup(key);
-        if(pos_scan_line_data==NULL)
-        {     
-            PathDataMruCache* path_data_cache = CacheManager::GetPathDataMruCache();
-            POSITION pos_path = path_data_cache->Lookup(key);
-            if(pos_path==NULL)    
-            {
-                if( !PaintFromRawData(psub, trans_org, key, overlay) )
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                SharedPtrConstPathData path_data = path_data_cache->GetAt(pos_path); //important! copy not ref                
-                path_data_cache->UpdateCache( pos_path );
-                if( !PaintFromPathData(psub, trans_org, *path_data, key, overlay) )
-                {
-                    return false;
-                }
-            }
-        }
-        else
-        {
-            SharedPtrConstScanLineData scan_line_data = scan_line_data_cache->GetAt(pos_scan_line_data);
-            scan_line_data_cache->UpdateCache( pos_scan_line_data );
-            if ( !PaintFromScanLineData(psub, *scan_line_data, key, overlay) )
-            {
-                return false;
-            }
-        }
-    }
-    else
+    if(pos!=NULL)
     {
         SharedPtrOverlay raterize_result = overlay_no_blur_cache->GetAt(pos);
         overlay_no_blur_cache->UpdateCache( pos );
         PaintFromNoneBluredOverlay(raterize_result, key, overlay);
-    }    
-    return true;
+    }  
+    else
+    {
+        ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
+        pos = scan_line_data_cache->Lookup(key);
+        if(pos!=NULL)
+        {
+            SharedPtrConstScanLineData scan_line_data = scan_line_data_cache->GetAt(pos);
+            scan_line_data_cache->UpdateCache( pos );
+            result = PaintFromScanLineData(psub, *scan_line_data, key, overlay);
+        }
+        else
+        {     
+            PathDataMruCache* path_data_cache = CacheManager::GetPathDataMruCache();
+            POSITION pos_path = path_data_cache->Lookup(key);
+            if(pos_path!=NULL)    
+            {
+                SharedPtrConstPathData path_data = path_data_cache->GetAt(pos_path); //important! copy not ref                
+                path_data_cache->UpdateCache( pos_path );
+                result = PaintFromPathData(psub, trans_org, *path_data, key, overlay);
+            }
+            else
+            {
+                result = PaintFromRawData(psub, trans_org, key, overlay);
+            }
+        }
+    }
+    return result;
 }
 
 bool CWord::NeedTransform()
