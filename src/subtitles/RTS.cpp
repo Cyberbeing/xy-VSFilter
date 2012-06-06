@@ -285,6 +285,40 @@ bool CWord::PaintFromScanLineData(const CPoint& psub, const ScanLineData& scan_l
     return true;
 }
 
+bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const PathData& path_data, const OverlayKey& key, SharedPtrOverlay* overlay )
+{
+    PathData path_data2 = path_data;
+    bool need_transform = NeedTransform();
+    if(need_transform)
+        Transform(&path_data2, CPoint(trans_org.x*8, trans_org.y*8));
+
+    SharedPtrScanLineData tmp(new ScanLineData());
+
+    if(!tmp->ScanConvert(&path_data2))
+    {
+        return false;
+    }
+
+    if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
+    {
+        if(!tmp->CreateWidenedRegion(static_cast<int>(m_style.get().outlineWidthX+0.5), 
+            static_cast<int>(m_style.get().outlineWidthY+0.5))) 
+        {
+            return false;
+        }
+    }
+    else if(m_style.get().borderStyle == 1)
+    {
+        if(!CreateOpaqueBox())
+        {
+            return false;
+        }
+    }
+    ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
+    scan_line_data_cache->UpdateCache(key, tmp); 
+    return PaintFromScanLineData(psub, *tmp, key, overlay);
+}
+
 bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key)
 {
     //overlay->reset(new Overlay());
@@ -297,67 +331,41 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
         ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
         POSITION pos_scan_line_data = scan_line_data_cache->Lookup(key);
         if(pos_scan_line_data==NULL)
-        {
-            //get outline path, if not cached, create it and cache a copy, else copy from cache
-            PathData *path_data = new PathData();
-            SharedPtrPathData path_data2(path_data);        
+        {     
             PathDataMruCache* path_data_cache = CacheManager::GetPathDataMruCache();
             POSITION pos_path = path_data_cache->Lookup(key);
             if(pos_path==NULL)    
             {
-                if(!CreatePath(path_data))
+                PathData *tmp=new PathData();
+                SharedPtrPathData path_data(tmp);
+                if(!CreatePath(tmp))
+                {
+                    return false;
+                }               
+                path_data_cache->UpdateCache(key, path_data);
+                if( !PaintFromPathData(psub, trans_org, *tmp, key, overlay) )
                 {
                     return false;
                 }
-
-                SharedPtrPathData data(new PathData());
-                *data = *path_data;//important! copy not ref                
-                path_data_cache->UpdateCache(key, data);
             }
             else
             {
-                *path_data = *(path_data_cache->GetAt(pos_path)); //important! copy not ref                
+                SharedPtrConstPathData path_data = path_data_cache->GetAt(pos_path); //important! copy not ref                
                 path_data_cache->UpdateCache( pos_path );
-            } 
-
-            bool need_transform = NeedTransform();
-            if(need_transform)
-                Transform(path_data, CPoint(trans_org.x*8, trans_org.y*8));
-
-            SharedPtrScanLineData tmp(new ScanLineData());
-            
-            if(!tmp->ScanConvert(path_data2))
-            {
-                return false;
-            }
-
-            if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
-            {
-                if(!tmp->CreateWidenedRegion(static_cast<int>(m_style.get().outlineWidthX+0.5), 
-                    static_cast<int>(m_style.get().outlineWidthY+0.5))) 
+                if( !PaintFromPathData(psub, trans_org, *path_data, key, overlay) )
                 {
                     return false;
                 }
             }
-            else if(m_style.get().borderStyle == 1)
-            {
-                if(!CreateOpaqueBox())
-                {
-                    return false;
-                }
-            }
-
-            scan_line_data_cache->UpdateCache(key, tmp); 
-            scan_line_data = tmp;
         }
         else
         {
             scan_line_data = scan_line_data_cache->GetAt(pos_scan_line_data);
             scan_line_data_cache->UpdateCache( pos_scan_line_data );
-        }
-        if ( !PaintFromScanLineData(psub, *scan_line_data, key, overlay) )
-        {
-            return false;
+            if ( !PaintFromScanLineData(psub, *scan_line_data, key, overlay) )
+            {
+                return false;
+            }
         }
     }
     else

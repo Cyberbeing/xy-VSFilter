@@ -2148,7 +2148,7 @@ void ScanLineData::_EvaluateLine(int x0, int y0, int x1, int y1)
     }
 }
 
-bool ScanLineData::ScanConvert(SharedPtrPathData path_data)
+bool ScanLineData::ScanConvert(PathData* path_data)
 {
     int lastmoveto = -1;
     int i;
