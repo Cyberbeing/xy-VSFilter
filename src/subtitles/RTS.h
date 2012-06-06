@@ -116,6 +116,7 @@ public:
     static void Paint(SharedPtrCWord word, const CPoint& psub, const CPoint& trans_org, OverlayList* overlay_list);
     static void PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay);
     void PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const OverlayKey& overlay_key, SharedPtrOverlay* overlay);
+    bool PaintFromScanLineData(const CPoint& psub, const ScanLineData& scan_line_data, const OverlayKey& key, SharedPtrOverlay* overlay);
 
     //friend class CWordCache;
     friend class CWordCacheKey;
