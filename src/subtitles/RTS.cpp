@@ -186,11 +186,10 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& trans_org
             trans_org2.y=0;
         }
 
+        CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
+        OverlayKey sub_key(*word, psub_true, trans_org2);
         if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() )
         {
-            CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
-            OverlayKey sub_key(*word, psub_true, trans_org2);
-
             OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();
 
             POSITION pos = overlay_cache->Lookup(sub_key);
@@ -220,17 +219,7 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& trans_org
                 overlay_list->overlay = overlay_cache->GetAt(pos);
                 overlay_cache->UpdateCache( pos );
             }
-            if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() 
-                && (psub.x!=(p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) 
-                || psub.y!=(p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK)) )
-            {
-                overlay_list->overlay.reset(overlay_list->overlay->GetSubpixelVariance((p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.x, 
-                    (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.y));
-                CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
-                OverlayKey sub_key(*word, psub_true, trans_org2);
-                OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();                
-                overlay_cache->UpdateCache(sub_key, overlay_list->overlay);
-            }
+            PaintFromOverlay(p, trans_org2, sub_key, overlay_list->overlay);
         }
 
         if(word->m_style.get().borderStyle == 1)
@@ -247,6 +236,22 @@ void CWord::Paint( SharedPtrCWord word, const CPoint& p, const CPoint& trans_org
     if(error)
     {
         overlay_list->overlay.reset( new Overlay() );
+    }
+}
+
+void CWord::PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay)
+{
+    if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() )
+    {
+        CPoint psub = SubpixelPositionControler::GetGlobalControler().GetSubpixel(p);
+        if( (psub.x!=(p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) 
+            || psub.y!=(p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK)) )
+        {
+            overlay.reset(overlay->GetSubpixelVariance((p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.x, 
+                (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) - psub.y));        
+            OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();                
+            overlay_cache->UpdateCache(subpixel_variance_key, overlay);
+        }
     }
 }
 
@@ -267,7 +272,8 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
         if(pos_scan_line_data==NULL)
         {
             //get outline path, if not cached, create it and cache a copy, else copy from cache
-            SharedPtrPathData path_data(new PathData());        
+            PathData *path_data = new PathData();
+            SharedPtrPathData path_data2(path_data);        
             PathDataMruCache* path_data_cache = CacheManager::GetPathDataMruCache();
             POSITION pos_path = path_data_cache->Lookup(key);
             if(pos_path==NULL)    
@@ -293,7 +299,7 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
 
             SharedPtrScanLineData tmp(new ScanLineData());
             
-            if(!tmp->ScanConvert(path_data))
+            if(!tmp->ScanConvert(path_data2))
             {
                 return false;
             }
@@ -360,7 +366,7 @@ bool CWord::NeedTransform()
            (fabs(m_style.get().fontShiftY) > 0.000001);
 }
 
-void CWord::Transform(SharedPtrPathData path_data, const CPoint& org)
+void CWord::Transform(PathData* path_data, const CPoint& org)
 {
 	//// CPUID from VDub
 	//bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
@@ -371,7 +377,7 @@ void CWord::Transform(SharedPtrPathData path_data, const CPoint& org)
 		Transform_C(path_data, org);
 }
 
-void CWord::Transform_C(const SharedPtrPathData& path_data, const CPoint &org )
+void CWord::Transform_C(PathData* path_data, const CPoint &org )
 {
 	double scalex = m_style.get().fontScaleX/100;
 	double scaley = m_style.get().fontScaleY/100;
@@ -477,7 +483,7 @@ void CWord::Transform_C(const SharedPtrPathData& path_data, const CPoint &org )
 	}
 }
 
-void CWord::Transform_SSE2(const SharedPtrPathData& path_data, const CPoint &org )
+void CWord::Transform_SSE2(PathData* path_data, const CPoint &org )
 {
 	// __m128 union data type currently not supported with Intel C++ Compiler, so just call C version
 #ifdef __ICL
@@ -844,7 +850,7 @@ bool CText::Append(const SharedPtrCWord& w)
     return (p && CWord::Append(w));
 }
 
-bool CText::CreatePath(const SharedPtrPathData& path_data)
+bool CText::CreatePath(PathData* path_data)
 {
     FwCMyFont font(m_style);
     HFONT hOldFont = SelectFont(g_hDC, font.get());
@@ -1086,7 +1092,7 @@ bool CPolygon::ParseStr()
     return(true);
 }
 
-bool CPolygon::CreatePath(const SharedPtrPathData& path_data)
+bool CPolygon::CreatePath(PathData* path_data)
 {
     int len = m_pathTypesOrg.GetCount();
     if(len == 0) return(false);
