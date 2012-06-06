@@ -102,7 +102,7 @@ public:
     ScanLineData();
     virtual ~ScanLineData();
 
-    bool ScanConvert(SharedPtrPathData path_data);
+    bool ScanConvert(PathData* path_data);
     bool CreateWidenedRegion(int borderX, int borderY);
     void DeleteOutlines();
 
