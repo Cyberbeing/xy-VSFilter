@@ -146,7 +146,7 @@ typedef EnhancedXyMru<CWordCacheKey, SharedPtrCWord, CWordCacheKeyTraits> CWordM
 
 typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, PathDataCacheKeyTraits> PathDataMruCache;
 
-typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
+typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData2, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
 
 typedef EnhancedXyMru<OverlayNoBlurKey, SharedPtrOverlay, OverlayNoBlurKeyTraits> OverlayNoBlurMruCache;
 

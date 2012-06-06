@@ -272,10 +272,10 @@ void CWord::PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const O
     overlay_cache->UpdateCache(overlay_key, *overlay);
 }
 
-bool CWord::PaintFromScanLineData(const CPoint& psub, const ScanLineData& scan_line_data, const OverlayKey& key, SharedPtrOverlay* overlay)
+bool CWord::PaintFromScanLineData(const CPoint& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay)
 {
     SharedPtrOverlay raterize_result(new Overlay());
-    if(!Rasterizer::Rasterize(scan_line_data, psub.x, psub.y, raterize_result)) 
+    if(!Rasterizer::Rasterize(scan_line_data2, psub.x, psub.y, raterize_result)) 
     {     
         return false;
     }
@@ -296,11 +296,12 @@ bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const
     CSize size;
     path_data2.AlignLeftTop(&left_top, &size);
 
-    SharedPtrScanLineData tmp(new ScanLineData());
-    if(!tmp->ScanConvert(path_data2, left_top, size))
+    SharedPtrScanLineData2 tmp(new ScanLineData2());
+    if(!tmp->ScanConvert(path_data2, size))
     {
         return false;
     }
+    tmp->SetOffset(left_top);
 
     if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
     {
@@ -354,7 +355,7 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
         pos = scan_line_data_cache->Lookup(key);
         if(pos!=NULL)
         {
-            SharedPtrConstScanLineData scan_line_data = scan_line_data_cache->GetAt(pos);
+            SharedPtrConstScanLineData2 scan_line_data = scan_line_data_cache->GetAt(pos);
             scan_line_data_cache->UpdateCache( pos );
             result = PaintFromScanLineData(psub, *scan_line_data, key, overlay);
         }
