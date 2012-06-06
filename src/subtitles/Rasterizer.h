@@ -53,6 +53,8 @@ public:
     bool EndPath(HDC hdc);
     bool PartialBeginPath(HDC hdc, bool bClearPath);
     bool PartialEndPath(HDC hdc, long dx, long dy);
+    
+    void AlignLeftTop(CPoint *left_top, CSize *size);
 
     BYTE* mpPathTypes;
     POINT* mpPathPoints;
@@ -102,7 +104,7 @@ public:
     ScanLineData();
     virtual ~ScanLineData();
 
-    bool ScanConvert(PathData* path_data);
+    bool ScanConvert(const PathData& path_data, const CPoint& left_top, const CSize& size);
     bool CreateWidenedRegion(int borderX, int borderY);
     void DeleteOutlines();
 

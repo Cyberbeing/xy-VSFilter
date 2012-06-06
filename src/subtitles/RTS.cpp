@@ -292,9 +292,12 @@ bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const
     if(need_transform)
         Transform(&path_data2, CPoint(trans_org.x*8, trans_org.y*8));
 
-    SharedPtrScanLineData tmp(new ScanLineData());
+    CPoint left_top;
+    CSize size;
+    path_data2.AlignLeftTop(&left_top, &size);
 
-    if(!tmp->ScanConvert(&path_data2))
+    SharedPtrScanLineData tmp(new ScanLineData());
+    if(!tmp->ScanConvert(path_data2, left_top, size))
     {
         return false;
     }

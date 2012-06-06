@@ -1989,6 +1989,42 @@ bool PathData::PartialEndPath(HDC hdc, long dx, long dy)
     return false;
 }
 
+void PathData::AlignLeftTop(CPoint *left_top, CSize *size)
+{
+    int minx = INT_MAX;
+    int miny = INT_MAX;
+    int maxx = INT_MIN;
+    int maxy = INT_MIN;
+    for(int i=0; i<mPathPoints; ++i)
+    {
+        int ix = mpPathPoints[i].x;
+        int iy = mpPathPoints[i].y;
+        if(ix < minx) minx = ix;
+        if(ix > maxx) maxx = ix;
+        if(iy < miny) miny = iy;
+        if(iy > maxy) maxy = iy;
+    }
+    if(minx > maxx || miny > maxy)
+    {
+        _TrashPath();
+        *left_top = CPoint(0, 0);
+        *size = CSize(0, 0);
+        return;
+    }
+    minx = (minx >> 3) & ~7;
+    miny = (miny >> 3) & ~7;
+    maxx = (maxx + 7) >> 3;
+    maxy = (maxy + 7) >> 3;
+    for(int i=0; i<mPathPoints; ++i)
+    {
+        mpPathPoints[i].x -= minx*8;
+        mpPathPoints[i].y -= miny*8;
+    }
+    *left_top = CPoint(minx, miny);
+    *size = CSize(maxx+1-minx, maxy+1-miny);
+    return;
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 // ScanLineData
@@ -2153,7 +2189,7 @@ void ScanLineData::_EvaluateLine(int x0, int y0, int x1, int y1)
     }
 }
 
-bool ScanLineData::ScanConvert(PathData* path_data)
+bool ScanLineData::ScanConvert(const PathData& path_data, const CPoint& left_top, const CSize& size)
 {
     int lastmoveto = -1;
     int i;
@@ -2162,45 +2198,16 @@ bool ScanLineData::ScanConvert(PathData* path_data)
     mWideOutline.clear();
     mWideBorder = 0;
     // Determine bounding box
-    if(!path_data->mPathPoints)
+    if(!path_data.mPathPoints)
     {
         mPathOffsetX = mPathOffsetY = 0;
         mWidth = mHeight = 0;
-        return 0;
+        return false;
     }
-    int minx = INT_MAX;
-    int miny = INT_MAX;
-    int maxx = INT_MIN;
-    int maxy = INT_MIN;
-    for(i=0; i<path_data->mPathPoints; ++i)
-    {
-        int ix = path_data->mpPathPoints[i].x;
-        int iy = path_data->mpPathPoints[i].y;
-        if(ix < minx) minx = ix;
-        if(ix > maxx) maxx = ix;
-        if(iy < miny) miny = iy;
-        if(iy > maxy) maxy = iy;
-    }
-    minx = (minx >> 3) & ~7;
-    miny = (miny >> 3) & ~7;
-    maxx = (maxx + 7) >> 3;
-    maxy = (maxy + 7) >> 3;
-    for(i=0; i<path_data->mPathPoints; ++i)
-    {
-        path_data->mpPathPoints[i].x -= minx*8;
-        path_data->mpPathPoints[i].y -= miny*8;
-    }
-    if(minx > maxx || miny > maxy)
-    {
-        mWidth = mHeight = 0;
-        mPathOffsetX = mPathOffsetY = 0;
-        path_data->_TrashPath();
-        return true;
-    }
-    mWidth = maxx + 1 - minx;
-    mHeight = maxy + 1 - miny;
-    mPathOffsetX = minx;
-    mPathOffsetY = miny;
+    mWidth = size.cx;
+    mHeight = size.cy;
+    mPathOffsetX = left_top.x;
+    mPathOffsetY = left_top.y;
     // Initialize edge buffer.  We use edge 0 as a sentinel.
     mEdgeNext = 1;
     mEdgeHeapSize = 2048;
@@ -2215,9 +2222,9 @@ bool ScanLineData::ScanConvert(PathData* path_data)
     fFirstSet = false;
     firstp.x = firstp.y = 0;
     lastp.x = lastp.y = 0;
-    for(i=0; i<path_data->mPathPoints; ++i)
+    for(i=0; i<path_data.mPathPoints; ++i)
     {
-        BYTE t = path_data->mpPathTypes[i] & ~PT_CLOSEFIGURE;
+        BYTE t = path_data.mpPathTypes[i] & ~PT_CLOSEFIGURE;
         switch(t)
         {
         case PT_MOVETO:
@@ -2225,30 +2232,28 @@ bool ScanLineData::ScanConvert(PathData* path_data)
                 _EvaluateLine(lastp.x, lastp.y, firstp.x, firstp.y);
             lastmoveto = i;
             fFirstSet = false;
-            lastp = path_data->mpPathPoints[i];
+            lastp = path_data.mpPathPoints[i];
             break;
         case PT_MOVETONC:
             break;
         case PT_LINETO:
-            if(path_data->mPathPoints - (i-1) >= 2) _EvaluateLine(*path_data, i-1, i);
+            if(path_data.mPathPoints - (i-1) >= 2) _EvaluateLine(path_data, i-1, i);
             break;
         case PT_BEZIERTO:
-            if(path_data->mPathPoints - (i-1) >= 4) _EvaluateBezier(*path_data, i-1, false);
+            if(path_data.mPathPoints - (i-1) >= 4) _EvaluateBezier(path_data, i-1, false);
             i += 2;
             break;
         case PT_BSPLINETO:
-            if(path_data->mPathPoints - (i-1) >= 4) _EvaluateBezier(*path_data, i-1, true);
+            if(path_data.mPathPoints - (i-1) >= 4) _EvaluateBezier(path_data, i-1, true);
             i += 2;
             break;
         case PT_BSPLINEPATCHTO:
-            if(path_data->mPathPoints - (i-3) >= 4) _EvaluateBezier(*path_data, i-3, true);
+            if(path_data.mPathPoints - (i-3) >= 4) _EvaluateBezier(path_data, i-3, true);
             break;
         }
     }
     if(lastmoveto >= 0 && firstp != lastp)
         _EvaluateLine(lastp.x, lastp.y, firstp.x, firstp.y);
-    // Free the path since we don't need it anymore.
-    path_data->_TrashPath();
     // Convert the edges to spans.  We couldn't do this before because some of
     // the regions may have winding numbers >+1 and it would have been a pain
     // to try to adjust the spans on the fly.  We use one heap to detangle
