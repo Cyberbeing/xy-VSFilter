@@ -272,17 +272,27 @@ void CWord::PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const O
     overlay_cache->UpdateCache(overlay_key, *overlay);
 }
 
+bool CWord::PaintFromScanLineData(const CPoint& psub, const ScanLineData& scan_line_data, const OverlayKey& key, SharedPtrOverlay* overlay)
+{
+    SharedPtrOverlay raterize_result(new Overlay());
+    if(!Rasterizer::Rasterize(scan_line_data, psub.x, psub.y, raterize_result)) 
+    {     
+        return false;
+    }
+    OverlayNoBlurMruCache* overlay_no_blur_cache = CacheManager::GetOverlayNoBlurMruCache();
+    overlay_no_blur_cache->UpdateCache(key, raterize_result);
+    PaintFromNoneBluredOverlay(raterize_result, key, overlay);
+    return true;
+}
+
 bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key)
 {
     //overlay->reset(new Overlay());
     OverlayNoBlurMruCache* overlay_no_blur_cache = CacheManager::GetOverlayNoBlurMruCache();
     POSITION pos = overlay_no_blur_cache->Lookup(key);
 
-    SharedPtrOverlay raterize_result;
     if(pos==NULL)
     {
-        raterize_result.reset(new Overlay());
-
         SharedPtrConstScanLineData scan_line_data;
         ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
         POSITION pos_scan_line_data = scan_line_data_cache->Lookup(key);
@@ -345,19 +355,17 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             scan_line_data = scan_line_data_cache->GetAt(pos_scan_line_data);
             scan_line_data_cache->UpdateCache( pos_scan_line_data );
         }
-        if(!Rasterizer::Rasterize(*scan_line_data, psub.x, psub.y, raterize_result)) 
-        {     
+        if ( !PaintFromScanLineData(psub, *scan_line_data, key, overlay) )
+        {
             return false;
         }
-
-        overlay_no_blur_cache->UpdateCache(key, raterize_result);
     }
     else
     {
-        raterize_result = overlay_no_blur_cache->GetAt(pos);            
+        SharedPtrOverlay raterize_result = overlay_no_blur_cache->GetAt(pos);
         overlay_no_blur_cache->UpdateCache( pos );
-    }
-    PaintFromNoneBluredOverlay(raterize_result, key, overlay);
+        PaintFromNoneBluredOverlay(raterize_result, key, overlay);
+    }    
     return true;
 }
 
