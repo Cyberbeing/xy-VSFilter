@@ -319,6 +319,20 @@ bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const
     return PaintFromScanLineData(psub, *tmp, key, overlay);
 }
 
+bool CWord::PaintFromRawData( const CPoint& psub, const CPoint& trans_org, const OverlayKey& key, SharedPtrOverlay* overlay )
+{
+    PathDataMruCache* path_data_cache = CacheManager::GetPathDataMruCache();
+
+    PathData *tmp=new PathData();
+    SharedPtrPathData path_data(tmp);
+    if(!CreatePath(tmp))
+    {
+        return false;
+    }
+    path_data_cache->UpdateCache(key, path_data);
+    return PaintFromPathData(psub, trans_org, *tmp, key, overlay);
+}
+
 bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key)
 {
     //overlay->reset(new Overlay());
@@ -327,7 +341,6 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
 
     if(pos==NULL)
     {
-        SharedPtrConstScanLineData scan_line_data;
         ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
         POSITION pos_scan_line_data = scan_line_data_cache->Lookup(key);
         if(pos_scan_line_data==NULL)
@@ -336,14 +349,7 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
             POSITION pos_path = path_data_cache->Lookup(key);
             if(pos_path==NULL)    
             {
-                PathData *tmp=new PathData();
-                SharedPtrPathData path_data(tmp);
-                if(!CreatePath(tmp))
-                {
-                    return false;
-                }               
-                path_data_cache->UpdateCache(key, path_data);
-                if( !PaintFromPathData(psub, trans_org, *tmp, key, overlay) )
+                if( !PaintFromRawData(psub, trans_org, key, overlay) )
                 {
                     return false;
                 }
@@ -360,7 +366,7 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
         }
         else
         {
-            scan_line_data = scan_line_data_cache->GetAt(pos_scan_line_data);
+            SharedPtrConstScanLineData scan_line_data = scan_line_data_cache->GetAt(pos_scan_line_data);
             scan_line_data_cache->UpdateCache( pos_scan_line_data );
             if ( !PaintFromScanLineData(psub, *scan_line_data, key, overlay) )
             {
