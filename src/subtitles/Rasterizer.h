@@ -90,9 +90,6 @@ private:
 
     typedef unsigned char byte;
 
-protected:
-    int mPathOffsetX, mPathOffsetY;	
-
 private:
     void _ReallocEdgeBuffer(int edges);
     void _EvaluateBezier(const PathData& path_data, int ptbase, bool fBSpline);
@@ -104,15 +101,31 @@ public:
     ScanLineData();
     virtual ~ScanLineData();
 
-    bool ScanConvert(const PathData& path_data, const CPoint& left_top, const CSize& size);
+    bool ScanConvert(const PathData& path_data, const CSize& size);
     bool CreateWidenedRegion(int borderX, int borderY);
     void DeleteOutlines();
 
     friend class Rasterizer;
 };
 
-typedef ::boost::shared_ptr<const ScanLineData> SharedPtrConstScanLineData;
-typedef ::boost::shared_ptr<ScanLineData> SharedPtrScanLineData;
+class ScanLineData2:public ScanLineData
+{
+public:
+    ScanLineData2():mPathOffsetX(0),mPathOffsetY(0){}
+
+    void SetOffset(const CPoint& offset)
+    {
+        mPathOffsetX = offset.x;
+        mPathOffsetY = offset.y;
+    }
+protected:
+    int mPathOffsetX, mPathOffsetY;	
+
+    friend class Rasterizer;
+};
+
+typedef ::boost::shared_ptr<const ScanLineData2> SharedPtrConstScanLineData2;
+typedef ::boost::shared_ptr<ScanLineData2> SharedPtrScanLineData2;
 
 typedef ::boost::shared_ptr<BYTE> SharedPtrByte;
 
@@ -194,7 +207,7 @@ private:
         };
     };
 public:    
-    static bool Rasterize(const ScanLineData& scan_line_data, int xsub, int ysub, SharedPtrOverlay overlay);
+    static bool Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay);
     static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);
 
     static DrawItem* CreateDrawItem(SubPicDesc& spd, 

@@ -623,7 +623,7 @@ static void Bilinear(unsigned char *buf, int w, int h, int stride, int x_factor,
     xy_free(col_pix_buf_base);
 }
 
-bool Rasterizer::Rasterize(const ScanLineData& scan_line_data, int xsub, int ysub, SharedPtrOverlay overlay)
+bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay)
 {
     using namespace ::boost::flyweights;
 
@@ -633,19 +633,19 @@ bool Rasterizer::Rasterize(const ScanLineData& scan_line_data, int xsub, int ysu
     }
     overlay->CleanUp();
 
-    if(!scan_line_data.mWidth || !scan_line_data.mHeight)
+    if(!scan_line_data2.mWidth || !scan_line_data2.mHeight)
     {
         return true;
     }
     xsub &= 7;
     ysub &= 7;
     //xsub = ysub = 0;
-    int width = scan_line_data.mWidth + xsub;
-    int height = scan_line_data.mHeight + ysub;
-    overlay->mOffsetX = scan_line_data.mPathOffsetX - xsub;
-    overlay->mOffsetY = scan_line_data.mPathOffsetY - ysub;
-    int wide_border = (scan_line_data.mWideBorder+7)&~7;
-    overlay->mfWideOutlineEmpty = scan_line_data.mWideOutline.empty();
+    int width = scan_line_data2.mWidth + xsub;
+    int height = scan_line_data2.mHeight + ysub;
+    overlay->mOffsetX = scan_line_data2.mPathOffsetX - xsub;
+    overlay->mOffsetY = scan_line_data2.mPathOffsetY - ysub;
+    int wide_border = (scan_line_data2.mWideBorder+7)&~7;
+    overlay->mfWideOutlineEmpty = scan_line_data2.mWideOutline.empty();
     if(!overlay->mfWideOutlineEmpty)
     {
         width += 2*wide_border ;
@@ -668,7 +668,7 @@ bool Rasterizer::Rasterize(const ScanLineData& scan_line_data, int xsub, int ysu
     overlay->mpOverlayBuffer.border = overlay->mpOverlayBuffer.base + overlay->mOverlayPitch * overlay->mOverlayHeight;        
 
     // Are we doing a border?
-    const ScanLineData::tSpanBuffer* pOutline[2] = {&(scan_line_data.mOutline), &(scan_line_data.mWideOutline)};
+    const ScanLineData::tSpanBuffer* pOutline[2] = {&(scan_line_data2.mOutline), &(scan_line_data2.mWideOutline)};
     for(int i = countof(pOutline)-1; i >= 0; i--)
     {
         ScanLineData::tSpanBuffer::const_iterator it = pOutline[i]->begin();
@@ -2024,7 +2024,7 @@ void PathData::AlignLeftTop(CPoint *left_top, CSize *size)
 
 // ScanLineData
 
-ScanLineData::ScanLineData():mPathOffsetX(0),mPathOffsetY(0)
+ScanLineData::ScanLineData()
 {
 }
 
@@ -2184,7 +2184,7 @@ void ScanLineData::_EvaluateLine(int x0, int y0, int x1, int y1)
     }
 }
 
-bool ScanLineData::ScanConvert(const PathData& path_data, const CPoint& left_top, const CSize& size)
+bool ScanLineData::ScanConvert(const PathData& path_data, const CSize& size)
 {
     int lastmoveto = -1;
     int i;
@@ -2195,14 +2195,11 @@ bool ScanLineData::ScanConvert(const PathData& path_data, const CPoint& left_top
     // Determine bounding box
     if(!path_data.mPathPoints)
     {
-        mPathOffsetX = mPathOffsetY = 0;
         mWidth = mHeight = 0;
         return false;
     }
     mWidth = size.cx;
     mHeight = size.cy;
-    mPathOffsetX = left_top.x;
-    mPathOffsetY = left_top.y;
     // Initialize edge buffer.  We use edge 0 as a sentinel.
     mEdgeNext = 1;
     mEdgeHeapSize = 2048;
