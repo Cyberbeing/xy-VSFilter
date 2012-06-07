@@ -191,22 +191,6 @@ private:
 
 typedef ::boost::shared_ptr<Overlay> SharedPtrOverlay;
 
-typedef ::boost::shared_array<BYTE> SharedArrayByte;
-
-struct DrawItem
-{
-    SharedPtrOverlay overlay;
-    CRect clip_rect;
-    SharedArrayByte alpha_mask;
-    int xsub;
-    int ysub;
-    DWORD switchpts[6];
-    bool fBody;
-    bool fBorder;
-};
-
-typedef ::boost::shared_ptr<DrawItem> SharedPtrDrawItem;
-
 class Rasterizer
 {
 private:
@@ -227,19 +211,9 @@ public:
     static bool Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay);
     static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);
 
-    static DrawItem* CreateDrawItem(SubPicDesc& spd, 
-        SharedPtrOverlay overlay, 
-        const CRect& clipRect, 
-        SharedArrayByte pAlphaMask, 
-        int xsub, int ysub, 
-        const DWORD* switchpts, bool fBody, bool fBorder);
-
     static SharedPtrByte CompositeAlphaMask(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, byte* pAlphaMask, 
         int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
         CRect *outputDirtyRect);
-    static CRect Draw(SubPicDesc& spd, DrawItem& draw_item);
-
-    static CRect DryDraw(SubPicDesc& spd, DrawItem& draw_item);
 
     static CRect DryDraw(SubPicDesc& spd, 
         SharedPtrOverlay overlay, 

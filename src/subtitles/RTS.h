@@ -59,6 +59,25 @@ struct OverlayList
     }
 };
 
+class CClipper;
+typedef ::boost::shared_ptr<CClipper> SharedPtrCClipper;
+
+typedef ::boost::shared_array<BYTE> SharedArrayByte;
+
+struct DrawItem
+{
+    SharedPtrOverlay overlay;
+    CRect clip_rect;
+    SharedPtrCClipper clipper;
+    int xsub;
+    int ysub;
+    DWORD switchpts[6];
+    bool fBody;
+    bool fBorder;
+};
+
+typedef ::boost::shared_ptr<DrawItem> SharedPtrDrawItem;
+
 struct CompositeDrawItem
 {
     SharedPtrDrawItem shadow;
@@ -123,6 +142,8 @@ public:
     //friend class CWordCache;
     friend class CWordCacheKey;
     friend class PathDataCacheKey;
+    friend class ClipperAlphaMaskCacheKey;
+    friend class ClipperAlphaMaskCacheKeyTraits;
     friend std::size_t hash_value(const CWord& key); 
 };
 
@@ -168,6 +189,9 @@ public:
 
     virtual SharedPtrCWord Copy();
     virtual bool Append(const SharedPtrCWord& w);
+
+    friend class ClipperAlphaMaskCacheKey;
+    friend class ClipperAlphaMaskCacheKeyTraits;
 };
 
 enum eftype
@@ -183,6 +207,18 @@ enum eftype
 
 class Effect
 {
+public:
+    Effect()
+    {
+        memset(param, 0, sizeof(param));
+        memset(t, 0, sizeof(t));
+    }
+    bool operator==(const Effect& rhs)const
+    {
+        return type==rhs.type 
+            && !memcmp(param, rhs.param, sizeof(param))
+            && !memcmp(t, rhs.t, sizeof(t));
+    }
 public:
     enum eftype type;
     int param[8];
@@ -215,6 +251,9 @@ public:
     virtual ~CClipper();
 
     const SharedArrayByte& GetAlphaMask();
+
+    friend class ClipperAlphaMaskCacheKey;
+    friend class ClipperAlphaMaskCacheKeyTraits;
 };
 
 class CLine: private CAtlList<SharedPtrCWord>
@@ -230,7 +269,8 @@ public:
     void AddWord2Tail(SharedPtrCWord words);
     bool IsEmpty();
 
-    CRect PaintAll(CompositeDrawItemList* output, SubPicDesc& spd, const CRect& clipRect, SharedArrayByte pAlphaMask, CPoint p, const CPoint& org, const int time, const int alpha);
+    CRect PaintAll(CompositeDrawItemList* output, SubPicDesc& spd, const CRect& clipRect, const SharedPtrCClipper &clipper, 
+        CPoint p, const CPoint& org, const int time, const int alpha);
 };
 
 class CSubtitle: private CAtlList<CLine*>
@@ -251,7 +291,7 @@ public:
 
     CAtlList<SharedPtrCWord> m_words;
 
-    CClipper* m_pClipper;
+    SharedPtrCClipper m_pClipper;
 
     CRect m_rect, m_clip;
     int m_topborder, m_bottomborder;
@@ -419,8 +459,18 @@ private:
     double CalcAnimation(double dst, double src, bool fAnimate);
 
     void Draw(SubPicDesc& spd, CompositeDrawItemListList& drawItemListList);
-    
+
     CSubtitle* GetSubtitle(int entry);
+public:
+    static CRect DryDraw(SubPicDesc& spd, DrawItem& draw_item);
+    static CRect Draw( SubPicDesc& spd, DrawItem& draw_item );
+
+    static DrawItem* CreateDrawItem(SubPicDesc& spd, 
+        SharedPtrOverlay overlay, 
+        const CRect& clipRect, 
+        const SharedPtrCClipper &clipper, 
+        int xsub, int ysub, 
+        const DWORD* switchpts, bool fBody, bool fBorder);
 
 protected:
     virtual void OnChanged();
