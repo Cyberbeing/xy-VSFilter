@@ -60,7 +60,7 @@ public:
     {
         //fix me: should not do init here
         CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
-        CacheManager::GetScanLineDataMruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
+        CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
         CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
         CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_overlay_cache_max_item_num);
         SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_subpixel_pos_level) );

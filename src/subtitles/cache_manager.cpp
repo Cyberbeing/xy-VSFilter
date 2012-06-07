@@ -29,7 +29,7 @@ ULONG PathDataCacheKeyTraits::Hash( const PathDataCacheKey& key )
     return( CStringElementTraits<CString>::Hash(key.m_str) ); 
 }
 
-ULONG ScanLineDataCacheKeyTraits::Hash( const ScanLineDataCacheKey& key )
+ULONG ScanLineData2CacheKeyTraits::Hash( const ScanLineData2CacheKey& key )
 {
     //return hash_value(static_cast<PathDataCacheKey>(key)) ^ key.m_org.x ^ key.m_org.y;
     size_t hash = PathDataCacheKeyTraits::Hash(static_cast<const PathDataCacheKey&>(key));
@@ -42,7 +42,7 @@ ULONG ScanLineDataCacheKeyTraits::Hash( const ScanLineDataCacheKey& key )
 
 ULONG OverlayNoBlurKeyTraits::Hash( const OverlayNoBlurKey& key )
 {
-    ULONG hash = ScanLineDataCacheKeyTraits::Hash(static_cast<const ScanLineDataCacheKey&>(key));
+    ULONG hash = ScanLineData2CacheKeyTraits::Hash(static_cast<const ScanLineData2CacheKey&>(key));
     hash += (hash<<5);
     hash += key.m_p.x;
     hash += (hash<<5);
@@ -58,6 +58,32 @@ ULONG OverlayKeyTraits::Hash( const OverlayKey& key )
     hash += (hash<<5);
     hash += hash_value(key.m_style.get().fGaussianBlur);
     return  hash;
+}
+
+
+ULONG PathDataTraits::Hash( const PathData& key )
+{
+    ULONG hash = 515;
+    hash += (hash<<5);
+    hash += key.mPathPoints;
+    for (int i=0;i<key.mPathPoints;i++)
+    {
+        hash += (hash<<5);
+        hash += key.mpPathTypes[i];
+    }
+    for (int i=0;i<key.mPathPoints;i++)
+    {
+        hash += (hash<<5);
+        hash += key.mpPathPoints[i].x;
+        hash += (hash<<5);
+        hash += key.mpPathPoints[i].y;
+    }
+    return hash;
+}
+
+ULONG ScanLineDataCacheKeyTraits::Hash( const ScanLineDataCacheKey& key )
+{
+    return PathDataTraits::Hash(*key.m_path_data);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -137,9 +163,9 @@ bool PathDataCacheKey::CompareSTSStyle( const STSStyle& lhs, const STSStyle& rhs
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-// ScanLineDataCacheKey
+// ScanLineData2CacheKey
 
-bool ScanLineDataCacheKey::operator==( const ScanLineDataCacheKey& key ) const
+bool ScanLineData2CacheKey::operator==( const ScanLineData2CacheKey& key ) const
 { 
     return //(static_cast<PathDataCacheKey>(*this)==static_cast<PathDataCacheKey>(key)) 
         PathDataCacheKey::operator==(key) //static_cast will call copy constructer to construct a tmp obj
@@ -165,7 +191,7 @@ bool OverlayNoBlurKey::operator==( const OverlayNoBlurKey& key ) const
     //static_cast will call copy constructer to construct a tmp obj
     //return (static_cast<ScanLineDataCacheKey>(*this)==static_cast<ScanLineDataCacheKey>(key)) 
     //    && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y); 
-    return ScanLineDataCacheKey::operator==(key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y);
+    return ScanLineData2CacheKey::operator==(key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,13 +210,26 @@ bool OverlayKey::operator==( const OverlayKey& key ) const
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+// ScanLineDataCacheKey
+
+bool ScanLineDataCacheKey::operator==( const ScanLineDataCacheKey& key ) const
+{
+    return (m_path_data && key.m_path_data) ? *m_path_data==*key.m_path_data : m_path_data==key.m_path_data;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 // CacheManager
 TextInfoMruCache* CacheManager::s_text_info_cache = NULL;
 CWordMruCache* CacheManager::s_word_mru_cache = NULL;
 PathDataMruCache* CacheManager::s_path_data_mru_cache = NULL;
-ScanLineDataMruCache* CacheManager::s_scan_line_data_mru_cache = NULL;
+ScanLineData2MruCache* CacheManager::s_scan_line_data_2_mru_cache = NULL;
 OverlayNoBlurMruCache* CacheManager::s_overlay_no_blur_mru_cache = NULL;
 OverlayMruCache* CacheManager::s_overlay_mru_cache = NULL;
+
+ScanLineDataMruCache* CacheManager::s_scan_line_data_mru_cache = NULL;
+
 OverlayMruCache* CacheManager::s_subpixel_variance_cache = NULL;
 AssTagListMruCache* CacheManager::s_ass_tag_list_cache = NULL;
 
@@ -230,13 +269,13 @@ OverlayNoBlurMruCache* CacheManager::GetOverlayNoBlurMruCache()
     return s_overlay_no_blur_mru_cache;
 }
 
-ScanLineDataMruCache* CacheManager::GetScanLineDataMruCache()
+ScanLineData2MruCache* CacheManager::GetScanLineData2MruCache()
 {
-    if(s_scan_line_data_mru_cache==NULL)
+    if(s_scan_line_data_2_mru_cache==NULL)
     {
-        s_scan_line_data_mru_cache = new ScanLineDataMruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
+        s_scan_line_data_2_mru_cache = new ScanLineData2MruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
     }
-    return s_scan_line_data_mru_cache;
+    return s_scan_line_data_2_mru_cache;
 }
 
 OverlayMruCache* CacheManager::GetSubpixelVarianceCache()
@@ -246,6 +285,15 @@ OverlayMruCache* CacheManager::GetSubpixelVarianceCache()
         s_subpixel_variance_cache = new OverlayMruCache(SUBPIXEL_VARIANCE_CACHE_ITEM_NUM);
     }
     return s_subpixel_variance_cache;    
+}
+
+ScanLineDataMruCache* CacheManager::GetScanLineDataMruCache()
+{
+    if(s_scan_line_data_mru_cache==NULL)
+    {
+        s_scan_line_data_mru_cache = new ScanLineDataMruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
+    }
+    return s_scan_line_data_mru_cache;
 }
 
 AssTagListMruCache* CacheManager::GetAssTagListMruCache()

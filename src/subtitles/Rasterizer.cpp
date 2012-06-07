@@ -632,16 +632,16 @@ bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int y
         return false;
     }
     overlay->CleanUp();
-
-    if(!scan_line_data2.mWidth || !scan_line_data2.mHeight)
+    const ScanLineData& scan_line_data = *scan_line_data2.m_scan_line_data;
+    if(!scan_line_data.mWidth || !scan_line_data.mHeight)
     {
         return true;
     }
     xsub &= 7;
     ysub &= 7;
     //xsub = ysub = 0;
-    int width = scan_line_data2.mWidth + xsub;
-    int height = scan_line_data2.mHeight + ysub;
+    int width = scan_line_data.mWidth + xsub;
+    int height = scan_line_data.mHeight + ysub;
     overlay->mOffsetX = scan_line_data2.mPathOffsetX - xsub;
     overlay->mOffsetY = scan_line_data2.mPathOffsetY - ysub;
     int wide_border = (scan_line_data2.mWideBorder+7)&~7;
@@ -668,7 +668,7 @@ bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int y
     overlay->mpOverlayBuffer.border = overlay->mpOverlayBuffer.base + overlay->mOverlayPitch * overlay->mOverlayHeight;        
 
     // Are we doing a border?
-    const ScanLineData::tSpanBuffer* pOutline[2] = {&(scan_line_data2.mOutline), &(scan_line_data2.mWideOutline)};
+    const ScanLineData::tSpanBuffer* pOutline[2] = {&(scan_line_data.mOutline), &(scan_line_data2.mWideOutline)};
     for(int i = countof(pOutline)-1; i >= 0; i--)
     {
         ScanLineData::tSpanBuffer::const_iterator it = pOutline[i]->begin();
@@ -1904,6 +1904,15 @@ PathData::~PathData()
     _TrashPath();
 }
 
+bool PathData::operator==( const PathData& rhs ) const
+{
+    return (this==&rhs) || (
+        mPathPoints==rhs.mPathPoints 
+        && !memcmp(mpPathTypes, rhs.mpPathTypes, mPathPoints * sizeof(BYTE) ) 
+        && !memcmp(mpPathPoints, rhs.mpPathPoints, mPathPoints * sizeof(POINT) )
+        );
+}
+
 void PathData::_TrashPath()
 {
     delete [] mpPathTypes;
@@ -2190,8 +2199,6 @@ bool ScanLineData::ScanConvert(const PathData& path_data, const CSize& size)
     int i;
     // Drop any outlines we may have.
     mOutline.clear();
-    mWideOutline.clear();
-    mWideBorder = 0;
     // Determine bounding box
     if(!path_data.mPathPoints)
     {
@@ -2298,15 +2305,20 @@ bool ScanLineData::ScanConvert(const PathData& path_data, const CSize& size)
 
 using namespace std;
 
-void ScanLineData::_OverlapRegion(tSpanBuffer& dst, tSpanBuffer& src, int dx, int dy)
+void ScanLineData::DeleteOutlines()
+{    
+    mOutline.clear();
+}
+
+void ScanLineData2::_OverlapRegion(tSpanBuffer& dst, const tSpanBuffer& src, int dx, int dy)
 {
     tSpanBuffer temp;
     temp.reserve(dst.size() + src.size());
     dst.swap(temp);
     tSpanBuffer::iterator itA = temp.begin();
     tSpanBuffer::iterator itAE = temp.end();
-    tSpanBuffer::iterator itB = src.begin();
-    tSpanBuffer::iterator itBE = src.end();
+    tSpanBuffer::const_iterator itB = src.begin();
+    tSpanBuffer::const_iterator itBE = src.end();
     // Don't worry -- even if dy<0 this will still work! // G: hehe, the evil twin :)
     unsigned __int64 offset1 = (((__int64)dy)<<32) - dx;
     unsigned __int64 offset2 = (((__int64)dy)<<32) + dx;
@@ -2377,11 +2389,14 @@ void ScanLineData::_OverlapRegion(tSpanBuffer& dst, tSpanBuffer& src, int dx, in
     }
 }
 
-bool ScanLineData::CreateWidenedRegion(int rx, int ry)
+bool ScanLineData2::CreateWidenedRegion(int rx, int ry)
 {
     if(rx < 0) rx = 0;
     if(ry < 0) ry = 0;
     mWideBorder = max(rx,ry);
+    mWideOutline.clear();
+
+    const tSpanBuffer& out_line = m_scan_line_data->mOutline;
     if (ry > 0)
     {
         // Do a half circle.
@@ -2389,20 +2404,14 @@ bool ScanLineData::CreateWidenedRegion(int rx, int ry)
         for(int y = -ry; y <= ry; ++y)
         {
             int x = (int)(0.5 + sqrt(float(ry*ry - y*y)) * float(rx)/float(ry));
-            _OverlapRegion(mWideOutline, mOutline, x, y);
+            _OverlapRegion(mWideOutline, out_line, x, y);
         }
     }
     else if (ry == 0 && rx > 0)
     {
         // There are artifacts if we don't make at least two overlaps of the line, even at same Y coord
-        _OverlapRegion(mWideOutline, mOutline, rx, 0);
-        _OverlapRegion(mWideOutline, mOutline, rx, 0);
+        _OverlapRegion(mWideOutline, out_line, rx, 0);
+        _OverlapRegion(mWideOutline, out_line, rx, 0);
     }
     return true;
-}
-
-void ScanLineData::DeleteOutlines()
-{
-    mWideOutline.clear();
-    mOutline.clear();
 }

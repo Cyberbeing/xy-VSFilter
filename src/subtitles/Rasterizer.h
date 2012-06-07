@@ -48,6 +48,8 @@ public:
 
     PathData(const PathData&);//important! disable default copy constructor
     const PathData& operator=(const PathData&);
+    bool operator==(const PathData& rhs)const;
+
     void _TrashPath();
     bool BeginPath(HDC hdc);
     bool EndPath(HDC hdc);
@@ -76,8 +78,6 @@ private:
     typedef std::vector<tSpan> tSpanBuffer;
 
     tSpanBuffer mOutline;
-    tSpanBuffer mWideOutline;
-    int mWideBorder;
 
     struct Edge {
         int next;
@@ -95,31 +95,48 @@ private:
     void _EvaluateBezier(const PathData& path_data, int ptbase, bool fBSpline);
     void _EvaluateLine(const PathData& path_data, int pt1idx, int pt2idx);
     void _EvaluateLine(int x0, int y0, int x1, int y1);	
-    static void _OverlapRegion(tSpanBuffer& dst, tSpanBuffer& src, int dx, int dy);
 
 public:
     ScanLineData();
     virtual ~ScanLineData();
 
     bool ScanConvert(const PathData& path_data, const CSize& size);
-    bool CreateWidenedRegion(int borderX, int borderY);
     void DeleteOutlines();
 
     friend class Rasterizer;
+    friend class ScanLineData2;
 };
 
-class ScanLineData2:public ScanLineData
+typedef ::boost::shared_ptr<const ScanLineData> SharedPtrConstScanLineData;
+typedef ::boost::shared_ptr<ScanLineData> SharedPtrScanLineData;
+
+class ScanLineData2
 {
 public:
-    ScanLineData2():mPathOffsetX(0),mPathOffsetY(0){}
-
+    ScanLineData2():mPathOffsetX(0),mPathOffsetY(0),mWideBorder(0){}
+    ScanLineData2(const CPoint& left_top, const SharedPtrConstScanLineData& scan_line_data)
+        :m_scan_line_data(scan_line_data)
+        ,mPathOffsetX(left_top.x)
+        ,mPathOffsetY(left_top.y)
+    {
+    }
     void SetOffset(const CPoint& offset)
     {
         mPathOffsetX = offset.x;
         mPathOffsetY = offset.y;
     }
-protected:
+    bool CreateWidenedRegion(int borderX, int borderY);
+private:
+    typedef ScanLineData::tSpanBuffer tSpanBuffer;
+    typedef ScanLineData::tSpan tSpan;
+
+    SharedPtrConstScanLineData m_scan_line_data;
     int mPathOffsetX, mPathOffsetY;	
+    tSpanBuffer mWideOutline;
+    int mWideBorder;
+
+private:
+    static void _OverlapRegion(tSpanBuffer& dst, const tSpanBuffer& src, int dx, int dy);
 
     friend class Rasterizer;
 };
