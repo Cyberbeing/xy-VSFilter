@@ -272,7 +272,7 @@ void CWord::PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const O
     overlay_cache->UpdateCache(overlay_key, *overlay);
 }
 
-bool CWord::PaintFromScanLineData(const CPoint& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay)
+bool CWord::PaintFromScanLineData2(const CPoint& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay)
 {
     SharedPtrOverlay raterize_result(new Overlay());
     if(!Rasterizer::Rasterize(scan_line_data2, psub.x, psub.y, raterize_result)) 
@@ -287,22 +287,37 @@ bool CWord::PaintFromScanLineData(const CPoint& psub, const ScanLineData2& scan_
 
 bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const PathData& path_data, const OverlayKey& key, SharedPtrOverlay* overlay )
 {
-    PathData path_data2 = path_data;
+    PathData *path_data2 = new PathData(path_data);//fix me: this copy operation can be saved if no transform is needed
+    SharedPtrConstPathData shared_ptr_path_data2(path_data2);
     bool need_transform = NeedTransform();
     if(need_transform)
-        Transform(&path_data2, CPoint(trans_org.x*8, trans_org.y*8));
+        Transform(path_data2, CPoint(trans_org.x*8, trans_org.y*8));
 
     CPoint left_top;
     CSize size;
-    path_data2.AlignLeftTop(&left_top, &size);
+    path_data2->AlignLeftTop(&left_top, &size);
 
-    SharedPtrScanLineData2 tmp(new ScanLineData2());
-    if(!tmp->ScanConvert(path_data2, size))
+    ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
+    ScanLineDataCacheKey scan_line_data_key(shared_ptr_path_data2);
+    POSITION pos = scan_line_data_cache->Lookup(scan_line_data_key);
+    SharedPtrConstScanLineData scan_line_data;
+    if( pos != NULL )
     {
-        return false;
+        scan_line_data = scan_line_data_cache->GetAt(pos);
+        scan_line_data_cache->UpdateCache(pos);
     }
-    tmp->SetOffset(left_top);
-
+    else
+    {
+        ScanLineData *tmp = new ScanLineData();
+        scan_line_data.reset(tmp);
+        if(!tmp->ScanConvert(*path_data2, size))
+        {
+            return false;
+        }
+        scan_line_data_cache->UpdateCache(scan_line_data_key, scan_line_data);
+    }
+    ScanLineData2 *tmp = new ScanLineData2(left_top, scan_line_data);
+    SharedPtrScanLineData2 scan_line_data2( tmp );
     if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
     {
         if(!tmp->CreateWidenedRegion(static_cast<int>(m_style.get().outlineWidthX+0.5), 
@@ -318,9 +333,9 @@ bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const
             return false;
         }
     }
-    ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
-    scan_line_data_cache->UpdateCache(key, tmp); 
-    return PaintFromScanLineData(psub, *tmp, key, overlay);
+    ScanLineData2MruCache* scan_line_data2_cache = CacheManager::GetScanLineData2MruCache();
+    scan_line_data2_cache->UpdateCache(key, scan_line_data2); 
+    return PaintFromScanLineData2(psub, *tmp, key, overlay);
 }
 
 bool CWord::PaintFromRawData( const CPoint& psub, const CPoint& trans_org, const OverlayKey& key, SharedPtrOverlay* overlay )
@@ -351,13 +366,13 @@ bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverla
     }  
     else
     {
-        ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
+        ScanLineData2MruCache* scan_line_data_cache = CacheManager::GetScanLineData2MruCache();
         pos = scan_line_data_cache->Lookup(key);
         if(pos!=NULL)
         {
             SharedPtrConstScanLineData2 scan_line_data = scan_line_data_cache->GetAt(pos);
             scan_line_data_cache->UpdateCache( pos );
-            result = PaintFromScanLineData(psub, *scan_line_data, key, overlay);
+            result = PaintFromScanLineData2(psub, *scan_line_data, key, overlay);
         }
         else
         {     
@@ -1924,7 +1939,7 @@ void CRenderedTextSubtitle::Deinit()
 
     CacheManager::GetCWordMruCache()->RemoveAll();
     CacheManager::GetPathDataMruCache()->RemoveAll();
-    CacheManager::GetScanLineDataMruCache()->RemoveAll();
+    CacheManager::GetScanLineData2MruCache()->RemoveAll();
     CacheManager::GetOverlayNoBlurMruCache()->RemoveAll();
     CacheManager::GetOverlayMruCache()->RemoveAll();
     CacheManager::GetAssTagListMruCache()->RemoveAll();

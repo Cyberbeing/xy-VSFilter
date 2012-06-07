@@ -711,7 +711,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	CAutoLock cAutoLock(&m_csQueueLock);
 
     CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
-    CacheManager::GetScanLineDataMruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
+    CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
     CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
     CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_overlay_cache_max_item_num);
     SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_subpixel_pos_level) );
@@ -1327,7 +1327,7 @@ STDMETHODIMP CDirectVobSubFilter::put_ScanLineDataCacheMaxItemNum( int scan_line
 
     if(hr == NOERROR)
     {
-        CacheManager::GetScanLineDataMruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
+        CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
     }
 
     return hr;
@@ -1367,9 +1367,9 @@ STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
     caches_info->path_cache_cur_item_num    = CacheManager::GetPathDataMruCache()->GetCurItemNum();
     caches_info->path_cache_hit_count       = CacheManager::GetPathDataMruCache()->GetCacheHitCount();
     caches_info->path_cache_query_count     = CacheManager::GetPathDataMruCache()->GetQueryCount();
-    caches_info->scanline_cache_cur_item_num= CacheManager::GetScanLineDataMruCache()->GetCurItemNum();
-    caches_info->scanline_cache_hit_count   = CacheManager::GetScanLineDataMruCache()->GetCacheHitCount();
-    caches_info->scanline_cache_query_count = CacheManager::GetScanLineDataMruCache()->GetQueryCount();
+    caches_info->scanline_cache_cur_item_num= CacheManager::GetScanLineData2MruCache()->GetCurItemNum();
+    caches_info->scanline_cache_hit_count   = CacheManager::GetScanLineData2MruCache()->GetCacheHitCount();
+    caches_info->scanline_cache_query_count = CacheManager::GetScanLineData2MruCache()->GetQueryCount();
     caches_info->non_blur_cache_cur_item_num= CacheManager::GetOverlayNoBlurMruCache()->GetCurItemNum();
     caches_info->non_blur_cache_hit_count   = CacheManager::GetOverlayNoBlurMruCache()->GetCacheHitCount();
     caches_info->non_blur_cache_query_count = CacheManager::GetOverlayNoBlurMruCache()->GetQueryCount();

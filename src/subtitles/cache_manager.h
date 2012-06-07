@@ -57,27 +57,27 @@ protected:
     friend class PathDataCacheKeyTraits;
 };
 
-class ScanLineDataCacheKey: public PathDataCacheKey
+class ScanLineData2CacheKey: public PathDataCacheKey
 {
 public:
-    ScanLineDataCacheKey(const CWord& word, const POINT& org):PathDataCacheKey(word),m_org(org) { }
-    ScanLineDataCacheKey(const ScanLineDataCacheKey& key):PathDataCacheKey(key),m_org(key.m_org) { }
-    ScanLineDataCacheKey(const FwSTSStyle& style, const CStringW& str, const POINT& org)
+    ScanLineData2CacheKey(const CWord& word, const POINT& org):PathDataCacheKey(word),m_org(org) { }
+    ScanLineData2CacheKey(const ScanLineData2CacheKey& key):PathDataCacheKey(key),m_org(key.m_org) { }
+    ScanLineData2CacheKey(const FwSTSStyle& style, const CStringW& str, const POINT& org)
         :PathDataCacheKey(style, str),m_org(org) { }
-    bool operator==(const ScanLineDataCacheKey& key)const;
+    bool operator==(const ScanLineData2CacheKey& key)const;
 
     POINT m_org;
 
-    friend class ScanLineDataCacheKeyTraits;
+    friend class ScanLineData2CacheKeyTraits;
 };
 
-class OverlayNoBlurKey: public ScanLineDataCacheKey
+class OverlayNoBlurKey: public ScanLineData2CacheKey
 {
 public:
-    OverlayNoBlurKey(const CWord& word, const POINT& p, const POINT& org):ScanLineDataCacheKey(word,org),m_p(p) { }
-    OverlayNoBlurKey(const OverlayNoBlurKey& key):ScanLineDataCacheKey(key),m_p(key.m_p) { }
+    OverlayNoBlurKey(const CWord& word, const POINT& p, const POINT& org):ScanLineData2CacheKey(word,org),m_p(p) { }
+    OverlayNoBlurKey(const OverlayNoBlurKey& key):ScanLineData2CacheKey(key),m_p(key.m_p) { }
     OverlayNoBlurKey(const FwSTSStyle& style, const CStringW& str, const POINT& p, const POINT& org)
-        :ScanLineDataCacheKey(style, str, org),m_p(p) { }
+        :ScanLineData2CacheKey(style, str, org),m_p(p) { }
     bool operator==(const OverlayNoBlurKey& key)const;
 
     POINT m_p;    
@@ -92,6 +92,15 @@ public:
     bool operator==(const OverlayKey& key)const;
 
     friend class OverlayKeyTraits;
+};
+
+class ScanLineDataCacheKey
+{
+public:
+    ScanLineDataCacheKey(const SharedPtrConstPathData& path_data):m_path_data(path_data){}
+    bool operator==(const ScanLineDataCacheKey& key)const;
+
+    SharedPtrConstPathData m_path_data;
 };
 
 class TextInfoCacheKeyTraits:public CElementTraits<TextInfoCacheKey>
@@ -112,10 +121,10 @@ public:
     static ULONG Hash(const PathDataCacheKey& key);
 };
 
-class ScanLineDataCacheKeyTraits:public CElementTraits<ScanLineDataCacheKey>
+class ScanLineData2CacheKeyTraits:public CElementTraits<ScanLineData2CacheKey>
 {
 public:
-    static ULONG Hash(const ScanLineDataCacheKey& key);
+    static ULONG Hash(const ScanLineData2CacheKey& key);
 };
 
 class OverlayNoBlurKeyTraits:public CElementTraits<OverlayNoBlurKey>
@@ -128,6 +137,18 @@ class OverlayKeyTraits:public CElementTraits<OverlayKey>
 {
 public:
     static ULONG Hash(const OverlayKey& key);
+};
+
+class ScanLineDataCacheKeyTraits:public CElementTraits<ScanLineDataCacheKey>
+{
+public:
+    static ULONG Hash(const ScanLineDataCacheKey& key);
+};
+
+class PathDataTraits:public CElementTraits<PathData>
+{
+public:
+    static ULONG Hash(const PathData& key);
 };
 
 typedef EnhancedXyMru<
@@ -146,11 +167,13 @@ typedef EnhancedXyMru<CWordCacheKey, SharedPtrCWord, CWordCacheKeyTraits> CWordM
 
 typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, PathDataCacheKeyTraits> PathDataMruCache;
 
-typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData2, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
+typedef EnhancedXyMru<ScanLineData2CacheKey, SharedPtrConstScanLineData2, ScanLineData2CacheKeyTraits> ScanLineData2MruCache;
 
 typedef EnhancedXyMru<OverlayNoBlurKey, SharedPtrOverlay, OverlayNoBlurKeyTraits> OverlayNoBlurMruCache;
 
 typedef EnhancedXyMru<OverlayKey, SharedPtrOverlay, OverlayKeyTraits> OverlayMruCache;
+
+typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
 
 class CacheManager
 {
@@ -167,20 +190,26 @@ public:
 
     static TextInfoMruCache* GetTextInfoCache();
     static AssTagListMruCache* GetAssTagListMruCache();
+
+    static ScanLineDataMruCache* GetScanLineDataMruCache();
+
     static OverlayMruCache* GetSubpixelVarianceCache();
     static OverlayMruCache* GetOverlayMruCache();
     static OverlayNoBlurMruCache* GetOverlayNoBlurMruCache();
-    static ScanLineDataMruCache* GetScanLineDataMruCache();
+    static ScanLineData2MruCache* GetScanLineData2MruCache();
     static PathDataMruCache* GetPathDataMruCache();
     static CWordMruCache* GetCWordMruCache();
 private:
     static TextInfoMruCache* s_text_info_cache;
     static AssTagListMruCache* s_ass_tag_list_cache;
+
+    static ScanLineDataMruCache* s_scan_line_data_mru_cache;
+
     static OverlayMruCache* s_subpixel_variance_cache;
     static OverlayMruCache* s_overlay_mru_cache;
     static OverlayNoBlurMruCache* s_overlay_no_blur_mru_cache;
     static PathDataMruCache* s_path_data_mru_cache;
-    static ScanLineDataMruCache* s_scan_line_data_mru_cache;
+    static ScanLineData2MruCache* s_scan_line_data_2_mru_cache;
     static CWordMruCache* s_word_mru_cache;
 };
 
