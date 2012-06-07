@@ -103,6 +103,15 @@ public:
     SharedPtrConstPathData m_path_data;
 };
 
+class ClipperAlphaMaskCacheKey
+{
+public:
+    ClipperAlphaMaskCacheKey(const SharedPtrCClipper& clipper):m_clipper(clipper){}
+    bool operator==(const ClipperAlphaMaskCacheKey& key)const;
+public:
+    SharedPtrCClipper m_clipper;
+};
+
 class TextInfoCacheKeyTraits:public CElementTraits<TextInfoCacheKey>
 {
 public:
@@ -151,6 +160,13 @@ public:
     static ULONG Hash(const PathData& key);
 };
 
+class ClipperAlphaMaskCacheKeyTraits:public CElementTraits<ClipperAlphaMaskCacheKey>
+{
+public:
+    static ULONG Hash(const ClipperAlphaMaskCacheKey& key);
+    static ULONG Hash(const CClipper& key);
+};
+
 typedef EnhancedXyMru<
     TextInfoCacheKey, 
     CText::SharedPtrTextInfo, 
@@ -174,6 +190,8 @@ typedef EnhancedXyMru<OverlayNoBlurKey, SharedPtrOverlay, OverlayNoBlurKeyTraits
 typedef EnhancedXyMru<OverlayKey, SharedPtrOverlay, OverlayKeyTraits> OverlayMruCache;
 
 typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
+
+typedef EnhancedXyMru<ClipperAlphaMaskCacheKey, SharedArrayByte, ClipperAlphaMaskCacheKeyTraits> ClipperAlphaMaskMruCache;
 
 class CacheManager
 {

@@ -1358,27 +1358,6 @@ CRect Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& c
     return bbox;
 }
 
-CRect Rasterizer::Draw( SubPicDesc& spd, DrawItem& draw_item )
-{
-    return Draw(spd, draw_item.overlay, draw_item.clip_rect, draw_item.alpha_mask.get(), 
-        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
-}
-
-DrawItem* Rasterizer::CreateDrawItem( SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, SharedArrayByte pAlphaMask, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
-{
-    DrawItem* result = new DrawItem();
-    result->overlay = overlay;
-    result->clip_rect = clipRect;
-    result->alpha_mask = pAlphaMask;
-    result->xsub = xsub;
-    result->ysub = ysub;
-
-    memcpy(result->switchpts, switchpts, sizeof(result->switchpts));
-    result->fBody = fBody;
-    result->fBorder = fBorder;
-    return result;
-}
-
 CRect Rasterizer::DryDraw( SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, byte* pAlphaMask, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
 {
     CRect bbox(0, 0, 0, 0);
@@ -1408,12 +1387,6 @@ CRect Rasterizer::DryDraw( SubPicDesc& spd, SharedPtrOverlay overlay, const CRec
     bbox &= CRect(0, 0, spd.w, spd.h);
 
     return bbox;
-}
-
-CRect Rasterizer::DryDraw( SubPicDesc& spd, DrawItem& draw_item )
-{
-    return DryDraw(spd, draw_item.overlay, draw_item.clip_rect, draw_item.alpha_mask.get(), 
-        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
 }
 
 void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nHeight, DWORD argb)

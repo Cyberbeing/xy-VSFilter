@@ -86,6 +86,40 @@ ULONG ScanLineDataCacheKeyTraits::Hash( const ScanLineDataCacheKey& key )
     return PathDataTraits::Hash(*key.m_path_data);
 }
 
+ULONG ClipperAlphaMaskCacheKeyTraits::Hash( const ClipperAlphaMaskCacheKey& key )
+{
+    return Hash(*key.m_clipper);
+}
+
+ULONG ClipperAlphaMaskCacheKeyTraits::Hash( const CClipper& key )
+{
+    ULONG hash = CStringElementTraits<CString>::Hash(key.m_polygon->m_str);;
+    hash += (hash<<5);
+    hash += key.m_inverse;
+    hash += (hash<<5);
+    hash += key.m_effectType;
+    hash += (hash<<5);
+    hash += key.m_size.cx;
+    hash += (hash<<5);
+    hash += key.m_size.cy;
+    hash += (hash<<5);
+    hash += hash_value(key.m_polygon->m_scalex);
+    hash += (hash<<5);
+    hash += hash_value(key.m_polygon->m_scaley);
+
+    for (int i=0;i<sizeof(key.m_effect.param)/sizeof(key.m_effect.param[0]);i++)
+    {
+        hash += (hash<<5);
+        hash += key.m_effect.param[i];
+    }
+    for (int i=0;i<sizeof(key.m_effect.t)/sizeof(key.m_effect.t[0]);i++)
+    {
+        hash += (hash<<5);
+        hash += key.m_effect.t[i];
+    }
+    return hash;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // TextInfoCacheKey
@@ -217,6 +251,31 @@ bool ScanLineDataCacheKey::operator==( const ScanLineDataCacheKey& key ) const
     return (m_path_data && key.m_path_data) ? *m_path_data==*key.m_path_data : m_path_data==key.m_path_data;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+// ClipperAlphaMaskCacheKey
+
+bool ClipperAlphaMaskCacheKey::operator==( const ClipperAlphaMaskCacheKey& key ) const
+{
+    bool result = false;
+    if (m_clipper==key.m_clipper)
+    {
+        result = true;
+    }
+    else if ( m_clipper!=NULL && key.m_clipper!=NULL )
+    {
+        const CClipper& lhs = *m_clipper;
+        const CClipper& rhs = *key.m_clipper;
+        result = (lhs.m_polygon->m_str == rhs.m_polygon->m_str 
+            && fabs(lhs.m_polygon->m_scalex - rhs.m_polygon->m_scalex) < 0.000001
+            && fabs(lhs.m_polygon->m_scaley - rhs.m_polygon->m_scaley) < 0.000001
+            && lhs.m_size == rhs.m_size        
+            && lhs.m_inverse == rhs.m_inverse
+            && lhs.m_effectType == rhs.m_effectType
+            && lhs.m_effect == rhs.m_effect);//fix me: unsafe code
+    }
+    return result;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
