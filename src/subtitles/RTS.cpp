@@ -1158,18 +1158,15 @@ CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool 
 
 CClipper::~CClipper()
 {    
-    m_pAlphaMask.reset(NULL);
 }
 
-void CClipper::PaintBaseClipper()
+BYTE* CClipper::PaintBaseClipper()
 {
+    BYTE* result = NULL;
     //m_pAlphaMask = NULL;
     if(m_size.cx < 0 || m_size.cy < 0)
-        return;
-    m_pAlphaMask.reset(new BYTE[m_size.cx*m_size.cy]);
-    if( !m_pAlphaMask )
-        return;
-    memset( m_pAlphaMask.get(), 0, m_size.cx*m_size.cy);
+        return result;
+
     OverlayList overlay_list;
     CWord::Paint( m_polygon, CPoint(0, 0), CPoint(0, 0), &overlay_list );
     int w = overlay_list.overlay->mOverlayWidth, h = overlay_list.overlay->mOverlayHeight;
@@ -1179,9 +1176,15 @@ void CClipper::PaintBaseClipper()
     if(y < 0) {yo = -y; h -= -y; y = 0;}
     if(x+w > m_size.cx) w = m_size.cx-x;
     if(y+h > m_size.cy) h = m_size.cy-y;
-    if(w <= 0 || h <= 0) return;
+    if(w <= 0 || h <= 0) return result;
+
+    result = new BYTE[m_size.cx*m_size.cy];
+    if( !result )
+        return result;
+    memset( result, 0, m_size.cx*m_size.cy );
+
     const BYTE* src = overlay_list.overlay->mpOverlayBuffer.body + (overlay_list.overlay->mOverlayPitch * yo + xo);
-    BYTE* dst = m_pAlphaMask.get() + m_size.cx * y + x;
+    BYTE* dst = result + m_size.cx * y + x;
     while(h--)
     {
         //for(int wt=0; wt<w; ++wt)
@@ -1192,20 +1195,24 @@ void CClipper::PaintBaseClipper()
     }
     if(m_inverse)
     {
-        BYTE* dst = m_pAlphaMask.get();
+        BYTE* dst = result;
         for(int i = m_size.cx*m_size.cy; i>0; --i, ++dst)
             *dst = 0x40 - *dst; // mask is 6 bit
     }
+    return result;
 }
 
-void CClipper::PaintBannerClipper()
+BYTE* CClipper::PaintBannerClipper()
 {
     int width = m_effect.param[2];
     int w = m_size.cx, h = m_size.cy;
 
-    PaintBaseClipper();    
+    BYTE* result = PaintBaseClipper();
+    if(!result)
+        return result;
+
     int da = (64<<8)/width;
-    BYTE* am = m_pAlphaMask.get();
+    BYTE* am = result;
     for(int j = 0; j < h; j++, am += w)
     {
         int a = 0;
@@ -1218,14 +1225,17 @@ void CClipper::PaintBannerClipper()
         for(int i = k; i < w; i++, a -= da)
             am[i] = (am[i]*a)>>14;
     }
+    return result;
 }
 
-void CClipper::PaintScrollClipper()
+BYTE* CClipper::PaintScrollClipper()
 {
     int height = m_effect.param[4];
     int w = m_size.cx, h = m_size.cy;
     
-    PaintBaseClipper();
+    BYTE* result = PaintBaseClipper();
+    if(!result)
+        return result;
 
     int da = (64<<8)/height;
     int a = 0;
@@ -1235,8 +1245,8 @@ void CClipper::PaintScrollClipper()
     if(l > h) {l = h;}
     if(k < h)
     {
-        BYTE* am = &m_pAlphaMask[k*w];
-        memset(m_pAlphaMask.get(), 0, am - m_pAlphaMask.get());
+        BYTE* am = &result[k*w];
+        memset(result, 0, am - result);
         for(int j = k; j < l; j++, a += da)
         {
             for(int i = 0; i < w; i++, am++)
@@ -1251,7 +1261,7 @@ void CClipper::PaintScrollClipper()
     if(l > h) {l = h;}
     if(k < h)
     {
-        BYTE* am = &m_pAlphaMask[k*w];
+        BYTE* am = &result[k*w];
         int j = k;
         for(; j < l; j++, a += da)
         {
@@ -1260,26 +1270,25 @@ void CClipper::PaintScrollClipper()
         }
         memset(am, 0, (h-j)*w);
     }
+    return result;
 }
 
-void CClipper::Paint()
+BYTE* CClipper::Paint()
 {
-    if(!m_painted)
+    BYTE* result = NULL;
+    switch(m_effectType)
     {
-        m_painted=true;
-        switch(m_effectType)
-        {
-        case -1:
-            PaintBaseClipper();
-            break;
-        case EF_BANNER:
-            PaintBannerClipper();
-            break;
-        case EF_SCROLL:
-            PaintScrollClipper();
-            break;
-        }
+    case -1:
+        result = PaintBaseClipper();
+        break;
+    case EF_BANNER:
+        result = PaintBannerClipper();
+        break;
+    case EF_SCROLL:
+        result = PaintScrollClipper();
+        break;
     }
+    return result;
 }
 
 void CClipper::SetEffect( const Effect& effect, int effectType )
@@ -1288,10 +1297,31 @@ void CClipper::SetEffect( const Effect& effect, int effectType )
     m_effect = effect;
 }
 
-const SharedArrayByte& CClipper::GetAlphaMask()
+SharedArrayByte CClipper::GetAlphaMask( const SharedPtrCClipper& clipper )
 {
-    Paint();
-    return m_pAlphaMask;
+    if (clipper!=NULL)
+    {
+        ClipperAlphaMaskCacheKey key(clipper);
+        ClipperAlphaMaskMruCache * cache = CacheManager::GetClipperAlphaMaskMruCache();
+        POSITION pos = cache->Lookup(key);
+        if( pos!=NULL )
+        {
+            const SharedArrayByte& result = cache->GetAt(pos);
+            cache->UpdateCache(pos);
+            return result;
+        }
+        else
+        {
+            SharedArrayByte result( clipper->Paint() );
+            cache->UpdateCache(key, result);
+            return result;
+        }
+    }
+    else
+    {
+        SharedArrayByte result;
+        return result;
+    }
 }
 
 // CLine
@@ -3543,17 +3573,8 @@ CRect CRenderedTextSubtitle::DryDraw( SubPicDesc& spd, DrawItem& draw_item )
 
 CRect CRenderedTextSubtitle::Draw( SubPicDesc& spd, DrawItem& draw_item )
 {
-    if (draw_item.clipper!=NULL)
-    {
-        const SharedArrayByte& alpha_mask = draw_item.clipper->GetAlphaMask();
-        return Rasterizer::Draw(spd, draw_item.overlay, draw_item.clip_rect, alpha_mask.get(), 
-            draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
-    }
-    else
-    {
-        return Rasterizer::Draw(spd, draw_item.overlay, draw_item.clip_rect, NULL, 
-            draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
-    }    
+    return Rasterizer::Draw(spd, draw_item.overlay, draw_item.clip_rect, CClipper::GetAlphaMask(draw_item.clipper).get(), 
+        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
 }
 
 DrawItem* CRenderedTextSubtitle::CreateDrawItem( SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, 
