@@ -237,20 +237,18 @@ private:
     int m_effectType;
 
     bool m_painted;
-        
-    SharedArrayByte m_pAlphaMask;
 
-    void PaintBaseClipper();
-    void PaintBannerClipper();
-    void PaintScrollClipper();  
+    BYTE* PaintBaseClipper();
+    BYTE* PaintBannerClipper();
+    BYTE* PaintScrollClipper();  
 
-    void Paint();
+    BYTE* Paint();
 public:
     CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse);    
     void SetEffect(const Effect& effect, int effectType);
     virtual ~CClipper();
 
-    const SharedArrayByte& GetAlphaMask();
+    static const SharedArrayByte& GetAlphaMask(const SharedPtrCClipper& clipper);
 
     friend class ClipperAlphaMaskCacheKey;
     friend class ClipperAlphaMaskCacheKeyTraits;

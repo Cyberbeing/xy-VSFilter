@@ -292,6 +292,8 @@ ScanLineDataMruCache* CacheManager::s_scan_line_data_mru_cache = NULL;
 OverlayMruCache* CacheManager::s_subpixel_variance_cache = NULL;
 AssTagListMruCache* CacheManager::s_ass_tag_list_cache = NULL;
 
+ClipperAlphaMaskMruCache* CacheManager::s_clipper_alpha_mask_cache = NULL;
+
 OverlayMruCache* CacheManager::GetOverlayMruCache()
 {
     if(s_overlay_mru_cache==NULL)
@@ -371,4 +373,13 @@ TextInfoMruCache* CacheManager::GetTextInfoCache()
         s_text_info_cache = new TextInfoMruCache(TEXT_INFO_CACHE_ITEM_NUM);
     }
     return s_text_info_cache;
+}
+
+ClipperAlphaMaskMruCache* CacheManager::GetClipperAlphaMaskMruCache()
+{
+    if(s_clipper_alpha_mask_cache==NULL)
+    {
+        s_clipper_alpha_mask_cache = new ClipperAlphaMaskMruCache(CLIPPER_ALPHA_MASK_MRU_CACHE);
+    }
+    return s_clipper_alpha_mask_cache;
 }

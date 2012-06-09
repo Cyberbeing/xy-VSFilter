@@ -196,6 +196,8 @@ typedef EnhancedXyMru<ClipperAlphaMaskCacheKey, SharedArrayByte, ClipperAlphaMas
 class CacheManager
 {
 public:
+    static const int CLIPPER_ALPHA_MASK_MRU_CACHE = 8;
+
     static const int TEXT_INFO_CACHE_ITEM_NUM = 2048;
     static const int ASS_TAG_LIST_CACHE_ITEM_NUM = 256;
     static const int SUBPIXEL_VARIANCE_CACHE_ITEM_NUM = 256;
@@ -206,6 +208,7 @@ public:
     static const int PATH_CACHE_ITEM_NUM = 256;
     static const int WORD_CACHE_ITEM_NUM = 512;
 
+    static ClipperAlphaMaskMruCache* GetClipperAlphaMaskMruCache();
     static TextInfoMruCache* GetTextInfoCache();
     static AssTagListMruCache* GetAssTagListMruCache();
 
@@ -218,6 +221,8 @@ public:
     static PathDataMruCache* GetPathDataMruCache();
     static CWordMruCache* GetCWordMruCache();
 private:
+    static ClipperAlphaMaskMruCache* s_clipper_alpha_mask_cache;
+
     static TextInfoMruCache* s_text_info_cache;
     static AssTagListMruCache* s_ass_tag_list_cache;
 
