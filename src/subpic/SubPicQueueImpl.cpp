@@ -428,22 +428,31 @@ DWORD CSubPicQueue::ThreadProc()
 
 				if(rtNow < rtStop)
 				{
-					CComPtr<ISubPicEx> pStatic;
-					if(FAILED(m_pAllocator->GetStaticEx(&pStatic)))
-						break;
+                    CComPtr<ISubPicEx> pDynamic;
+                    if(FAILED(m_pAllocator->AllocDynamicEx(&pDynamic)))
+                        break;
 
-					HRESULT hr = RenderTo(pStatic, rtStart, rtStop, fps, m_bDisableAnim);
+                    if(m_pAllocator->IsDynamicWriteOnly())
+                    {
+                        CComPtr<ISubPicEx> pStatic;
+                        if(FAILED(m_pAllocator->GetStaticEx(&pStatic)))
+                            break;
 
-					if(FAILED(hr))
-						break;
+                        HRESULT hr = RenderTo(pStatic, rtStart, rtStop, fps, m_bDisableAnim);
 
-					if(S_OK != hr) // subpic was probably empty
-						continue;
+                        if(FAILED(hr))
+                            break;
 
-					CComPtr<ISubPicEx> pDynamic;
-					if(FAILED(m_pAllocator->AllocDynamicEx(&pDynamic))
-					|| FAILED(pStatic->CopyTo(pDynamic)))
-						break;
+                        if(FAILED(pStatic->CopyTo(pDynamic)))
+                            break;
+                    }
+                    else
+                    {
+                        HRESULT hr = RenderTo(pDynamic, rtStart, rtStop, fps, m_bDisableAnim);
+
+                        if(FAILED(hr))
+                            break;
+                    }
 
 					AppendQueue(pDynamic);
 				}
