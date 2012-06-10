@@ -240,7 +240,7 @@ private:
 
     BYTE* PaintBaseClipper();
     BYTE* PaintBannerClipper();
-    BYTE* PaintScrollClipper();  
+    BYTE* PaintScrollClipper();
 
     BYTE* Paint();
 public:
@@ -464,7 +464,7 @@ public:
     static CRect Draw( SubPicDesc& spd, DrawItem& draw_item );
 
     static DrawItem* CreateDrawItem(SubPicDesc& spd, 
-        SharedPtrOverlay overlay, 
+        const SharedPtrOverlay& overlay, 
         const CRect& clipRect, 
         const SharedPtrCClipper &clipper, 
         int xsub, int ysub, 

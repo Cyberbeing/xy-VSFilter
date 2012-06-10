@@ -3573,11 +3573,17 @@ CRect CRenderedTextSubtitle::DryDraw( SubPicDesc& spd, DrawItem& draw_item )
 
 CRect CRenderedTextSubtitle::Draw( SubPicDesc& spd, DrawItem& draw_item )
 {
-    return Rasterizer::Draw(spd, draw_item.overlay, draw_item.clip_rect, CClipper::GetAlphaMask(draw_item.clipper).get(), 
+    CRect result;
+    const SharedArrayByte& pAlphaMask = CClipper::GetAlphaMask(draw_item.clipper);
+    const SharedPtrByte& alpha = Rasterizer::CompositeAlphaMask(spd, draw_item.overlay, draw_item.clip_rect, pAlphaMask.get(), 
+        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder, 
+        &result);
+    Rasterizer::Draw(spd, draw_item.overlay, draw_item.clip_rect, alpha.get(), 
         draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
+    return result;
 }
 
-DrawItem* CRenderedTextSubtitle::CreateDrawItem( SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, 
+DrawItem* CRenderedTextSubtitle::CreateDrawItem( SubPicDesc& spd, const SharedPtrOverlay& overlay, const CRect& clipRect, 
     const SharedPtrCClipper &clipper, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
 {
     DrawItem* result = new DrawItem();
