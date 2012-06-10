@@ -91,6 +91,8 @@
 #define IDS_RG_YUV_RANGE                184
 #define IDS_RG_SUPPORTED_VERSION        185
 #define IDS_RG_VERSION                  186
+#define IDS_RG_SUBPICTTOBUFFER          187
+#define IDS_RG_ANIMWHENBUFFERING        188
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202

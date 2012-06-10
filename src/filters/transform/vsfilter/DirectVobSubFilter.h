@@ -102,6 +102,8 @@ public:
     STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
 	STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
     STDMETHODIMP put_ColourSpace(int colourSpace);
+    STDMETHODIMP put_SubPictToBuffer(unsigned int uSubPictToBuffer);
+    STDMETHODIMP put_AnimWhenBuffering(bool fAnimWhenBuffering);
     STDMETHODIMP put_YuvRange(int yuvRange);
     STDMETHODIMP put_Placement(bool fOverridePlacement, int xperc, int yperc);
     STDMETHODIMP put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fPolygonize);

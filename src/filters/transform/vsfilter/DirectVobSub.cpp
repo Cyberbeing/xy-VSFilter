@@ -73,6 +73,9 @@ CDirectVobSub::CDirectVobSub()
 	m_fMediaFPSEnabled = !!theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), 0);
 	m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), 0));
 
+    m_uSubPictToBuffer = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RG_SUBPICTTOBUFFER), 0);
+    m_fAnimWhenBuffering = !!theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RG_ANIMWHENBUFFERING), 0);
+
     m_overlay_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), 256);
     if(m_overlay_cache_max_item_num<0) m_overlay_cache_max_item_num = 0;
 
@@ -292,6 +295,46 @@ STDMETHODIMP CDirectVobSub::put_ColourSpace(int colourSpace)
     m_colourSpace = colourSpace;
 
     return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::get_SubPictToBuffer(unsigned int* uSubPictToBuffer)
+{
+	CAutoLock cAutoLock(&m_propsLock);
+
+	return uSubPictToBuffer ? *uSubPictToBuffer = m_uSubPictToBuffer, S_OK : E_POINTER;
+}
+
+STDMETHODIMP CDirectVobSub::put_SubPictToBuffer(unsigned int uSubPictToBuffer)
+{
+	CAutoLock cAutoLock(&m_propsLock);
+
+	if(m_uSubPictToBuffer == uSubPictToBuffer) {
+		return S_FALSE;
+	}
+
+	m_uSubPictToBuffer = uSubPictToBuffer;
+
+	return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::get_AnimWhenBuffering(bool* fAnimWhenBuffering)
+{
+	CAutoLock cAutoLock(&m_propsLock);
+
+	return fAnimWhenBuffering ? *fAnimWhenBuffering = m_fAnimWhenBuffering, S_OK : E_POINTER;
+}
+
+STDMETHODIMP CDirectVobSub::put_AnimWhenBuffering(bool fAnimWhenBuffering)
+{
+	CAutoLock cAutoLock(&m_propsLock);
+
+	if(m_fAnimWhenBuffering == fAnimWhenBuffering) {
+		return S_FALSE;
+	}
+
+	m_fAnimWhenBuffering = fAnimWhenBuffering;
+
+	return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::get_YuvRange(int* yuvRange)
@@ -820,6 +863,8 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 	theApp.WriteProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), (BYTE*)&m_MediaFPS, sizeof(m_MediaFPS));
 	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), m_ePARCompensationType);
 
+    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RG_SUBPICTTOBUFFER), m_uSubPictToBuffer);
+    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RG_ANIMWHENBUFFERING), m_fAnimWhenBuffering);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), m_overlay_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM), m_overlay_no_blur_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM), m_scan_line_data_cache_max_item_num);

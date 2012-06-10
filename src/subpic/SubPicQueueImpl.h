@@ -70,24 +70,15 @@ public:
 */
 };
 
-class CSubPicQueue : public CSubPicQueueImpl, private CAMThread
+class CSubPicQueue : public CSubPicQueueImpl, private CInterfaceList<ISubPicEx>, private CAMThread
 {
 	int m_nMaxSubPic;
 	BOOL m_bDisableAnim;
 
-	CInterfaceList<ISubPic> m_Queue;
-
 	CCritSec m_csQueueLock; // for protecting CInterfaceList<ISubPic>
-
-
-	POSITION m_subPos;//use to pass to the SubPic provider to produce the next SubPic
-
 	REFERENCE_TIME UpdateQueue();
-	void AppendQueue(ISubPic* pSubPic);
-	int GetQueueCount();
+	void AppendQueue(ISubPicEx* pSubPic);
 
-	REFERENCE_TIME m_rtQueueMin;
-	REFERENCE_TIME m_rtQueueMax;
 	REFERENCE_TIME m_rtQueueStart, m_rtInvalidate;
 
 	// CAMThread
@@ -95,8 +86,6 @@ class CSubPicQueue : public CSubPicQueueImpl, private CAMThread
 	bool m_fBreakBuffering;
 	enum {EVENT_EXIT, EVENT_TIME, EVENT_COUNT}; // IMPORTANT: _EXIT must come before _TIME if we want to exit fast from the destructor
 	HANDLE m_ThreadEvents[EVENT_COUNT];
-	enum {QueueEvents_NOTEMPTY, QueueEvents_NOTFULL, QueueEvents_COUNT};
-	HANDLE m_QueueEvents[QueueEvents_COUNT];
     DWORD ThreadProc();
 
 public:

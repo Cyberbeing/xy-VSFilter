@@ -1241,6 +1241,28 @@ STDMETHODIMP CDirectVobSubFilter::put_ColourSpace(int colourSpace)
     return hr;
 }
 
+STDMETHODIMP CDirectVobSubFilter::put_SubPictToBuffer(unsigned int uSubPictToBuffer)
+{
+	HRESULT hr = CDirectVobSub::put_SubPictToBuffer(uSubPictToBuffer);
+
+	if(hr == NOERROR && m_pInput && m_pInput->IsConnected()) {
+		InitSubPicQueue();
+	}
+
+	return hr;
+}
+
+STDMETHODIMP CDirectVobSubFilter::put_AnimWhenBuffering(bool fAnimWhenBuffering)
+{
+	HRESULT hr = CDirectVobSub::put_AnimWhenBuffering(fAnimWhenBuffering);
+
+	if(hr == NOERROR && m_pInput && m_pInput->IsConnected()) {
+		InitSubPicQueue();
+	}
+
+	return hr;
+}
+
 STDMETHODIMP CDirectVobSubFilter::put_YuvRange( int yuvRange )
 {
     CAutoLock cAutolock(&m_csQueueLock);

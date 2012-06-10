@@ -638,6 +638,8 @@ BEGIN
     IDS_RG_YUV_RANGE        "Yuv Range"
     IDS_RG_SUPPORTED_VERSION "Supported Version"
     IDS_RG_VERSION          "Version"
+    IDS_RG_SUBPICTTOBUFFER  "SubPic To Buffer"
+    IDS_RG_ANIMWHENBUFFERING "Anim When Buffering"
 END
 
 STRINGTABLE
