@@ -280,106 +280,146 @@ bool ClipperAlphaMaskCacheKey::operator==( const ClipperAlphaMaskCacheKey& key )
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // CacheManager
-TextInfoMruCache* CacheManager::s_text_info_cache = NULL;
-CWordMruCache* CacheManager::s_word_mru_cache = NULL;
-PathDataMruCache* CacheManager::s_path_data_mru_cache = NULL;
-ScanLineData2MruCache* CacheManager::s_scan_line_data_2_mru_cache = NULL;
-OverlayNoBlurMruCache* CacheManager::s_overlay_no_blur_mru_cache = NULL;
-OverlayMruCache* CacheManager::s_overlay_mru_cache = NULL;
 
-ScanLineDataMruCache* CacheManager::s_scan_line_data_mru_cache = NULL;
+struct Caches
+{
+public:
+    Caches()
+    {
+        s_clipper_alpha_mask_cache = NULL;
 
-OverlayMruCache* CacheManager::s_subpixel_variance_cache = NULL;
-AssTagListMruCache* CacheManager::s_ass_tag_list_cache = NULL;
+        s_text_info_cache = NULL;
+        s_word_mru_cache = NULL;
+        s_path_data_mru_cache = NULL;
+        s_scan_line_data_2_mru_cache = NULL;
+        s_overlay_no_blur_mru_cache = NULL;
+        s_overlay_mru_cache = NULL;
 
-ClipperAlphaMaskMruCache* CacheManager::s_clipper_alpha_mask_cache = NULL;
+        s_scan_line_data_mru_cache = NULL;
+
+        s_subpixel_variance_cache = NULL;
+        s_ass_tag_list_cache = NULL;
+    }
+    ~Caches()
+    {
+        delete s_clipper_alpha_mask_cache;
+
+        delete s_text_info_cache;
+        delete s_word_mru_cache;
+        delete s_path_data_mru_cache;
+        delete s_scan_line_data_2_mru_cache;
+        delete s_overlay_no_blur_mru_cache;
+        delete s_overlay_mru_cache;
+
+        delete s_scan_line_data_mru_cache;
+
+        delete s_subpixel_variance_cache;
+        delete s_ass_tag_list_cache;
+    }
+public:
+    ClipperAlphaMaskMruCache* s_clipper_alpha_mask_cache;
+
+    TextInfoMruCache* s_text_info_cache;
+    AssTagListMruCache* s_ass_tag_list_cache;
+
+    ScanLineDataMruCache* s_scan_line_data_mru_cache;
+
+    OverlayMruCache* s_subpixel_variance_cache;
+    OverlayMruCache* s_overlay_mru_cache;
+    OverlayNoBlurMruCache* s_overlay_no_blur_mru_cache;
+    PathDataMruCache* s_path_data_mru_cache;
+    ScanLineData2MruCache* s_scan_line_data_2_mru_cache;
+    CWordMruCache* s_word_mru_cache;
+};
+
+static Caches s_caches;
 
 OverlayMruCache* CacheManager::GetOverlayMruCache()
 {
-    if(s_overlay_mru_cache==NULL)
+    if(s_caches.s_overlay_mru_cache==NULL)
     {
-        s_overlay_mru_cache = new OverlayMruCache(OVERLAY_CACHE_ITEM_NUM);
+        s_caches.s_overlay_mru_cache = new OverlayMruCache(OVERLAY_CACHE_ITEM_NUM);
     }
-    return s_overlay_mru_cache;
+    return s_caches.s_overlay_mru_cache;
 }
 
 PathDataMruCache* CacheManager::GetPathDataMruCache()
 {
-    if (s_path_data_mru_cache==NULL)
+    if (s_caches.s_path_data_mru_cache==NULL)
     {
-        s_path_data_mru_cache = new PathDataMruCache(PATH_CACHE_ITEM_NUM);
+        s_caches.s_path_data_mru_cache = new PathDataMruCache(PATH_CACHE_ITEM_NUM);
     }
-    return s_path_data_mru_cache;
+    return s_caches.s_path_data_mru_cache;
 }
 
 CWordMruCache* CacheManager::GetCWordMruCache()
 {
-    if(s_word_mru_cache==NULL)
+    if(s_caches.s_word_mru_cache==NULL)
     {
-        s_word_mru_cache = new CWordMruCache(WORD_CACHE_ITEM_NUM);
+        s_caches.s_word_mru_cache = new CWordMruCache(WORD_CACHE_ITEM_NUM);
     }
-    return s_word_mru_cache;
+    return s_caches.s_word_mru_cache;
 }
 
 OverlayNoBlurMruCache* CacheManager::GetOverlayNoBlurMruCache()
 {
-    if(s_overlay_no_blur_mru_cache==NULL)
+    if(s_caches.s_overlay_no_blur_mru_cache==NULL)
     {
-        s_overlay_no_blur_mru_cache = new OverlayNoBlurMruCache(OVERLAY_NO_BLUR_CACHE_ITEM_NUM);
+        s_caches.s_overlay_no_blur_mru_cache = new OverlayNoBlurMruCache(OVERLAY_NO_BLUR_CACHE_ITEM_NUM);
     }
-    return s_overlay_no_blur_mru_cache;
+    return s_caches.s_overlay_no_blur_mru_cache;
 }
 
 ScanLineData2MruCache* CacheManager::GetScanLineData2MruCache()
 {
-    if(s_scan_line_data_2_mru_cache==NULL)
+    if(s_caches.s_scan_line_data_2_mru_cache==NULL)
     {
-        s_scan_line_data_2_mru_cache = new ScanLineData2MruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
+        s_caches.s_scan_line_data_2_mru_cache = new ScanLineData2MruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
     }
-    return s_scan_line_data_2_mru_cache;
+    return s_caches.s_scan_line_data_2_mru_cache;
 }
 
 OverlayMruCache* CacheManager::GetSubpixelVarianceCache()
 {
-    if(s_subpixel_variance_cache==NULL)
+    if(s_caches.s_subpixel_variance_cache==NULL)
     {
-        s_subpixel_variance_cache = new OverlayMruCache(SUBPIXEL_VARIANCE_CACHE_ITEM_NUM);
+        s_caches.s_subpixel_variance_cache = new OverlayMruCache(SUBPIXEL_VARIANCE_CACHE_ITEM_NUM);
     }
-    return s_subpixel_variance_cache;    
+    return s_caches.s_subpixel_variance_cache;    
 }
 
 ScanLineDataMruCache* CacheManager::GetScanLineDataMruCache()
 {
-    if(s_scan_line_data_mru_cache==NULL)
+    if(s_caches.s_scan_line_data_mru_cache==NULL)
     {
-        s_scan_line_data_mru_cache = new ScanLineDataMruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
+        s_caches.s_scan_line_data_mru_cache = new ScanLineDataMruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
     }
-    return s_scan_line_data_mru_cache;
+    return s_caches.s_scan_line_data_mru_cache;
 }
 
 AssTagListMruCache* CacheManager::GetAssTagListMruCache()
 {
-    if(s_ass_tag_list_cache==NULL)
+    if(s_caches.s_ass_tag_list_cache==NULL)
     {
-        s_ass_tag_list_cache = new AssTagListMruCache(ASS_TAG_LIST_CACHE_ITEM_NUM);
+        s_caches.s_ass_tag_list_cache = new AssTagListMruCache(ASS_TAG_LIST_CACHE_ITEM_NUM);
     }
-    return s_ass_tag_list_cache;  
+    return s_caches.s_ass_tag_list_cache;  
 }
 
 TextInfoMruCache* CacheManager::GetTextInfoCache()
 {
-    if(s_text_info_cache==NULL)
+    if(s_caches.s_text_info_cache==NULL)
     {
-        s_text_info_cache = new TextInfoMruCache(TEXT_INFO_CACHE_ITEM_NUM);
+        s_caches.s_text_info_cache = new TextInfoMruCache(TEXT_INFO_CACHE_ITEM_NUM);
     }
-    return s_text_info_cache;
+    return s_caches.s_text_info_cache;
 }
 
 ClipperAlphaMaskMruCache* CacheManager::GetClipperAlphaMaskMruCache()
 {
-    if(s_clipper_alpha_mask_cache==NULL)
+    if(s_caches.s_clipper_alpha_mask_cache==NULL)
     {
-        s_clipper_alpha_mask_cache = new ClipperAlphaMaskMruCache(CLIPPER_ALPHA_MASK_MRU_CACHE);
+        s_caches.s_clipper_alpha_mask_cache = new ClipperAlphaMaskMruCache(CLIPPER_ALPHA_MASK_MRU_CACHE);
     }
-    return s_clipper_alpha_mask_cache;
+    return s_caches.s_clipper_alpha_mask_cache;
 }
