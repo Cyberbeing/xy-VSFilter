@@ -220,20 +220,6 @@ public:
     static ScanLineData2MruCache* GetScanLineData2MruCache();
     static PathDataMruCache* GetPathDataMruCache();
     static CWordMruCache* GetCWordMruCache();
-private:
-    static ClipperAlphaMaskMruCache* s_clipper_alpha_mask_cache;
-
-    static TextInfoMruCache* s_text_info_cache;
-    static AssTagListMruCache* s_ass_tag_list_cache;
-
-    static ScanLineDataMruCache* s_scan_line_data_mru_cache;
-
-    static OverlayMruCache* s_subpixel_variance_cache;
-    static OverlayMruCache* s_overlay_mru_cache;
-    static OverlayNoBlurMruCache* s_overlay_no_blur_mru_cache;
-    static PathDataMruCache* s_path_data_mru_cache;
-    static ScanLineData2MruCache* s_scan_line_data_2_mru_cache;
-    static CWordMruCache* s_word_mru_cache;
 };
 
 #endif // end of __CACHE_MANAGER_H_310C134F_844C_4590_A4D2_AD30165AF10A__
