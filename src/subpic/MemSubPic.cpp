@@ -603,15 +603,45 @@ STDMETHODIMP CMemSubPic::CopyTo(ISubPicEx* pSubPic)
 	if(FAILED(GetDesc(src)) || FAILED(pSubPic->GetDesc(dst))) {
         return E_FAIL;
     }
-    while(!m_rectListDirty.IsEmpty())
+    switch (m_spd.type)
     {
-        CRect& cRect = m_rectListDirty.GetHead();
-        int w = cRect.Width(), h = cRect.Height();
-        BYTE* s = (BYTE*)src.bits + src.pitch*cRect.top + cRect.left*4;
-        BYTE* d = (BYTE*)dst.bits + dst.pitch*cRect.top + cRect.left*4;
-        for(int j = 0; j < h; j++, s += src.pitch, d += dst.pitch)
-            memcpy(d, s, w*4);
-    }
+    case MSP_RGBA:
+    case MSP_AYUV:
+    case MSP_XY_AUYV:
+        {
+            POSITION pos = m_rectListDirty.GetHeadPosition();
+            while(pos!=NULL)
+            {
+                CRect& cRect = m_rectListDirty.GetNext(pos);
+                int w = cRect.Width(), h = cRect.Height();
+                BYTE* s = reinterpret_cast<BYTE*>(src.bits) + src.pitch*cRect.top + cRect.left*4;
+                BYTE* d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*cRect.top + cRect.left*4;
+                for(int j = 0; j < h; j++, s += src.pitch, d += dst.pitch)
+                    memcpy(d, s, w*4);
+            }
+        }
+        break;
+    case MSP_AYUV_PLANAR:
+        {
+            POSITION pos = m_rectListDirty.GetHeadPosition();
+            while(pos!=NULL)
+            {
+                CRect& cRect = m_rectListDirty.GetNext(pos);
+                int w = cRect.Width(), h = cRect.Height();
+                BYTE* s = reinterpret_cast<BYTE*>(src.bits) + src.pitch*cRect.top + cRect.left;
+                BYTE* d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*cRect.top + cRect.left;
+                int plan_stride = src.pitch * src.h;
+                for (int i=0;i<4;i++)
+                {
+                    BYTE *s2 = s+i*plan_stride;
+                    BYTE *d2 = d+i*plan_stride;
+                    for(int j = 0; j < h; j++, s2 += src.pitch, d2 += dst.pitch)
+                        memcpy(d2, s2, w);
+                }
+            }
+        }
+        break;
+    }     
     return S_OK;
 }
 

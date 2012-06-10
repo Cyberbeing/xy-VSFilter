@@ -405,8 +405,10 @@ STDMETHODIMP CSubPicExImpl::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList)
         POSITION pos = dirtyRectList->GetHeadPosition();
         while(pos!=NULL)
         {
-            m_rcDirty |= dirtyRectList->GetNext(pos);
-        }
+            CRect &rect = dirtyRectList->GetNext(pos);
+            rect &= CRect(CPoint(0,0),m_size);
+            m_rcDirty |= rect;
+        }        
         MergeRects(*dirtyRectList, &m_rectListDirty);
         return S_OK;
     }
