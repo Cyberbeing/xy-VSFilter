@@ -236,6 +236,7 @@ private:
 
     bool m_painted;
 
+    GrayImage2* PaintSimpleClipper();
     GrayImage2* PaintBaseClipper();
     GrayImage2* PaintBannerClipper();
     GrayImage2* PaintScrollClipper();

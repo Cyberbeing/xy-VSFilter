@@ -1160,6 +1160,50 @@ CClipper::~CClipper()
 {    
 }
 
+GrayImage2* CClipper::PaintSimpleClipper()
+{
+    GrayImage2* result = NULL;
+    if(m_size.cx < 0 || m_size.cy < 0)
+        return result;
+
+    OverlayList overlay_list;
+    CWord::Paint( m_polygon, CPoint(0, 0), CPoint(0, 0), &overlay_list );
+    int w = overlay_list.overlay->mOverlayWidth, h = overlay_list.overlay->mOverlayHeight;
+    int x = (overlay_list.overlay->mOffsetX+4)>>3, y = (overlay_list.overlay->mOffsetY+4)>>3;
+    int xo = 0, yo = 0;
+    if(x < 0) {xo = -x; w -= -x; x = 0;}
+    if(y < 0) {yo = -y; h -= -y; y = 0;}
+    if(x+w > m_size.cx) w = m_size.cx-x;
+    if(y+h > m_size.cy) h = m_size.cy-y;
+    if(w <= 0 || h <= 0) return result;
+
+    result = new GrayImage2();
+    if( !result )
+        return result;
+    result->data.reset(new BYTE[w*h]);
+    result->pitch = w;
+    result->size.SetSize(w, h);
+    result->left_top.SetPoint(x, y);
+
+    //fix me: unnecessary copy
+    BYTE * result_data = result->data.get();
+    if(!result_data)
+    {
+        delete result;
+        return NULL;
+    }
+    const BYTE* src = overlay_list.overlay->mpOverlayBuffer.body + (overlay_list.overlay->mOverlayPitch * yo + xo);
+    while(h--)
+    {
+        //for(int wt=0; wt<w; ++wt)
+        //  dst[wt] = src[wt];
+        memcpy(result_data, src, w);
+        src += overlay_list.overlay->mOverlayPitch;
+        result_data += w;
+    }
+    return result;
+}
+
 GrayImage2* CClipper::PaintBaseClipper()
 {
     GrayImage2* result = NULL;
@@ -1293,7 +1337,14 @@ GrayImage2* CClipper::Paint()
     switch(m_effectType)
     {
     case -1:
-        result = PaintBaseClipper();
+        if (!m_inverse)
+        {
+            result = PaintSimpleClipper();
+        }
+        else
+        {
+            result = PaintBaseClipper();
+        }
         break;
     case EF_BANNER:
         result = PaintBannerClipper();
@@ -1335,7 +1386,7 @@ SharedPtrGrayImage2 CClipper::GetAlphaMask( const SharedPtrCClipper& clipper )
     {
         SharedPtrGrayImage2 result;
         return result;
-    }    
+    }
 }
 
 // CLine
@@ -3592,7 +3643,7 @@ CRect CRenderedTextSubtitle::Draw( SubPicDesc& spd, DrawItem& draw_item )
     const SharedPtrByte& alpha = Rasterizer::CompositeAlphaMask(spd, draw_item.overlay, draw_item.clip_rect, alpha_mask.get(), 
         draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder, 
         &result);
-    Rasterizer::Draw(spd, draw_item.overlay, draw_item.clip_rect, alpha.get(), 
+    Rasterizer::Draw(spd, draw_item.overlay, result, alpha.get(), 
         draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
     return result;
 }
