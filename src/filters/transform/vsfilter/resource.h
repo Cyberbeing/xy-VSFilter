@@ -175,6 +175,7 @@
 #define IDC_SPINPathCache               317
 #define IDC_SPINOverlayCache            318
 #define IDC_SPLIT1                      319
+#define IDC_EDITMaxBufferSub            319
 #define IDC_COMBO_SUBPIXEL_POS          320
 #define IDC_LABEL_SCAN_LINE_CACHE       321
 #define IDC_EDITScanlineCache           322
@@ -184,8 +185,10 @@
 #define IDC_EDITOverlayNoBlurCache      325
 #define IDC_SPINOverlayNoBlurCache      326
 #define IDC_CACHES_INFO_BTN             327
+#define IDC_SPINMaxBufferSub            328
 #define IDC_CHECK_FOLLOW_UPSTREAM       329
 #define IDC_COMBO_COLOUR_SPACE          330
+#define IDC_CHECKAnimWhenBuffering      331
 #define IDC_COMBO_YUV_RANGE             332
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
@@ -221,7 +224,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        232
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         331
+#define _APS_NEXT_CONTROL_VALUE         333
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif

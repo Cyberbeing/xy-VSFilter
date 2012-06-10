@@ -589,7 +589,6 @@ CDVSMiscPPage::CDVSMiscPPage(LPUNKNOWN pUnk, HRESULT* phr) :
 	BindControl(IDC_FLIPSUB, m_flipsub);
 	BindControl(IDC_HIDE, m_hidesub);
 	BindControl(IDC_SHOWOSDSTATS, m_showosd);
-	//BindControl(IDC_PREBUFFERING, m_prebuff);
     BindControl(IDC_COMBO_COLOUR_SPACE, m_colourSpaceDropList);
     BindControl(IDC_COMBO_YUV_RANGE, m_yuvRangeDropList);
 	BindControl(IDC_AUTORELOAD, m_autoreload);
@@ -630,7 +629,6 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->put_Flip(m_fFlipPicture, m_fFlipSubtitles);
 		m_pDirectVobSub->put_HideSubtitles(m_fHideSubtitles);
 		m_pDirectVobSub->put_OSD(m_fOSD);
-		m_pDirectVobSub->put_PreBuffering(m_fDoPreBuffering);
         m_pDirectVobSubXy->put_ColourSpace(m_colourSpace);
         m_pDirectVobSubXy->put_YuvRange(m_yuvRange);
 		m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
@@ -641,7 +639,6 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->get_Flip(&m_fFlipPicture, &m_fFlipSubtitles);
 		m_pDirectVobSub->get_HideSubtitles(&m_fHideSubtitles);
 		m_pDirectVobSub->get_OSD(&m_fOSD);
-		m_pDirectVobSub->get_PreBuffering(&m_fDoPreBuffering);        
         m_pDirectVobSubXy->get_ColourSpace(&m_colourSpace);
         m_pDirectVobSubXy->get_YuvRange(&m_yuvRange);
 		m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
@@ -827,6 +824,9 @@ CDVSBasePPage(NAME("DirectVobSub More Property Page"), pUnk, IDD_DVSMOREPAGE, ID
     BindControl(IDC_SPINOverlayNoBlurCache, m_overlay_no_blur_cache);
     BindControl(IDC_SPINOverlayCache, m_overlay_cache);
     BindControl(IDC_COMBO_SUBPIXEL_POS, m_combo_subpixel_pos);
+
+    BindControl(IDC_SPINMaxBufferSub, m_subpicttobuff);
+    BindControl(IDC_CHECKAnimWhenBuffering, m_animwhenbuff);
 }
 
 bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -884,6 +884,8 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
         m_pDirectVobSubXy->put_ScanLineDataCacheMaxItemNum(m_scan_line_data_cache_max_item_num);
         m_pDirectVobSubXy->put_PathDataCacheMaxItemNum(m_path_cache_max_item_num);
         m_pDirectVobSubXy->put_SubpixelPositionLevel(m_subpixel_pos_level);
+        m_pDirectVobSub->put_SubPictToBuffer(m_uSubPictToBuffer);
+        m_pDirectVobSub->put_AnimWhenBuffering(m_fAnimWhenBuffering);
     }
     else
     {
@@ -892,6 +894,8 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
         m_pDirectVobSubXy->get_ScanLineDataCacheMaxItemNum(&m_scan_line_data_cache_max_item_num);
         m_pDirectVobSubXy->get_PathDataCacheMaxItemNum(&m_path_cache_max_item_num);
         m_pDirectVobSubXy->get_SubpixelPositionLevel(&m_subpixel_pos_level);
+        m_pDirectVobSub->get_SubPictToBuffer(&m_uSubPictToBuffer);
+        m_pDirectVobSub->get_AnimWhenBuffering(&m_fAnimWhenBuffering);
     }
 }
 
@@ -912,6 +916,9 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         {
             m_subpixel_pos_level = 0;
         }
+
+        m_uSubPictToBuffer = m_subpicttobuff.GetPos32();
+        m_fAnimWhenBuffering = !!m_animwhenbuff.GetCheck();
     }
     else
     {
@@ -939,6 +946,10 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         m_combo_subpixel_pos.AddString( CString(_T("8x8(bilinear)")) );m_combo_subpixel_pos.SetItemData(4, 4);
 
         m_combo_subpixel_pos.SetCurSel( temp );        
+
+        m_subpicttobuff.SetPos32(m_uSubPictToBuffer);
+        m_subpicttobuff.SetRange32(0, 60);
+        m_animwhenbuff.SetCheck(m_fAnimWhenBuffering);
     }
 }
 

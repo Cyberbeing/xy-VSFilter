@@ -201,7 +201,6 @@ BEGIN
     LTEXT           "YCbCr level range",IDC_STATIC,19,103,62,11
     COMBOBOX        IDC_COMBO_COLOUR_SPACE,94,116,48,16,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "YCbCr matrix",IDC_STATIC,95,103,44,11
-    CONTROL         "Pre-&buffer subpictures",IDC_PREBUFFERING,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,148,118,88,10
     CONTROL         "&Auto-reload subtitle files after detecting modification",IDC_AUTORELOAD,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,139,185,10
     LTEXT           " (reloading is disabled while showing the property pages)",IDC_STATIC,26,150,182,8
@@ -360,6 +359,11 @@ BEGIN
     GROUPBOX        "Cache Options",IDC_STATIC,7,3,233,93
     RTEXT           "Cache LV2",IDC_LABEL_OVERLAY_NO_BLUR,20,56,57,8
     PUSHBUTTON      "caches info",IDC_CACHES_INFO_BTN,147,21,50,14
+    LTEXT           "Max pre-buffered Sub",IDC_STATIC,42,102,81,8
+    EDITTEXT        IDC_EDITMaxBufferSub,42,111,22,12,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_SPINMaxBufferSub,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,64,110,11,14
+    CONTROL         "Allow animation when buffering",IDC_CHECKAnimWhenBuffering,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,42,128,136,10
 END
 
 

@@ -119,7 +119,7 @@ public:
 [uuid("A8B25C0E-0894-4531-B668-AB1599FAF7F6")]
 class CDVSMiscPPage : public CDVSBasePPage
 {
-	bool m_fFlipPicture, m_fFlipSubtitles, m_fHideSubtitles, m_fOSD, m_fDoPreBuffering, m_fReloaderDisabled, m_fSaveFullPath;
+	bool m_fFlipPicture, m_fFlipSubtitles, m_fHideSubtitles, m_fOSD, m_fReloaderDisabled, m_fSaveFullPath;
 
     int m_colourSpace, m_yuvRange;
 
@@ -159,9 +159,13 @@ public:
 class CDVSMorePPage : public CDVSBasePPage
 {
     int m_overlay_cache_max_item_num, m_overlay_no_blur_cache_max_item_num, m_path_cache_max_item_num, m_scan_line_data_cache_max_item_num, m_subpixel_pos_level;
-
+    bool m_fAnimWhenBuffering;
+    unsigned int m_uSubPictToBuffer;
+	
     CSpinButtonCtrl m_path_cache, m_scanline_cache, m_overlay_no_blur_cache, m_overlay_cache;
-
+    CButton m_animwhenbuff;
+    CSpinButtonCtrl m_subpicttobuff;
+	
     CComboBox m_combo_subpixel_pos;
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
