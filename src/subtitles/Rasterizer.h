@@ -211,7 +211,7 @@ public:
     static bool Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay);
     static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);
 
-    static SharedPtrByte CompositeAlphaMask(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, byte* pAlphaMask, 
+    static SharedPtrByte CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOverlay& overlay, const CRect& clipRect, byte* pAlphaMask, 
         int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
         CRect *outputDirtyRect);
 
@@ -222,10 +222,10 @@ public:
         int xsub, int ysub, 
         const DWORD* switchpts, bool fBody, bool fBorder);
 
-    static CRect Draw(SubPicDesc& spd, 
+    static void Draw(SubPicDesc& spd, 
         SharedPtrOverlay overlay, 
         const CRect& clipRect, 
-        byte* pAlphaMask, 
+        byte* s_base, 
         int xsub, int ysub, 
         const DWORD* switchpts, bool fBody, bool fBorder);
 		
