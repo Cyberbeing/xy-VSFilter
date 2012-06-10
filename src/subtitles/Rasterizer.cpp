@@ -1066,7 +1066,8 @@ static const __int64 _00ff00ff00ff00ff = 0x00ff00ff00ff00ffi64;
 //    switchpts[i*2] contains a colour and switchpts[i*2+1] contains the coordinate to use that colour from
 // fBody tells whether to render the body of the subs.
 // fBorder tells whether to render the border of the subs.
-SharedPtrByte Rasterizer::CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOverlay& overlay, const CRect& clipRect, byte* pAlphaMask, 
+SharedPtrByte Rasterizer::CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOverlay& overlay, const CRect& clipRect, 
+    const GrayImage2* alpha_mask, 
     int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
     CRect *outputDirtyRect)
 {
@@ -1103,11 +1104,15 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOve
     // Grab the first colour
     DWORD color = switchpts[0];
     byte* s_base = (byte*)xy_malloc(overlay->mOverlayPitch * overlay->mOverlayHeight);
-    
+    const byte* alpha_mask_data = alpha_mask != NULL ? alpha_mask->data.get() : NULL;
+    const int alpha_mask_pitch = alpha_mask != NULL ? alpha_mask->pitch : 0;
+    if(alpha_mask_data!=NULL )
+        alpha_mask_data += alpha_mask->pitch * y + x - alpha_mask->left_top.y*alpha_mask->pitch - alpha_mask->left_top.x;
+
     if(fSingleColor)
     {
         overlay->FillAlphaMash(s_base, fBody, fBorder, xo, yo, w, h, 
-            pAlphaMask==NULL ? NULL : pAlphaMask + spd.w * y + x, spd.w,
+            alpha_mask_data, alpha_mask_pitch,
             color>>24 );
     }
     else
@@ -1124,7 +1129,7 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOve
             int new_x = sw[3] < w+xo ? sw[3] : w+xo;
             overlay->FillAlphaMash(s_base, fBody, fBorder, 
                 last_x, yo, new_x-last_x, h, 
-                pAlphaMask==NULL ? NULL : pAlphaMask + spd.w * y + x + last_x - xo, spd.w,
+                alpha_mask_data, alpha_mask_pitch,
                 alpha );   
             last_x = new_x;
             sw += 2;
@@ -1452,7 +1457,8 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
 
 // Overlay
 
-void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const byte* pBorder, int x, int y, int w, int h, const byte* pAlphaMask, int pitch, DWORD color_alpha )
+void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const byte* pBorder, int x, int y, int w, int h, 
+    const byte* pAlphaMask, int pitch, DWORD color_alpha )
 {
     pBody = pBody!=NULL ? pBody + y*mOverlayPitch + x: NULL;
     pBorder = pBorder!=NULL ? pBorder + y*mOverlayPitch + x: NULL;

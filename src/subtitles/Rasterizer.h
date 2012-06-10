@@ -191,6 +191,19 @@ private:
 
 typedef ::boost::shared_ptr<Overlay> SharedPtrOverlay;
 
+typedef ::boost::shared_array<BYTE> SharedArrayByte;
+
+struct GrayImage2
+{
+public:
+    CPoint left_top;
+    CSize size;
+    int pitch;
+    SharedArrayByte data;
+};
+
+typedef ::boost::shared_ptr<GrayImage2> SharedPtrGrayImage2;
+
 class Rasterizer
 {
 private:
@@ -211,7 +224,8 @@ public:
     static bool Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay);
     static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);
 
-    static SharedPtrByte CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOverlay& overlay, const CRect& clipRect, byte* pAlphaMask, 
+    static SharedPtrByte CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOverlay& overlay, const CRect& clipRect, 
+        const GrayImage2* alpha_mask, 
         int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
         CRect *outputDirtyRect);
 

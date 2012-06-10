@@ -62,8 +62,6 @@ struct OverlayList
 class CClipper;
 typedef ::boost::shared_ptr<CClipper> SharedPtrCClipper;
 
-typedef ::boost::shared_array<BYTE> SharedArrayByte;
-
 struct DrawItem
 {
     SharedPtrOverlay overlay;
@@ -238,17 +236,17 @@ private:
 
     bool m_painted;
 
-    BYTE* PaintBaseClipper();
-    BYTE* PaintBannerClipper();
-    BYTE* PaintScrollClipper();
-
-    BYTE* Paint();
+    GrayImage2* PaintBaseClipper();
+    GrayImage2* PaintBannerClipper();
+    GrayImage2* PaintScrollClipper();
+    
+    GrayImage2* Paint();
 public:
     CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse);    
     void SetEffect(const Effect& effect, int effectType);
     virtual ~CClipper();
 
-    static SharedArrayByte GetAlphaMask(const SharedPtrCClipper& clipper);
+    static SharedPtrGrayImage2 GetAlphaMask(const SharedPtrCClipper& clipper);
 
     friend class ClipperAlphaMaskCacheKey;
     friend class ClipperAlphaMaskCacheKeyTraits;
