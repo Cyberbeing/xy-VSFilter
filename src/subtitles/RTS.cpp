@@ -1297,7 +1297,7 @@ void CClipper::SetEffect( const Effect& effect, int effectType )
     m_effect = effect;
 }
 
-const SharedArrayByte& CClipper::GetAlphaMask( const SharedPtrCClipper& clipper )
+SharedArrayByte CClipper::GetAlphaMask( const SharedPtrCClipper& clipper )
 {
     if (clipper!=NULL)
     {
@@ -3573,8 +3573,7 @@ CRect CRenderedTextSubtitle::DryDraw( SubPicDesc& spd, DrawItem& draw_item )
 
 CRect CRenderedTextSubtitle::Draw( SubPicDesc& spd, DrawItem& draw_item )
 {
-    const SharedArrayByte& pAlphaMask = CClipper::GetAlphaMask(draw_item.clipper);
-    return Rasterizer::Draw(spd, draw_item.overlay, draw_item.clip_rect, pAlphaMask.get(), 
+    return Rasterizer::Draw(spd, draw_item.overlay, draw_item.clip_rect, CClipper::GetAlphaMask(draw_item.clipper).get(), 
         draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
 }
 

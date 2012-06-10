@@ -248,7 +248,7 @@ public:
     void SetEffect(const Effect& effect, int effectType);
     virtual ~CClipper();
 
-    static const SharedArrayByte& GetAlphaMask(const SharedPtrCClipper& clipper);
+    static SharedArrayByte GetAlphaMask(const SharedPtrCClipper& clipper);
 
     friend class ClipperAlphaMaskCacheKey;
     friend class ClipperAlphaMaskCacheKeyTraits;
