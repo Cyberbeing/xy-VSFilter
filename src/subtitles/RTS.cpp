@@ -1160,9 +1160,9 @@ CClipper::~CClipper()
 {    
 }
 
-BYTE* CClipper::PaintBaseClipper()
+GrayImage2* CClipper::PaintBaseClipper()
 {
-    BYTE* result = NULL;
+    GrayImage2* result = NULL;
     //m_pAlphaMask = NULL;
     if(m_size.cx < 0 || m_size.cy < 0)
         return result;
@@ -1178,13 +1178,25 @@ BYTE* CClipper::PaintBaseClipper()
     if(y+h > m_size.cy) h = m_size.cy-y;
     if(w <= 0 || h <= 0) return result;
 
-    result = new BYTE[m_size.cx*m_size.cy];
+    result = new GrayImage2();
     if( !result )
         return result;
-    memset( result, 0, m_size.cx*m_size.cy );
+    result->data.reset(new BYTE[m_size.cx*m_size.cy]);
+    result->pitch = m_size.cx;
+    result->size = m_size;
+    result->left_top.SetPoint(0, 0);
+
+    BYTE * result_data = result->data.get();
+    if(!result_data)
+    {
+        delete result;
+        return NULL;
+    }
+
+    memset( result_data, 0, m_size.cx*m_size.cy );
 
     const BYTE* src = overlay_list.overlay->mpOverlayBuffer.body + (overlay_list.overlay->mOverlayPitch * yo + xo);
-    BYTE* dst = result + m_size.cx * y + x;
+    BYTE* dst = result_data + m_size.cx * y + x;
     while(h--)
     {
         //for(int wt=0; wt<w; ++wt)
@@ -1195,24 +1207,24 @@ BYTE* CClipper::PaintBaseClipper()
     }
     if(m_inverse)
     {
-        BYTE* dst = result;
+        BYTE* dst = result_data;
         for(int i = m_size.cx*m_size.cy; i>0; --i, ++dst)
             *dst = 0x40 - *dst; // mask is 6 bit
     }
     return result;
 }
 
-BYTE* CClipper::PaintBannerClipper()
+GrayImage2* CClipper::PaintBannerClipper()
 {
     int width = m_effect.param[2];
     int w = m_size.cx, h = m_size.cy;
 
-    BYTE* result = PaintBaseClipper();
+    GrayImage2* result = PaintBaseClipper();
     if(!result)
         return result;
 
     int da = (64<<8)/width;
-    BYTE* am = result;
+    BYTE* am = result->data.get();
     for(int j = 0; j < h; j++, am += w)
     {
         int a = 0;
@@ -1228,14 +1240,16 @@ BYTE* CClipper::PaintBannerClipper()
     return result;
 }
 
-BYTE* CClipper::PaintScrollClipper()
+GrayImage2* CClipper::PaintScrollClipper()
 {
     int height = m_effect.param[4];
     int w = m_size.cx, h = m_size.cy;
     
-    BYTE* result = PaintBaseClipper();
+    GrayImage2* result = PaintBaseClipper();
     if(!result)
         return result;
+
+    BYTE* data = result->data.get();
 
     int da = (64<<8)/height;
     int a = 0;
@@ -1245,8 +1259,8 @@ BYTE* CClipper::PaintScrollClipper()
     if(l > h) {l = h;}
     if(k < h)
     {
-        BYTE* am = &result[k*w];
-        memset(result, 0, am - result);
+        BYTE* am = &data[k*w];
+        memset(result, 0, am - data);
         for(int j = k; j < l; j++, a += da)
         {
             for(int i = 0; i < w; i++, am++)
@@ -1261,7 +1275,7 @@ BYTE* CClipper::PaintScrollClipper()
     if(l > h) {l = h;}
     if(k < h)
     {
-        BYTE* am = &result[k*w];
+        BYTE* am = &data[k*w];
         int j = k;
         for(; j < l; j++, a += da)
         {
@@ -1273,9 +1287,9 @@ BYTE* CClipper::PaintScrollClipper()
     return result;
 }
 
-BYTE* CClipper::Paint()
+GrayImage2* CClipper::Paint()
 {
-    BYTE* result = NULL;
+    GrayImage2* result = NULL;
     switch(m_effectType)
     {
     case -1:
@@ -1297,7 +1311,7 @@ void CClipper::SetEffect( const Effect& effect, int effectType )
     m_effect = effect;
 }
 
-SharedArrayByte CClipper::GetAlphaMask( const SharedPtrCClipper& clipper )
+SharedPtrGrayImage2 CClipper::GetAlphaMask( const SharedPtrCClipper& clipper )
 {
     if (clipper!=NULL)
     {
@@ -1306,22 +1320,22 @@ SharedArrayByte CClipper::GetAlphaMask( const SharedPtrCClipper& clipper )
         POSITION pos = cache->Lookup(key);
         if( pos!=NULL )
         {
-            const SharedArrayByte& result = cache->GetAt(pos);
+            const SharedPtrGrayImage2& result = cache->GetAt(pos);
             cache->UpdateCache(pos);
             return result;
         }
         else
         {
-            SharedArrayByte result( clipper->Paint() );
+            SharedPtrGrayImage2 result( clipper->Paint() );
             cache->UpdateCache(key, result);
             return result;
         }
     }
     else
     {
-        SharedArrayByte result;
+        SharedPtrGrayImage2 result;
         return result;
-    }
+    }    
 }
 
 // CLine
@@ -3574,8 +3588,8 @@ CRect CRenderedTextSubtitle::DryDraw( SubPicDesc& spd, DrawItem& draw_item )
 CRect CRenderedTextSubtitle::Draw( SubPicDesc& spd, DrawItem& draw_item )
 {
     CRect result;
-    const SharedArrayByte& pAlphaMask = CClipper::GetAlphaMask(draw_item.clipper);
-    const SharedPtrByte& alpha = Rasterizer::CompositeAlphaMask(spd, draw_item.overlay, draw_item.clip_rect, pAlphaMask.get(), 
+    const SharedPtrGrayImage2& alpha_mask = CClipper::GetAlphaMask(draw_item.clipper);
+    const SharedPtrByte& alpha = Rasterizer::CompositeAlphaMask(spd, draw_item.overlay, draw_item.clip_rect, alpha_mask.get(), 
         draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder, 
         &result);
     Rasterizer::Draw(spd, draw_item.overlay, draw_item.clip_rect, alpha.get(), 

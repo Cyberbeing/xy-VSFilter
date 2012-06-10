@@ -191,7 +191,7 @@ typedef EnhancedXyMru<OverlayKey, SharedPtrOverlay, OverlayKeyTraits> OverlayMru
 
 typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
 
-typedef EnhancedXyMru<ClipperAlphaMaskCacheKey, SharedArrayByte, ClipperAlphaMaskCacheKeyTraits> ClipperAlphaMaskMruCache;
+typedef EnhancedXyMru<ClipperAlphaMaskCacheKey, SharedPtrGrayImage2, ClipperAlphaMaskCacheKeyTraits> ClipperAlphaMaskMruCache;
 
 class CacheManager
 {
