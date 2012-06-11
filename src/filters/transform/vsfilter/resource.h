@@ -89,6 +89,7 @@
 #define IDS_RG_BT601_WIDTH              182
 #define IDS_RG_BT601_HEIGHT             183
 #define IDS_RG_YUV_RANGE                184
+#define IDS_RG_HIDE_TRAY_ICON           185
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
@@ -99,6 +100,7 @@
 #define IDC_CACHESUB                    206
 #define IDC_ONLYSHOWFORCEDSUBS          207
 #define IDC_POLYGONIZE                  208
+#define IDC_CHECKBOX_HideTrayIcon       209
 #define IDC_FONT                        212
 #define IDC_CONFIGDLG                   213
 #define IDC_SHADOW                      214

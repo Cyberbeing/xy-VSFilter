@@ -70,6 +70,7 @@ class CDVSMainPPage : public CDVSBasePPage
 	int m_iSelectedLanguage, m_nLangs;
 	WCHAR** m_ppLangs;
 	bool m_fOverridePlacement;
+    bool m_fHideTrayIcon;
 	int	m_PlacementXperc, m_PlacementYperc;
 	STSStyle m_defStyle;
 	bool m_fOnlyShowForcedVobSubs;
@@ -82,7 +83,7 @@ class CDVSMainPPage : public CDVSBasePPage
 	CButton m_font, m_forcedsubs;
 	CButton m_AutoPARCompensation;
 	CComboBox m_PARCombo;
-
+    CButton m_hide_tray_icon;
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual void UpdateControlData(bool fSave);

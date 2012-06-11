@@ -69,6 +69,7 @@ CDirectVobSub::CDirectVobSub()
 	m_SubtitleSpeedDiv = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), 1000);
 	m_fMediaFPSEnabled = !!theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), 0);
 	m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), 0));
+    m_fHideTrayIcon =  !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), 0);
 
     m_overlay_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), 256);
     if(m_overlay_cache_max_item_num<0) m_overlay_cache_max_item_num = 0;
@@ -783,6 +784,25 @@ STDMETHODIMP CDirectVobSub::put_FollowUpstreamPreferredOrder( bool fFollowUpstre
     return S_OK;
 }
 
+STDMETHODIMP CDirectVobSub::get_HideTrayIcon( bool *fHideTrayIcon )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(fHideTrayIcon) *fHideTrayIcon=m_fHideTrayIcon;
+
+    return S_OK;
+}
+
+STDMETHODIMP CDirectVobSub::put_HideTrayIcon( bool fHideTrayIcon )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(m_fHideTrayIcon == fHideTrayIcon) return S_FALSE;
+    m_fHideTrayIcon = fHideTrayIcon;
+
+    return S_OK;
+}
+
 STDMETHODIMP CDirectVobSub::UpdateRegistry()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
@@ -816,6 +836,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 	theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), m_fMediaFPSEnabled);
 	theApp.WriteProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), (BYTE*)&m_MediaFPS, sizeof(m_MediaFPS));
 	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), m_ePARCompensationType);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), m_fHideTrayIcon);
 
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), m_overlay_cache_max_item_num);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM), m_overlay_no_blur_cache_max_item_num);

@@ -624,7 +624,7 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
 	}
     if (!reconnected && m_pOutput->IsConnected())
     {
-        if(!m_hSystrayThread)
+        if(!m_hSystrayThread && !m_fHideTrayIcon)
         {
             m_tbid.graph = m_pGraph;
             m_tbid.dvs = static_cast<IDirectVobSub*>(this);

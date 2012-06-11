@@ -117,6 +117,15 @@ extern "C" {
         STDMETHOD(put_FollowUpstreamPreferredOrder) (THIS_
             bool fFollowUpstreamPreferredOrder
             ) PURE;
+
+        //
+        STDMETHOD(get_HideTrayIcon) (THIS_
+            bool *fHideTrayIcon
+            ) PURE;
+
+        STDMETHOD(put_HideTrayIcon) (THIS_
+            bool fHideTrayIcon
+            ) PURE;
 	};
 
 #ifdef __cplusplus

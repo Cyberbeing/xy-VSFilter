@@ -180,9 +180,12 @@ BEGIN
     COMBOBOX        IDC_LANGCOMBO,15,50,95,65,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CTEXT           "This space was intentionally left blank... :)",IDC_STATIC,7,188,232,31,SS_CENTERIMAGE | NOT WS_VISIBLE | WS_BORDER
     LTEXT           "Language:",IDC_STATIC,15,37,35,8
-    GROUPBOX        "Aspect ratio settings",IDC_STATIC,7,112,232,47
+    GROUPBOX        "Aspect ratio settings",IDC_STATIC,7,112,111,47
     COMBOBOX        IDC_PARCOMBO,15,138,95,43,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "PAR compensation",IDC_STATIC,15,126,62,8
+    GROUPBOX        "Systray Settings",IDC_STATIC,124,112,115,35
+    CONTROL         "&Hide tray icon",IDC_CHECKBOX_HideTrayIcon,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,132,126,99,12
 END
 
 IDD_DVSMISCPAGE DIALOGEX 0, 0, 247, 200
@@ -636,6 +639,7 @@ BEGIN
     IDS_RG_BT601_WIDTH      "bt.601 width(for guess)"
     IDS_RG_BT601_HEIGHT     "bt.601 height(for guess)"
     IDS_RG_YUV_RANGE        "Yuv Range"
+    IDS_RG_HIDE_TRAY_ICON   "hide tray icon"
 END
 
 STRINGTABLE

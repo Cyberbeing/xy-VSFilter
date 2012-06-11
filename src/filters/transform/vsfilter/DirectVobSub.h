@@ -60,6 +60,8 @@ protected:
 	bool m_fBufferVobSub, m_fOnlyShowForcedVobSubs, m_fPolygonize;
 	CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;
 
+    bool m_fHideTrayIcon;
+
     static int const MAX_COLOR_SPACE = 256;
     ColorSpaceId m_outputColorSpace[MAX_COLOR_SPACE];
     bool m_selectedOutputColorSpace[MAX_COLOR_SPACE];
@@ -171,6 +173,9 @@ public:
 
     STDMETHODIMP get_FollowUpstreamPreferredOrder(bool *fFollowUpstreamPreferredOrder);
     STDMETHODIMP put_FollowUpstreamPreferredOrder(bool fFollowUpstreamPreferredOrder);
+
+    STDMETHODIMP get_HideTrayIcon(bool *fHideTrayIcon);
+    STDMETHODIMP put_HideTrayIcon(bool fHideTrayIcon);
 
 	STDMETHODIMP UpdateRegistry();
 

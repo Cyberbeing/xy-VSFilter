@@ -292,6 +292,7 @@ CDVSMainPPage::CDVSMainPPage(LPUNKNOWN pUnk, HRESULT* phr) :
 	BindControl(IDC_FONT, m_font);
 	BindControl(IDC_ONLYSHOWFORCEDSUBS, m_forcedsubs);
 	BindControl(IDC_PARCOMBO, m_PARCombo);
+    BindControl(IDC_CHECKBOX_HideTrayIcon, m_hide_tray_icon);
 }
 
 CDVSMainPPage::~CDVSMainPPage()
@@ -387,6 +388,7 @@ void CDVSMainPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->put_VobSubSettings(true, m_fOnlyShowForcedVobSubs, false);
 		m_pDirectVobSub->put_TextSettings(&m_defStyle);
 		m_pDirectVobSub->put_AspectRatioSettings(&m_ePARCompensationType);
+        m_pDirectVobSubXy->put_HideTrayIcon(m_fHideTrayIcon);
 	}
 	else
 	{
@@ -400,6 +402,7 @@ void CDVSMainPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->get_VobSubSettings(NULL, &m_fOnlyShowForcedVobSubs, NULL);
 		m_pDirectVobSub->get_TextSettings(&m_defStyle);
 		m_pDirectVobSub->get_AspectRatioSettings(&m_ePARCompensationType);
+        m_pDirectVobSubXy->get_HideTrayIcon(&m_fHideTrayIcon);
 	}
 }
 
@@ -423,6 +426,7 @@ void CDVSMainPPage::UpdateControlData(bool fSave)
 			m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(m_PARCombo.GetItemData(m_PARCombo.GetCurSel()));
 		else
 			m_ePARCompensationType = CSimpleTextSubtitle::EPCTDisabled;
+        m_fHideTrayIcon = !!m_hide_tray_icon.GetCheck();
 	}
 	else
 	{
@@ -461,6 +465,7 @@ void CDVSMainPPage::UpdateControlData(bool fSave)
 		m_PARCombo.SetItemData(3, CSimpleTextSubtitle::EPCTAccurateSize);
 		if (m_ePARCompensationType == CSimpleTextSubtitle::EPCTAccurateSize)
 			m_PARCombo.SetCurSel(3);
+        m_hide_tray_icon.SetCheck(m_fHideTrayIcon);
 	}
 }
 
