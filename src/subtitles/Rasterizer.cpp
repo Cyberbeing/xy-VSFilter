@@ -1080,6 +1080,11 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOve
     // Limit drawn area to intersection of rendering surface and rectangular clip area
     CRect r(0, 0, spd.w, spd.h);
     r &= clipRect;
+    if (alpha_mask!=NULL)
+    {
+        r &= CRect(alpha_mask->left_top, alpha_mask->size);
+    }
+
     // Remember that all subtitle coordinates are specified in 1/8 pixels
     // (x+4)>>3 rounds to nearest whole pixel.
     // ??? What is xsub, ysub, mOffsetX and mOffsetY ?    
@@ -1096,7 +1101,6 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOve
     // Check if there's actually anything to render
     if(w <= 0 || h <= 0) return(result);
     outputDirtyRect->SetRect(x, y, x+w, y+h);
-    *outputDirtyRect &= CRect(0, 0, spd.w, spd.h);
 
     bool fSingleColor = (switchpts[1]==0xffffffff);
 
