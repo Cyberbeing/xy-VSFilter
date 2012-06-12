@@ -151,7 +151,9 @@ struct Overlay
 public:
     Overlay()
     {
-        memset(this, 0, sizeof(*this));//todo: fix me. not safe.
+        mOffsetX=mOffsetY=mWidth=mHeight=0;
+        mOverlayWidth=mOverlayHeight=mOverlayPitch=0;
+        mfWideOutlineEmpty = false;
     }
     ~Overlay()
     {
@@ -159,9 +161,7 @@ public:
     }
 
     void CleanUp()
-    {
-        xy_free(mpOverlayBuffer.base);
-        memset(&mpOverlayBuffer, 0, sizeof(mpOverlayBuffer));        
+    {  
         mOverlayWidth=mOverlayHeight=mOverlayPitch=0;
         mfWideOutlineEmpty = false;
     }
@@ -171,12 +171,9 @@ public:
         const byte* pAlphaMask, int pitch, DWORD color_alpha);
 
     Overlay* GetSubpixelVariance(unsigned int xshift, unsigned int yshift);
-
-    struct {
-        byte *base;
-        byte *body;
-        byte *border;
-    } mpOverlayBuffer;
+public:
+    SharedPtrByte mBody;
+    SharedPtrByte mBorder;
     int mOffsetX, mOffsetY;
     int mWidth, mHeight;
         
@@ -191,15 +188,13 @@ private:
 
 typedef ::boost::shared_ptr<Overlay> SharedPtrOverlay;
 
-typedef ::boost::shared_array<BYTE> SharedArrayByte;
-
 struct GrayImage2
 {
 public:
     CPoint left_top;
     CSize size;
     int pitch;
-    SharedArrayByte data;
+    SharedPtrByte data;
 };
 
 typedef ::boost::shared_ptr<GrayImage2> SharedPtrGrayImage2;
