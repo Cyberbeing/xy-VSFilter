@@ -843,7 +843,7 @@ bool CWord::CreateOpaqueBox()
 
 void CWord::PaintAll( SharedPtrCWord word, 
     const CPoint& shadowPos, const CPoint& outlinePos, const CPoint& bodyPos, const CPoint& org,  
-    OverlayList* shadow, OverlayList* outline, OverlayList* body )
+    SharedPtrOverlay* shadow, SharedPtrOverlay* outline, SharedPtrOverlay* body )
 {
     CPoint transOrg;
     if(shadow!=NULL) 
@@ -859,18 +859,38 @@ void CWord::PaintAll( SharedPtrCWord word,
     else if(body!=NULL)
     {
         transOrg = org - bodyPos;
-    }
+    }    
     if(shadow!=NULL)
     {
-        Paint(word, shadowPos, transOrg, shadow);
+        OverlayList overlay_list;
+        Paint(word, shadowPos, transOrg, &overlay_list);
+        if(word->m_style.get().borderStyle == 0)
+        {
+            *shadow = overlay_list.overlay;
+        }
+        else if (word->m_style.get().borderStyle==1 && overlay_list.next)
+        {
+            *shadow = overlay_list.next->overlay;
+        }
     }
     if(outline!=NULL)
     {
-        Paint(word, outlinePos, transOrg, outline);
+        OverlayList overlay_list;
+        Paint(word, outlinePos, transOrg, &overlay_list);
+        if(word->m_style.get().borderStyle == 0)
+        {
+            *outline = overlay_list.overlay;
+        }
+        else if (word->m_style.get().borderStyle==1 && overlay_list.next)
+        {
+            *outline = overlay_list.next->overlay;
+        }
     }
     if(body!=NULL)
     {
-        Paint(word, bodyPos, transOrg, body);
+        OverlayList overlay_list;
+        Paint(word, bodyPos, transOrg, &overlay_list);
+        *body = overlay_list.overlay;
     }    
 }
 
@@ -1473,7 +1493,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
         bool hasOutline = w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0 && !(w->m_ktype == 2 && time < w->m_kstart);
         bool hasBody = true;
 
-        OverlayList shadowOverlay, outlineOverlay, bodyOverlay;
+        SharedPtrOverlay shadowOverlay, outlineOverlay, bodyOverlay;
         CWord::PaintAll(w, shadowPos, outlinePos, bodyPos, org,
             hasShadow ? &shadowOverlay : NULL, 
             hasOutline ? &outlineOverlay : NULL, 
@@ -1497,7 +1517,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             if(w->m_style.get().borderStyle == 0)
             {
                 outputItem.shadow.reset( 
-                    CRenderedTextSubtitle::CreateDrawItem(spd, shadowOverlay.overlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw,
+                    CRenderedTextSubtitle::CreateDrawItem(spd, shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw,
                     w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
                     (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart))
                     );
@@ -1506,7 +1526,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
                 outputItem.shadow.reset( 
-                    CRenderedTextSubtitle::CreateDrawItem(spd, shadowOverlay.next->overlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw, true, false)
+                    CRenderedTextSubtitle::CreateDrawItem(spd, shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw, true, false)
                     );
                 bbox |= CRenderedTextSubtitle::DryDraw(spd, *outputItem.shadow);
             }
@@ -1530,14 +1550,14 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             if(w->m_style.get().borderStyle == 0)
             {
                 outputItem.outline.reset( 
-                    CRenderedTextSubtitle::CreateDrawItem(spd, outlineOverlay.overlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
+                    CRenderedTextSubtitle::CreateDrawItem(spd, outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
                     );
                 bbox |= CRenderedTextSubtitle::DryDraw(spd, *outputItem.outline);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
                 outputItem.outline.reset( 
-                    CRenderedTextSubtitle::CreateDrawItem(spd, outlineOverlay.next->overlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, true, false)
+                    CRenderedTextSubtitle::CreateDrawItem(spd, outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, true, false)
                     );
                 bbox |= CRenderedTextSubtitle::DryDraw(spd, *outputItem.outline);
             }
@@ -1597,7 +1617,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                 sw[4] =rgb2yuv(sw[4], XY_AYUV);
             }
             outputItem.body.reset( 
-                CRenderedTextSubtitle::CreateDrawItem(spd, bodyOverlay.overlay, clipRect, clipper, bodyPos.x, bodyPos.y, sw, true, false)
+                CRenderedTextSubtitle::CreateDrawItem(spd, bodyOverlay, clipRect, clipper, bodyPos.x, bodyPos.y, sw, true, false)
                 );
             bbox |= CRenderedTextSubtitle::DryDraw(spd, *outputItem.body);            
         }
