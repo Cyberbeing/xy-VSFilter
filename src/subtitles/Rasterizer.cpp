@@ -1863,7 +1863,7 @@ PathData::PathData():mpPathTypes(NULL), mpPathPoints(NULL), mPathPoints(0)
 {
 }
 
-PathData::PathData( const PathData& src ):mPathPoints(src.mPathPoints)
+PathData::PathData( const PathData& src ):mpPathTypes(NULL), mpPathPoints(NULL), mPathPoints(src.mPathPoints)
 {
     //TODO: deal with the case that src.mPathPoints<0 
     if(mPathPoints>0)
