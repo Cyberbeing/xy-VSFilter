@@ -1884,9 +1884,8 @@ const PathData& PathData::operator=( const PathData& src )
     {
         if(mPathPoints!=src.mPathPoints && src.mPathPoints>0)
         {
+            _TrashPath();
             mPathPoints = src.mPathPoints;
-            delete[] mpPathTypes;
-            delete[] mpPathPoints;
             mpPathTypes = static_cast<BYTE*>(malloc(mPathPoints * sizeof(BYTE)));
             mpPathPoints = static_cast<POINT*>(malloc(mPathPoints * sizeof(POINT)));//better than realloc
         }
@@ -1906,10 +1905,16 @@ PathData::~PathData()
 
 void PathData::_TrashPath()
 {
-    delete [] mpPathTypes;
-    delete [] mpPathPoints;
-    mpPathTypes = NULL;
-    mpPathPoints = NULL;
+    if (mpPathTypes)
+    {
+        free(mpPathTypes);
+        mpPathTypes = NULL;
+    }
+    if (mpPathPoints)
+    {
+        free(mpPathPoints);
+        mpPathPoints = NULL;
+    }
     mPathPoints = 0;
 }
 
