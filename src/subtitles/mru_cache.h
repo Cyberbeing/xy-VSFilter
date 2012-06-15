@@ -33,7 +33,8 @@ public:
         }
         else
         {
-            _list.MoveToHead(pos);
+            _list.GetAt(pos).second = value;
+            _list.MoveToHead(pos);            
         }
         if(_list.GetCount()>_max_item_num)
         {

@@ -642,19 +642,18 @@ bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int y
     //xsub = ysub = 0;
     int width = scan_line_data.mWidth + xsub;
     int height = scan_line_data.mHeight + ysub;
-    overlay->mOffsetX = scan_line_data2.mPathOffsetX - xsub;
-    overlay->mOffsetY = scan_line_data2.mPathOffsetY - ysub;
-    int wide_border = (scan_line_data2.mWideBorder+7)&~7;
     overlay->mfWideOutlineEmpty = scan_line_data2.mWideOutline.empty();
     if(!overlay->mfWideOutlineEmpty)
     {
+        int wide_border = (scan_line_data2.mWideBorder+7)&~7;
+
         width += 2*wide_border ;
         height += 2*wide_border ;
         xsub += wide_border ;
         ysub += wide_border ;
-        overlay->mOffsetX -= wide_border;
-        overlay->mOffsetY -= wide_border;
     }
+    overlay->mOffsetX = scan_line_data2.mPathOffsetX - xsub;
+    overlay->mOffsetY = scan_line_data2.mPathOffsetY - ysub;
 
     overlay->mWidth = width;
     overlay->mHeight = height;

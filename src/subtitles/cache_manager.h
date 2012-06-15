@@ -103,6 +103,19 @@ public:
     SharedPtrConstPathData m_path_data;
 };
 
+class OverlayNoOffsetKey:public ScanLineDataCacheKey
+{
+public:
+    OverlayNoOffsetKey(const SharedPtrConstPathData& path_data, int xsub, int ysub, int border_x, int border_y)
+        : ScanLineDataCacheKey(path_data)
+        , m_border( border_x+(border_y<<16) )
+        , m_rasterize_sub( xsub+(ysub<<16) ){}
+    bool operator==(const OverlayNoOffsetKey& key)const;
+
+    int m_border;
+    int m_rasterize_sub;
+};
+
 class ClipperAlphaMaskCacheKey
 {
 public:
@@ -154,6 +167,12 @@ public:
     static ULONG Hash(const ScanLineDataCacheKey& key);
 };
 
+class OverlayNoOffsetKeyTraits:public CElementTraits<OverlayNoOffsetKey>
+{
+public:
+    static ULONG Hash(const OverlayNoOffsetKey& key);
+};
+
 class PathDataTraits:public CElementTraits<PathData>
 {
 public:
@@ -191,6 +210,8 @@ typedef EnhancedXyMru<OverlayKey, SharedPtrOverlay, OverlayKeyTraits> OverlayMru
 
 typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
 
+typedef EnhancedXyMru<OverlayNoOffsetKey, OverlayNoBlurKey, OverlayNoOffsetKeyTraits> OverlayNoOffsetMruCache;
+
 typedef EnhancedXyMru<ClipperAlphaMaskCacheKey, SharedPtrGrayImage2, ClipperAlphaMaskCacheKeyTraits> ClipperAlphaMaskMruCache;
 
 class CacheManager
@@ -213,6 +234,7 @@ public:
     static AssTagListMruCache* GetAssTagListMruCache();
 
     static ScanLineDataMruCache* GetScanLineDataMruCache();
+    static OverlayNoOffsetMruCache* GetOverlayNoOffsetMruCache();
 
     static OverlayMruCache* GetSubpixelVarianceCache();
     static OverlayMruCache* GetOverlayMruCache();

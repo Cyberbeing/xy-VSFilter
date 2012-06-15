@@ -287,6 +287,8 @@ bool CWord::PaintFromScanLineData2(const CPoint& psub, const ScanLineData2& scan
 
 bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const PathData& path_data, const OverlayKey& key, SharedPtrOverlay* overlay )
 {
+    bool result = false;
+
     PathData *path_data2 = new PathData(path_data);//fix me: this copy operation can be saved if no transform is needed
     SharedPtrConstPathData shared_ptr_path_data2(path_data2);
     bool need_transform = NeedTransform();
@@ -297,45 +299,79 @@ bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const
     CSize size;
     path_data2->AlignLeftTop(&left_top, &size);
 
-    ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
-    ScanLineDataCacheKey scan_line_data_key(shared_ptr_path_data2);
-    POSITION pos = scan_line_data_cache->Lookup(scan_line_data_key);
-    SharedPtrConstScanLineData scan_line_data;
-    if( pos != NULL )
+    int border_x = static_cast<int>(m_style.get().outlineWidthX+0.5);
+    int border_y = static_cast<int>(m_style.get().outlineWidthY+0.5);
+    int wide_border = border_x>border_y ? border_x:border_y;
+    if (m_style.get().borderStyle==1)
     {
-        scan_line_data = scan_line_data_cache->GetAt(pos);
-        scan_line_data_cache->UpdateCache(pos);
+        border_x = border_y = 0;
+    }
+
+    OverlayNoOffsetMruCache* overlay_key_cache = CacheManager::GetOverlayNoOffsetMruCache();
+    OverlayNoOffsetKey overlay_no_offset_key(shared_ptr_path_data2, psub.x, psub.y, border_x, border_y);
+    POSITION pos = overlay_key_cache->Lookup(overlay_no_offset_key);
+        
+    OverlayNoBlurMruCache* overlay_cache = CacheManager::GetOverlayNoBlurMruCache();
+    if (pos!=NULL)
+    {
+        OverlayNoBlurKey overlay_key = overlay_key_cache->GetAt(pos);        
+        pos = overlay_cache->Lookup(overlay_key);        
+    }
+    if (pos)
+    {
+        SharedPtrOverlay raterize_result( new Overlay() );
+        *raterize_result = *overlay_cache->GetAt(pos);
+        raterize_result->mOffsetX = left_top.x - psub.x - ((wide_border+7)&~7);
+        raterize_result->mOffsetY = left_top.y - psub.y - ((wide_border+7)&~7);
+        PaintFromNoneBluredOverlay(raterize_result, key, overlay);
+        result = true;
+        overlay_cache->UpdateCache(key, raterize_result);
     }
     else
     {
-        ScanLineData *tmp = new ScanLineData();
-        scan_line_data.reset(tmp);
-        if(!tmp->ScanConvert(*path_data2, size))
+        ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
+        pos = scan_line_data_cache->Lookup(overlay_no_offset_key);
+        SharedPtrConstScanLineData scan_line_data;
+        if( pos != NULL )
         {
-            return false;
+            scan_line_data = scan_line_data_cache->GetAt(pos);
+            scan_line_data_cache->UpdateCache(pos);
         }
-        scan_line_data_cache->UpdateCache(scan_line_data_key, scan_line_data);
+        else
+        {
+            ScanLineData *tmp = new ScanLineData();
+            scan_line_data.reset(tmp);
+            if(!tmp->ScanConvert(*path_data2, size))
+            {
+                return false;
+            }
+            scan_line_data_cache->UpdateCache(overlay_no_offset_key, scan_line_data);
+        }
+        ScanLineData2 *tmp = new ScanLineData2(left_top, scan_line_data);
+        SharedPtrScanLineData2 scan_line_data2( tmp );
+        if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
+        {
+            if(!tmp->CreateWidenedRegion(border_x, border_y)) 
+            {
+                return false;
+            }
+        }
+        else if(m_style.get().borderStyle == 1)
+        {
+            if(!CreateOpaqueBox())
+            {
+                return false;
+            }
+        }
+        ScanLineData2MruCache* scan_line_data2_cache = CacheManager::GetScanLineData2MruCache();
+        scan_line_data2_cache->UpdateCache(key, scan_line_data2); 
+        result = PaintFromScanLineData2(psub, *tmp, key, overlay);        
     }
-    ScanLineData2 *tmp = new ScanLineData2(left_top, scan_line_data);
-    SharedPtrScanLineData2 scan_line_data2( tmp );
-    if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
+    if (result)
     {
-        if(!tmp->CreateWidenedRegion(static_cast<int>(m_style.get().outlineWidthX+0.5), 
-            static_cast<int>(m_style.get().outlineWidthY+0.5))) 
-        {
-            return false;
-        }
+        overlay_key_cache->UpdateCache(overlay_no_offset_key, key);
     }
-    else if(m_style.get().borderStyle == 1)
-    {
-        if(!CreateOpaqueBox())
-        {
-            return false;
-        }
-    }
-    ScanLineData2MruCache* scan_line_data2_cache = CacheManager::GetScanLineData2MruCache();
-    scan_line_data2_cache->UpdateCache(key, scan_line_data2); 
-    return PaintFromScanLineData2(psub, *tmp, key, overlay);
+    return result;
 }
 
 bool CWord::PaintFromRawData( const CPoint& psub, const CPoint& trans_org, const OverlayKey& key, SharedPtrOverlay* overlay )

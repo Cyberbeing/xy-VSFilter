@@ -86,6 +86,16 @@ ULONG ScanLineDataCacheKeyTraits::Hash( const ScanLineDataCacheKey& key )
     return PathDataTraits::Hash(*key.m_path_data);
 }
 
+ULONG OverlayNoOffsetKeyTraits::Hash( const OverlayNoOffsetKey& key )
+{
+    ULONG hash = ScanLineDataCacheKeyTraits::Hash(key);
+    hash += (hash<<5);
+    hash += key.m_border;
+    hash += (hash<<5);
+    hash += key.m_rasterize_sub;
+    return hash;
+}
+
 ULONG ClipperAlphaMaskCacheKeyTraits::Hash( const ClipperAlphaMaskCacheKey& key )
 {
     return Hash(*key.m_clipper);
@@ -253,6 +263,16 @@ bool ScanLineDataCacheKey::operator==( const ScanLineDataCacheKey& key ) const
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+// OverlayNoOffsetKey
+
+bool OverlayNoOffsetKey::operator==( const OverlayNoOffsetKey& key ) const
+{
+    return (this==&key) || ( this->m_border == key.m_border && this->m_rasterize_sub == key.m_rasterize_sub &&
+        ScanLineDataCacheKey::operator==(key) );
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 // ClipperAlphaMaskCacheKey
 
 bool ClipperAlphaMaskCacheKey::operator==( const ClipperAlphaMaskCacheKey& key ) const
@@ -296,7 +316,8 @@ public:
         s_overlay_mru_cache = NULL;
 
         s_scan_line_data_mru_cache = NULL;
-
+        s_overlay_no_offset_mru_cache = NULL;
+		
         s_subpixel_variance_cache = NULL;
         s_ass_tag_list_cache = NULL;
     }
@@ -312,6 +333,7 @@ public:
         delete s_overlay_mru_cache;
 
         delete s_scan_line_data_mru_cache;
+        delete s_overlay_no_offset_mru_cache;
 
         delete s_subpixel_variance_cache;
         delete s_ass_tag_list_cache;
@@ -323,6 +345,7 @@ public:
     AssTagListMruCache* s_ass_tag_list_cache;
 
     ScanLineDataMruCache* s_scan_line_data_mru_cache;
+    OverlayNoOffsetMruCache* s_overlay_no_offset_mru_cache;
 
     OverlayMruCache* s_subpixel_variance_cache;
     OverlayMruCache* s_overlay_mru_cache;
@@ -395,6 +418,15 @@ ScanLineDataMruCache* CacheManager::GetScanLineDataMruCache()
         s_caches.s_scan_line_data_mru_cache = new ScanLineDataMruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
     }
     return s_caches.s_scan_line_data_mru_cache;
+}
+
+OverlayNoOffsetMruCache* CacheManager::GetOverlayNoOffsetMruCache()
+{
+    if(s_caches.s_overlay_no_offset_mru_cache==NULL)
+    {
+        s_caches.s_overlay_no_offset_mru_cache = new OverlayNoOffsetMruCache(OVERLAY_NO_BLUR_CACHE_ITEM_NUM);
+    }
+    return s_caches.s_overlay_no_offset_mru_cache;    
 }
 
 AssTagListMruCache* CacheManager::GetAssTagListMruCache()
