@@ -235,7 +235,6 @@
     <ClInclude Include="VobSubFileRipper.h" />
     <ClInclude Include="VobSubImage.h" />
     <ClInclude Include="xy_malloc.h" />
-    <ClInclude Include="xy_sse_api.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -186,6 +186,7 @@
 #define IDC_CACHES_INFO_BTN             327
 #define IDC_CHECK_FOLLOW_UPSTREAM       329
 #define IDC_COMBO_COLOUR_SPACE          330
+#define IDC_VERSION                     331
 #define IDC_COMBO_YUV_RANGE             332
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
@@ -219,9 +220,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        232
+#define _APS_NEXT_RESOURCE_VALUE        334
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         331
-#define _APS_NEXT_SYMED_VALUE           103
+#define _APS_NEXT_CONTROL_VALUE         333
+#define _APS_NEXT_SYMED_VALUE           188
 #endif
 #endif

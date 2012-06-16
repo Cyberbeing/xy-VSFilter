@@ -955,6 +955,23 @@ CDVSAboutPPage::CDVSAboutPPage(LPUNKNOWN lpunk, HRESULT* phr) :
 
 }
 
+bool CDVSAboutPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch(uMsg) {
+    case WM_INITDIALOG: {
+        CStringA version_sha1_short = XY_VSFILTER_VERSION_COMMIT_SHA1;
+        version_sha1_short = version_sha1_short.Left(7);
+        CStringA version = XY_ABOUT_VERSION_STR;
+        version.Format("DirectVobSub %s (git %s)\nxy-VSFilter\nCopyright 2001-2012 Yu Zhuohuang, Gabest et. al.", 
+            XY_ABOUT_VERSION_STR, version_sha1_short);
+		    
+			  SetDlgItemTextA( m_Dlg, IDC_VERSION, version.GetString() );
+			  break;
+		}		  
+	  }
+
+	return false;
+}
 /* CDVSZoomPPage */
 
 CDVSZoomPPage::CDVSZoomPPage(LPUNKNOWN pUnk, HRESULT* phr) :

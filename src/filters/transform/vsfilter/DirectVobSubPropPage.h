@@ -178,6 +178,8 @@ class CDVSAboutPPage : public CDVSBasePPage
 {
 public:
     CDVSAboutPPage(LPUNKNOWN lpunk, HRESULT* phr);
+    
+    bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 [uuid("525F116F-04AD-40a2-AE2F-A0C4E1AFEF98")]

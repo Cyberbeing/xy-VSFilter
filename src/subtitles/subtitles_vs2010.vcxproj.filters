@@ -134,9 +134,6 @@
     <ClInclude Include="xy_malloc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="xy_sse_api.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="mru_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
