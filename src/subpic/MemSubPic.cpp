@@ -111,141 +111,7 @@ static void SaveNvxx2File(SubPicDesc& spd, const CRect& cRect, const char * file
 //
 // alpha blend functions
 // 
-
-#define AVERAGE_4_PIX_INTRINSICS(m128_1, m128_2) \
-    m128_1 = _mm_avg_epu8(m128_1, m128_2); \
-    m128_2 = _mm_slli_epi16(m128_1, 8); \
-    m128_1 = _mm_srli_epi16(m128_1, 8); \
-    m128_2 = _mm_srli_epi16(m128_2, 8); \
-    m128_1 = _mm_avg_epu8(m128_1, m128_2);
-
-#define AVERAGE_4_PIX_INTRINSICS_2(m128_1, m128_2) \
-    {\
-    m128_1 = _mm_avg_epu8(m128_1, m128_2); \
-    m128_2 = _mm_slli_epi16(m128_1, 8); \
-    __m128i m128_3 = _mm_srli_epi16(m128_1, 8); \
-    m128_2 = _mm_or_si128(m128_2, m128_3);\
-    m128_1 = _mm_avg_epu8(m128_1, m128_2);\
-    }
-
-void subsample_and_interlace_2_line_c(BYTE* dst, const BYTE* u, const BYTE* v, int w, int pitch)
-{
-    const BYTE* end = u + w;
-    for (;u<end;dst+=2,u+=2,v+=2)
-    {
-        dst[0] = (u[0] + u[0+pitch] + 1)/2;
-        int tmp1 = (u[1] + u[1+pitch] + 1)/2;
-        dst[0] = (dst[0] + tmp1 + 1)/2;                
-        dst[1] = (v[0] + v[0+pitch] + 1)/2;
-        tmp1 = (v[1] + v[1+pitch] + 1)/2;
-        dst[1] = (dst[1] + tmp1 + 1)/2;
-    }
-}
-
-__forceinline void subsample_and_interlace_2_line_sse2(BYTE* dst, const BYTE* u, const BYTE* v, int w, int pitch)
-{
-    const BYTE* end = u + w;
-    for (;u<end;dst+=16,u+=16,v+=16)
-    {
-        __m128i u_1 = _mm_load_si128( reinterpret_cast<const __m128i*>(u) );    
-        __m128i u_2 = _mm_load_si128( reinterpret_cast<const __m128i*>(u+pitch) );
-        __m128i v_1 = _mm_load_si128( reinterpret_cast<const __m128i*>(v) );    
-        __m128i v_2 = _mm_load_si128( reinterpret_cast<const __m128i*>(v+pitch) );
-        AVERAGE_4_PIX_INTRINSICS(u_1, u_2);
-        AVERAGE_4_PIX_INTRINSICS(v_1, v_2);
-        u_1 = _mm_packus_epi16(u_1, u_1);
-        v_1 = _mm_packus_epi16(v_1, v_1);
-        u_1 = _mm_unpacklo_epi8(u_1, v_1);
-
-        _mm_store_si128( reinterpret_cast<__m128i*>(dst), u_1 );
-    }
-}
-
-static __forceinline void pix_alpha_blend_yv12_luma_sse2(byte* dst, const byte* alpha, const byte* sub)
-{
-    __m128i dst128 = _mm_load_si128( reinterpret_cast<const __m128i*>(dst) );
-    __m128i alpha128 = _mm_load_si128( reinterpret_cast<const __m128i*>(alpha) );
-    __m128i sub128 = _mm_load_si128( reinterpret_cast<const __m128i*>(sub) );
-    __m128i zero = _mm_setzero_si128();
-
-    __m128i ones;
-#ifdef _DEBUG
-    ones = _mm_setzero_si128();//disable warning C4700
-#endif
-    ones = _mm_cmpeq_epi32(ones,ones);
-    ones = _mm_cmpeq_epi8(ones,alpha128);
-
-    __m128i dst_lo128 = _mm_unpacklo_epi8(dst128, zero);
-    __m128i alpha_lo128 = _mm_unpacklo_epi8(alpha128, zero);
-
-    __m128i ones2 = _mm_unpacklo_epi8(ones, zero);    
-
-    dst_lo128 = _mm_mullo_epi16(dst_lo128, alpha_lo128);
-    dst_lo128 = _mm_adds_epu16(dst_lo128, ones2);
-    dst_lo128 = _mm_srli_epi16(dst_lo128, 8);
-
-    dst128 = _mm_unpackhi_epi8(dst128, zero);
-    alpha128 = _mm_unpackhi_epi8(alpha128, zero);
-
-    ones2 = _mm_unpackhi_epi8(ones, zero);
-
-    dst128 = _mm_mullo_epi16(dst128, alpha128);
-    dst128 = _mm_adds_epu16(dst128, ones2);
-    dst128 = _mm_srli_epi16(dst128, 8);
-    dst_lo128 = _mm_packus_epi16(dst_lo128, dst128);
-
-    dst_lo128 = _mm_adds_epu8(dst_lo128, sub128);
-    _mm_store_si128( reinterpret_cast<__m128i*>(dst), dst_lo128 );
-}
-
-/***
- * output not exactly identical to pix_alpha_blend_yv12_chroma
- */
-static __forceinline void pix_alpha_blend_yv12_chroma_sse2(byte* dst, const byte* src, const byte* alpha, int src_pitch)
-{
-    __m128i zero = _mm_setzero_si128();
-    __m128i alpha128_1 = _mm_load_si128( reinterpret_cast<const __m128i*>(alpha) );
-    __m128i alpha128_2 = _mm_load_si128( reinterpret_cast<const __m128i*>(alpha+src_pitch) );
-    __m128i dst128 = _mm_loadl_epi64( reinterpret_cast<const __m128i*>(dst) );
-
-    __m128i sub128_1 = _mm_load_si128( reinterpret_cast<const __m128i*>(src) );
-    __m128i sub128_2 = _mm_load_si128( reinterpret_cast<const __m128i*>(src+src_pitch) );
-
-    AVERAGE_4_PIX_INTRINSICS(alpha128_1, alpha128_2);
-
-    __m128i ones;
-#ifdef _DEBUG
-    ones = _mm_setzero_si128();//disable warning C4700
-#endif
-    ones = _mm_cmpeq_epi32(ones,ones);
-    ones = _mm_cmpeq_epi8(ones, alpha128_1);
-    
-    dst128 = _mm_unpacklo_epi8(dst128, zero);
-    __m128i dst128_2 = _mm_and_si128(dst128, ones);
-    
-    dst128 = _mm_mullo_epi16(dst128, alpha128_1);
-    dst128 = _mm_adds_epu16(dst128, dst128_2);
-    
-    dst128 = _mm_srli_epi16(dst128, 8);
-        
-    AVERAGE_4_PIX_INTRINSICS(sub128_1, sub128_2);
-
-    dst128 = _mm_adds_epi16(dst128, sub128_1);    
-    dst128 = _mm_packus_epi16(dst128, dst128);
-    
-    _mm_storel_epi64( reinterpret_cast<__m128i*>(dst), dst128 );
-}
-
-static __forceinline void pix_alpha_blend_yv12_chroma(byte* dst, const byte* src, const byte* alpha, int src_pitch)
-{
-    unsigned int ia = (alpha[0]+alpha[1]+
-        alpha[0+src_pitch]+alpha[1+src_pitch])>>2;
-    if(ia!=0xff)
-    {
-        *dst= (((*dst)*ia)>>8) + ((src[0]        +src[1]+
-            src[src_pitch]+src[1+src_pitch] )>>2);
-    }    
-}
+#include "xy_intrinsics.h"
 
 static void AlphaBltYv12Luma(byte* dst, int dst_pitch,
     int w, int h,
@@ -309,246 +175,14 @@ static void AlphaBltYv12Chroma(byte* dst, int dst_pitch,
         int pitch = sub_pitch;
         for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
         {
-            const BYTE* s2 = sub_chroma;
-            const BYTE* sa2 = alpha;
-            const BYTE* s2end_mod16 = s2 + (w&~15);
-            const BYTE* s2end = s2 + w;
-            BYTE* d2 = dst;
-
-            for(; s2 < s2end_mod16; s2 += 16, sa2 += 16, d2+=8)
-            {
-                pix_alpha_blend_yv12_chroma_sse2(d2, s2, sa2, sub_pitch);
-            }
-            for(; s2 < s2end; s2+=2, sa2+=2, d2++)
-            {
-                pix_alpha_blend_yv12_chroma(d2, s2, sa2, sub_pitch);
-            }
+            hleft_vmid_mix_uv_yv12_sse2(dst, w, sub_chroma, alpha, sub_pitch);
         }
     }
     else//fix me: only a workaround for non-mod-16 size video
     {
         for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
         {
-            const BYTE* s2 = sub_chroma;
-            const BYTE* sa2 = alpha;
-            const BYTE* s2end_mod16 = s2 + (w&~15);
-            const BYTE* s2end = s2 + w;
-            BYTE* d2 = dst;
-            for(; s2 < s2end; s2 += 2, sa2 += 2, d2++)
-            {                            
-                pix_alpha_blend_yv12_chroma(d2, s2, sa2, sub_pitch);
-            }
-        }
-    }
-}
-
-__forceinline void mix_16_y_p010_sse2(BYTE* dst, const BYTE* src, const BYTE* src_alpha)
-{
-    //important!
-    __m128i alpha = _mm_load_si128( reinterpret_cast<const __m128i*>(src_alpha) );
-    __m128i src_y = _mm_load_si128( reinterpret_cast<const __m128i*>(src) );
-    __m128i dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(dst) );                        
-
-    __m128i alpha_ff;
-#ifdef _DEBUG
-    alpha_ff = _mm_setzero_si128();//disable warning C4700
-#endif
-    alpha_ff = _mm_cmpeq_epi32(alpha_ff,alpha_ff);
-
-    alpha_ff = _mm_cmpeq_epi8(alpha_ff, alpha);                                           
-
-    __m128i lo = _mm_unpacklo_epi8(alpha_ff, alpha);//(alpha<<8)+0x100 will overflow
-    //so we do it another way
-    //first, (alpha<<8)+0xff
-    __m128i ones = _mm_setzero_si128();
-    ones = _mm_cmpeq_epi16(dst_y, ones);
-
-    __m128i ones2;
-#ifdef _DEBUG
-    ones2 = _mm_setzero_si128();//disable warning C4700
-#endif
-    ones2 = _mm_cmpeq_epi32(ones2,ones2);
-    
-    ones = _mm_xor_si128(ones, ones2);                            
-    ones = _mm_srli_epi16(ones, 15);
-    ones = _mm_and_si128(ones, lo);
-
-    dst_y = _mm_mulhi_epu16(dst_y, lo);
-    dst_y = _mm_adds_epu16(dst_y, ones);//then add one if necessary
-
-    lo = _mm_setzero_si128();
-    lo = _mm_unpacklo_epi8(lo, src_y);
-    dst_y = _mm_adds_epu16(dst_y, lo);                        
-    _mm_store_si128( reinterpret_cast<__m128i*>(dst), dst_y );
-
-    dst += 16;
-    dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(dst) );
-
-    lo = _mm_unpackhi_epi8(alpha_ff, alpha);
-
-    ones = _mm_setzero_si128();
-    ones = _mm_cmpeq_epi16(dst_y, ones);
-    ones = _mm_xor_si128(ones, ones2);  
-    ones = _mm_srli_epi16(ones, 15);
-    ones = _mm_and_si128(ones, lo);    
-
-    dst_y = _mm_mulhi_epu16(dst_y, lo); 
-    dst_y = _mm_adds_epu16(dst_y, ones);
-
-    lo = _mm_setzero_si128();
-    lo = _mm_unpackhi_epi8(lo, src_y);
-    dst_y = _mm_adds_epu16(dst_y, lo);
-    _mm_store_si128( reinterpret_cast<__m128i*>(dst), dst_y );
-}
-
-//for test only
-void mix_16_y_p010_c(BYTE* dst, const BYTE* src, const BYTE* src_alpha)
-{
-    WORD* dst_word = reinterpret_cast<WORD*>(dst);
-    for (int i=0;i<16;i++)
-    {
-        if (src_alpha[i]!=0xff)
-        {
-            dst_word[i] = ((dst_word[i] *src_alpha[i])>>8) + (src[i]<<8);
-        }
-    }
-}
-
-__forceinline void mix_16_uv_p010_sse2(BYTE* dst, const BYTE* src, const BYTE* src_alpha, int pitch)
-{
-    //important!
-    __m128i alpha = _mm_load_si128( reinterpret_cast<const __m128i*>(src_alpha) );
-    __m128i alpha2 = _mm_load_si128( reinterpret_cast<const __m128i*>(src_alpha+pitch) );
-
-    __m128i src_y = _mm_load_si128( reinterpret_cast<const __m128i*>(src) );
-    __m128i dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(dst) );                        
-
-    AVERAGE_4_PIX_INTRINSICS_2(alpha, alpha2);
-
-    __m128i alpha_ff;
-#ifdef _DEBUG
-    alpha_ff = _mm_setzero_si128();//disable warning C4700
-#endif
-    alpha_ff = _mm_cmpeq_epi32(alpha_ff,alpha_ff);
-    
-    alpha_ff = _mm_cmpeq_epi8(alpha_ff, alpha);                                           
-
-    __m128i lo = _mm_unpacklo_epi8(alpha_ff, alpha);//(alpha<<8)+0x100 will overflow
-    //so we do it another way
-    //first, (alpha<<8)+0xff
-    __m128i ones = _mm_setzero_si128();
-    ones = _mm_cmpeq_epi16(dst_y, ones);
-
-    __m128i ones2;
-#ifdef _DEBUG
-    ones2 = _mm_setzero_si128();//disable warning C4700
-#endif
-    ones2 = _mm_cmpeq_epi32(ones2,ones2);
-    ones = _mm_xor_si128(ones, ones2);                            
-    ones = _mm_srli_epi16(ones, 15);
-    ones = _mm_and_si128(ones, lo);
-
-    dst_y = _mm_mulhi_epu16(dst_y, lo);
-    dst_y = _mm_adds_epu16(dst_y, ones);//then add one if necessary
-
-    lo = _mm_setzero_si128();
-    lo = _mm_unpacklo_epi8(lo, src_y);
-    dst_y = _mm_adds_epu16(dst_y, lo);                        
-    _mm_store_si128( reinterpret_cast<__m128i*>(dst), dst_y );
-
-    dst += 16;
-    dst_y = _mm_load_si128( reinterpret_cast<const __m128i*>(dst) );
-
-    lo = _mm_unpackhi_epi8(alpha_ff, alpha);
-
-    ones = _mm_setzero_si128();
-    ones = _mm_cmpeq_epi16(dst_y, ones);
-    ones = _mm_xor_si128(ones, ones2);  
-    ones = _mm_srli_epi16(ones, 15);
-    ones = _mm_and_si128(ones, lo);    
-
-    dst_y = _mm_mulhi_epu16(dst_y, lo); 
-    dst_y = _mm_adds_epu16(dst_y, ones);
-
-    lo = _mm_setzero_si128();
-    lo = _mm_unpackhi_epi8(lo, src_y);
-    dst_y = _mm_adds_epu16(dst_y, lo);
-    _mm_store_si128( reinterpret_cast<__m128i*>(dst), dst_y );
-}
-
-//for test only
-void mix_16_uv_p010_c(BYTE* dst, const BYTE* src, const BYTE* src_alpha, int pitch)
-{
-    WORD* dst_word = reinterpret_cast<WORD*>(dst);
-    for (int i=0;i<8;i++, src_alpha+=2, src+=2, dst_word+=2)
-    {
-        unsigned int ia = ( 
-            (src_alpha[0]+src_alpha[0+pitch]+1)/2+
-            (src_alpha[1]+src_alpha[1+pitch]+1)/2+1)/2;
-        if( ia!=0xFF )
-        {
-            int tmp = (((dst_word[0])*ia)>>8) + (src[0]<<8);
-            if(tmp>0xffff) tmp = 0xffff;
-            dst_word[0] = tmp;
-            tmp = (((dst_word[1])*ia)>>8) + (src[1]<<8);
-            if(tmp>0xffff) tmp = 0xffff;
-            dst_word[1] = tmp;
-        }
-    }
-}
-
-__forceinline void mix_16_uv_nvxx_sse2(BYTE* dst, const BYTE* src, const BYTE* src_alpha, int pitch)
-{
-    __m128i dst128 = _mm_load_si128( reinterpret_cast<const __m128i*>(dst) );
-    __m128i alpha128_1 = _mm_load_si128( reinterpret_cast<const __m128i*>(src_alpha) );
-    __m128i alpha128_2 = _mm_load_si128( reinterpret_cast<const __m128i*>(src_alpha+pitch) );
-    __m128i sub128 = _mm_load_si128( reinterpret_cast<const __m128i*>(src) );
-
-    AVERAGE_4_PIX_INTRINSICS_2(alpha128_1, alpha128_2);
-    __m128i zero = _mm_setzero_si128();
-
-    __m128i ones;
-#ifdef _DEBUG
-    ones = _mm_setzero_si128();//disable warning C4700
-#endif
-    ones = _mm_cmpeq_epi32(ones,ones);
-    ones = _mm_cmpeq_epi8(ones,alpha128_1);
-
-    __m128i dst_lo128 = _mm_unpacklo_epi8(dst128, zero);
-    alpha128_2 = _mm_unpacklo_epi8(alpha128_1, zero);
-
-    __m128i ones2 = _mm_unpacklo_epi8(ones, zero);    
-
-    dst_lo128 = _mm_mullo_epi16(dst_lo128, alpha128_2);
-    dst_lo128 = _mm_adds_epu16(dst_lo128, ones2);
-    dst_lo128 = _mm_srli_epi16(dst_lo128, 8);
-
-    dst128 = _mm_unpackhi_epi8(dst128, zero);
-    alpha128_1 = _mm_unpackhi_epi8(alpha128_1, zero);
-
-    ones2 = _mm_unpackhi_epi8(ones, zero);
-
-    dst128 = _mm_mullo_epi16(dst128, alpha128_1);
-    dst128 = _mm_adds_epu16(dst128, ones2);
-    dst128 = _mm_srli_epi16(dst128, 8);
-    dst_lo128 = _mm_packus_epi16(dst_lo128, dst128);
-
-    dst_lo128 = _mm_adds_epu8(dst_lo128, sub128);
-    _mm_store_si128( reinterpret_cast<__m128i*>(dst), dst_lo128 );
-}
-
-//for test only
-void mix_16_uv_nvxx_c(BYTE* dst, const BYTE* src, const BYTE* src_alpha, int pitch)
-{
-    for (int i=0;i<8;i++, src_alpha+=2, src+=2, dst+=2)
-    {
-        unsigned int ia = ( 
-            (src_alpha[0]+src_alpha[0+pitch]+1)/2+
-            (src_alpha[1]+src_alpha[1+pitch]+1)/2+1)/2;
-        if( ia!=0xFF )
-        {
-            dst[0] = (((dst[0])*ia)>>8) + src[0];            
-            dst[1] = (((dst[1])*ia)>>8) + src[1];
+            hleft_vmid_mix_uv_yv12_c(dst, w, sub_chroma, alpha, sub_pitch);
         }
     }
 }
@@ -718,6 +352,11 @@ STDMETHODIMP CMemSubPic::UnlockOther(CAtlList<CRect>* dirtyRectList)
     {
         const CRect& cRect = m_rectListDirty.GetNext(pos);
         int w = cRect.Width(), h = cRect.Height();
+        if (w<=0 || h<=0)
+        {
+            continue;
+        }
+
         BYTE* top = (BYTE*)m_spd.bits + m_spd.pitch*(cRect.top) + cRect.left*4;
         BYTE* bottom = top + m_spd.pitch*h;
         if(m_alpha_blt_dst_type == MSP_RGB16)
@@ -754,10 +393,15 @@ STDMETHODIMP CMemSubPic::UnlockOther(CAtlList<CRect>* dirtyRectList)
             {
                 BYTE* s = tempTop;
                 BYTE* e = s + w*4;
+                BYTE last_v = s[0], last_u=s[2];
                 for(; s < e; s+=8) // AUYV AUYV -> AxYU AxYV
                 {
-                    s[4] = (s[0] + s[4])>>1;
-                    s[0] = (s[2] + s[6])>>1;
+                    BYTE tmp = s[4];
+                    s[4] = (last_v + 2*s[0] + s[4] + 2)>>2;
+                    last_v = tmp;
+
+                    s[0] = (last_u + 2*s[2] + s[6] + 2)>>2;                    
+                    last_u = s[6];
                 }
             }
 
@@ -798,6 +442,10 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
     {
         const CRect& cRect = m_rectListDirty.GetNext(pos);
         int w = cRect.Width(), h = cRect.Height();
+        if(w<=0 || h<=0)
+        {
+            continue;
+        }
 
         BYTE* top = (BYTE*)m_spd.bits + m_spd.pitch*cRect.top + cRect.left*4;
         BYTE* bottom = top + m_spd.pitch*h;
@@ -812,19 +460,23 @@ STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
             for(; top < bottom ; top += m_spd.pitch) {
                 BYTE* s = top;
                 BYTE* e = s + w*4;
+                DWORD last_yuv = ColorConvTable::PreMulArgb2Ayuv(s[3], s[2], s[1], s[0]);
                 for(; s < e; s+=8) { // ARGB ARGB -> AxYU AxYV
-                    if((s[3]+s[7]) < 0x1fe) {
-                        int tmp1 = ColorConvTable::PreMulArgb2Ayuv(s[3], s[2], s[1], s[0]);
-                        int tmp2 = ColorConvTable::PreMulArgb2Ayuv(s[7], s[6], s[5], s[4]);
+                    if((s[3]+s[7]+(last_yuv>>24)) < 0xff*3) {
+                        DWORD tmp1 = ColorConvTable::PreMulArgb2Ayuv(s[3], s[2], s[1], s[0]);
+                        DWORD tmp2 = ColorConvTable::PreMulArgb2Ayuv(s[7], s[6], s[5], s[4]);
 
                         s[1] = (tmp1>>16)&0xff;
                         s[5] = (tmp2>>16)&0xff;
 
-                        s[0] = (((tmp1>>8)&0xff) + ((tmp2>>8)&0xff) + 1)/2;
-                        s[4] = ((tmp1&0xff) + (tmp2&0xff) + 1)/2;
+                        s[0] = (((last_yuv>>8)&0xff) + 2*((tmp1>>8)&0xff) + ((tmp2>>8)&0xff) + 2)/4;
+                        s[4] = ((last_yuv&0xff) + 2*(tmp1&0xff) + (tmp2&0xff) + 2)/4;
+                        last_yuv = tmp2;
                     } else {
+                        last_yuv = ColorConvTable::PreMulArgb2Ayuv(s[7], s[6], s[5], s[4]);
+
                         s[1] = s[5] = 0;
-                        s[0] = s[4] = 0;
+                        s[0] = s[4] = 0;                        
                     }
                 }
             }
@@ -868,9 +520,10 @@ void CMemSubPic::SubsampleAndInterlace( const CRect& cRect, bool u_first )
     //Walkarround for alignment
     if ( (m_spd.pitch&15) == 0 ) 
     {
+        ASSERT(w%16==0);
         for (int i=0;i<h;i+=2)
         {
-            subsample_and_interlace_2_line_sse2(dst, u_start, v_start, w, m_spd.pitch);
+            hleft_vmid_subsample_and_interlace_2_line_sse2(dst, u_start, v_start, w, m_spd.pitch);
             u_start += 2*m_spd.pitch;
             v_start += 2*m_spd.pitch;
             dst += m_spd.pitch;
@@ -880,7 +533,7 @@ void CMemSubPic::SubsampleAndInterlace( const CRect& cRect, bool u_first )
     {
         for (int i=0;i<h;i+=2)
         {
-            subsample_and_interlace_2_line_c(dst, u_start, v_start, w, m_spd.pitch);
+            hleft_vmid_subsample_and_interlace_2_line_c(dst, u_start, v_start, w, m_spd.pitch);
             u_start += 2*m_spd.pitch;
             v_start += 2*m_spd.pitch;
             dst += m_spd.pitch;
@@ -1248,15 +901,18 @@ STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_P010(const RECT* pSrc, const RECT* pDs
         BYTE* s2 = s;
         WORD* d2=reinterpret_cast<WORD*>(d);
         WORD* d2_end = reinterpret_cast<WORD*>(d+2*w);
+        DWORD last_alpha = s2[3]+s2[3+src.pitch];
         for( ; d2<d2_end; s2+=8, d2+=2)
         {
             unsigned int ia = ( 
-                s2[3]+          s2[3+4]+
-                s2[3+src.pitch]+s2[3+4+src.pitch]);
-            if( ia!=0xFF*4 )
+                last_alpha +
+                (s2[3]  + s2[3+src.pitch])*2 +
+                s2[3+4]+ s2[3+4+src.pitch]);
+            last_alpha = s2[3+4]+ s2[3+4+src.pitch];
+            if( ia!=0xFF*8 )
             {
-                d2[0] = (((d2[0])*ia)>>10) + ((s2[0] + s2[0+src.pitch])<<7);
-                d2[1] = (((d2[1])*ia)>>10) + ((s2[4] + s2[4+src.pitch])<<7);
+                d2[0] = (((d2[0])*ia)>>11) + ((s2[0] + s2[0+src.pitch])<<7);
+                d2[1] = (((d2[1])*ia)>>11) + ((s2[4] + s2[4+src.pitch])<<7);
             }
         }
     }
@@ -1338,14 +994,17 @@ STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_Yv12(const RECT* pSrc, const RECT* pDs
     for(ptrdiff_t i = 0; i < 2; i++) {
         s = ss[i];
         d = dd[i];
-        BYTE* is = ss[1-i];
-        for(ptrdiff_t j = 0; j < h2; j++, s += src.pitch*2, d += dst.pitchUV, is += src.pitch*2) {
+        BYTE* a = ss[0]+3;
+        for(ptrdiff_t j = 0; j < h2; j++, s += src.pitch*2, d += dst.pitchUV, a += src.pitch*2) {
             BYTE* s2 = s;
             BYTE* s2end = s2 + w*4;
             BYTE* d2 = d;
-            BYTE* is2 = is;
-            for(; s2 < s2end; s2 += 8, d2++, is2 += 8) {
-                unsigned int ia = (s2[3]+s2[3+src.pitch]+is2[3]+is2[3+src.pitch])>>2;
+            BYTE* a2 = a;
+            
+            DWORD last_alpha = a2[0]+a2[0+src.pitch];
+            for(; s2 < s2end; s2 += 8, d2++, a2 += 8) {
+                unsigned int ia = (last_alpha + 2*(a2[0]+a2[0+src.pitch]) + a2[4] + a2[4+src.pitch] + 4 )>>3;
+                last_alpha = a2[4] + a2[4+src.pitch];
                 if(ia < 0xff) {
                     *d2 = ((*d2*ia)>>8) + ((s2[0]+s2[src.pitch])>>1);
                 }
@@ -1431,14 +1090,16 @@ STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_Nv12(const RECT* pSrc, const RECT* pDs
     for(ptrdiff_t i = 0; i < 2; i++) {
         s = ss[i];
         d = dd[i];
-        BYTE* is = ss[1-i];
-        for(ptrdiff_t j = 0; j < h2; j++, s += src.pitch*2, d += dst.pitchUV, is += src.pitch*2) {
+        BYTE* a = ss[0]+3;
+        for(ptrdiff_t j = 0; j < h2; j++, s += src.pitch*2, d += dst.pitchUV, a += src.pitch*2) {
             BYTE* s2 = s;
             BYTE* s2end = s2 + w*4;
             BYTE* d2 = d;
-            BYTE* is2 = is;
-            for(; s2 < s2end; s2 += 8, d2+=2, is2 += 8) {
-                unsigned int ia = (s2[3]+s2[3+src.pitch]+is2[3]+is2[3+src.pitch])>>2;
+            BYTE* a2 = a;
+            DWORD last_alpha = a2[0]+a2[0+src.pitch];
+            for(; s2 < s2end; s2 += 8, d2+=2, a2 += 8) {
+                unsigned int ia = (last_alpha+2*(a2[0]+a2[0+src.pitch])+a2[4]+a2[4+src.pitch]+4)>>3;
+                last_alpha = a2[4]+a2[4+src.pitch];
                 if(ia < 0xff) {
                     *d2 = ((*d2*ia)>>8) + ((s2[0]+s2[src.pitch])>>1);
                 }
@@ -1547,50 +1208,14 @@ STDMETHODIMP CMemSubPic::AlphaBltAnv12_P010( const RECT* pSrc, const RECT* pDst,
     {
         for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
         {
-            BYTE* s_u2 = s_uv;
-            BYTE* sa2 = sa;
-            BYTE* s_u2end_mod16 = s_u2 + (w&~15);
-            BYTE* s_u2end = s_u2 + w;
-            BYTE* d2 = d;
-
-            for(; s_u2 < s_u2end_mod16; s_u2+=16, sa2+=16, d2+=32)
-            {
-                mix_16_uv_p010_sse2(d2, s_u2, sa2, src.pitch);
-            }
-
-            for( WORD* d3=reinterpret_cast<WORD*>(d2); s_u2 < s_u2end; s_u2+=2, sa2+=2, d3+=2)
-            {
-                unsigned int ia = ( 
-                    sa2[0]+          sa2[1]+
-                    sa2[0+src.pitch]+sa2[1+src.pitch]);
-                if( ia!=0xFF*4 )
-                {
-                    d3[0] = (((d3[0])*ia)>>10) + (s_u2[0]<<8);
-                    d3[1] = (((d3[1])*ia)>>10) + (s_u2[1]<<8);
-                }
-            }
+            hleft_vmid_mix_uv_p010_sse2(d, w, s_uv, sa, src.pitch);
         }
     }
     else
-    {
+    {        
         for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
         {
-            BYTE* s_u2 = s_uv;
-            BYTE* sa2 = sa;
-            BYTE* s_u2end = s_u2 + w;
-            BYTE* d2 = d;
-            
-            for( WORD* d3=reinterpret_cast<WORD*>(d2); s_u2 < s_u2end; s_u2+=2, sa2+=2, d3+=2)
-            {
-                unsigned int ia = ( 
-                    sa2[0]+          sa2[1]+
-                    sa2[0+src.pitch]+sa2[1+src.pitch]);
-                if( ia!=0xFF*4 )
-                {
-                    d3[0] = (((d3[0])*ia)>>10) + (s_u2[0]<<8);
-                    d3[1] = (((d3[1])*ia)>>10) + (s_u2[1]<<8);
-                }
-            }
+            hleft_vmid_mix_uv_p010_c(d, w, s_uv, sa, src.pitch);
         }
     }
     __asm emms;
@@ -1651,27 +1276,7 @@ STDMETHODIMP CMemSubPic::AlphaBltAnv12_Nvxx( const RECT* pSrc, const RECT* pDst,
         int pitch = src.pitch;
         for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
         {
-            BYTE* s_u2 = s_uv;
-            BYTE* sa2 = sa;
-            BYTE* s_u2end_mod16 = s_u2 + (w&~15);
-            BYTE* s_u2end = s_u2 + w;
-            BYTE* d2 = d;
-
-            for(; s_u2 < s_u2end_mod16; s_u2+=16, sa2+=16, d2+=16)
-            {
-                mix_16_uv_nvxx_sse2(d2, s_u2, sa2, src.pitch);
-            }
-            for( BYTE* d3=d2; s_u2 < s_u2end; s_u2+=2, sa2+=2, d3+=2)
-            {
-                unsigned int ia = ( 
-                    sa2[0]+          sa2[1]+
-                    sa2[0+src.pitch]+sa2[1+src.pitch]);
-                if( ia!=0xFF*4 )
-                {
-                    d3[0] = (((d3[0])*ia)>>10) + s_u2[0];
-                    d3[1] = (((d3[1])*ia)>>10) + s_u2[1];
-                }
-            }
+            hleft_vmid_mix_uv_nvxx_sse2(d, w, s_uv, sa, src.pitch);
         }
     }
     else
@@ -1680,23 +1285,7 @@ STDMETHODIMP CMemSubPic::AlphaBltAnv12_Nvxx( const RECT* pSrc, const RECT* pDst,
         int pitch = src.pitch;
         for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
         {
-            BYTE* s_u2 = s_uv;
-            BYTE* sa2 = sa;
-            BYTE* s_u2end_mod16 = s_u2 + (w&~15);
-            BYTE* s_u2end = s_u2 + w;
-            BYTE* d2 = d;
-
-            for( BYTE* d3=d2; s_u2 < s_u2end; s_u2+=2, sa2+=2, d3+=2)
-            {
-                unsigned int ia = ( 
-                    sa2[0]+          sa2[1]+
-                    sa2[0+src.pitch]+sa2[1+src.pitch]);
-                if( ia!=0xFF*4 )
-                {
-                    d3[0] = (((d3[0])*ia)>>10) + s_u2[0];
-                    d3[1] = (((d3[1])*ia)>>10) + s_u2[1];
-                }
-            }
+            hleft_vmid_mix_uv_nvxx_c(d, w, s_uv, sa, src.pitch);
         }
     }
 
@@ -1798,6 +1387,3 @@ bool CMemSubPicAllocator::AllocEx(bool fStatic, ISubPicEx** ppSubPic)
     (*ppSubPic)->AddRef();
 	return true;
 }
-
-
-

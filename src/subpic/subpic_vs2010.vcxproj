@@ -207,6 +207,7 @@
     <ClInclude Include="SubPicProviderExWrapper.h" />
     <ClInclude Include="SubPicProviderImpl.h" />
     <ClInclude Include="SubPicQueueImpl.h" />
+    <ClInclude Include="xy_intrinsics.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
