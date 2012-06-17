@@ -23,6 +23,7 @@
 #include <math.h>
 #include <time.h>
 #include "RTS.h"
+#include "draw_item.h"
 #include "cache_manager.h"
 #include "../subpic/color_conv_table.h"
 #include "subpixel_position_controler.h"
@@ -1499,18 +1500,18 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             if(w->m_style.get().borderStyle == 0)
             {
                 outputItem.shadow.reset( 
-                    CRenderedTextSubtitle::CreateDrawItem(spd, shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw,
+                    DrawItem::CreateDrawItem(spd, shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw,
                     w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
                     (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart))
                     );
-                bbox |= CRenderedTextSubtitle::DryDraw(spd, *outputItem.shadow);
+                bbox |= DrawItem::DryDraw(spd, *outputItem.shadow);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
                 outputItem.shadow.reset( 
-                    CRenderedTextSubtitle::CreateDrawItem(spd, shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw, true, false)
+                    DrawItem::CreateDrawItem(spd, shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw, true, false)
                     );
-                bbox |= CRenderedTextSubtitle::DryDraw(spd, *outputItem.shadow);
+                bbox |= DrawItem::DryDraw(spd, *outputItem.shadow);
             }
         }
         //outline
@@ -1532,16 +1533,16 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             if(w->m_style.get().borderStyle == 0)
             {
                 outputItem.outline.reset( 
-                    CRenderedTextSubtitle::CreateDrawItem(spd, outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
+                    DrawItem::CreateDrawItem(spd, outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
                     );
-                bbox |= CRenderedTextSubtitle::DryDraw(spd, *outputItem.outline);
+                bbox |= DrawItem::DryDraw(spd, *outputItem.outline);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
                 outputItem.outline.reset( 
-                    CRenderedTextSubtitle::CreateDrawItem(spd, outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, true, false)
+                    DrawItem::CreateDrawItem(spd, outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, true, false)
                     );
-                bbox |= CRenderedTextSubtitle::DryDraw(spd, *outputItem.outline);
+                bbox |= DrawItem::DryDraw(spd, *outputItem.outline);
             }
         }
         //body
@@ -1599,9 +1600,9 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                 sw[4] =rgb2yuv(sw[4], XY_AYUV);
             }
             outputItem.body.reset( 
-                CRenderedTextSubtitle::CreateDrawItem(spd, bodyOverlay, clipRect, clipper, bodyPos.x, bodyPos.y, sw, true, false)
+                DrawItem::CreateDrawItem(spd, bodyOverlay, clipRect, clipper, bodyPos.x, bodyPos.y, sw, true, false)
                 );
-            bbox |= CRenderedTextSubtitle::DryDraw(spd, *outputItem.body);            
+            bbox |= DrawItem::DryDraw(spd, *outputItem.body);            
         }
         p.x += w->m_width;
     }
@@ -3674,55 +3675,21 @@ void CRenderedTextSubtitle::Draw( SubPicDesc& spd, CompositeDrawItemListList& dr
         {
             CompositeDrawItem& draw_item = drawItemList.GetNext(item_pos);
             if(draw_item.shadow)
-                Draw( spd, *draw_item.shadow );
+                DrawItem::Draw( spd, *draw_item.shadow );
         }
         item_pos = drawItemList.GetHeadPosition();
         while(item_pos)
         {
             CompositeDrawItem& draw_item = drawItemList.GetNext(item_pos);
             if(draw_item.outline)
-                Draw( spd, *draw_item.outline );
+                DrawItem::Draw( spd, *draw_item.outline );
         }
         item_pos = drawItemList.GetHeadPosition();
         while(item_pos)
         {
             CompositeDrawItem& draw_item = drawItemList.GetNext(item_pos);
             if(draw_item.body)
-                Draw( spd, *draw_item.body );
+                DrawItem::Draw( spd, *draw_item.body );
         }
     }
-}
-
-CRect CRenderedTextSubtitle::DryDraw( SubPicDesc& spd, DrawItem& draw_item )
-{
-    return Rasterizer::DryDraw(spd, draw_item.overlay, draw_item.clip_rect, NULL,
-        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
-}
-
-CRect CRenderedTextSubtitle::Draw( SubPicDesc& spd, DrawItem& draw_item )
-{
-    CRect result;
-    const SharedPtrGrayImage2& alpha_mask = CClipper::GetAlphaMask(draw_item.clipper);
-    const SharedPtrByte& alpha = Rasterizer::CompositeAlphaMask(spd, draw_item.overlay, draw_item.clip_rect, alpha_mask.get(), 
-        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder, 
-        &result);
-    Rasterizer::Draw(spd, draw_item.overlay, result, alpha.get(), 
-        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
-    return result;
-}
-
-DrawItem* CRenderedTextSubtitle::CreateDrawItem( SubPicDesc& spd, const SharedPtrOverlay& overlay, const CRect& clipRect, 
-    const SharedPtrCClipper &clipper, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
-{
-    DrawItem* result = new DrawItem();
-    result->overlay = overlay;
-    result->clip_rect = clipRect;
-    result->clipper = clipper;
-    result->xsub = xsub;
-    result->ysub = ysub;
-
-    memcpy(result->switchpts, switchpts, sizeof(result->switchpts));
-    result->fBody = fBody;
-    result->fBorder = fBorder;
-    return result;
 }

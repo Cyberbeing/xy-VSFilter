@@ -47,27 +47,7 @@ class CPolygon;
 class CClipper;
 typedef ::boost::shared_ptr<CClipper> SharedPtrCClipper;
 
-struct DrawItem
-{
-    SharedPtrOverlay overlay;
-    CRect clip_rect;
-    SharedPtrCClipper clipper;
-    int xsub;
-    int ysub;
-    DWORD switchpts[6];
-    bool fBody;
-    bool fBorder;
-};
-
-typedef ::boost::shared_ptr<DrawItem> SharedPtrDrawItem;
-
-struct CompositeDrawItem
-{
-    SharedPtrDrawItem shadow;
-    SharedPtrDrawItem outline;
-    SharedPtrDrawItem body;
-};
-
+struct CompositeDrawItem;
 typedef CAtlList<CompositeDrawItem> CompositeDrawItemList;
 typedef CAtlList<CompositeDrawItemList> CompositeDrawItemListList;
 
@@ -446,16 +426,6 @@ private:
     void Draw(SubPicDesc& spd, CompositeDrawItemListList& drawItemListList);
 
     CSubtitle* GetSubtitle(int entry);
-public:
-    static CRect DryDraw(SubPicDesc& spd, DrawItem& draw_item);
-    static CRect Draw( SubPicDesc& spd, DrawItem& draw_item );
-
-    static DrawItem* CreateDrawItem(SubPicDesc& spd, 
-        const SharedPtrOverlay& overlay, 
-        const CRect& clipRect, 
-        const SharedPtrCClipper &clipper, 
-        int xsub, int ysub, 
-        const DWORD* switchpts, bool fBody, bool fBorder);
 
 protected:
     virtual void OnChanged();
