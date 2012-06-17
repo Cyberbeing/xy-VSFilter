@@ -423,8 +423,6 @@ private:
 
     double CalcAnimation(double dst, double src, bool fAnimate);
 
-    void Draw(SubPicDesc& spd, CompositeDrawItemListList& drawItemListList);
-
     CSubtitle* GetSubtitle(int entry);
 
 protected:
@@ -455,9 +453,9 @@ public:
     STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
     STDMETHODIMP ParseScript(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List );
     static void DoRender( SubPicDesc& spd, const CSubtitle2List& sub2List, 
-        CAtlList<CRect> *rectList, CompositeDrawItemListList *drawItemListList /*output*/);
+        CAtlList<CRect> *rectList, CompositeDrawItemListList *compDrawItemListList /*output*/);
     static void RenderOneSubtitle(SubPicDesc& spd, const CSubtitle2& sub2, 
-        CAtlList<CRect>* rectList, CompositeDrawItemList* drawItemList /*output*/);
+        CAtlList<CRect>* rectList, CompositeDrawItemList* compDrawItemList /*output*/);
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
 
     // IPersist

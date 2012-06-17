@@ -1500,18 +1500,18 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             if(w->m_style.get().borderStyle == 0)
             {
                 outputItem.shadow.reset( 
-                    DrawItem::CreateDrawItem(spd, shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw,
+                    DrawItem::CreateDrawItem(shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw,
                     w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
                     (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart))
                     );
-                bbox |= DrawItem::DryDraw(spd, *outputItem.shadow);
+                bbox |= DrawItem::GetDirtyRect(*outputItem.shadow);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
                 outputItem.shadow.reset( 
-                    DrawItem::CreateDrawItem(spd, shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw, true, false)
+                    DrawItem::CreateDrawItem( shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw, true, false)
                     );
-                bbox |= DrawItem::DryDraw(spd, *outputItem.shadow);
+                bbox |= DrawItem::GetDirtyRect(*outputItem.shadow);
             }
         }
         //outline
@@ -1533,16 +1533,16 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             if(w->m_style.get().borderStyle == 0)
             {
                 outputItem.outline.reset( 
-                    DrawItem::CreateDrawItem(spd, outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
+                    DrawItem::CreateDrawItem(outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
                     );
-                bbox |= DrawItem::DryDraw(spd, *outputItem.outline);
+                bbox |= DrawItem::GetDirtyRect(*outputItem.outline);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
                 outputItem.outline.reset( 
-                    DrawItem::CreateDrawItem(spd, outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, true, false)
+                    DrawItem::CreateDrawItem(outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, true, false)
                     );
-                bbox |= DrawItem::DryDraw(spd, *outputItem.outline);
+                bbox |= DrawItem::GetDirtyRect(*outputItem.outline);
             }
         }
         //body
@@ -1600,9 +1600,9 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                 sw[4] =rgb2yuv(sw[4], XY_AYUV);
             }
             outputItem.body.reset( 
-                DrawItem::CreateDrawItem(spd, bodyOverlay, clipRect, clipper, bodyPos.x, bodyPos.y, sw, true, false)
+                DrawItem::CreateDrawItem(bodyOverlay, clipRect, clipper, bodyPos.x, bodyPos.y, sw, true, false)
                 );
-            bbox |= DrawItem::DryDraw(spd, *outputItem.body);            
+            bbox |= DrawItem::GetDirtyRect(*outputItem.body);            
         }
         p.x += w->m_width;
     }
@@ -3465,27 +3465,27 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
         return hr;
     }
 
-    CompositeDrawItemListList drawItemListList;   
-    DoRender(spd, sub2List, &rectList, &drawItemListList);
-    Draw(spd, drawItemListList);
+    CompositeDrawItemListList compDrawItemListList;   
+    DoRender(spd, sub2List, &rectList, &compDrawItemListList);
+    CompositeDrawItem::Draw(spd, compDrawItemListList);
     return (!rectList.IsEmpty()) ? S_OK : S_FALSE;
 }
 
 void CRenderedTextSubtitle::DoRender( SubPicDesc& spd, const CSubtitle2List& sub2List, 
-    CAtlList<CRect> *rectList, CompositeDrawItemListList *drawItemListList /*output*/)
+    CAtlList<CRect> *rectList, CompositeDrawItemListList *compDrawItemListList /*output*/)
 {
     //check input and log error
     POSITION pos=sub2List.GetHeadPosition();
     while ( pos!=NULL )
     {
         const CSubtitle2& sub2 = sub2List.GetNext(pos);
-        CompositeDrawItemList& drawItemList = drawItemListList->GetAt(drawItemListList->AddTail());
-        RenderOneSubtitle(spd, sub2, rectList, &drawItemList);
+        CompositeDrawItemList& compDrawItemList = compDrawItemListList->GetAt(compDrawItemListList->AddTail());
+        RenderOneSubtitle(spd, sub2, rectList, &compDrawItemList);
     }
 }
 
 void CRenderedTextSubtitle::RenderOneSubtitle( SubPicDesc& spd, const CSubtitle2& sub2, 
-    CAtlList<CRect>* rectList, CompositeDrawItemList* drawItemList /*output*/)
+    CAtlList<CRect>* rectList, CompositeDrawItemList* compDrawItemList /*output*/)
 {   
     CSubtitle* s = sub2.s;
     const CRect& clipRect = sub2.clipRect;
@@ -3512,7 +3512,7 @@ void CRenderedTextSubtitle::RenderOneSubtitle( SubPicDesc& spd, const CSubtitle2
             : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
             :                            org.x - (l->m_width/2);
 
-        CompositeDrawItemList tmpDrawItemList;
+        CompositeDrawItemList tmpCompDrawItemList;
         if (s->m_clipInverse)
         {
             CompositeDrawItemList tmp1,tmp2,tmp3,tmp4;              
@@ -3527,20 +3527,20 @@ void CRenderedTextSubtitle::RenderOneSubtitle( SubPicDesc& spd, const CSubtitle2
             bbox2 |= l->PaintAll(&tmp2, spd, iclipRect[1], clipper, p, org2, time, alpha);
             bbox2 |= l->PaintAll(&tmp3, spd, iclipRect[2], clipper, p, org2, time, alpha);
             bbox2 |= l->PaintAll(&tmp4, spd, iclipRect[3], clipper, p, org2, time, alpha);
-            tmpDrawItemList.AddTailList(&tmp1);
-            tmpDrawItemList.AddTailList(&tmp2);
-            tmpDrawItemList.AddTailList(&tmp3);
-            tmpDrawItemList.AddTailList(&tmp4);
+            tmpCompDrawItemList.AddTailList(&tmp1);
+            tmpCompDrawItemList.AddTailList(&tmp2);
+            tmpCompDrawItemList.AddTailList(&tmp3);
+            tmpCompDrawItemList.AddTailList(&tmp4);
         }
         else
         {
             for (int i=0;i<l->GetWordCount();i++)
             {
-                tmpDrawItemList.AddTail();
+                tmpCompDrawItemList.AddTail();
             }
-            bbox2 |= l->PaintAll(&tmpDrawItemList, spd, clipRect, clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmpCompDrawItemList, spd, clipRect, clipper, p, org2, time, alpha);
         }
-        drawItemList->AddTailList(&tmpDrawItemList);
+        compDrawItemList->AddTailList(&tmpCompDrawItemList);
         p.y += l->m_ascent + l->m_descent;
     }
     rectList->AddTail(bbox2);
@@ -3613,34 +3613,4 @@ STDMETHODIMP_(bool) CRenderedTextSubtitle::IsColorTypeSupported( int type )
            type==MSP_AYUV ||
            type==MSP_XY_AUYV ||
            type==MSP_RGBA;
-}
-
-void CRenderedTextSubtitle::Draw( SubPicDesc& spd, CompositeDrawItemListList& drawItemListList )
-{
-    POSITION list_pos = drawItemListList.GetHeadPosition();
-    while(list_pos)
-    {
-        CompositeDrawItemList& drawItemList = drawItemListList.GetNext(list_pos);
-        POSITION item_pos = drawItemList.GetHeadPosition();
-        while(item_pos)
-        {
-            CompositeDrawItem& draw_item = drawItemList.GetNext(item_pos);
-            if(draw_item.shadow)
-                DrawItem::Draw( spd, *draw_item.shadow );
-        }
-        item_pos = drawItemList.GetHeadPosition();
-        while(item_pos)
-        {
-            CompositeDrawItem& draw_item = drawItemList.GetNext(item_pos);
-            if(draw_item.outline)
-                DrawItem::Draw( spd, *draw_item.outline );
-        }
-        item_pos = drawItemList.GetHeadPosition();
-        while(item_pos)
-        {
-            CompositeDrawItem& draw_item = drawItemList.GetNext(item_pos);
-            if(draw_item.body)
-                DrawItem::Draw( spd, *draw_item.body );
-        }
-    }
 }

@@ -3,6 +3,7 @@
 
 #include <WTypes.h>
 #include "RTS.h"
+#include <atlcoll.h>
 
 struct DrawItem
 {
@@ -16,11 +17,10 @@ public:
     bool fBody;
     bool fBorder;
 public:
-    static CRect DryDraw(SubPicDesc& spd, DrawItem& draw_item);
+    static CRect GetDirtyRect(DrawItem& draw_item);
     static CRect Draw( SubPicDesc& spd, DrawItem& draw_item );
 
-    static DrawItem* CreateDrawItem(SubPicDesc& spd,
-        const SharedPtrOverlay& overlay,
+    static DrawItem* CreateDrawItem(const SharedPtrOverlay& overlay,
         const CRect& clipRect,
         const SharedPtrCClipper &clipper,
         int xsub, int ysub,
@@ -29,12 +29,17 @@ public:
 
 typedef ::boost::shared_ptr<DrawItem> SharedPtrDrawItem;
 
+typedef CAtlList<CompositeDrawItem> CompositeDrawItemList;
+typedef CAtlList<CompositeDrawItemList> CompositeDrawItemListList;
+
 struct CompositeDrawItem
 {
+public:
     SharedPtrDrawItem shadow;
     SharedPtrDrawItem outline;
     SharedPtrDrawItem body;
+public:
+    static void Draw(SubPicDesc& spd, CompositeDrawItemListList& compDrawItemListList);
 };
-
 
 #endif // __DRAW_ITEM_21D18040_C396_4CA5_BFCE_5616A63F2C56_H__

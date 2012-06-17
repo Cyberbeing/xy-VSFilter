@@ -1394,35 +1394,20 @@ void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& cl
     return;
 }
 
-CRect Rasterizer::DryDraw( SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, byte* pAlphaMask, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
+CRect Rasterizer::DryDraw( const SharedPtrOverlay& overlay, const CRect& clipRect, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
 {
-    CRect bbox(0, 0, 0, 0);
-    if(!switchpts || !fBody && !fBorder) return(bbox);
+    CRect r;
+    if(!switchpts || !fBody && !fBorder) return(r);
 
-    // clip
-    // Limit drawn area to intersection of rendering surface and rectangular clip area
-    CRect r(0, 0, spd.w, spd.h);
-    r &= clipRect;
     // Remember that all subtitle coordinates are specified in 1/8 pixels
     // (x+4)>>3 rounds to nearest whole pixel.
     // ??? What is xsub, ysub, mOffsetX and mOffsetY ?
-    int overlayPitch = overlay->mOverlayPitch;
     int x = (xsub + overlay->mOffsetX + 4)>>3;
     int y = (ysub + overlay->mOffsetY + 4)>>3;
     int w = overlay->mOverlayWidth;
     int h = overlay->mOverlayHeight;
-    int xo = 0, yo = 0;
-    // Again, limiting?
-    if(x < r.left) {xo = r.left-x; w -= r.left-x; x = r.left;}
-    if(y < r.top) {yo = r.top-y; h -= r.top-y; y = r.top;}
-    if(x+w > r.right) w = r.right-x;
-    if(y+h > r.bottom) h = r.bottom-y;
-    // Check if there's actually anything to render
-    if(w <= 0 || h <= 0) return(bbox);
-    bbox.SetRect(x, y, x+w, y+h);
-    bbox &= CRect(0, 0, spd.w, spd.h);
-
-    return bbox;
+    r = clipRect & CRect(x, y, x+w, y+h);
+    return r;
 }
 
 void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nHeight, DWORD argb)
