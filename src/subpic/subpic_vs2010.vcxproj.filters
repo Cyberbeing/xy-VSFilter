@@ -101,5 +101,8 @@
     <ClInclude Include="SubPicProviderExWrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="xy_intrinsics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

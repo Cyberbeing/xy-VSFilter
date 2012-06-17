@@ -29,5 +29,8 @@
     <ClInclude Include="test_alphablend.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="test_instrinsics_macro.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
