@@ -154,6 +154,7 @@
     <ClCompile Include="cache_manager.cpp" />
     <ClCompile Include="CCDecoder.cpp" />
     <ClCompile Include="CompositionObject.cpp" />
+    <ClCompile Include="draw_item.cpp" />
     <ClCompile Include="DVBSub.cpp" />
     <ClCompile Include="GFN.cpp" />
     <ClCompile Include="HdmvSub.cpp" />
@@ -214,6 +215,7 @@
     <ClInclude Include="cache_manager.h" />
     <ClInclude Include="CCDecoder.h" />
     <ClInclude Include="CompositionObject.h" />
+    <ClInclude Include="draw_item.h" />
     <ClInclude Include="DVBSub.h" />
     <ClInclude Include="flyweight_base_types.h" />
     <ClInclude Include="GFN.h" />
