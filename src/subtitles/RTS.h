@@ -44,21 +44,6 @@ typedef ::boost::flyweights::flyweight<::boost::flyweights::key_value<STSStyleBa
 
 class CPolygon;
 
-struct OverlayList
-{
-    SharedPtrOverlay overlay;
-    OverlayList* next;
-
-    OverlayList()
-    {
-        next = NULL;
-    }
-    ~OverlayList()
-    {
-        delete next;
-    }
-};
-
 class CClipper;
 typedef ::boost::shared_ptr<CClipper> SharedPtrCClipper;
 
@@ -127,10 +112,13 @@ public:
     
     //use static func instead of obj member to avoid constructing a shared_ptr from this 
     //shared_from_this may cause a exception if the obj is not owned by a shared_ptr
-    static void PaintAll(SharedPtrCWord word, 
+    static void PaintAll(const SharedPtrCWord& word, 
         const CPoint& shadowPos, const CPoint& outlinePos, const CPoint& bodyPos, const CPoint& org,
-        SharedPtrOverlay* shadow, SharedPtrOverlay* outline, SharedPtrOverlay* body);
-    static void Paint(SharedPtrCWord word, const CPoint& psub, const CPoint& trans_org, OverlayList* overlay_list);
+        SharedPtrOverlay* shadow, SharedPtrOverlay* outline, SharedPtrOverlay* body);    
+    static void PaintBody(const SharedPtrCWord& word, const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay);
+    static void PaintOutline(const SharedPtrCWord& word, const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay);
+    static void PaintShadow(const SharedPtrCWord& word, const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay);
+
     static void PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay);
     void PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const OverlayKey& overlay_key, SharedPtrOverlay* overlay);
     bool PaintFromScanLineData2(const CPoint& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay);
