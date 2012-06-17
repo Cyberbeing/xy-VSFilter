@@ -1,5 +1,8 @@
 #include "stdafx.h"
 #include "draw_item.h"
+#include <vector>
+
+using namespace std;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -40,32 +43,101 @@ DrawItem* DrawItem::CreateDrawItem( const SharedPtrOverlay& overlay, const CRect
     return result;
 }
 
-void CompositeDrawItem::Draw( SubPicDesc& spd, CompositeDrawItemListList& compDrawItemListList )
+//////////////////////////////////////////////////////////////////////////
+//
+// DrawItemEx
+// 
+
+bool cmp_draw_order(DrawItemEx* lhs, DrawItemEx* rhs)
 {
+    return lhs->draw_order < rhs->draw_order;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// CompositeDrawItem
+// 
+
+CRect CompositeDrawItem::GetDirtyRect( CompositeDrawItem& item )
+{
+    CRect result;    
+    if (item.shadow)
+    {
+        result |= DrawItem::GetDirtyRect(*item.shadow);
+    }
+    if (item.outline)
+    {
+        result |= DrawItem::GetDirtyRect(*item.outline);
+    }
+    if (item.body)
+    {
+        result |= DrawItem::GetDirtyRect(*item.body);
+    }
+    return result;
+}
+
+void CompositeDrawItem::Draw( SubPicDesc& spd, CompositeDrawItemListList& compDrawItemListList )
+{    
+    DrawItemExList draw_item_ex_list;
+    CreateDrawItemExList(compDrawItemListList, &draw_item_ex_list);
+
+    typedef std::vector<DrawItemEx*> DrawItemExVec;
+    DrawItemExVec draw_item_ex_vec( draw_item_ex_list.GetCount() );
+    POSITION pos = draw_item_ex_list.GetHeadPosition();
+    DrawItemExVec::iterator iter=draw_item_ex_vec.begin();
+    while( iter != draw_item_ex_vec.end() )
+    {
+        *iter = &(draw_item_ex_list.GetNext(pos));
+        iter++;
+    }
+    std::sort(draw_item_ex_vec.begin(), draw_item_ex_vec.end(), cmp_draw_order);
+
+    iter=draw_item_ex_vec.begin();
+    while( iter != draw_item_ex_vec.end() )
+    {
+        DrawItem &item = *((*iter)->item);
+        DrawItem::Draw(spd, item);
+		iter++;
+    }
+}
+
+void CompositeDrawItem::CreateDrawItemExList( CompositeDrawItemListList& compDrawItemListList, DrawItemExList *output )
+{
+    ASSERT(output!=NULL);
     POSITION list_pos = compDrawItemListList.GetHeadPosition();
+    int comp_item_id = 1;
     while(list_pos)
     {
         CompositeDrawItemList& compDrawItemList = compDrawItemListList.GetNext(list_pos);
+        int count = compDrawItemList.GetCount();
+
         POSITION item_pos = compDrawItemList.GetHeadPosition();
-        while(item_pos)
+        for ( ; item_pos; comp_item_id++ )
         {
-            CompositeDrawItem& draw_item = compDrawItemList.GetNext(item_pos);
-            if(draw_item.shadow)
-                DrawItem::Draw( spd, *draw_item.shadow );
+            CompositeDrawItem& comp_draw_item = compDrawItemList.GetNext(item_pos);
+            CRect dirty_rect = CompositeDrawItem::GetDirtyRect(comp_draw_item);
+            if(comp_draw_item.shadow)
+            {
+                DrawItemEx &draw_item_ex = output->GetAt(output->AddTail());
+                draw_item_ex.draw_order = comp_item_id;
+                draw_item_ex.item = comp_draw_item.shadow;
+                draw_item_ex.dirty_rect = dirty_rect;
+            }
+            if(comp_draw_item.outline)
+            {
+                DrawItemEx &draw_item_ex = output->GetAt(output->AddTail());
+                draw_item_ex.draw_order = comp_item_id+count;
+                draw_item_ex.item = comp_draw_item.outline;
+                draw_item_ex.dirty_rect = dirty_rect;
+            }
+            if(comp_draw_item.body)
+            {
+                DrawItemEx &draw_item_ex = output->GetAt(output->AddTail());
+                draw_item_ex.draw_order = comp_item_id+2*count;
+                draw_item_ex.item = comp_draw_item.body;
+                draw_item_ex.dirty_rect = dirty_rect;
+            }
         }
-        item_pos = compDrawItemList.GetHeadPosition();
-        while(item_pos)
-        {
-            CompositeDrawItem& draw_item = compDrawItemList.GetNext(item_pos);
-            if(draw_item.outline)
-                DrawItem::Draw( spd, *draw_item.outline );
-        }
-        item_pos = compDrawItemList.GetHeadPosition();
-        while(item_pos)
-        {
-            CompositeDrawItem& draw_item = compDrawItemList.GetNext(item_pos);
-            if(draw_item.body)
-                DrawItem::Draw( spd, *draw_item.body );
-        }
+        comp_item_id += 2*count;
     }
 }
