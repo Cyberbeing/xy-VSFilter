@@ -31,19 +31,20 @@ class CDirectVobSub : public IDirectVobSub2, public IDirectVobSubXy, public IFil
 public:
     enum ColourSpaceOption
     {
-        BT_601 = 0,
-        BT_709,
-        AUTO_GUESS
+        YuvMatrix_AUTO = 0
+        ,BT_601
+        ,BT_709
+        ,GUESS
     };
     enum YuvRange
     {
-        YuvRange_TV = 0,
-        YuvRange_PC,
-        YuvRange_Auto
+        YuvRange_Auto = 0
+        ,YuvRange_TV
+        ,YuvRange_PC
     };
 
-    static const int REQUIRED_CONFIG_VERSION = 16;
-    static const int CUR_SUPPORTED_FILTER_VERSION = 0;
+    static const int REQUIRED_CONFIG_VERSION = 39;
+    static const int CUR_SUPPORTED_FILTER_VERSION = 39;
 protected:
 	CDirectVobSub();
 	virtual ~CDirectVobSub();

@@ -670,7 +670,7 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
         }
         else
         {
-            m_colourSpace = CDirectVobSub::BT_601;
+            m_colourSpace = CDirectVobSub::YuvMatrix_AUTO;
         }
 
         if (m_yuvRangeDropList.GetCurSel() != CB_ERR)
@@ -694,19 +694,22 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
 		//m_prebuff.SetCheck(m_fDoPreBuffering);
 
         //CString str;str.Format(_T("m_colourSpace:%d"),m_colourSpace);
-        if( m_colourSpace != CDirectVobSub::AUTO_GUESS && 
+        if( m_colourSpace != CDirectVobSub::YuvMatrix_AUTO && 
             m_colourSpace != CDirectVobSub::BT_601 && 
-            m_colourSpace != CDirectVobSub::BT_709 )
+            m_colourSpace != CDirectVobSub::BT_709 &&
+            m_colourSpace != CDirectVobSub::GUESS )
         {
-            m_colourSpace = CDirectVobSub::AUTO_GUESS;
+            m_colourSpace = CDirectVobSub::YuvMatrix_AUTO;
         }
         m_colourSpaceDropList.ResetContent();
+        m_colourSpaceDropList.AddString( CString(_T("Auto")) );
+        m_colourSpaceDropList.SetItemData( CDirectVobSub::YuvMatrix_AUTO, CDirectVobSub::YuvMatrix_AUTO );
         m_colourSpaceDropList.AddString( CString(_T("BT.601")) ); 
         m_colourSpaceDropList.SetItemData( CDirectVobSub::BT_601, CDirectVobSub::BT_601 );
         m_colourSpaceDropList.AddString( CString(_T("BT.709")) ); 
         m_colourSpaceDropList.SetItemData( CDirectVobSub::BT_709, CDirectVobSub::BT_709);
-        m_colourSpaceDropList.AddString( CString(_T("Auto")) );
-        m_colourSpaceDropList.SetItemData( CDirectVobSub::AUTO_GUESS, CDirectVobSub::AUTO_GUESS );        
+        m_colourSpaceDropList.AddString( CString(_T("Guess")) );
+        m_colourSpaceDropList.SetItemData( CDirectVobSub::GUESS, CDirectVobSub::GUESS );
         m_colourSpaceDropList.SetCurSel( m_colourSpace ); 
 
         if( m_yuvRange != CDirectVobSub::YuvRange_Auto &&
@@ -716,12 +719,12 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
             m_yuvRange = CDirectVobSub::YuvRange_Auto;
         }
         m_yuvRangeDropList.ResetContent();
+        m_yuvRangeDropList.AddString( CString(_T("Auto")) );
+        m_yuvRangeDropList.SetItemData( CDirectVobSub::YuvRange_Auto, CDirectVobSub::YuvRange_Auto );
         m_yuvRangeDropList.AddString( CString(_T("TV")) );
         m_yuvRangeDropList.SetItemData( CDirectVobSub::YuvRange_TV, CDirectVobSub::YuvRange_TV );
         m_yuvRangeDropList.AddString( CString(_T("PC")) );
         m_yuvRangeDropList.SetItemData( CDirectVobSub::YuvRange_PC, CDirectVobSub::YuvRange_PC );
-        m_yuvRangeDropList.AddString( CString(_T("Auto")) );
-        m_yuvRangeDropList.SetItemData( CDirectVobSub::YuvRange_Auto, CDirectVobSub::YuvRange_Auto );
         m_yuvRangeDropList.SetCurSel( m_yuvRange ); 
 
 		m_showosd.SetCheck(m_fOSD);

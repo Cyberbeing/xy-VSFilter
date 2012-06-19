@@ -92,7 +92,7 @@ public:
         ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
         ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
 
-        if ( m_colourSpace!=CDirectVobSub::BT_601 && m_colourSpace!=CDirectVobSub::BT_709 )
+        if ( m_colourSpace==CDirectVobSub::YuvMatrix_AUTO )
         {
             switch(m_script_selected_yuv)
             {
@@ -103,8 +103,8 @@ public:
                 yuv_matrix = ColorConvTable::BT709;
                 break;
             case CSimpleTextSubtitle::YCbCrMatrix_AUTO:
-            default:        
-                yuv_matrix = (dst.w > m_bt601Width || dst.h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
+            default:
+                yuv_matrix = ColorConvTable::BT601;                
                 break;
             }
         }
@@ -118,10 +118,13 @@ public:
             case CDirectVobSub::BT_709:
                 yuv_matrix = ColorConvTable::BT709;
                 break;
+            case CDirectVobSub::GUESS:
+                yuv_matrix = (dst.w > m_bt601Width || dst.h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
+                break;
             }
         }
 
-        if( m_yuvRange!=CDirectVobSub::YuvRange_TV && m_yuvRange!=CDirectVobSub::YuvRange_PC)
+        if( m_yuvRange==CDirectVobSub::YuvRange_Auto )
         {
             switch(m_script_selected_range)
             {
@@ -131,7 +134,7 @@ public:
             case CSimpleTextSubtitle::YCbCrRange_TV:
                 yuv_range = ColorConvTable::RANGE_TV;
                 break;
-            case CSimpleTextSubtitle::YCbCrMatrix_AUTO:
+            case CSimpleTextSubtitle::YCbCrRange_AUTO:
             default:        
                 yuv_range = ColorConvTable::RANGE_TV;
                 break;

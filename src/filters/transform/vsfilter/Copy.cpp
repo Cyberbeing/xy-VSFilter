@@ -568,7 +568,8 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
         tmp.Format( _T("Colourspace: %ls.%ls(%ls)\n"), 
             ColorConvTable::GetDefaultRangeType()==ColorConvTable::RANGE_PC ? _T("PC"):_T("TV"),
             ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT601 ? _T("BT.601"):_T("BT.709"),
-            m_colourSpace==CDirectVobSub::AUTO_GUESS ? _T("Guessed") : _T("forced") );
+            m_colourSpace==CDirectVobSub::YuvMatrix_AUTO ? _T("Auto") :
+              m_colourSpace==CDirectVobSub::GUESS ? _T("Guessed") : _T("forced") );
         msg += tmp;
 
         //print cache info
