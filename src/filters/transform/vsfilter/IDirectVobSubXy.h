@@ -10,12 +10,12 @@ extern "C" {
     [uuid("85E5D6F9-BEFB-4E01-B047-758359CDF9AB")]
 	interface IDirectVobSubXy : public IUnknown 
     {
-        STDMETHOD(get_ColourSpace) (THIS_
-                    int* colourSpace
+        STDMETHOD(get_ColorSpace) (THIS_
+                    int* colorSpace
                  ) PURE;
 
-        STDMETHOD(put_ColourSpace) (THIS_
-                    int colourSpace
+        STDMETHOD(put_ColorSpace) (THIS_
+                    int colorSpace
                 ) PURE;
 
         //

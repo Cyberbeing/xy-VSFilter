@@ -1228,10 +1228,10 @@ STDMETHODIMP CDirectVobSubFilter::put_PreBuffering(bool fDoPreBuffering)
 	return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::put_ColourSpace(int colourSpace)
+STDMETHODIMP CDirectVobSubFilter::put_ColorSpace(int colorSpace)
 {
     CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::put_ColourSpace(colourSpace);
+    HRESULT hr = CDirectVobSub::put_ColorSpace(colorSpace);
 
     if(hr == NOERROR)
     {
@@ -2314,7 +2314,7 @@ void CDirectVobSubFilter::SetYuvMatrix()
     ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
     ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
 
-    if ( m_colourSpace==CDirectVobSub::YuvMatrix_AUTO )
+    if ( m_colorSpace==CDirectVobSub::YuvMatrix_AUTO )
     {
         switch(m_script_selected_yuv)
         {
@@ -2332,7 +2332,7 @@ void CDirectVobSubFilter::SetYuvMatrix()
     }
     else
     {
-        switch(m_colourSpace)
+        switch(m_colorSpace)
         {
         case CDirectVobSub::BT_601:
             yuv_matrix = ColorConvTable::BT601;

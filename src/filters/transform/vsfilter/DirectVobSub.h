@@ -29,7 +29,7 @@
 class CDirectVobSub : public IDirectVobSub2, public IDirectVobSubXy, public IFilterVersion
 {
 public:
-    enum ColourSpaceOption
+    enum ColorSpaceOption
     {
         YuvMatrix_AUTO = 0
         ,BT_601
@@ -59,7 +59,7 @@ protected:
 	bool m_fHideSubtitles;
 	bool m_fDoPreBuffering;
 
-    int m_colourSpace, m_yuvRange;
+    int m_colorSpace, m_yuvRange;
     int m_bt601Width, m_bt601Height;//for AUTO_GUESS
 
 	bool m_fOverridePlacement;
@@ -117,8 +117,8 @@ public:
     STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
     STDMETHODIMP get_PreBuffering(bool* fDoPreBuffering);
     STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
-    STDMETHODIMP get_ColourSpace(int* colourSpace);
-    STDMETHODIMP put_ColourSpace(int colourSpace);
+    STDMETHODIMP get_ColorSpace(int* colorSpace);
+    STDMETHODIMP put_ColorSpace(int colorSpace);
     STDMETHODIMP get_YuvRange(int* yuvRange);
     STDMETHODIMP put_YuvRange(int yuvRange);
     STDMETHODIMP get_SubPictToBuffer(unsigned int* uSubPictToBuffer)

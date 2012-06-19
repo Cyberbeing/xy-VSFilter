@@ -45,7 +45,7 @@
 #define IDS_RG_WEBLOAD                  140
 #define IDS_RG_EMBEDDEDLOAD             141
 #define IDS_RG_USE_BT709                142
-#define IDS_RG_COLOUR_SPACE             142
+#define IDS_RG_COLOR_SPACE             142
 #define IDS_R_PERFORMANCE               143
 #define IDS_R_TIMING                    144
 #define IDS_RTM_SUBTITLEDELAY           145
@@ -185,7 +185,7 @@
 #define IDC_SPINOverlayNoBlurCache      326
 #define IDC_CACHES_INFO_BTN             327
 #define IDC_CHECK_FOLLOW_UPSTREAM       329
-#define IDC_COMBO_COLOUR_SPACE          330
+#define IDC_COMBO_COLOR_SPACE          330
 #define IDC_VERSION                     331
 #define IDC_COMBO_YUV_RANGE             332
 #define IDC_CACHE_OPTIONS               401

@@ -37,13 +37,13 @@ CDirectVobSub::CDirectVobSub()
     m_fHideSubtitles = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), 0);
 	m_fDoPreBuffering = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), 1);
     
-    m_colourSpace = GetCompatibleProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOUR_SPACE), CDirectVobSub::YuvMatrix_AUTO);
-    if( m_colourSpace!=CDirectVobSub::YuvMatrix_AUTO && 
-        m_colourSpace!=CDirectVobSub::BT_601 && 
-        m_colourSpace!=CDirectVobSub::BT_709 &&
-        m_colourSpace!=CDirectVobSub::GUESS)
+    m_colorSpace = GetCompatibleProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOR_SPACE), CDirectVobSub::YuvMatrix_AUTO);
+    if( m_colorSpace!=CDirectVobSub::YuvMatrix_AUTO && 
+        m_colorSpace!=CDirectVobSub::BT_601 && 
+        m_colorSpace!=CDirectVobSub::BT_709 &&
+        m_colorSpace!=CDirectVobSub::GUESS)
     {
-        m_colourSpace = CDirectVobSub::YuvMatrix_AUTO;
+        m_colorSpace = CDirectVobSub::YuvMatrix_AUTO;
     }
     m_yuvRange = GetCompatibleProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), CDirectVobSub::YuvRange_Auto);
     if( m_yuvRange!=CDirectVobSub::YuvRange_Auto && 
@@ -278,20 +278,20 @@ STDMETHODIMP CDirectVobSub::put_PreBuffering(bool fDoPreBuffering)
 	//return S_OK;
 }
 
-STDMETHODIMP CDirectVobSub::get_ColourSpace(int* colourSpace)
+STDMETHODIMP CDirectVobSub::get_ColorSpace(int* colorSpace)
 {
     CAutoLock cAutoLock(&m_propsLock);
 
-    return colourSpace ? *colourSpace = m_colourSpace, S_OK : E_POINTER;
+    return colorSpace ? *colorSpace = m_colorSpace, S_OK : E_POINTER;
 }
 
-STDMETHODIMP CDirectVobSub::put_ColourSpace(int colourSpace)
+STDMETHODIMP CDirectVobSub::put_ColorSpace(int colorSpace)
 {
     CAutoLock cAutoLock(&m_propsLock);
 
-    if(m_colourSpace == colourSpace) return S_FALSE;
+    if(m_colorSpace == colorSpace) return S_FALSE;
 
-    m_colourSpace = colourSpace;
+    m_colorSpace = colorSpace;
 
     return S_OK;
 }
@@ -818,7 +818,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), m_yuvRange);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOUR_SPACE), m_colourSpace);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOR_SPACE), m_colorSpace);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_HEIGHT), 600);
 

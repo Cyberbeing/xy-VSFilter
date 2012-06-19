@@ -202,7 +202,7 @@ BEGIN
     GROUPBOX        "Subtitle Output",IDC_STATIC,7,90,232,45
     COMBOBOX        IDC_COMBO_YUV_RANGE,22,116,44,16,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "YCbCr level range",IDC_STATIC,19,103,62,11
-    COMBOBOX        IDC_COMBO_COLOUR_SPACE,94,116,48,16,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_COLOR_SPACE,94,116,48,16,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "YCbCr matrix",IDC_STATIC,95,103,44,11
     CONTROL         "Pre-&buffer subpictures",IDC_PREBUFFERING,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,148,118,88,10
     CONTROL         "&Auto-reload subtitle files after detecting modification",IDC_AUTORELOAD,
@@ -562,7 +562,7 @@ BEGIN
     IDS_RG_EXTERNALLOAD     "ExtLoad"
     IDS_RG_WEBLOAD          "WebLoad"
     IDS_RG_EMBEDDEDLOAD     "EmbLoad"
-    IDS_RG_COLOUR_SPACE     "Colour Space"
+    IDS_RG_COLOR_SPACE     "Color Space"
     IDS_R_PERFORMANCE       "Performance"
 END
 
