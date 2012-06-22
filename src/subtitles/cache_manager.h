@@ -74,14 +74,22 @@ class ScanLineData2CacheKey: public PathDataCacheKey
 {
 public:
     ScanLineData2CacheKey(const CWord& word, const POINT& org):PathDataCacheKey(word),m_org(org) { }
-    ScanLineData2CacheKey(const ScanLineData2CacheKey& key):PathDataCacheKey(key),m_org(key.m_org) { }
+    ScanLineData2CacheKey(const ScanLineData2CacheKey& key)
+        :PathDataCacheKey(key)
+        ,m_org(key.m_org)
+        ,m_hash_value(key.m_hash_value) { }
     ScanLineData2CacheKey(const FwSTSStyle& style, const CStringW& str, const POINT& org)
         :PathDataCacheKey(style, str),m_org(org) { }
     bool operator==(const ScanLineData2CacheKey& key)const;
 
+    ULONG UpdateHashValue();
+    ULONG GetHashValue()const
+    {
+        return m_hash_value;
+    }
+public:
+    ULONG m_hash_value;
     POINT m_org;
-
-    friend class ScanLineData2CacheKeyTraits;
 };
 
 class OverlayNoBlurKey: public ScanLineData2CacheKey
@@ -167,12 +175,6 @@ public:
     static ULONG Hash(const PathDataCacheKey& key);
 };
 
-class ScanLineData2CacheKeyTraits:public CElementTraits<ScanLineData2CacheKey>
-{
-public:
-    static ULONG Hash(const ScanLineData2CacheKey& key);
-};
-
 class ScanLineDataCacheKeyTraits:public CElementTraits<ScanLineDataCacheKey>
 {
 public:
@@ -214,7 +216,7 @@ typedef EnhancedXyMru<CWordCacheKey, SharedPtrCWord, XyCacheKeyTraits<CWordCache
 
 typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, PathDataCacheKeyTraits> PathDataMruCache;
 
-typedef EnhancedXyMru<ScanLineData2CacheKey, SharedPtrConstScanLineData2, ScanLineData2CacheKeyTraits> ScanLineData2MruCache;
+typedef EnhancedXyMru<ScanLineData2CacheKey, SharedPtrConstScanLineData2, XyCacheKeyTraits<ScanLineData2CacheKey>> ScanLineData2MruCache;
 
 typedef EnhancedXyMru<OverlayNoBlurKey, SharedPtrOverlay, XyCacheKeyTraits<OverlayNoBlurKey>> OverlayNoBlurMruCache;
 
