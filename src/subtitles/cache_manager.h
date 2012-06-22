@@ -34,11 +34,17 @@ public:
     bool operator==(const CWordCacheKey& key)const;
     bool operator==(const CWord& key)const;
 
+    ULONG UpdateHashValue();
+    ULONG GetHashValue()const
+    {
+        return m_hash_value;
+    }
+public:
     CStringW m_str;
     FwSTSStyle m_style;
     int m_ktype, m_kstart, m_kend;
 
-    friend class CWordCacheKeyTraits;
+    ULONG m_hash_value;
 };
 
 class PathDataCacheKey
@@ -142,12 +148,6 @@ public:
     }
 };
 
-class CWordCacheKeyTraits:public CElementTraits<CWordCacheKey>
-{
-public:
-    static ULONG Hash(const CWordCacheKey& key);
-};
-
 class PathDataCacheKeyTraits:public CElementTraits<PathDataCacheKey>
 {
 public:
@@ -209,7 +209,7 @@ typedef EnhancedXyMru<
     CStringElementTraits<CStringW>
 > AssTagListMruCache;
 
-typedef EnhancedXyMru<CWordCacheKey, SharedPtrCWord, CWordCacheKeyTraits> CWordMruCache;
+typedef EnhancedXyMru<CWordCacheKey, SharedPtrCWord, XyCacheKeyTraits<CWordCacheKey>> CWordMruCache;
 
 typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, PathDataCacheKeyTraits> PathDataMruCache;
 
