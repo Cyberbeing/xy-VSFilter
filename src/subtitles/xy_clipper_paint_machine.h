@@ -14,8 +14,9 @@ class CClipperPaintMachine
 public:
     CClipperPaintMachine(const SharedPtrCClipper& clipper)
         : m_clipper(clipper){}
-  
+
     void Paint(SharedPtrGrayImage2* output);
+    CRect CalcDirtyRect();
 private:
     SharedPtrCClipper m_clipper;
 };

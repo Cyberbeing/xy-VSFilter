@@ -1333,7 +1333,7 @@ void CLine::Compact()
 }
 
 CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRect& clipRect, 
-    const SharedPtrCClipper &clipper, CPoint p, const CPoint& org, const int time, const int alpha )
+    const SharedPtrCClipperPaintMachine &clipper, CPoint p, const CPoint& org, const int time, const int alpha )
 {
     CRect bbox(0, 0, 0, 0);
     POSITION pos = GetHeadPosition();
@@ -3418,7 +3418,8 @@ void CRenderedTextSubtitle::RenderOneSubtitle( SubPicDesc& spd, const CSubtitle2
     int time = sub2.time;
     if(!s) return;
 
-    const SharedPtrCClipper& clipper = s->m_pClipper;
+    SharedPtrCClipperPaintMachine clipper( new CClipperPaintMachine(s->m_pClipper) );
+
     CRect iclipRect[4];
     iclipRect[0] = CRect(0, 0, spd.w, clipRect.top);
     iclipRect[1] = CRect(0, clipRect.top, clipRect.left, clipRect.bottom);

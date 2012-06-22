@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
 #include "xy_overlay_paint_machine.h"
+#include "xy_clipper_paint_machine.h"
 
 using namespace std;
 
@@ -27,13 +28,15 @@ CRect DrawItem::GetDirtyRect()
     int w = overlay_rect.Width()>>3;
     int h = overlay_rect.Height()>>3;
     r = clip_rect & CRect(x, y, x+w, y+h);
+    r &= clipper->CalcDirtyRect();
     return r;
 }
 
 CRect DrawItem::Draw( SubPicDesc& spd, DrawItem& draw_item, const CRect& clip_rect )
 {
     CRect result;
-    const SharedPtrGrayImage2& alpha_mask = CClipper::GetAlphaMask(draw_item.clipper);
+    SharedPtrGrayImage2 alpha_mask;
+    draw_item.clipper->Paint(&alpha_mask);
     
     SharedPtrOverlay overlay;
     ASSERT(draw_item.overlay_paint_machine);
@@ -48,7 +51,7 @@ CRect DrawItem::Draw( SubPicDesc& spd, DrawItem& draw_item, const CRect& clip_re
 }
 
 DrawItem* DrawItem::CreateDrawItem( const SharedPtrOverlayPaintMachine& overlay_paint_machine, const CRect& clipRect,
-    const SharedPtrCClipper &clipper, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
+    const SharedPtrCClipperPaintMachine &clipper, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
 {
     DrawItem* result = new DrawItem();
     result->overlay_paint_machine = overlay_paint_machine;
