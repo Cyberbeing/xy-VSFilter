@@ -4,11 +4,15 @@
 #include <WTypes.h>
 #include "RTS.h"
 #include <atlcoll.h>
+#include <boost/shared_ptr.hpp>
+
+class OverlayPaintMachine;
+typedef ::boost::shared_ptr<OverlayPaintMachine> SharedPtrOverlayPaintMachine;
 
 struct DrawItem
 {
 public:
-    SharedPtrOverlay overlay;
+    SharedPtrOverlayPaintMachine overlay_paint_machine;
     CRect clip_rect;
     SharedPtrCClipper clipper;
     int xsub;
@@ -17,10 +21,10 @@ public:
     bool fBody;
     bool fBorder;
 public:
-    static CRect GetDirtyRect(DrawItem& draw_item);
+    CRect GetDirtyRect();
     static CRect Draw( SubPicDesc& spd, DrawItem& draw_item, const CRect& clip_rect );
 
-    static DrawItem* CreateDrawItem(const SharedPtrOverlay& overlay,
+    static DrawItem* CreateDrawItem(const SharedPtrOverlayPaintMachine& overlay_paint_machine,
         const CRect& clipRect,
         const SharedPtrCClipper &clipper,
         int xsub, int ysub,

@@ -15,6 +15,21 @@ void OverlayPaintMachine::Paint(SharedPtrOverlay* overlay)
     m_inner_paint_machine->Paint(m_layer, overlay);
 }
 
+CRect OverlayPaintMachine::CalcDirtyRect()
+{
+    ASSERT(m_inner_paint_machine);
+    m_inner_paint_machine->Paint(m_layer, &m_overlay);//fix me: not a decent state machine yet
+    if (m_overlay)
+    {
+        int x = m_overlay->mOffsetX;
+        int y = m_overlay->mOffsetY;
+        int w = 8*m_overlay->mOverlayWidth;
+        int h = 8*m_overlay->mOverlayHeight;
+        return CRect(x, y, x+w, y+h);
+    }
+    return CRect(0,0,0,0);
+}
+
 void CWordPaintMachine::Paint( LAYER layer, SharedPtrOverlay* overlay )
 {
     switch (layer)

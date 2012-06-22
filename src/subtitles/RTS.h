@@ -90,11 +90,7 @@ public:
     virtual SharedPtrCWord Copy() = 0;
     virtual bool Append(const SharedPtrCWord& w);
     
-    //use static func instead of obj member to avoid constructing a shared_ptr from this 
-    //shared_from_this may cause a exception if the obj is not owned by a shared_ptr
-    static void PaintAll(const SharedPtrCWord& word, 
-        const CPoint& shadowPos, const CPoint& outlinePos, const CPoint& bodyPos, const CPoint& org,
-        SharedPtrOverlay* shadow, SharedPtrOverlay* outline, SharedPtrOverlay* body);
+    
 
     static void PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay);
     void PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const OverlayKey& overlay_key, SharedPtrOverlay* overlay);

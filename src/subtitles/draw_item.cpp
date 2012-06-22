@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
+#include "xy_overlay_paint_machine.h"
 
 using namespace std;
 
@@ -10,30 +11,47 @@ using namespace std;
 //
 // DrawItem
 // 
-CRect DrawItem::GetDirtyRect( DrawItem& draw_item )
+CRect DrawItem::GetDirtyRect()
 {
-    //fix me: intersect with clipper rect 
-    return Rasterizer::DryDraw(draw_item.overlay, draw_item.clip_rect, 
-        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
+    CRect r;
+    if(!switchpts || !fBody && !fBorder) return(r);
+
+    ASSERT(overlay_paint_machine);
+    CRect overlay_rect = overlay_paint_machine->CalcDirtyRect();
+
+    // Remember that all subtitle coordinates are specified in 1/8 pixels
+    // (x+4)>>3 rounds to nearest whole pixel.
+    // ??? What is xsub, ysub, mOffsetX and mOffsetY ?
+    int x = (xsub + overlay_rect.left + 4)>>3;
+    int y = (ysub + overlay_rect.top + 4)>>3;
+    int w = overlay_rect.Width()>>3;
+    int h = overlay_rect.Height()>>3;
+    r = clip_rect & CRect(x, y, x+w, y+h);
+    return r;
 }
 
 CRect DrawItem::Draw( SubPicDesc& spd, DrawItem& draw_item, const CRect& clip_rect )
 {
     CRect result;
     const SharedPtrGrayImage2& alpha_mask = CClipper::GetAlphaMask(draw_item.clipper);
-    const SharedPtrByte& alpha = Rasterizer::CompositeAlphaMask(spd, draw_item.overlay, draw_item.clip_rect & clip_rect, alpha_mask.get(),
+    
+    SharedPtrOverlay overlay;
+    ASSERT(draw_item.overlay_paint_machine);
+    draw_item.overlay_paint_machine->Paint(&overlay);
+
+    const SharedPtrByte& alpha = Rasterizer::CompositeAlphaMask(spd, overlay, draw_item.clip_rect & clip_rect, alpha_mask.get(),
         draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder,
         &result);
-    Rasterizer::Draw(spd, draw_item.overlay, result, alpha.get(),
+    Rasterizer::Draw(spd, overlay, result, alpha.get(),
         draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
     return result;
 }
 
-DrawItem* DrawItem::CreateDrawItem( const SharedPtrOverlay& overlay, const CRect& clipRect,
+DrawItem* DrawItem::CreateDrawItem( const SharedPtrOverlayPaintMachine& overlay_paint_machine, const CRect& clipRect,
     const SharedPtrCClipper &clipper, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
 {
     DrawItem* result = new DrawItem();
-    result->overlay = overlay;
+    result->overlay_paint_machine = overlay_paint_machine;
     result->clip_rect = clipRect;
     result->clipper = clipper;
     result->xsub = xsub;
@@ -55,15 +73,15 @@ CRect CompositeDrawItem::GetDirtyRect( CompositeDrawItem& item )
     CRect result;    
     if (item.shadow)
     {
-        result |= DrawItem::GetDirtyRect(*item.shadow);
+        result |= item.shadow->GetDirtyRect();
     }
     if (item.outline)
     {
-        result |= DrawItem::GetDirtyRect(*item.outline);
+        result |= item.outline->GetDirtyRect();
     }
     if (item.body)
     {
-        result |= DrawItem::GetDirtyRect(*item.body);
+        result |= *item.body->GetDirtyRect();
     }
     return result;
 }
