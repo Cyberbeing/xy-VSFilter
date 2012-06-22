@@ -9,12 +9,15 @@
 class OverlayPaintMachine;
 typedef ::boost::shared_ptr<OverlayPaintMachine> SharedPtrOverlayPaintMachine;
 
+class CClipperPaintMachine;
+typedef ::boost::shared_ptr<CClipperPaintMachine> SharedPtrCClipperPaintMachine;
+
 struct DrawItem
 {
 public:
     SharedPtrOverlayPaintMachine overlay_paint_machine;
     CRect clip_rect;
-    SharedPtrCClipper clipper;
+    SharedPtrCClipperPaintMachine clipper;
     int xsub;
     int ysub;
     DWORD switchpts[6];
@@ -26,7 +29,7 @@ public:
 
     static DrawItem* CreateDrawItem(const SharedPtrOverlayPaintMachine& overlay_paint_machine,
         const CRect& clipRect,
-        const SharedPtrCClipper &clipper,
+        const SharedPtrCClipperPaintMachine &clipper,
         int xsub, int ysub,
         const DWORD* switchpts, bool fBody, bool fBorder);
 };

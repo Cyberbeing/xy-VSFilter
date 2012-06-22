@@ -56,6 +56,9 @@ typedef CWord* PCWord;
 typedef ::boost::shared_ptr<CWord> SharedPtrCWord;
 typedef ::boost::shared_ptr<CPolygon> SharedPtrCPolygon;
 
+class CClipperPaintMachine;
+typedef ::boost::shared_ptr<CClipperPaintMachine> SharedPtrCClipperPaintMachine;
+
 class OverlayKey;
 class CWord
 {
@@ -229,7 +232,8 @@ public:
     void AddWord2Tail(SharedPtrCWord words);
     bool IsEmpty();
 
-    CRect PaintAll(CompositeDrawItemList* output, SubPicDesc& spd, const CRect& clipRect, const SharedPtrCClipper &clipper, 
+    CRect PaintAll(CompositeDrawItemList* output, SubPicDesc& spd, const CRect& clipRect, 
+        const SharedPtrCClipperPaintMachine &clipper, 
         CPoint p, const CPoint& org, const int time, const int alpha);
 };
 
