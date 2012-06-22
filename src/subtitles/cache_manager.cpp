@@ -25,11 +25,6 @@ ULONG PathDataTraits::Hash( const PathData& key )
     return hash;
 }
 
-ULONG ScanLineDataCacheKeyTraits::Hash( const ScanLineDataCacheKey& key )
-{
-    return PathDataTraits::Hash(*key.m_path_data);
-}
-
 ULONG ClipperAlphaMaskCacheKeyTraits::Hash( const ClipperAlphaMaskCacheKey& key )
 {
     return Hash(*key.m_clipper);
@@ -254,6 +249,12 @@ bool ScanLineDataCacheKey::operator==( const ScanLineDataCacheKey& key ) const
     return (m_path_data && key.m_path_data) ? *m_path_data==*key.m_path_data : m_path_data==key.m_path_data;
 }
 
+ULONG ScanLineDataCacheKey::UpdateHashValue()
+{
+    m_hash_value = PathDataTraits::Hash(*m_path_data);
+    return m_hash_value;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // OverlayNoOffsetKey
@@ -266,7 +267,7 @@ bool OverlayNoOffsetKey::operator==( const OverlayNoOffsetKey& key ) const
 
 ULONG OverlayNoOffsetKey::UpdateHashValue()
 {
-    m_hash_value = ScanLineDataCacheKeyTraits::Hash(*this);
+    m_hash_value = __super::UpdateHashValue();
     m_hash_value += (m_hash_value<<5);
     m_hash_value += m_border;
     m_hash_value += (m_hash_value<<5);
