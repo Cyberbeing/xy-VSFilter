@@ -25,12 +25,7 @@ ULONG PathDataTraits::Hash( const PathData& key )
     return hash;
 }
 
-ULONG ClipperAlphaMaskCacheKeyTraits::Hash( const ClipperAlphaMaskCacheKey& key )
-{
-    return Hash(*key.m_clipper);
-}
-
-ULONG ClipperAlphaMaskCacheKeyTraits::Hash( const CClipper& key )
+ULONG ClipperTraits::Hash( const CClipper& key )
 {
     ULONG hash = CStringElementTraits<CString>::Hash(key.m_polygon->m_str);;
     hash += (hash<<5);
@@ -301,6 +296,13 @@ bool ClipperAlphaMaskCacheKey::operator==( const ClipperAlphaMaskCacheKey& key )
     }
     return result;
 }
+
+ULONG ClipperAlphaMaskCacheKey::UpdateHashValue()
+{
+    m_hash_value = ClipperTraits::Hash(*m_clipper);
+    return m_hash_value;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
