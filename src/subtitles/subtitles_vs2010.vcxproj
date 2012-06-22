@@ -209,6 +209,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode log|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="xy_overlay_paint_machine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseSub.h" />
@@ -237,6 +238,7 @@
     <ClInclude Include="VobSubFileRipper.h" />
     <ClInclude Include="VobSubImage.h" />
     <ClInclude Include="xy_malloc.h" />
+    <ClInclude Include="xy_overlay_paint_machine.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

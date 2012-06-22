@@ -110,6 +110,7 @@ public:
     friend class PathDataCacheKey;
     friend class ClipperTraits;
     friend class ClipperAlphaMaskCacheKey;
+    friend class OverlayPaintMachine;
     friend std::size_t hash_value(const CWord& key); 
 };
 
