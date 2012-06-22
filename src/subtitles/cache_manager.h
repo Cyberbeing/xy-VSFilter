@@ -143,6 +143,13 @@ public:
     ScanLineDataCacheKey(const SharedPtrConstPathData& path_data):m_path_data(path_data){}
     bool operator==(const ScanLineDataCacheKey& key)const;
 
+    ULONG UpdateHashValue();
+    ULONG GetHashValue()const
+    {
+        return m_hash_value;
+    }
+public:
+    ULONG m_hash_value;
     SharedPtrConstPathData m_path_data;
 };
 
@@ -186,12 +193,6 @@ public:
     }
 };
 
-class ScanLineDataCacheKeyTraits:public CElementTraits<ScanLineDataCacheKey>
-{
-public:
-    static ULONG Hash(const ScanLineDataCacheKey& key);
-};
-
 class PathDataTraits:public CElementTraits<PathData>
 {
 public:
@@ -227,7 +228,7 @@ typedef EnhancedXyMru<OverlayNoBlurKey, SharedPtrOverlay, XyCacheKeyTraits<Overl
 
 typedef EnhancedXyMru<OverlayKey, SharedPtrOverlay, XyCacheKeyTraits<OverlayKey>> OverlayMruCache;
 
-typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
+typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, XyCacheKeyTraits<ScanLineDataCacheKey>> ScanLineDataMruCache;
 
 typedef EnhancedXyMru<OverlayNoOffsetKey, OverlayNoBlurKey, XyCacheKeyTraits<OverlayNoOffsetKey>> OverlayNoOffsetMruCache;
 
