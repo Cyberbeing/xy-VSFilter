@@ -321,6 +321,7 @@ bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const
 
     OverlayNoOffsetMruCache* overlay_key_cache = CacheManager::GetOverlayNoOffsetMruCache();
     OverlayNoOffsetKey overlay_no_offset_key(shared_ptr_path_data2, psub.x, psub.y, border_x, border_y);
+    overlay_no_offset_key.UpdateHashValue();
     POSITION pos = overlay_key_cache->Lookup(overlay_no_offset_key);
         
     OverlayNoBlurMruCache* overlay_cache = CacheManager::GetOverlayNoBlurMruCache();
