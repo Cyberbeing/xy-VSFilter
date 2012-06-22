@@ -108,8 +108,8 @@ public:
     //friend class CWordCache;
     friend class CWordCacheKey;
     friend class PathDataCacheKey;
+    friend class ClipperTraits;
     friend class ClipperAlphaMaskCacheKey;
-    friend class ClipperAlphaMaskCacheKeyTraits;
     friend std::size_t hash_value(const CWord& key); 
 };
 
@@ -156,8 +156,8 @@ public:
     virtual SharedPtrCWord Copy();
     virtual bool Append(const SharedPtrCWord& w);
 
+    friend class ClipperTraits;
     friend class ClipperAlphaMaskCacheKey;
-    friend class ClipperAlphaMaskCacheKeyTraits;
 };
 
 enum eftype
@@ -217,8 +217,8 @@ public:
 
     static SharedPtrGrayImage2 GetAlphaMask(const SharedPtrCClipper& clipper);
 
+    friend class ClipperTraits;
     friend class ClipperAlphaMaskCacheKey;
-    friend class ClipperAlphaMaskCacheKeyTraits;
 };
 
 class CLine: private CAtlList<SharedPtrCWord>

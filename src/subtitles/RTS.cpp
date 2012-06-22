@@ -1386,6 +1386,7 @@ SharedPtrGrayImage2 CClipper::GetAlphaMask( const SharedPtrCClipper& clipper )
     if (clipper!=NULL)
     {
         ClipperAlphaMaskCacheKey key(clipper);
+        key.UpdateHashValue();
         ClipperAlphaMaskMruCache * cache = CacheManager::GetClipperAlphaMaskMruCache();
         POSITION pos = cache->Lookup(key);
         if( pos!=NULL )
