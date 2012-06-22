@@ -134,6 +134,7 @@
     </ClCompile>
     <ClCompile Include="text.cpp" />
     <ClCompile Include="vd.cpp" />
+    <ClCompile Include="xy_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DSMPropertyBag.h" />
@@ -150,6 +151,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="text.h" />
     <ClInclude Include="vd.h" />
+    <ClInclude Include="xy_utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
