@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "draw_item.h"
+#include <vector>
+#include <algorithm>
 #include <boost/shared_ptr.hpp>
 
 using namespace std;
@@ -233,13 +235,106 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
     if(output==NULL || input_count==0)
         return;
 
-    XyRectEx& result = output->GetAt(output->AddTail());
-    result.item_ex_list.reset(new PCompositeDrawItemExList());
-    POSITION pos = input.GetHeadPosition();
-    while(pos)
+    typedef CAtlList<XyRectEx> Segment;
+
+    struct BreakPoint
     {
-        const XyRectEx& item = input.GetNext(pos);
-        result.SetRect(result | item);
-        result.item_ex_list->AddTailList(item.item_ex_list.get());
+        int x;
+        const XyRectEx* rect;
+
+        inline bool operator<(const BreakPoint& breakpoint ) const
+        {
+            return (x < breakpoint.x);
+        }
+    };
+
+    std::vector<int> vertical_breakpoints(2*input_count);
+    std::vector<BreakPoint> herizon_breakpoints(input_count);
+
+    POSITION pos = input.GetHeadPosition();
+    for(int i=0; i<input_count; i++)
+    {
+        const XyRectEx& rect = input.GetNext(pos);
+        vertical_breakpoints[2*i]=rect.top;
+        vertical_breakpoints[2*i+1]=rect.bottom;
+
+        herizon_breakpoints[i].x = rect.left;
+        herizon_breakpoints[i].rect = &rect;
+    }
+
+    std::sort(vertical_breakpoints.begin(), vertical_breakpoints.end());
+    std::sort(herizon_breakpoints.begin(), herizon_breakpoints.end());
+
+    CAtlArray<Segment> tempSegments;
+    tempSegments.SetCount(vertical_breakpoints.size()-1);
+    int prev = vertical_breakpoints[0], count = 0;
+    for(int ptr = 1; ptr<vertical_breakpoints.size(); ptr++)
+    {
+        if(vertical_breakpoints[ptr] != prev)
+        {
+            Segment& seg = tempSegments[count];
+            seg.AddTail();
+            seg.GetTail().SetRect(INT_MIN, prev, INT_MIN, vertical_breakpoints[ptr]);
+            seg.GetTail().item_ex_list.reset(new PCompositeDrawItemExList());
+
+            prev = vertical_breakpoints[ptr];
+            count++;
+        }
+    }
+
+    for(int i=0; i<input_count; i++)
+    {
+        const XyRectEx& rect = *herizon_breakpoints[i].rect;
+
+        int start = 0, mid, end = count;
+
+        while(start<end)
+        {
+            mid = (start+end)>>1;
+            if(tempSegments[mid].GetTail().top < rect.top)
+            {
+                start = mid+1;
+            }
+            else
+            {
+                end = mid;
+            }
+        }
+        for(; start < count; start++)
+        {
+            CAtlList<XyRectEx>& cur_line = tempSegments[start];
+            XyRectEx & item = cur_line.GetTail();
+            if (item.top >= rect.bottom)
+            {
+                break;
+            }
+            if (item.right<rect.left)
+            {
+                cur_line.AddTail();
+                XyRectEx & new_item = cur_line.GetTail();
+                new_item.SetRect( rect.left, item.top, rect.right, item.bottom );
+                new_item.item_ex_list.reset(new PCompositeDrawItemExList());
+                new_item.item_ex_list->AddTailList( rect.item_ex_list.get() );
+            }
+            else
+            {
+                if (item.right<rect.right)
+                {
+                    item.right = rect.right;
+                }
+                item.item_ex_list->AddTailList( rect.item_ex_list.get() );
+            }
+        }
+    }
+    for (int i=count-1;i>=0;i--)
+    {
+        Segment& cur_line = tempSegments[i];
+        POSITION pos_cur_line = cur_line.GetTailPosition();
+        XyRectEx *cur_rect = &cur_line.GetPrev(pos_cur_line);
+        while(pos_cur_line)
+        {
+            output->AddHead(*cur_rect);
+            cur_rect = &cur_line.GetPrev(pos_cur_line);
+        }
     }
 }
