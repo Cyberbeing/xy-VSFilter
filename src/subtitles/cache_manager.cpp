@@ -5,11 +5,6 @@
 #include "StdAfx.h"
 #include "cache_manager.h"
 
-ULONG PathDataCacheKeyTraits::Hash( const PathDataCacheKey& key )
-{
-    return( CStringElementTraits<CString>::Hash(key.m_str) ); 
-}
-
 ULONG PathDataTraits::Hash( const PathData& key )
 {
     ULONG hash = 515;
@@ -174,6 +169,13 @@ bool PathDataCacheKey::CompareSTSStyle( const STSStyle& lhs, const STSStyle& rhs
         lhs.fStrikeOut==rhs.fStrikeOut;
 }
 
+ULONG PathDataCacheKey::UpdateHashValue()
+{
+    m_hash_value = CStringElementTraits<CString>::Hash(m_str);
+    return m_hash_value;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // ScanLineData2CacheKey
@@ -197,7 +199,7 @@ bool ScanLineData2CacheKey::operator==( const ScanLineData2CacheKey& key ) const
 
 ULONG ScanLineData2CacheKey::UpdateHashValue()
 {
-    m_hash_value = PathDataCacheKeyTraits::Hash(*this);
+    m_hash_value = __super::UpdateHashValue();
     m_hash_value += (m_hash_value<<5);
     m_hash_value += m_org.x;
     m_hash_value += (m_hash_value<<5);
