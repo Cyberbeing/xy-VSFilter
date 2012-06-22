@@ -326,9 +326,48 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
             }
         }
     }
-    for (int i=count-1;i>=0;i--)
+
+    for (int i=count-1;i>0;i--)
     {
-        Segment& cur_line = tempSegments[i];
+        CAtlList<XyRectEx>& cur_line = tempSegments[i];
+        CAtlList<XyRectEx>& upper_line = tempSegments[i-1];
+
+        POSITION pos_cur_line = cur_line.GetTailPosition();
+        XyRectEx *cur_rect = &cur_line.GetPrev(pos_cur_line);
+        if(cur_rect->top == upper_line.GetTail().bottom)
+        {
+            POSITION pos = upper_line.GetTailPosition();                          
+            while(pos)
+            {
+                XyRectEx& upper_rect = upper_line.GetPrev(pos);
+                while( upper_rect.right<cur_rect->right || upper_rect.left<cur_rect->left )
+                {
+                    output->AddHead(*cur_rect);
+                    //if(!cur_line.IsEmpty())
+                    cur_rect = &cur_line.GetPrev(pos_cur_line);
+                }
+                if(!pos_cur_line)
+                    break;
+
+                if(upper_rect.right==cur_rect->right && upper_rect.left==cur_rect->left)
+                {
+                    upper_rect.bottom = cur_rect->bottom;
+                    upper_rect.item_ex_list->AddTailList( cur_rect->item_ex_list.get() );
+                    //if(!cur_line.IsEmpty())
+                    cur_rect = &cur_line.GetPrev(pos_cur_line);
+                }
+                //else if ( upper_rect.right>cur_rect.right || upper_rect.left>cur_rect.left )             
+            }
+        }
+        while(pos_cur_line)
+        {
+            output->AddHead(*cur_rect);
+            cur_rect = &cur_line.GetPrev(pos_cur_line);
+        }
+    }
+    if(count>0)
+    {
+        CAtlList<XyRectEx>& cur_line = tempSegments[0];
         POSITION pos_cur_line = cur_line.GetTailPosition();
         XyRectEx *cur_rect = &cur_line.GetPrev(pos_cur_line);
         while(pos_cur_line)
@@ -338,3 +377,4 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
         }
     }
 }
+
