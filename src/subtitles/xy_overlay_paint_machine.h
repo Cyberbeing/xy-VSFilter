@@ -28,7 +28,7 @@ public:
 
     static void PaintBody(const SharedPtrCWord& word, const CPoint& p, const CPoint& org, SharedPtrOverlay* overlay);
 
-    void Paint(LAYER layer, SharedPtrOverlay* overlay);    
+    void Paint(LAYER layer, SharedPtrOverlay* overlay);
 private:
     CWordPaintMachine(){}
 
@@ -51,9 +51,12 @@ public:
         , m_layer(layer) {}
  
     void Paint(SharedPtrOverlay* overlay);
+    CRect CalcDirtyRect();//return a 8x8 supersampled rect
 private:
     SharedCWordPaintMachine m_inner_paint_machine;
     CWordPaintMachine::LAYER m_layer;
+
+    SharedPtrOverlay m_overlay;
 };
 
 

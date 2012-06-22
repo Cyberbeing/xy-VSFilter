@@ -771,28 +771,6 @@ bool CWord::CreateOpaqueBox()
     return(!!m_pOpaqueBox);
 }
 
-void CWord::PaintAll( const SharedPtrCWord& word, 
-    const CPoint& shadowPos, const CPoint& outlinePos, const CPoint& bodyPos, const CPoint& org,  
-    SharedPtrOverlay* shadow, SharedPtrOverlay* outline, SharedPtrOverlay* body )
-{
-    SharedPtrOverlayPaintMachine shadow_pm, outline_pm, body_pm;
-    CWordPaintMachine::CreatePaintMachines(word, shadowPos, outlinePos, bodyPos, org, 
-        shadow ? &shadow_pm : NULL, outline ? &outline_pm : NULL, body ? &body_pm : NULL );
-    if(shadow!=NULL)
-    {
-        shadow_pm->Paint(shadow);
-    }
-    if(outline!=NULL)
-    {
-        outline_pm->Paint(outline);
-    }
-    if(body!=NULL)
-    {
-        body_pm->Paint(body);
-    }
-}
-
-
 // CText
 
 CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend)
@@ -1393,11 +1371,12 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
         bool hasOutline = w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0 && !(w->m_ktype == 2 && time < w->m_kstart);
         bool hasBody = true;
 
-        SharedPtrOverlay shadowOverlay, outlineOverlay, bodyOverlay;
-        CWord::PaintAll(w, shadowPos, outlinePos, bodyPos, org,
-            hasShadow ? &shadowOverlay : NULL, 
-            hasOutline ? &outlineOverlay : NULL, 
-            hasBody ? &bodyOverlay : NULL);
+        SharedPtrOverlayPaintMachine shadow_pm, outline_pm, body_pm;
+        CWordPaintMachine::CreatePaintMachines(w, shadowPos, outlinePos, bodyPos, org,
+            hasShadow ? &shadow_pm : NULL, 
+            hasOutline ? &outline_pm : NULL, 
+            hasBody ? &body_pm : NULL);
+
         //shadow
         if(hasShadow)
         {    
@@ -1417,15 +1396,15 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             if(w->m_style.get().borderStyle == 0)
             {
                 outputItem.shadow.reset( 
-                    DrawItem::CreateDrawItem(shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw,
+                    DrawItem::CreateDrawItem(shadow_pm, clipRect, clipper, shadowPos.x, shadowPos.y, sw,
                     w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
                     (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart))
                     );
             }
-            else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
+            else if(w->m_style.get().borderStyle == 1)
             {
                 outputItem.shadow.reset( 
-                    DrawItem::CreateDrawItem( shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw, true, false)
+                    DrawItem::CreateDrawItem( shadow_pm, clipRect, clipper, shadowPos.x, shadowPos.y, sw, true, false)
                     );
             }
         }
@@ -1448,13 +1427,13 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             if(w->m_style.get().borderStyle == 0)
             {
                 outputItem.outline.reset( 
-                    DrawItem::CreateDrawItem(outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
+                    DrawItem::CreateDrawItem(outline_pm, clipRect, clipper, outlinePos.x, outlinePos.y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
                     );
             }
-            else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
+            else if(w->m_style.get().borderStyle == 1)
             {
                 outputItem.outline.reset( 
-                    DrawItem::CreateDrawItem(outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, true, false)
+                    DrawItem::CreateDrawItem(outline_pm, clipRect, clipper, outlinePos.x, outlinePos.y, sw, true, false)
                     );
             }
         }
@@ -1513,7 +1492,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                 sw[4] =rgb2yuv(sw[4], XY_AYUV);
             }
             outputItem.body.reset( 
-                DrawItem::CreateDrawItem(bodyOverlay, clipRect, clipper, bodyPos.x, bodyPos.y, sw, true, false)
+                DrawItem::CreateDrawItem(body_pm, clipRect, clipper, bodyPos.x, bodyPos.y, sw, true, false)
                 );
         }
         bbox |= CompositeDrawItem::GetDirtyRect(outputItem);
