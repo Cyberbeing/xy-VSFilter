@@ -1394,22 +1394,6 @@ void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& cl
     return;
 }
 
-CRect Rasterizer::DryDraw( const SharedPtrOverlay& overlay, const CRect& clipRect, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
-{
-    CRect r;
-    if(!switchpts || !fBody && !fBorder) return(r);
-
-    // Remember that all subtitle coordinates are specified in 1/8 pixels
-    // (x+4)>>3 rounds to nearest whole pixel.
-    // ??? What is xsub, ysub, mOffsetX and mOffsetY ?
-    int x = (xsub + overlay->mOffsetX + 4)>>3;
-    int y = (ysub + overlay->mOffsetY + 4)>>3;
-    int w = overlay->mOverlayWidth;
-    int h = overlay->mOverlayHeight;
-    r = clipRect & CRect(x, y, x+w, y+h);
-    return r;
-}
-
 void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nHeight, DWORD argb)
 {
     bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);

@@ -227,11 +227,6 @@ public:
         int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
         CRect *outputDirtyRect);
 
-    static CRect DryDraw(const SharedPtrOverlay& overlay,
-        const CRect& clipRect, 
-        int xsub, int ysub, 
-        const DWORD* switchpts, bool fBody, bool fBorder);
-
     static void Draw(SubPicDesc& spd, 
         SharedPtrOverlay overlay, 
         const CRect& clipRect, 
