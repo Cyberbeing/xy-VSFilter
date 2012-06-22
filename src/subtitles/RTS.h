@@ -213,6 +213,7 @@ public:
 
     friend class ClipperTraits;
     friend class ClipperAlphaMaskCacheKey;
+    friend class CClipperPaintMachine;
 };
 
 class CLine: private CAtlList<SharedPtrCWord>
