@@ -5,20 +5,6 @@
 #include "StdAfx.h"
 #include "cache_manager.h"
 
-ULONG TextInfoCacheKeyTraits::Hash( const TextInfoCacheKey& key )
-{
-    ULONG hash = CStringElementTraits<CString>::Hash(key.m_str);
-    hash += (hash<<5);
-    hash += hash_value( static_cast<const STSStyleBase&>(key.m_style.get()) );
-    hash += (hash<<5);
-    hash += hash_value( key.m_style.get().fontScaleX );
-    hash += (hash<<5);
-    hash += hash_value( key.m_style.get().fontScaleY );
-    hash += (hash<<5);
-    hash += hash_value( key.m_style.get().fontSpacing );
-    return hash;
-}
-
 ULONG CWordCacheKeyTraits::Hash( const CWordCacheKey& key )
 {
     return( CStringElementTraits<CString>::Hash(key.m_str) );//fix me
@@ -141,6 +127,20 @@ bool TextInfoCacheKey::operator==( const TextInfoCacheKey& key ) const
         && m_style.get().fontScaleX == key.m_style.get().fontScaleX
         && m_style.get().fontScaleY == key.m_style.get().fontScaleY
         && m_style.get().fontSpacing == key.m_style.get().fontSpacing;
+}
+
+ULONG TextInfoCacheKey::UpdateHashValue() 
+{
+    m_hash_value = CStringElementTraits<CString>::Hash(m_str);
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += hash_value( static_cast<const STSStyleBase&>(m_style.get()) );
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += hash_value( m_style.get().fontScaleX );
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += hash_value( m_style.get().fontScaleY );
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += hash_value( m_style.get().fontSpacing );
+    return m_hash_value;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////

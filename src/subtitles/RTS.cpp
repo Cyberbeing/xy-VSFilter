@@ -891,6 +891,7 @@ CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     TextInfoCacheKey text_info_key;
     text_info_key.m_str = m_str;
     text_info_key.m_style = m_style;
+    text_info_key.UpdateHashValue();
     TextInfoMruCache* text_info_cache = CacheManager::GetTextInfoCache();
     POSITION pos = text_info_cache->Lookup(text_info_key);
     if(pos==NULL)
