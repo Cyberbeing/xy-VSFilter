@@ -31,3 +31,8 @@ void CClipperPaintMachine::Paint(SharedPtrGrayImage2 *output)
         }
     }
 }
+
+CRect CClipperPaintMachine::CalcDirtyRect()
+{
+    return CRect(0,0,INT_MAX, INT_MAX);//fix me: not a decent state machine yet
+}
