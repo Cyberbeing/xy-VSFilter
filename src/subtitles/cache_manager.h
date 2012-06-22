@@ -13,9 +13,16 @@ class TextInfoCacheKey
 public:
     CStringW m_str;
     FwSTSStyle m_style;
+
+    ULONG m_hash_value;
+public:
     bool operator==(const TextInfoCacheKey& key)const;
 
-    friend class TextInfoCacheKeyTraits;
+    ULONG UpdateHashValue();
+    ULONG GetHashValue()const
+    {
+        return m_hash_value;
+    }
 };
 
 class CWordCacheKey
@@ -125,10 +132,14 @@ public:
     SharedPtrCClipper m_clipper;
 };
 
-class TextInfoCacheKeyTraits:public CElementTraits<TextInfoCacheKey>
-{
+template<class CahcheKey>
+class XyCacheKeyTraits:public CElementTraits<CahcheKey>
+{    
 public:
-    static ULONG Hash(const TextInfoCacheKey& key);
+    static ULONG Hash(const CahcheKey& key)
+    {
+        return key.GetHashValue();
+    }
 };
 
 class CWordCacheKeyTraits:public CElementTraits<CWordCacheKey>
@@ -189,7 +200,7 @@ public:
 typedef EnhancedXyMru<
     TextInfoCacheKey, 
     CText::SharedPtrTextInfo, 
-    TextInfoCacheKeyTraits
+    XyCacheKeyTraits<TextInfoCacheKey>
 > TextInfoMruCache;
 
 typedef EnhancedXyMru<
