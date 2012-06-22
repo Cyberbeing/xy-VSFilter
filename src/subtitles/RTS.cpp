@@ -189,6 +189,7 @@ void CWord::PaintBody( const SharedPtrCWord& word, const CPoint& p, const CPoint
 
         CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
         OverlayKey sub_key(*word, psub_true, trans_org2);
+        sub_key.UpdateHashValue();
         if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() )
         {
             OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();
@@ -204,6 +205,7 @@ void CWord::PaintBody( const SharedPtrCWord& word, const CPoint& p, const CPoint
         {
             CPoint psub = SubpixelPositionControler::GetGlobalControler().GetSubpixel(p);
             OverlayKey overlay_key(*word, psub, trans_org2);
+            overlay_key.UpdateHashValue();
             OverlayMruCache* overlay_cache = CacheManager::GetOverlayMruCache();
             POSITION pos = overlay_cache->Lookup(overlay_key);
             if(pos==NULL)
@@ -324,7 +326,7 @@ bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const
     OverlayNoBlurMruCache* overlay_cache = CacheManager::GetOverlayNoBlurMruCache();
     if (pos!=NULL)
     {
-        OverlayNoBlurKey overlay_key = overlay_key_cache->GetAt(pos);        
+        OverlayNoBlurKey overlay_key = overlay_key_cache->GetAt(pos);
         pos = overlay_cache->Lookup(overlay_key);        
     }
     if (pos)

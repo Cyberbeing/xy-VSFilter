@@ -31,17 +31,6 @@ ULONG OverlayNoBlurKeyTraits::Hash( const OverlayNoBlurKey& key )
     return  hash;
 }
 
-ULONG OverlayKeyTraits::Hash( const OverlayKey& key )
-{
-    ULONG hash = OverlayNoBlurKeyTraits::Hash(static_cast<const OverlayNoBlurKey&>(key));
-    hash += (hash<<5);
-    hash += key.m_style.get().fBlur;
-    hash += (hash<<5);
-    hash += hash_value(key.m_style.get().fGaussianBlur);
-    return  hash;
-}
-
-
 ULONG PathDataTraits::Hash( const PathData& key )
 {
     ULONG hash = 515;
@@ -252,6 +241,17 @@ bool OverlayKey::operator==( const OverlayKey& key ) const
     //return ((CWordCacheKey)(*this)==(CWordCacheKey)key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
     //        && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y);
 }
+
+ULONG OverlayKey::UpdateHashValue()
+{
+    m_hash_value = OverlayNoBlurKeyTraits::Hash(*this);
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += m_style.get().fBlur;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += hash_value(m_style.get().fGaussianBlur);
+    return  m_hash_value;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
