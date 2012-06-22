@@ -5,11 +5,6 @@
 #include "StdAfx.h"
 #include "cache_manager.h"
 
-ULONG CWordCacheKeyTraits::Hash( const CWordCacheKey& key )
-{
-    return( CStringElementTraits<CString>::Hash(key.m_str) );//fix me
-}
-
 ULONG PathDataCacheKeyTraits::Hash( const PathDataCacheKey& key )
 {
     return( CStringElementTraits<CString>::Hash(key.m_str) ); 
@@ -163,6 +158,7 @@ CWordCacheKey::CWordCacheKey( const CWordCacheKey& key )
     m_ktype = key.m_ktype;
     m_kstart = key.m_kstart;
     m_kend = key.m_kend;
+    m_hash_value = key.m_hash_value;
 }
 
 CWordCacheKey::CWordCacheKey( const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend )
@@ -189,6 +185,11 @@ bool CWordCacheKey::operator==(const CWord& key)const
         m_kend == key.m_kend);
 }
 
+ULONG CWordCacheKey::UpdateHashValue() 
+{
+    m_hash_value = CStringElementTraits<CString>::Hash(m_str);//fix me
+    return m_hash_value;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // PathDataCacheKey
