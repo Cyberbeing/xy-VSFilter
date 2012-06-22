@@ -51,7 +51,10 @@ class PathDataCacheKey
 {
 public:
     PathDataCacheKey(const CWord& word):m_str(word.m_str),m_style(word.m_style){}
-    PathDataCacheKey(const PathDataCacheKey& key):m_str(key.m_str),m_style(key.m_style){}
+    PathDataCacheKey(const PathDataCacheKey& key)
+        :m_str(key.m_str)
+        ,m_style(key.m_style)
+        ,m_hash_value(key.m_hash_value){}
     PathDataCacheKey(const FwSTSStyle& style, const CStringW& str):m_str(str),m_style(style){}
     bool operator==(const PathDataCacheKey& key)const
     {
@@ -63,11 +66,17 @@ public:
     }
 
     static bool CompareSTSStyle(const STSStyle& lhs, const STSStyle& rhs);
+    
+    ULONG UpdateHashValue();
+    ULONG GetHashValue()const
+    {
+        return m_hash_value;
+    }
+public:
+    ULONG m_hash_value;
 protected:
     CStringW m_str;
     FwSTSStyle m_style;
-
-    friend class PathDataCacheKeyTraits;
 };
 
 class ScanLineData2CacheKey: public PathDataCacheKey
@@ -169,12 +178,6 @@ public:
     }
 };
 
-class PathDataCacheKeyTraits:public CElementTraits<PathDataCacheKey>
-{
-public:
-    static ULONG Hash(const PathDataCacheKey& key);
-};
-
 class ScanLineDataCacheKeyTraits:public CElementTraits<ScanLineDataCacheKey>
 {
 public:
@@ -214,7 +217,7 @@ typedef EnhancedXyMru<
 
 typedef EnhancedXyMru<CWordCacheKey, SharedPtrCWord, XyCacheKeyTraits<CWordCacheKey>> CWordMruCache;
 
-typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, PathDataCacheKeyTraits> PathDataMruCache;
+typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, XyCacheKeyTraits<PathDataCacheKey>> PathDataMruCache;
 
 typedef EnhancedXyMru<ScanLineData2CacheKey, SharedPtrConstScanLineData2, XyCacheKeyTraits<ScanLineData2CacheKey>> ScanLineData2MruCache;
 
