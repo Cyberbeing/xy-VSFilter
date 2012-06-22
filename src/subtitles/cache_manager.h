@@ -155,6 +155,14 @@ public:
         , m_rasterize_sub( xsub+(ysub<<16) ){}
     bool operator==(const OverlayNoOffsetKey& key)const;
 
+    ULONG UpdateHashValue();
+    ULONG GetHashValue()const
+    {
+        return m_hash_value;
+    }
+public:
+    ULONG m_hash_value;
+
     int m_border;
     int m_rasterize_sub;
 };
@@ -182,12 +190,6 @@ class ScanLineDataCacheKeyTraits:public CElementTraits<ScanLineDataCacheKey>
 {
 public:
     static ULONG Hash(const ScanLineDataCacheKey& key);
-};
-
-class OverlayNoOffsetKeyTraits:public CElementTraits<OverlayNoOffsetKey>
-{
-public:
-    static ULONG Hash(const OverlayNoOffsetKey& key);
 };
 
 class PathDataTraits:public CElementTraits<PathData>
@@ -227,7 +229,7 @@ typedef EnhancedXyMru<OverlayKey, SharedPtrOverlay, XyCacheKeyTraits<OverlayKey>
 
 typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
 
-typedef EnhancedXyMru<OverlayNoOffsetKey, OverlayNoBlurKey, OverlayNoOffsetKeyTraits> OverlayNoOffsetMruCache;
+typedef EnhancedXyMru<OverlayNoOffsetKey, OverlayNoBlurKey, XyCacheKeyTraits<OverlayNoOffsetKey>> OverlayNoOffsetMruCache;
 
 typedef EnhancedXyMru<ClipperAlphaMaskCacheKey, SharedPtrGrayImage2, ClipperAlphaMaskCacheKeyTraits> ClipperAlphaMaskMruCache;
 
