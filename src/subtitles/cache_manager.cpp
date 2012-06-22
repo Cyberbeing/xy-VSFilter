@@ -21,16 +21,6 @@ ULONG ScanLineData2CacheKeyTraits::Hash( const ScanLineData2CacheKey& key )
     return  hash;
 }
 
-ULONG OverlayNoBlurKeyTraits::Hash( const OverlayNoBlurKey& key )
-{
-    ULONG hash = ScanLineData2CacheKeyTraits::Hash(static_cast<const ScanLineData2CacheKey&>(key));
-    hash += (hash<<5);
-    hash += key.m_p.x;
-    hash += (hash<<5);
-    hash += key.m_p.y;
-    return  hash;
-}
-
 ULONG PathDataTraits::Hash( const PathData& key )
 {
     ULONG hash = 515;
@@ -228,6 +218,17 @@ bool OverlayNoBlurKey::operator==( const OverlayNoBlurKey& key ) const
     return ScanLineData2CacheKey::operator==(key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y);
 }
 
+ULONG OverlayNoBlurKey::UpdateHashValue()
+{
+    m_hash_value = ScanLineData2CacheKeyTraits::Hash(*this);
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += m_p.x;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += m_p.y;
+    return  m_hash_value;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // OverlayKey
@@ -244,7 +245,7 @@ bool OverlayKey::operator==( const OverlayKey& key ) const
 
 ULONG OverlayKey::UpdateHashValue()
 {
-    m_hash_value = OverlayNoBlurKeyTraits::Hash(*this);
+    m_hash_value = __super::UpdateHashValue();
     m_hash_value += (m_hash_value<<5);
     m_hash_value += m_style.get().fBlur;
     m_hash_value += (m_hash_value<<5);
