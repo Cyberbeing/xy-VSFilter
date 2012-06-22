@@ -1504,14 +1504,12 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                     w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
                     (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart))
                     );
-                bbox |= DrawItem::GetDirtyRect(*outputItem.shadow);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
                 outputItem.shadow.reset( 
                     DrawItem::CreateDrawItem( shadowOverlay, clipRect, clipper, shadowPos.x, shadowPos.y, sw, true, false)
                     );
-                bbox |= DrawItem::GetDirtyRect(*outputItem.shadow);
             }
         }
         //outline
@@ -1535,14 +1533,12 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
                 outputItem.outline.reset( 
                     DrawItem::CreateDrawItem(outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
                     );
-                bbox |= DrawItem::GetDirtyRect(*outputItem.outline);
             }
             else if(w->m_style.get().borderStyle == 1 && w->m_pOpaqueBox)
             {
                 outputItem.outline.reset( 
                     DrawItem::CreateDrawItem(outlineOverlay, clipRect, clipper, outlinePos.x, outlinePos.y, sw, true, false)
                     );
-                bbox |= DrawItem::GetDirtyRect(*outputItem.outline);
             }
         }
         //body
@@ -1602,8 +1598,8 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             outputItem.body.reset( 
                 DrawItem::CreateDrawItem(bodyOverlay, clipRect, clipper, bodyPos.x, bodyPos.y, sw, true, false)
                 );
-            bbox |= DrawItem::GetDirtyRect(*outputItem.body);            
         }
+        bbox |= CompositeDrawItem::GetDirtyRect(outputItem);
         p.x += w->m_width;
     }
     return(bbox);
