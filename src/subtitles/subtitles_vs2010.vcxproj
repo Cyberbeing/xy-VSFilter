@@ -205,6 +205,7 @@
     </ClCompile>
     <ClCompile Include="VobSubFileRipper.cpp" />
     <ClCompile Include="VobSubImage.cpp" />
+    <ClCompile Include="xy_clipper_paint_machine.cpp" />
     <ClCompile Include="xy_malloc.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode log|Win32'">NotUsing</PrecompiledHeader>
@@ -237,6 +238,7 @@
     <ClInclude Include="VobSubFile.h" />
     <ClInclude Include="VobSubFileRipper.h" />
     <ClInclude Include="VobSubImage.h" />
+    <ClInclude Include="xy_clipper_paint_machine.h" />
     <ClInclude Include="xy_malloc.h" />
     <ClInclude Include="xy_overlay_paint_machine.h" />
   </ItemGroup>
