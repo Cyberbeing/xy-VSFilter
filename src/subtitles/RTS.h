@@ -94,10 +94,7 @@ public:
     //shared_from_this may cause a exception if the obj is not owned by a shared_ptr
     static void PaintAll(const SharedPtrCWord& word, 
         const CPoint& shadowPos, const CPoint& outlinePos, const CPoint& bodyPos, const CPoint& org,
-        SharedPtrOverlay* shadow, SharedPtrOverlay* outline, SharedPtrOverlay* body);    
-    static void PaintBody(const SharedPtrCWord& word, const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay);
-    static void PaintOutline(const SharedPtrCWord& word, const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay);
-    static void PaintShadow(const SharedPtrCWord& word, const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay);
+        SharedPtrOverlay* shadow, SharedPtrOverlay* outline, SharedPtrOverlay* body);
 
     static void PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay);
     void PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const OverlayKey& overlay_key, SharedPtrOverlay* overlay);
@@ -110,7 +107,7 @@ public:
     friend class PathDataCacheKey;
     friend class ClipperTraits;
     friend class ClipperAlphaMaskCacheKey;
-    friend class OverlayPaintMachine;
+    friend class CWordPaintMachine;
     friend std::size_t hash_value(const CWord& key); 
 };
 
