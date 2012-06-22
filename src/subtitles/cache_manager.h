@@ -99,12 +99,18 @@ public:
 class OverlayKey: public OverlayNoBlurKey
 {
 public:
-    OverlayKey(const CWord& word, const POINT& p, const POINT& org):OverlayNoBlurKey(word, p, org) { }
-    OverlayKey(const OverlayKey& key):OverlayNoBlurKey(key){ }
+    OverlayKey(const CWord& word, const POINT& p, const POINT& org):OverlayNoBlurKey(word, p, org) {  }
+    OverlayKey(const OverlayKey& key):OverlayNoBlurKey(key), m_hash_value(key.m_hash_value) {  }
 
     bool operator==(const OverlayKey& key)const;
 
-    friend class OverlayKeyTraits;
+    ULONG UpdateHashValue();
+    ULONG GetHashValue()const
+    {
+        return m_hash_value;
+    }
+public:
+    ULONG m_hash_value;
 };
 
 class ScanLineDataCacheKey
@@ -166,12 +172,6 @@ public:
     static ULONG Hash(const OverlayNoBlurKey& key);
 };
 
-class OverlayKeyTraits:public CElementTraits<OverlayKey>
-{
-public:
-    static ULONG Hash(const OverlayKey& key);
-};
-
 class ScanLineDataCacheKeyTraits:public CElementTraits<ScanLineDataCacheKey>
 {
 public:
@@ -217,7 +217,7 @@ typedef EnhancedXyMru<ScanLineData2CacheKey, SharedPtrConstScanLineData2, ScanLi
 
 typedef EnhancedXyMru<OverlayNoBlurKey, SharedPtrOverlay, OverlayNoBlurKeyTraits> OverlayNoBlurMruCache;
 
-typedef EnhancedXyMru<OverlayKey, SharedPtrOverlay, OverlayKeyTraits> OverlayMruCache;
+typedef EnhancedXyMru<OverlayKey, SharedPtrOverlay, XyCacheKeyTraits<OverlayKey>> OverlayMruCache;
 
 typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, ScanLineDataCacheKeyTraits> ScanLineDataMruCache;
 
