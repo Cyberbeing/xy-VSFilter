@@ -27,6 +27,7 @@
 #include "cache_manager.h"
 #include "../subpic/color_conv_table.h"
 #include "subpixel_position_controler.h"
+#include "xy_overlay_paint_machine.h"
 
 // WARNING: this isn't very thread safe, use only one RTS a time.
 static HDC g_hDC;
@@ -175,59 +176,8 @@ bool CWord::Append(const SharedPtrCWord& w)
 
 void CWord::PaintBody( const SharedPtrCWord& word, const CPoint& p, const CPoint& trans_org, SharedPtrOverlay* overlay )
 {
-    if(!word->m_str || overlay==NULL) return;
-    bool error = false;
-    do 
-    {
-        CPoint trans_org2 = trans_org;    
-        bool need_transform = word->NeedTransform();
-        if(!need_transform)
-        {
-            trans_org2.x=0;
-            trans_org2.y=0;
-        }
-
-        CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
-        OverlayKey sub_key(*word, psub_true, trans_org2);
-        sub_key.UpdateHashValue();
-        if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() )
-        {
-            OverlayMruCache* overlay_cache = CacheManager::GetSubpixelVarianceCache();
-
-            POSITION pos = overlay_cache->Lookup(sub_key);
-            if(pos!=NULL) 
-            {
-                *overlay = overlay_cache->GetAt(pos);
-                overlay_cache->UpdateCache( pos );
-            }
-        }
-        if( !overlay->get() )
-        {
-            CPoint psub = SubpixelPositionControler::GetGlobalControler().GetSubpixel(p);
-            OverlayKey overlay_key(*word, psub, trans_org2);
-            overlay_key.UpdateHashValue();
-            OverlayMruCache* overlay_cache = CacheManager::GetOverlayMruCache();
-            POSITION pos = overlay_cache->Lookup(overlay_key);
-            if(pos==NULL)
-            {
-                if( !word->DoPaint(psub, trans_org2, overlay, overlay_key) )
-                {
-                    error = true;
-                    break;
-                }                
-            }
-            else
-            {
-                *overlay = overlay_cache->GetAt(pos);
-                overlay_cache->UpdateCache( pos );
-            }
-            PaintFromOverlay(p, trans_org2, sub_key, *overlay);
-        }
-    } while(false);
-    if(error)
-    {
-        overlay->reset( new Overlay() );
-    }
+    OverlayPaintMachine paint_machine(word, p, trans_org);
+    paint_machine.Paint(overlay);
 }
 
 void CWord::PaintOutline( const SharedPtrCWord& word, const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay )
