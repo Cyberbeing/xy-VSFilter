@@ -28,6 +28,7 @@
 #include "../subpic/color_conv_table.h"
 #include "subpixel_position_controler.h"
 #include "xy_overlay_paint_machine.h"
+#include "xy_clipper_paint_machine.h"
 
 // WARNING: this isn't very thread safe, use only one RTS a time.
 static HDC g_hDC;
@@ -1273,30 +1274,10 @@ void CClipper::SetEffect( const Effect& effect, int effectType )
 
 SharedPtrGrayImage2 CClipper::GetAlphaMask( const SharedPtrCClipper& clipper )
 {
-    if (clipper!=NULL)
-    {
-        ClipperAlphaMaskCacheKey key(clipper);
-        key.UpdateHashValue();
-        ClipperAlphaMaskMruCache * cache = CacheManager::GetClipperAlphaMaskMruCache();
-        POSITION pos = cache->Lookup(key);
-        if( pos!=NULL )
-        {
-            const SharedPtrGrayImage2& result = cache->GetAt(pos);
-            cache->UpdateCache(pos);
-            return result;
-        }
-        else
-        {
-            SharedPtrGrayImage2 result( clipper->Paint() );
-            cache->UpdateCache(key, result);
-            return result;
-        }
-    }
-    else
-    {
-        SharedPtrGrayImage2 result;
-        return result;
-    }
+    SharedPtrGrayImage2 result;
+    CClipperPaintMachine paint_machine(clipper);
+    paint_machine.Paint(&result);
+    return result;
 }
 
 // CLine
