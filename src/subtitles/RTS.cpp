@@ -174,32 +174,6 @@ bool CWord::Append(const SharedPtrCWord& w)
     return(true);
 }
 
-void CWord::PaintBody( const SharedPtrCWord& word, const CPoint& p, const CPoint& trans_org, SharedPtrOverlay* overlay )
-{
-    OverlayPaintMachine paint_machine(word, p, trans_org);
-    paint_machine.Paint(overlay);
-}
-
-void CWord::PaintOutline( const SharedPtrCWord& word, const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay )
-{
-    if (word->m_style.get().borderStyle==0)
-    {
-        PaintBody(word, psub, trans_org, overlay);
-    }
-    else if (word->m_style.get().borderStyle==1)
-    {
-        if(word->CreateOpaqueBox())
-        {
-            PaintBody(word->m_pOpaqueBox, psub, trans_org, overlay);
-        }
-    }
-}
-
-void CWord::PaintShadow( const SharedPtrCWord& word, const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay )
-{
-    PaintOutline(word, psub, trans_org, overlay);
-}
-
 void CWord::PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay)
 {
     if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() )
@@ -801,33 +775,21 @@ void CWord::PaintAll( const SharedPtrCWord& word,
     const CPoint& shadowPos, const CPoint& outlinePos, const CPoint& bodyPos, const CPoint& org,  
     SharedPtrOverlay* shadow, SharedPtrOverlay* outline, SharedPtrOverlay* body )
 {
-    CPoint transOrg;
-    if(shadow!=NULL) 
-    {
-        //has shadow
-        transOrg = org - shadowPos;
-    }
-    else if(outline!=NULL)
-    {
-        //has outline
-        transOrg = org - outlinePos;
-    }
-    else if(body!=NULL)
-    {
-        transOrg = org - bodyPos;
-    }    
+    SharedPtrOverlayPaintMachine shadow_pm, outline_pm, body_pm;
+    CWordPaintMachine::CreatePaintMachines(word, shadowPos, outlinePos, bodyPos, org, 
+        shadow ? &shadow_pm : NULL, outline ? &outline_pm : NULL, body ? &body_pm : NULL );
     if(shadow!=NULL)
     {
-        PaintShadow(word, shadowPos, transOrg, shadow);
+        shadow_pm->Paint(shadow);
     }
     if(outline!=NULL)
     {
-        PaintOutline(word, outlinePos, transOrg, outline);
+        outline_pm->Paint(outline);
     }
     if(body!=NULL)
     {
-        PaintBody(word, bodyPos, transOrg, body);
-    }    
+        body_pm->Paint(body);
+    }
 }
 
 
@@ -1160,7 +1122,7 @@ GrayImage2* CClipper::PaintSimpleClipper()
         return result;
 
     SharedPtrOverlay overlay;
-    CWord::PaintBody( m_polygon, CPoint(0, 0), CPoint(0, 0), &overlay );
+    CWordPaintMachine::PaintBody( m_polygon, CPoint(0, 0), CPoint(0, 0), &overlay );
     int w = overlay->mOverlayWidth, h = overlay->mOverlayHeight;
     int x = (overlay->mOffsetX+4)>>3, y = (overlay->mOffsetY+4)>>3;
     result = new GrayImage2();
@@ -1181,7 +1143,7 @@ GrayImage2* CClipper::PaintBaseClipper()
         return result;
 
     SharedPtrOverlay overlay;
-    CWord::PaintBody( m_polygon, CPoint(0, 0), CPoint(0, 0), &overlay );
+    CWordPaintMachine::PaintBody( m_polygon, CPoint(0, 0), CPoint(0, 0), &overlay );
     int w = overlay->mOverlayWidth, h = overlay->mOverlayHeight;
     int x = (overlay->mOffsetX+4)>>3, y = (overlay->mOffsetY+4)>>3;
     int xo = 0, yo = 0;
