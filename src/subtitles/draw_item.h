@@ -25,7 +25,7 @@ public:
     bool fBorder;
 public:
     CRect GetDirtyRect();
-    static CRect Draw( SubPicDesc& spd, DrawItem& draw_item, const CRect& clip_rect );
+    static CRect Draw( XyBitmap *bitmap, DrawItem& draw_item, const CRect& clip_rect );
 
     static DrawItem* CreateDrawItem(const SharedPtrOverlayPaintMachine& overlay_paint_machine,
         const CRect& clipRect,

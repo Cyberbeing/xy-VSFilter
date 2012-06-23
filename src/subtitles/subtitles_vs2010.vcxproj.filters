@@ -90,6 +90,9 @@
     <ClCompile Include="xy_clipper_paint_machine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="xy_bitmap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCDecoder.h">
@@ -175,6 +178,9 @@
     </ClInclude>
     <ClInclude Include="xy_clipper_paint_machine.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xy_bitmap.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
