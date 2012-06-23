@@ -11,6 +11,9 @@ typedef ::boost::shared_ptr<Overlay> SharedPtrOverlay;
 class OverlayPaintMachine;
 typedef ::boost::shared_ptr<OverlayPaintMachine> SharedPtrOverlayPaintMachine;
 
+class OverlayKey;
+typedef ::boost::shared_ptr<OverlayKey> SharedPtrOverlayKey;
+
 class CWordPaintMachine
 {
 public:
@@ -29,6 +32,7 @@ public:
     static void PaintBody(const SharedPtrCWord& word, const CPoint& p, const CPoint& org, SharedPtrOverlay* overlay);
 
     void Paint(LAYER layer, SharedPtrOverlay* overlay);
+    const SharedPtrOverlayKey& GetHashKey(LAYER layer);
 private:
     CWordPaintMachine(){}
 
@@ -36,9 +40,15 @@ private:
     void PaintOutline(const SharedPtrCWord& word, const CPoint& p, SharedPtrOverlay* overlay);
     void PaintShadow(const SharedPtrCWord& word, const CPoint& p, SharedPtrOverlay* overlay);
 
+    OverlayKey* CreateBodyOverlayHashKey(const SharedPtrCWord& word, const CPoint& p);
+    OverlayKey* CreateOutlineOverlayHashKey(const SharedPtrCWord& word, const CPoint& p);
+    OverlayKey* CreateShadowOverlayHashKey(const SharedPtrCWord& word, const CPoint& p);
+
     SharedPtrCWord m_word;
     CPoint m_shadow_pos, m_outline_pos, m_body_pos;
     CPoint m_trans_org;
+
+    SharedPtrOverlayKey m_shadow_key, m_border_key, m_body_key;
 };
 
 typedef ::boost::shared_ptr<CWordPaintMachine> SharedCWordPaintMachine;
@@ -52,6 +62,7 @@ public:
  
     void Paint(SharedPtrOverlay* overlay);
     CRect CalcDirtyRect();//return a 8x8 supersampled rect
+    const SharedPtrOverlayKey& GetHashKey();
 private:
     SharedCWordPaintMachine m_inner_paint_machine;
     CWordPaintMachine::LAYER m_layer;

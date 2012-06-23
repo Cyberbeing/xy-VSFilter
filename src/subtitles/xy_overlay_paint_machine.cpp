@@ -35,6 +35,11 @@ CRect OverlayPaintMachine::CalcDirtyRect()
     return CRect(0,0,0,0);
 }
 
+const SharedPtrOverlayKey& OverlayPaintMachine::GetHashKey()
+{
+    return m_inner_paint_machine->GetHashKey(m_layer);
+}
+
 void CWordPaintMachine::Paint( LAYER layer, SharedPtrOverlay* overlay )
 {
     switch (layer)
@@ -150,6 +155,11 @@ void CWordPaintMachine::CreatePaintMachines( const SharedPtrCWord& word
     machine->m_shadow_pos = shadow_pos;
     machine->m_outline_pos = outline_pos;
     machine->m_body_pos = body_pos;
+
+    machine->m_body_key.reset( machine->CreateBodyOverlayHashKey(word, machine->m_body_pos) );
+    machine->m_border_key.reset( machine->CreateOutlineOverlayHashKey(word, machine->m_outline_pos) );
+    machine->m_shadow_key.reset( machine->CreateShadowOverlayHashKey(word, machine->m_shadow_pos) );
+
     if (shadow)
     {
         shadow->reset( new OverlayPaintMachine(machine, SHADOW) );
@@ -170,5 +180,62 @@ void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPoint& p, 
     machine.m_word = word;
     machine.m_trans_org = org - p;//IMPORTANT! NOTE: not totally initiated
     machine.m_body_pos = p;
+    machine.m_body_key.reset( machine.CreateBodyOverlayHashKey(word, machine.m_body_pos) );
     machine.PaintBody(word, p, overlay);
+}
+
+const SharedPtrOverlayKey& CWordPaintMachine::GetHashKey(LAYER layer)
+{
+    //fix me: sharing keys with paint functions
+    switch (layer)
+    {
+    case SHADOW:
+        return m_shadow_key;
+        break;
+    case OUTLINE:
+        return m_border_key;
+        break;
+    case BODY:
+        return m_body_key;
+        break;
+    }
+    ASSERT(0);
+    return m_body_key;
+}
+
+OverlayKey* CWordPaintMachine::CreateBodyOverlayHashKey( const SharedPtrCWord& word, const CPoint& p )
+{
+    CPoint trans_org2 = m_trans_org;    
+    bool need_transform = word->NeedTransform();
+    if(!need_transform)
+    {
+        trans_org2.x=0;
+        trans_org2.y=0;
+    }
+    CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
+    OverlayKey *body_overlay_key=new OverlayKey(*word, psub_true, trans_org2);
+    body_overlay_key->UpdateHashValue();
+    return body_overlay_key;
+}
+
+OverlayKey* CWordPaintMachine::CreateOutlineOverlayHashKey( const SharedPtrCWord& word, const CPoint& p )
+{
+    if (word->m_style.get().borderStyle==0)
+    {
+        return CreateBodyOverlayHashKey(word, p);
+    }
+    else if (word->m_style.get().borderStyle==1)
+    {
+        if(word->CreateOpaqueBox())
+        {
+            return CreateBodyOverlayHashKey(word->m_pOpaqueBox, p);
+        }
+    }
+    ASSERT(0);
+    return NULL;
+}
+
+OverlayKey* CWordPaintMachine::CreateShadowOverlayHashKey( const SharedPtrCWord& word, const CPoint& p )
+{
+    return CreateOutlineOverlayHashKey(word, p);
 }

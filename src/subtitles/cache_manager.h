@@ -191,6 +191,55 @@ public:
     SharedPtrCClipper m_clipper;
 };
 
+struct DrawItem;
+class DrawItemHashKey
+{
+public:
+    DrawItemHashKey(const DrawItem& draw_item);
+    bool operator==(const DrawItemHashKey& hash_key) const;
+
+    ULONG UpdateHashValue();
+    ULONG GetHashValue()const
+    {
+        return m_hash_value;
+    }
+public:
+    ULONG m_hash_value;
+private:
+    typedef ::boost::shared_ptr<OverlayKey> SharedOverlayKey;
+    SharedOverlayKey m_overlay_key;
+    ClipperAlphaMaskCacheKey m_clipper_key;
+    CRect m_clip_rect;
+    int m_xsub;
+    int m_ysub;
+    DWORD m_switchpts[6];
+    bool m_fBody;
+    bool m_fBorder;
+};
+
+class GroupedDrawItemsHashKey
+{
+public:
+    bool operator==(const GroupedDrawItemsHashKey& key) const;
+
+    ULONG UpdateHashValue();
+    ULONG GetHashValue()const
+    {
+        return m_hash_value;
+    }
+public:
+    ULONG m_hash_value;
+private:
+    typedef ::boost::shared_ptr<DrawItemHashKey> PKey;
+    typedef CAtlArray<PKey> Keys;
+    typedef ::boost::shared_ptr<Keys> PKeys;
+
+    PKeys m_key;
+    CRect m_clip_rect;
+
+    friend struct GroupedDrawItems;
+};
+
 template<class CahcheKey>
 class XyCacheKeyTraits:public CElementTraits<CahcheKey>
 {    
@@ -241,9 +290,15 @@ typedef EnhancedXyMru<OverlayNoOffsetKey, OverlayNoBlurKey, XyCacheKeyTraits<Ove
 
 typedef EnhancedXyMru<ClipperAlphaMaskCacheKey, SharedPtrGrayImage2, XyCacheKeyTraits<ClipperAlphaMaskCacheKey>> ClipperAlphaMaskMruCache;
 
+class XyBitmap;
+typedef ::boost::shared_ptr<XyBitmap> SharedPtrXyBitmap;
+typedef EnhancedXyMru<GroupedDrawItemsHashKey, SharedPtrXyBitmap, XyCacheKeyTraits<GroupedDrawItemsHashKey>> BitmapMruCache;
+
+
 class CacheManager
 {
 public:
+    static const int BITMAP_MRU_CACHE_ITEM_NUM = 64;//for test only 
     static const int CLIPPER_ALPHA_MASK_MRU_CACHE = 48;
 
     static const int TEXT_INFO_CACHE_ITEM_NUM = 2048;
@@ -255,6 +310,9 @@ public:
     static const int SCAN_LINE_DATA_CACHE_ITEM_NUM = 512;
     static const int PATH_CACHE_ITEM_NUM = 512;
     static const int WORD_CACHE_ITEM_NUM = 512;
+
+
+    static BitmapMruCache* GetBitmapMruCache();
 
     static ClipperAlphaMaskMruCache* GetClipperAlphaMaskMruCache();
     static TextInfoMruCache* GetTextInfoCache();

@@ -36,3 +36,8 @@ CRect CClipperPaintMachine::CalcDirtyRect()
 {
     return CRect(0,0,INT_MAX, INT_MAX);//fix me: not a decent state machine yet
 }
+
+const ClipperAlphaMaskCacheKey& CClipperPaintMachine::GetHashKey()
+{
+    return m_hash_key;
+}
