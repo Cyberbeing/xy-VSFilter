@@ -57,4 +57,13 @@ public:
     static void Draw(SubPicDesc& spd, CompositeDrawItemListList& compDrawItemListList);
 };
 
+struct GroupedDrawItems
+{
+public:
+    CAtlList<SharedPtrDrawItem> draw_item_list;
+    CRect clip_rect;
+public:
+    void Draw(SubPicDesc& spd);
+};
+
 #endif // __DRAW_ITEM_21D18040_C396_4CA5_BFCE_5616A63F2C56_H__

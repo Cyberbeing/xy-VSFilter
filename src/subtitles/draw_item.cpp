@@ -92,12 +92,6 @@ CRect CompositeDrawItem::GetDirtyRect( CompositeDrawItem& item )
     return result;
 }
 
-struct GroupedDrawItems
-{
-    CAtlList<SharedPtrDrawItem> draw_item_list;
-    CRect clip_rect;
-};
-
 //temporary data struct for the complex dirty rect splitting and draw item grouping algorithm 
 struct CompositeDrawItemEx
 {
@@ -213,15 +207,7 @@ void CompositeDrawItem::Draw( SubPicDesc& spd, CompositeDrawItemListList& compDr
 
     for (int i=0;i<grouped_draw_items.GetCount();i++)
     {
-        GroupedDrawItems& item = grouped_draw_items[i];
-        pos = item.draw_item_list.GetHeadPosition();
-        XyBitmap *bitmap = XyBitmap::CreateBitmap(item.clip_rect, spd.type==MSP_AYUV_PLANAR ? XyBitmap::PLANNA : XyBitmap::PACK );
-        while(pos)
-        {
-            DrawItem::Draw(bitmap, *item.draw_item_list.GetNext(pos), item.clip_rect);
-        }
-        XyBitmap::AlphaBlt(spd, *bitmap);
-        delete bitmap;
+        grouped_draw_items[i].Draw(spd);
     }
 }
 
@@ -403,5 +389,22 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
             cur_rect = &cur_line.GetPrev(pos_cur_line);
         }
     }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// GroupedDrawItems
+// 
+
+void GroupedDrawItems::Draw( SubPicDesc& spd )
+{
+    POSITION pos = draw_item_list.GetHeadPosition();
+    XyBitmap *bitmap = XyBitmap::CreateBitmap(clip_rect, spd.type==MSP_AYUV_PLANAR ? XyBitmap::PLANNA : XyBitmap::PACK );
+    while(pos)
+    {
+        DrawItem::Draw(bitmap, *draw_item_list.GetNext(pos), clip_rect);
+    }
+    XyBitmap::AlphaBlt(spd, *bitmap);
+    delete bitmap;
 }
 
