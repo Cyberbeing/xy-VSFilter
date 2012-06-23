@@ -11,24 +11,20 @@
 /****************************************************************************
  * xy_malloc:
  ****************************************************************************/
-void *xy_malloc( int i_size )
+void *xy_malloc( int i_size, int align_shift )
 {
-#ifdef SYS_MACOSX
-    /* Mac OS X always returns 16 bytes aligned memory */
-    return malloc( i_size );
-#elif defined( HAVE_MALLOC_H )
-    return memalign( 16, i_size );
-#else
+    const int ALIGNMENT = 16;
+    const int MASK = ALIGNMENT - 1;
     uint8_t * buf;
     uint8_t * align_buf;
-    buf = (uint8_t *) malloc( i_size + 15 + sizeof( void ** ) +
+    align_shift &= MASK;
+    buf = (uint8_t *) malloc( i_size + MASK + sizeof( void ** ) +
               sizeof( int ) );
-    align_buf = buf + 15 + sizeof( void ** ) + sizeof( int );
-    align_buf -= (intptr_t) align_buf & 15;
+    align_buf = buf + MASK + sizeof( void ** ) + sizeof( int );
+    align_buf -= (ALIGNMENT + ((intptr_t) align_buf & MASK) - align_shift) & MASK;
     *( (void **) ( align_buf - sizeof( void ** ) ) ) = buf;
     *( (int *) ( align_buf - sizeof( void ** ) - sizeof( int ) ) ) = i_size;
     return align_buf;
-#endif
 }
 
 /****************************************************************************
@@ -38,22 +34,15 @@ void xy_free( void *p )
 {
     if( p )
     {
-#if defined( HAVE_MALLOC_H ) || defined( SYS_MACOSX )
-        free( p );
-#else
         free( *( ( ( void **) p ) - 1 ) );
-#endif
     }
 }
 
 /****************************************************************************
  * xy_realloc:
  ****************************************************************************/
-void *xy_realloc( void *p, int i_size )
+void *xy_realloc( void *p, int i_size, int align_shift )
 {
-#ifdef HAVE_MALLOC_H
-    return realloc( p, i_size );
-#else
     int       i_old_size = 0;
     uint8_t * p_new;
     if( p )
@@ -61,14 +50,13 @@ void *xy_realloc( void *p, int i_size )
         i_old_size = *( (int*) ( (uint8_t*) p - sizeof( void ** ) -
                          sizeof( int ) ) );
     }
-    p_new = (uint8_t*)xy_malloc( i_size );
+    p_new = (uint8_t*)xy_malloc( i_size, align_shift );
     if( i_old_size > 0 && i_size > 0 )
     {
         memcpy( p_new, p, ( i_old_size < i_size ) ? i_old_size : i_size );
     }
     xy_free( p );
     return p_new;
-#endif
 }
 
 
