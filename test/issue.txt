@@ -85,3 +85,5 @@ issue 36: Corruption Bug. Associated script: 33.ass.(fixed)
 ==============================================================
 issue 37: Codepage issue. Associated script: 34.ass.(fixed)
 ==============================================================
+issue 38: Corruption when there are actually NO border but draw border routine still runs. Associated script: 35.ass.(fixed)
+==============================================================

@@ -161,7 +161,10 @@ public:
     }
 
     void CleanUp()
-    {  
+    {
+        mBody.reset((BYTE*)NULL);
+        mBorder.reset((BYTE*)NULL);
+        mOffsetX=mOffsetY=mWidth=mHeight=0;
         mOverlayWidth=mOverlayHeight=mOverlayPitch=0;
         mfWideOutlineEmpty = false;
     }

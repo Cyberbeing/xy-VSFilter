@@ -1104,8 +1104,8 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOve
     //fix me: check and log error
     SharedPtrByte result;
     *outputDirtyRect = CRect(0, 0, 0, 0);
-    if(!switchpts || !fBody && !fBorder) return(result);
-
+    if (!switchpts || !fBody && !fBorder) return result;
+    if (fBorder && !overlay->mBorder) return result;
     // clip
     // Limit drawn area to intersection of rendering surface and rectangular clip area
     CRect r(0, 0, spd.w, spd.h);
@@ -1779,6 +1779,14 @@ void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const b
     {
         //should NOT happen!
         ASSERT(0);
+        while(h--)
+        {
+            for(int j=0;j<x_end;j++)
+            {
+                dst[j] = 0;
+            }
+            dst += mOverlayPitch;
+        }
     }
 }
 
