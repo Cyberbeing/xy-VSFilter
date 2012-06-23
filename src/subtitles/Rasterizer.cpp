@@ -28,6 +28,7 @@
 #include "SeparableFilter.h"
 #include "xy_logger.h"
 #include <boost/flyweight/key_value.hpp>
+#include "xy_bitmap.h"
 
 #ifndef _MAX	/* avoid collision with common (nonconforming) macros */
 #define _MAX	(max)
@@ -1096,7 +1097,7 @@ static const __int64 _00ff00ff00ff00ff = 0x00ff00ff00ff00ffi64;
 //    switchpts[i*2] contains a colour and switchpts[i*2+1] contains the coordinate to use that colour from
 // fBody tells whether to render the body of the subs.
 // fBorder tells whether to render the border of the subs.
-SharedPtrByte Rasterizer::CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOverlay& overlay, const CRect& clipRect, 
+SharedPtrByte Rasterizer::CompositeAlphaMask(const SharedPtrOverlay& overlay, const CRect& clipRect, 
     const GrayImage2* alpha_mask, 
     int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
     CRect *outputDirtyRect)
@@ -1106,10 +1107,8 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOve
     *outputDirtyRect = CRect(0, 0, 0, 0);
     if (!switchpts || !fBody && !fBorder) return result;
     if (fBorder && !overlay->mBorder) return result;
-    // clip
-    // Limit drawn area to intersection of rendering surface and rectangular clip area
-    CRect r(0, 0, spd.w, spd.h);
-    r &= clipRect;
+
+    CRect r = clipRect;
     if (alpha_mask!=NULL)
     {
         r &= CRect(alpha_mask->left_top, alpha_mask->size);
@@ -1173,51 +1172,63 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOve
     return result;
 }
 
-void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& clipRect, byte* s_base, 
+
+// 
+// draw overlay[clipRect] to bitmap[0,0,w,h]
+// 
+void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& clipRect, byte* s_base, 
     int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder)
 {
-    if(!switchpts || !fBody && !fBorder) return;
-
+    if (!switchpts || !fBody && !fBorder) return;
+    if (bitmap==NULL)
+    {
+        ASSERT(0);
+        return;
+    }
     // clip
-    // Limit drawn area to intersection of rendering surface and rectangular clip area
-    CRect r(0, 0, spd.w, spd.h);
-    r &= clipRect;
+    // Limit drawn area to rectangular clip area
+    CRect r = clipRect;
     // Remember that all subtitle coordinates are specified in 1/8 pixels
     // (x+4)>>3 rounds to nearest whole pixel.
-    // ??? What is xsub, ysub, mOffsetX and mOffsetY ?
     int overlayPitch = overlay->mOverlayPitch;
     int x = (xsub + overlay->mOffsetX + 4)>>3;
     int y = (ysub + overlay->mOffsetY + 4)>>3;
     int w = overlay->mOverlayWidth;
     int h = overlay->mOverlayHeight;
     int xo = 0, yo = 0;
-    // Again, limiting?
+
     if(x < r.left) {xo = r.left-x; w -= r.left-x; x = r.left;}
     if(y < r.top) {yo = r.top-y; h -= r.top-y; y = r.top;}
     if(x+w > r.right) w = r.right-x;
     if(y+h > r.bottom) h = r.bottom-y;
     // Check if there's actually anything to render
-    if(w <= 0 || h <= 0) return;
+    if (w <= 0 || h <= 0) return;
+    // must have enough space to draw into
+    ASSERT(x >= bitmap->x && y >= bitmap->y && x+w <= bitmap->x + bitmap->w && y+h <= bitmap->y + bitmap->h );
 
     // CPUID from VDub
     bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
     bool fSingleColor = (switchpts[1]==0xffffffff);
-    bool AYUV_PLANAR = (spd.type==MSP_AYUV_PLANAR);
+    bool PLANAR = (bitmap->type==XyBitmap::PLANNA);
     int draw_method = 0;
     if(fSingleColor)
         draw_method |= DM::SINGLE_COLOR;
     if(fSSE2)
         draw_method |= DM::SSE2;
-    if(AYUV_PLANAR)
+    if(PLANAR)
         draw_method |= DM::AYUV_PLANAR;
     
     // draw
     // Grab the first colour
     DWORD color = switchpts[0];
     const byte* s = s_base + overlay->mOverlayPitch*yo + xo;
-
-    // How would this differ from src?
-    unsigned long* dst = (unsigned long *)(((char *)spd.bits + spd.pitch * y) + ((x*spd.bpp)>>3));
+    
+    int dst_offset = 0;
+    if (bitmap->type==XyBitmap::PLANNA)
+        dst_offset = bitmap->pitch*(y-bitmap->y) + x - bitmap->x;
+    else
+        dst_offset = bitmap->pitch*(y-bitmap->y) + (x - bitmap->x)*4;
+    unsigned long* dst = (unsigned long*)((BYTE*)bitmap->plans[0] + dst_offset);
 
     // Every remaining line in the bitmap to be rendered...
     switch(draw_method)
@@ -1232,7 +1243,7 @@ void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& cl
                 // only have one here. (No alpha mask.)
                 pixmix_sse2(&dst[wt], color, s[wt]);
             s += overlayPitch;
-            dst = (unsigned long *)((char *)dst + spd.pitch);
+            dst = (unsigned long *)((char *)dst + bitmap->pitch);
         }
     }
     break;
@@ -1243,7 +1254,7 @@ void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& cl
             for(int wt=0; wt<w; ++wt)
                 pixmix(&dst[wt], color, s[wt]);
             s += overlayPitch;
-            dst = (unsigned long *)((char *)dst + spd.pitch);
+            dst = (unsigned long *)((char *)dst + bitmap->pitch);
         }
     }
     break;
@@ -1261,7 +1272,7 @@ void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& cl
                 pixmix_sse2(&dst[wt], color, s[wt]);
             }
             s += overlayPitch;
-            dst = (unsigned long *)((char *)dst + spd.pitch);
+            dst = (unsigned long *)((char *)dst + bitmap->pitch);
         }
     }
     break;
@@ -1276,29 +1287,29 @@ void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& cl
                 pixmix(&dst[wt], color, s[wt]);
             }
             s += overlayPitch;
-            dst = (unsigned long *)((char *)dst + spd.pitch);
+            dst = (unsigned long *)((char *)dst + bitmap->pitch);
         }
     }
     break;
     case   DM::SINGLE_COLOR |   DM::SSE2 |   DM::AYUV_PLANAR :
     {
-        unsigned char* dst_A = (unsigned char*)dst;
-        unsigned char* dst_Y = dst_A + spd.pitch*spd.h;
-        unsigned char* dst_U = dst_Y + spd.pitch*spd.h;
-        unsigned char* dst_V = dst_U + spd.pitch*spd.h;
+        unsigned char* dst_A = bitmap->plans[0] + dst_offset;
+        unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
+        unsigned char* dst_U = bitmap->plans[2] + dst_offset;
+        unsigned char* dst_V = bitmap->plans[3] + dst_offset;
 
-        AlphaBlt(dst_Y, s, ((color)>>16)&0xff, h, w, overlayPitch, spd.pitch);
-        AlphaBlt(dst_U, s, ((color)>>8)&0xff, h, w, overlayPitch, spd.pitch);
-        AlphaBlt(dst_V, s, ((color))&0xff, h, w, overlayPitch, spd.pitch);
-        AlphaBlt(dst_A, s, 0, h, w, overlayPitch, spd.pitch);
+        AlphaBlt(dst_Y, s, ((color)>>16)&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt(dst_U, s, ((color)>>8)&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt(dst_V, s, ((color))&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt(dst_A, s, 0, h, w, overlayPitch, bitmap->pitch);
     }
     break;
     case 0*DM::SINGLE_COLOR |   DM::SSE2 |   DM::AYUV_PLANAR :
     {
-        unsigned char* dst_A = (unsigned char*)dst;
-        unsigned char* dst_Y = dst_A + spd.pitch*spd.h;
-        unsigned char* dst_U = dst_Y + spd.pitch*spd.h;
-        unsigned char* dst_V = dst_U + spd.pitch*spd.h;
+        unsigned char* dst_A = bitmap->plans[0] + dst_offset;
+        unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
+        unsigned char* dst_U = bitmap->plans[2] + dst_offset;
+        unsigned char* dst_V = bitmap->plans[3] + dst_offset;
 
         const DWORD *sw = switchpts;
         int last_x = xo;
@@ -1310,10 +1321,10 @@ void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& cl
             sw += 2;
             if( new_x < last_x )
                 continue;
-            AlphaBlt(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, spd.pitch);
-            AlphaBlt(dst_U, s + last_x - xo, (color>>8)&0xff, h, new_x-last_x, overlayPitch, spd.pitch);
-            AlphaBlt(dst_V, s + last_x - xo, (color)&0xff, h, new_x-last_x, overlayPitch, spd.pitch);
-            AlphaBlt(dst_A, s + last_x - xo, 0, h, new_x-last_x, overlayPitch, spd.pitch);
+            AlphaBlt(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt(dst_U, s + last_x - xo, (color>>8)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt(dst_V, s + last_x - xo, (color)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt(dst_A, s + last_x - xo, 0, h, new_x-last_x, overlayPitch, bitmap->pitch);
 
             dst_A += new_x - last_x;
             dst_Y += new_x - last_x;
@@ -1336,10 +1347,10 @@ void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& cl
 //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
 //        debug_dst=(char*)dst;
 
-        unsigned char* dst_A = (unsigned char*)dst;
-        unsigned char* dst_Y = dst_A + spd.pitch*spd.h;
-        unsigned char* dst_U = dst_Y + spd.pitch*spd.h;
-        unsigned char* dst_V = dst_U + spd.pitch*spd.h;
+        unsigned char* dst_A = bitmap->plans[0] + dst_offset;
+        unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
+        unsigned char* dst_U = bitmap->plans[2] + dst_offset;
+        unsigned char* dst_V = bitmap->plans[3] + dst_offset;
         while(h--)
         {
             for(int wt=0; wt<w; ++wt)
@@ -1349,10 +1360,10 @@ void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& cl
                 SPLIT_AYUV(temp, dst_A+wt, dst_Y+wt, dst_U+wt, dst_V+wt);
             }
             s += overlayPitch;
-            dst_A += spd.pitch;
-            dst_Y += spd.pitch;
-            dst_U += spd.pitch;
-            dst_V += spd.pitch;
+            dst_A += bitmap->pitch;
+            dst_Y += bitmap->pitch;
+            dst_U += bitmap->pitch;
+            dst_V += bitmap->pitch;
         }
 //        XY_DO_ONCE( xy_logger::write_file("G:\\a2_rt", debug_dst, (h2-1)*spd.pitch) );
 //        debug_dst += spd.pitch*spd.h;
@@ -1365,10 +1376,10 @@ void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& cl
     break;
     case 0*DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::AYUV_PLANAR :
     {
-        unsigned char* dst_A = (unsigned char*)dst;
-        unsigned char* dst_Y = dst_A + spd.pitch*spd.h;
-        unsigned char* dst_U = dst_Y + spd.pitch*spd.h;
-        unsigned char* dst_V = dst_U + spd.pitch*spd.h;
+        unsigned char* dst_A = bitmap->plans[0] + dst_offset;
+        unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
+        unsigned char* dst_U = bitmap->plans[2] + dst_offset;
+        unsigned char* dst_V = bitmap->plans[3] + dst_offset;
         while(h--)
         {
             const DWORD *sw = switchpts;
@@ -1380,10 +1391,10 @@ void Rasterizer::Draw(SubPicDesc& spd, SharedPtrOverlay overlay, const CRect& cl
                 SPLIT_AYUV(temp, dst_A+wt, dst_Y+wt, dst_U+wt, dst_V+wt);
             }
             s += overlayPitch;
-            dst_A += spd.pitch;
-            dst_Y += spd.pitch;
-            dst_U += spd.pitch;
-            dst_V += spd.pitch;
+            dst_A += bitmap->pitch;
+            dst_Y += bitmap->pitch;
+            dst_U += bitmap->pitch;
+            dst_V += bitmap->pitch;
         }
     }
     break;

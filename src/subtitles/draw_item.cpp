@@ -5,6 +5,8 @@
 #include <boost/shared_ptr.hpp>
 #include "xy_overlay_paint_machine.h"
 #include "xy_clipper_paint_machine.h"
+#include "../SubPic/ISubPic.h"
+#include "xy_bitmap.h"
 
 using namespace std;
 
@@ -32,7 +34,7 @@ CRect DrawItem::GetDirtyRect()
     return r;
 }
 
-CRect DrawItem::Draw( SubPicDesc& spd, DrawItem& draw_item, const CRect& clip_rect )
+CRect DrawItem::Draw( XyBitmap* bitmap, DrawItem& draw_item, const CRect& clip_rect )
 {
     CRect result;
     SharedPtrGrayImage2 alpha_mask;
@@ -42,10 +44,11 @@ CRect DrawItem::Draw( SubPicDesc& spd, DrawItem& draw_item, const CRect& clip_re
     ASSERT(draw_item.overlay_paint_machine);
     draw_item.overlay_paint_machine->Paint(&overlay);
 
-    const SharedPtrByte& alpha = Rasterizer::CompositeAlphaMask(spd, overlay, draw_item.clip_rect & clip_rect, alpha_mask.get(),
+    const SharedPtrByte& alpha = Rasterizer::CompositeAlphaMask(overlay, draw_item.clip_rect & clip_rect, alpha_mask.get(),
         draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder,
         &result);
-    Rasterizer::Draw(spd, overlay, result, alpha.get(),
+
+    Rasterizer::Draw(bitmap, overlay, result, alpha.get(),
         draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
     return result;
 }
@@ -212,10 +215,13 @@ void CompositeDrawItem::Draw( SubPicDesc& spd, CompositeDrawItemListList& compDr
     {
         GroupedDrawItems& item = grouped_draw_items[i];
         pos = item.draw_item_list.GetHeadPosition();
+        XyBitmap *bitmap = XyBitmap::CreateBitmap(item.clip_rect, spd.type==MSP_AYUV_PLANAR ? XyBitmap::PLANNA : XyBitmap::PACK );
         while(pos)
         {
-            DrawItem::Draw(spd, *item.draw_item_list.GetNext(pos), item.clip_rect);
+            DrawItem::Draw(bitmap, *item.draw_item_list.GetNext(pos), item.clip_rect);
         }
+        XyBitmap::AlphaBlt(spd, *bitmap);
+        delete bitmap;
     }
 }
 

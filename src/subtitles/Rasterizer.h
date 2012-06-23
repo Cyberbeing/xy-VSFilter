@@ -202,6 +202,7 @@ public:
 
 typedef ::boost::shared_ptr<GrayImage2> SharedPtrGrayImage2;
 
+class XyBitmap;
 class Rasterizer
 {
 private:
@@ -222,12 +223,12 @@ public:
     static bool Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay);
     static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);
 
-    static SharedPtrByte CompositeAlphaMask(SubPicDesc& spd, const SharedPtrOverlay& overlay, const CRect& clipRect, 
+    static SharedPtrByte CompositeAlphaMask(const SharedPtrOverlay& overlay, const CRect& clipRect, 
         const GrayImage2* alpha_mask, 
         int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
         CRect *outputDirtyRect);
 
-    static void Draw(SubPicDesc& spd, 
+    static void Draw(XyBitmap* bitmap, 
         SharedPtrOverlay overlay, 
         const CRect& clipRect, 
         byte* s_base, 
