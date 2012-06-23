@@ -772,6 +772,23 @@ bool CWord::CreateOpaqueBox()
     return(!!m_pOpaqueBox);
 }
 
+bool CWord::operator==( const CWord& rhs ) const
+{
+    return (this==&rhs) || (
+        m_str == rhs.m_str &&
+        m_fWhiteSpaceChar == rhs.m_fWhiteSpaceChar &&
+        m_fLineBreak == rhs.m_fLineBreak &&
+        m_style == rhs.m_style && //fix me:?
+        m_ktype == rhs.m_ktype &&
+        m_kstart == rhs.m_kstart &&
+        m_kend == rhs.m_kend &&
+        m_width == rhs.m_width &&
+        m_ascent == rhs.m_ascent &&
+        m_descent == rhs.m_descent);
+    //m_pOpaqueBox
+}
+
+
 // CText
 
 CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend)

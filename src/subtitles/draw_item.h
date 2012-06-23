@@ -12,6 +12,9 @@ typedef ::boost::shared_ptr<OverlayPaintMachine> SharedPtrOverlayPaintMachine;
 class CClipperPaintMachine;
 typedef ::boost::shared_ptr<CClipperPaintMachine> SharedPtrCClipperPaintMachine;
 
+class DrawItemHashKey;
+typedef ::boost::shared_ptr<DrawItemHashKey> SharedPtrDrawItemHashKey;
+
 struct DrawItem
 {
 public:
@@ -23,9 +26,12 @@ public:
     DWORD switchpts[6];
     bool fBody;
     bool fBorder;
+
+    SharedPtrDrawItemHashKey m_key;
 public:
     CRect GetDirtyRect();
     static CRect Draw( XyBitmap *bitmap, DrawItem& draw_item, const CRect& clip_rect );
+    const SharedPtrDrawItemHashKey& GetHashKey();
 
     static DrawItem* CreateDrawItem(const SharedPtrOverlayPaintMachine& overlay_paint_machine,
         const CRect& clipRect,
@@ -64,6 +70,8 @@ public:
     CRect clip_rect;
 public:
     void Draw(SubPicDesc& spd);
+	
+    GroupedDrawItemsHashKey GetHashKey();
 };
 
 #endif // __DRAW_ITEM_21D18040_C396_4CA5_BFCE_5616A63F2C56_H__

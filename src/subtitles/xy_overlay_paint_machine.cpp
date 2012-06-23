@@ -35,6 +35,11 @@ CRect OverlayPaintMachine::CalcDirtyRect()
     return CRect(0,0,0,0);
 }
 
+const SharedPtrCWordPaintResultKey& OverlayPaintMachine::GetHashKey()
+{
+    return m_inner_paint_machine->GetHashKey();
+}
+
 void CWordPaintMachine::Paint( LAYER layer, SharedPtrOverlay* overlay )
 {
     switch (layer)
@@ -150,6 +155,9 @@ void CWordPaintMachine::CreatePaintMachines( const SharedPtrCWord& word
     machine->m_shadow_pos = shadow_pos;
     machine->m_outline_pos = outline_pos;
     machine->m_body_pos = body_pos;
+    machine->m_key.reset( new CWordPaintResultKey(word, 
+        machine->m_shadow_pos, machine->m_outline_pos, machine->m_body_pos, machine->m_trans_org) );
+    machine->m_key->UpdateHashValue();
     if (shadow)
     {
         shadow->reset( new OverlayPaintMachine(machine, SHADOW) );
@@ -170,5 +178,14 @@ void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPoint& p, 
     machine.m_word = word;
     machine.m_trans_org = org - p;//IMPORTANT! NOTE: not totally initiated
     machine.m_body_pos = p;
+    machine.m_key.reset( new CWordPaintResultKey(word, 
+        machine.m_shadow_pos, machine.m_outline_pos, machine.m_body_pos, machine.m_trans_org) );
+    machine.m_key->UpdateHashValue();
     machine.PaintBody(word, p, overlay);
+}
+
+const SharedPtrCWordPaintResultKey& CWordPaintMachine::GetHashKey()
+{
+    ASSERT(m_key);
+    return  m_key;
 }
