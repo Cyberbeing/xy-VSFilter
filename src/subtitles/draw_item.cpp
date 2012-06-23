@@ -66,7 +66,16 @@ DrawItem* DrawItem::CreateDrawItem( const SharedPtrOverlayPaintMachine& overlay_
     memcpy(result->switchpts, switchpts, sizeof(result->switchpts));
     result->fBody = fBody;
     result->fBorder = fBorder;
+
+    result->m_key.reset( new DrawItemHashKey(*result) );
+    result->m_key->UpdateHashValue();
+
     return result;
+}
+
+const SharedPtrDrawItemHashKey& DrawItem::GetHashKey()
+{
+    return m_key;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -398,13 +407,42 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
 
 void GroupedDrawItems::Draw( SubPicDesc& spd )
 {
-    POSITION pos = draw_item_list.GetHeadPosition();
-    XyBitmap *bitmap = XyBitmap::CreateBitmap(clip_rect, spd.type==MSP_AYUV_PLANAR ? XyBitmap::PLANNA : XyBitmap::PACK );
-    while(pos)
+    BitmapMruCache *bitmap_cache = CacheManager::GetBitmapMruCache();
+    GroupedDrawItemsHashKey key = GetHashKey();
+    POSITION pos = bitmap_cache->Lookup(key);
+    if (pos==NULL)
     {
-        DrawItem::Draw(bitmap, *draw_item_list.GetNext(pos), clip_rect);
+        POSITION pos = draw_item_list.GetHeadPosition();
+        XyBitmap *bitmap = XyBitmap::CreateBitmap(clip_rect, spd.type==MSP_AYUV_PLANAR ? XyBitmap::PLANNA : XyBitmap::PACK );
+        SharedPtrXyBitmap shared_bitmap(bitmap);
+        while(pos)
+        {
+            DrawItem::Draw(bitmap, *draw_item_list.GetNext(pos), clip_rect);
+        }
+        XyBitmap::BitBlt(spd, *bitmap);
+        bitmap_cache->UpdateCache(key, shared_bitmap);
     }
-    XyBitmap::BitBlt(spd, *bitmap);
-    delete bitmap;
+    else
+    {
+        const XyBitmap& bitmap =  *(bitmap_cache->GetAt(pos));
+        XyBitmap::BitBlt(spd, bitmap);
+        bitmap_cache->UpdateCache(pos);
+    }
+}
+
+GroupedDrawItemsHashKey GroupedDrawItems::GetHashKey()
+{
+    GroupedDrawItemsHashKey key;
+    key.m_clip_rect = clip_rect;
+    GroupedDrawItemsHashKey::Keys *inner_key = new GroupedDrawItemsHashKey::Keys();
+    ASSERT(inner_key);
+    key.m_key.reset(inner_key);
+    inner_key->SetCount(draw_item_list.GetCount());
+    POSITION pos = draw_item_list.GetHeadPosition();
+    for (int i=0;i<inner_key->GetCount();i++)
+    {
+        inner_key->GetAt(i) = draw_item_list.GetNext(pos)->GetHashKey();
+    }
+    return key;
 }
 

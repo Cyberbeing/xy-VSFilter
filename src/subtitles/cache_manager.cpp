@@ -4,6 +4,9 @@
 /************************************************************************/
 #include "StdAfx.h"
 #include "cache_manager.h"
+#include "draw_item.h"
+#include "xy_overlay_paint_machine.h"
+#include "xy_clipper_paint_machine.h"
 
 ULONG PathDataTraits::Hash( const PathData& key )
 {
@@ -299,8 +302,100 @@ bool ClipperAlphaMaskCacheKey::operator==( const ClipperAlphaMaskCacheKey& key )
 
 ULONG ClipperAlphaMaskCacheKey::UpdateHashValue()
 {
-    m_hash_value = ClipperTraits::Hash(*m_clipper);
+    if(m_clipper)
+        m_hash_value = ClipperTraits::Hash(*m_clipper);
+    else
+        m_hash_value = 0;
     return m_hash_value;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+// CWordPaintResultKey
+
+bool CWordPaintResultKey::operator==( const CWordPaintResultKey& key ) const
+{
+    return (this==&key) || (
+        *m_word == *key.m_word &&
+        m_shadow_pos == key.m_shadow_pos &&
+        m_outline_pos == key.m_outline_pos &&
+        m_body_pos == key.m_body_pos &&
+        m_trans_org == key.m_trans_org);
+}
+
+ULONG CWordPaintResultKey::UpdateHashValue()
+{
+    m_hash_value = 0;//Yes, we would not really hash now, so that test of operator== can be easier
+    return m_hash_value;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+// DrawItemHashKey
+
+ULONG DrawItemHashKey::UpdateHashValue()
+{
+    m_hash_value = 0;//Yes, we would not really hash now, so that test of operator== can be easier
+    return m_hash_value;
+}
+
+DrawItemHashKey::DrawItemHashKey( const DrawItem& draw_item)
+    : m_overlay_key( draw_item.overlay_paint_machine->GetHashKey() )
+    , m_clipper_key( draw_item.clipper->GetHashKey() )
+    , m_clip_rect(draw_item.clip_rect)
+    , m_xsub(draw_item.xsub)
+    , m_ysub(draw_item.ysub)
+    , m_fBody(draw_item.fBody)
+    , m_fBorder(draw_item.fBorder)
+{
+    for(int i=0;i<countof(m_switchpts);i++)
+        m_switchpts[i] = draw_item.switchpts[i];
+}
+
+bool DrawItemHashKey::operator==( const DrawItemHashKey& key ) const
+{
+    return (this==&key) || (
+        *m_overlay_key==*key.m_overlay_key && 
+        m_clipper_key==key.m_clipper_key &&
+        (m_clip_rect == key.m_clip_rect)==TRUE &&
+        m_xsub == key.m_xsub &&
+        m_ysub == key.m_ysub &&
+        m_fBody == key.m_fBody &&
+        m_fBorder == key.m_fBorder &&
+        !memcmp(m_switchpts, key.m_switchpts, sizeof(m_switchpts)));
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+// GroupedDrawItemsHashKey
+
+ULONG GroupedDrawItemsHashKey::UpdateHashValue()
+{
+    m_hash_value = 0;//Yes, we would not really hash now, so that test of operator== can be easier
+    return m_hash_value;
+}
+
+bool GroupedDrawItemsHashKey::operator==( const GroupedDrawItemsHashKey& key ) const
+{
+    if (this==&key)
+    {
+        return true;
+    }
+    else if ( m_key->GetCount()!=key.m_key->GetCount() || m_clip_rect!=key.m_clip_rect)
+    {
+        return false;
+    }
+    else
+    {
+        for( unsigned i=0;i<m_key->GetCount();i++)
+        {
+            if( !(*m_key->GetAt(i) == *key.m_key->GetAt(i)) )
+                return false;
+        }
+        return true;
+    }
+    return true;
 }
 
 
@@ -313,6 +408,7 @@ struct Caches
 public:
     Caches()
     {
+        s_bitmap_cache = NULL;
         s_clipper_alpha_mask_cache = NULL;
 
         s_text_info_cache = NULL;
@@ -330,6 +426,7 @@ public:
     }
     ~Caches()
     {
+        delete s_bitmap_cache;
         delete s_clipper_alpha_mask_cache;
 
         delete s_text_info_cache;
@@ -346,6 +443,7 @@ public:
         delete s_ass_tag_list_cache;
     }
 public:
+    BitmapMruCache* s_bitmap_cache;
     ClipperAlphaMaskMruCache* s_clipper_alpha_mask_cache;
 
     TextInfoMruCache* s_text_info_cache;
@@ -461,4 +559,13 @@ ClipperAlphaMaskMruCache* CacheManager::GetClipperAlphaMaskMruCache()
         s_caches.s_clipper_alpha_mask_cache = new ClipperAlphaMaskMruCache(CLIPPER_ALPHA_MASK_MRU_CACHE);
     }
     return s_caches.s_clipper_alpha_mask_cache;
+}
+
+BitmapMruCache* CacheManager::GetBitmapMruCache()
+{
+    if (s_caches.s_bitmap_cache==NULL)
+    {
+        s_caches.s_bitmap_cache = new BitmapMruCache(BITMAP_MRU_CACHE_ITEM_NUM);
+    }
+    return s_caches.s_bitmap_cache;
 }

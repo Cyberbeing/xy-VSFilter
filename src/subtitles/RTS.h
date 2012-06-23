@@ -70,11 +70,27 @@ class CWord
     bool CreateOpaqueBox();
 
 protected:
-    CStringW m_str;
-
     virtual bool CreatePath(PathData* path_data) = 0;
 
     bool DoPaint(const CPoint& p, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key);
+public:
+    CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend); // str[0] = 0 -> m_fLineBreak = true (in this case we only need and use the height of m_font from the whole class)
+    CWord(const CWord&);
+    virtual ~CWord();
+
+    virtual SharedPtrCWord Copy() = 0;
+    virtual bool Append(const SharedPtrCWord& w);
+    
+    bool operator==(const CWord& rhs)const;
+
+    static void PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay);
+    void PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const OverlayKey& overlay_key, SharedPtrOverlay* overlay);
+    bool PaintFromScanLineData2(const CPoint& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay);
+    bool PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const PathData& path_data, const OverlayKey& key, SharedPtrOverlay* overlay );
+    bool PaintFromRawData( const CPoint& psub, const CPoint& trans_org, const OverlayKey& key, SharedPtrOverlay* overlay );
+
+protected:
+    CStringW m_str;
 public:
     bool m_fWhiteSpaceChar, m_fLineBreak;
 
@@ -86,27 +102,13 @@ public:
 
     int m_width, m_ascent, m_descent;
 
-    CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend); // str[0] = 0 -> m_fLineBreak = true (in this case we only need and use the height of m_font from the whole class)
-    CWord(const CWord&);
-    virtual ~CWord();
-
-    virtual SharedPtrCWord Copy() = 0;
-    virtual bool Append(const SharedPtrCWord& w);
-    
-    
-
-    static void PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay);
-    void PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const OverlayKey& overlay_key, SharedPtrOverlay* overlay);
-    bool PaintFromScanLineData2(const CPoint& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay);
-    bool PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const PathData& path_data, const OverlayKey& key, SharedPtrOverlay* overlay );
-    bool PaintFromRawData( const CPoint& psub, const CPoint& trans_org, const OverlayKey& key, SharedPtrOverlay* overlay );
-
     //friend class CWordCache;
     friend class CWordCacheKey;
     friend class PathDataCacheKey;
     friend class ClipperTraits;
     friend class ClipperAlphaMaskCacheKey;
     friend class CWordPaintMachine;
+    friend class CWordPaintResultKey;
     friend std::size_t hash_value(const CWord& key); 
 };
 
