@@ -309,13 +309,23 @@ ULONG ClipperAlphaMaskCacheKey::UpdateHashValue()
     return m_hash_value;
 }
 
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // DrawItemHashKey
 
 ULONG DrawItemHashKey::UpdateHashValue()
 {
-    m_hash_value = 0;//Yes, we would not really hash now, so that test of operator== can be easier
+    m_hash_value = m_overlay_key->GetHashValue();
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += m_clipper_key.GetHashValue();
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += hash_value(m_clip_rect);
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += m_fBorder;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += m_fBody;
+    m_hash_value += m_switchpts[0];
     return m_hash_value;
 }
 
@@ -351,7 +361,13 @@ bool DrawItemHashKey::operator==( const DrawItemHashKey& key ) const
 
 ULONG GroupedDrawItemsHashKey::UpdateHashValue()
 {
-    m_hash_value = 0;//Yes, we would not really hash now, so that test of operator== can be easier
+    m_hash_value = hash_value(m_clip_rect);
+    ASSERT(m_key);
+    for( unsigned i=0;i<m_key->GetCount();i++)
+    {
+        m_hash_value += (m_hash_value<<5);
+        m_hash_value += m_key->GetAt(i)->GetHashValue();
+    }
     return m_hash_value;
 }
 
