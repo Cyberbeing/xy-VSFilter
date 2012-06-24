@@ -854,18 +854,34 @@ bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                         IDirectVobSubXy::CachesInfo caches_info;
                         m_pDirectVobSubXy->get_CachesInfo(&caches_info);
                         CString msg;
-                        msg.Format(_T("Cache LV 4(path cache)\n")\
-                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)\n")\
-                                   _T("Cache LV 3(scanline cache)\n")\
-                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)\n")\
-                                   _T("Cache LV 2(non-blur cache)\n")\
-                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)\n")\
-                                   _T("Cache LV 1(overlay cache)\n")\
-                                   _T("\t:%ld/%ld/%ld(stored num/hit_count/query_count)"),
+                        msg.Format(
+                            _T("Cache :stored_num/hit_count/query_count\n")\
+                            _T("  Parser cache 1:%ld/%ld/%ld\n")\
+                            _T("  Parser cache 2:%ld/%ld/%ld\n")\
+                            _T("\n")\
+                            _T("  LV 4:%ld/%ld/%ld\n")\
+                            _T("  LV 3:%ld/%ld/%ld\n")\
+                            _T("  LV 2:%ld/%ld/%ld\n")\
+                            _T("  LV 1:%ld/%ld/%ld\n")\
+                            _T("  LV 0:%ld/%ld/%ld\n")\
+                            _T("\n")\
+                            _T("  bitmap   :%ld/%ld/%ld\n")\
+                            _T("  scan line:%ld/%ld/%ld\n")\
+                            _T("  relay key:%ld/%ld/%ld\n")\
+                            _T("  clipper  :%ld/%ld/%ld\n")\
+                            ,
+                            caches_info.text_info_cache_cur_item_num, caches_info.text_info_cache_hit_count, caches_info.text_info_cache_query_count,
+                            caches_info.word_info_cache_cur_item_num, caches_info.word_info_cache_hit_count, caches_info.word_info_cache_query_count,
                             caches_info.path_cache_cur_item_num,     caches_info.path_cache_hit_count,     caches_info.path_cache_query_count,
-                            caches_info.scanline_cache_cur_item_num, caches_info.scanline_cache_hit_count, caches_info.scanline_cache_query_count,
+                            caches_info.scanline_cache2_cur_item_num, caches_info.scanline_cache2_hit_count, caches_info.scanline_cache2_query_count,
                             caches_info.non_blur_cache_cur_item_num, caches_info.non_blur_cache_hit_count, caches_info.non_blur_cache_query_count,
-                            caches_info.overlay_cache_cur_item_num,  caches_info.overlay_cache_hit_count,  caches_info.overlay_cache_query_count);
+                            caches_info.overlay_cache_cur_item_num,  caches_info.overlay_cache_hit_count,  caches_info.overlay_cache_query_count,
+                            caches_info.interpolate_cache_cur_item_num, caches_info.interpolate_cache_hit_count, caches_info.interpolate_cache_query_count,
+                            caches_info.bitmap_cache_cur_item_num, caches_info.bitmap_cache_hit_count, caches_info.bitmap_cache_query_count,
+                            caches_info.scanline_cache_cur_item_num, caches_info.scanline_cache_hit_count, caches_info.scanline_cache_query_count,
+                            caches_info.overlay_key_cache_cur_item_num, caches_info.overlay_key_cache_hit_count, caches_info.overlay_key_cache_query_count,
+                            caches_info.clipper_cache_cur_item_num, caches_info.clipper_cache_hit_count, caches_info.clipper_cache_query_count
+                            );
                         MessageBox(
                             m_hwnd,
                             msg,

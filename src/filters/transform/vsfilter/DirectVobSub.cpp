@@ -724,9 +724,9 @@ STDMETHODIMP CDirectVobSub::get_CachesInfo(CachesInfo* caches_info)
         caches_info->path_cache_cur_item_num    = 0;
         caches_info->path_cache_hit_count       = 0;
         caches_info->path_cache_query_count     = 0;
-        caches_info->scanline_cache_cur_item_num= 0;
-        caches_info->scanline_cache_hit_count   = 0;
-        caches_info->scanline_cache_query_count = 0;
+        caches_info->scanline_cache2_cur_item_num= 0;
+        caches_info->scanline_cache2_hit_count   = 0;
+        caches_info->scanline_cache2_query_count = 0;
         caches_info->non_blur_cache_cur_item_num= 0;
         caches_info->non_blur_cache_hit_count   = 0;
         caches_info->non_blur_cache_query_count = 0;
