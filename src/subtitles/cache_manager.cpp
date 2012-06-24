@@ -325,7 +325,13 @@ bool CWordPaintResultKey::operator==( const CWordPaintResultKey& key ) const
 
 ULONG CWordPaintResultKey::UpdateHashValue()
 {
-    m_hash_value = 0;//Yes, we would not really hash now, so that test of operator== can be easier
+    m_hash_value = CStringElementTraits<CString>::Hash(m_word->m_str);
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += ((m_shadow_pos.y<<16) | (m_shadow_pos.x));
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += ((m_body_pos.y<<16) | (m_body_pos.x));
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += ((m_trans_org.y<<16) | (m_trans_org.x));//fix me: style not take into account
     return m_hash_value;
 }
 
@@ -336,7 +342,16 @@ ULONG CWordPaintResultKey::UpdateHashValue()
 
 ULONG DrawItemHashKey::UpdateHashValue()
 {
-    m_hash_value = 0;//Yes, we would not really hash now, so that test of operator== can be easier
+    m_hash_value = m_overlay_key->GetHashValue();
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += m_clipper_key.GetHashValue();
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += hash_value(m_clip_rect);
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += m_fBorder;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += m_fBody;
+    m_hash_value += m_switchpts[0];
     return m_hash_value;
 }
 
@@ -372,7 +387,13 @@ bool DrawItemHashKey::operator==( const DrawItemHashKey& key ) const
 
 ULONG GroupedDrawItemsHashKey::UpdateHashValue()
 {
-    m_hash_value = 0;//Yes, we would not really hash now, so that test of operator== can be easier
+    m_hash_value = hash_value(m_clip_rect);
+    ASSERT(m_key);
+    for( unsigned i=0;i<m_key->GetCount();i++)
+    {
+        m_hash_value += (m_hash_value<<5);
+        m_hash_value += m_key->GetAt(i)->GetHashValue();
+    }
     return m_hash_value;
 }
 
