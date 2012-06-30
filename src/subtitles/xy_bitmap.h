@@ -2,6 +2,8 @@
 #define __XY_BITMAP_674EB983_2A49_432D_A750_62C3B3E9DA67_H__
 
 #include <atltypes.h>
+#include <boost/shared_ptr.hpp>
+#include "XySubRenderIntf.h"
 
 class XyBitmap
 {
@@ -30,5 +32,32 @@ public:
 private:
     static void ClearBitmap(XyBitmap *bitmap);
 };
+
+class XySubRenderFrame: public CUnknown, public IXySubRenderFrame
+{
+public:
+    DECLARE_IUNKNOWN;
+    STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
+
+    STDMETHODIMP GetOutputRect(RECT *outputRect);
+    STDMETHODIMP GetClipRect(RECT *clipRect);
+    STDMETHODIMP GetXyColorSpace(int *xyColorSpace);
+    STDMETHODIMP GetBitmapCount(int *count);
+    STDMETHODIMP GetBitmap(int index, ULONGLONG *id, POINT *position, SIZE *size, LPCVOID *pixels, int *pitch);
+    STDMETHODIMP GetBitmapExtra(int index, LPVOID extra_info);
+public:
+    XySubRenderFrame();
+    ~XySubRenderFrame();
+    
+    typedef ::boost::shared_ptr<XyBitmap> SharedBitmap;
+public:
+    CAtlArray<SharedBitmap> m_bitmaps;
+    CAtlArray<int> m_bitmap_ids;
+    CRect m_output_rect;
+    CRect m_clip_rect;
+    XyColorSpace m_xy_color_space;
+};
+
+
 
 #endif // __XY_BITMAP_674EB983_2A49_432D_A750_62C3B3E9DA67_H__
