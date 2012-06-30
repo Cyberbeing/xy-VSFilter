@@ -25,6 +25,7 @@
 #include "CRect2.h"
 
 #include "SubPicProviderExWrapper.h"
+#include "SimpleSubPicWrapper.h"
 
 #define CSUBPICQUEUE_THREAD_PROC_WAIT_TIMEOUT	20
 #define CSUBPICQUEUE_LOOKUP_WAIT_TIMEOUT		40
@@ -72,7 +73,7 @@ STDMETHODIMP CSubPicQueueImpl::NonDelegatingQueryInterface(REFIID riid, void** p
 {
 	return
 		QI(ISubPicQueue)
-        QI(ISubPicQueueEx)
+        QI(ISimpleSubPicProvider)
 		__super::NonDelegatingQueryInterface(riid, ppv);
 }
 
@@ -115,7 +116,43 @@ STDMETHODIMP CSubPicQueueImpl::SetTime(REFERENCE_TIME rtNow)
 
 // ISubPicQueueEx
 
-STDMETHODIMP CSubPicQueueImpl::SetSubPicProviderEx( ISubPicProviderEx* pSubPicProviderEx )
+STDMETHODIMP CSubPicQueueImpl::SetSubPicProvider( IUnknown* subpic_provider )
+{
+    CComQIPtr<ISubPicProviderEx> tmp = subpic_provider;
+    if (tmp)
+    {
+        return SetSubPicProviderEx(tmp);
+    }
+    else
+    {
+        CComQIPtr<ISubPicProvider> tmp2 = subpic_provider;
+        if (tmp2)
+        {
+            return SetSubPicProvider(tmp);
+        }
+    }
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CSubPicQueueImpl::GetSubPicProvider( IUnknown** subpic_provider )
+{
+    if(!subpic_provider) {
+        return E_POINTER;
+    }
+
+    CAutoLock cAutoLock(&m_csSubPicProvider);
+
+    if(m_pSubPicProviderEx) {
+        *subpic_provider = m_pSubPicProviderEx;
+        (*subpic_provider)->AddRef();
+    }
+
+    return !!*subpic_provider ? S_OK : E_FAIL;
+}
+
+// private
+
+HRESULT CSubPicQueueImpl::SetSubPicProviderEx( ISubPicProviderEx* pSubPicProviderEx )
 {
     //	if(m_pSubPicProvider != pSubPicProvider)
     {
@@ -142,7 +179,7 @@ STDMETHODIMP CSubPicQueueImpl::SetSubPicProviderEx( ISubPicProviderEx* pSubPicPr
     return S_OK;
 }
 
-STDMETHODIMP CSubPicQueueImpl::GetSubPicProviderEx( ISubPicProviderEx** pSubPicProviderEx )
+HRESULT CSubPicQueueImpl::GetSubPicProviderEx( ISubPicProviderEx** pSubPicProviderEx )
 {
     if(!pSubPicProviderEx) {
         return E_POINTER;
@@ -157,8 +194,6 @@ STDMETHODIMP CSubPicQueueImpl::GetSubPicProviderEx( ISubPicProviderEx** pSubPicP
 
     return !!*pSubPicProviderEx ? S_OK : E_FAIL;
 }
-
-// private
 
 HRESULT CSubPicQueueImpl::RenderTo(ISubPicEx* pSubPic, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, double fps, BOOL bIsAnimated)
 {
@@ -357,7 +392,7 @@ STDMETHODIMP_(bool) CSubPicQueue::LookupSubPic(REFERENCE_TIME rtNow, ISubPic** p
     return(!!*ppSubPic);
 }
 
-STDMETHODIMP_(bool) CSubPicQueue::LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSubPic)
+STDMETHODIMP_(bool) CSubPicQueue::LookupSubPic( REFERENCE_TIME now /*[in]*/, ISimpleSubPic** output_subpic/*[out]*/ )
 {
     //ToDo: fix me
     return false;
@@ -635,7 +670,23 @@ STDMETHODIMP_(bool) CSubPicQueueNoThread::LookupSubPic(REFERENCE_TIME rtNow, ISu
     }
 }
 
-STDMETHODIMP_(bool) CSubPicQueueNoThread::LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSubPic)
+STDMETHODIMP_(bool) CSubPicQueueNoThread::LookupSubPic( REFERENCE_TIME now /*[in]*/, ISimpleSubPic** output_subpic /*[out]*/ )
+{    
+    if(output_subpic!=NULL)
+    {
+        CComPtr<ISubPicEx> temp;
+        bool result = LookupSubPicEx(now, &temp);
+        (*output_subpic = new SimpleSubPicWrapper(temp))->AddRef();
+        return result;
+    }
+    else
+    {
+        return LookupSubPicEx(now, NULL);
+    }
+}
+
+
+bool CSubPicQueueNoThread::LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSubPic)
 {
     if(!ppSubPic)
         return(false);

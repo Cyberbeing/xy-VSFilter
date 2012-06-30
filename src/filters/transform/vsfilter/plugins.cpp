@@ -48,8 +48,7 @@ private:
 protected:
 	float m_fps;
 	CCritSec m_csSubLock;
-    CComPtr<ISimpleSubPicProvider> m_simple_provider;
-	CComPtr<ISubPicQueue> m_pSubPicQueue;
+	CComPtr<ISimpleSubPicProvider> m_simple_provider;
 	CComPtr<ISubPicProvider> m_pSubPicProvider;
 	DWORD_PTR m_SubPicProviderId;
 
@@ -174,27 +173,21 @@ public:
         }
 		CSize size(dst.w, dst.h);
 
-		if(!m_pSubPicQueue)
+		if(!m_simple_provider)
 		{
             CComPtr<ISubPicExAllocator> pAllocator = new CPooledSubPicAllocator(dst.type, size, 2);
                         
 			HRESULT hr;
-			if(!(m_pSubPicQueue = new CSubPicQueueNoThread(pAllocator, &hr)) || FAILED(hr))
+			if(!(m_simple_provider = new CSubPicQueueNoThread(pAllocator, &hr)) || FAILED(hr))
 			{
-				m_pSubPicQueue = NULL;
+				m_simple_provider = NULL;
 				return(false);
 			}
-            m_simple_provider = new SimpleSubPicProvider(m_pSubPicQueue);
-            if (!m_simple_provider)
-            {
-                m_simple_provider = NULL;
-                return(false);
-            }
 		}
 
 		if(m_SubPicProviderId != (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider)
 		{
-			m_pSubPicQueue->SetSubPicProvider(m_pSubPicProvider);
+			m_simple_provider->SetSubPicProvider(m_pSubPicProvider);
 			m_SubPicProviderId = (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider;
 		}
 

@@ -189,26 +189,6 @@ public IUnknown {
 	STDMETHOD (GetStats) (int nSubPic /*[in]*/, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
 };
 
-interface __declspec(uuid("E1EAC839-0584-49D3-8DAF-5D22FCD1B651"))
-ISubPicQueueEx :
-public IUnknown // not inherit ISubPicQueue so that 
-                // when it comes to a point that we want to delete ISubPicQueue interface,
-                // we will have less trouble
-{
-public:
-    STDMETHOD (SetSubPicProviderEx) (ISubPicProviderEx* pSubPicProvider /*[in]*/) PURE;
-    STDMETHOD (GetSubPicProviderEx) (ISubPicProviderEx** pSubPicProvider /*[out]*/) PURE;
-
-    STDMETHOD (SetFPS) (double fps /*[in]*/) PURE;
-    STDMETHOD (SetTime) (REFERENCE_TIME rtNow /*[in]*/) PURE;
-
-    STDMETHOD (Invalidate) (REFERENCE_TIME rtInvalidate = -1) PURE;
-    STDMETHOD_(bool, LookupSubPicEx) (REFERENCE_TIME rtNow /*[in]*/, ISubPicEx** ppSubPic /*[out]*/) PURE;
-
-    STDMETHOD (GetStats) (int& nSubPics, REFERENCE_TIME& rtNow, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
-    STDMETHOD (GetStats) (int nSubPic /*[in]*/, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
-};
-
 //
 // ISubPicAllocatorPresenter
 //

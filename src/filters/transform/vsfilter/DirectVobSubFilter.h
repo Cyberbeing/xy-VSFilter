@@ -27,8 +27,7 @@
 #include "../../../subtitles/VobSubFile.h"
 #include "../../../subtitles/RTS.h"
 #include "../../../subtitles/SSF.h"
-
-interface ISimpleSubPicProvider;
+#include "../../../subpic/ISimpleSubPic.h"
 
 typedef struct
 {
@@ -51,8 +50,7 @@ class CDirectVobSubFilter
     friend class CTextInputPin;
 
 	CCritSec m_csQueueLock;
-	CComPtr<ISubPicQueueEx> m_pSubPicQueue;
-    CComPtr<ISimpleSubPicProvider> m_simple_provider;
+	CComPtr<ISimpleSubPicProvider> m_simple_provider;
 
 	void InitSubPicQueue();
 	SubPicDesc m_spd;
