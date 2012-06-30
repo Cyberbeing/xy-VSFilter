@@ -67,16 +67,50 @@ void XyBitmap::ClearBitmap( XyBitmap *bitmap )
     }
 }
 
-void XyBitmap::AlphaBlt( SubPicDesc& spd, const XyBitmap& bitmap )
+void XyBitmap::AlphaBltPack( SubPicDesc& spd, POINT pos, SIZE size, LPCVOID pixels, int pitch )
 {
-    ASSERT( spd.type==MSP_AYUV_PLANAR ? bitmap.type==XyBitmap::PLANNA : bitmap.type==XyBitmap::PACK );
+    ASSERT( spd.type!=MSP_AYUV_PLANAR );
+    CRect r(0, 0, spd.w, spd.h);
+
+    int x = pos.x;
+    int y = pos.y;
+    int w = size.cx;
+    int h = size.cy;
+    int x_src = 0, y_src = 0;
+
+    if(x < r.left) {x_src = r.left-x; w -= r.left-x; x = r.left;}
+    if(y < r.top) {y_src = r.top-y; h -= r.top-y; y = r.top;}
+    if(x+w > r.right) w = r.right-x;
+    if(y+h > r.bottom) h = r.bottom-y;
+
+    const BYTE* src = reinterpret_cast<const BYTE*>(pixels) + y_src*pitch + x_src*4;
+
+    BYTE* dst = reinterpret_cast<BYTE*>(spd.bits) + spd.pitch * y + ((x*spd.bpp)>>3);
+
+    for(int i=0;i<h;i++, src += pitch, dst += spd.pitch)
+    {
+        const BYTE* s2 = src;
+        const BYTE* s2end = s2 + w*4;
+        DWORD* d2 = (DWORD*)dst;
+        for(; s2 < s2end; s2 += 4, d2++)
+        {
+            int tmp = s2[3]+1;
+            *d2 = (((((*d2&0x00ff00ff)*tmp)>>8) + (*((DWORD*)s2)&0x00ff00ff))&0x00ff00ff)
+                | (((((*d2&0x0000ff00)*tmp)>>8) + (*((DWORD*)s2)&0x0000ff00))&0x0000ff00);
+        }
+    }
+}
+
+void XyBitmap::AlphaBltPlannar( SubPicDesc& spd, POINT pos, SIZE size, const XyPlannerFormatExtra& pixels, int pitch )
+{
+    ASSERT( spd.type==MSP_AYUV_PLANAR );
 
     CRect r(0, 0, spd.w, spd.h);
 
-    int x = bitmap.x;
-    int y = bitmap.y;
-    int w = bitmap.w;
-    int h = bitmap.h;
+    int x = pos.x;
+    int y = pos.y;
+    int w = size.cx;
+    int h = size.cy;
     int x_src = 0, y_src = 0;
 
     if(x < r.left) {x_src = r.left-x; w -= r.left-x; x = r.left;}
@@ -86,67 +120,47 @@ void XyBitmap::AlphaBlt( SubPicDesc& spd, const XyBitmap& bitmap )
 
     BYTE* dst = reinterpret_cast<BYTE*>(spd.bits) + spd.pitch * y + ((x*spd.bpp)>>3);
 
-    if (bitmap.type==PLANNA)
+    const BYTE* src_A = reinterpret_cast<const BYTE*>(pixels.plans[0]) + y_src*pitch + x_src;
+    const BYTE* src_Y = reinterpret_cast<const BYTE*>(pixels.plans[1]) + y_src*pitch + x_src;
+    const BYTE* src_U = reinterpret_cast<const BYTE*>(pixels.plans[2]) + y_src*pitch + x_src;
+    const BYTE* src_V = reinterpret_cast<const BYTE*>(pixels.plans[3]) + y_src*pitch + x_src;
+
+    BYTE* dst_A = dst;
+    BYTE* dst_Y = dst_A + spd.pitch*spd.h;
+    BYTE* dst_U = dst_Y + spd.pitch*spd.h;
+    BYTE* dst_V = dst_U + spd.pitch*spd.h;
+
+    const BYTE*  src_A1 = src_A;
+    for (int i=0;i<h;i++, src_A += pitch, dst_A += spd.pitch)
     {
-        const BYTE* src_A = bitmap.plans[0] + y_src*bitmap.pitch + x_src;
-        const BYTE* src_Y = bitmap.plans[1] + y_src*bitmap.pitch + x_src;
-        const BYTE* src_U = bitmap.plans[2] + y_src*bitmap.pitch + x_src;
-        const BYTE* src_V = bitmap.plans[3] + y_src*bitmap.pitch + x_src;
-
-        BYTE* dst_A = dst;
-        BYTE* dst_Y = dst_A + spd.pitch*spd.h;
-        BYTE* dst_U = dst_Y + spd.pitch*spd.h;
-        BYTE* dst_V = dst_U + spd.pitch*spd.h;
-
-        const BYTE*  src_A1 = src_A;
-        for (int i=0;i<h;i++, src_A += bitmap.pitch, dst_A += spd.pitch)
+        for (int j=0;j<w;j++)
         {
-            for (int j=0;j<w;j++)
-            {
-                dst_A[j] = (dst_A[j]*(src_A[j]+1))>>8;
-            }
-        }
-
-        src_A = src_A1;
-        for (int i=0;i<h;i++, src_A += bitmap.pitch, src_Y += bitmap.pitch, dst_Y += spd.pitch)
-        {
-            for (int j=0;j<w;j++)
-            {
-                dst_Y[j] = ((dst_Y[j]*(src_A[j]+1))>>8) + src_Y[j];
-            }
-        }
-        src_A = src_A1;
-        for (int i=0;i<h;i++, src_A += bitmap.pitch, src_U += bitmap.pitch, dst_U += spd.pitch)
-        {
-            for (int j=0;j<w;j++)
-            {
-                dst_U[j] = ((dst_U[j]*(src_A[j]+1))>>8) + src_U[j];
-            }
-        }
-        src_A = src_A1;
-        for (int i=0;i<h;i++, src_A += bitmap.pitch, src_V += bitmap.pitch, dst_V += spd.pitch)
-        {
-            for (int j=0;j<w;j++)
-            {
-                dst_V[j] = ((dst_V[j]*(src_A[j]+1))>>8) + src_V[j];
-            }
+            dst_A[j] = (dst_A[j]*(src_A[j]+1))>>8;
         }
     }
-    else if (bitmap.type==PACK)
-    {
-        const BYTE* src = bitmap.plans[0] + y_src*bitmap.pitch + x_src*4;
 
-        for(int i=0;i<h;i++, src += bitmap.pitch, dst += spd.pitch)
+    src_A = src_A1;
+    for (int i=0;i<h;i++, src_A += pitch, src_Y += pitch, dst_Y += spd.pitch)
+    {
+        for (int j=0;j<w;j++)
         {
-            const BYTE* s2 = src;
-            const BYTE* s2end = s2 + w*4;
-            DWORD* d2 = (DWORD*)dst;
-            for(; s2 < s2end; s2 += 4, d2++)
-            {
-                int tmp = s2[3]+1;
-                *d2 = (((((*d2&0x00ff00ff)*tmp)>>8) + (*((DWORD*)s2)&0x00ff00ff))&0x00ff00ff)
-                    | (((((*d2&0x0000ff00)*tmp)>>8) + (*((DWORD*)s2)&0x0000ff00))&0x0000ff00);
-            }
+            dst_Y[j] = ((dst_Y[j]*(src_A[j]+1))>>8) + src_Y[j];
+        }
+    }
+    src_A = src_A1;
+    for (int i=0;i<h;i++, src_A += pitch, src_U += pitch, dst_U += spd.pitch)
+    {
+        for (int j=0;j<w;j++)
+        {
+            dst_U[j] = ((dst_U[j]*(src_A[j]+1))>>8) + src_U[j];
+        }
+    }
+    src_A = src_A1;
+    for (int i=0;i<h;i++, src_A += pitch, src_V += pitch, dst_V += spd.pitch)
+    {
+        for (int j=0;j<w;j++)
+        {
+            dst_V[j] = ((dst_V[j]*(src_A[j]+1))>>8) + src_V[j];
         }
     }
 }
@@ -254,12 +268,12 @@ STDMETHODIMP XySubRenderFrame::GetBitmapExtra( int index, LPVOID extra_info )
     if (extra_info && m_xy_color_space == XY_CS_AYUV_PLANAR)
     {
         const XyBitmap& bitmap = *(m_bitmaps.GetAt(index));
-        XyAyuvPlannerFormatExtra *output = reinterpret_cast<XyAyuvPlannerFormatExtra*>(extra_info);
+        XyPlannerFormatExtra *output = reinterpret_cast<XyPlannerFormatExtra*>(extra_info);
 
-        output->a = bitmap.plans[0];
-        output->y = bitmap.plans[1];
-        output->u = bitmap.plans[2];
-        output->v = bitmap.plans[3];
+        output->plans[0] = bitmap.plans[0];
+        output->plans[1] = bitmap.plans[1];
+        output->plans[2] = bitmap.plans[2];
+        output->plans[3] = bitmap.plans[3];
     }
     return S_OK;
 }

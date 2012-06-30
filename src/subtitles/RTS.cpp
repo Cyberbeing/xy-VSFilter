@@ -3394,8 +3394,30 @@ STDMETHODIMP CRenderedTextSubtitle::ParseScript(SubPicDesc& spd, REFERENCE_TIME 
 
 STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList)
 {
+    XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
     if(m_size != CSize(spd.w*8, spd.h*8) || m_vidrect != CRect(spd.vidrect.left*8, spd.vidrect.top*8, spd.vidrect.right*8, spd.vidrect.bottom*8))
-        Init(CSize(spd.w, spd.h), spd.vidrect);
+    {
+        Init(CSize(spd.w, spd.h), spd.vidrect);        
+        render_frame_creater->SetOutputRect(CRect(0,0,spd.w,spd.h));
+        render_frame_creater->SetClipRect(CRect(0,0,spd.w,spd.h));
+    }
+    XyColorSpace color_space = XY_CS_ARGB;
+    switch(spd.type)
+    {
+    case MSP_AYUV_PLANAR:
+        color_space = XY_CS_AYUV_PLANAR;
+        break;
+    case MSP_XY_AUYV:
+        color_space = XY_CS_AUYV;
+        break;
+    case MSP_AYUV:
+        color_space = XY_CS_AYUV;
+        break;
+    default:
+        color_space = XY_CS_ARGB;
+        break;
+    }
+    render_frame_creater->SetColorSpace(color_space);
 
     CSubtitle2List sub2List;
     HRESULT hr = ParseScript(spd, rt, fps, &sub2List);
@@ -3406,7 +3428,52 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
 
     CompositeDrawItemListList compDrawItemListList;   
     DoRender(spd, sub2List, &rectList, &compDrawItemListList);
-    CompositeDrawItem::Draw(spd, compDrawItemListList);
+
+    XySubRenderFrame *sub_render_frame;
+    CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);
+
+    if (sub_render_frame)
+    {
+        SharedPtrXySubRenderFrame auto_cleaner(sub_render_frame);
+        int count = 0;
+        hr = sub_render_frame->GetBitmapCount(&count);
+        if(FAILED(hr))
+        {
+            return hr;
+        }
+        int color_space;
+        hr = sub_render_frame->GetXyColorSpace(&color_space);
+        if(FAILED(hr))
+        {
+            return hr;
+        }
+        for (int i=0;i<count;i++)
+        {
+            POINT pos;
+            SIZE size;
+            LPCVOID pixels;
+            int pitch;
+            hr = sub_render_frame->GetBitmap(i, NULL, &pos, &size, &pixels, &pitch );
+            if(FAILED(hr))
+            {
+                return hr;
+            }
+            if (color_space==XY_CS_AYUV_PLANAR)
+            {
+                XyPlannerFormatExtra plans;
+                hr = sub_render_frame->GetBitmapExtra(i, &plans);
+                if(FAILED(hr))
+                {
+                    return hr;
+                }
+                XyBitmap::AlphaBltPlannar(spd, pos, size, plans, pitch);
+            }
+            else
+            {
+                XyBitmap::AlphaBltPack(spd, pos, size, pixels, pitch);
+            }
+        }
+    }    
     return (!rectList.IsEmpty()) ? S_OK : S_FALSE;
 }
 

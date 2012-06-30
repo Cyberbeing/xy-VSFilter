@@ -8,12 +8,9 @@ enum XyColorSpace
     XY_CS_AYUV_PLANAR
 };
 
-struct XyAyuvPlannerFormatExtra
+struct XyPlannerFormatExtra
 {
-    LPCVOID a;
-    LPCVOID y;
-    LPCVOID u;
-    LPCVOID v;
+    LPCVOID plans[4];
 };
 
 [uuid("4237bf3b-14fd-44a4-9704-86ec87f89897")]
@@ -29,6 +26,6 @@ interface IXySubRenderFrame : public IUnknown
 
     STDMETHOD(GetBitmap)(int index, ULONGLONG *id, POINT *position, SIZE *size, LPCVOID *pixels, int *pitch) = 0;
 
-    //if xyColorSpace == XY_AYUV_PLANAR, extra_info should point to a AyuvPlannerFormatExtra struct
+    //if xyColorSpace == XY_AYUV_PLANAR, extra_info should point to a XyPlannerFormatExtra struct
     STDMETHOD(GetBitmapExtra)(int index, LPVOID extra_info) = 0;
 };
