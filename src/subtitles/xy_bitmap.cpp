@@ -150,3 +150,116 @@ void XyBitmap::AlphaBlt( SubPicDesc& spd, const XyBitmap& bitmap )
         }
     }
 }
+
+//////////////////////////////////////////////////////////////////////////
+//
+// SubRenderFrame
+// 
+
+XySubRenderFrame::XySubRenderFrame()
+    : CUnknown(NAME("XySubRenderFrameWrapper"), NULL)
+{
+
+}
+
+XySubRenderFrame::~XySubRenderFrame()
+{
+}
+
+STDMETHODIMP XySubRenderFrame::NonDelegatingQueryInterface( REFIID riid, void** ppv )
+{
+    return
+        QI(IXySubRenderFrame)
+        __super::NonDelegatingQueryInterface(riid, ppv);
+}
+
+STDMETHODIMP XySubRenderFrame::GetOutputRect( RECT *outputRect )
+{
+    if (!outputRect)
+    {
+        return E_POINTER;
+    }
+    *outputRect = m_output_rect;
+    return S_OK;
+}
+
+STDMETHODIMP XySubRenderFrame::GetClipRect( RECT *clipRect )
+{
+    if (!clipRect)
+    {
+        return E_POINTER;
+    }
+    *clipRect = m_clip_rect;
+    return S_OK;
+}
+
+STDMETHODIMP XySubRenderFrame::GetXyColorSpace( int *xyColorSpace )
+{
+    if (!xyColorSpace)
+    {
+        return E_POINTER;
+    }
+    *xyColorSpace = m_xy_color_space;
+    return S_OK;
+}
+
+STDMETHODIMP XySubRenderFrame::GetBitmapCount( int *count )
+{
+    if (!count)
+    {
+        return E_POINTER;
+    }
+    *count = m_bitmaps.GetCount();
+    return S_OK;
+}
+
+STDMETHODIMP XySubRenderFrame::GetBitmap( int index, ULONGLONG *id, POINT *position, SIZE *size, LPCVOID *pixels, int *pitch )
+{
+    if (index<0 || index>=(int)m_bitmaps.GetCount())
+    {
+        return E_INVALIDARG;
+    }
+    if (id)
+    {
+        *id = m_bitmap_ids.GetAt(index);
+    }
+    const XyBitmap& bitmap = *(m_bitmaps.GetAt(index));
+    if (position)
+    {
+        position->x = bitmap.x;
+        position->y = bitmap.y;
+    }
+    if (size)
+    {
+        size->cx = bitmap.w;
+        size->cy = bitmap.h;
+    }
+    if (pixels)
+    {
+        *pixels = bitmap.plans[0];
+    }
+    if (pitch)
+    {
+        *pitch = bitmap.pitch;
+    }
+    return S_OK;
+}
+
+STDMETHODIMP XySubRenderFrame::GetBitmapExtra( int index, LPVOID extra_info )
+{
+    if (index<0 || index>=(int)m_bitmaps.GetCount())
+    {
+        return E_INVALIDARG;
+    }
+    if (extra_info && m_xy_color_space == XY_CS_AYUV_PLANAR)
+    {
+        const XyBitmap& bitmap = *(m_bitmaps.GetAt(index));
+        XyAyuvPlannerFormatExtra *output = reinterpret_cast<XyAyuvPlannerFormatExtra*>(extra_info);
+
+        output->a = bitmap.plans[0];
+        output->y = bitmap.plans[1];
+        output->u = bitmap.plans[2];
+        output->v = bitmap.plans[3];
+    }
+    return S_OK;
+}

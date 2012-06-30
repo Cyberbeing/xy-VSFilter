@@ -167,10 +167,10 @@ void CompositeDrawItem::Draw( SubPicDesc& spd, CompositeDrawItemListList& compDr
                 draw_item_ex->rect_id_list.AddTail(rect_id);
         }
     }
-    for (int i=0;i<draw_item_ex_tree.GetCount();i++)
+    for (unsigned i=0;i<draw_item_ex_tree.GetCount();i++)
     {
         CompositeDrawItemExVec &draw_item_ex_vec = draw_item_ex_tree[i];
-        for (int j=0;j<draw_item_ex_vec.GetCount();j++)
+        for (unsigned j=0;j<draw_item_ex_vec.GetCount();j++)
         {
             CompositeDrawItemEx &draw_item_ex = draw_item_ex_vec[j];
             if (draw_item_ex.item->shadow)
@@ -184,7 +184,7 @@ void CompositeDrawItem::Draw( SubPicDesc& spd, CompositeDrawItemListList& compDr
                 }
             }
         }
-        for (int j=0;j<draw_item_ex_vec.GetCount();j++)
+        for (unsigned j=0;j<draw_item_ex_vec.GetCount();j++)
         {
             CompositeDrawItemEx &draw_item_ex = draw_item_ex_vec[j];
             if (draw_item_ex.item->outline)
@@ -198,7 +198,7 @@ void CompositeDrawItem::Draw( SubPicDesc& spd, CompositeDrawItemListList& compDr
                 }
             }
         }
-        for (int j=0;j<draw_item_ex_vec.GetCount();j++)
+        for (unsigned j=0;j<draw_item_ex_vec.GetCount();j++)
         {
             CompositeDrawItemEx &draw_item_ex = draw_item_ex_vec[j];
             if (draw_item_ex.item->body)
@@ -213,10 +213,37 @@ void CompositeDrawItem::Draw( SubPicDesc& spd, CompositeDrawItemListList& compDr
             }            
         }
     }
-
-    for (int i=0;i<grouped_draw_items.GetCount();i++)
+    
+    XyBitmap::MemLayout bitmap_layout = XyBitmap::PACK;
+    XySubRenderFrame sub_render_frame;
+    sub_render_frame.m_output_rect.SetRect(0,0,spd.w,spd.h);
+    sub_render_frame.m_clip_rect = sub_render_frame.m_output_rect;
+    switch(spd.type)
     {
-        grouped_draw_items[i].Draw(spd);
+    case MSP_AYUV_PLANAR:
+        sub_render_frame.m_xy_color_space = XY_CS_AYUV_PLANAR;
+        bitmap_layout = XyBitmap::PLANNA;
+        break;
+    case MSP_XY_AUYV:
+        sub_render_frame.m_xy_color_space = XY_CS_AUYV;
+        bitmap_layout = XyBitmap::PACK;
+        break;
+    case MSP_AYUV:
+        sub_render_frame.m_xy_color_space = XY_CS_AYUV;
+        bitmap_layout = XyBitmap::PACK;
+        break;
+    default:
+        sub_render_frame.m_xy_color_space = XY_CS_ARGB;
+        bitmap_layout = XyBitmap::PACK;
+        break;
+    }
+    sub_render_frame.m_bitmaps.SetCount(grouped_draw_items.GetCount());
+    sub_render_frame.m_bitmap_ids.SetCount(grouped_draw_items.GetCount());
+
+    for (unsigned i=0;i<grouped_draw_items.GetCount();i++)
+    {
+        grouped_draw_items[i].Draw(bitmap_layout, &sub_render_frame.m_bitmaps.GetAt(i), &sub_render_frame.m_bitmap_ids.GetAt(i));
+        XyBitmap::AlphaBlt(spd, *sub_render_frame.m_bitmaps.GetAt(i));
     }
 }
 
@@ -290,7 +317,7 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
     CAtlArray<Segment> tempSegments;
     tempSegments.SetCount(vertical_breakpoints.size()-1);
     int prev = vertical_breakpoints[0], count = 0;
-    for(int ptr = 1; ptr<vertical_breakpoints.size(); ptr++)
+    for(unsigned ptr = 1; ptr<vertical_breakpoints.size(); ptr++)
     {
         if(vertical_breakpoints[ptr] != prev)
         {
@@ -405,29 +432,31 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
 // GroupedDrawItems
 // 
 
-void GroupedDrawItems::Draw( SubPicDesc& spd )
+void GroupedDrawItems::Draw( XyBitmap::MemLayout bitmap_layout, SharedPtrXyBitmap *bitmap, int *bitmap_identity_num )
 {
+    static int id=0;
+
+    ASSERT(bitmap && bitmap_identity_num);
     BitmapMruCache *bitmap_cache = CacheManager::GetBitmapMruCache();
     GroupedDrawItemsHashKey key = GetHashKey();
     POSITION pos = bitmap_cache->Lookup(key);
     if (pos==NULL)
     {
         POSITION pos = draw_item_list.GetHeadPosition();
-        XyBitmap *bitmap = XyBitmap::CreateBitmap(clip_rect, spd.type==MSP_AYUV_PLANAR ? XyBitmap::PLANNA : XyBitmap::PACK );
-        SharedPtrXyBitmap shared_bitmap(bitmap);
+        XyBitmap *tmp = XyBitmap::CreateBitmap(clip_rect, bitmap_layout );
+        bitmap->reset(tmp);
         while(pos)
         {
-            DrawItem::Draw(bitmap, *draw_item_list.GetNext(pos), clip_rect);
+            DrawItem::Draw(tmp, *draw_item_list.GetNext(pos), clip_rect);
         }
-        XyBitmap::AlphaBlt(spd, *bitmap);
-        bitmap_cache->UpdateCache(key, shared_bitmap);
+        bitmap_cache->UpdateCache(key, *bitmap);
     }
     else
     {
-        const XyBitmap& bitmap =  *(bitmap_cache->GetAt(pos));
-        XyBitmap::AlphaBlt(spd, bitmap);
+        *bitmap = bitmap_cache->GetAt(pos);
         bitmap_cache->UpdateCache(pos);
     }
+    *bitmap_identity_num  = id++;//fix me: not really support id yet
 }
 
 GroupedDrawItemsHashKey GroupedDrawItems::GetHashKey()
@@ -439,7 +468,7 @@ GroupedDrawItemsHashKey GroupedDrawItems::GetHashKey()
     key.m_key.reset(inner_key);
     inner_key->SetCount(draw_item_list.GetCount());
     POSITION pos = draw_item_list.GetHeadPosition();
-    for (int i=0;i<inner_key->GetCount();i++)
+    for (unsigned i=0;i<inner_key->GetCount();i++)
     {
         inner_key->GetAt(i) = draw_item_list.GetNext(pos)->GetHashKey();
     }

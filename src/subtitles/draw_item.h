@@ -5,6 +5,7 @@
 #include "RTS.h"
 #include <atlcoll.h>
 #include <boost/shared_ptr.hpp>
+#include "xy_bitmap.h"
 
 class OverlayPaintMachine;
 typedef ::boost::shared_ptr<OverlayPaintMachine> SharedPtrOverlayPaintMachine;
@@ -69,7 +70,7 @@ public:
     CAtlList<SharedPtrDrawItem> draw_item_list;
     CRect clip_rect;
 public:
-    void Draw(SubPicDesc& spd);
+    void Draw(XyBitmap::MemLayout bitmap_layout, SharedPtrXyBitmap *bitmap, int *bitmap_identity_num);
 	
     GroupedDrawItemsHashKey GetHashKey();
 };

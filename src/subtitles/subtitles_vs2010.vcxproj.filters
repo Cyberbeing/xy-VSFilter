@@ -182,5 +182,8 @@
     <ClInclude Include="xy_bitmap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="XySubRenderIntf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

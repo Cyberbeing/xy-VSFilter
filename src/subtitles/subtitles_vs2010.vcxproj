@@ -239,6 +239,7 @@
     <ClInclude Include="VobSubFile.h" />
     <ClInclude Include="VobSubFileRipper.h" />
     <ClInclude Include="VobSubImage.h" />
+    <ClInclude Include="XySubRenderIntf.h" />
     <ClInclude Include="xy_clipper_paint_machine.h" />
     <ClInclude Include="xy_bitmap.h" />
     <ClInclude Include="xy_malloc.h" />
