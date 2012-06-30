@@ -131,12 +131,12 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 CDirectVobSubFilter::~CDirectVobSubFilter()
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
-	if(m_pSubPicQueue)
+	if(m_simple_provider)
 	{
 		DbgLog((LOG_TRACE, 3, "~CDirectVobSubFilter::Invalidate"));
-		m_pSubPicQueue->Invalidate();
+		m_simple_provider->Invalidate();
 	}
-	m_pSubPicQueue = NULL;
+	m_simple_provider = NULL;
 
 	if(m_hfont) {DeleteObject(m_hfont); m_hfont = 0;}
 	if(m_hbm) {DeleteObject(m_hbm); m_hbm = 0;}
@@ -276,10 +276,10 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	{
 		CAutoLock cAutoLock(&m_csQueueLock);
 
-		if(m_pSubPicQueue)
+		if(m_simple_provider)
 		{
-			m_pSubPicQueue->SetTime(CalcCurrentTime());
-			m_pSubPicQueue->SetFPS(m_fps);
+			m_simple_provider->SetTime(CalcCurrentTime());
+			m_simple_provider->SetFPS(m_fps);
 		}
 	}
 
@@ -641,7 +641,7 @@ HRESULT CDirectVobSubFilter::BreakConnect(PIN_DIRECTION dir)
 	{
 		// not really needed, but may free up a little memory
 		CAutoLock cAutoLock(&m_csQueueLock);
-		m_pSubPicQueue = NULL;
+		m_simple_provider = NULL;
 	}
 
 	return __super::BreakConnect(dir);
@@ -702,7 +702,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
     CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_overlay_cache_max_item_num);
     SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_subpixel_pos_level) );
 
-	m_pSubPicQueue = NULL;
+	m_simple_provider = NULL;
 
 	const GUID& subtype = m_pInput->CurrentMediaType().subtype;
 
@@ -758,18 +758,9 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	//m_pSubPicQueue = m_fDoPreBuffering
 	//	? (ISubPicQueue*)new CSubPicQueue(MAX_SUBPIC_QUEUE_LENGTH, pSubPicAllocator, &hr)
 	//	: (ISubPicQueue*)new CSubPicQueueNoThread(pSubPicAllocator, &hr);
-    m_pSubPicQueue = new CSubPicQueueNoThread(pSubPicAllocator, &hr);
+    m_simple_provider = new CSubPicQueueNoThread(pSubPicAllocator, &hr);
 
-	if(FAILED(hr)) m_pSubPicQueue = NULL;
-
-    if (m_pSubPicQueue)
-    {
-        m_simple_provider = new SimpleSubPicProvider(m_pSubPicQueue);
-    }
-    else
-    {
-        m_simple_provider = NULL;
-    }
+	if(FAILED(hr)) m_simple_provider = NULL;
 
 	UpdateSubtitle(false);
 
@@ -1894,7 +1885,7 @@ void CDirectVobSubFilter::UpdateSubtitle(bool fApplyDefStyle)
 {
 	CAutoLock cAutolock(&m_csQueueLock);
 
-	if(!m_pSubPicQueue) return;
+	if(!m_simple_provider) return;
 
 	InvalidateSubtitle();
 
@@ -2022,20 +2013,20 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 
     SetYuvMatrix();
 
-	if(m_pSubPicQueue)
-		m_pSubPicQueue->SetSubPicProviderEx(CComQIPtr<ISubPicProviderEx>(pSubStream));
+	if(m_simple_provider)
+		m_simple_provider->SetSubPicProvider(CComQIPtr<ISubPicProviderEx>(pSubStream));
 }
 
 void CDirectVobSubFilter::InvalidateSubtitle(REFERENCE_TIME rtInvalidate, DWORD_PTR nSubtitleId)
 {
     CAutoLock cAutolock(&m_csQueueLock);
 
-	if(m_pSubPicQueue)
+	if(m_simple_provider)
 	{
 		if(nSubtitleId == -1 || nSubtitleId == m_nSubtitleId)
 		{
 			DbgLog((LOG_TRACE, 3, "InvalidateSubtitle::Invalidate"));
-			m_pSubPicQueue->Invalidate(rtInvalidate);
+			m_simple_provider->Invalidate(rtInvalidate);
 		}
 	}
 }

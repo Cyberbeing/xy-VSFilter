@@ -19,5 +19,16 @@ ISimpleSubPicProvider :
 public IUnknown
 {
 public:
+    STDMETHOD (SetSubPicProvider) (IUnknown* subpic_provider /*[in]*/) PURE;
+    STDMETHOD (GetSubPicProvider) (IUnknown** subpic_provider /*[out]*/) PURE;
+
+    STDMETHOD (SetFPS) (double fps /*[in]*/) PURE;
+    STDMETHOD (SetTime) (REFERENCE_TIME now /*[in]*/) PURE;
+
+    STDMETHOD (Invalidate) (REFERENCE_TIME invalidate_rt = -1) PURE;
     STDMETHOD_(bool, LookupSubPic) (REFERENCE_TIME now /*[in]*/, ISimpleSubPic** output_subpic /*[out]*/) PURE;
+
+    //fix me: & => *
+    STDMETHOD (GetStats) (int& nSubPics, REFERENCE_TIME& rtNow, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
+    STDMETHOD (GetStats) (int nSubPic /*[in]*/, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
 };

@@ -24,8 +24,10 @@
 #pragma once
 
 #include "ISubPic.h"
+#include "ISimpleSubPic.h"
 
-class CSubPicQueueImpl : public CUnknown, public ISubPicQueue, public ISubPicQueueEx
+
+class CSubPicQueueImpl : public CUnknown, public ISubPicQueue, public ISimpleSubPicProvider
 {
     CAtlList<int> m_prefered_colortype;
 
@@ -41,6 +43,8 @@ protected:
 
 	HRESULT RenderTo(ISubPicEx* pSubPic, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, double fps, BOOL bIsAnimated);
 
+    HRESULT SetSubPicProviderEx(ISubPicProviderEx* pSubPicProviderEx);
+    HRESULT GetSubPicProviderEx(ISubPicProviderEx** pSubPicProviderEx);
 public:
 	CSubPicQueueImpl(ISubPicExAllocator* pAllocator, HRESULT* phr, const int *prefered_colortype=NULL, int prefered_colortype_num=0);
 	virtual ~CSubPicQueueImpl();
@@ -56,10 +60,10 @@ public:
 	STDMETHODIMP SetFPS(double fps);
 	STDMETHODIMP SetTime(REFERENCE_TIME rtNow);
 
-    // ISubPicQueueEx
+    // ISimpleSubPicProvider
 
-    STDMETHODIMP SetSubPicProviderEx(ISubPicProviderEx* pSubPicProviderEx);
-    STDMETHODIMP GetSubPicProviderEx(ISubPicProviderEx** pSubPicProviderEx);
+    STDMETHODIMP SetSubPicProvider(IUnknown* subpic_provider);
+    STDMETHODIMP GetSubPicProvider(IUnknown** subpic_provider);
 
 	STDMETHODIMP Invalidate(REFERENCE_TIME rtInvalidate = -1) = 0;
 /*
@@ -110,10 +114,12 @@ public:
 
 	STDMETHODIMP Invalidate(REFERENCE_TIME rtInvalidate = -1);
 	STDMETHODIMP_(bool) LookupSubPic(REFERENCE_TIME rtNow, ISubPic** ppSubPic);
-    STDMETHODIMP_(bool) LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSubPic);
 
 	STDMETHODIMP GetStats(int& nSubPics, REFERENCE_TIME& rtNow, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop);
 	STDMETHODIMP GetStats(int nSubPic, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop);
+
+    // ISimpleSubPicProvider
+    STDMETHODIMP_(bool) LookupSubPic(REFERENCE_TIME now /*[in]*/, ISimpleSubPic** output_subpic/*[out]*/);
 };
 
 class CSubPicQueueNoThread : public CSubPicQueueImpl
@@ -122,6 +128,8 @@ class CSubPicQueueNoThread : public CSubPicQueueImpl
 	CComPtr<ISubPicEx> m_pSubPic;
 
     CAtlList<int> m_prefered_colortype;
+    
+    bool LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSubPic);
 public:
 	CSubPicQueueNoThread(ISubPicExAllocator* pAllocator, HRESULT* phr, const int *prefered_colortype=NULL, int prefered_colortype_num=0);
 	virtual ~CSubPicQueueNoThread();
@@ -133,7 +141,7 @@ public:
 	STDMETHODIMP GetStats(int& nSubPics, REFERENCE_TIME& rtNow, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop);
 	STDMETHODIMP GetStats(int nSubPic, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop);
 
-    // ISubPicQueueEx
-    STDMETHODIMP_(bool) LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSubPic);
+    // ISimpleSubPicProvider
+    STDMETHODIMP_(bool) LookupSubPic(REFERENCE_TIME now /*[in]*/, ISimpleSubPic** output_subpic/*[out]*/);
 };
 
