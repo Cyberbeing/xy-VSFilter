@@ -141,8 +141,14 @@ void CreateDrawItemExTree( CompositeDrawItemListList& input,
     CompositeDrawItemExTree *out_draw_item_ex_tree, 
     XyRectExList *out_rect_ex_list );
 
-void CompositeDrawItem::Draw( SubPicDesc& spd, CompositeDrawItemListList& compDrawItemListList )
+void CompositeDrawItem::Draw( XySubRenderFrame**output, CompositeDrawItemListList& compDrawItemListList )
 {
+    if (!output)
+    {
+        return;
+    }
+    *output = NULL;
+
     CompositeDrawItemExTree draw_item_ex_tree;
     XyRectExList rect_ex_list;
     CreateDrawItemExTree(compDrawItemListList, &draw_item_ex_tree, &rect_ex_list);
@@ -214,36 +220,14 @@ void CompositeDrawItem::Draw( SubPicDesc& spd, CompositeDrawItemListList& compDr
         }
     }
 
-    XyBitmap::MemLayout bitmap_layout = XyBitmap::PACK;
-    XyColorSpace color_space;
-    switch(spd.type)
-    {
-    case MSP_AYUV_PLANAR:
-        color_space = XY_CS_AYUV_PLANAR;
-        break;
-    case MSP_XY_AUYV:
-        color_space = XY_CS_AUYV;
-        break;
-    case MSP_AYUV:
-        color_space = XY_CS_AYUV;
-        break;
-    default:
-        color_space = XY_CS_ARGB;
-        break;
-    }
-
     XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
-    render_frame_creater->SetOutputRect(CRect(0,0,spd.w,spd.h));
-    render_frame_creater->SetClipRect(CRect(0,0,spd.w,spd.h));
-    render_frame_creater->SetColorSpace(color_space);
-        
-    XySubRenderFrame *sub_render_frame = render_frame_creater->NewXySubRenderFrame(grouped_draw_items.GetCount());
-    SharedPtrXySubRenderFrame auto_cleaner(sub_render_frame);
+    
+    *output = render_frame_creater->NewXySubRenderFrame(grouped_draw_items.GetCount());
+    XySubRenderFrame& sub_render_frame = **output;
 
     for (unsigned i=0;i<grouped_draw_items.GetCount();i++)
     {
-        grouped_draw_items[i].Draw(&(sub_render_frame->m_bitmaps.GetAt(i)), &(sub_render_frame->m_bitmap_ids.GetAt(i)));
-        XyBitmap::AlphaBlt(spd, *(sub_render_frame->m_bitmaps.GetAt(i)));
+        grouped_draw_items[i].Draw(&(sub_render_frame.m_bitmaps.GetAt(i)), &(sub_render_frame.m_bitmap_ids.GetAt(i)));
     }
 }
 

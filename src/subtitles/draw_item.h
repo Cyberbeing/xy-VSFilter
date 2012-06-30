@@ -61,7 +61,7 @@ public:
 public:    
     static CRect GetDirtyRect( CompositeDrawItem& item );
 
-    static void Draw(SubPicDesc& spd, CompositeDrawItemListList& compDrawItemListList);
+    static void Draw(XySubRenderFrame**output, CompositeDrawItemListList& compDrawItemListList);
 };
 
 struct GroupedDrawItems
