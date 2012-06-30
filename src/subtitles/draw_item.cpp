@@ -213,37 +213,37 @@ void CompositeDrawItem::Draw( SubPicDesc& spd, CompositeDrawItemListList& compDr
             }            
         }
     }
-    
+
     XyBitmap::MemLayout bitmap_layout = XyBitmap::PACK;
-    XySubRenderFrame sub_render_frame;
-    sub_render_frame.m_output_rect.SetRect(0,0,spd.w,spd.h);
-    sub_render_frame.m_clip_rect = sub_render_frame.m_output_rect;
+    XyColorSpace color_space;
     switch(spd.type)
     {
     case MSP_AYUV_PLANAR:
-        sub_render_frame.m_xy_color_space = XY_CS_AYUV_PLANAR;
-        bitmap_layout = XyBitmap::PLANNA;
+        color_space = XY_CS_AYUV_PLANAR;
         break;
     case MSP_XY_AUYV:
-        sub_render_frame.m_xy_color_space = XY_CS_AUYV;
-        bitmap_layout = XyBitmap::PACK;
+        color_space = XY_CS_AUYV;
         break;
     case MSP_AYUV:
-        sub_render_frame.m_xy_color_space = XY_CS_AYUV;
-        bitmap_layout = XyBitmap::PACK;
+        color_space = XY_CS_AYUV;
         break;
     default:
-        sub_render_frame.m_xy_color_space = XY_CS_ARGB;
-        bitmap_layout = XyBitmap::PACK;
+        color_space = XY_CS_ARGB;
         break;
     }
-    sub_render_frame.m_bitmaps.SetCount(grouped_draw_items.GetCount());
-    sub_render_frame.m_bitmap_ids.SetCount(grouped_draw_items.GetCount());
+
+    XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
+    render_frame_creater->SetOutputRect(CRect(0,0,spd.w,spd.h));
+    render_frame_creater->SetClipRect(CRect(0,0,spd.w,spd.h));
+    render_frame_creater->SetColorSpace(color_space);
+        
+    XySubRenderFrame *sub_render_frame = render_frame_creater->NewXySubRenderFrame(grouped_draw_items.GetCount());
+    SharedPtrXySubRenderFrame auto_cleaner(sub_render_frame);
 
     for (unsigned i=0;i<grouped_draw_items.GetCount();i++)
     {
-        grouped_draw_items[i].Draw(bitmap_layout, &sub_render_frame.m_bitmaps.GetAt(i), &sub_render_frame.m_bitmap_ids.GetAt(i));
-        XyBitmap::AlphaBlt(spd, *sub_render_frame.m_bitmaps.GetAt(i));
+        grouped_draw_items[i].Draw(&(sub_render_frame->m_bitmaps.GetAt(i)), &(sub_render_frame->m_bitmap_ids.GetAt(i)));
+        XyBitmap::AlphaBlt(spd, *(sub_render_frame->m_bitmaps.GetAt(i)));
     }
 }
 
@@ -432,7 +432,7 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
 // GroupedDrawItems
 // 
 
-void GroupedDrawItems::Draw( XyBitmap::MemLayout bitmap_layout, SharedPtrXyBitmap *bitmap, int *bitmap_identity_num )
+void GroupedDrawItems::Draw( SharedPtrXyBitmap *bitmap, int *bitmap_identity_num )
 {
     static int id=0;
 
@@ -443,7 +443,7 @@ void GroupedDrawItems::Draw( XyBitmap::MemLayout bitmap_layout, SharedPtrXyBitma
     if (pos==NULL)
     {
         POSITION pos = draw_item_list.GetHeadPosition();
-        XyBitmap *tmp = XyBitmap::CreateBitmap(clip_rect, bitmap_layout );
+        XyBitmap *tmp = XySubRenderFrameCreater::GetDefaultCreater()->CreateBitmap(clip_rect);
         bitmap->reset(tmp);
         while(pos)
         {
