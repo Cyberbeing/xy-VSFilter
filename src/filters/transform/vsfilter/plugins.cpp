@@ -48,6 +48,7 @@ private:
 protected:
 	float m_fps;
 	CCritSec m_csSubLock;
+    CComPtr<ISimpleSubPicProvider> m_simple_provider;
 	CComPtr<ISubPicQueue> m_pSubPicQueue;
 	CComPtr<ISubPicProvider> m_pSubPicProvider;
 	DWORD_PTR m_SubPicProviderId;
@@ -183,6 +184,12 @@ public:
 				m_pSubPicQueue = NULL;
 				return(false);
 			}
+            m_simple_provider = new SimpleSubPicProvider(m_pSubPicQueue);
+            if (!m_simple_provider)
+            {
+                m_simple_provider = NULL;
+                return(false);
+            }
 		}
 
 		if(m_SubPicProviderId != (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider)
@@ -191,14 +198,13 @@ public:
 			m_SubPicProviderId = (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider;
 		}
 
-		CComPtr<ISubPic> pSubPic;
-		if(!m_pSubPicQueue->LookupSubPic(rt, &pSubPic))
+		CComPtr<ISimpleSubPic> pSubPic;
+		if(!m_simple_provider->LookupSubPic(rt, &pSubPic))
 			return(false);
 
         if(dst.type == MSP_RGB32 || dst.type == MSP_RGB24 || dst.type == MSP_RGB16 || dst.type == MSP_RGB15)
             dst.h = -dst.h;
-        SimpleSubPicWrapper simple_subpic(pSubPic);
-        simple_subpic.AlphaBlt(&dst);
+        pSubPic->AlphaBlt(&dst);
 
 		return(true);
 	}

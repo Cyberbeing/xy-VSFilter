@@ -28,6 +28,8 @@
 #include "../../../subtitles/RTS.h"
 #include "../../../subtitles/SSF.h"
 
+interface ISimpleSubPicProvider;
+
 typedef struct
 {
 	HWND hSystrayWnd;
@@ -50,6 +52,8 @@ class CDirectVobSubFilter
 
 	CCritSec m_csQueueLock;
 	CComPtr<ISubPicQueueEx> m_pSubPicQueue;
+    CComPtr<ISimpleSubPicProvider> m_simple_provider;
+
 	void InitSubPicQueue();
 	SubPicDesc m_spd;
 
