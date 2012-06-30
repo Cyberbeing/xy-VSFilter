@@ -331,12 +331,11 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	{
 		CAutoLock cAutoLock(&m_csQueueLock);
 
-		if(m_pSubPicQueue)
+		if(m_simple_provider)
 		{
-			CComPtr<ISubPicEx> pSubPic;
-
+            CComPtr<ISimpleSubPic> pSubPic;
 			//int timeStamp1 = GetTickCount();
-			bool lookupResult = SUCCEEDED(m_pSubPicQueue->LookupSubPicEx(CalcCurrentTime(), &pSubPic));
+			bool lookupResult = m_simple_provider->LookupSubPic(CalcCurrentTime(), &pSubPic);
 			//int timeStamp2 = GetTickCount();
 			//m_time_rasterization += timeStamp2-timeStamp1;
 
@@ -344,8 +343,7 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 			{
                 if(fFlip ^ fFlipSub)
                     spd.h = -spd.h;
-                SimpleSubPicWrapper simple_subpic(pSubPic);
-                simple_subpic.AlphaBlt(&spd);
+                pSubPic->AlphaBlt(&spd);
 				DbgLog((LOG_TRACE,3,"AlphaBlt time:%lu", (ULONG)(CalcCurrentTime()/10000)));
 			}
 		}
@@ -763,6 +761,15 @@ void CDirectVobSubFilter::InitSubPicQueue()
     m_pSubPicQueue = new CSubPicQueueNoThread(pSubPicAllocator, &hr);
 
 	if(FAILED(hr)) m_pSubPicQueue = NULL;
+
+    if (m_pSubPicQueue)
+    {
+        m_simple_provider = new SimpleSubPicProvider(m_pSubPicQueue);
+    }
+    else
+    {
+        m_simple_provider = NULL;
+    }
 
 	UpdateSubtitle(false);
 
