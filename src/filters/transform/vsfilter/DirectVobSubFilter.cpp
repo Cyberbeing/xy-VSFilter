@@ -31,12 +31,14 @@
 #include "../../../SubPic/SubPicQueueImpl.h"
 #include "../../../SubPic/PooledSubPic.h"
 #include "../../../subpic/color_conv_table.h"
+#include "../../../subpic/SimpleSubPicWrapper.h"
 
 #include <initguid.h>
 #include "..\..\..\..\include\moreuuids.h"
 
 #include "CAutoTiming.h"
 #include "xy_logger.h"
+
 
 #define MAX_SUBPIC_QUEUE_LENGTH 1
 
@@ -340,24 +342,10 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 
 			if(lookupResult && pSubPic)
 			{
-				//CRect r;
-				//pSubPic->GetDirtyRect(r);
-				CAtlList<const CRect> rectList;
-				pSubPic->GetDirtyRects(rectList);
-
-				if(fFlip ^ fFlipSub)
-					spd.h = -spd.h;
-
-				POSITION pos = rectList.GetHeadPosition();
-				while(pos!=NULL)
-				{
-					const CRect& cRect = rectList.GetNext(pos);
-					pSubPic->AlphaBlt(cRect, cRect, &spd);
-					//pSubPic->AlphaBlt(r, r, &spd);
-				}
-
-				//m_time_alphablt += GetTickCount() - timeStamp2;
-
+                if(fFlip ^ fFlipSub)
+                    spd.h = -spd.h;
+                SimpleSubPicWrapper simple_subpic(pSubPic);
+                simple_subpic.AlphaBlt(&spd);
 				DbgLog((LOG_TRACE,3,"AlphaBlt time:%lu", (ULONG)(CalcCurrentTime()/10000)));
 			}
 		}

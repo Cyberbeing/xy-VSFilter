@@ -29,6 +29,7 @@
 #include "../../../SubPic/PooledSubPic.h"
 #include "../../../SubPic/SubPicQueueImpl.h"
 #include "../../../subpic/color_conv_table.h"
+#include "../../../subpic/SimpleSubPicWrapper.h"
 #include "DirectVobSub.h"
 #include "vfr.h"
 
@@ -194,13 +195,10 @@ public:
 		if(!m_pSubPicQueue->LookupSubPic(rt, &pSubPic))
 			return(false);
 
-		CRect r;
-		pSubPic->GetDirtyRect(r);
-
-		if(dst.type == MSP_RGB32 || dst.type == MSP_RGB24 || dst.type == MSP_RGB16 || dst.type == MSP_RGB15)
-			dst.h = -dst.h;
-
-		pSubPic->AlphaBlt(r, r, &dst);
+        if(dst.type == MSP_RGB32 || dst.type == MSP_RGB24 || dst.type == MSP_RGB16 || dst.type == MSP_RGB15)
+            dst.h = -dst.h;
+        SimpleSubPicWrapper simple_subpic(pSubPic);
+        simple_subpic.AlphaBlt(&dst);
 
 		return(true);
 	}
