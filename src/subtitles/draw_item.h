@@ -70,7 +70,7 @@ public:
     CAtlList<SharedPtrDrawItem> draw_item_list;
     CRect clip_rect;
 public:
-    void Draw(XyBitmap::MemLayout bitmap_layout, SharedPtrXyBitmap *bitmap, int *bitmap_identity_num);
+    void Draw(SharedPtrXyBitmap *bitmap, int *bitmap_identity_num);
 	
     GroupedDrawItemsHashKey GetHashKey();
 };

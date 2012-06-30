@@ -263,3 +263,89 @@ STDMETHODIMP XySubRenderFrame::GetBitmapExtra( int index, LPVOID extra_info )
     }
     return S_OK;
 }
+
+//////////////////////////////////////////////////////////////////////////
+//
+// XySubRenderFrameCreater
+// 
+
+XySubRenderFrameCreater* XySubRenderFrameCreater::GetDefaultCreater()
+{
+    static XySubRenderFrameCreater s_default_creater;
+    return &s_default_creater;
+}
+
+HRESULT XySubRenderFrameCreater::SetOutputRect( const RECT& output_rect )
+{
+    m_output_rect = output_rect;
+    return S_OK;
+}
+
+HRESULT XySubRenderFrameCreater::SetClipRect( const RECT& clip_rect )
+{
+    m_clip_rect = clip_rect;
+    return S_OK;
+}
+
+HRESULT XySubRenderFrameCreater::SetColorSpace( XyColorSpace color_space )
+{
+    m_xy_color_space = color_space;
+    switch (m_xy_color_space)
+    {
+    case XY_CS_AYUV_PLANAR:
+        m_bitmap_layout = XyBitmap::PLANNA;
+        break;
+    default:
+        m_bitmap_layout = XyBitmap::PACK;
+        break;
+    }
+    return S_OK;
+}
+
+HRESULT XySubRenderFrameCreater::GetOutputRect( RECT *output_rect )
+{
+    if (!output_rect)
+    {
+        return S_FALSE;
+    }
+    *output_rect = m_output_rect;
+    return S_OK;
+}
+
+HRESULT XySubRenderFrameCreater::GetClipRect( RECT *clip_rect )
+{
+    if (!clip_rect)
+    {
+        return S_FALSE;
+    }
+    *clip_rect = m_clip_rect;
+    return S_OK;
+}
+
+HRESULT XySubRenderFrameCreater::GetColorSpace( XyColorSpace *color_space )
+{
+    if (!color_space)
+    {
+        return S_FALSE;
+    }
+    *color_space = m_xy_color_space;
+    return S_OK;
+}
+
+XySubRenderFrame* XySubRenderFrameCreater::NewXySubRenderFrame( UINT bitmap_count )
+{
+    XySubRenderFrame *result = new XySubRenderFrame();
+    ASSERT(result);
+    result->m_output_rect = m_output_rect;
+    result->m_clip_rect = m_clip_rect;
+    result->m_xy_color_space = m_xy_color_space;
+    result->m_bitmap_ids.SetCount(bitmap_count);
+    result->m_bitmaps.SetCount(bitmap_count);
+    return result;
+}
+
+XyBitmap* XySubRenderFrameCreater::CreateBitmap( const RECT& target_rect )
+{
+    return XyBitmap::CreateBitmap(target_rect, m_bitmap_layout);
+}
+

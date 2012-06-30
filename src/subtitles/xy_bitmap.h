@@ -58,6 +58,31 @@ public:
     XyColorSpace m_xy_color_space;
 };
 
+typedef ::boost::shared_ptr<XySubRenderFrame> SharedPtrXySubRenderFrame;
+
+class XySubRenderFrameCreater
+{
+public:
+    static XySubRenderFrameCreater* GetDefaultCreater();
+
+    HRESULT SetOutputRect(const RECT& output_rect);
+    HRESULT SetClipRect(const RECT& clip_rect);
+    HRESULT SetColorSpace(XyColorSpace color_space);
+
+    HRESULT GetOutputRect(RECT *output_rect);
+    HRESULT GetClipRect(RECT *clip_rect);
+    HRESULT GetColorSpace(XyColorSpace *color_space);
+
+    XySubRenderFrame* NewXySubRenderFrame(UINT bitmap_count);
+    XyBitmap* CreateBitmap(const RECT& target_rect);
+
+    XySubRenderFrameCreater():m_xy_color_space(XY_CS_ARGB), m_bitmap_layout(XyBitmap::PACK){}
+private:
+    CRect m_output_rect;
+    CRect m_clip_rect;
+    XyColorSpace m_xy_color_space;
+    XyBitmap::MemLayout m_bitmap_layout;
+};
 
 
 #endif // __XY_BITMAP_674EB983_2A49_432D_A750_62C3B3E9DA67_H__
