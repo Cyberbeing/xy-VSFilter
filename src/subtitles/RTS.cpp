@@ -25,7 +25,6 @@
 #include "RTS.h"
 #include "draw_item.h"
 #include "cache_manager.h"
-#include "../subpic/color_conv_table.h"
 #include "subpixel_position_controler.h"
 #include "xy_overlay_paint_machine.h"
 #include "xy_clipper_paint_machine.h"
@@ -33,15 +32,6 @@
 // WARNING: this isn't very thread safe, use only one RTS a time.
 static HDC g_hDC;
 static int g_hDC_refcnt = 0;
-
-enum XY_MSP_SUBTYPE {XY_AYUV, XY_AUYV};
-static inline DWORD rgb2yuv(DWORD argb, XY_MSP_SUBTYPE type)
-{
-    if(type==XY_AYUV)
-        return ColorConvTable::Argb2Ayuv(argb);
-    else
-        return ColorConvTable::Argb2Auyv(argb);
-}
 
 static long revcolor(long c)
 {
@@ -1382,15 +1372,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             if(alpha > 0) a = MulDiv(a, 0xff - alpha, 0xff);
             COLORREF shadow = revcolor(w->m_style.get().colors[3]) | (a<<24);
             DWORD sw[6] = {shadow, -1};
-            //xy
-            if(spd.type == MSP_XY_AUYV)
-            {
-                sw[0] =rgb2yuv(sw[0], XY_AUYV);
-            }
-            else if(spd.type == MSP_AYUV || spd.type == MSP_AYUV_PLANAR)
-            {
-                sw[0] =rgb2yuv(sw[0], XY_AYUV);
-            }            
+            sw[0] = XySubRenderFrameCreater::GetDefaultCreater()->TransColor(sw[0]);
             if(w->m_style.get().borderStyle == 0)
             {
                 outputItem.shadow.reset( 
@@ -1413,15 +1395,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             if(alpha > 0) aoutline += MulDiv(alpha, 0xff - w->m_style.get().alpha[2], 0xff);
             COLORREF outline = revcolor(w->m_style.get().colors[2]) | ((0xff-aoutline)<<24);
             DWORD sw[6] = {outline, -1};
-            //xy
-            if(spd.type == MSP_XY_AUYV)
-            {
-                sw[0] =rgb2yuv(sw[0], XY_AUYV);
-            }
-            else if(spd.type == MSP_AYUV || spd.type == MSP_AYUV_PLANAR)
-            {
-                sw[0] =rgb2yuv(sw[0], XY_AYUV);
-            }
+            sw[0] = XySubRenderFrameCreater::GetDefaultCreater()->TransColor(sw[0]);
             if(w->m_style.get().borderStyle == 0)
             {
                 outputItem.outline.reset( 
@@ -1476,19 +1450,9 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRe
             sw[3] = (int)(w->m_style.get().outlineWidthX + t*w->m_width) >> 3;
             sw[4] = sw[2];
             sw[5] = 0x00ffffff;
-            //xy
-            if(spd.type == MSP_XY_AUYV)
-            {
-                sw[0] =rgb2yuv(sw[0], XY_AUYV);
-                sw[2] =rgb2yuv(sw[2], XY_AUYV);
-                sw[4] =rgb2yuv(sw[4], XY_AUYV);
-            }
-            else if(spd.type == MSP_AYUV || spd.type == MSP_AYUV_PLANAR)
-            {
-                sw[0] =rgb2yuv(sw[0], XY_AYUV);
-                sw[2] =rgb2yuv(sw[2], XY_AYUV);
-                sw[4] =rgb2yuv(sw[4], XY_AYUV);
-            }
+            sw[0] = XySubRenderFrameCreater::GetDefaultCreater()->TransColor(sw[0]);
+            sw[2] = XySubRenderFrameCreater::GetDefaultCreater()->TransColor(sw[2]);
+            sw[4] = XySubRenderFrameCreater::GetDefaultCreater()->TransColor(sw[4]);
             outputItem.body.reset( 
                 DrawItem::CreateDrawItem(body_pm, clipRect, clipper, bodyPos.x, bodyPos.y, sw, true, false)
                 );

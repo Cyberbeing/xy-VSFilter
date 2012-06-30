@@ -77,6 +77,7 @@ public:
 
     XySubRenderFrame* NewXySubRenderFrame(UINT bitmap_count);
     XyBitmap* CreateBitmap(const RECT& target_rect);
+    DWORD TransColor(DWORD argb);
 
     XySubRenderFrameCreater():m_xy_color_space(XY_CS_ARGB), m_bitmap_layout(XyBitmap::PACK){}
 private:

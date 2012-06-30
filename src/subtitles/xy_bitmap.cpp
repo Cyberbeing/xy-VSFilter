@@ -2,7 +2,7 @@
 #include "xy_bitmap.h"
 #include "xy_malloc.h"
 #include "../SubPic/ISubPic.h"
-
+#include "../subpic/color_conv_table.h"
 
 XyBitmap::~XyBitmap()
 {
@@ -361,5 +361,23 @@ XySubRenderFrame* XySubRenderFrameCreater::NewXySubRenderFrame( UINT bitmap_coun
 XyBitmap* XySubRenderFrameCreater::CreateBitmap( const RECT& target_rect )
 {
     return XyBitmap::CreateBitmap(target_rect, m_bitmap_layout);
+}
+
+DWORD XySubRenderFrameCreater::TransColor( DWORD argb )
+{
+    switch(m_xy_color_space)
+    {
+    case XY_CS_AYUV_PLANAR:
+    case XY_CS_AYUV:
+        return ColorConvTable::Argb2Ayuv(argb);
+        break;
+    case XY_CS_AUYV:
+        return ColorConvTable::Argb2Auyv(argb);
+        break;
+    case XY_CS_ARGB:
+        return argb;
+        break;
+    }
+    return argb;
 }
 
