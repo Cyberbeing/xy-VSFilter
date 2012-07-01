@@ -3025,6 +3025,7 @@ STDMETHODIMP CRenderedTextSubtitle::NonDelegatingQueryInterface(REFIID riid, voi
     return
         QI(IPersist)
         QI(ISubStream)
+        QI(ISubPicProviderEx2)
         QI(ISubPicProvider)
         QI(ISubPicProviderEx)
         __super::NonDelegatingQueryInterface(riid, ppv);
@@ -3584,4 +3585,14 @@ STDMETHODIMP_(bool) CRenderedTextSubtitle::IsColorTypeSupported( int type )
            type==MSP_AYUV ||
            type==MSP_XY_AUYV ||
            type==MSP_RGBA;
+}
+
+STDMETHODIMP CRenderedTextSubtitle::Lock()
+{
+    return CSubPicProviderImpl::Lock();
+}
+
+STDMETHODIMP CRenderedTextSubtitle::Unlock()
+{
+    return CSubPicProviderImpl::Unlock();
 }

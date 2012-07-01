@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ISubPic.h"
-#include <atlbase.h>
 
 //
 // ISimpleSubPic
@@ -13,6 +12,9 @@ public IUnknown {
 	STDMETHOD (AlphaBlt) (SubPicDesc* target) PURE;
 };
 
+//
+// ISimpleSubPicProvider 
+// 
 
 interface __declspec(uuid("b3a13c82-efcf-4433-95a4-0c750cc638f6"))
 ISimpleSubPicProvider :
@@ -32,3 +34,24 @@ public:
     STDMETHOD (GetStats) (int& nSubPics, REFERENCE_TIME& rtNow, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
     STDMETHOD (GetStats) (int nSubPic /*[in]*/, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop /*[out]*/) PURE;
 };
+
+interface __declspec(uuid("1f277b1b-c28d-4022-b00e-373d0b1b54cd"))
+ISubPicProviderEx2 ://A tmp thing for test
+public IUnknown {
+    STDMETHOD (Lock) () PURE;
+    STDMETHOD (Unlock) () PURE;
+
+    STDMETHOD_(POSITION, GetStartPosition) (REFERENCE_TIME rt, double fps) PURE;
+    STDMETHOD_(POSITION, GetNext) (POSITION pos) PURE;
+
+    STDMETHOD_(REFERENCE_TIME, GetStart) (POSITION pos, double fps) PURE;
+    STDMETHOD_(REFERENCE_TIME, GetStop) (POSITION pos, double fps) PURE;
+
+    STDMETHOD_(bool, IsAnimated) (POSITION pos) PURE;
+
+    STDMETHOD_(VOID, GetStartStop) (POSITION pos, double fps, /*out*/REFERENCE_TIME& start, /*out*/REFERENCE_TIME& stop) PURE;
+    STDMETHOD (RenderEx) (SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList) PURE;
+
+    STDMETHOD_(bool, IsColorTypeSupported) (int type) PURE;
+};
+

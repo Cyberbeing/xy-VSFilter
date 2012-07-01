@@ -24,6 +24,7 @@
 #include "STS.h"
 #include "Rasterizer.h"
 #include "../SubPic/SubPicProviderImpl.h"
+#include "../SubPic/ISimpleSubPic.h"
 #include <atlcoll.h>
 #include <boost/flyweight/key_value.hpp>
 #include <boost/smart_ptr.hpp>
@@ -318,7 +319,7 @@ public:
 };
 
 [uuid("537DCACA-2812-4a4f-B2C6-1A34C17ADEB0")]
-class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, public CSimpleTextSubtitle
+class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, public ISubPicProviderEx2, public CSimpleTextSubtitle
 {
 public:
     enum AssCmdType
@@ -443,7 +444,10 @@ public:
     DECLARE_IUNKNOWN
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
-    // ISubPicProviderEx
+    // ISubPicProviderEx2
+    STDMETHODIMP Lock();
+    STDMETHODIMP Unlock();
+    // ISubPicProviderEx && ISubPicProviderEx2
     STDMETHODIMP_(POSITION) GetStartPosition(REFERENCE_TIME rt, double fps);
     STDMETHODIMP_(POSITION) GetNext(POSITION pos);
     STDMETHODIMP_(REFERENCE_TIME) GetStart(POSITION pos, double fps);

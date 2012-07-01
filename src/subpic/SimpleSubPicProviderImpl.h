@@ -1,7 +1,7 @@
 #pragma once
 
-#include "SubPicQueueImpl.h"
 #include "ISimpleSubPic.h"
+#include "SubPicQueueImpl.h"
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -18,7 +18,7 @@ public:
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
     bool LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSubPic);
-    HRESULT GetSubPicProviderEx(ISubPicProviderEx** pSubPicProviderEx);
+    HRESULT GetSubPicProviderEx(ISubPicProviderEx2** pSubPicProviderEx);
     HRESULT RenderTo(ISubPicEx* pSubPic, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, double fps, BOOL bIsAnimated);
 public:
     // ISimpleSubPicProvider
@@ -36,7 +36,7 @@ public:
     STDMETHODIMP GetStats(int nSubPic, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop);
 private:
     CCritSec m_csSubPicProvider;
-    CComPtr<ISubPicProviderEx> m_pSubPicProviderEx;
+    CComPtr<ISubPicProviderEx2> m_pSubPicProviderEx;
 
     CAtlList<int> m_prefered_colortype;
 protected:

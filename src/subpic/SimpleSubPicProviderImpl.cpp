@@ -44,7 +44,7 @@ STDMETHODIMP SimpleSubPicProvider::NonDelegatingQueryInterface( REFIID riid, voi
 
 STDMETHODIMP SimpleSubPicProvider::SetSubPicProvider( IUnknown* subpic_provider )
 {
-    CComQIPtr<ISubPicProviderEx> tmp = subpic_provider;
+    CComQIPtr<ISubPicProviderEx2> tmp = subpic_provider;
     if (tmp)
     {
         CAutoLock cAutoLock(&m_csSubPicProvider);
@@ -186,7 +186,7 @@ bool SimpleSubPicProvider::LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSu
     }
     else
     {
-        CComPtr<ISubPicProviderEx> pSubPicProvider;
+        CComPtr<ISubPicProviderEx2> pSubPicProvider;
         if(SUCCEEDED(GetSubPicProviderEx(&pSubPicProvider)) && pSubPicProvider
             && SUCCEEDED(pSubPicProvider->Lock()))
         {
@@ -228,7 +228,7 @@ bool SimpleSubPicProvider::LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSu
     return(!!*ppSubPic);
 }
 
-HRESULT SimpleSubPicProvider::GetSubPicProviderEx( ISubPicProviderEx** pSubPicProviderEx )
+HRESULT SimpleSubPicProvider::GetSubPicProviderEx( ISubPicProviderEx2** pSubPicProviderEx )
 {
     if(!pSubPicProviderEx) {
         return E_POINTER;
@@ -252,7 +252,7 @@ HRESULT SimpleSubPicProvider::RenderTo( ISubPicEx* pSubPic, REFERENCE_TIME rtSta
         return hr;
     }
 
-    CComPtr<ISubPicProviderEx> pSubPicProviderEx;
+    CComPtr<ISubPicProviderEx2> pSubPicProviderEx;
     if(FAILED(GetSubPicProviderEx(&pSubPicProviderEx)) || !pSubPicProviderEx) {
         return hr;
     }
@@ -314,7 +314,7 @@ STDMETHODIMP SimpleSubPicProvider2::NonDelegatingQueryInterface( REFIID riid, vo
 
 STDMETHODIMP SimpleSubPicProvider2::SetSubPicProvider( IUnknown* subpic_provider )
 {
-    CComQIPtr<ISubPicProviderEx> tmp = subpic_provider;
+    CComQIPtr<ISubPicProviderEx2> tmp = subpic_provider;
     if (tmp)
     {
         m_cur_provider = &m_ex_provider;
