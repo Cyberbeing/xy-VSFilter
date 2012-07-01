@@ -179,6 +179,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode log|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SimpleSubPicProviderImpl.cpp" />
     <ClCompile Include="SimpleSubPicWrapper.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">Create</PrecompiledHeader>
@@ -203,6 +204,7 @@
     <ClInclude Include="ISubRender.h" />
     <ClInclude Include="MemSubPic.h" />
     <ClInclude Include="PooledSubPic.h" />
+    <ClInclude Include="SimpleSubPicProviderImpl.h" />
     <ClInclude Include="SimpleSubPicWrapper.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SubPicAllocatorPresenterImpl.h" />

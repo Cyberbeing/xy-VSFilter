@@ -28,7 +28,7 @@
 #include "VSFilter.h"
 #include "systray.h"
 #include "../../../DSUtil/MediaTypes.h"
-#include "../../../SubPic/SubPicQueueImpl.h"
+#include "../../../SubPic/SimpleSubPicProviderImpl.h"
 #include "../../../SubPic/PooledSubPic.h"
 #include "../../../subpic/color_conv_table.h"
 #include "../../../subpic/SimpleSubPicWrapper.h"
@@ -758,7 +758,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	//m_pSubPicQueue = m_fDoPreBuffering
 	//	? (ISubPicQueue*)new CSubPicQueue(MAX_SUBPIC_QUEUE_LENGTH, pSubPicAllocator, &hr)
 	//	: (ISubPicQueue*)new CSubPicQueueNoThread(pSubPicAllocator, &hr);
-    m_simple_provider = new CSubPicQueueNoThread(pSubPicAllocator, &hr);
+    m_simple_provider = new SimpleSubPicProvider2(pSubPicAllocator, &hr);
 
 	if(FAILED(hr)) m_simple_provider = NULL;
 
