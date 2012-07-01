@@ -27,7 +27,7 @@
 #include "../../../Subtitles/RTS.h"
 #include "../../../Subtitles/SSF.h"
 #include "../../../SubPic/PooledSubPic.h"
-#include "../../../SubPic/SubPicQueueImpl.h"
+#include "../../../SubPic/SimpleSubPicProviderImpl.h"
 #include "../../../subpic/color_conv_table.h"
 #include "../../../subpic/SimpleSubPicWrapper.h"
 #include "DirectVobSub.h"
@@ -178,7 +178,7 @@ public:
             CComPtr<ISubPicExAllocator> pAllocator = new CPooledSubPicAllocator(dst.type, size, 2);
                         
 			HRESULT hr;
-			if(!(m_simple_provider = new CSubPicQueueNoThread(pAllocator, &hr)) || FAILED(hr))
+			if(!(m_simple_provider = new SimpleSubPicProvider2(pAllocator, &hr)) || FAILED(hr))
 			{
 				m_simple_provider = NULL;
 				return(false);
