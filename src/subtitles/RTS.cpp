@@ -3360,48 +3360,12 @@ STDMETHODIMP CRenderedTextSubtitle::ParseScript(const SIZE& output_size, REFEREN
 STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList)
 {
     CSize output_size = CSize(spd.w,spd.h);
-    XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();    
-    if(m_size != CSize(output_size.cx*8, output_size.cy*8) || m_vidrect != CRect(spd.vidrect.left*8, spd.vidrect.top*8, spd.vidrect.right*8, spd.vidrect.bottom*8))
-    {
-        Init(output_size, spd.vidrect);        
-        render_frame_creater->SetOutputRect(CRect(0,0,output_size.cx,output_size.cy));
-        render_frame_creater->SetClipRect(CRect(0,0,output_size.cx,output_size.cy));
-    }
-    XyColorSpace color_space = XY_CS_ARGB;
-    switch(spd.type)
-    {
-    case MSP_AYUV_PLANAR:
-        color_space = XY_CS_AYUV_PLANAR;
-        break;
-    case MSP_XY_AUYV:
-        color_space = XY_CS_AUYV;
-        break;
-    case MSP_AYUV:
-        color_space = XY_CS_AYUV;
-        break;
-    default:
-        color_space = XY_CS_ARGB;
-        break;
-    }
-    render_frame_creater->SetColorSpace(color_space);
-
     rectList.RemoveAll();
-    CSubtitle2List sub2List;
-    HRESULT hr = ParseScript(output_size, rt, fps, &sub2List);
-    if(hr!=S_OK)
+
+    CComPtr<IXySubRenderFrame> sub_render_frame;
+    HRESULT hr = RenderEx(&sub_render_frame, spd.type, output_size, spd.vidrect, rt, fps);
+    if (SUCCEEDED(hr) && sub_render_frame)
     {
-        return hr;
-    }
-
-    CompositeDrawItemListList compDrawItemListList;   
-    DoRender(output_size, sub2List, &compDrawItemListList);
-
-    XySubRenderFrame *sub_render_frame;
-    CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);
-
-    if (sub_render_frame)
-    {
-        SharedPtrXySubRenderFrame auto_cleaner(sub_render_frame);
         int count = 0;
         hr = sub_render_frame->GetBitmapCount(&count);
         if(FAILED(hr))
@@ -3443,6 +3407,58 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
         }
     }    
     return (!rectList.IsEmpty()) ? S_OK : S_FALSE;
+}
+
+HRESULT CRenderedTextSubtitle::RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, const SIZE& output_size, const CRect& video_rect, REFERENCE_TIME rt, double fps)
+{
+    if (!subRenderFrame)
+    {
+        return S_FALSE;
+    }
+    
+    XyColorSpace color_space = XY_CS_ARGB;
+    switch(spd_type)
+    {
+    case MSP_AYUV_PLANAR:
+        color_space = XY_CS_AYUV_PLANAR;
+        break;
+    case MSP_XY_AUYV:
+        color_space = XY_CS_AUYV;
+        break;
+    case MSP_AYUV:
+        color_space = XY_CS_AYUV;
+        break;
+    default:
+        color_space = XY_CS_ARGB;
+        break;
+    }
+
+    XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
+    render_frame_creater->SetColorSpace(color_space);
+
+    if(m_size != CSize(output_size.cx*8, output_size.cy*8) 
+        || m_vidrect != CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8))
+    {
+        Init(output_size, video_rect);        
+        render_frame_creater->SetOutputRect(CRect(0,0,output_size.cx,output_size.cy));
+        render_frame_creater->SetClipRect(CRect(0,0,output_size.cx,output_size.cy));
+    }
+
+    CSubtitle2List sub2List;
+    HRESULT hr = ParseScript(output_size, rt, fps, &sub2List);
+    if(hr!=S_OK)
+    {
+        return hr;
+    }
+
+    CompositeDrawItemListList compDrawItemListList;   
+    DoRender(output_size, sub2List, &compDrawItemListList);
+
+    XySubRenderFrame *sub_render_frame;
+    CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);
+    (*subRenderFrame = sub_render_frame)->AddRef();
+
+    return hr;
 }
 
 void CRenderedTextSubtitle::DoRender( const SIZE& output_size, const CSubtitle2List& sub2List, 
