@@ -61,6 +61,8 @@ class CClipperPaintMachine;
 typedef ::boost::shared_ptr<CClipperPaintMachine> SharedPtrCClipperPaintMachine;
 
 class OverlayKey;
+interface IXySubRenderFrame;
+
 class CWord
 {
     bool NeedTransform();
@@ -427,6 +429,8 @@ private:
 
     CSubtitle* GetSubtitle(int entry);
 
+    HRESULT RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, const SIZE& output_size, const CRect& video_rect, 
+        REFERENCE_TIME rt, double fps);
 protected:
     virtual void OnChanged();
     
