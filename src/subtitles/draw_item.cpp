@@ -31,6 +31,12 @@ CRect DrawItem::GetDirtyRect()
     int h = overlay_rect.Height()>>3;
     r = clip_rect & CRect(x, y, x+w, y+h);
     r &= clipper->CalcDirtyRect();
+
+    //expand the rect, so that it is possible to perform chroma sub-sampling
+    r.left &= ~1;
+    r.right = (r.right + 1)&~1;
+    r.top &= ~1;
+    r.bottom = (r.bottom + 1)&~1;
     return r;
 }
 
