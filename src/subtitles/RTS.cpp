@@ -1339,7 +1339,7 @@ void CLine::Compact()
     }
 }
 
-CRect CLine::PaintAll( CompositeDrawItemList* output, SubPicDesc& spd, const CRect& clipRect, 
+CRect CLine::PaintAll( CompositeDrawItemList* output, const CRect& clipRect, 
     const SharedPtrCClipperPaintMachine &clipper, CPoint p, const CPoint& org, const int time, const int alpha )
 {
     CRect bbox(0, 0, 0, 0);
@@ -3194,7 +3194,7 @@ static int lscomp(const void* ls1, const void* ls2)
     return(ret);
 }
 
-STDMETHODIMP CRenderedTextSubtitle::ParseScript(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List )
+STDMETHODIMP CRenderedTextSubtitle::ParseScript(const SIZE& output_size, REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List )
 {
     //fix me: check input and log error
     int t = (int)(rt / 10000);
@@ -3328,7 +3328,7 @@ STDMETHODIMP CRenderedTextSubtitle::ParseScript(SubPicDesc& spd, REFERENCE_TIME 
                     ? s->m_effects[k]->param[0] + (int)(m_time*8.0/s->m_effects[k]->param[2]) - spaceNeeded.cy
                         : s->m_effects[k]->param[1] - (int)(m_time*8.0/s->m_effects[k]->param[2]);
                     r.bottom = r.top + spaceNeeded.cy;
-                    CRect cr(0, (s->m_effects[k]->param[0] + 4) >> 3, spd.w, (s->m_effects[k]->param[1] + 4) >> 3);
+                    CRect cr(0, (s->m_effects[k]->param[0] + 4) >> 3, output_size.cx, (s->m_effects[k]->param[1] + 4) >> 3);
                     if(s->m_relativeTo == 1)
                         r.top += m_vidrect.top,
                         r.bottom += m_vidrect.top,
@@ -3359,12 +3359,13 @@ STDMETHODIMP CRenderedTextSubtitle::ParseScript(SubPicDesc& spd, REFERENCE_TIME 
 
 STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList)
 {
-    XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
-    if(m_size != CSize(spd.w*8, spd.h*8) || m_vidrect != CRect(spd.vidrect.left*8, spd.vidrect.top*8, spd.vidrect.right*8, spd.vidrect.bottom*8))
+    CSize output_size = CSize(spd.w,spd.h);
+    XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();    
+    if(m_size != CSize(output_size.cx*8, output_size.cy*8) || m_vidrect != CRect(spd.vidrect.left*8, spd.vidrect.top*8, spd.vidrect.right*8, spd.vidrect.bottom*8))
     {
-        Init(CSize(spd.w, spd.h), spd.vidrect);        
-        render_frame_creater->SetOutputRect(CRect(0,0,spd.w,spd.h));
-        render_frame_creater->SetClipRect(CRect(0,0,spd.w,spd.h));
+        Init(output_size, spd.vidrect);        
+        render_frame_creater->SetOutputRect(CRect(0,0,output_size.cx,output_size.cy));
+        render_frame_creater->SetClipRect(CRect(0,0,output_size.cx,output_size.cy));
     }
     XyColorSpace color_space = XY_CS_ARGB;
     switch(spd.type)
@@ -3384,15 +3385,16 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     }
     render_frame_creater->SetColorSpace(color_space);
 
+    rectList.RemoveAll();
     CSubtitle2List sub2List;
-    HRESULT hr = ParseScript(spd, rt, fps, &sub2List);
+    HRESULT hr = ParseScript(output_size, rt, fps, &sub2List);
     if(hr!=S_OK)
     {
         return hr;
     }
 
     CompositeDrawItemListList compDrawItemListList;   
-    DoRender(spd, sub2List, &rectList, &compDrawItemListList);
+    DoRender(output_size, sub2List, &compDrawItemListList);
 
     XySubRenderFrame *sub_render_frame;
     CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);
@@ -3423,6 +3425,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
             {
                 return hr;
             }
+            rectList.AddTail(CRect(pos, size));
             if (color_space==XY_CS_AYUV_PLANAR)
             {
                 XyPlannerFormatExtra plans;
@@ -3442,8 +3445,8 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     return (!rectList.IsEmpty()) ? S_OK : S_FALSE;
 }
 
-void CRenderedTextSubtitle::DoRender( SubPicDesc& spd, const CSubtitle2List& sub2List, 
-    CAtlList<CRect> *rectList, CompositeDrawItemListList *compDrawItemListList /*output*/)
+void CRenderedTextSubtitle::DoRender( const SIZE& output_size, const CSubtitle2List& sub2List, 
+    CompositeDrawItemListList *compDrawItemListList /*output*/)
 {
     //check input and log error
     POSITION pos=sub2List.GetHeadPosition();
@@ -3451,12 +3454,12 @@ void CRenderedTextSubtitle::DoRender( SubPicDesc& spd, const CSubtitle2List& sub
     {
         const CSubtitle2& sub2 = sub2List.GetNext(pos);
         CompositeDrawItemList& compDrawItemList = compDrawItemListList->GetAt(compDrawItemListList->AddTail());
-        RenderOneSubtitle(spd, sub2, rectList, &compDrawItemList);
+        RenderOneSubtitle(output_size, sub2, &compDrawItemList);
     }
 }
 
-void CRenderedTextSubtitle::RenderOneSubtitle( SubPicDesc& spd, const CSubtitle2& sub2, 
-    CAtlList<CRect>* rectList, CompositeDrawItemList* compDrawItemList /*output*/)
+void CRenderedTextSubtitle::RenderOneSubtitle( const SIZE& output_size, const CSubtitle2& sub2, 
+    CompositeDrawItemList* compDrawItemList /*output*/)
 {   
     CSubtitle* s = sub2.s;
     const CRect& clipRect = sub2.clipRect;
@@ -3470,10 +3473,10 @@ void CRenderedTextSubtitle::RenderOneSubtitle( SubPicDesc& spd, const CSubtitle2
     SharedPtrCClipperPaintMachine clipper( new CClipperPaintMachine(s->m_pClipper) );
 
     CRect iclipRect[4];
-    iclipRect[0] = CRect(0, 0, spd.w, clipRect.top);
+    iclipRect[0] = CRect(0, 0, output_size.cx, clipRect.top);
     iclipRect[1] = CRect(0, clipRect.top, clipRect.left, clipRect.bottom);
-    iclipRect[2] = CRect(clipRect.right, clipRect.top, spd.w, clipRect.bottom);
-    iclipRect[3] = CRect(0, clipRect.bottom, spd.w, spd.h);        
+    iclipRect[2] = CRect(clipRect.right, clipRect.top, output_size.cx, clipRect.bottom);
+    iclipRect[3] = CRect(0, clipRect.bottom, output_size.cx, output_size.cy);        
     CRect bbox2(0,0,0,0);
     POSITION pos = s->GetHeadLinePosition();       
     CPoint p = p2;
@@ -3495,10 +3498,10 @@ void CRenderedTextSubtitle::RenderOneSubtitle( SubPicDesc& spd, const CSubtitle2
                 tmp3.AddTail();
                 tmp4.AddTail();
             }                
-            bbox2 |= l->PaintAll(&tmp1, spd, iclipRect[0], clipper, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmp2, spd, iclipRect[1], clipper, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmp3, spd, iclipRect[2], clipper, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmp4, spd, iclipRect[3], clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp1, iclipRect[0], clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp2, iclipRect[1], clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp3, iclipRect[2], clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp4, iclipRect[3], clipper, p, org2, time, alpha);
             tmpCompDrawItemList.AddTailList(&tmp1);
             tmpCompDrawItemList.AddTailList(&tmp2);
             tmpCompDrawItemList.AddTailList(&tmp3);
@@ -3510,12 +3513,11 @@ void CRenderedTextSubtitle::RenderOneSubtitle( SubPicDesc& spd, const CSubtitle2
             {
                 tmpCompDrawItemList.AddTail();
             }
-            bbox2 |= l->PaintAll(&tmpCompDrawItemList, spd, clipRect, clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmpCompDrawItemList, clipRect, clipper, p, org2, time, alpha);
         }
         compDrawItemList->AddTailList(&tmpCompDrawItemList);
         p.y += l->m_ascent + l->m_descent;
     }
-    rectList->AddTail(bbox2);
 }
 
 STDMETHODIMP CRenderedTextSubtitle::Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox)

@@ -235,7 +235,7 @@ public:
     void AddWord2Tail(SharedPtrCWord words);
     bool IsEmpty();
 
-    CRect PaintAll(CompositeDrawItemList* output, SubPicDesc& spd, const CRect& clipRect, 
+    CRect PaintAll(CompositeDrawItemList* output, const CRect& clipRect, 
         const SharedPtrCClipperPaintMachine &clipper, 
         CPoint p, const CPoint& org, const int time, const int alpha);
 };
@@ -456,11 +456,11 @@ public:
     STDMETHODIMP_(bool) IsAnimated(POSITION pos);
     STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox);
     STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
-    STDMETHODIMP ParseScript(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List );
-    static void DoRender( SubPicDesc& spd, const CSubtitle2List& sub2List, 
-        CAtlList<CRect> *rectList, CompositeDrawItemListList *compDrawItemListList /*output*/);
-    static void RenderOneSubtitle(SubPicDesc& spd, const CSubtitle2& sub2, 
-        CAtlList<CRect>* rectList, CompositeDrawItemList* compDrawItemList /*output*/);
+    STDMETHODIMP ParseScript(const SIZE& output_size, REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List );
+    static void DoRender( const SIZE& output_size, const CSubtitle2List& sub2List, 
+        CompositeDrawItemListList *compDrawItemListList /*output*/);
+    static void RenderOneSubtitle(const SIZE& output_size, const CSubtitle2& sub2, 
+        CompositeDrawItemList* compDrawItemList /*output*/);
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
 
     // IPersist
