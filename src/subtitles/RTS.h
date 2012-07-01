@@ -429,8 +429,6 @@ private:
 
     CSubtitle* GetSubtitle(int entry);
 
-    HRESULT RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, const SIZE& output_size, const CRect& video_rect, 
-        REFERENCE_TIME rt, double fps);
 protected:
     virtual void OnChanged();
     
@@ -451,6 +449,9 @@ public:
     // ISubPicProviderEx2
     STDMETHODIMP Lock();
     STDMETHODIMP Unlock();
+    STDMETHODIMP RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, const SIZE& output_size, const CRect& video_rect, 
+        REFERENCE_TIME rt, double fps);
+
     // ISubPicProviderEx && ISubPicProviderEx2
     STDMETHODIMP_(POSITION) GetStartPosition(REFERENCE_TIME rt, double fps);
     STDMETHODIMP_(POSITION) GetNext(POSITION pos);

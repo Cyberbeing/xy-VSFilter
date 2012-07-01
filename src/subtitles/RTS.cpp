@@ -3409,7 +3409,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     return (!rectList.IsEmpty()) ? S_OK : S_FALSE;
 }
 
-HRESULT CRenderedTextSubtitle::RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, const SIZE& output_size, const CRect& video_rect, REFERENCE_TIME rt, double fps)
+STDMETHODIMP CRenderedTextSubtitle::RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, const SIZE& output_size, const CRect& video_rect, REFERENCE_TIME rt, double fps)
 {
     if (!subRenderFrame)
     {

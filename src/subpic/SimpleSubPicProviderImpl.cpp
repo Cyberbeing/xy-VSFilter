@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "SimpleSubPicProviderImpl.h"
 #include "SimpleSubPicWrapper.h"
-
+#include "../subtitles/xy_bitmap.h"
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -268,8 +268,53 @@ HRESULT SimpleSubPicProvider::RenderTo( ISubPicEx* pSubPic, REFERENCE_TIME rtSta
         if(SUCCEEDED(pSubPic->ClearDirtyRect(color)))
         {
             CAtlList<CRect> rectList;
+            CSize output_size = CSize(spd.w,spd.h);
 
-            hr = pSubPicProviderEx->RenderEx(spd, bIsAnimated ? rtStart : ((rtStart+rtStop)/2), fps, rectList);
+            CComPtr<IXySubRenderFrame> sub_render_frame;
+            hr = pSubPicProviderEx->RenderEx(&sub_render_frame, spd.type, output_size, spd.vidrect, 
+                bIsAnimated ? rtStart : ((rtStart+rtStop)/2), fps);
+            if (SUCCEEDED(hr) && sub_render_frame)
+            {
+                int count = 0;
+                hr = sub_render_frame->GetBitmapCount(&count);
+                if(FAILED(hr))
+                {
+                    return hr;
+                }
+                int color_space;
+                hr = sub_render_frame->GetXyColorSpace(&color_space);
+                if(FAILED(hr))
+                {
+                    return hr;
+                }
+                for (int i=0;i<count;i++)
+                {
+                    POINT pos;
+                    SIZE size;
+                    LPCVOID pixels;
+                    int pitch;
+                    hr = sub_render_frame->GetBitmap(i, NULL, &pos, &size, &pixels, &pitch );
+                    if(FAILED(hr))
+                    {
+                        return hr;
+                    }
+                    rectList.AddTail(CRect(pos, size));
+                    if (color_space==XY_CS_AYUV_PLANAR)
+                    {
+                        XyPlannerFormatExtra plans;
+                        hr = sub_render_frame->GetBitmapExtra(i, &plans);
+                        if(FAILED(hr))
+                        {
+                            return hr;
+                        }
+                        XyBitmap::BitBltPlannar(spd, pos, size, plans, pitch);
+                    }
+                    else
+                    {
+                        XyBitmap::BitBltPack(spd, pos, size, pixels, pitch);
+                    }
+                }
+            }
 
             POSITION pos = pSubPicProviderEx->GetStartPosition(rtStart, fps);
 
