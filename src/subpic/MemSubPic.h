@@ -63,7 +63,11 @@ public:
     // ISubPicEx
 	STDMETHODIMP CopyTo(ISubPicEx* pSubPic);
 	STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList);
-	STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);
+    STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);
+public:
+    static HRESULT AlphaBltAnv12_Nv12(const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch,
+        BYTE* dst_y, BYTE* dst_uv, int dst_pitch,
+        int w, int h);
 };
 
 // CMemSubPicAllocator
