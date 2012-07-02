@@ -117,7 +117,7 @@ static void AlphaBltYv12Luma(byte* dst, int dst_pitch,
     int w, int h,
     const byte* sub, const byte* alpha, int sub_pitch)
 {
-    if( ((reinterpret_cast<intptr_t>(alpha) | static_cast<intptr_t>(sub_pitch) |
+    if( ((reinterpret_cast<intptr_t>(alpha) | reinterpret_cast<intptr_t>(sub) | static_cast<intptr_t>(sub_pitch) |
         reinterpret_cast<intptr_t>(dst) | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 )
     {
         for(int i=0; i<h; i++, dst += dst_pitch, alpha += sub_pitch, sub += sub_pitch)
@@ -1244,57 +1244,26 @@ HRESULT CMemSubPic::AlphaBltAnv12_Nv12( const RECT* pSrc, const RECT* pDst, SubP
     int w = rs.Width(), h = rs.Height();
     bool bottom_down = rd.top > rd.bottom;
 
-    BYTE* d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*rd.top + rd.left;
-    if(bottom_down)
+    BYTE* d = NULL;
+    BYTE* dUV = NULL;
+    if (!bottom_down)
     {
-        d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*(rd.top-1) + rd.left;
-        dst.pitch = -dst.pitch;
-    }
-
-    //dst.pitch = abs(dst.pitch);
-    int h2 = h/2;
-    if(!dst.pitchUV)
-    {
-        dst.pitchUV = abs(dst.pitch);
-    }
-    if(!dst.bitsU)
-    {
-        dst.bitsU = reinterpret_cast<BYTE*>(dst.bits) + abs(dst.pitch)*dst.h;                
-    }
-    BYTE* ddUV = dst.bitsU + dst.pitchUV*rd.top/2 + rd.left;            
-    if(bottom_down)
-    {
-        ddUV = dst.bitsU + dst.pitchUV*(rd.top/2-1) + rd.left;
-        dst.pitchUV = -dst.pitchUV;
-    }
-
-    BYTE* sa= reinterpret_cast<BYTE*>(src.bits) + src.pitch*rs.top + rs.left;            
-
-    BYTE* s_uv = sa + src.pitch*src.h*2;//UV    
-
-    AlphaBltYv12Luma( d, dst.pitch, w, h, sa + src.pitch*src.h, sa, src.pitch );
-    if( ((reinterpret_cast<intptr_t>(sa) | static_cast<intptr_t>(src.pitch) |
-        reinterpret_cast<intptr_t>(ddUV) | static_cast<intptr_t>(dst.pitchUV) ) & 15 )==0 )
-    {
-        BYTE* d = ddUV;
-        int pitch = src.pitch;
-        for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
-        {
-            hleft_vmid_mix_uv_nv12_sse2(d, w, s_uv, sa, src.pitch);
-        }
+        d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*rd.top + rd.left;
+        dUV = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*dst.h + dst.pitch*rd.top/2 + rd.left;
     }
     else
     {
-        BYTE* d = ddUV;
-        int pitch = src.pitch;
-        for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
-        {
-            hleft_vmid_mix_uv_nv12_c(d, w, s_uv, sa, src.pitch);
-        }
+        d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*(rd.top-1) + rd.left;
+        dUV = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*dst.h + dst.pitch*(rd.top/2-1) + rd.left;
+        dst.pitch = -dst.pitch;
     }
+    ASSERT(dst.pitchUV==0 || dst.pitchUV==abs(dst.pitch));
 
-    __asm emms;
-    return S_OK;
+    const BYTE* sa = reinterpret_cast<const BYTE*>(src.bits) + src.pitch*rs.top + rs.left;            
+    const BYTE* sy = sa + src.pitch*src.h;
+    const BYTE* s_uv = sy + src.pitch*src.h;//UV
+
+    return AlphaBltAnv12_Nv12(sa, sy, s_uv, src.pitch, d, dUV, dst.pitch, w, h);
 }
 
 STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
@@ -1331,6 +1300,38 @@ STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
         }
     }
     return __super::SetDirtyRectEx(dirtyRectList);
+}
+
+//
+// static 
+// 
+
+HRESULT CMemSubPic::AlphaBltAnv12_Nv12( const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch, 
+    BYTE* dst_y, BYTE* dst_uv, int dst_pitch, int w, int h )
+{
+    AlphaBltYv12Luma( dst_y, dst_pitch, w, h, src_y, src_a, src_pitch );
+
+    int h2 = h/2;
+    if( ((reinterpret_cast<intptr_t>(src_a) | reinterpret_cast<intptr_t>(src_uv) | static_cast<intptr_t>(src_pitch) |
+        reinterpret_cast<intptr_t>(dst_uv) | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 )
+    {
+        BYTE* d = dst_uv;
+        for(int j = 0; j < h2; j++, src_uv += src_pitch, src_a += src_pitch*2, d += dst_pitch)
+        {
+            hleft_vmid_mix_uv_nv12_sse2(d, w, src_uv, src_a, src_pitch);
+        }
+    }
+    else
+    {
+        BYTE* d = dst_uv;
+        for(int j = 0; j < h2; j++, src_uv += src_pitch, src_a += src_pitch*2, d += dst_pitch)
+        {
+            hleft_vmid_mix_uv_nv12_c(d, w, src_uv, src_a, src_pitch);
+        }
+    }
+
+    __asm emms;
+    return S_OK;
 }
 
 //
