@@ -207,8 +207,8 @@ TEST_F(AlphaBlendTest, Check_hleft_vmid_mix_uv_nvxx)
                 data1 = data0;
                 data2 = data1;
 
-                hleft_vmid_mix_uv_nvxx_c( data1.dst, w, data1.src, data1.alpha, pitch);
-                hleft_vmid_mix_uv_nvxx_sse2( data2.dst, w, data2.src, data2.alpha, pitch);
+                hleft_vmid_mix_uv_nv12_c( data1.dst, w, data1.src, data1.alpha, pitch);
+                hleft_vmid_mix_uv_nv12_sse2( data2.dst, w, data2.src, data2.alpha, pitch);
 
                 ASSERT_EQ(true, data1==data0)
                     <<"pitch "<<pitch<<" w "<<w
@@ -226,8 +226,8 @@ TEST_F(AlphaBlendTest, Check_hleft_vmid_mix_uv_nvxx)
                 data1 = data0;
                 data2 = data1;
 
-                hleft_vmid_mix_uv_nvxx_c( data1.dst, w, data1.src, data1.alpha, pitch);
-                hleft_vmid_mix_uv_nvxx_sse2( data2.dst, w, data2.src, data2.alpha, pitch);
+                hleft_vmid_mix_uv_nv12_c( data1.dst, w, data1.src, data1.alpha, pitch);
+                hleft_vmid_mix_uv_nv12_sse2( data2.dst, w, data2.src, data2.alpha, pitch);
 
                 ASSERT_EQ(true, data1==data2)
                     <<"pitch "<<pitch<<" w "<<w
