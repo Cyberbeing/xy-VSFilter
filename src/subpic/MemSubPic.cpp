@@ -1133,96 +1133,25 @@ HRESULT CMemSubPic::AlphaBltAnv12_P010( const RECT* pSrc, const RECT* pDst, SubP
     int w = rs.Width(), h = rs.Height();
     bool bottom_down = rd.top > rd.bottom;
 
-    BYTE* d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*rd.top + rd.left*2;
-    if(bottom_down)
+    BYTE* d = NULL;
+    BYTE* dUV = NULL;
+    if(!bottom_down)
     {
-        d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*(rd.top-1) + rd.left*2;
-        dst.pitch = -dst.pitch;
-    }
-
-    //dst.pitch = abs(dst.pitch);
-    int h2 = h/2;
-    if(!dst.pitchUV)
-    {
-        dst.pitchUV = abs(dst.pitch);
-    }
-    dst.bitsU = reinterpret_cast<BYTE*>(dst.bits) + abs(dst.pitch)*dst.h;    
-    BYTE* ddUV = dst.bitsU + dst.pitchUV*rd.top/2 + rd.left*2;
-    if(bottom_down)
-    {
-        ddUV = dst.bitsU + dst.pitchUV*(rd.top/2-1) + rd.left*2;
-        dst.pitchUV = -dst.pitchUV;
-    }
-
-    BYTE* src_origin= reinterpret_cast<BYTE*>(src.bits) + src.pitch*rs.top + rs.left;
-    BYTE *s = src_origin;
-    
-    // equivalent:                
-    //   if( (reinterpret_cast<intptr_t>(s2)&15)==0 && (reinterpret_cast<intptr_t>(sa)&15)==0 
-    //     && (reinterpret_cast<intptr_t>(d2)&15)==0 )
-    if( ((reinterpret_cast<intptr_t>(s) | static_cast<intptr_t>(src.pitch) |
-        reinterpret_cast<intptr_t>(d) | static_cast<intptr_t>(dst.pitch) ) & 15 )==0 )
-    {
-        for(int i=0; i<h; i++, s += src.pitch, d += dst.pitch)
-        {
-            BYTE* sa = s;
-            BYTE* s2 = s + src.pitch*src.h;
-            BYTE* s2end_mod16 = s2 + (w&~15);
-            BYTE* s2end = s2 + w;
-            BYTE* d2 = d;
-
-            for(; s2 < s2end_mod16; s2+=16, sa+=16, d2+=32)
-            {
-                mix_16_y_p010_sse2(d2, s2, sa);
-            }
-            for( WORD* d3=reinterpret_cast<WORD*>(d2); s2 < s2end; s2++, sa++, d3++)
-            {
-                if(sa[0] < 0xff)
-                {                            
-                    d2[0] = ((d2[0]*sa[0])>>8) + (s2[0]<<8);
-                }
-            }
-        }
-    }
-    else //fix me: only a workaround for non-mod-16 size video
-    {
-        for(int i=0; i<h; i++, s += src.pitch, d += dst.pitch)
-        {
-            BYTE* sa = s;
-            BYTE* s2 = s + src.pitch*src.h;
-            BYTE* s2end_mod16 = s2 + (w&~15);
-            BYTE* s2end = s2 + w;
-            WORD* d2 = reinterpret_cast<WORD*>(d);
-            for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
-            {
-                if(sa[0] < 0xff)
-                {                            
-                    d2[0] = ((d2[0]*sa[0])>>8) + (s2[0]<<8);
-                }
-            }
-        }
-    }
-        
-    d = ddUV;
-    BYTE* sa = src_origin;
-    BYTE* s_uv = src_origin + src.pitch*src.h*2;//UV        
-    if( ((reinterpret_cast<intptr_t>(sa) | static_cast<intptr_t>(src.pitch) |
-        reinterpret_cast<intptr_t>(d) | static_cast<intptr_t>(dst.pitch) ) & 15 )==0 )
-    {
-        for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
-        {
-            hleft_vmid_mix_uv_p010_sse2(d, w, s_uv, sa, src.pitch);
-        }
+        d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*rd.top + rd.left*2;
+        dUV = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*dst.h + dst.pitch*rd.top/2 + rd.left*2;
     }
     else
-    {        
-        for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
-        {
-            hleft_vmid_mix_uv_p010_c(d, w, s_uv, sa, src.pitch);
-        }
+    {
+        d = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*(rd.top-1) + rd.left*2;
+        dUV = reinterpret_cast<BYTE*>(dst.bits) + dst.pitch*dst.h + dst.pitch*(rd.top/2-1) + rd.left*2;
+        dst.pitch = -dst.pitch;
     }
-    __asm emms;
-    return S_OK;
+    ASSERT(dst.pitchUV==0 || dst.pitchUV==abs(dst.pitch));
+
+    const BYTE* sa = reinterpret_cast<const BYTE*>(src.bits) + src.pitch*rs.top + rs.left;            
+    const BYTE* sy = sa + src.pitch*src.h;
+    const BYTE* s_uv = sy + src.pitch*src.h;//UV
+    return AlphaBltAnv12_P010(sa, sy, s_uv, src.pitch, d, dUV, dst.pitch, w, h);
 }
 
 HRESULT CMemSubPic::AlphaBltAnv12_Nv12( const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget )
@@ -1305,6 +1234,73 @@ STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
 //
 // static 
 // 
+
+HRESULT CMemSubPic::AlphaBltAnv12_P010( const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch, 
+    BYTE* dst_y, BYTE* dst_uv, int dst_pitch, int w, int h )
+{
+    const BYTE* sa = src_a;
+    if( ((reinterpret_cast<intptr_t>(src_a) | reinterpret_cast<intptr_t>(src_y) | static_cast<intptr_t>(src_pitch) |
+        reinterpret_cast<intptr_t>(dst_y) | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 )
+    {
+        for(int i=0; i<h; i++, sa += src_pitch, src_y += src_pitch, dst_y += dst_pitch)
+        {
+            const BYTE* sa2 = sa;
+            const BYTE* s2 = src_y;
+            const BYTE* s2end_mod16 = s2 + (w&~15);
+            const BYTE* s2end = s2 + w;
+            BYTE* d2 = dst_y;
+
+            for(; s2 < s2end_mod16; s2+=16, sa2+=16, d2+=32)
+            {
+                mix_16_y_p010_sse2(d2, s2, sa2);
+            }
+            for( WORD* d3=reinterpret_cast<WORD*>(d2); s2 < s2end; s2++, sa2++, d3++)
+            {
+                if(sa2[0] < 0xff)
+                {
+                    d2[0] = ((d2[0]*sa2[0])>>8) + (s2[0]<<8);
+                }
+            }
+        }
+    }
+    else //fix me: only a workaround for non-mod-16 size video
+    {
+        for(int i=0; i<h; i++, sa += src_pitch, src_y += src_pitch, dst_y += dst_pitch)
+        {
+            const BYTE* sa2 = sa;
+            const BYTE* s2 = src_y;
+            const BYTE* s2end = s2 + w;
+            WORD* d2 = reinterpret_cast<WORD*>(dst_y);
+            for(; s2 < s2end; s2+=1, sa2+=1, d2+=1)
+            {
+                if(sa2[0] < 0xff)
+                {                            
+                    d2[0] = ((d2[0]*sa2[0])>>8) + (s2[0]<<8);
+                }
+            }
+        }
+    }
+    //UV
+    int h2 = h/2;
+    BYTE* d = dst_uv;   
+    if( ((reinterpret_cast<intptr_t>(src_a) | reinterpret_cast<intptr_t>(src_uv) | static_cast<intptr_t>(src_pitch) |
+        reinterpret_cast<intptr_t>(dst_uv) | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 )
+    {
+        for(int j = 0; j < h2; j++, src_uv += src_pitch, src_a += src_pitch*2, d += dst_pitch)
+        {
+            hleft_vmid_mix_uv_p010_sse2(d, w, src_uv, src_a, src_pitch);
+        }
+    }
+    else
+    {        
+        for(int j = 0; j < h2; j++, src_uv += src_pitch, src_a += src_pitch*2, d += dst_pitch)
+        {
+            hleft_vmid_mix_uv_p010_c(d, w, src_uv, src_a, src_pitch);
+        }
+    }
+    __asm emms;
+    return S_OK;
+}
 
 HRESULT CMemSubPic::AlphaBltAnv12_Nv12( const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch, 
     BYTE* dst_y, BYTE* dst_uv, int dst_pitch, int w, int h )
