@@ -46,6 +46,7 @@ protected:
     CComPtr<ISubPicExAllocator> m_pAllocator;
 
     CCritSec m_csLock;
+    REFERENCE_TIME m_subpic_start,m_subpic_stop;
     CComPtr<ISubPicEx> m_pSubPic;
 };
 
@@ -63,6 +64,8 @@ public:
     DECLARE_IUNKNOWN;
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 public:
+    SimpleSubPicProvider2(const SimpleSubPicProvider2&);
+    void operator=(const SimpleSubPicProvider2&)const;
 
     // ISimpleSubPicProvider
 
@@ -82,8 +85,4 @@ protected:
     ISimpleSubPicProvider *m_cur_provider;
     SimpleSubPicProvider m_ex_provider;
     CSubPicQueueNoThread m_old_provider;
-
-private:
-    SimpleSubPicProvider2(const SimpleSubPicProvider2&);
-    void operator=(const SimpleSubPicProvider2&)const;
 };

@@ -24,6 +24,13 @@ SimpleSubPicProvider::SimpleSubPicProvider( ISubPicExAllocator* pAllocator, HRES
         }
         return;
     }
+    if (m_pAllocator->IsDynamicWriteOnly())
+    {
+        int o=0;
+        o = o/o;
+        throw 0;
+        exit(-1);
+    }
     m_prefered_colortype.AddTail(MSP_AYUV_PLANAR);
     m_prefered_colortype.AddTail(MSP_AYUV);
     m_prefered_colortype.AddTail(MSP_XY_AUYV);
@@ -180,7 +187,7 @@ bool SimpleSubPicProvider::LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSu
         pSubPic = m_pSubPic;
     }
 
-    if(pSubPic->GetStart() <= rtNow && rtNow < pSubPic->GetStop())
+    if(m_subpic_start <= rtNow && rtNow < m_subpic_stop)
     {
         (*ppSubPic = pSubPic)->AddRef();
     }
@@ -199,19 +206,8 @@ bool SimpleSubPicProvider::LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSu
 
                 if(rtStart <= rtNow && rtNow < rtStop)
                 {
-                    if(m_pAllocator->IsDynamicWriteOnly())
-                    {
-                        CComPtr<ISubPicEx> pStatic;
-                        if(SUCCEEDED(m_pAllocator->GetStaticEx(&pStatic))
-                            && SUCCEEDED(RenderTo(pStatic, rtNow, rtNow+1, fps, true))
-                            && SUCCEEDED(pStatic->CopyTo(pSubPic)))
-                            (*ppSubPic = pSubPic)->AddRef();
-                    }
-                    else
-                    {
-                        if(SUCCEEDED(RenderTo(m_pSubPic, rtNow, rtNow+1, fps, true)))
-                            (*ppSubPic = pSubPic)->AddRef();
-                    }
+                    if(SUCCEEDED(RenderTo(m_pSubPic, rtNow, rtNow+1, fps, true)))
+                        (*ppSubPic = pSubPic)->AddRef();
                 }
             }
 
@@ -318,10 +314,7 @@ HRESULT SimpleSubPicProvider::RenderTo( ISubPicEx* pSubPic, REFERENCE_TIME rtSta
 
             POSITION pos = pSubPicProviderEx->GetStartPosition(rtStart, fps);
 
-            pSubPicProviderEx->GetStartStop(pos, fps, rtStart, rtStop);
-
-            pSubPic->SetStart(rtStart);
-            pSubPic->SetStop(rtStop);
+            pSubPicProviderEx->GetStartStop(pos, fps, m_subpic_start, m_subpic_stop);
 
             pSubPic->Unlock(&rectList);
         }
