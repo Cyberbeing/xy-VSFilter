@@ -38,15 +38,15 @@ protected:
 protected:
 	STDMETHODIMP_(void*) GetObject() const; // returns SubPicDesc*
     
-    STDMETHODIMP AlphaBltAxyuAxyv_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
-    STDMETHODIMP AlphaBltAxyuAxyv_Yv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
-    STDMETHODIMP AlphaBltAxyuAxyv_Nv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
-    STDMETHODIMP AlphaBltAnv12_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);   
-    STDMETHODIMP AlphaBltAnv12_Nvxx(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
-    STDMETHODIMP AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
-    
-    STDMETHODIMP UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList);
-    STDMETHODIMP UnlockOther(CAtlList<CRect>* dirtyRectList);
+    HRESULT AlphaBltAxyuAxyv_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+    HRESULT AlphaBltAxyuAxyv_Yv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+    HRESULT AlphaBltAxyuAxyv_Nv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+    HRESULT AlphaBltAnv12_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);   
+    HRESULT AlphaBltAnv12_Nv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+    HRESULT AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+
+    HRESULT UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList);
+    HRESULT UnlockOther(CAtlList<CRect>* dirtyRectList);
 
     void SubsampleAndInterlace( const CRect& cRect, bool u_first );
 public:
@@ -63,7 +63,7 @@ public:
     // ISubPicEx
 	STDMETHODIMP CopyTo(ISubPicEx* pSubPic);
 	STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList);
-	STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);    
+	STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);
 };
 
 // CMemSubPicAllocator
