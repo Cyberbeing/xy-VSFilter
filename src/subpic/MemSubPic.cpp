@@ -113,80 +113,6 @@ static void SaveNvxx2File(SubPicDesc& spd, const CRect& cRect, const char * file
 // 
 #include "xy_intrinsics.h"
 
-static void AlphaBltYv12Luma(byte* dst, int dst_pitch,
-    int w, int h,
-    const byte* sub, const byte* alpha, int sub_pitch)
-{
-    if( ((reinterpret_cast<intptr_t>(alpha) | reinterpret_cast<intptr_t>(sub) | static_cast<intptr_t>(sub_pitch) |
-        reinterpret_cast<intptr_t>(dst) | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 )
-    {
-        for(int i=0; i<h; i++, dst += dst_pitch, alpha += sub_pitch, sub += sub_pitch)
-        {
-            const BYTE* sa = alpha;
-            const BYTE* s2 = sub;
-            const BYTE* s2end_mod16 = s2 + (w&~15);
-            const BYTE* s2end = s2 + w;
-            BYTE* d2 = dst;
-
-            for(; s2 < s2end_mod16; s2+=16, sa+=16, d2+=16)
-            {
-                pix_alpha_blend_yv12_luma_sse2(d2, sa, s2);                        
-            }
-            for(; s2 < s2end; s2++, sa++, d2++)
-            {
-                if(sa[0] < 0xff)
-                {                    
-                    d2[0] = ((d2[0]*sa[0])>>8) + s2[0];
-                }
-            }
-        }
-    }
-    else //fix me: only a workaround for non-mod-16 size video
-    {
-        for(int i=0; i<h; i++, dst += dst_pitch, alpha += sub_pitch, sub += sub_pitch)
-        {
-            const BYTE* sa = alpha;
-            const BYTE* s2 = sub;
-            const BYTE* s2end_mod16 = s2 + (w&~15);
-            const BYTE* s2end = s2 + w;
-            BYTE* d2 = dst;
-            for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
-            {
-                if(sa[0] < 0xff)
-                {
-                    //					d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];  
-                    d2[0] = ((d2[0]*sa[0])>>8) + s2[0];
-                }
-            }
-        }
-    }
-}
-
-static void AlphaBltYv12Chroma(byte* dst, int dst_pitch,
-    int w, int chroma_h,
-    const byte* sub_chroma, const byte* alpha, int sub_pitch)
-{
-    if( ((reinterpret_cast<intptr_t>(sub_chroma) |
-        //reinterpret_cast<intptr_t>(dst) | 
-        reinterpret_cast<intptr_t>(alpha) | static_cast<intptr_t>(sub_pitch) 
-        //| (static_cast<intptr_t>(dst_pitch)&7) 
-        ) & 15 )==0 )
-    {
-        int pitch = sub_pitch;
-        for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
-        {
-            hleft_vmid_mix_uv_yv12_sse2(dst, w, sub_chroma, alpha, sub_pitch);
-        }
-    }
-    else//fix me: only a workaround for non-mod-16 size video
-    {
-        for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
-        {
-            hleft_vmid_mix_uv_yv12_c(dst, w, sub_chroma, alpha, sub_pitch);
-        }
-    }
-}
-
 //
 // CMemSubPic
 //
@@ -1234,6 +1160,80 @@ STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
 //
 // static 
 // 
+
+void CMemSubPic::AlphaBltYv12Luma(byte* dst, int dst_pitch,
+    int w, int h,
+    const byte* sub, const byte* alpha, int sub_pitch)
+{
+    if( ((reinterpret_cast<intptr_t>(alpha) | reinterpret_cast<intptr_t>(sub) | static_cast<intptr_t>(sub_pitch) |
+        reinterpret_cast<intptr_t>(dst) | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 )
+    {
+        for(int i=0; i<h; i++, dst += dst_pitch, alpha += sub_pitch, sub += sub_pitch)
+        {
+            const BYTE* sa = alpha;
+            const BYTE* s2 = sub;
+            const BYTE* s2end_mod16 = s2 + (w&~15);
+            const BYTE* s2end = s2 + w;
+            BYTE* d2 = dst;
+
+            for(; s2 < s2end_mod16; s2+=16, sa+=16, d2+=16)
+            {
+                pix_alpha_blend_yv12_luma_sse2(d2, sa, s2);                        
+            }
+            for(; s2 < s2end; s2++, sa++, d2++)
+            {
+                if(sa[0] < 0xff)
+                {                    
+                    d2[0] = ((d2[0]*sa[0])>>8) + s2[0];
+                }
+            }
+        }
+    }
+    else //fix me: only a workaround for non-mod-16 size video
+    {
+        for(int i=0; i<h; i++, dst += dst_pitch, alpha += sub_pitch, sub += sub_pitch)
+        {
+            const BYTE* sa = alpha;
+            const BYTE* s2 = sub;
+            const BYTE* s2end_mod16 = s2 + (w&~15);
+            const BYTE* s2end = s2 + w;
+            BYTE* d2 = dst;
+            for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
+            {
+                if(sa[0] < 0xff)
+                {
+                    //					d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];  
+                    d2[0] = ((d2[0]*sa[0])>>8) + s2[0];
+                }
+            }
+        }
+    }
+}
+
+void CMemSubPic::AlphaBltYv12Chroma(byte* dst, int dst_pitch,
+    int w, int chroma_h,
+    const byte* sub_chroma, const byte* alpha, int sub_pitch)
+{
+    if( ((reinterpret_cast<intptr_t>(sub_chroma) |
+        //reinterpret_cast<intptr_t>(dst) | 
+        reinterpret_cast<intptr_t>(alpha) | static_cast<intptr_t>(sub_pitch) 
+        //| (static_cast<intptr_t>(dst_pitch)&7) 
+        ) & 15 )==0 )
+    {
+        int pitch = sub_pitch;
+        for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
+        {
+            hleft_vmid_mix_uv_yv12_sse2(dst, w, sub_chroma, alpha, sub_pitch);
+        }
+    }
+    else//fix me: only a workaround for non-mod-16 size video
+    {
+        for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
+        {
+            hleft_vmid_mix_uv_yv12_c(dst, w, sub_chroma, alpha, sub_pitch);
+        }
+    }
+}
 
 HRESULT CMemSubPic::AlphaBltAnv12_P010( const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch, 
     BYTE* dst_y, BYTE* dst_uv, int dst_pitch, int w, int h )
