@@ -340,7 +340,7 @@ STDMETHODIMP CMemSubPic::Unlock( CAtlList<CRect>* dirtyRectList )
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CMemSubPic::UnlockOther(CAtlList<CRect>* dirtyRectList)
+HRESULT CMemSubPic::UnlockOther(CAtlList<CRect>* dirtyRectList)
 {
     SetDirtyRectEx(dirtyRectList);
     if(m_rectListDirty.IsEmpty()) {
@@ -424,7 +424,7 @@ STDMETHODIMP CMemSubPic::UnlockOther(CAtlList<CRect>* dirtyRectList)
     return S_OK;
 }
 
-STDMETHODIMP CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
+HRESULT CMemSubPic::UnlockRGBA_YUV(CAtlList<CRect>* dirtyRectList)
 {
     //debug
     ONCER( SaveRect2File(dirtyRectList->GetHead(), "F:/mplayer_MinGW_full/MinGW/home/Administrator/xy_vsfilter/debug.rect") );
@@ -569,7 +569,7 @@ STDMETHODIMP CMemSubPic::AlphaBlt( const RECT* pSrc, const RECT* pDst, SubPicDes
     else if ( src_type==MSP_AYUV_PLANAR && (dst_type == MSP_NV12 ||
                                             dst_type == MSP_NV21 ) )
     {
-        return AlphaBltAnv12_Nvxx(pSrc, pDst, pTarget);
+        return AlphaBltAnv12_Nv12(pSrc, pDst, pTarget);
     }
     
     else if( src_type==MSP_AYUV_PLANAR && (dst_type == MSP_P010 ||
@@ -595,7 +595,7 @@ STDMETHODIMP CMemSubPic::AlphaBlt( const RECT* pSrc, const RECT* pDst, SubPicDes
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
+HRESULT CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
 {
     const SubPicDesc& src = m_spd;
     SubPicDesc dst = *pTarget; // copy, because we might modify it
@@ -835,7 +835,7 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
     return S_OK;
 }
 
-STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
+HRESULT CMemSubPic::AlphaBltAxyuAxyv_P010(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
 {
     const SubPicDesc& src = m_spd;
     SubPicDesc dst = *pTarget; // copy, because we might modify it
@@ -923,7 +923,7 @@ STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_P010(const RECT* pSrc, const RECT* pDs
     return S_OK;
 }
 
-STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_Yv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
+HRESULT CMemSubPic::AlphaBltAxyuAxyv_Yv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
 {
     const SubPicDesc& src = m_spd;
     SubPicDesc dst = *pTarget; // copy, because we might modify it
@@ -1018,7 +1018,7 @@ STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_Yv12(const RECT* pSrc, const RECT* pDs
     return S_OK;
 }
 
-STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_Nv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
+HRESULT CMemSubPic::AlphaBltAxyuAxyv_Nv12(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget)
 {
     ONCER( SaveArgb2File(*pTarget, CRect(CPoint(0,0), m_size), "F:/mplayer_MinGW_full/MinGW/home/Administrator/xy_vsfilter/debug.nv12") );
     const SubPicDesc& src = m_spd;
@@ -1114,7 +1114,7 @@ STDMETHODIMP CMemSubPic::AlphaBltAxyuAxyv_Nv12(const RECT* pSrc, const RECT* pDs
     return S_OK;
 }
 
-STDMETHODIMP CMemSubPic::AlphaBltAnv12_P010( const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget )
+HRESULT CMemSubPic::AlphaBltAnv12_P010( const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget )
 {
     //fix me: check colorspace and log error
     const SubPicDesc& src = m_spd;
@@ -1222,9 +1222,10 @@ STDMETHODIMP CMemSubPic::AlphaBltAnv12_P010( const RECT* pSrc, const RECT* pDst,
         }
     }
     __asm emms;
+    return S_OK;
 }
 
-STDMETHODIMP CMemSubPic::AlphaBltAnv12_Nvxx( const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget )
+HRESULT CMemSubPic::AlphaBltAnv12_Nv12( const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget )
 {
     //fix me: check colorspace and log error
     const SubPicDesc& src = m_spd;
@@ -1279,7 +1280,7 @@ STDMETHODIMP CMemSubPic::AlphaBltAnv12_Nvxx( const RECT* pSrc, const RECT* pDst,
         int pitch = src.pitch;
         for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
         {
-            hleft_vmid_mix_uv_nvxx_sse2(d, w, s_uv, sa, src.pitch);
+            hleft_vmid_mix_uv_nv12_sse2(d, w, s_uv, sa, src.pitch);
         }
     }
     else
@@ -1288,11 +1289,12 @@ STDMETHODIMP CMemSubPic::AlphaBltAnv12_Nvxx( const RECT* pSrc, const RECT* pDst,
         int pitch = src.pitch;
         for(int j = 0; j < h2; j++, s_uv += src.pitch, sa += src.pitch*2, d += dst.pitchUV)
         {
-            hleft_vmid_mix_uv_nvxx_c(d, w, s_uv, sa, src.pitch);
+            hleft_vmid_mix_uv_nv12_c(d, w, s_uv, sa, src.pitch);
         }
     }
 
     __asm emms;
+    return S_OK;
 }
 
 STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )

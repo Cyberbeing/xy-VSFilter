@@ -707,7 +707,7 @@ static __forceinline void hleft_vmid_mix_uv_p010_sse2(BYTE* dst, int w, const BY
     hleft_vmid_mix_uv_p010_c(dst, w&15, src, am, src_pitch, w>15?-1:0);
 }
 
-static __forceinline void hleft_vmid_mix_uv_nvxx_c(BYTE* dst, int w, const BYTE* src, const BYTE* am, int src_pitch, int last_src_id=0)
+static __forceinline void hleft_vmid_mix_uv_nv12_c(BYTE* dst, int w, const BYTE* src, const BYTE* am, int src_pitch, int last_src_id=0)
 {
     int last_alpha = (am[last_src_id]+am[src_pitch+last_src_id]+1)/2;
     const BYTE* end = src + w;
@@ -726,7 +726,7 @@ static __forceinline void hleft_vmid_mix_uv_nvxx_c(BYTE* dst, int w, const BYTE*
     }
 }
 
-static __forceinline void hleft_vmid_mix_uv_nvxx_sse2(BYTE* dst, int w, const BYTE* src, const BYTE* am, int src_pitch, int last_src_id=0)
+static __forceinline void hleft_vmid_mix_uv_nv12_sse2(BYTE* dst, int w, const BYTE* src, const BYTE* am, int src_pitch, int last_src_id=0)
 {
     __m128i last_alpha = _mm_cvtsi32_si128( (am[last_src_id]+am[src_pitch+last_src_id]+1)<<7 );
     const BYTE* end_mod16 = src + (w&~15);
@@ -771,7 +771,7 @@ static __forceinline void hleft_vmid_mix_uv_nvxx_sse2(BYTE* dst, int w, const BY
         dst_lo128 = _mm_adds_epu8(dst_lo128, sub128);
         _mm_store_si128( reinterpret_cast<__m128i*>(dst), dst_lo128 );
     }
-    hleft_vmid_mix_uv_nvxx_c(dst, w&15, src, am, src_pitch, w>15?-1:0);
+    hleft_vmid_mix_uv_nv12_c(dst, w&15, src, am, src_pitch, w>15?-1:0);
 }
 
 #endif // __XY_INTRINSICS_D66EF42F_67BC_47F4_A70D_40F1AB80F376_H__
