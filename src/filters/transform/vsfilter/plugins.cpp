@@ -160,10 +160,10 @@ public:
         ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
     }
 
-	bool Render(SubPicDesc& dst, REFERENCE_TIME rt, float fps)
-	{
-		if(!m_pSubPicProvider)
-			return(false);
+    bool Render(SubPicDesc& dst, REFERENCE_TIME rt, float fps)
+    {
+        if(!m_pSubPicProvider)
+            return(false);
 
         if(!m_fLazyInit)
         {
@@ -171,25 +171,23 @@ public:
 
             SetYuvMatrix(dst);
         }
-		CSize size(dst.w, dst.h);
+        CSize size(dst.w, dst.h);
 
-		if(!m_simple_provider)
-		{
-            CComPtr<ISubPicExAllocator> pAllocator = new CPooledSubPicAllocator(dst.type, size, 2);
-                        
-			HRESULT hr;
-			if(!(m_simple_provider = new SimpleSubPicProvider2(pAllocator, &hr)) || FAILED(hr))
-			{
-				m_simple_provider = NULL;
-				return(false);
-			}
-		}
+        if(!m_simple_provider)
+        {
+            HRESULT hr;
+            if(!(m_simple_provider = new SimpleSubPicProvider2(dst.type, size, size, CRect(CPoint(0,0), size), &hr)) || FAILED(hr))
+            {
+                m_simple_provider = NULL;
+                return(false);
+            }
+        }
 
-		if(m_SubPicProviderId != (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider)
-		{
-			m_simple_provider->SetSubPicProvider(m_pSubPicProvider);
-			m_SubPicProviderId = (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider;
-		}
+        if(m_SubPicProviderId != (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider)
+        {
+            m_simple_provider->SetSubPicProvider(m_pSubPicProvider);
+            m_SubPicProviderId = (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider;
+        }
 
 		CComPtr<ISimpleSubPic> pSubPic;
 		if(!m_simple_provider->LookupSubPic(rt, &pSubPic))
@@ -199,8 +197,8 @@ public:
             dst.h = -dst.h;
         pSubPic->AlphaBlt(&dst);
 
-		return(true);
-	}
+        return(true);
+    }
 
 	DWORD ThreadProc()
 	{

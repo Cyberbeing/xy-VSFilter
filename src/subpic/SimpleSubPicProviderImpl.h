@@ -11,15 +11,16 @@
 class SimpleSubPicProvider: public CUnknown, public ISimpleSubPicProvider
 {
 public:
-    SimpleSubPicProvider(ISubPicExAllocator* pAllocator, HRESULT* phr);
+    SimpleSubPicProvider(int alpha_blt_dst_type, SIZE spd_size, RECT video_rect, HRESULT* phr=NULL);
     virtual ~SimpleSubPicProvider();
 
     DECLARE_IUNKNOWN;
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
-    bool LookupSubPicEx(REFERENCE_TIME rtNow, ISubPicEx** ppSubPic);
+    bool LookupSubPicEx(REFERENCE_TIME rtNow, IXySubRenderFrame** sub_render_frame);
     HRESULT GetSubPicProviderEx(ISubPicProviderEx2** pSubPicProviderEx);
-    HRESULT RenderTo(ISubPicEx* pSubPic, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, double fps, BOOL bIsAnimated);
+    HRESULT RenderTo(IXySubRenderFrame** pSubPic, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, double fps, BOOL bIsAnimated);
+    bool IsSpdColorTypeSupported(int type);
 public:
     // ISimpleSubPicProvider
 
@@ -40,6 +41,10 @@ private:
 
     CAtlList<int> m_prefered_colortype;
 protected:
+    int m_alpha_blt_dst_type;
+    SIZE m_spd_size;
+    RECT m_video_rect;
+    int m_spd_type;
     double m_fps;
     REFERENCE_TIME m_rtNow;
 
@@ -47,7 +52,7 @@ protected:
 
     CCritSec m_csLock;
     REFERENCE_TIME m_subpic_start,m_subpic_stop;
-    CComPtr<ISubPicEx> m_pSubPic;
+    CComPtr<IXySubRenderFrame> m_pSubPic;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -58,7 +63,7 @@ protected:
 class SimpleSubPicProvider2: public CUnknown, public ISimpleSubPicProvider
 {
 public:
-    SimpleSubPicProvider2(ISubPicExAllocator* pAllocator, HRESULT* phr, const int *prefered_colortype=NULL, int prefered_colortype_num=0);
+    SimpleSubPicProvider2(int alpha_blt_dst_type, SIZE max_size, SIZE cur_size, RECT video_rect, HRESULT* phr=NULL);
     virtual ~SimpleSubPicProvider2();
 
     DECLARE_IUNKNOWN;
@@ -82,7 +87,15 @@ public:
     STDMETHODIMP GetStats(int nSubPic, REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop);
 
 protected:
+    int m_alpha_blt_dst_type;
+    SIZE m_max_size;
+    SIZE m_cur_size;
+    RECT m_video_rect;
+
+    double m_fps;
+    REFERENCE_TIME m_now;
+
     ISimpleSubPicProvider *m_cur_provider;
-    SimpleSubPicProvider m_ex_provider;
-    CSubPicQueueNoThread m_old_provider;
+    SimpleSubPicProvider *m_ex_provider;
+    CSubPicQueueNoThread *m_old_provider;
 };
