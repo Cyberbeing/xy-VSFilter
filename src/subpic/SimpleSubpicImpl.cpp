@@ -135,7 +135,7 @@ HRESULT SimpleSubpic::AlphaBltAnv12_Nv12( SubPicDesc* target, const Bitmap& src 
     const BYTE* sa = reinterpret_cast<const BYTE*>(src.extra.plans[A]);
     const BYTE* sy = reinterpret_cast<const BYTE*>(src.extra.plans[Y]);
     const BYTE* s_uv = reinterpret_cast<const BYTE*>(src.extra.plans[UV]);
-    return CMemSubPic::AlphaBltAnv12_P010(sa, sy, s_uv, src.pitch, d, dUV, dst.pitch, w, h);
+    return CMemSubPic::AlphaBltAnv12_Nv12(sa, sy, s_uv, src.pitch, d, dUV, dst.pitch, w, h);
 }
 
 HRESULT SimpleSubpic::AlphaBlt( SubPicDesc* target, const Bitmap& src )
@@ -505,11 +505,13 @@ void SimpleSubpic::SubsampleAndInterlace( int index, Bitmap*bitmap, bool u_first
     ASSERT(bitmap!=NULL);
     //fix me: check alignment and log error
     int w = bitmap->size.cx, h = bitmap->size.cy;
+    ASSERT(h%2==0);
     const BYTE* u_start = reinterpret_cast<const BYTE*>(bitmap->extra.plans[2]);
     const BYTE* v_start = reinterpret_cast<const BYTE*>(bitmap->extra.plans[3]);
 
-    BYTE* dst = reinterpret_cast<BYTE*>(xy_malloc(bitmap->pitch*h, (bitmap->pos.x*4)&15));
+    BYTE* dst = reinterpret_cast<BYTE*>(xy_malloc(bitmap->pitch*h/2, bitmap->pos.x&15));
     m_buffers.GetAt(index) = dst;
+    bitmap->extra.plans[2] = dst;
 
     if(!u_first)
     {
@@ -522,10 +524,12 @@ void SimpleSubpic::SubsampleAndInterlace( int index, Bitmap*bitmap, bool u_first
     //Walkarround for alignment
     if ( ((bitmap->pitch | (int)u_start | (int)v_start)&15) == 0  ) 
     {
-        ASSERT(w%16==0);
         for (int i=0;i<h;i+=2)
         {
-            hleft_vmid_subsample_and_interlace_2_line_sse2(dst, u_start, v_start, w, bitmap->pitch);
+            int w16 = w&~15;
+            hleft_vmid_subsample_and_interlace_2_line_sse2(dst, u_start, v_start, w16, bitmap->pitch);
+            ASSERT(w>0);
+            hleft_vmid_subsample_and_interlace_2_line_c(dst+w16, u_start+w16, v_start+w16, w&15, bitmap->pitch, -1);
             u_start += 2*bitmap->pitch;
             v_start += 2*bitmap->pitch;
             dst += bitmap->pitch;
@@ -541,5 +545,4 @@ void SimpleSubpic::SubsampleAndInterlace( int index, Bitmap*bitmap, bool u_first
             dst += bitmap->pitch;
         }
     }
-    bitmap->extra.plans[2] = dst;
 }
