@@ -6,6 +6,15 @@
 #include <boost/flyweight/no_locking.hpp>
 #include <afx.h>
 
+template<>
+struct std::equal_to<CRect>
+{	// functor for operator==
+    bool operator()(const CRect& _Left, const CRect& _Right) const
+    {	// apply operator== to operands
+        return (_Left == _Right)==TRUE;
+    }
+};
+
 typedef ::boost::flyweights::flyweight<CRect, ::boost::flyweights::no_locking> FwRect;
 
 static inline std::size_t hash_value(const double& d)
