@@ -388,7 +388,7 @@ void CDVSMainPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->put_VobSubSettings(true, m_fOnlyShowForcedVobSubs, false);
 		m_pDirectVobSub->put_TextSettings(&m_defStyle);
 		m_pDirectVobSub->put_AspectRatioSettings(&m_ePARCompensationType);
-        m_pDirectVobSubXy->put_HideTrayIcon(m_fHideTrayIcon);
+        m_pDirectVobSubXy->XySetBool(DirectVobSubXyIntOptions::BOOL_HIDE_TRAY_ICON, m_fHideTrayIcon);
 	}
 	else
 	{
@@ -402,7 +402,7 @@ void CDVSMainPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->get_VobSubSettings(NULL, &m_fOnlyShowForcedVobSubs, NULL);
 		m_pDirectVobSub->get_TextSettings(&m_defStyle);
 		m_pDirectVobSub->get_AspectRatioSettings(&m_ePARCompensationType);
-        m_pDirectVobSubXy->get_HideTrayIcon(&m_fHideTrayIcon);
+        m_pDirectVobSubXy->XyGetBool(DirectVobSubXyIntOptions::BOOL_HIDE_TRAY_ICON, &m_fHideTrayIcon);
 	}
 }
 
@@ -636,8 +636,8 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->put_HideSubtitles(m_fHideSubtitles);
 		m_pDirectVobSub->put_OSD(m_fOSD);
 		m_pDirectVobSub->put_PreBuffering(m_fDoPreBuffering);
-        m_pDirectVobSubXy->put_ColorSpace(m_colorSpace);
-        m_pDirectVobSubXy->put_YuvRange(m_yuvRange);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_COLOR_SPACE, m_colorSpace);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_YUV_RANGE, m_yuvRange);
 		m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
 		m_pDirectVobSub->put_SaveFullPath(m_fSaveFullPath);
 	}
@@ -647,8 +647,8 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->get_HideSubtitles(&m_fHideSubtitles);
 		m_pDirectVobSub->get_OSD(&m_fOSD);
 		m_pDirectVobSub->get_PreBuffering(&m_fDoPreBuffering);        
-        m_pDirectVobSubXy->get_ColorSpace(&m_colorSpace);
-        m_pDirectVobSubXy->get_YuvRange(&m_yuvRange);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_COLOR_SPACE, &m_colorSpace);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_YUV_RANGE, &m_yuvRange);
 		m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
 		m_pDirectVobSub->get_SaveFullPath(&m_fSaveFullPath);
 	}
@@ -851,8 +851,10 @@ bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                     {
                         AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-                        IDirectVobSubXy::CachesInfo caches_info;
-                        m_pDirectVobSubXy->get_CachesInfo(&caches_info);
+                        DirectVobSubXyIntOptions::CachesInfo *caches_info = NULL;
+                        int tmp;
+                        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyIntOptions::BIN_CACHES_INFO, reinterpret_cast<LPVOID*>(&caches_info), &tmp);
+                        ASSERT(caches_info);
                         CString msg;
                         msg.Format(
                             _T("Cache :stored_num/hit_count/query_count\n")\
@@ -870,17 +872,17 @@ bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                             _T("  relay key:%ld/%ld/%ld\n")\
                             _T("  clipper  :%ld/%ld/%ld\n")\
                             ,
-                            caches_info.text_info_cache_cur_item_num, caches_info.text_info_cache_hit_count, caches_info.text_info_cache_query_count,
-                            caches_info.word_info_cache_cur_item_num, caches_info.word_info_cache_hit_count, caches_info.word_info_cache_query_count,
-                            caches_info.path_cache_cur_item_num,     caches_info.path_cache_hit_count,     caches_info.path_cache_query_count,
-                            caches_info.scanline_cache2_cur_item_num, caches_info.scanline_cache2_hit_count, caches_info.scanline_cache2_query_count,
-                            caches_info.non_blur_cache_cur_item_num, caches_info.non_blur_cache_hit_count, caches_info.non_blur_cache_query_count,
-                            caches_info.overlay_cache_cur_item_num,  caches_info.overlay_cache_hit_count,  caches_info.overlay_cache_query_count,
-                            caches_info.interpolate_cache_cur_item_num, caches_info.interpolate_cache_hit_count, caches_info.interpolate_cache_query_count,
-                            caches_info.bitmap_cache_cur_item_num, caches_info.bitmap_cache_hit_count, caches_info.bitmap_cache_query_count,
-                            caches_info.scanline_cache_cur_item_num, caches_info.scanline_cache_hit_count, caches_info.scanline_cache_query_count,
-                            caches_info.overlay_key_cache_cur_item_num, caches_info.overlay_key_cache_hit_count, caches_info.overlay_key_cache_query_count,
-                            caches_info.clipper_cache_cur_item_num, caches_info.clipper_cache_hit_count, caches_info.clipper_cache_query_count
+                            caches_info->text_info_cache_cur_item_num, caches_info->text_info_cache_hit_count, caches_info->text_info_cache_query_count,
+                            caches_info->word_info_cache_cur_item_num, caches_info->word_info_cache_hit_count, caches_info->word_info_cache_query_count,
+                            caches_info->path_cache_cur_item_num,     caches_info->path_cache_hit_count,     caches_info->path_cache_query_count,
+                            caches_info->scanline_cache2_cur_item_num, caches_info->scanline_cache2_hit_count, caches_info->scanline_cache2_query_count,
+                            caches_info->non_blur_cache_cur_item_num, caches_info->non_blur_cache_hit_count, caches_info->non_blur_cache_query_count,
+                            caches_info->overlay_cache_cur_item_num,  caches_info->overlay_cache_hit_count,  caches_info->overlay_cache_query_count,
+                            caches_info->interpolate_cache_cur_item_num, caches_info->interpolate_cache_hit_count, caches_info->interpolate_cache_query_count,
+                            caches_info->bitmap_cache_cur_item_num, caches_info->bitmap_cache_hit_count, caches_info->bitmap_cache_query_count,
+                            caches_info->scanline_cache_cur_item_num, caches_info->scanline_cache_hit_count, caches_info->scanline_cache_query_count,
+                            caches_info->overlay_key_cache_cur_item_num, caches_info->overlay_key_cache_hit_count, caches_info->overlay_key_cache_query_count,
+                            caches_info->clipper_cache_cur_item_num, caches_info->clipper_cache_hit_count, caches_info->clipper_cache_query_count
                             );
                         MessageBox(
                             m_hwnd,
@@ -888,6 +890,7 @@ bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                             _T("Caches Info"),
                             MB_OK | MB_ICONINFORMATION | MB_APPLMODAL
                             );
+                        delete []caches_info;
                         return(true);
                     }
                 }
@@ -903,19 +906,19 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
 {
     if(fSave)
     {
-        m_pDirectVobSubXy->put_OverlayCacheMaxItemNum(m_overlay_cache_max_item_num);
-        m_pDirectVobSubXy->put_OverlayNoBlurCacheMaxItemNum(m_overlay_no_blur_cache_max_item_num);
-        m_pDirectVobSubXy->put_ScanLineDataCacheMaxItemNum(m_scan_line_data_cache_max_item_num);
-        m_pDirectVobSubXy->put_PathDataCacheMaxItemNum(m_path_cache_max_item_num);
-        m_pDirectVobSubXy->put_SubpixelPositionLevel(m_subpixel_pos_level);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, m_overlay_cache_max_item_num);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, m_overlay_no_blur_cache_max_item_num);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, m_scan_line_data_cache_max_item_num);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, m_path_cache_max_item_num);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_SUBPIXEL_POS_LEVEL, m_subpixel_pos_level);
     }
     else
     {
-        m_pDirectVobSubXy->get_OverlayCacheMaxItemNum(&m_overlay_cache_max_item_num);
-        m_pDirectVobSubXy->get_OverlayNoBlurCacheMaxItemNum(&m_overlay_no_blur_cache_max_item_num);
-        m_pDirectVobSubXy->get_ScanLineDataCacheMaxItemNum(&m_scan_line_data_cache_max_item_num);
-        m_pDirectVobSubXy->get_PathDataCacheMaxItemNum(&m_path_cache_max_item_num);
-        m_pDirectVobSubXy->get_SubpixelPositionLevel(&m_subpixel_pos_level);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, &m_overlay_cache_max_item_num);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, &m_overlay_no_blur_cache_max_item_num);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, &m_scan_line_data_cache_max_item_num);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, &m_path_cache_max_item_num);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_SUBPIXEL_POS_LEVEL, &m_subpixel_pos_level);
     }
 }
 
@@ -1069,8 +1072,10 @@ void CDVSZoomPPage::UpdateObjectData(bool fSave)
 
 /* CDVSColorPPage */
 
-CDVSColorPPage::CDVSColorPPage(LPUNKNOWN pUnk, HRESULT* phr) :
-    CDVSBasePPage(NAME("DirectVobSub Color Property Page"), pUnk, IDD_DVSCOLORPAGE, IDD_DVSCOLORPAGE)
+CDVSColorPPage::CDVSColorPPage(LPUNKNOWN pUnk, HRESULT* phr) 
+    : CDVSBasePPage(NAME("DirectVobSub Color Property Page"), pUnk, IDD_DVSCOLORPAGE, IDD_DVSCOLORPAGE)
+    , m_outputColorSpace(NULL)
+    , m_inputColorSpace(NULL)
 {
 	BindControl(IDC_OUTPUT_FORMAT_LIST, m_outputFmtList);
 	BindControl(IDC_INPUT_FORMAT_LIST, m_inputFmtList);
@@ -1163,15 +1168,17 @@ void CDVSColorPPage::UpdateObjectData(bool fSave)
 {
 	if(fSave)
 	{
-        m_pDirectVobSubXy->put_FollowUpstreamPreferredOrder(m_fFollowUpstream);
-        m_pDirectVobSubXy->put_OutputColorFormat(m_outputColorSpace, m_selectedOutputColorSpace, m_outputColorSpaceCount);
-        m_pDirectVobSubXy->put_InputColorFormat(m_inputColorSpace, m_selectedInputColorSpace, m_inputColorSpaceCount);
+        m_pDirectVobSubXy->XySetBool(DirectVobSubXyIntOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER, m_fFollowUpstream);
+        m_pDirectVobSubXy->XySetBin(DirectVobSubXyIntOptions::BIN_OUTPUT_COLOR_FORMAT, m_outputColorSpace, m_outputColorSpaceCount);
+        m_pDirectVobSubXy->XySetBin(DirectVobSubXyIntOptions::BIN_INPUT_COLOR_FORMAT, m_inputColorSpace, m_inputColorSpaceCount);
 	}
 	else
-	{        
-        m_pDirectVobSubXy->get_FollowUpstreamPreferredOrder(&m_fFollowUpstream);
-        m_pDirectVobSubXy->get_OutputColorFormat(m_outputColorSpace, m_selectedOutputColorSpace, &m_outputColorSpaceCount);
-        m_pDirectVobSubXy->get_InputColorFormat(m_inputColorSpace, m_selectedInputColorSpace, &m_inputColorSpaceCount);
+	{
+        delete []m_outputColorSpace; m_outputColorSpace=NULL;
+        delete []m_inputColorSpace;  m_inputColorSpace=NULL;
+        m_pDirectVobSubXy->XyGetBool(DirectVobSubXyIntOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER, &m_fFollowUpstream);
+        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyIntOptions::BIN_OUTPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&m_outputColorSpace), &m_outputColorSpaceCount);
+        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyIntOptions::BIN_INPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&m_inputColorSpace), &m_inputColorSpaceCount);
 	}
 }
 
@@ -1183,8 +1190,8 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
 		{
             for(int i = 0; i < m_outputColorSpaceCount; i++)
             {
-                m_outputColorSpace[i] = static_cast<ColorSpaceId>(m_outputFmtList.GetItemData(i));
-                m_selectedOutputColorSpace[i] = static_cast<bool>(m_outputFmtList.GetCheck(i));                
+                m_outputColorSpace[i].color_space = static_cast<ColorSpaceId>(m_outputFmtList.GetItemData(i));
+                m_outputColorSpace[i].selected = static_cast<bool>(m_outputFmtList.GetCheck(i));                
             }
 		}
 		else ASSERT(0);
@@ -1192,8 +1199,8 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
         {
             for(int i = 0; i < m_inputColorSpaceCount; i++)
             {
-                m_inputColorSpace[i] = static_cast<ColorSpaceId>(m_inputFmtList.GetItemData(i));
-                m_selectedInputColorSpace[i] = static_cast<bool>(m_inputFmtList.GetCheck(i));                
+                m_inputColorSpace[i].color_space = static_cast<ColorSpaceId>(m_inputFmtList.GetItemData(i));
+                m_inputColorSpace[i].selected = static_cast<bool>(m_inputFmtList.GetCheck(i));                
             }
         }
         else ASSERT(0);
@@ -1213,9 +1220,9 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
         m_outputFmtList.InsertColumn(0, _T("output"), LVCFMT_LEFT, 110);
         for(int i = 0; i < static_cast<int>(m_outputColorSpaceCount); i++)
         {
-            m_outputFmtList.InsertItem(i, GetColorSpaceName(m_outputColorSpace[i],OUTPUT_COLOR_SPACE));
-            m_outputFmtList.SetItemData(i, m_outputColorSpace[i]);
-            m_outputFmtList.SetCheck(i, static_cast<BOOL>(m_selectedOutputColorSpace[i]));
+            m_outputFmtList.InsertItem(i, GetColorSpaceName(m_outputColorSpace[i].color_space,OUTPUT_COLOR_SPACE));
+            m_outputFmtList.SetItemData(i, m_outputColorSpace[i].color_space);
+            m_outputFmtList.SetCheck(i, static_cast<BOOL>(m_outputColorSpace[i].selected));
         }
 
         m_inputFmtList.ShowScrollBar(SB_HORZ, FALSE);
@@ -1225,11 +1232,17 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
         m_inputFmtList.InsertColumn(0, _T("input"), LVCFMT_LEFT, 150);		
         for(int i = 0; i < static_cast<int>(m_inputColorSpaceCount); i++)
         {
-            m_inputFmtList.InsertItem(i, GetColorSpaceName(m_inputColorSpace[i],INPUT_COLOR_SPACE));
-            m_inputFmtList.SetItemData(i, m_inputColorSpace[i]);
-            m_inputFmtList.SetCheck(i, static_cast<BOOL>(m_selectedInputColorSpace[i]));
+            m_inputFmtList.InsertItem(i, GetColorSpaceName(m_inputColorSpace[i].color_space,INPUT_COLOR_SPACE));
+            m_inputFmtList.SetItemData(i, m_inputColorSpace[i].color_space);
+            m_inputFmtList.SetCheck(i, static_cast<BOOL>(m_inputColorSpace[i].selected));
         }
 	}
+}
+
+CDVSColorPPage::~CDVSColorPPage()
+{
+    delete []m_outputColorSpace;
+    delete []m_inputColorSpace;
 }
 
 /* CDVSPathsPPage */

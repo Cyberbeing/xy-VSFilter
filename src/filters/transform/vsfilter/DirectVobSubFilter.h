@@ -96,6 +96,10 @@ public:
     void GetInputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
     void GetOutputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
 
+    // IDirectVobSubXy
+    STDMETHODIMP XySetBool     (int field, bool      value);
+    STDMETHODIMP XySetInt      (int field, int       value);
+
     // IDirectVobSub
     STDMETHODIMP put_FileName(WCHAR* fn);
 	STDMETHODIMP get_LanguageCount(int* nLangs);
@@ -103,24 +107,14 @@ public:
 	STDMETHODIMP put_SelectedLanguage(int iSelected);
     STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
 	STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
-    STDMETHODIMP put_ColorSpace(int colorSpace);
-    STDMETHODIMP put_YuvRange(int yuvRange);
+
     STDMETHODIMP put_Placement(bool fOverridePlacement, int xperc, int yperc);
     STDMETHODIMP put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fPolygonize);
     STDMETHODIMP put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer);
     STDMETHODIMP put_SubtitleTiming(int delay, int speedmul, int speeddiv);
 
-    STDMETHODIMP put_OverlayCacheMaxItemNum(int overlay_cache_max_item_num);
-    STDMETHODIMP put_ScanLineDataCacheMaxItemNum(int scan_line_data_cache_max_item_num);
-    STDMETHODIMP put_PathDataCacheMaxItemNum(int path_data_cache_max_item_num);
-    STDMETHODIMP put_OverlayNoBlurCacheMaxItemNum(int overlay_no_blur_cache_max_item_num);
-
     STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
-
-    STDMETHODIMP put_SubpixelPositionLevel(int subpixel_pos_level);
-
-    STDMETHODIMP put_FollowUpstreamPreferredOrder(bool fFollowUpstreamPreferredOrder);
-
+    
     STDMETHODIMP get_MediaFPS(bool* fEnabled, double* fps);
     STDMETHODIMP put_MediaFPS(bool fEnabled, double fps);
     STDMETHODIMP get_ZoomRect(NORMALIZEDRECT* rect);

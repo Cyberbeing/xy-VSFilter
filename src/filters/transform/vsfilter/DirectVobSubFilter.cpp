@@ -52,6 +52,8 @@ bool g_RegOK = true;//false; // doesn't work with the dvd graph builder
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #endif
 
+using namespace DirectVobSubXyIntOptions;
+
 ////////////////////////////////////////////////////////////////////////////
 //
 // Constructor
@@ -120,7 +122,7 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 
 	memset(&m_CurrentVIH2, 0, sizeof(VIDEOINFOHEADER2));
 
-    m_donot_follow_upstream_preferred_order = !m_fFollowUpstreamPreferredOrder;
+    m_donot_follow_upstream_preferred_order = !m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER];
 
 	m_time_alphablt = m_time_rasterization = 0;
 
@@ -610,7 +612,7 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
 	}
     if (!reconnected && m_pOutput->IsConnected())
     {
-        if(!m_hSystrayThread && !m_fHideTrayIcon)
+        if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
         {
             m_tbid.graph = m_pGraph;
             m_tbid.dvs = static_cast<IDirectVobSub*>(this);
@@ -696,11 +698,11 @@ void CDirectVobSubFilter::InitSubPicQueue()
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
 
-    CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
-    CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
-    CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
-    CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_overlay_cache_max_item_num);
-    SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_subpixel_pos_level) );
+    CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
+    CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]);
+    CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM]);
+    CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM]);
+    SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]) );
 
 	m_simple_provider = NULL;
 
@@ -1203,32 +1205,6 @@ STDMETHODIMP CDirectVobSubFilter::put_PreBuffering(bool fDoPreBuffering)
 	return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::put_ColorSpace(int colorSpace)
-{
-    CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::put_ColorSpace(colorSpace);
-
-    if(hr == NOERROR)
-    {
-        SetYuvMatrix();
-    }
-
-    return hr;
-}
-
-STDMETHODIMP CDirectVobSubFilter::put_YuvRange( int yuvRange )
-{
-    CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::put_YuvRange(yuvRange);
-
-    if(hr == NOERROR)
-    {
-        SetYuvMatrix();
-    }
-
-    return hr;
-}
-
 STDMETHODIMP CDirectVobSubFilter::put_Placement(bool fOverridePlacement, int xperc, int yperc)
 {
 	DbgLog((LOG_TRACE, 3, "%s(%d) %s", __FILE__, __LINE__, __FUNCTION__));
@@ -1282,58 +1258,6 @@ STDMETHODIMP CDirectVobSubFilter::put_SubtitleTiming(int delay, int speedmul, in
 	return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::put_OverlayCacheMaxItemNum( int overlay_cache_max_item_num )
-{
-    CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::put_OverlayCacheMaxItemNum(overlay_cache_max_item_num);
-
-    if(hr == NOERROR)
-    {
-        CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_overlay_cache_max_item_num);
-    }
-
-    return hr;
-}
-
-STDMETHODIMP CDirectVobSubFilter::put_ScanLineDataCacheMaxItemNum( int scan_line_data_cache_max_item_num )
-{
-    CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::put_ScanLineDataCacheMaxItemNum(scan_line_data_cache_max_item_num);
-
-    if(hr == NOERROR)
-    {
-        CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
-    }
-
-    return hr;
-}
-
-STDMETHODIMP CDirectVobSubFilter::put_PathDataCacheMaxItemNum(int path_data_cache_max_item_num)
-{
-    CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::put_PathDataCacheMaxItemNum(path_data_cache_max_item_num);
-
-    if(hr == NOERROR)
-    {
-        CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
-    }
-
-    return hr;
-}
-
-STDMETHODIMP CDirectVobSubFilter::put_OverlayNoBlurCacheMaxItemNum(int overlay_no_blur_cache_max_item_num)
-{
-    CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::put_OverlayNoBlurCacheMaxItemNum(overlay_no_blur_cache_max_item_num);
-
-    if(hr == NOERROR)
-    {
-        CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
-    }
-
-    return hr;
-}
-
 STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
 {
     CAutoLock cAutoLock(&m_csQueueLock);
@@ -1378,32 +1302,6 @@ STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
     caches_info->clipper_cache_cur_item_num = CacheManager::GetClipperAlphaMaskMruCache()->GetCurItemNum();
     caches_info->clipper_cache_hit_count    = CacheManager::GetClipperAlphaMaskMruCache()->GetCacheHitCount();
     caches_info->clipper_cache_query_count  = CacheManager::GetClipperAlphaMaskMruCache()->GetQueryCount();
-
-    return hr;
-}
-
-STDMETHODIMP CDirectVobSubFilter::put_SubpixelPositionLevel(int subpixel_pos_level)
-{
-    CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::put_SubpixelPositionLevel(subpixel_pos_level);
-
-    if(hr == NOERROR)
-    {
-        SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(subpixel_pos_level) );
-    }
-
-    return hr;
-}
-
-STDMETHODIMP CDirectVobSubFilter::put_FollowUpstreamPreferredOrder( bool fFollowUpstreamPreferredOrder )
-{
-    CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::put_FollowUpstreamPreferredOrder(fFollowUpstreamPreferredOrder);
-
-    if(hr == NOERROR)
-    {
-        m_donot_follow_upstream_preferred_order = !m_fFollowUpstreamPreferredOrder;
-    }
 
     return hr;
 }
@@ -2225,17 +2123,16 @@ DWORD CDirectVobSubFilter::ThreadProc()
 
 void CDirectVobSubFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
 {
-    ColorSpaceId colorspace[MAX_COLOR_SPACE_NUM];
-    bool selected[MAX_COLOR_SPACE_NUM];
-    UINT tempCount;
-    if( get_InputColorFormat(colorspace, selected, &tempCount)==S_OK )
+    ColorSpaceOpt *color_space=NULL;
+    int tempCount = 0;
+    if( XyGetBin(BIN_INPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&color_space), &tempCount)==S_OK )
     {
         *count = 0;
         for (int i=0;i<tempCount;i++)
         {
-            if(selected[i])
+            if(color_space[i].selected)
             {
-                preferredOrder[*count] = colorspace[i];
+                preferredOrder[*count] = color_space[i].color_space;
                 (*count)++;
             }
         }
@@ -2244,21 +2141,21 @@ void CDirectVobSubFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UIN
     {
         CBaseVideoFilter::GetInputColorspaces(preferredOrder, count);
     }
+    delete[]color_space;
 }
 
 void CDirectVobSubFilter::GetOutputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
 {
-    ColorSpaceId colorspace[MAX_COLOR_SPACE_NUM];
-    bool selected[MAX_COLOR_SPACE_NUM];
-    UINT tempCount;
-    if( get_OutputColorFormat(colorspace, selected, &tempCount)==S_OK )
+    ColorSpaceOpt *color_space=NULL;
+    int tempCount = 0;
+    if( XyGetBin(BIN_OUTPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&color_space), &tempCount)==S_OK )
     {
         *count = 0;
         for (int i=0;i<tempCount;i++)
         {
-            if(selected[i])
+            if(color_space[i].selected)
             {
-                preferredOrder[*count] = colorspace[i];
+                preferredOrder[*count] = color_space[i].color_space;
                 (*count)++;
             }
         }
@@ -2267,6 +2164,7 @@ void CDirectVobSubFilter::GetOutputColorspaces( ColorSpaceId *preferredOrder, UI
     {
         CBaseVideoFilter::GetInputColorspaces(preferredOrder, count);
     }
+    delete []color_space;
 }
 
 HRESULT CDirectVobSubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
@@ -2305,7 +2203,7 @@ void CDirectVobSubFilter::SetYuvMatrix()
     ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
     ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
 
-    if ( m_colorSpace==CDirectVobSub::YuvMatrix_AUTO )
+    if ( m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::YuvMatrix_AUTO )
     {
         switch(m_script_selected_yuv)
         {
@@ -2323,7 +2221,7 @@ void CDirectVobSubFilter::SetYuvMatrix()
     }
     else
     {
-        switch(m_colorSpace)
+        switch(m_xy_int_opt[INT_COLOR_SPACE])
         {
         case CDirectVobSub::BT_601:
             yuv_matrix = ColorConvTable::BT601;
@@ -2338,7 +2236,7 @@ void CDirectVobSubFilter::SetYuvMatrix()
         }
     }
 
-    if( m_yuvRange==CDirectVobSub::YuvRange_Auto )
+    if( m_xy_int_opt[INT_YUV_RANGE]==CDirectVobSub::YuvRange_Auto )
     {
         switch(m_script_selected_range)
         {
@@ -2356,7 +2254,7 @@ void CDirectVobSubFilter::SetYuvMatrix()
     }
     else
     {
-        switch(m_yuvRange)
+        switch(m_xy_int_opt[INT_YUV_RANGE])
         {
         case CDirectVobSub::YuvRange_TV:
             yuv_range = ColorConvTable::RANGE_TV;
@@ -2371,4 +2269,63 @@ void CDirectVobSubFilter::SetYuvMatrix()
     }
 
     ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
+}
+
+// IDirectVobSubXy
+
+STDMETHODIMP CDirectVobSubFilter::XySetBool( int field, bool value )
+{
+    CAutoLock cAutolock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::XySetBool(field, value);
+    if(hr != NOERROR)
+    {
+        return hr;
+    }
+    switch(field)
+    {
+    case DirectVobSubXyIntOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER:
+        m_donot_follow_upstream_preferred_order = !m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER];
+        break;
+    default:
+        hr = E_NOTIMPL;
+        break;
+    }
+    return hr;
+}
+
+STDMETHODIMP CDirectVobSubFilter::XySetInt( int field, int value )
+{
+    CAutoLock cAutolock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::XySetInt(field, value);
+    if(hr != NOERROR)
+    {
+        return hr;
+    }
+    switch(field)
+    {
+    case DirectVobSubXyIntOptions::INT_COLOR_SPACE:
+    case DirectVobSubXyIntOptions::INT_YUV_RANGE:
+        SetYuvMatrix();
+        break;
+    case DirectVobSubXyIntOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM:
+        CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case DirectVobSubXyIntOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM:
+        CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case DirectVobSubXyIntOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM:
+        CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case DirectVobSubXyIntOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM:
+        CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case DirectVobSubXyIntOptions::INT_SUBPIXEL_POS_LEVEL:
+        SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[field]) );
+        break;
+    default:
+        hr = E_NOTIMPL;
+        break;
+    }
+    
+    return hr;
 }

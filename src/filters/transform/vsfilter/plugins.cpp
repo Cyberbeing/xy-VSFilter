@@ -33,6 +33,8 @@
 #include "DirectVobSub.h"
 #include "vfr.h"
 
+using namespace DirectVobSubXyIntOptions;
+
 //
 // Generic interface
 //
@@ -60,11 +62,11 @@ public:
     CFilter() : CUnknown(NAME("CFilter"), NULL), m_fps(-1), m_SubPicProviderId(0), m_fLazyInit(false)
     {
         //fix me: should not do init here
-        CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_path_data_cache_max_item_num);
-        CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_scan_line_data_cache_max_item_num);
-        CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_overlay_no_blur_cache_max_item_num);
-        CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_overlay_cache_max_item_num);
-        SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_subpixel_pos_level) );
+        CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
+        CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]);
+        CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM]);
+        CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM]);
+        SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]) );
         
         m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
         m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
@@ -93,7 +95,7 @@ public:
         ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
         ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
 
-        if ( m_colorSpace==CDirectVobSub::YuvMatrix_AUTO )
+        if ( m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::YuvMatrix_AUTO )
         {
             switch(m_script_selected_yuv)
             {
@@ -111,7 +113,7 @@ public:
         }
         else
         {
-            switch(m_colorSpace)
+            switch(m_xy_int_opt[INT_COLOR_SPACE])
             {
             case CDirectVobSub::BT_601:
                 yuv_matrix = ColorConvTable::BT601;
@@ -125,7 +127,7 @@ public:
             }
         }
 
-        if( m_yuvRange==CDirectVobSub::YuvRange_Auto )
+        if( m_xy_int_opt[INT_YUV_RANGE]==CDirectVobSub::YuvRange_Auto )
         {
             switch(m_script_selected_range)
             {
@@ -143,7 +145,7 @@ public:
         }
         else
         {
-            switch(m_yuvRange)
+            switch(m_xy_int_opt[INT_YUV_RANGE])
             {
             case CDirectVobSub::YuvRange_TV:
                 yuv_range = ColorConvTable::RANGE_TV;

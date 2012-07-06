@@ -45,6 +45,9 @@ public:
 
     static const int REQUIRED_CONFIG_VERSION = 39;
     static const int CUR_SUPPORTED_FILTER_VERSION = 39;
+
+    typedef DirectVobSubXyIntOptions::CachesInfo CachesInfo;
+    typedef DirectVobSubXyIntOptions::ColorSpaceOpt ColorSpaceOpt;
 protected:
 	CDirectVobSub();
 	virtual ~CDirectVobSub();
@@ -59,7 +62,6 @@ protected:
 	bool m_fHideSubtitles;
 	bool m_fDoPreBuffering;
 
-    int m_colorSpace, m_yuvRange;
     int m_bt601Width, m_bt601Height;//for AUTO_GUESS
 
 	bool m_fOverridePlacement;
@@ -67,24 +69,10 @@ protected:
 	bool m_fBufferVobSub, m_fOnlyShowForcedVobSubs, m_fPolygonize;
 	CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;
 
-    bool m_fHideTrayIcon;
-
     static int const MAX_COLOR_SPACE = 256;
-    ColorSpaceId m_outputColorSpace[MAX_COLOR_SPACE];
-    bool m_selectedOutputColorSpace[MAX_COLOR_SPACE];
-
-    ColorSpaceId m_inputColorSpace[MAX_COLOR_SPACE];
-    bool m_selectedInputColorSpace[MAX_COLOR_SPACE];
-
-    int m_overlay_cache_max_item_num;
-    int m_scan_line_data_cache_max_item_num;
-    int m_path_data_cache_max_item_num;
-    int m_overlay_no_blur_cache_max_item_num;
-
-    int m_subpixel_pos_level;
-
-    bool m_fFollowUpstreamPreferredOrder;
-
+    ColorSpaceOpt m_outputColorSpace[MAX_COLOR_SPACE];
+    ColorSpaceOpt m_inputColorSpace[MAX_COLOR_SPACE];
+    
 	STSStyle m_defStyle;
 
 	bool m_fAdvancedRenderer;
@@ -103,7 +91,30 @@ protected:
 	CComPtr<ISubClock> m_pSubClock;
 	bool m_fForced;
 
+    int m_xy_int_opt[DirectVobSubXyIntOptions::INT_COUNT];
+    bool m_xy_bool_opt[DirectVobSubXyIntOptions::BOOL_COUNT];
+    ULONGLONG m_xy_ulonglong_opt[DirectVobSubXyIntOptions::ULONGLONG_COUNT];
 public:
+    
+    // IDirectVobSubXy
+
+    STDMETHODIMP XyGetBool     (int field, bool      *value);
+    STDMETHODIMP XyGetInt      (int field, int       *value);
+    STDMETHODIMP XyGetSize     (int field, SIZE      *value);
+    STDMETHODIMP XyGetRect     (int field, RECT      *value);
+    STDMETHODIMP XyGetUlonglong(int field, ULONGLONG *value);
+    STDMETHODIMP XyGetDouble   (int field, double    *value);
+    STDMETHODIMP XyGetString   (int field, LPWSTR    *value, int *chars);
+    STDMETHODIMP XyGetBin      (int field, LPVOID    *value, int *size );
+
+    STDMETHODIMP XySetBool     (int field, bool      value);
+    STDMETHODIMP XySetInt      (int field, int       value);
+    STDMETHODIMP XySetSize     (int field, SIZE      value);
+    STDMETHODIMP XySetRect     (int field, RECT      value);
+    STDMETHODIMP XySetUlonglong(int field, ULONGLONG value);
+    STDMETHODIMP XySetDouble   (int field, double    value);
+    STDMETHODIMP XySetString   (int field, LPWSTR    value, int chars);
+    STDMETHODIMP XySetBin      (int field, LPVOID    value, int size );
 
 	// IDirectVobSub
 
@@ -117,10 +128,8 @@ public:
     STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
     STDMETHODIMP get_PreBuffering(bool* fDoPreBuffering);
     STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
-    STDMETHODIMP get_ColorSpace(int* colorSpace);
-    STDMETHODIMP put_ColorSpace(int colorSpace);
-    STDMETHODIMP get_YuvRange(int* yuvRange);
-    STDMETHODIMP put_YuvRange(int yuvRange);
+
+    
     STDMETHODIMP get_SubPictToBuffer(unsigned int* uSubPictToBuffer)
     {
         return E_NOTIMPL;
@@ -157,36 +166,9 @@ public:
     STDMETHODIMP put_ZoomRect(NORMALIZEDRECT* rect);
 	STDMETHODIMP get_ColorFormat(int* iPosition) {return E_NOTIMPL;}
     STDMETHODIMP put_ColorFormat(int iPosition) {return E_NOTIMPL;}
+
+    STDMETHOD (get_CachesInfo)(CachesInfo* caches_info);
     
-    STDMETHODIMP get_OutputColorFormat(ColorSpaceId* preferredOrder, bool* fSelected, UINT* count);
-    STDMETHODIMP put_OutputColorFormat(const ColorSpaceId* preferredOrder, const bool* fSelected, UINT count);
-
-    STDMETHODIMP get_InputColorFormat(ColorSpaceId* preferredOrder, bool* fSelected, UINT* count);
-    STDMETHODIMP put_InputColorFormat(const ColorSpaceId* preferredOrder, const bool* fSelected, UINT count);
-
-    STDMETHODIMP get_OverlayCacheMaxItemNum(int* overlay_cache_max_item_num);
-    STDMETHODIMP put_OverlayCacheMaxItemNum(int overlay_cache_max_item_num);
-
-    STDMETHODIMP get_ScanLineDataCacheMaxItemNum(int* scan_line_data_cache_max_item_num);
-    STDMETHODIMP put_ScanLineDataCacheMaxItemNum(int scan_line_data_cache_max_item_num);
-
-    STDMETHODIMP get_PathDataCacheMaxItemNum(int* path_data_cache_max_item_num);
-    STDMETHODIMP put_PathDataCacheMaxItemNum(int path_data_cache_max_item_num);
-    
-    STDMETHODIMP get_OverlayNoBlurCacheMaxItemNum(int* overlay_no_blur_cache_max_item_num);
-    STDMETHODIMP put_OverlayNoBlurCacheMaxItemNum(int overlay_no_blur_cache_max_item_num);
-
-    STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
-
-    STDMETHODIMP get_SubpixelPositionLevel(int* subpixel_pos_level);
-    STDMETHODIMP put_SubpixelPositionLevel(int subpixel_pos_level);
-
-    STDMETHODIMP get_FollowUpstreamPreferredOrder(bool *fFollowUpstreamPreferredOrder);
-    STDMETHODIMP put_FollowUpstreamPreferredOrder(bool fFollowUpstreamPreferredOrder);
-
-    STDMETHODIMP get_HideTrayIcon(bool *fHideTrayIcon);
-    STDMETHODIMP put_HideTrayIcon(bool fHideTrayIcon);
-
 	STDMETHODIMP UpdateRegistry();
 
 	STDMETHODIMP HasConfigDialog(int iSelected);
