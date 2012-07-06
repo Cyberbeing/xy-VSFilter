@@ -159,7 +159,8 @@ public:
 [uuid("69CE757B-E8C0-4B0A-9EA0-CEA284096F98")]
 class CDVSMorePPage : public CDVSBasePPage
 {
-    int m_overlay_cache_max_item_num, m_overlay_no_blur_cache_max_item_num, m_path_cache_max_item_num, m_scan_line_data_cache_max_item_num, m_subpixel_pos_level;
+    int m_overlay_cache_max_item_num, m_overlay_no_blur_cache_max_item_num, m_path_cache_max_item_num, 
+        m_scan_line_data_cache_max_item_num, m_subpixel_pos_level;
 
     CSpinButtonCtrl m_path_cache, m_scanline_cache, m_overlay_no_blur_cache, m_overlay_cache;
 
@@ -205,13 +206,13 @@ class CDVSColorPPage : public CDVSBasePPage
     CButton m_followUpstreamPreferredOrder, m_btnColorUp, m_btnColorDown;
     
     static const int MAX_COLOR_SPACE = 256;
-    ColorSpaceId m_outputColorSpace[MAX_COLOR_SPACE];
-    bool m_selectedOutputColorSpace[MAX_COLOR_SPACE];
-    UINT m_outputColorSpaceCount;
 
-    ColorSpaceId m_inputColorSpace[MAX_COLOR_SPACE];
-    bool m_selectedInputColorSpace[MAX_COLOR_SPACE];
-    UINT m_inputColorSpaceCount;
+    typedef DirectVobSubXyIntOptions::ColorSpaceOpt ColorSpaceOpt;
+    ColorSpaceOpt *m_outputColorSpace;
+    int m_outputColorSpaceCount;
+
+    ColorSpaceOpt *m_inputColorSpace;
+    int m_inputColorSpaceCount;
 
     bool m_fFollowUpstream;
 protected:
@@ -221,6 +222,7 @@ protected:
 
 public:
     CDVSColorPPage(LPUNKNOWN lpunk, HRESULT* phr);
+    ~CDVSColorPPage();
 };
 
 [uuid("CE77C59C-CFD2-429f-868C-8B04D23F94CA")]
