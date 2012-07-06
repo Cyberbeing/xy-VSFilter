@@ -419,7 +419,6 @@ public:
     typedef ::boost::shared_ptr<const AssTagList> SharedPtrConstAssTagList;
     struct AssTag
     {
-        CStringW cmd;
         AssCmdType cmdType;
         CAtlArray<CStringW> strParams;
         AssTagList embeded;
@@ -447,6 +446,7 @@ private:
     void ParseEffect(CSubtitle* sub, const CString& str);
     void ParseString(CSubtitle* sub, CStringW str, const FwSTSStyle& style);
     void ParsePolygon(CSubtitle* sub, const CStringW& str, const FwSTSStyle& style);
+
     static bool ParseSSATag(AssTagList *assTags, const CStringW& str);
     bool ParseSSATag(CSubtitle* sub, const AssTagList& assTags, STSStyle& style, const STSStyle& org, bool fAnimate = false);
     bool ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate = false);
