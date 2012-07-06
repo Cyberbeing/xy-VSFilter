@@ -2429,7 +2429,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
             }
         case CMD_be:
             {
-                int n = (int)(CalcAnimation(wcstol(p, NULL, 10), style.fBlur, fAnimate)+0.5);
+                int n = (int)(CalcAnimation(wcstod(p, NULL), style.fBlur, fAnimate)+0.5);
                 style.fBlur = !p.IsEmpty()
                               ? n
                               : org.fBlur;
@@ -2461,10 +2461,10 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                     CRect r;
                     sub->m_clipInverse = invert;
                     r.SetRect(
-                        wcstol(params[0], NULL, 10),
-                        wcstol(params[1], NULL, 10),
-                        wcstol(params[2], NULL, 10),
-                        wcstol(params[3], NULL, 10));
+                        wcstod(params[0], NULL)+0.5,
+                        wcstod(params[1], NULL)+0.5,
+                        wcstod(params[2], NULL)+0.5,
+                        wcstod(params[3], NULL)+0.5);
                     CPoint o(0, 0);
                     if(sub->m_relativeTo == 1) // TODO: this should also apply to the other two clippings above
                     {
@@ -2572,7 +2572,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
             }
         case CMD_fscx:
             {
-                double n = CalcAnimation(wcstol(p, NULL, 10), style.fontScaleX, fAnimate);
+                double n = CalcAnimation(wcstod(p, NULL), style.fontScaleX, fAnimate);
                 style.fontScaleX = !p.IsEmpty()
                                    ? ((n < 0) ? 0 : n)
                                        : org.fontScaleX;
@@ -2580,7 +2580,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
             }
         case CMD_fscy:
             {
-                double n = CalcAnimation(wcstol(p, NULL, 10), style.fontScaleY, fAnimate);
+                double n = CalcAnimation(wcstod(p, NULL), style.fontScaleY, fAnimate);
                 style.fontScaleY = !p.IsEmpty()
                                    ? ((n < 0) ? 0 : n)
                                        : org.fontScaleY;
@@ -2605,12 +2605,12 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 {
                     if(p[0] == L'-' || p[0] == L'+')
                     {
-                        double n = CalcAnimation(style.fontSize + style.fontSize*wcstol(p, NULL, 10)/10, style.fontSize, fAnimate);
+                        double n = CalcAnimation(style.fontSize + style.fontSize*wcstod(p, NULL)/10, style.fontSize, fAnimate);
                         style.fontSize = (n > 0) ? n : org.fontSize;
                     }
                     else
                     {
-                        double n = CalcAnimation(wcstol(p, NULL, 10), style.fontSize, fAnimate);
+                        double n = CalcAnimation(wcstod(p, NULL), style.fontSize, fAnimate);
                         style.fontSize = (n > 0) ? n : org.fontSize;
                     }
                 }
@@ -2631,7 +2631,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
         case CMD_kt:
             {
                 m_kstart = !p.IsEmpty()
-                           ? wcstol(p, NULL, 10)*10
+                           ? wcstod(p, NULL)*10
                            : 0;
                 m_kend = m_kstart;
                 break;
@@ -2643,7 +2643,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 m_ktype = 1;
                 m_kstart = m_kend;
                 m_kend += !p.IsEmpty()
-                          ? wcstol(p, NULL, 10)*10
+                          ? wcstod(p, NULL)*10
                           : 1000;
                 sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
@@ -2653,7 +2653,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 m_ktype = 2;
                 m_kstart = m_kend;
                 m_kend += !p.IsEmpty()
-                          ? wcstol(p, NULL, 10)*10
+                          ? wcstod(p, NULL)*10
                           : 1000;
                 sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
@@ -2663,7 +2663,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 m_ktype = 0;
                 m_kstart = m_kend;
                 m_kend += !p.IsEmpty()
-                          ? wcstol(p, NULL, 10)*10
+                          ? wcstod(p, NULL)*10
                           : 1000;
                 sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
