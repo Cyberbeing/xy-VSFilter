@@ -80,6 +80,7 @@ CSRIAPI csri_inst *csri_open_mem(csri_rend *renderer, const void *data, size_t l
 	// This is actually less effecient than opening a file, since this first writes the memory data to a temp file,
 	// then opens that file and parses from that.
 	csri_inst *inst = new csri_inst();
+
 	inst->cs = new CCritSec();
 	inst->rts = new CRenderedTextSubtitle(inst->cs);
 	if (inst->rts->Open((BYTE*)data, (int)length, DEFAULT_CHARSET, _T("CSRI memory subtitles"))) {
@@ -143,32 +144,12 @@ CSRIAPI void csri_render(csri_inst *inst, struct csri_frame *frame, double time)
 			spd.pitch = frame->strides[0];
 			break;
 
-		case CSRI_F_BGR:
-			spd.type = MSP_RGB24;
-			spd.bpp = 24;
-			spd.bits = frame->planes[0];
-			spd.pitch = frame->strides[0];
-			break;
-
-		case CSRI_F_YUY2:
-			spd.type = MSP_YUY2;
-			spd.bpp = 16;
-			spd.bits = frame->planes[0];
-			spd.pitch = frame->strides[0];
-			break;
-
-		case CSRI_F_YV12:
-			spd.type = MSP_YV12;
-			spd.bpp = 12;
-			spd.bits = frame->planes[0];
-			spd.bitsU = frame->planes[1];
-			spd.bitsV = frame->planes[2];
-			spd.pitch = frame->strides[0];
-			spd.pitchUV = frame->strides[1];
-			break;
-
 		default:
-			// eh?
+            ASSERT(0);
+            CString msg;
+            msg.Format(_T("Anything other then RGB32 is NOT supported!"));
+            MessageBox(NULL, msg, _T("Warning"), MB_OKCANCEL|MB_ICONWARNING);
+            int o = 0; o=o/o;
 			return;
 	}
 	spd.vidrect = inst->video_rect;

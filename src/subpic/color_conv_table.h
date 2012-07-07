@@ -24,8 +24,7 @@ struct ColorConvTable
         , RANGE_TV
         , RANGE_PC
     };
-    
-    static void SetDefaultYUVType(YuvMatrixType yuv_type) { SetDefaultConvType(yuv_type, RANGE_TV); }
+
     static void SetDefaultConvType(YuvMatrixType yuv_type, YuvRangeType range);
 
     static YuvMatrixType GetDefaultYUVType();

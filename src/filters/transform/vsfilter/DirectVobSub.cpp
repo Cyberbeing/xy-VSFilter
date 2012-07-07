@@ -75,16 +75,20 @@ CDirectVobSub::CDirectVobSub()
 	m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), 0));
     m_fHideTrayIcon =  !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), 0);
 
-    m_overlay_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), 256);
+    m_overlay_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM)
+        , CacheManager::OVERLAY_CACHE_ITEM_NUM);
     if(m_overlay_cache_max_item_num<0) m_overlay_cache_max_item_num = 0;
 
-    m_overlay_no_blur_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM), 256);
+    m_overlay_no_blur_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM)
+        , CacheManager::OVERLAY_NO_BLUR_CACHE_ITEM_NUM);
     if(m_overlay_no_blur_cache_max_item_num<0) m_overlay_no_blur_cache_max_item_num = 0;
 
-    m_scan_line_data_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM), 512);
+    m_scan_line_data_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM)
+        , CacheManager::SCAN_LINE_DATA_CACHE_ITEM_NUM);
 	if(m_scan_line_data_cache_max_item_num<0) m_scan_line_data_cache_max_item_num = 0;
     
-    m_path_data_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), 512);
+    m_path_data_cache_max_item_num = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM)
+        , CacheManager::PATH_CACHE_ITEM_NUM);
     if(m_path_data_cache_max_item_num<0) m_path_data_cache_max_item_num = 0;
 
     m_subpixel_pos_level = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), SubpixelPositionControler::EIGHT_X_EIGHT);
@@ -101,15 +105,15 @@ CDirectVobSub::CDirectVobSub()
     if(theApp.GetProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_OUTPUT_COLORFORMATS), &pData, &nSize)
         && pData && nSize == 2*GetOutputColorSpaceNumber())
     {
-        for (int i=0;i<nSize/2;i++)
+        for (unsigned i=0;i<nSize/2;i++)
         {
             m_outputColorSpace[i] = static_cast<ColorSpaceId>(pData[2*i]);
-            m_selectedOutputColorSpace[i] = static_cast<bool>(pData[2*i+1]);
+            m_selectedOutputColorSpace[i] = !!pData[2*i+1];
         }        
     }
     else
     {
-        for (int i=0;i<GetOutputColorSpaceNumber();i++)
+        for (unsigned i=0;i<GetOutputColorSpaceNumber();i++)
         {
             m_outputColorSpace[i] = static_cast<ColorSpaceId>(i);
             m_selectedOutputColorSpace[i] = true;
@@ -125,15 +129,15 @@ CDirectVobSub::CDirectVobSub()
     if(theApp.GetProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INPUT_COLORFORMATS), &pData, &nSize)
         && pData && nSize == 2*GetInputColorSpaceNumber())
     {
-        for (int i=0;i<nSize/2;i++)
+        for (unsigned i=0;i<nSize/2;i++)
         {
             m_inputColorSpace[i] = static_cast<ColorSpaceId>(pData[2*i]);
-            m_selectedInputColorSpace[i] = static_cast<bool>(pData[2*i+1]);
+            m_selectedInputColorSpace[i] = !!pData[2*i+1];
         }        
     }
     else
     {
-        for (int i=0;i<GetOutputColorSpaceNumber();i++)
+        for (unsigned i=0;i<GetOutputColorSpaceNumber();i++)
         {
             m_inputColorSpace[i] = static_cast<ColorSpaceId>(i);
             m_selectedInputColorSpace[i] = true;

@@ -47,8 +47,8 @@ public:
 private:
     SubpixelPositionControler()
     {
-        _subpixel_level = NONE;
-        _subpixel_mask = NONE_MASK;    
+        _subpixel_level = EIGHT_X_EIGHT;
+        _subpixel_mask = EIGHT_X_EIGHT_MASK;    
     }
     SUBPIXEL_LEVEL _subpixel_level;
     SUBPIXEL_MASK _subpixel_mask;
