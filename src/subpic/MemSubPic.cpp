@@ -1258,7 +1258,7 @@ HRESULT CMemSubPic::AlphaBltAnv12_P010( const BYTE* src_a, const BYTE* src_y, co
             {
                 if(sa2[0] < 0xff)
                 {
-                    d2[0] = ((d2[0]*sa2[0])>>8) + (s2[0]<<8);
+                    d3[0] = ((d3[0]*sa2[0])>>8) + (s2[0]<<8);
                 }
             }
         }
