@@ -1249,27 +1249,94 @@ HRESULT CMemSubPic::AlphaBltAnv12_P010( const BYTE* src_a, const BYTE* src_y, co
     BYTE* dst_y, BYTE* dst_uv, int dst_pitch, int w, int h )
 {
     const BYTE* sa = src_a;
-    if( ((reinterpret_cast<intptr_t>(src_a) | reinterpret_cast<intptr_t>(src_y) | static_cast<intptr_t>(src_pitch) |
-        reinterpret_cast<intptr_t>(dst_y) | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 )
+    if( (
+         ((reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(src_y))         
+         |(reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(dst_y))
+         | static_cast<intptr_t>(src_pitch)
+         | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 && 
+        w > 32 )
     {
+        int head = (16 - reinterpret_cast<intptr_t>(src_a)&15)&15;
+        int tail = (w - head) & 15;
+
         for(int i=0; i<h; i++, sa += src_pitch, src_y += src_pitch, dst_y += dst_pitch)
         {
             const BYTE* sa2 = sa;
             const BYTE* s2 = src_y;
             const BYTE* s2end_mod16 = s2 + (w&~15);
-            const BYTE* s2end = s2 + w;
             BYTE* d2 = dst_y;
+            WORD* d_w=reinterpret_cast<WORD*>(dst_y);
 
-            for(; s2 < s2end_mod16; s2+=16, sa2+=16, d2+=32)
+            switch( head )//important: it is safe since w > 16 
             {
-                mix_16_y_p010_sse2(d2, s2, sa2);
+            case 15:
+#define _XY_MIX_ONE if(sa2[0] < 0xff) { d_w[0] = ((d_w[0]*sa2[0])>>8) + (s2[0]<<8); } sa2++;d_w++;s2++;
+                _XY_MIX_ONE
+            case 14:
+                _XY_MIX_ONE
+            case 13:
+                _XY_MIX_ONE
+            case 12:
+                _XY_MIX_ONE
+            case 11:
+                _XY_MIX_ONE
+            case 10:
+                _XY_MIX_ONE
+            case 9:
+                _XY_MIX_ONE
+            case 8:
+                _XY_MIX_ONE
+            case 7:
+                _XY_MIX_ONE
+            case 6:
+                _XY_MIX_ONE
+            case 5:
+                _XY_MIX_ONE
+            case 4:
+                _XY_MIX_ONE
+            case 3:
+                _XY_MIX_ONE
+            case 2:
+                _XY_MIX_ONE
+            case 1://fall through on purpose
+                _XY_MIX_ONE
             }
-            for( WORD* d3=reinterpret_cast<WORD*>(d2); s2 < s2end; s2++, sa2++, d3++)
+            for(; s2 < s2end_mod16; s2+=16, sa2+=16, d_w+=16)
             {
-                if(sa2[0] < 0xff)
-                {
-                    d3[0] = ((d3[0]*sa2[0])>>8) + (s2[0]<<8);
-                }
+                mix_16_y_p010_sse2( reinterpret_cast<BYTE*>(d_w), s2, sa2);
+            }
+            switch( tail )//important: it is safe since w > 16 
+            {
+            case 15:
+                _XY_MIX_ONE
+            case 14:
+                _XY_MIX_ONE
+            case 13:
+                _XY_MIX_ONE
+            case 12:
+                _XY_MIX_ONE
+            case 11:
+                _XY_MIX_ONE
+            case 10:
+                _XY_MIX_ONE
+            case 9:
+                _XY_MIX_ONE
+            case 8:
+                _XY_MIX_ONE
+            case 7:
+                _XY_MIX_ONE
+            case 6:
+                _XY_MIX_ONE
+            case 5:
+                _XY_MIX_ONE
+            case 4:
+                _XY_MIX_ONE
+            case 3:
+                _XY_MIX_ONE
+            case 2:
+                _XY_MIX_ONE
+            case 1://fall through on purpose
+                _XY_MIX_ONE
             }
         }
     }
@@ -1280,12 +1347,12 @@ HRESULT CMemSubPic::AlphaBltAnv12_P010( const BYTE* src_a, const BYTE* src_y, co
             const BYTE* sa2 = sa;
             const BYTE* s2 = src_y;
             const BYTE* s2end = s2 + w;
-            WORD* d2 = reinterpret_cast<WORD*>(dst_y);
-            for(; s2 < s2end; s2+=1, sa2+=1, d2+=1)
+            WORD* d_w = reinterpret_cast<WORD*>(dst_y);
+            for(; s2 < s2end; s2+=1, sa2+=1, d_w+=1)
             {
                 if(sa2[0] < 0xff)
                 {                            
-                    d2[0] = ((d2[0]*sa2[0])>>8) + (s2[0]<<8);
+                    d_w[0] = ((d_w[0]*sa2[0])>>8) + (s2[0]<<8);
                 }
             }
         }
