@@ -1165,17 +1165,31 @@ void CMemSubPic::AlphaBltYv12Luma(byte* dst, int dst_pitch,
     int w, int h,
     const byte* sub, const byte* alpha, int sub_pitch)
 {
-    if( ((reinterpret_cast<intptr_t>(alpha) | reinterpret_cast<intptr_t>(sub) | static_cast<intptr_t>(sub_pitch) |
-        reinterpret_cast<intptr_t>(dst) | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 )
+    if( (
+         ((reinterpret_cast<intptr_t>(alpha) ^ reinterpret_cast<intptr_t>(sub))
+         |(reinterpret_cast<intptr_t>(alpha) ^ reinterpret_cast<intptr_t>(dst))
+         | static_cast<intptr_t>(sub_pitch)
+         | static_cast<intptr_t>(dst_pitch) ) & 15 )==0
+        && w > 32)
     {
+        int head = (16 - (reinterpret_cast<intptr_t>(alpha)&15))&15;
+        int tail = (w-head) & 15;
+        int w1 = w - head - tail;
         for(int i=0; i<h; i++, dst += dst_pitch, alpha += sub_pitch, sub += sub_pitch)
         {
             const BYTE* sa = alpha;
             const BYTE* s2 = sub;
-            const BYTE* s2end_mod16 = s2 + (w&~15);
+            const BYTE* s2end_mod16 = s2 + w1;
             const BYTE* s2end = s2 + w;
             BYTE* d2 = dst;
 
+            for( ; (reinterpret_cast<intptr_t>(s2)&15) != 0; s2++, sa++, d2++)
+            {
+                if(sa[0] < 0xff)
+                {                    
+                    d2[0] = ((d2[0]*sa[0])>>8) + s2[0];
+                }
+            }
             for(; s2 < s2end_mod16; s2+=16, sa+=16, d2+=16)
             {
                 pix_alpha_blend_yv12_luma_sse2(d2, sa, s2);                        
@@ -1195,7 +1209,6 @@ void CMemSubPic::AlphaBltYv12Luma(byte* dst, int dst_pitch,
         {
             const BYTE* sa = alpha;
             const BYTE* s2 = sub;
-            const BYTE* s2end_mod16 = s2 + (w&~15);
             const BYTE* s2end = s2 + w;
             BYTE* d2 = dst;
             for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
