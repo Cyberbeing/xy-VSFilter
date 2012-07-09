@@ -1295,13 +1295,24 @@ HRESULT CMemSubPic::AlphaBltAnv12_P010( const BYTE* src_a, const BYTE* src_y, co
     }
     //UV
     int h2 = h/2;
-    BYTE* d = dst_uv;   
-    if( ((reinterpret_cast<intptr_t>(src_a) | reinterpret_cast<intptr_t>(src_uv) | static_cast<intptr_t>(src_pitch) |
-        reinterpret_cast<intptr_t>(dst_uv) | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 )
+    BYTE* d = dst_uv;
+    if( (
+        ((reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(src_uv)) 
+        |(reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(dst_uv))
+        | static_cast<intptr_t>(src_pitch) 
+        | static_cast<intptr_t>(dst_pitch) ) & 15) ==0 &&
+        w > 16 )
     {
+        int head = (16-(reinterpret_cast<intptr_t>(src_a)&15))&15;
+        int tail = (w-head) & 15;
+        int w00 = w - head - tail;
+
+        ASSERT(w>0);//the calls to mix may failed if w==0
         for(int j = 0; j < h2; j++, src_uv += src_pitch, src_a += src_pitch*2, d += dst_pitch)
         {
-            hleft_vmid_mix_uv_p010_sse2(d, w, src_uv, src_a, src_pitch);
+            hleft_vmid_mix_uv_p010_c2(d, head, src_uv, src_a, src_pitch);
+            hleft_vmid_mix_uv_p010_sse2(d+2*head, w00, src_uv+head, src_a+head, src_pitch, head>0 ? -1 : 0);
+            hleft_vmid_mix_uv_p010_c2(d+2*(head+w00), tail, src_uv+head+w00, src_a+head+w00, src_pitch, (w00+head)>0 ? -1 : 0);
         }
     }
     else
