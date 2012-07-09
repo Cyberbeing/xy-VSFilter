@@ -1223,27 +1223,34 @@ void CMemSubPic::AlphaBltYv12Luma(byte* dst, int dst_pitch,
     }
 }
 
-void CMemSubPic::AlphaBltYv12Chroma(byte* dst, int dst_pitch,
+void CMemSubPic::AlphaBltYv12Chroma(byte* dst_uv, int dst_pitch,
     int w, int chroma_h,
-    const byte* sub_chroma, const byte* alpha, int sub_pitch)
+    const byte* src_uv, const byte* src_a, int src_pitch)
 {
-    if( ((reinterpret_cast<intptr_t>(sub_chroma) |
-        //reinterpret_cast<intptr_t>(dst) | 
-        reinterpret_cast<intptr_t>(alpha) | static_cast<intptr_t>(sub_pitch) 
-        //| (static_cast<intptr_t>(dst_pitch)&7) 
-        ) & 15 )==0 )
+    if( (
+        ((reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(src_uv)) 
+        |(reinterpret_cast<intptr_t>(src_a) ^ (2*reinterpret_cast<intptr_t>(dst_uv)))
+        | static_cast<intptr_t>(src_pitch) 
+        | (2*static_cast<intptr_t>(dst_pitch)) ) & 15) ==0 &&
+        w > 16 )
     {
-        int pitch = sub_pitch;
-        for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
+        int head = (16 - (reinterpret_cast<intptr_t>(src_a)&15))&15;
+        int tail = (w-head) & 15;
+        int w00 = w - head - tail;
+
+        int pitch = src_pitch;
+        for(int j = 0; j < chroma_h; j++, src_uv += src_pitch*2, src_a += src_pitch*2, dst_uv += dst_pitch)
         {
-            hleft_vmid_mix_uv_yv12_sse2(dst, w, sub_chroma, alpha, sub_pitch);
+            hleft_vmid_mix_uv_yv12_c2(dst_uv, head, src_uv, src_a, src_pitch);
+            hleft_vmid_mix_uv_yv12_sse2(dst_uv+(head>>1), w00, src_uv+head, src_a+head, src_pitch, head>0 ? -1 : 0);
+            hleft_vmid_mix_uv_yv12_c2(dst_uv+((head+w00)>>1), tail, src_uv+head+w00, src_a+head+w00, src_pitch, (w00+head)>0 ? -1 : 0);
         }
     }
     else//fix me: only a workaround for non-mod-16 size video
     {
-        for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
+        for(int j = 0; j < chroma_h; j++, src_uv += src_pitch*2, src_a += src_pitch*2, dst_uv += dst_pitch)
         {
-            hleft_vmid_mix_uv_yv12_c(dst, w, sub_chroma, alpha, sub_pitch);
+            hleft_vmid_mix_uv_yv12_c(dst_uv, w, src_uv, src_a, src_pitch);
         }
     }
 }
