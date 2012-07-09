@@ -565,11 +565,64 @@ static __forceinline void hleft_vmid_mix_uv_yv12_c(byte* dst, int w, const byte*
     }
 }
 
-static __forceinline void hleft_vmid_mix_uv_yv12_sse2(byte* dst, int w, const byte* src, const byte* am, int src_pitch, int last_src_id=0)
-{    
+//0<=w15<=15 && w15%2==0
+static __forceinline void hleft_vmid_mix_uv_yv12_c2(byte* dst, int w15, const byte* src, const byte* am, int src_pitch, int last_src_id=0)
+{
+    ASSERT(w15>=0 && w15<=15 && (w15&1)==0 );
+
+    int last_alpha = (am[last_src_id]+am[last_src_id+src_pitch]+1)/2;
+    int last_sub = (src[last_src_id]+src[last_src_id+src_pitch]+1)/2;
+    const BYTE* end = src + w15;
+
+    switch(w15)
+    {
+    case 14:
+#define _hleft_vmid_mix_uv_yv12_c2_mix_2 \
+    int ia = (am[0]+am[0+src_pitch]+1)/2;\
+    int tmp1 = (am[1]+am[1+src_pitch]+1)/2;\
+    last_alpha = (last_alpha + tmp1 + 1)/2;\
+    ia = (ia + last_alpha + 1)/2;\
+    last_alpha = tmp1;\
+    \
+    if(ia!=0xff)\
+    {\
+        tmp1 = (src[0]+src[0+src_pitch]+1)/2;\
+        int tmp2 = (src[1]+src[1+src_pitch]+1)/2;\
+        last_sub = (last_sub+tmp2+1)/2;\
+        tmp1 = (tmp1+last_sub+1)/2;\
+        last_sub = tmp2;\
+        \
+        *dst= (((*dst)*ia)>>8) + tmp1;\
+    }\
+    else\
+    {\
+        last_sub = (src[1]+src[1+src_pitch]+1)/2;\
+    }src += 2, am += 2, dst++
+
+        { _hleft_vmid_mix_uv_yv12_c2_mix_2; }
+    case 12:
+        { _hleft_vmid_mix_uv_yv12_c2_mix_2; }
+    case 10:
+        { _hleft_vmid_mix_uv_yv12_c2_mix_2; }
+    case 8:
+        { _hleft_vmid_mix_uv_yv12_c2_mix_2 ; }
+    case 6:
+        { _hleft_vmid_mix_uv_yv12_c2_mix_2 ; }
+    case 4:
+        { _hleft_vmid_mix_uv_yv12_c2_mix_2; }
+    case 2:
+        { _hleft_vmid_mix_uv_yv12_c2_mix_2; }
+    }
+}
+
+// am[last_src_id] valid && w&15=0
+static __forceinline void hleft_vmid_mix_uv_yv12_sse2(byte* dst, int w00, const byte* src, const byte* am, int src_pitch, int last_src_id=0)
+{
+    ASSERT( (( (2*(int)dst) | w00 | (int)src | (int)am | src_pitch)&15)==0 );
+
     __m128i last_src = _mm_cvtsi32_si128( (src[last_src_id]+src[src_pitch+last_src_id]+1)<<7 );
     __m128i last_alpha = _mm_cvtsi32_si128( (am[last_src_id]+am[src_pitch+last_src_id]+1)<<7 );
-    const BYTE* end_mod16 = src + (w&~15);
+    const BYTE* end_mod16 = src + (w00&~15);
     for(; src < end_mod16; src += 16, am += 16, dst+=8)
     {
         __m128i zero = _mm_setzero_si128();
@@ -606,7 +659,6 @@ static __forceinline void hleft_vmid_mix_uv_yv12_sse2(byte* dst, int w, const by
 
         _mm_storel_epi64( reinterpret_cast<__m128i*>(dst), dst128 );
     }
-    hleft_vmid_mix_uv_yv12_c(dst, w&15, src, am, src_pitch, w>15?-1:0);
 }
 
 static __forceinline void hleft_vmid_mix_uv_p010_c(BYTE* dst, int w, const BYTE* src, const BYTE* am, int src_pitch, int last_src_id=0)
@@ -693,7 +745,7 @@ static __forceinline void hleft_vmid_mix_uv_p010_sse2(BYTE* dst, int w00, const 
 {
     ASSERT( (((int)dst | w00 | (int)src | (int)am | src_pitch)&15)==0 );
     __m128i last_alpha = _mm_cvtsi32_si128( (am[last_src_id]+am[src_pitch+last_src_id]+1)<<7 );
-    const BYTE* end_mod16 = src + (w00&~15);
+    const BYTE* end_mod16 = src + w00;
     for(; src < end_mod16; src+=16, am+=16, dst+=32)
     {
         //important!
