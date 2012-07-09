@@ -59,21 +59,21 @@ public:
     std::string GetAlphaString() const
     {
         std::stringstream os;
-        os<<"alpha:";
+        os<<"alpha:"<<std::endl;
         GetBufString(os, alpha);
         return os.str();
     }
     std::string GetSrcString() const 
     {
         std::stringstream os;
-        os<<"Src:";
+        os<<"Src:"<<std::endl;
         GetBufString(os, src);
         return os.str();
     }
     std::string GetDstString() const
     {
         std::stringstream os;
-        os<<"Dst:";
+        os<<"Dst:"<<std::endl;
         GetBufString(os, dst);
         return os.str();
     }
@@ -98,10 +98,10 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const AlphaSrcDstTestData& test_data)
 {
-    os<<"\tpitch:"<<test_data.pitch<<std::endl;
-    test_data.GetAlphaString();
-    test_data.GetSrcString();
-    test_data.GetDstString();    
+    os<<"\tpitch:"<<test_data.pitch<<std::endl
+      <<test_data.GetAlphaString()
+      <<test_data.GetSrcString()
+      <<test_data.GetDstString();    
     return os;
 }
 
