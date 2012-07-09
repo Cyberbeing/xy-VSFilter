@@ -726,10 +726,50 @@ static __forceinline void hleft_vmid_mix_uv_nv12_c(BYTE* dst, int w, const BYTE*
     }
 }
 
-static __forceinline void hleft_vmid_mix_uv_nv12_sse2(BYTE* dst, int w, const BYTE* src, const BYTE* am, int src_pitch, int last_src_id=0)
+//0<=w15<=15
+static __forceinline void hleft_vmid_mix_uv_nv12_c2(BYTE* dst, int w15, const BYTE* src, const BYTE* am, int src_pitch, int last_src_id=0)
 {
+    ASSERT(w15>=0 && w15<=15 && (w15&1)==0 );
+    int last_alpha = (am[last_src_id]+am[src_pitch+last_src_id]+1)/2;
+
+    switch(w15)
+    {
+    case 14:
+#define _hleft_vmid_mix_uv_nv12_c2_mix_2 \
+    int ia = (am[0]+am[0+src_pitch]+1)/2;\
+    int tmp2 = (am[1]+am[1+src_pitch]+1)/2;\
+    last_alpha = (last_alpha + tmp2 + 1)/2;\
+    ia = (ia + last_alpha + 1)/2;\
+    last_alpha = tmp2;\
+    if ( ia!=0xFF )\
+    {\
+        dst[0] = (((dst[0])*ia)>>8) + src[0];\
+        dst[1] = (((dst[1])*ia)>>8) + src[1];\
+    }\
+    src+=2, am+=2, dst+=2;
+
+        { _hleft_vmid_mix_uv_nv12_c2_mix_2 }
+    case 12:
+        { _hleft_vmid_mix_uv_nv12_c2_mix_2 }
+    case 10:
+        { _hleft_vmid_mix_uv_nv12_c2_mix_2 }
+    case 8:
+        { _hleft_vmid_mix_uv_nv12_c2_mix_2 }
+    case 6:
+        { _hleft_vmid_mix_uv_nv12_c2_mix_2 }
+    case 4:
+        { _hleft_vmid_mix_uv_nv12_c2_mix_2 }
+    case 2:
+        { _hleft_vmid_mix_uv_nv12_c2_mix_2 }
+    }
+}
+
+// am[last_src_id] valid && w&15=0
+static __forceinline void hleft_vmid_mix_uv_nv12_sse2(BYTE* dst, int w00, const BYTE* src, const BYTE* am, int src_pitch, int last_src_id=0)
+{
+    ASSERT( ((int)dst | w00 | (int)src | (int)am | src_pitch)&15==0 );
     __m128i last_alpha = _mm_cvtsi32_si128( (am[last_src_id]+am[src_pitch+last_src_id]+1)<<7 );
-    const BYTE* end_mod16 = src + (w&~15);
+    const BYTE* end_mod16 = src + w00;
     for(; src < end_mod16; src+=16, am+=16, dst+=16)
     {
         __m128i dst128 = _mm_load_si128( reinterpret_cast<const __m128i*>(dst) );
@@ -771,7 +811,6 @@ static __forceinline void hleft_vmid_mix_uv_nv12_sse2(BYTE* dst, int w, const BY
         dst_lo128 = _mm_adds_epu8(dst_lo128, sub128);
         _mm_store_si128( reinterpret_cast<__m128i*>(dst), dst_lo128 );
     }
-    hleft_vmid_mix_uv_nv12_c(dst, w&15, src, am, src_pitch, w>15?-1:0);
 }
 
 #endif // __XY_INTRINSICS_D66EF42F_67BC_47F4_A70D_40F1AB80F376_H__
