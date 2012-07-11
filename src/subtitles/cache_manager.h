@@ -217,7 +217,7 @@ typedef EnhancedXyMru<ClipperAlphaMaskCacheKey, SharedPtrGrayImage2, ClipperAlph
 class CacheManager
 {
 public:
-    static const int CLIPPER_ALPHA_MASK_MRU_CACHE = 8;
+    static const int CLIPPER_ALPHA_MASK_MRU_CACHE = 48;
 
     static const int TEXT_INFO_CACHE_ITEM_NUM = 2048;
     static const int ASS_TAG_LIST_CACHE_ITEM_NUM = 256;
