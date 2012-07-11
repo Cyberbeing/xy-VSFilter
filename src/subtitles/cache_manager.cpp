@@ -86,58 +86,6 @@ ULONG TextInfoCacheKey::UpdateHashValue()
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-// CWordCacheKey
-
-CWordCacheKey::CWordCacheKey( const CWord& word )
-{
-    m_str = word.m_str;
-    m_style = word.m_style;
-    m_ktype = word.m_ktype;
-    m_kstart = word.m_kstart;
-    m_kend = word.m_kend;
-}
-
-CWordCacheKey::CWordCacheKey( const CWordCacheKey& key )
-{
-    m_str = key.m_str;
-    m_style = key.m_style;
-    m_ktype = key.m_ktype;
-    m_kstart = key.m_kstart;
-    m_kend = key.m_kend;
-    m_hash_value = key.m_hash_value;
-}
-
-CWordCacheKey::CWordCacheKey( const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend )
-    :m_style(style),m_str(str),m_ktype(ktype),m_kstart(kstart),m_kend(m_kend)
-{
-
-}
-
-bool CWordCacheKey::operator==( const CWordCacheKey& key ) const
-{
-    return (m_str == key.m_str &&
-        m_style == key.m_style &&
-        m_ktype == key.m_ktype &&
-        m_kstart == key.m_kstart &&
-        m_kend == key.m_kend);
-}
-
-bool CWordCacheKey::operator==(const CWord& key)const
-{
-    return (m_str == key.m_str &&
-        m_style == key.m_style &&
-        m_ktype == key.m_ktype &&
-        m_kstart == key.m_kstart &&
-        m_kend == key.m_kend);
-}
-
-ULONG CWordCacheKey::UpdateHashValue() 
-{
-    m_hash_value = CStringElementTraits<CString>::Hash(m_str);//fix me
-    return m_hash_value;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////
-
 // PathDataCacheKey
 
 bool PathDataCacheKey::CompareSTSStyle( const STSStyle& lhs, const STSStyle& rhs )
@@ -433,7 +381,6 @@ public:
         s_clipper_alpha_mask_cache = NULL;
 
         s_text_info_cache = NULL;
-        s_word_mru_cache = NULL;
         s_path_data_mru_cache = NULL;
         s_scan_line_data_2_mru_cache = NULL;
         s_overlay_no_blur_mru_cache = NULL;
@@ -451,7 +398,6 @@ public:
         delete s_clipper_alpha_mask_cache;
 
         delete s_text_info_cache;
-        delete s_word_mru_cache;
         delete s_path_data_mru_cache;
         delete s_scan_line_data_2_mru_cache;
         delete s_overlay_no_blur_mru_cache;
@@ -478,7 +424,6 @@ public:
     OverlayNoBlurMruCache* s_overlay_no_blur_mru_cache;
     PathDataMruCache* s_path_data_mru_cache;
     ScanLineData2MruCache* s_scan_line_data_2_mru_cache;
-    CWordMruCache* s_word_mru_cache;
 };
 
 static Caches s_caches;
@@ -499,15 +444,6 @@ PathDataMruCache* CacheManager::GetPathDataMruCache()
         s_caches.s_path_data_mru_cache = new PathDataMruCache(PATH_CACHE_ITEM_NUM);
     }
     return s_caches.s_path_data_mru_cache;
-}
-
-CWordMruCache* CacheManager::GetCWordMruCache()
-{
-    if(s_caches.s_word_mru_cache==NULL)
-    {
-        s_caches.s_word_mru_cache = new CWordMruCache(WORD_CACHE_ITEM_NUM);
-    }
-    return s_caches.s_word_mru_cache;
 }
 
 OverlayNoBlurMruCache* CacheManager::GetOverlayNoBlurMruCache()
