@@ -1898,7 +1898,6 @@ void CRenderedTextSubtitle::Deinit()
     m_size = CSize(0, 0);
     m_vidrect.SetRectEmpty();
 
-    CacheManager::GetCWordMruCache()->RemoveAll();
     CacheManager::GetPathDataMruCache()->RemoveAll();
     CacheManager::GetScanLineData2MruCache()->RemoveAll();
     CacheManager::GetOverlayNoBlurMruCache()->RemoveAll();

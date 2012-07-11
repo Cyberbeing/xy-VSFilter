@@ -106,7 +106,6 @@ public:
     int m_width, m_ascent, m_descent;
 
     //friend class CWordCache;
-    friend class CWordCacheKey;
     friend class PathDataCacheKey;
     friend class ClipperTraits;
     friend class ClipperAlphaMaskCacheKey;

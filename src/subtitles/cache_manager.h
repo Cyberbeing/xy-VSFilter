@@ -25,28 +25,6 @@ public:
     }
 };
 
-class CWordCacheKey
-{
-public:
-    CWordCacheKey(const CWord& word);
-    CWordCacheKey(const CWordCacheKey& key);
-    CWordCacheKey(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend);
-    bool operator==(const CWordCacheKey& key)const;
-    bool operator==(const CWord& key)const;
-
-    ULONG UpdateHashValue();
-    ULONG GetHashValue()const
-    {
-        return m_hash_value;
-    }
-public:
-    CStringW m_str;
-    FwSTSStyle m_style;
-    int m_ktype, m_kstart, m_kend;
-
-    ULONG m_hash_value;
-};
-
 class PathDataCacheKey
 {
 public:
@@ -274,8 +252,6 @@ typedef EnhancedXyMru<
     CStringElementTraits<CStringW>
 > AssTagListMruCache;
 
-typedef EnhancedXyMru<CWordCacheKey, SharedPtrCWord, XyCacheKeyTraits<CWordCacheKey>> CWordMruCache;
-
 typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, XyCacheKeyTraits<PathDataCacheKey>> PathDataMruCache;
 
 typedef EnhancedXyMru<ScanLineData2CacheKey, SharedPtrConstScanLineData2, XyCacheKeyTraits<ScanLineData2CacheKey>> ScanLineData2MruCache;
@@ -311,7 +287,6 @@ public:
     static const int PATH_CACHE_ITEM_NUM = 512;
     static const int WORD_CACHE_ITEM_NUM = 512;
 
-
     static BitmapMruCache* GetBitmapMruCache();
 
     static ClipperAlphaMaskMruCache* GetClipperAlphaMaskMruCache();
@@ -326,7 +301,6 @@ public:
     static OverlayNoBlurMruCache* GetOverlayNoBlurMruCache();
     static ScanLineData2MruCache* GetScanLineData2MruCache();
     static PathDataMruCache* GetPathDataMruCache();
-    static CWordMruCache* GetCWordMruCache();
 };
 
 #endif // end of __CACHE_MANAGER_H_310C134F_844C_4590_A4D2_AD30165AF10A__
