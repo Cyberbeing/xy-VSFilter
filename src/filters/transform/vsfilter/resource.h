@@ -92,6 +92,10 @@
 #define IDS_RG_HIDE_TRAY_ICON           185
 #define IDS_RG_SUPPORTED_VERSION        186
 #define IDS_RG_VERSION                  187
+#define IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM    188
+#define IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM   189
+#define IDS_RP_TEXT_INFO_CACHE_ITEM_NUM     190
+#define IDS_RP_ASS_TAG_LIST_CACHE_ITEM_NUM  191
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
@@ -223,6 +227,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        334
 #define _APS_NEXT_COMMAND_VALUE         32770
 #define _APS_NEXT_CONTROL_VALUE         333
-#define _APS_NEXT_SYMED_VALUE           188
+#define _APS_NEXT_SYMED_VALUE           192
 #endif
 #endif

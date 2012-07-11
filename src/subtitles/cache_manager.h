@@ -323,7 +323,7 @@ class CacheManager
 {
 public:
     static const int BITMAP_MRU_CACHE_ITEM_NUM = 64;//for test only 
-    static const int CLIPPER_ALPHA_MASK_MRU_CACHE = 48;
+    static const int CLIPPER_MRU_CACHE_ITEM_NUM = 48;
 
     static const int TEXT_INFO_CACHE_ITEM_NUM = 2048;
     static const int ASS_TAG_LIST_CACHE_ITEM_NUM = 256;
