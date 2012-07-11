@@ -551,7 +551,7 @@ ClipperAlphaMaskMruCache* CacheManager::GetClipperAlphaMaskMruCache()
 {
     if(s_caches.s_clipper_alpha_mask_cache==NULL)
     {
-        s_caches.s_clipper_alpha_mask_cache = new ClipperAlphaMaskMruCache(CLIPPER_ALPHA_MASK_MRU_CACHE);
+        s_caches.s_clipper_alpha_mask_cache = new ClipperAlphaMaskMruCache(CLIPPER_MRU_CACHE_ITEM_NUM);
     }
     return s_caches.s_clipper_alpha_mask_cache;
 }
