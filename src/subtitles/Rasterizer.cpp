@@ -29,6 +29,7 @@
 #include "xy_logger.h"
 #include <boost/flyweight/key_value.hpp>
 #include "xy_bitmap.h"
+#include "xy_widen_regoin.h"
 
 #ifndef _MAX	/* avoid collision with common (nonconforming) macros */
 #define _MAX	(std::max)
@@ -39,7 +40,6 @@
 #define _IMPL_MAX _MAX
 #define _IMPL_MIN _MIN
 #endif
-
 
 //NOTE: signed or unsigned affects the result seriously
 #define COMBINE_AYUV(a, y, u, v) ((((((((int)(a))<<8)|y)<<8)|u)<<8)|v)
@@ -2430,8 +2430,6 @@ bool ScanLineData::ScanConvert(const PathData& path_data, const CSize& size)
     return true;
 }
 
-using namespace std;
-
 void ScanLineData::DeleteOutlines()
 {    
     mOutline.clear();
@@ -2447,13 +2445,8 @@ bool ScanLineData2::CreateWidenedRegion(int rx, int ry)
     const tSpanBuffer& out_line = m_scan_line_data->mOutline;
     if (ry > 0)
     {
-        // Do a half circle.
-        // _OverlapRegion mirrors this so both halves are done.
-        for(int y = -ry; y <= ry; ++y)
-        {
-            int x = (int)(0.5 + sqrt(float(ry*ry - y*y)) * float(rx)/float(ry));
-            OverlapRegion(mWideOutline, out_line, x, y);
-        }
+        WidenRegionCreater *widen_region_creater = WidenRegionCreater::GetDefaultWidenRegionCreater();
+        widen_region_creater->xy_overlap_region(&mWideOutline, out_line, rx, ry);
     }
     else if (ry == 0 && rx > 0)
     {
