@@ -31,10 +31,10 @@
 #include "xy_bitmap.h"
 
 #ifndef _MAX	/* avoid collision with common (nonconforming) macros */
-#define _MAX	(max)
-#define _MIN	(min)
-#define _IMPL_MAX max
-#define _IMPL_MIN min
+#define _MAX	(std::max)
+#define _MIN	(std::min)
+#define _IMPL_MAX std::max
+#define _IMPL_MIN std::min
 #else
 #define _IMPL_MAX _MAX
 #define _IMPL_MIN _MIN
@@ -682,11 +682,11 @@ bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int y
     }
 
     // Are we doing a border?
-    const ScanLineData::tSpanBuffer* pOutline[2] = {&(scan_line_data.mOutline), &(scan_line_data2.mWideOutline)};
+    const tSpanBuffer* pOutline[2] = {&(scan_line_data.mOutline), &(scan_line_data2.mWideOutline)};
     for(int i = countof(pOutline)-1; i >= 0; i--)
     {
-        ScanLineData::tSpanBuffer::const_iterator it = pOutline[i]->begin();
-        ScanLineData::tSpanBuffer::const_iterator itEnd = pOutline[i]->end();
+        tSpanBuffer::const_iterator it = pOutline[i]->begin();
+        tSpanBuffer::const_iterator itEnd = pOutline[i]->end();
         byte* plan_selected = i==0 ? body : border;
         int pitch = overlay->mOverlayPitch;
         for(; it!=itEnd; ++it)
@@ -1086,7 +1086,84 @@ void AlphaBltC(byte* pY,
 // For CPUID usage in Rasterizer::Draw
 #include "../dsutil/vd.h"
 
-static const __int64 _00ff00ff00ff00ff = 0x00ff00ff00ff00ffi64;
+void OverlapRegion(tSpanBuffer& dst, const tSpanBuffer& src, int dx, int dy)
+{
+    tSpanBuffer temp;
+    temp.reserve(dst.size() + src.size());
+    dst.swap(temp);
+    tSpanBuffer::iterator itA = temp.begin();
+    tSpanBuffer::iterator itAE = temp.end();
+    tSpanBuffer::const_iterator itB = src.begin();
+    tSpanBuffer::const_iterator itBE = src.end();
+    // Don't worry -- even if dy<0 this will still work! // G: hehe, the evil twin :)
+    unsigned __int64 offset1 = (((__int64)dy)<<32) - dx;
+    unsigned __int64 offset2 = (((__int64)dy)<<32) + dx;
+    while(itA != itAE && itB != itBE)
+    {
+        if((*itB).first + offset1 < (*itA).first)
+        {
+            // B span is earlier.  Use it.
+            unsigned __int64 x1 = (*itB).first + offset1;
+            unsigned __int64 x2 = (*itB).second + offset2;
+            ++itB;
+            // B spans don't overlap, so begin merge loop with A first.
+            for(;;)
+            {
+                // If we run out of A spans or the A span doesn't overlap,
+                // then the next B span can't either (because B spans don't
+                // overlap) and we exit.
+                if(itA == itAE || (*itA).first > x2)
+                    break;
+                do {x2 = _MAX(x2, (*itA++).second);}
+                while(itA != itAE && (*itA).first <= x2);
+                // If we run out of B spans or the B span doesn't overlap,
+                // then the next A span can't either (because A spans don't
+                // overlap) and we exit.
+                if(itB == itBE || (*itB).first + offset1 > x2)
+                    break;
+                do {x2 = _MAX(x2, (*itB++).second + offset2);}
+                while(itB != itBE && (*itB).first + offset1 <= x2);
+            }
+            // Flush span.
+            dst.push_back(tSpan(x1, x2));
+        }
+        else
+        {
+            // A span is earlier.  Use it.
+            unsigned __int64 x1 = (*itA).first;
+            unsigned __int64 x2 = (*itA).second;
+            ++itA;
+            // A spans don't overlap, so begin merge loop with B first.
+            for(;;)
+            {
+                // If we run out of B spans or the B span doesn't overlap,
+                // then the next A span can't either (because A spans don't
+                // overlap) and we exit.
+                if(itB == itBE || (*itB).first + offset1 > x2)
+                    break;
+                do {x2 = _MAX(x2, (*itB++).second + offset2);}
+                while(itB != itBE && (*itB).first + offset1 <= x2);
+                // If we run out of A spans or the A span doesn't overlap,
+                // then the next B span can't either (because B spans don't
+                // overlap) and we exit.
+                if(itA == itAE || (*itA).first > x2)
+                    break;
+                do {x2 = _MAX(x2, (*itA++).second);}
+                while(itA != itAE && (*itA).first <= x2);
+            }
+            // Flush span.
+            dst.push_back(tSpan(x1, x2));
+        }
+    }
+    // Copy over leftover spans.
+    while(itA != itAE)
+        dst.push_back(*itA++);
+    while(itB != itBE)
+    {
+        dst.push_back(tSpan((*itB).first + offset1, (*itB).second + offset2));
+        ++itB;
+    }
+}
 
 // Render a subpicture onto a surface.
 // spd is the surface to render on.
@@ -2360,85 +2437,6 @@ void ScanLineData::DeleteOutlines()
     mOutline.clear();
 }
 
-void ScanLineData2::_OverlapRegion(tSpanBuffer& dst, const tSpanBuffer& src, int dx, int dy)
-{
-    tSpanBuffer temp;
-    temp.reserve(dst.size() + src.size());
-    dst.swap(temp);
-    tSpanBuffer::iterator itA = temp.begin();
-    tSpanBuffer::iterator itAE = temp.end();
-    tSpanBuffer::const_iterator itB = src.begin();
-    tSpanBuffer::const_iterator itBE = src.end();
-    // Don't worry -- even if dy<0 this will still work! // G: hehe, the evil twin :)
-    unsigned __int64 offset1 = (((__int64)dy)<<32) - dx;
-    unsigned __int64 offset2 = (((__int64)dy)<<32) + dx;
-    while(itA != itAE && itB != itBE)
-    {
-        if((*itB).first + offset1 < (*itA).first)
-        {
-            // B span is earlier.  Use it.
-            unsigned __int64 x1 = (*itB).first + offset1;
-            unsigned __int64 x2 = (*itB).second + offset2;
-            ++itB;
-            // B spans don't overlap, so begin merge loop with A first.
-            for(;;)
-            {
-                // If we run out of A spans or the A span doesn't overlap,
-                // then the next B span can't either (because B spans don't
-                // overlap) and we exit.
-                if(itA == itAE || (*itA).first > x2)
-                    break;
-                do {x2 = _MAX(x2, (*itA++).second);}
-                while(itA != itAE && (*itA).first <= x2);
-                // If we run out of B spans or the B span doesn't overlap,
-                // then the next A span can't either (because A spans don't
-                // overlap) and we exit.
-                if(itB == itBE || (*itB).first + offset1 > x2)
-                    break;
-                do {x2 = _MAX(x2, (*itB++).second + offset2);}
-                while(itB != itBE && (*itB).first + offset1 <= x2);
-            }
-            // Flush span.
-            dst.push_back(tSpan(x1, x2));
-        }
-        else
-        {
-            // A span is earlier.  Use it.
-            unsigned __int64 x1 = (*itA).first;
-            unsigned __int64 x2 = (*itA).second;
-            ++itA;
-            // A spans don't overlap, so begin merge loop with B first.
-            for(;;)
-            {
-                // If we run out of B spans or the B span doesn't overlap,
-                // then the next A span can't either (because A spans don't
-                // overlap) and we exit.
-                if(itB == itBE || (*itB).first + offset1 > x2)
-                    break;
-                do {x2 = _MAX(x2, (*itB++).second + offset2);}
-                while(itB != itBE && (*itB).first + offset1 <= x2);
-                // If we run out of A spans or the A span doesn't overlap,
-                // then the next B span can't either (because B spans don't
-                // overlap) and we exit.
-                if(itA == itAE || (*itA).first > x2)
-                    break;
-                do {x2 = _MAX(x2, (*itA++).second);}
-                while(itA != itAE && (*itA).first <= x2);
-            }
-            // Flush span.
-            dst.push_back(tSpan(x1, x2));
-        }
-    }
-    // Copy over leftover spans.
-    while(itA != itAE)
-        dst.push_back(*itA++);
-    while(itB != itBE)
-    {
-        dst.push_back(tSpan((*itB).first + offset1, (*itB).second + offset2));
-        ++itB;
-    }
-}
-
 bool ScanLineData2::CreateWidenedRegion(int rx, int ry)
 {
     if(rx < 0) rx = 0;
@@ -2454,14 +2452,14 @@ bool ScanLineData2::CreateWidenedRegion(int rx, int ry)
         for(int y = -ry; y <= ry; ++y)
         {
             int x = (int)(0.5 + sqrt(float(ry*ry - y*y)) * float(rx)/float(ry));
-            _OverlapRegion(mWideOutline, out_line, x, y);
+            OverlapRegion(mWideOutline, out_line, x, y);
         }
     }
     else if (ry == 0 && rx > 0)
     {
         // There are artifacts if we don't make at least two overlaps of the line, even at same Y coord
-        _OverlapRegion(mWideOutline, out_line, rx, 0);
-        _OverlapRegion(mWideOutline, out_line, rx, 0);
+        OverlapRegion(mWideOutline, out_line, rx, 0);
+        OverlapRegion(mWideOutline, out_line, rx, 0);
     }
     return true;
 }

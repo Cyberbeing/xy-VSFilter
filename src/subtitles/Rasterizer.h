@@ -66,6 +66,10 @@ public:
 typedef ::boost::shared_ptr<const PathData> SharedPtrConstPathData;
 typedef ::boost::shared_ptr<PathData> SharedPtrPathData;
 
+
+typedef std::pair<unsigned __int64, unsigned __int64> tSpan;
+typedef std::vector<tSpan> tSpanBuffer;
+
 class ScanLineData
 {
     bool fFirstSet;
@@ -73,9 +77,6 @@ class ScanLineData
 
 private:
     int mWidth, mHeight;
-
-    typedef std::pair<unsigned __int64, unsigned __int64> tSpan;
-    typedef std::vector<tSpan> tSpanBuffer;
 
     tSpanBuffer mOutline;
 
@@ -127,16 +128,10 @@ public:
     }
     bool CreateWidenedRegion(int borderX, int borderY);
 private:
-    typedef ScanLineData::tSpanBuffer tSpanBuffer;
-    typedef ScanLineData::tSpan tSpan;
-
     SharedPtrConstScanLineData m_scan_line_data;
     int mPathOffsetX, mPathOffsetY;	
     tSpanBuffer mWideOutline;
     int mWideBorder;
-
-private:
-    static void _OverlapRegion(tSpanBuffer& dst, const tSpanBuffer& src, int dx, int dy);
 
     friend class Rasterizer;
 };
