@@ -418,13 +418,87 @@ void WidenRegionCreaterImpl::add_line( SpanBuffer* dst, LinkSpanList& spans, int
     }
 }
 
-
+//
+// ref: A Fast Bresenham Type Algorithm For Drawing Ellipses by John Kennedy
+// http://homepage.smc.edu/kennedy_john/belipse.pdf
+// 
 int gen_left_arc(int left_arc[], int rx, int ry)
 {
-    for (int y=-ry;y<=ry;y++)
+    if (left_arc==NULL)
+        return 0;
+    
+    int *left_arc2 = left_arc + ry;
+    if (rx==0)
     {
-        left_arc[y+ry] = -(int)(0.5 + sqrt(float(ry*ry - y*y)) * float(rx)/float(ry));
+        for (int y=-ry;y<=ry;y++)
+        {
+            left_arc2[y] = 0;
+        }
+        return 0;
     }
+    else if (ry==0)
+    {
+        left_arc2[0] = rx;
+        return 0;
+    }
+
+    rx = abs(rx);
+    ry = abs(ry);
+    int a = rx;
+    int b = ry;
+    int a2 = 2* a * a;
+    int b2 = 2* b * b;
+    int x = a;
+    int y = 0;
+    __int64 dx = b*b*(1-2*a);
+    __int64 dy = a*a;
+    __int64 err = 0;
+    __int64 stopx = b2 * a;
+    __int64 stopy = 0;
+    while (stopx >= stopy)
+    {
+        left_arc2[y] = -x;
+        left_arc2[-y] = -x;
+
+        y++;
+        stopy += a2;
+        err += dy;
+        dy += a2;
+        if ( 2*err + dx > 0 )
+        {
+            x--;
+            stopx -= b2;
+            err += dx;
+            dx += b2;
+        }
+    }
+    int last_y_stop = y;
+
+    x = 0;
+    y = b;
+    dx = b*b;
+    dy = a*a*(1-2*b);
+    err = 0;
+    stopx = 0;
+    stopy = a2*b;
+    while (stopx <= stopy)
+    {
+        left_arc2[y] = -x;
+        left_arc2[-y] = -x;
+
+        x++;
+        stopx += b2;
+        err += dx;
+        dx += b2;
+        if (2*err+dy > 0) 
+        {
+            y--;
+            stopy -= a2;
+            err += dy;
+            dy += a2;
+        }
+    }
+    ASSERT(y<last_y_stop);
     return 0;
 }
 
