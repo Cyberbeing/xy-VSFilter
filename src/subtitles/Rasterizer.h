@@ -214,8 +214,13 @@ private:
             AYUV_PLANAR = 1<<4
         };
     };
-public:    
+public:
+    static const float GAUSSIAN_BLUR_THREHOLD;
+public:
+
     static bool Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay);
+    
+    static bool IsItReallyBlur(int fBlur, double fGaussianBlur);
     static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);
 
     static SharedPtrByte CompositeAlphaMask(const SharedPtrOverlay& overlay, const CRect& clipRect, 
