@@ -719,12 +719,24 @@ bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int y
     return true;
 }
 
+const float Rasterizer::GAUSSIAN_BLUR_THREHOLD = 0.333333f;
+
+bool Rasterizer::IsItReallyBlur( int fBlur, double fGaussianBlur )
+{
+    if (fBlur<=0 && fGaussianBlur<=GAUSSIAN_BLUR_THREHOLD)
+    {
+        return false;
+    }
+    return true;
+}
+
 // @return: true if actually a blur operation has done, or else false and output is leave unset.
 bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, 
     SharedPtrOverlay output_overlay)
 {
     using namespace ::boost::flyweights;
-
+    
+    ASSERT(IsItReallyBlur(fBlur, fGaussianBlur));
     if(!output_overlay)
     {
         return false;
@@ -740,7 +752,7 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianB
     output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
 
     int bluradjust = 0;
-    if(fBlur || fGaussianBlur > 0.1)
+    if ( IsItReallyBlur(fBlur, fGaussianBlur) )
     {
         if (fGaussianBlur > 0)
             bluradjust += (int)(fGaussianBlur*3*8 + 0.5) | 1;
@@ -803,7 +815,7 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianB
     ass_tmp_buf tmp_buf( max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0) );        
     //flyweight<key_value<int, ass_tmp_buf, ass_tmp_buf_get_size>, no_locking> tmp_buf((overlay->mOverlayWidth+1)*(overlay->mOverlayPitch+1));
     // Do some gaussian blur magic    
-    if (fGaussianBlur > 0.1)//(fGaussianBlur > 0) return true even if fGaussianBlur very small
+    if ( fGaussianBlur > GAUSSIAN_BLUR_THREHOLD )
     {
         byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
         flyweight<key_value<double, ass_synth_priv, ass_synth_priv_key>, no_locking> fw_priv_blur(fGaussianBlur);
@@ -1543,6 +1555,7 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
     }
     _mm_empty();
 }
+
 
 ///////////////////////////////////////////////////////////////
 
