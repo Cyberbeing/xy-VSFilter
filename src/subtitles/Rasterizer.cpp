@@ -41,6 +41,8 @@
 #define _IMPL_MIN _MIN
 #endif
 
+typedef const UINT8 CUINT8, *PCUINT8;
+
 //NOTE: signed or unsigned affects the result seriously
 #define COMBINE_AYUV(a, y, u, v) ((((((((int)(a))<<8)|y)<<8)|u)<<8)|v)
 
@@ -50,7 +52,110 @@
         *(y)=((color)>>16)&0xff;\
         *(a)=((color)>>24)&0xff;\
     } while(0)
-                                    
+
+class GaussianCoefficients
+{
+public:
+    int g_r;    
+    int g_w;    
+    int g_w_ex;
+    float *g_f;
+
+    double sigma;
+public:
+    GaussianCoefficients(const double sigma)
+    {
+        g_r = 0;
+        g_w = 0;
+        g_w_ex = 0;
+
+        g_f = NULL;
+
+        this->sigma = 0;
+        init(sigma);
+    }
+    GaussianCoefficients(const GaussianCoefficients& priv)
+        :g_r(priv.g_r),g_w(priv.g_w),sigma(priv.sigma),g_f(NULL)
+        ,g_w_ex(priv.g_w_ex)
+    {
+        if (this->g_w_ex > 0 && this != &priv) {
+            this->g_f = reinterpret_cast<float*>(xy_malloc(this->g_w_ex * sizeof(float)));
+            ASSERT(this->g_f);
+            memcpy(g_f, priv.g_f, this->g_w_ex * sizeof(g_f[0]));
+        }
+    }
+
+    ~GaussianCoefficients()
+    {
+        xy_free(g_f); g_f=NULL;
+    }
+
+private:
+    int init(double sigma)
+    {
+        double a = -1 / (sigma * sigma * 2);
+        double exp_a = exp(a);
+
+        double volume =  0;
+
+        if (this->sigma == sigma)
+            return 0;
+        else
+            this->sigma = sigma;
+
+        this->g_w = (int)ceil(sigma*3) | 1;
+        this->g_r = this->g_w / 2;
+        this->g_w_ex = (this->g_w + 3) & ~3;
+
+        if (this->g_w_ex > 0) {
+            xy_free(this->g_f);
+            this->g_f = reinterpret_cast<float*>(xy_malloc(this->g_w_ex * sizeof(float)));
+            if (this->g_f == NULL) {
+                return -1;
+            }
+        }
+
+        if (this->g_w > 0) {
+            volume = 0;        
+
+            double exp_0 = 1.0;
+            double exp_1 = exp_a;
+            double exp_2 = exp_1 * exp_1;
+            volume = exp_0;
+            this->g_f[this->g_r] = exp_0;
+            float* p_left = this->g_f+this->g_r-1;
+            float* p_right= this->g_f+this->g_r+1;
+            for(int i=0; i<this->g_r;++i,p_left--,p_right++)
+            {
+                exp_0 *= exp_1;
+                exp_1 *= exp_2;
+
+                *p_left = exp_0;
+                *p_right = exp_0;
+
+                volume += exp_0;
+                volume += exp_0;
+            }
+            //equivalent:
+            //  for (i = 0; i < this->g_w; ++i) {
+            //    this->g[i] = (unsigned) ( exp(a * (i - this->g_r) * (i - this->g_r))* volume_factor + .5 );
+            //    volume += this->g[i];
+            //  }
+            ASSERT(volume>0);
+            for (int i=0;i<this->g_w;i++)
+            {
+                this->g_f[i] /= volume;
+            }
+            for (int i=this->g_w;i<this->g_w_ex;i++)
+            {
+                this->g_f[i] = 0;
+            }
+        }
+        return 0;
+    }
+
+};
+
 class ass_synth_priv 
 {
 public:
@@ -71,9 +176,12 @@ public:
     double sigma;
 };
 
-struct ass_synth_priv_key
+
+// GaussianFilter = GaussianCoefficients or ass_synth_priv
+template<typename GaussianFilter>
+struct GaussianFilterKey
 {
-    const double& operator()(const ass_synth_priv& x)const
+    const double& operator()(const GaussianFilter& x)const
     {
         return x.sigma;
     }
@@ -128,7 +236,7 @@ ass_synth_priv::ass_synth_priv(const ass_synth_priv& priv):g_r(priv.g_r),g_w(pri
 ass_synth_priv::~ass_synth_priv()
 {
     free(g); g=NULL;
-    free(gt2); gt2=NULL;    
+    free(gt2); gt2=NULL;
 }
 
 int ass_synth_priv::generate_tables(double sigma)
@@ -154,13 +262,13 @@ int ass_synth_priv::generate_tables(double sigma)
     if (this->g_w > 0) {
         this->g = (unsigned*)realloc(this->g, this->g_w * sizeof(unsigned));
         this->gt2 = (unsigned*)realloc(this->gt2, 256 * this->g_w * sizeof(unsigned));        
-        if (this->g == NULL || this->gt2 == NULL) {                      
+        if (this->g == NULL || this->gt2 == NULL) {
             return -1;
-        }        
+        }
     }
 
     if (this->g_w > 0) {
-        volume_start = 0;        
+        volume_start = 0;
 
         double exp_0 = 1.0;
         double exp_1 = exp_a;
@@ -223,7 +331,7 @@ int ass_synth_priv::generate_tables(double sigma)
                 break;
             else if(volume < TARGET_VOLUME)
             {
-                volume_start = volume_factor;                
+                volume_start = volume_factor;
             }
             else if(volume >= TARGET_VOLUME+MAX_VOLUME_ERROR)
             {
@@ -263,10 +371,10 @@ int ass_synth_priv::generate_tables(double sigma)
             int last_mul = 0;
             unsigned *p_gt2 = this->gt2 + mx;
             *p_gt2 = 0;
-            for (int i = 1; i < 256; i++) {                
+            for (int i = 1; i < 256; i++) {
                 last_mul = last_mul+this->g[mx];
                 p_gt2 += this->g_w;
-                *p_gt2 = last_mul;                
+                *p_gt2 = last_mul;
                 //equivalent:
                 //    this->gt2[this->g_w * i+ mx] = this->g[mx] * i;
             }
@@ -315,7 +423,7 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
                 int mx;
                 const unsigned *m3 = m2 + src * mwidth;
                 unsigned sum = 0;
-                for (mx = mwidth-1; mx >= r - x ; mx--) {                
+                for (mx = mwidth-1; mx >= r - x ; mx--) {
                     sum += m3[mx];
                     dstp[mx] += sum;
                 }
@@ -480,6 +588,10 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
         t += width + 1;
     }
 }
+
+void xy_gaussian_blur(PUINT8 dst, int dst_stride,
+    PCUINT8 src, int width, int height, int stride, 
+    const float *gt, int r, int gt_ex_width);
 
 /**
  * \brief blur with [[1,2,1]. [2,4,2], [1,2,1]] kernel.
@@ -731,7 +843,8 @@ bool Rasterizer::IsItReallyBlur( int fBlur, double fGaussianBlur )
 }
 
 // @return: true if actually a blur operation has done, or else false and output is leave unset.
-bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, 
+// To Do: rewrite it or delete it
+bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, 
     SharedPtrOverlay output_overlay)
 {
     using namespace ::boost::flyweights;
@@ -818,7 +931,7 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianB
     if ( fGaussianBlur > GAUSSIAN_BLUR_THREHOLD )
     {
         byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
-        flyweight<key_value<double, ass_synth_priv, ass_synth_priv_key>, no_locking> fw_priv_blur(fGaussianBlur);
+        flyweight<key_value<double, ass_synth_priv, GaussianFilterKey<ass_synth_priv>>, no_locking> fw_priv_blur(fGaussianBlur);
         const ass_synth_priv& priv_blur = fw_priv_blur.get();
         if (output_overlay->mOverlayWidth>=priv_blur.g_w && output_overlay->mOverlayHeight>=priv_blur.g_w)
         {   
@@ -826,6 +939,182 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianB
                 priv_blur.gt2, priv_blur.g_r, priv_blur.g_w);
         }
     }
+
+    for (int pass = 0; pass < fBlur; pass++)
+    {
+        if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
+        {            
+            int pitch = output_overlay->mOverlayPitch;
+            byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
+            be_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+        }
+    }
+    return true;
+}
+
+// @return: true if actually a blur operation has done, or else false and output is leave unset.
+bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, 
+    SharedPtrOverlay output_overlay)
+{
+    using namespace ::boost::flyweights;
+    
+    if (!(g_cpuid.m_flags & CCpuID::sse2))
+    {
+        // C code path of floating point version is extreamly slow,
+        // so we fall back to fixed point version instead
+        return Rasterizer::OldFixedPointBlur(input_overlay, fBlur, fGaussianBlur, output_overlay);
+    }
+    
+    ASSERT(IsItReallyBlur(fBlur, fGaussianBlur));
+    if(!output_overlay || !IsItReallyBlur(fBlur, fGaussianBlur))
+    {
+        return false;
+    }
+    if (input_overlay.mOverlayWidth<=0 || input_overlay.mOverlayHeight<=0)
+    {
+        return true;
+    }
+    if (fGaussianBlur>0)
+    {
+        if (fBlur)//this insane thing should NEVER happen
+        {
+            SharedPtrOverlay tmp(new Overlay());
+
+            bool rv = GaussianBlur(input_overlay, fGaussianBlur, tmp);
+            ASSERT(rv);
+            rv = BeBlur(*tmp, fBlur, output_overlay);
+            ASSERT(rv);
+        }
+        else
+        {
+            bool rv = GaussianBlur(input_overlay, fGaussianBlur, output_overlay);
+            ASSERT(rv);
+        }
+    }
+    else if (fBlur)
+    {
+        bool rv = BeBlur(input_overlay, fBlur, output_overlay);
+        ASSERT(rv);
+    }
+    return true;
+}
+
+bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double fGaussianBlur, SharedPtrOverlay output_overlay )
+{
+    using namespace ::boost::flyweights;
+
+    ASSERT(output_overlay);
+    output_overlay->CleanUp();
+    output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
+
+    ASSERT(fGaussianBlur > 0);
+    flyweight<key_value<double, GaussianCoefficients, GaussianFilterKey<GaussianCoefficients>>, no_locking> fw_priv_blur(fGaussianBlur);
+    const GaussianCoefficients& priv_blur = fw_priv_blur.get();
+
+    int bluradjust = priv_blur.g_r * 8;
+    output_overlay->mOffsetX       = input_overlay.mOffsetX - bluradjust;
+    output_overlay->mOffsetY       = input_overlay.mOffsetY - bluradjust;
+    output_overlay->mWidth         = input_overlay.mWidth + (bluradjust<<1);
+    output_overlay->mHeight        = input_overlay.mHeight + (bluradjust<<1);
+    output_overlay->mOverlayWidth  = input_overlay.mOverlayWidth + (bluradjust>>2);
+    output_overlay->mOverlayHeight = input_overlay.mOverlayHeight + (bluradjust>>2);
+
+    output_overlay->mOverlayPitch = (output_overlay->mOverlayWidth+15)&~15;
+
+    BYTE* blur_plan = reinterpret_cast<BYTE*>(xy_malloc(output_overlay->mOverlayPitch * output_overlay->mOverlayHeight));
+    //memset(blur_plan, 0, output_overlay->mOverlayPitch * output_overlay->mOverlayHeight);
+
+    const BYTE* plan_input = input_overlay.mfWideOutlineEmpty ? input_overlay.mBody.get() : input_overlay.mBorder.get();    
+    ASSERT(output_overlay->mOverlayWidth>=priv_blur.g_w && output_overlay->mOverlayHeight>=priv_blur.g_w);
+    xy_gaussian_blur(blur_plan, output_overlay->mOverlayPitch, 
+        plan_input, input_overlay.mOverlayWidth, input_overlay.mOverlayHeight, input_overlay.mOverlayPitch, 
+        priv_blur.g_f, priv_blur.g_r, priv_blur.g_w_ex);
+    if (input_overlay.mfWideOutlineEmpty)
+    {
+        output_overlay->mBody.reset(blur_plan, xy_free);
+    }
+    else
+    {
+        output_overlay->mBorder.reset(blur_plan, xy_free);
+
+        BYTE* body = reinterpret_cast<BYTE*>(xy_malloc(output_overlay->mOverlayPitch * output_overlay->mOverlayHeight));
+        if( body==NULL )
+        {
+            return false;
+        }        
+        output_overlay->mBody.reset(body, xy_free);        
+        memset(body, 0, output_overlay->mOverlayPitch * (bluradjust>>3));
+        body += (bluradjust>>3)*output_overlay->mOverlayPitch;
+        plan_input = input_overlay.mBody.get();
+        ASSERT(plan_input);
+        for (int j=0;j<input_overlay.mOverlayHeight;j++)
+        {
+            memset(body, 0, (bluradjust>>3));
+            memcpy(body+(bluradjust>>3), plan_input, input_overlay.mOverlayWidth);
+            memset(body+(bluradjust>>3)+input_overlay.mOverlayWidth, 0, (bluradjust>>3));
+            body += output_overlay->mOverlayPitch;
+            plan_input += input_overlay.mOverlayPitch;
+        }
+        memset(body, 0, output_overlay->mOverlayPitch * (bluradjust>>3));
+    }
+    return true;
+}
+
+bool Rasterizer::BeBlur( const Overlay& input_overlay, int fBlur, SharedPtrOverlay output_overlay )
+{
+    ASSERT(output_overlay);
+    output_overlay->CleanUp();
+    output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
+
+    ASSERT(fBlur>0);
+    int bluradjust = 8;
+    output_overlay->mOffsetX       = input_overlay.mOffsetX - bluradjust;
+    output_overlay->mOffsetY       = input_overlay.mOffsetY - bluradjust;
+    output_overlay->mWidth         = input_overlay.mWidth + (bluradjust<<1);
+    output_overlay->mHeight        = input_overlay.mHeight + (bluradjust<<1);
+    output_overlay->mOverlayWidth  = input_overlay.mOverlayWidth + (bluradjust>>2);
+    output_overlay->mOverlayHeight = input_overlay.mOverlayHeight + (bluradjust>>2);
+
+    output_overlay->mOverlayPitch = (output_overlay->mOverlayWidth+15)&~15;
+
+    BYTE* body = reinterpret_cast<BYTE*>(xy_malloc(output_overlay->mOverlayPitch * output_overlay->mOverlayHeight));
+    if( body==NULL )
+    {
+        return false;
+    }
+    output_overlay->mBody.reset(body, xy_free);
+    memset(body, 0, output_overlay->mOverlayPitch * output_overlay->mOverlayHeight);
+    BYTE* border = NULL;
+    if (!output_overlay->mfWideOutlineEmpty)
+    {
+        border = reinterpret_cast<BYTE*>(xy_malloc(output_overlay->mOverlayPitch * output_overlay->mOverlayHeight));
+        if (border==NULL)
+        {
+            return false;
+        }
+        output_overlay->mBorder.reset(border, xy_free);
+        memset(border, 0, output_overlay->mOverlayPitch * output_overlay->mOverlayHeight);
+    }
+
+    //copy buffer
+    for(int i = 1; i >= 0; i--)
+    {
+        byte* plan_selected = i==0 ? body : border;
+        const byte* plan_input = i==0 ? input_overlay.mBody.get() : input_overlay.mBorder.get();
+
+        plan_selected += (bluradjust>>3) + (bluradjust>>3)*output_overlay->mOverlayPitch;
+        if ( plan_selected!=NULL && plan_input!=NULL )
+        {
+            for (int j=0;j<input_overlay.mOverlayHeight;j++)
+            {
+                memcpy(plan_selected, plan_input, input_overlay.mOverlayWidth*sizeof(plan_input[0]));
+                plan_selected += output_overlay->mOverlayPitch;
+                plan_input += input_overlay.mOverlayPitch;
+            }
+        }
+    }
+
+    ass_tmp_buf tmp_buf( max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0) );
 
     for (int pass = 0; pass < fBlur; pass++)
     {

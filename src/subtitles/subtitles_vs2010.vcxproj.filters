@@ -96,6 +96,9 @@
     <ClCompile Include="xy_widen_region.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="xy_filter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCDecoder.h">
