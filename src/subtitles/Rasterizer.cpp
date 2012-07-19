@@ -481,7 +481,7 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
 }
 
 /**
- * \brief blur with [[1,2,1]. [2,4,2], [1,2,1]] kernel.
+ * \brief blur with [[1,2,1], [2,4,2], [1,2,1]] kernel.
  */
 static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int stride)
 {   
@@ -568,6 +568,82 @@ static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int st
             old_col_sum = _mm_packus_epi16(old_col_sum, old_col_sum);
             _mm_storel_epi64( reinterpret_cast<__m128i*>(dst+x-1), old_col_sum );
         }
+        int old_pix = src[x-1];
+        int old_sum = old_pix + src[x-2];
+        for ( ; x < w; x++) {
+            int temp1 = src[x];
+            int temp2 = old_pix + temp1;
+            old_pix = temp1;
+            temp1 = old_sum + temp2;
+            old_sum = temp2;
+
+            temp2 = col_pix_buf[x] + temp1;
+            col_pix_buf[x] = temp1;
+            dst[x-1] = (col_sum_buf[x] + temp2) >> 4;
+            col_sum_buf[x] = temp2;
+        }
+    }
+
+    xy_free(col_sum_buf_base);
+    xy_free(col_pix_buf_base);
+}
+
+static void be_blur_c(unsigned char *buf, unsigned *tmp_base, int w, int h, int stride)
+{   
+    WORD *col_pix_buf_base = reinterpret_cast<WORD*>(xy_malloc(w*sizeof(WORD)));
+    WORD *col_sum_buf_base = reinterpret_cast<WORD*>(xy_malloc(w*sizeof(WORD)));
+    if(!col_sum_buf_base || !col_pix_buf_base)
+    {
+        //ToDo: error handling
+        return;
+    }
+    memset(col_pix_buf_base, 0, w*sizeof(WORD));
+    memset(col_sum_buf_base, 0, w*sizeof(WORD));
+    WORD *col_pix_buf = col_pix_buf_base-2;//for aligment;
+    WORD *col_sum_buf = col_sum_buf_base-2;//for aligment;
+    {
+        int y = 0;
+        unsigned char *src=buf+y*stride;
+
+        int x = 2;
+        int old_pix = src[x-1];
+        int old_sum = old_pix + src[x-2];
+        for ( ; x < w; x++) {
+            int temp1 = src[x];
+            int temp2 = old_pix + temp1;
+            old_pix = temp1;
+            temp1 = old_sum + temp2;
+            old_sum = temp2;
+            col_pix_buf[x] = temp1;
+        }
+    }
+    {
+        int y = 1;
+        unsigned char *src=buf+y*stride;
+
+
+        int x = 2;
+        int old_pix = src[x-1];
+        int old_sum = old_pix + src[x-2];
+        for ( ; x < w; x++) {
+            int temp1 = src[x];
+            int temp2 = old_pix + temp1;
+            old_pix = temp1;
+            temp1 = old_sum + temp2;
+            old_sum = temp2;
+
+            temp2 = col_pix_buf[x] + temp1;
+            col_pix_buf[x] = temp1;
+            //dst[x-1] = (col_sum_buf[x] + temp2) >> 4;
+            col_sum_buf[x] = temp2;
+        }
+    }
+
+    for (int y = 2; y < h; y++) {
+        unsigned char *src=buf+y*stride;
+        unsigned char *dst=buf+(y-1)*stride;
+
+        int x = 2;
         int old_pix = src[x-1];
         int old_sum = old_pix + src[x-2];
         for ( ; x < w; x++) {
@@ -814,13 +890,20 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianB
         }
     }
 
-    for (int pass = 0; pass < fBlur; pass++)
+    if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
     {
-        if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
-        {            
+        for (int pass = 0; pass < fBlur; pass++)
+        {
             int pitch = output_overlay->mOverlayPitch;
             byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
-            be_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+            if (g_cpuid.m_flags & CCpuID::sse2)
+            {
+                be_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+            }
+            else
+            {
+                be_blur_c(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+            }
         }
     }
     return true;
