@@ -27,6 +27,45 @@
 
 class CMemSubPic : public CSubPicExImpl
 {
+public:
+    static void AlphaBltYv12Luma(byte* dst, int dst_pitch, int w, int h, const byte* sub, const byte* alpha, int sub_pitch);
+    static void AlphaBltYv12LumaC(byte* dst, int dst_pitch, int w, int h, const byte* sub, const byte* alpha, int sub_pitch);
+
+    static void AlphaBltYv12Chroma(byte* dst, int dst_pitch, int w, int chroma_h, const byte* sub_chroma, 
+        const byte* alpha, int sub_pitch);
+    static void AlphaBltYv12ChromaC(byte* dst, int dst_pitch, int w, int chroma_h, const byte* sub_chroma, 
+        const byte* alpha, int sub_pitch);
+
+    static HRESULT AlphaBltAnv12_P010(const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch,
+        BYTE* dst_y, BYTE* dst_uv, int dst_pitch,
+        int w, int h);
+    static HRESULT AlphaBltAnv12_P010_C(const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch,
+        BYTE* dst_y, BYTE* dst_uv, int dst_pitch,
+        int w, int h);
+    static HRESULT AlphaBltAnv12_Nv12(const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch,
+        BYTE* dst_y, BYTE* dst_uv, int dst_pitch,
+        int w, int h);
+    static HRESULT AlphaBltAnv12_Nv12_C(const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch,
+        BYTE* dst_y, BYTE* dst_uv, int dst_pitch,
+        int w, int h);
+
+    static void SubsampleAndInterlace(BYTE* dst, const BYTE* u, const BYTE* v, int h, int w, int pitch);
+    static void SubsampleAndInterlaceC(BYTE* dst, const BYTE* u, const BYTE* v, int h, int w, int pitch);
+public:
+    CMemSubPic(SubPicDesc& spd, int alpha_blt_dst_type);
+    virtual ~CMemSubPic();
+
+    // ISubPic
+    STDMETHODIMP GetDesc(SubPicDesc& spd) const;
+    STDMETHODIMP ClearDirtyRect(DWORD color);
+    STDMETHODIMP Lock(SubPicDesc& spd);
+    STDMETHODIMP AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
+
+    // ISubPicEx
+    STDMETHODIMP CopyTo(ISubPicEx* pSubPic);
+    STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList);
+    STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);
+
 protected:
     int m_type;
     bool converted;
@@ -49,33 +88,6 @@ protected:
     HRESULT UnlockOther(CAtlList<CRect>* dirtyRectList);
 
     void SubsampleAndInterlace( const CRect& cRect, bool u_first );
-public:
-
-	CMemSubPic(SubPicDesc& spd, int alpha_blt_dst_type);
-	virtual ~CMemSubPic();
-    
-	// ISubPic
-	STDMETHODIMP GetDesc(SubPicDesc& spd) const;
-    STDMETHODIMP ClearDirtyRect(DWORD color);
-    STDMETHODIMP Lock(SubPicDesc& spd);
-    STDMETHODIMP AlphaBlt(const RECT* pSrc, const RECT* pDst, SubPicDesc* pTarget);
-
-    // ISubPicEx
-	STDMETHODIMP CopyTo(ISubPicEx* pSubPic);
-	STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList);
-    STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);
-public:
-    static void AlphaBltYv12Luma(byte* dst, int dst_pitch, int w, int h, const byte* sub, const byte* alpha, int sub_pitch);
-    static void AlphaBltYv12Chroma(byte* dst, int dst_pitch, int w, int chroma_h, const byte* sub_chroma, 
-        const byte* alpha, int sub_pitch);
-
-    static HRESULT AlphaBltAnv12_P010(const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch,
-        BYTE* dst_y, BYTE* dst_uv, int dst_pitch,
-        int w, int h);
-    static HRESULT AlphaBltAnv12_Nv12(const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch,
-        BYTE* dst_y, BYTE* dst_uv, int dst_pitch,
-        int w, int h);
-    
 };
 
 // CMemSubPicAllocator
