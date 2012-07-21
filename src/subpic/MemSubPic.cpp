@@ -743,9 +743,12 @@ STDMETHODIMP CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPi
             BYTE* s2 = s;
             BYTE* s2end = s2 + w*4;
             DWORD* d2 = (DWORD*)d;
+            ASSERT(w>0);
+            int last_a = w>0?s2[3]:0;
             for(; s2 < s2end; s2 += 8, d2++)
             {
-                ia = (s2[3]+s2[7])>>1;
+                ia = (last_a + 2*s2[3] + s2[7])>>2;
+                last_a = s2[7];
                 if(ia < 0xff)
                 {
                     //int y1 = (BYTE)(((((*d2&0xff))*s2[3])>>8) + s2[1]); // + y1;
