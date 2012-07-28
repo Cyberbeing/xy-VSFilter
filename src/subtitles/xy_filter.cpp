@@ -83,13 +83,35 @@ void xy_filter_c(float *dst, int width, int height, int stride, const float *fil
 }
 
 /****
+ * inline function sometimes generates stupid code
+ * 
+ * @src4, @src_5_8, @f4, @sum : __m128
+ * @src_5_8, @f4: const
+ * @sum : output
+ * @src4: undefined
+ **/ 
+#define XY_FILTER_4(src4, src_5_8, f4, sum) \
+    __m128 f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(0,0,0,0));\
+    f4_1 = _mm_mul_ps(f4_1, src4);\
+    sum = _mm_add_ps(sum, f4_1);\
+    __m128 src_3_6 = _mm_shuffle_ps(src4, src_5_8, _MM_SHUFFLE(1,0,3,2));/*3 4 5 6*/\
+    f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(2,2,2,2));\
+    f4_1 = _mm_mul_ps(f4_1, src_3_6);\
+    sum = _mm_add_ps(sum, f4_1);\
+    src4 = _mm_shuffle_ps(src4, src_3_6, _MM_SHUFFLE(2,1,2,1));/*2 3 4 5*/\
+    f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(1,1,1,1));\
+    f4_1 = _mm_mul_ps(f4_1, src4);\
+    sum = _mm_add_ps(sum, f4_1);\
+    src_3_6 = _mm_shuffle_ps(src_3_6, src_5_8, _MM_SHUFFLE(2,1,2,1));/*4 5 6 7*/\
+    f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(3,3,3,3));\
+    f4_1 = _mm_mul_ps(f4_1, src_3_6);\
+    sum = _mm_add_ps(sum, f4_1)
+
+/****
  * See @xy_filter_c
  **/
 void xy_filter_sse(float *dst, int width, int height, int stride, const float *filter, int filter_width)
 {
-#ifdef XY_FILTER_4
-#  undef XY_FILTER_4
-#endif
     ASSERT( stride>=4*(width+filter_width) );
     ASSERT( ((stride|(4*width)|(4*filter_width)|reinterpret_cast<int>(dst)|reinterpret_cast<int>(filter))&15)==0 );
 
@@ -123,24 +145,8 @@ void xy_filter_sse(float *dst, int width, int height, int stride, const float *f
                 __m128 src_5_8 = _mm_load_ps(src);/*5 6 7 8*/
                 __m128 f4 = _mm_load_ps(f);
 
-#define XY_FILTER_4(src4, src_5_8, f4, sum) \
-                __m128 f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(0,0,0,0));\
-                f4_1 = _mm_mul_ps(f4_1, src4);\
-                sum = _mm_add_ps(sum, f4_1);\
-                __m128 src_3_6 = _mm_shuffle_ps(src4, src_5_8, _MM_SHUFFLE(1,0,3,2));/*3 4 5 6*/\
-                f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(2,2,2,2));\
-                f4_1 = _mm_mul_ps(f4_1, src_3_6);\
-                sum = _mm_add_ps(sum, f4_1);\
-                src4 = _mm_shuffle_ps(src4, src_3_6, _MM_SHUFFLE(2,1,2,1));/*2 3 4 5*/\
-                f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(1,1,1,1));\
-                f4_1 = _mm_mul_ps(f4_1, src4);\
-                sum = _mm_add_ps(sum, f4_1);\
-                src_3_6 = _mm_shuffle_ps(src_3_6, src_5_8, _MM_SHUFFLE(2,1,2,1));/*4 5 6 7*/\
-                f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(3,3,3,3));\
-                f4_1 = _mm_mul_ps(f4_1, src_3_6);\
-                sum = _mm_add_ps(sum, f4_1)
-
                 { XY_FILTER_4(src4, src_5_8, f4, sum); }
+
                 src4 = src_5_8;
             }
             //store result
@@ -173,7 +179,7 @@ void xy_filter_sse(float *dst, int width, int height, int stride, const float *f
         for (;dst2<dst_end0;dst2+=4)
         {
             const float *src = dst2;
-            
+
             //filter 4
             __m128 src4 = _mm_load_ps(src);/*1 2 3 4*/
             __m128 sum = _mm_setzero_ps();
@@ -216,7 +222,6 @@ void xy_filter_sse(float *dst, int width, int height, int stride, const float *f
             _mm_store_ps(dst2, sum);
         }
     }
-#undef XY_FILTER_4
 }
 
 /****

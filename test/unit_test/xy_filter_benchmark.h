@@ -484,6 +484,139 @@ void xy_filter_sse_v2(float *dst, int width, int height, int stride, const float
 #undef XY_FILTER_4
 }
 
+static __forceinline void xy_filter_4_inline(__m128& src4, const __m128& src_5_8, const __m128& f4, __m128& sum)
+{
+    __m128 f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(0,0,0,0));
+    f4_1 = _mm_mul_ps(f4_1, src4);
+    sum = _mm_add_ps(sum, f4_1);
+    __m128 src_3_6 = _mm_shuffle_ps(src4, src_5_8, _MM_SHUFFLE(1,0,3,2));/*3 4 5 6*/
+    f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(2,2,2,2));
+    f4_1 = _mm_mul_ps(f4_1, src_3_6);
+    sum = _mm_add_ps(sum, f4_1);
+    src4 = _mm_shuffle_ps(src4, src_3_6, _MM_SHUFFLE(2,1,2,1));/*2 3 4 5*/
+    f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(1,1,1,1));
+    f4_1 = _mm_mul_ps(f4_1, src4);
+    sum = _mm_add_ps(sum, f4_1);
+    src_3_6 = _mm_shuffle_ps(src_3_6, src_5_8, _MM_SHUFFLE(2,1,2,1));/*4 5 6 7*/
+    f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(3,3,3,3));
+    f4_1 = _mm_mul_ps(f4_1, src_3_6);
+    sum = _mm_add_ps(sum, f4_1);
+}
+
+void xy_filter_sse_v3(float *dst, int width, int height, int stride, const float *filter, int filter_width)
+{
+    ASSERT( stride>=4*(width+filter_width) );
+    ASSERT( ((stride|(4*width)|(4*filter_width)|reinterpret_cast<int>(dst)|reinterpret_cast<int>(filter))&15)==0 );
+
+    int xx_fix = width > filter_width ? 0 : filter_width - width;
+    const float *filter_start = filter;
+    BYTE* dst_byte = reinterpret_cast<BYTE*>(dst);
+    BYTE* end = dst_byte + height*stride;
+    for( ; dst_byte<end; dst_byte+=stride )
+    {
+        float *dst_f = reinterpret_cast<float*>(dst_byte); 
+        float *dst2 = dst_f - filter_width;
+        float *dst_endr = dst_f + width;
+        float *dst_end0 = dst_endr - filter_width;
+        float *dst_endl = dst_f - xx_fix;
+        ASSERT(xx_fix==0 || dst_end0==dst_endl);
+
+        ASSERT(filter_start == filter);
+        filter_start += filter_width;
+        const float *filter_end = filter_start;
+
+        for (;dst2<dst_endl;dst2+=4)//left margin
+        {
+            const float *src = dst_f;
+            filter_start -= 4;
+
+            //filter 4
+            __m128 src4 = _mm_setzero_ps();/*1 2 3 4*/
+            __m128 sum = _mm_setzero_ps();
+            for(const float* f=filter_start;f<filter_end;f+=4,src+=4)
+            {   
+                __m128 src_5_8 = _mm_load_ps(src);/*5 6 7 8*/
+                __m128 f4 = _mm_load_ps(f);
+
+                xy_filter_4_inline(src4, src_5_8, f4, sum);
+
+                src4 = src_5_8;
+            }
+            //store result
+            _mm_store_ps(dst2, sum);
+        }
+        for (;dst2<dst_f;dst2+=4)//if width < filter_width
+        {
+            const float *src = dst_f;
+            filter_start-=4;
+            filter_end-=4;
+
+            __m128 src4 = _mm_setzero_ps();/*1 2 3 4*/
+            __m128 sum = _mm_setzero_ps();
+            __m128 src_5_8, f4;
+            for(const float* f=filter_start;f<filter_end;f+=4,src+=4)
+            {   
+                src_5_8 = _mm_load_ps(src);/*5 6 7 8*/
+                f4 = _mm_load_ps(f);
+
+                xy_filter_4_inline(src4, src_5_8, f4, sum);
+                src4 = src_5_8;
+            }
+            src_5_8 = _mm_setzero_ps();
+            f4 = _mm_load_ps(filter_end);
+            xy_filter_4_inline(src4, src_5_8, f4, sum);
+            //store result
+            _mm_store_ps(dst2, sum);
+        }
+        ASSERT(filter_start == filter);
+        for (;dst2<dst_end0;dst2+=4)
+        {
+            const float *src = dst2;
+
+            //filter 4
+            __m128 src4 = _mm_load_ps(src);/*1 2 3 4*/
+            __m128 sum = _mm_setzero_ps();
+            for(const float* f=filter_start;f<filter_end;f+=4)
+            {
+                src+=4;
+                __m128 src_5_8 = _mm_load_ps(src);/*5 6 7 8*/
+                __m128 f4 = _mm_load_ps(f);
+
+                xy_filter_4_inline(src4, src_5_8, f4, sum);
+                src4 = src_5_8;
+            }
+            //store result
+            _mm_store_ps(dst2, sum);
+        }
+        for (;dst2<dst_endr;dst2+=4)//right margin
+        {
+            const float *src = dst2;
+            filter_end-=4;
+
+            //filter 4
+            __m128 src4 = _mm_load_ps(src);//1 2 3 4
+            __m128 sum = _mm_setzero_ps();
+            __m128 src_5_8, f4;
+            for(const float* f=filter_start;f<filter_end;f+=4)
+            {
+                src+=4;
+                src_5_8 = _mm_load_ps(src);//5 6 7 8
+                f4 = _mm_load_ps(f);
+
+                xy_filter_4_inline(src4, src_5_8, f4, sum);
+
+                src4 = src_5_8;
+                //move new 4 in_n_out to old 4 in_n_out
+            }
+            src_5_8 = _mm_setzero_ps();
+            f4 = _mm_load_ps(filter_end);
+            xy_filter_4_inline(src4, src_5_8, f4, sum);
+            //store result
+            _mm_store_ps(dst2, sum);
+        }
+    }
+}
+
 class XyFilterTest : public ::testing::Test 
 {
 public:
@@ -564,8 +697,8 @@ TEST_F(XyFilterTest, function ## _ ## width ## _ ## height ## _ ## FILTER_LENGTH
 }
 
 #define DUAL_TEST(width, height, FILTER_LENGTH, loop_num) \
-    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v1) \
-    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v2)
+    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v2) \
+    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v3)
 
 DUAL_TEST(128, 16, 28, 20000)
     DUAL_TEST(256, 16, 28, 20000)
