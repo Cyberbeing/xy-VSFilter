@@ -7,11 +7,7 @@
 #include <xmmintrin.h>
 #include "xy_malloc.h"
 
-void xy_filter_c(float *dst, int width, int height, int stride, const float *filter, int filter_width);
-void xy_filter_one_line_c(float *dst, int width, const float *filter, int filter_width)
-{
-    xy_filter_c(dst, width, 1, ((width*4)+15)&~15, filter, filter_width);
-}
+void xy_filter_one_line_c(float *dst, int width, const float *filter, int filter_width);
 void xy_filter_sse(float *dst, int width, int height, int stride, const float *filter, int filter_width);
 void xy_filter_one_line_sse(float *dst, int width, const float *filter, int filter_width)
 {
