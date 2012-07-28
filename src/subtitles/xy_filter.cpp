@@ -144,7 +144,7 @@ void xy_filter_sse(float *dst, int width, int height, int stride, const float *f
                 src4 = src_5_8;
             }
             //store result
-            _mm_stream_ps(dst2, sum);
+            _mm_store_ps(dst2, sum);
         }
         for (;dst2<dst_f;dst2+=4)//if width < filter_width
         {
@@ -167,7 +167,7 @@ void xy_filter_sse(float *dst, int width, int height, int stride, const float *f
             f4 = _mm_load_ps(filter_end);
             { XY_FILTER_4(src4, src_5_8, f4, sum); }
             //store result
-            _mm_stream_ps(dst2, sum);
+            _mm_store_ps(dst2, sum);
         }
         ASSERT(filter_start == filter);
         for (;dst2<dst_end0;dst2+=4)
@@ -187,7 +187,7 @@ void xy_filter_sse(float *dst, int width, int height, int stride, const float *f
                 src4 = src_5_8;
             }
             //store result
-            _mm_stream_ps(dst2, sum);
+            _mm_store_ps(dst2, sum);
         }
         for (;dst2<dst_endr;dst2+=4)//right margin
         {
@@ -213,7 +213,7 @@ void xy_filter_sse(float *dst, int width, int height, int stride, const float *f
             f4 = _mm_load_ps(filter_end);
             { XY_FILTER_4(src4, src_5_8, f4, sum); }
             //store result
-            _mm_stream_ps(dst2, sum);
+            _mm_store_ps(dst2, sum);
         }
     }
 #undef XY_FILTER_4
@@ -279,10 +279,10 @@ void xy_byte_2_float_sse(float *dst, int dst_width, int dst_stride,
             __m128 dst_f2 =  _mm_cvtepi32_ps(src16_lo_hi);
             __m128 dst_f3 =  _mm_cvtepi32_ps(src16_hi_lo);
             __m128 dst_f4 =  _mm_cvtepi32_ps(src16_hi_hi);
-            _mm_stream_ps(dst2, dst_f1);
-            _mm_stream_ps(dst2+4, dst_f2);
-            _mm_stream_ps(dst2+8, dst_f3);
-            _mm_stream_ps(dst2+12, dst_f4);
+            _mm_store_ps(dst2, dst_f1);
+            _mm_store_ps(dst2+4, dst_f2);
+            _mm_store_ps(dst2+8, dst_f3);
+            _mm_store_ps(dst2+12, dst_f4);
         }
         PCUINT8 src2_end = src + width;
         for (;src2<src2_end;src2++,dst2++)
