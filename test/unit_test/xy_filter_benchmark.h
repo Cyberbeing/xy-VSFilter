@@ -5,6 +5,7 @@
 #include <wtypes.h>
 #include <math.h>
 #include <xmmintrin.h>
+#include "xy_malloc.h"
 
 typedef const UINT8 CUINT8, *PCUINT8;
 
@@ -863,7 +864,7 @@ struct FilterAllMargin<FILTER_LENGTH,0>
  *   FILTER_LENGTH%4 == 0 && FILTER_LENGTH<=width
  **/
 template<int FILTER_LENGTH>
-void xy_filter_sse_template(float *dst, int width, int height, int stride, const float *filter)
+void xy_filter_sse_template_v0(float *dst, int width, int height, int stride, const float *filter)
 {
     ASSERT( stride>=4*(width+FILTER_LENGTH) );
     ASSERT( ((stride|(4*width)|(4*FILTER_LENGTH)|reinterpret_cast<int>(dst)|reinterpret_cast<int>(filter))&15)==0 );
@@ -901,8 +902,8 @@ void xy_filter_sse_template(float *dst, int width, int height, int stride, const
 void xy_filter_sse_v5(float *dst, int width, int height, int stride, const float *filter, int filter_width)
 {
     typedef void (*Filter)(float *dst, int width, int height, int stride, const float *filter);
-    const Filter filters[] = { xy_filter_sse_template<4>, xy_filter_sse_template<8>, xy_filter_sse_template<12>, xy_filter_sse_template<16>,
-        xy_filter_sse_template<20>, xy_filter_sse_template<24>, xy_filter_sse_template<28>
+    const Filter filters[] = { xy_filter_sse_template_v0<4>, xy_filter_sse_template_v0<8>, xy_filter_sse_template_v0<12>, xy_filter_sse_template_v0<16>,
+        xy_filter_sse_template_v0<20>, xy_filter_sse_template_v0<24>, xy_filter_sse_template_v0<28>
     };
     if (filter_width<=28 && filter_width<=width)
     {
@@ -1068,71 +1069,349 @@ void xy_filter_sse_v6(float *dst, int width, int height, int stride, const float
     }
 }
 
+// v7
+
+/****
+ * @src4, @f4_1, @sum : __m128
+ * @f4_1: const
+ * @sum : output
+ * @src4: undefined
+ **/ 
+#define XY_FILTER_4_1(src4, f4_1, sum) \
+    src4 = _mm_mul_ps(src4, f4_1);\
+    sum = _mm_add_ps(sum, src4);
+
+/****
+ * Constrain:
+ *   LENGTH%4 == 0 || LENGTH%4 == 1
+ **/
+template<int LENGTH>
+struct M128s_V1
+{
+    __m128 x;
+    M128s_V1<LENGTH - 4> next;
+
+    template<int Index> __forceinline __m128& GetAt()
+    {
+        return next.GetAt<Index - 4>();
+    }
+    template<> __forceinline __m128& GetAt<0>()
+    {
+        return x;
+    }
+
+    template<int Start, int Offset> __forceinline __m128& GetAt()
+    {
+        return GetAt<Start + Offset>();
+    }
+
+    __forceinline void Load(const float* src)
+    {
+        x = _mm_load_ps(src);
+        next.Load(src+4);
+    }
+};
+
+template<>
+struct M128s_V1<1>
+{
+    __m128 x;
+
+    template<int Index> __forceinline __m128& GetAt()
+    {
+        return x;
+    }
+    __forceinline void Load(const float* src)
+    {
+        x = _mm_set1_ps(*src);
+    }
+};
+
+template<>
+struct M128s_V1<0>
+{
+    void Load(const float* src)
+    {
+    }
+};
+
+template<int FILTER_LENGTH, int START, int LENGTH>
+struct Filter4_V1
+{
+    static __forceinline void do_cal(__m128& src0_128, const float * src4, M128s_V1<FILTER_LENGTH>& filter128s, __m128& sum)
+    {
+        __m128 src4_128 = _mm_load_ps(src4);
+        { XY_FILTER_4(src0_128, src4_128, filter128s.GetAt<START>(), sum); }
+        Filter4_V1<FILTER_LENGTH,START+4,LENGTH-4>::do_cal(src4_128, src4+4, filter128s, sum);
+        src0_128 = src4_128;
+    }
+};
+
+template<int FILTER_LENGTH, int START>
+struct Filter4_V1<FILTER_LENGTH, START, 1>
+{
+    static __forceinline void do_cal(__m128& src0_128, const float * src4, M128s_V1<FILTER_LENGTH>& filter128s, __m128& sum)
+    {
+        cal_tail<FILTER_LENGTH-START>(src0_128, src4, filter128s, sum);
+    }
+    template<int TAIL>
+    static __forceinline void cal_tail(__m128& src0_128, const float * src4, M128s_V1<FILTER_LENGTH>& filter128s, __m128& sum)
+    {
+
+    }
+    template<>
+    static __forceinline void cal_tail<1>(__m128& src0_128, const float * src4, M128s_V1<FILTER_LENGTH>& filter128s, __m128& sum)
+    {
+        { XY_FILTER_4_1(src0_128, filter128s.GetAt<FILTER_LENGTH-1>(), sum); }
+    }
+};
+
+template<int FILTER_LENGTH, int START>
+struct Filter4_V1<FILTER_LENGTH, START, 0>
+{
+    static __forceinline void do_cal(__m128& src0_128, const float * src4, M128s_V1<FILTER_LENGTH>& filter128s, __m128& sum)
+    {
+    }
+};
+
+template<int FILTER_LENGTH,int MARGIN_LENGTH>
+struct FilterAllLeftMargin_V1
+{
+    static __forceinline void cal(float * src, M128s_V1<FILTER_LENGTH>& filter128s)
+    {
+        do_cal<FILTER_LENGTH%4>(src, filter128s);
+    }
+    template<int FILTER_TAIL>
+    static __forceinline void do_cal(float * src, M128s_V1<FILTER_LENGTH>& filter128s)
+    {
+        //filter 4
+        __m128 src0 = _mm_setzero_ps();
+        __m128 sum = _mm_setzero_ps();
+        Filter4_V1<FILTER_LENGTH,MARGIN_LENGTH-4,FILTER_LENGTH-MARGIN_LENGTH+4>::do_cal(src0, src, filter128s, sum);
+        _mm_store_ps(src-MARGIN_LENGTH, sum);
+        FilterAllLeftMargin_V1<FILTER_LENGTH,MARGIN_LENGTH-4>::do_cal<0>(src, filter128s);
+    }
+    template<>
+    static __forceinline void do_cal<1>(float * src, M128s_V1<FILTER_LENGTH>& filter128s)
+    {
+        //filter 4
+        __m128 sum = _mm_setzero_ps();
+        //Only one of the last 4 filter coefficiences is non-zero
+        _mm_store_ps(src-MARGIN_LENGTH, sum);
+        FilterAllLeftMargin_V1<FILTER_LENGTH,MARGIN_LENGTH-4>::do_cal<0>(src, filter128s);
+    }
+};
+
+template<int FILTER_LENGTH, int MARGIN_LENGTH>
+struct FilterAllRightMargin_V1
+{
+    static __forceinline void cal(float * src, M128s_V1<FILTER_LENGTH>& filter128s)
+    {
+        do_cal<FILTER_LENGTH%4>(src, filter128s);
+    }
+    template<int FILTER_TAIL>
+    static __forceinline void do_cal(float * src, M128s_V1<FILTER_LENGTH>& filter128s)
+    {
+        //filter 4
+        {
+            __m128 src0 = _mm_load_ps(src);
+            __m128 sum = _mm_setzero_ps();
+            Filter4_V1<FILTER_LENGTH,0,MARGIN_LENGTH-4>::do_cal(src0, src+4, filter128s, sum);
+            __m128 src4 = _mm_setzero_ps();
+            { XY_FILTER_4(src0, src4, filter128s.GetAt<MARGIN_LENGTH-4>(), sum); }
+            //store result
+            _mm_store_ps(src, sum);
+        }
+        FilterAllRightMargin_V1<FILTER_LENGTH,MARGIN_LENGTH-4>::do_cal<0>(src+4, filter128s);
+    }
+    template<>
+    static __forceinline void do_cal<1>(float * src, M128s_V1<FILTER_LENGTH>& filter128s)
+    {
+        //filter 4
+        {
+            __m128 src0 = _mm_load_ps(src);
+            __m128 sum = _mm_setzero_ps();
+            Filter4_V1<FILTER_LENGTH,0,MARGIN_LENGTH-4>::do_cal(src0, src+4, filter128s, sum);
+            //Only one of the last 4 filter coefficiences is non-zero
+            { XY_FILTER_4_1(src0, filter128s.GetAt<MARGIN_LENGTH-4>(), sum); }
+            //store result
+            _mm_store_ps(src, sum);
+        }
+        FilterAllRightMargin_V1<FILTER_LENGTH,MARGIN_LENGTH-4>::do_cal<0>(src+4, filter128s);
+    }
+};
+
+template<int FILTER_LENGTH>
+struct FilterAllLeftMargin_V1<FILTER_LENGTH,0>
+{
+    template<int FILTER_TAIL>
+    static __forceinline void do_cal(float * src, M128s_V1<FILTER_LENGTH>& filter128s)
+    {
+    }
+};
+
+template<int FILTER_LENGTH>
+struct FilterAllRightMargin_V1<FILTER_LENGTH,0>
+{
+    template<int FILTER_TAIL>
+    static __forceinline void do_cal(float * src, M128s_V1<FILTER_LENGTH>& filter128s)
+    {
+    }
+};
+
+/****
+ * Equivalent:
+ *   xy_filter_c(float *dst, int width, int height, int stride, const float *filter, (FILTER_LENGTH+3)&~3 );
+ * See @xy_filter_c
+ * Constrain:
+ *   FILTER_LENGTH<=width && width%4==0
+ **/
+template<int FILTER_LENGTH>
+void xy_filter_sse_template_v1(float *dst, int width, int height, int stride, const float *filter)
+{
+    ASSERT( stride>=4*(width+FILTER_LENGTH) );
+    ASSERT( ((stride|(4*width)|(4*FILTER_LENGTH)|reinterpret_cast<int>(dst)|reinterpret_cast<int>(filter))&15)==0 );
+
+    M128s_V1<FILTER_LENGTH> filter128s;
+    filter128s.Load(filter);
+
+    const float *filter_start = filter;
+    BYTE* dst_byte = reinterpret_cast<BYTE*>(dst);
+    BYTE* end = dst_byte + height*stride;
+    for( ; dst_byte<end; dst_byte+=stride )
+    {
+        float *dst2 = reinterpret_cast<float*>(dst_byte);
+
+        //left margin
+        FilterAllLeftMargin_V1<FILTER_LENGTH,((FILTER_LENGTH+3)&~3)>::cal(dst2, filter128s);
+        float *dst_end1 = dst2 + width;
+        float *dst_end0 = dst_end1 - ((FILTER_LENGTH+3)&~3);
+        for (;dst2<dst_end0;dst2+=4)
+        {
+            const float *src = dst2;
+
+            //filter 4
+            __m128 src0 = _mm_load_ps(src);/*1 2 3 4*/
+            src += 4;
+            __m128 sum = _mm_setzero_ps();
+            Filter4_V1<FILTER_LENGTH,0,FILTER_LENGTH>::do_cal(src0, src, filter128s, sum);
+            //store result
+            _mm_store_ps(dst2, sum);
+        }
+        FilterAllRightMargin_V1<FILTER_LENGTH,((FILTER_LENGTH+3)&~3)>::cal(dst2, filter128s);
+    }
+}
+
+/****
+ * See @xy_filter_c
+ **/
+void xy_filter_sse_v7(float *dst, int width, int height, int stride, const float *filter, int filter_width)
+{
+    typedef void (*Filter)(float *dst, int width, int height, int stride, const float *filter);
+    const Filter filters[] = { 
+        NULL,
+        xy_filter_sse_template_v1<1>, xy_filter_sse_template_v1<4>, xy_filter_sse_template_v1<4>, xy_filter_sse_template_v1<4>, 
+        xy_filter_sse_template_v1<5>, xy_filter_sse_template_v1<8>, xy_filter_sse_template_v1<8>, xy_filter_sse_template_v1<8>, 
+        xy_filter_sse_template_v1<9>, xy_filter_sse_template_v1<12>, xy_filter_sse_template_v1<12>, xy_filter_sse_template_v1<12>, 
+        xy_filter_sse_template_v1<13>, xy_filter_sse_template_v1<16>, xy_filter_sse_template_v1<16>, xy_filter_sse_template_v1<16>,
+        xy_filter_sse_template_v1<17>, xy_filter_sse_template_v1<20>, xy_filter_sse_template_v1<20>, xy_filter_sse_template_v1<20>, 
+        xy_filter_sse_template_v1<21>, xy_filter_sse_template_v1<24>, xy_filter_sse_template_v1<24>, xy_filter_sse_template_v1<24>, 
+        xy_filter_sse_template_v1<25>, xy_filter_sse_template_v1<28>, xy_filter_sse_template_v1<28>, xy_filter_sse_template_v1<28>
+    };
+    if (filter_width<=28 && filter_width<=width)
+    {
+        int tmp = filter_width;
+        while(filter[tmp-1]==0.0f && filter_width-tmp<3)//Skip tail zero, but limited to 3. We cannot support more current.
+            tmp--;
+        filters[tmp](dst, width, height, stride, filter);
+    }
+    else
+    {
+        xy_filter_sse_v6(dst, width, height, stride, filter, filter_width);
+    }   
+}
+
+// v7 end
+
 class XyFilterTest : public ::testing::Test 
 {
 public:
-    static const int MAX_FILTER_LENGTH = 128;
-    static const int MAX_DATA_BUFF_SIZE = 512*1024;
+    static const int MAX_FILTER_LENGTH = 256;
+    static const int MAX_DATA_BUFF_SIZE = 512*512;
+    static const int MAX_BUFF_SIZE = MAX_DATA_BUFF_SIZE + 2*MAX_FILTER_LENGTH;
 
-    float filter_f_base[MAX_FILTER_LENGTH+3];
+    float *buff_base;
+
     float *filter_f;
 
-    float data_base[MAX_DATA_BUFF_SIZE+3];
     float *data;
     int w, h, pitch;
     int filter_width;
+    int ex_filter_width;
 
-protected:
-    virtual void SetUp() 
+    XyFilterTest():buff_base(NULL),filter_f(NULL),data(NULL)
     {
+        buff_base = (float*)xy_malloc(MAX_BUFF_SIZE*sizeof(float));
+        data = buff_base + MAX_FILTER_LENGTH;
+        filter_f = data + MAX_DATA_BUFF_SIZE;
+    }
+    ~XyFilterTest()
+    {
+        xy_free(buff_base);buff_base=NULL;
+    }
+
+    const XyFilterTest& copy (const XyFilterTest& rhs)
+    {
+        w = rhs.w;
+        h = rhs.h;
+        pitch = rhs.pitch;
+        filter_width = rhs.filter_width;
+        ex_filter_width = rhs.ex_filter_width;
+
+        memcpy(buff_base, rhs.buff_base, MAX_BUFF_SIZE*sizeof(float));        
+        return *this;
     }
 
     void FillRandData(int w, int h, int filter_width)
     {
         this->w = w;
-        this->h = h;        
+        this->h = h;
         this->filter_width = filter_width;
-        ASSERT(w%4==0);
-        ASSERT(this->filter_width  <= MAX_FILTER_LENGTH);
-        //ASSERT(this->filter_width%4==0);
-        
-        this->pitch = ((w+filter_width+3)&~3)*sizeof(float);
-        ASSERT(this->pitch*this->h <= MAX_DATA_BUFF_SIZE);
+        this->ex_filter_width = ((filter_width+3)&~3);        
+        this->pitch = ((w+ex_filter_width+3)&~3)*sizeof(float);
 
-        data = data_base + filter_width;
-        if ((int)(data)&15)
-        {
-            data = (float*)(((int)data + 15) & ~15);
-        }
-        filter_f = filter_f_base;
-        if ((int)(filter_f)&15)
-        {
-            filter_f = (float*)(((int)filter_f + 15) & ~15);
-        }
+        ASSERT(this->pitch*this->h <= MAX_DATA_BUFF_SIZE);
 
         for (int i=0;i<h;i++)
         {
             float *data2 = (float*)((PUINT8)data + i*pitch);
             for (int j=0;j<w+filter_width;j++)
             {
-                data2[j] = rand()*0.1f/0xFF;
+                data2[j] = rand()&0xFF;
             }
         }
         float sum = 0;
         for (int i=0;i<filter_width;i++)
         {
-            filter_f[i] = abs(rand());
+            filter_f[i] = abs((rand()&0xFFFFF)+0xFFFFF);
             sum += filter_f[i];
         }
         for (int i=0;i<filter_width;i++)
         {
             filter_f[i] /= sum;
         }
-        for (int i=filter_width;i<((filter_width+3)&~3);i++)
+        for (int i=filter_width;i<ex_filter_width;i++)
         {
             filter_f[i] = 0;
         }
     }
+protected:
+    virtual void SetUp() 
+    {
+    }
+private:
+    XyFilterTest(const XyFilterTest&);
+    const XyFilterTest& operator= (const XyFilterTest& rhs);
 };
 
 #define FilterTest(width, height, FILTER_LENGTH, loop_num, function) \
@@ -1148,18 +1427,27 @@ TEST_F(XyFilterTest, function ## _ ## width ## _ ## height ## _ ## FILTER_LENGTH
 }
 
 #define DUAL_TEST(width, height, FILTER_LENGTH, loop_num) \
-    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v4) \
-    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v6)
+    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v5) \
+    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v7)
 
-DUAL_TEST(128, 16, 28, 20000)
-    DUAL_TEST(256, 16, 28, 20000)
-    DUAL_TEST(512, 16, 28, 20000)
-    DUAL_TEST(128, 32, 28, 20000)
-    DUAL_TEST(256, 32, 28, 20000)
-    DUAL_TEST(512, 32, 28, 20000)
-    DUAL_TEST(128, 64, 28, 20000)
-    DUAL_TEST(256, 64, 28, 20000)
-    DUAL_TEST(512, 64, 28, 20000)
+DUAL_TEST(128, 16, 20, 20000)
+    DUAL_TEST(256, 16, 20, 20000)
+    DUAL_TEST(512, 16, 20, 20000)
+    DUAL_TEST(128, 32, 20, 20000)
+    DUAL_TEST(256, 32, 20, 20000)
+    DUAL_TEST(512, 32, 20, 20000)
+    DUAL_TEST(128, 64, 20, 20000)
+    DUAL_TEST(256, 64, 20, 20000)
+    DUAL_TEST(512, 64, 20, 20000)
+DUAL_TEST(128, 16, 21, 20000)
+    DUAL_TEST(256, 16, 21, 20000)
+    DUAL_TEST(512, 16, 21, 20000)
+    DUAL_TEST(128, 32, 21, 20000)
+    DUAL_TEST(256, 32, 21, 20000)
+    DUAL_TEST(512, 32, 21, 20000)
+    DUAL_TEST(128, 64, 21, 20000)
+    DUAL_TEST(256, 64, 21, 20000)
+    DUAL_TEST(512, 64, 21, 20000)
 
 //////////////////////////////////////////////////////////////////////
 
