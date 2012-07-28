@@ -95,7 +95,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="main.cpp">
+      <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">AssemblyAndSourceCode</AssemblerOutput>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="subpic_alphablend_test_data.h" />
