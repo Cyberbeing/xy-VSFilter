@@ -46,7 +46,7 @@
     <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
-    <IncludePath>$(SolutionDir)\..\..\..\..\test\gtest-1.6.0\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\..\..\..\test\gtest-1.6.0\include;$(SolutionDir)\..\..\..\..\src\subtitles;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
@@ -58,7 +58,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\..\lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>gtestDU.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gtestDU.lib;subtitlesDU.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
