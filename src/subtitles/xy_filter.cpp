@@ -375,10 +375,7 @@ struct Filter4<FILTER_LENGTH, START, 1>
         cal_tail<FILTER_LENGTH-START>(src0_128, src4, filter128s, sum);
     }
     template<int TAIL>
-    static __forceinline void cal_tail(__m128& src0_128, const float * src4, M128s<FILTER_LENGTH>& filter128s, __m128& sum)
-    {
-
-    }
+    static __forceinline void cal_tail(__m128& src0_128, const float * src4, M128s<FILTER_LENGTH>& filter128s, __m128& sum);
     template<>
     static __forceinline void cal_tail<1>(__m128& src0_128, const float * src4, M128s<FILTER_LENGTH>& filter128s, __m128& sum)
     {
