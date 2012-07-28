@@ -124,23 +124,19 @@ void xy_filter_sse(float *dst, int width, int height, int stride, const float *f
                 __m128 f4 = _mm_load_ps(f);
 
 #define XY_FILTER_4(src4, src_5_8, f4, sum) \
-                __m128 f4_1 = _mm_unpacklo_ps(f4,f4);\
-                f4_1 = _mm_unpacklo_ps(f4_1, f4_1);\
+                __m128 f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(0,0,0,0));\
                 f4_1 = _mm_mul_ps(f4_1, src4);\
                 sum = _mm_add_ps(sum, f4_1);\
                 __m128 src_3_6 = _mm_shuffle_ps(src4, src_5_8, _MM_SHUFFLE(1,0,3,2));/*3 4 5 6*/\
-                f4_1 = _mm_unpackhi_ps(f4,f4);\
-                f4_1 = _mm_unpacklo_ps(f4_1,f4_1);\
+                f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(2,2,2,2));\
                 f4_1 = _mm_mul_ps(f4_1, src_3_6);\
                 sum = _mm_add_ps(sum, f4_1);\
                 src4 = _mm_shuffle_ps(src4, src_3_6, _MM_SHUFFLE(2,1,2,1));/*2 3 4 5*/\
-                f4_1 = _mm_unpacklo_ps(f4,f4);\
-                f4_1 = _mm_unpackhi_ps(f4_1, f4_1);\
+                f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(1,1,1,1));\
                 f4_1 = _mm_mul_ps(f4_1, src4);\
                 sum = _mm_add_ps(sum, f4_1);\
                 src_3_6 = _mm_shuffle_ps(src_3_6, src_5_8, _MM_SHUFFLE(2,1,2,1));/*4 5 6 7*/\
-                f4_1 = _mm_unpackhi_ps(f4,f4);\
-                f4_1 = _mm_unpackhi_ps(f4_1, f4_1);\
+                f4_1 = _mm_shuffle_ps(f4, f4, _MM_SHUFFLE(3,3,3,3));\
                 f4_1 = _mm_mul_ps(f4_1, src_3_6);\
                 sum = _mm_add_ps(sum, f4_1)
 
@@ -306,7 +302,7 @@ void xy_byte_2_float_sse(float *dst, int dst_width, int dst_stride,
  * @dst_width MUST >= @height.
  * if @dst_width > @height, the extra elements will be filled with 0.
  **/
-void xy_transpose(float *dst, int dst_width, int dst_stride, 
+void xy_float_2_float_transpose_c(float *dst, int dst_width, int dst_stride, 
     const float *src, int width, int height, int src_stride)
 {
     ASSERT(dst_width >= height);
@@ -331,11 +327,52 @@ void xy_transpose(float *dst, int dst_width, int dst_stride,
 }
 
 /****
+ * see @xy_float_2_float_transpose_c
+ **/
+void xy_float_2_float_transpose_sse(float *dst, int dst_width, int dst_stride, 
+    const float *src, int width, int height, int src_stride)
+{
+    typedef float DstT;
+    typedef const float SrcT;
+
+    ASSERT( (((int)dst|dst_stride)&15)==0 );
+    ASSERT(dst_width >= height);
+    PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
+    SrcT* src_end = src + width;
+    PCUINT8 src2_end1 = reinterpret_cast<PCUINT8>(src) + (height&~3)*src_stride;
+    PCUINT8 src2_end2 = reinterpret_cast<PCUINT8>(src) + height*src_stride;
+    for( ; src<src_end; src++, dst_byte+=dst_stride )
+    {
+        PCUINT8 src2 = reinterpret_cast<PCUINT8>(src);
+
+        DstT *dst2 = reinterpret_cast<DstT*>(dst_byte);
+        for (;src2<src2_end1;src2+=4*src_stride,dst2+=4)
+        {
+            __m128 m1 = _mm_set_ps(
+                *(SrcT*)(src2+3*src_stride), 
+                *(SrcT*)(src2+2*src_stride), 
+                *(SrcT*)(src2+src_stride), 
+                *(SrcT*)(src2));
+            _mm_store_ps(dst2, m1);
+        }
+        for (;src2<src2_end2;src2+=src_stride,dst2++)
+        {
+            *dst2 = *reinterpret_cast<SrcT*>(src2);
+        }
+        float *dst2_end = reinterpret_cast<DstT*>(dst_byte) + dst_width;
+        for (;dst2<dst2_end;dst2++)
+        {
+            *dst2 = 0;
+        }
+    }
+}
+
+/****
  * Transpose and round Matrix src, then copy to dst.
  * @dst_width MUST >= @height.
  * if @dst_width > @height, the extra elements will be filled with 0.
  **/
-void xy_transpose(UINT8 *dst, int dst_width, int dst_stride, 
+void xy_float_2_byte_transpose_c(UINT8 *dst, int dst_width, int dst_stride, 
     const float *src, int width, int height, int src_stride)
 {
     ASSERT(dst_width >= height);
@@ -352,6 +389,68 @@ void xy_transpose(UINT8 *dst, int dst_width, int dst_stride,
             *dst2 = static_cast<UINT8>(*reinterpret_cast<const float*>(src2)+0.5);
         }
         UINT8 *dst2_end = reinterpret_cast<UINT8*>(dst_byte) + dst_width;
+        for (;dst2<dst2_end;dst2++)
+        {
+            *dst2 = 0;
+        }
+    }
+}
+
+void xy_float_2_byte_transpose_sse(UINT8 *dst, int dst_width, int dst_stride, 
+    const float *src, int width, int height, int src_stride)
+{
+    typedef UINT8 DstT;
+    typedef const float SrcT;
+
+    ASSERT(dst_width >= height);
+    PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
+    SrcT* src_end = src + width;
+    PCUINT8 src2_end00 = reinterpret_cast<PCUINT8>(src) + (height&~15)*src_stride;
+    PCUINT8 src2_end = reinterpret_cast<PCUINT8>(src) + height*src_stride;
+    for( ; src<src_end; src++, dst_byte+=dst_stride )
+    {
+        PCUINT8 src2 = reinterpret_cast<PCUINT8>(src);
+
+        DstT *dst2 = reinterpret_cast<DstT*>(dst_byte);
+        for (;src2<src2_end00;src2+=16*src_stride,dst2+=16)
+        {
+            __m128 m1 = _mm_set_ps(
+                *(SrcT*)(src2+3*src_stride),
+                *(SrcT*)(src2+2*src_stride), 
+                *(SrcT*)(src2+src_stride), 
+                *(SrcT*)(src2));
+            __m128 m2 = _mm_set_ps(
+                *(SrcT*)(src2+7*src_stride),
+                *(SrcT*)(src2+6*src_stride),
+                *(SrcT*)(src2+5*src_stride),
+                *(SrcT*)(src2+4*src_stride));
+            __m128 m3 = _mm_set_ps(
+                *(SrcT*)(src2+11*src_stride),
+                *(SrcT*)(src2+10*src_stride),
+                *(SrcT*)(src2+9*src_stride), 
+                *(SrcT*)(src2+8*src_stride));
+            __m128 m4 = _mm_set_ps(
+                *(SrcT*)(src2+15*src_stride),
+                *(SrcT*)(src2+14*src_stride),
+                *(SrcT*)(src2+13*src_stride),
+                *(SrcT*)(src2+12*src_stride));
+
+            __m128i i1 = _mm_cvtps_epi32(m1);
+            __m128i i2 = _mm_cvtps_epi32(m2);
+            __m128i i3 = _mm_cvtps_epi32(m3);
+            __m128i i4 = _mm_cvtps_epi32(m4);
+
+            i1 = _mm_packs_epi32(i1,i2);
+            i3 = _mm_packs_epi32(i3,i4);
+            i1 = _mm_packus_epi16(i1,i3);
+
+            _mm_store_si128((__m128i*)dst2, i1);
+        }
+        for (;src2<src2_end;src2+=src_stride,dst2++)
+        {
+            *dst2 = static_cast<DstT>(*reinterpret_cast<SrcT*>(src2)+0.5);
+        }
+        DstT *dst2_end = reinterpret_cast<DstT*>(dst_byte) + dst_width;
         for (;dst2<dst2_end;dst2++)
         {
             *dst2 = 0;
@@ -399,14 +498,14 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     float *ver_buff = ver_buff_base + ex_mask_width;
 
     int true_width = width+r*2;
-    xy_transpose(ver_buff, fheight, fstride_ver, hor_buff-r*2, true_width, height, fstride);
+    xy_float_2_float_transpose_sse(ver_buff, fheight, fstride_ver, hor_buff-r*2, true_width, height, fstride);
 
     // vertical pass
     xy_filter_sse(ver_buff, fheight, true_width, fstride_ver, gt, ex_mask_width);
     
     // transpose
     int true_height = height + 2*r;
-    xy_transpose(dst, true_width, dst_stride, ver_buff-r*2, true_height, true_width, fstride_ver);
+    xy_float_2_byte_transpose_sse(dst, true_width, dst_stride, ver_buff-r*2, true_height, true_width, fstride_ver);
     
     xy_free(buff_base);
     _mm_empty();
