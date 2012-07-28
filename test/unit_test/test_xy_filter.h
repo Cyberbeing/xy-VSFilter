@@ -13,6 +13,7 @@ void xy_filter_one_line_sse(float *dst, int width, const float *filter, int filt
 {
     xy_filter_sse(dst, width, 1, ((width*4)+15)&~15, filter, filter_width);
 }
+void xy_filter_one_line_sse_v6(float *dst, int width, const float *filter, int filter_width);
 
 template<typename T>
 std::ostream& GetBufString(std::ostream& os, T* buf, int len)
@@ -188,7 +189,7 @@ TEST_F(XyFilterTest, c_vs_sse)
                 data1.copy(data0);
                 data2.copy(data0);
                 xy_filter_one_line_c(data1.data, data1.w, data1.filter_f, data1.ex_filter_width);
-                xy_filter_one_line_sse(data2.data, data2.w, data2.filter_f, data2.ex_filter_width);
+                xy_filter_one_line_sse_v6(data2.data, data2.w, data2.filter_f, data2.ex_filter_width);
                 ASSERT_EQ(true, data2.operator==(data1))
                     <<LOG_VAR(i)<<LOG_VAR(WIDTH)<<LOG_VAR(FILTER_WIDTH)<<std::endl
                     <<"data0:"<<data0
@@ -198,5 +199,27 @@ TEST_F(XyFilterTest, c_vs_sse)
         }
 }
 
+
+TEST_F(XyFilterTest, sse_vs_sse_v6)
+{
+    int LOOP_NUM = 10;
+    for(int WIDTH=4;WIDTH<256;WIDTH+=4)
+        for (int FILTER_WIDTH=3;FILTER_WIDTH<32;FILTER_WIDTH++)
+        {
+            for(int i=0;i<LOOP_NUM;i++)
+            {
+                data0.FillRandData(WIDTH, 1, FILTER_WIDTH);
+                data1.copy(data0);
+                data2.copy(data0);
+                xy_filter_one_line_sse(data1.data, data1.w, data1.filter_f, data1.ex_filter_width);
+                xy_filter_one_line_sse_v6(data2.data, data2.w, data2.filter_f, data2.ex_filter_width);
+                ASSERT_EQ(true, data2.operator==(data1))
+                    <<LOG_VAR(i)<<LOG_VAR(WIDTH)<<LOG_VAR(FILTER_WIDTH)<<std::endl
+                    <<"data0:"<<data0
+                    <<"data1:"<<data1
+                    <<"data2:"<<data2;
+            }
+        }
+}
 
 #endif // __TEST_XY_FILTER_0B6AC4E9_AA51_4EF9_B255_90792DC07DB9_H__
