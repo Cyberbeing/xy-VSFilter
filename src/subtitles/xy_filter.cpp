@@ -522,6 +522,76 @@ void xy_filter_sse_template(float *dst, int width, int height, int stride, const
     }
 }
 
+
+/****
+ * @src4, @src_5_8, @f3_1, @f3_2, @sum: __m128
+ * @src4, @src_5_8, @f3_1, @f3_2: const
+ * @sum: output
+ **/
+#define XY_3_TAG_SYMMETRIC_FILTER_4(src4, src_5_8, f3_1, f3_2, sum) \
+    __m128 src_3_6 = _mm_shuffle_ps(src4, src_5_8, _MM_SHUFFLE(1,0,3,2));/*3 4 5 6*/\
+    __m128 src_2_5 = _mm_shuffle_ps(src4, src_3_6, _MM_SHUFFLE(2,1,2,1));/*2 3 4 5*/\
+    sum = _mm_mul_ps(f3_1, src4);\
+    __m128 mul2 = _mm_mul_ps(f3_2, src_2_5);\
+    __m128 mul3 = _mm_mul_ps(f3_1, src_3_6);\
+    sum = _mm_add_ps(sum, mul2);\
+    sum = _mm_add_ps(sum, mul3);
+
+/****
+ * Equivalent:
+ *   xy_filter_c(float *dst, int width, int height, int stride, const float *filter, 4 );
+ * See @xy_filter_c
+ * Constrain:
+ *   filter[3] == 0 && filter[0] == filter[2] (symmetric) (&& sum(filter)==1)
+ **/
+void xy_3_tag_symmetric_filter_sse(float *dst, int width, int height, int stride, const float *filter)
+{
+    const int filter_width = 4;
+    ASSERT( stride>=4*(width+filter_width) );
+    ASSERT( ((stride|(4*width)|(4*filter_width)|reinterpret_cast<int>(dst)|reinterpret_cast<int>(filter))&15)==0 );
+
+    ASSERT(filter_width==4 && filter[3]==0 && filter[2]==filter[0]);
+    
+    __m128 f3_1 = _mm_set1_ps(filter[0]);
+    __m128 f3_2 = _mm_set1_ps(filter[1]);
+
+    BYTE* dst_byte = reinterpret_cast<BYTE*>(dst);
+    BYTE* end = dst_byte + height*stride;
+    for( ; dst_byte<end; dst_byte+=stride )
+    {
+        float *dst_f = reinterpret_cast<float*>(dst_byte);
+        float *dst2 = dst_f;
+
+        float *dst_end0 = dst_f + width - 4;
+        //filter 4
+        __m128 src4 = _mm_load_ps(dst2);/*1 2 3 4*/
+        {
+            __m128 sum;
+            __m128 src_4 = _mm_setzero_ps();
+            { XY_3_TAG_SYMMETRIC_FILTER_4(src_4, src4, f3_1, f3_2, sum); }
+            _mm_store_ps(dst2-4, sum);
+        }        
+        for (;dst2<dst_end0;dst2+=4)
+        {
+            __m128 sum;
+            __m128 src_5_8 = _mm_load_ps(dst2+4);/*5 6 7 8*/
+            { XY_3_TAG_SYMMETRIC_FILTER_4(src4, src_5_8, f3_1, f3_2, sum); }
+            src4 = src_5_8;
+            //store result
+            _mm_store_ps(dst2, sum);
+        }
+        {
+            __m128 sum;
+            __m128 src_5_8 = _mm_setzero_ps();/*5 6 7 8*/
+            { XY_3_TAG_SYMMETRIC_FILTER_4(src4, src_5_8, f3_1, f3_2, sum); }
+            src4 = src_5_8;
+            //store result
+            _mm_store_ps(dst2, sum);
+        }
+    }
+}
+
+
 /****
  * See @xy_filter_c
  **/
@@ -544,7 +614,14 @@ void xy_filter_sse(float *dst, int width, int height, int stride, const float *f
         // Skip tail zero, but we cannot (and don't have to) support more than 3 tail zeros currently.
         while( AlmostEqual(filter[tmp-1],0.0f) && filter_width-tmp<3 )
             tmp--;
-        filters[tmp](dst, width, height, stride, filter);
+        if (tmp==3&&filter[0]==filter[2])
+        {
+            xy_3_tag_symmetric_filter_sse(dst, width, height, stride, filter);
+        }
+        else
+        {
+            filters[tmp](dst, width, height, stride, filter);
+        }
     }
     else
     {
