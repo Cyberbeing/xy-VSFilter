@@ -32,5 +32,11 @@
     <ClInclude Include="test_instrinsics_macro.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="test_xy_filter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xy_filter_benchmark.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

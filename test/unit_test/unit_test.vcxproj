@@ -102,6 +102,8 @@
     <ClInclude Include="test_alphablend.h" />
     <ClInclude Include="test_instrinsics_macro.h" />
     <ClInclude Include="test_subsample_and_interlace.h" />
+    <ClInclude Include="test_xy_filter.h" />
+    <ClInclude Include="xy_filter_benchmark.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
