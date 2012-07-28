@@ -1071,6 +1071,31 @@ void xy_filter_sse_v6(float *dst, int width, int height, int stride, const float
 
 // v7
 
+//
+// ref: "Comparing floating point numbers" by Bruce Dawson
+// http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
+//
+bool AlmostEqual(float A, float B, int maxUlps=0)
+{
+    // Make sure maxUlps is non-negative and small enough that the
+    // default NAN won't compare as equal to anything.
+    ASSERT(maxUlps > 0 && maxUlps < 4 * 1024 * 1024);
+    int aInt = *(int*)&A;
+    // Make aInt lexicographically ordered as a twos-complement int
+    if (aInt < 0)
+        aInt = 0x80000000 - aInt;
+    // Make bInt lexicographically ordered as a twos-complement int
+    int bInt = *(int*)&B;
+    if (bInt < 0)
+        bInt = 0x80000000 - bInt;
+
+    int intDiff = abs(aInt - bInt);
+    if (intDiff <= maxUlps)
+        return true;
+
+    return false;
+}
+
 /****
  * @src4, @f4_1, @sum : __m128
  * @f4_1: const
@@ -1321,7 +1346,7 @@ void xy_filter_sse_v7(float *dst, int width, int height, int stride, const float
     if (filter_width<=28 && filter_width<=width)
     {
         int tmp = filter_width;
-        while(filter[tmp-1]==0.0f && filter_width-tmp<3)//Skip tail zero, but limited to 3. We cannot support more current.
+        while( AlmostEqual(filter[tmp-1],0.0f) && filter_width-tmp<3)//Skip tail zero, but limited to 3. We cannot support more current.
             tmp--;
         filters[tmp](dst, width, height, stride, filter);
     }
@@ -1332,6 +1357,113 @@ void xy_filter_sse_v7(float *dst, int width, int height, int stride, const float
 }
 
 // v7 end
+
+
+// v8
+
+/****
+ * @src4, @src_5_8, @f3_1, @f3_2, @sum: __m128
+ * @src4, @src_5_8, @f3_1, @f3_2: const
+ * @sum: output
+ **/
+#define XY_3_TAG_SYMMETRIC_FILTER_4(src4, src_5_8, f3_1, f3_2, sum) \
+    __m128 src_3_6 = _mm_shuffle_ps(src4, src_5_8, _MM_SHUFFLE(1,0,3,2));/*3 4 5 6*/\
+    __m128 src_2_5 = _mm_shuffle_ps(src4, src_3_6, _MM_SHUFFLE(2,1,2,1));/*2 3 4 5*/\
+    sum = _mm_mul_ps(f3_1, src4);\
+    __m128 mul2 = _mm_mul_ps(f3_2, src_2_5);\
+    __m128 mul3 = _mm_mul_ps(f3_1, src_3_6);\
+    sum = _mm_add_ps(sum, mul2);\
+    sum = _mm_add_ps(sum, mul3);
+
+/****
+ * Equivalent:
+ *   xy_filter_c(float *dst, int width, int height, int stride, const float *filter, 4 );
+ * See @xy_filter_c
+ * Constrain:
+ *   filter[3] == 0 && filter[0] == filter[2] (symmetric) (&& sum(filter)==1)
+ **/
+void xy_3_tag_symmetric_filter_sse(float *dst, int width, int height, int stride, const float *filter)
+{
+    const int filter_width = 4;
+    ASSERT( stride>=4*(width+filter_width) );
+    ASSERT( ((stride|(4*width)|(4*filter_width)|reinterpret_cast<int>(dst)|reinterpret_cast<int>(filter))&15)==0 );
+
+    ASSERT(filter_width==4 && filter[3]==0 && filter[2]==filter[0]);
+    
+    __m128 f3_1 = _mm_set1_ps(filter[0]);
+    __m128 f3_2 = _mm_set1_ps(filter[1]);
+
+    BYTE* dst_byte = reinterpret_cast<BYTE*>(dst);
+    BYTE* end = dst_byte + height*stride;
+    for( ; dst_byte<end; dst_byte+=stride )
+    {
+        float *dst_f = reinterpret_cast<float*>(dst_byte);
+        float *dst2 = dst_f;
+
+        float *dst_end0 = dst_f + width - 4;
+        //filter 4
+        __m128 src4 = _mm_load_ps(dst2);/*1 2 3 4*/
+        {
+            __m128 sum;
+            __m128 src_4 = _mm_setzero_ps();
+            { XY_3_TAG_SYMMETRIC_FILTER_4(src_4, src4, f3_1, f3_2, sum); }
+            _mm_store_ps(dst2, sum);
+        }        
+        for (;dst2<dst_end0;dst2+=4)
+        {
+            __m128 sum;
+            __m128 src_5_8 = _mm_load_ps(dst2+4);/*5 6 7 8*/
+            { XY_3_TAG_SYMMETRIC_FILTER_4(src4, src_5_8, f3_1, f3_2, sum); }
+            src4 = src_5_8;
+            //store result
+            _mm_store_ps(dst2, sum);
+        }
+        {
+            __m128 sum;
+            __m128 src_5_8 = _mm_setzero_ps();/*5 6 7 8*/
+            { XY_3_TAG_SYMMETRIC_FILTER_4(src4, src_5_8, f3_1, f3_2, sum); }
+            src4 = src_5_8;
+            //store result
+            _mm_store_ps(dst2, sum);
+        }
+    }
+}
+
+void xy_filter_sse_v8(float *dst, int width, int height, int stride, const float *filter, int filter_width)
+{
+    typedef void (*Filter)(float *dst, int width, int height, int stride, const float *filter);
+    const Filter filters[] = { 
+        NULL,
+        xy_filter_sse_template_v1<1>, xy_filter_sse_template_v1<4>, xy_filter_sse_template_v1<4>, xy_filter_sse_template_v1<4>, 
+        xy_filter_sse_template_v1<5>, xy_filter_sse_template_v1<8>, xy_filter_sse_template_v1<8>, xy_filter_sse_template_v1<8>, 
+        xy_filter_sse_template_v1<9>, xy_filter_sse_template_v1<12>, xy_filter_sse_template_v1<12>, xy_filter_sse_template_v1<12>, 
+        xy_filter_sse_template_v1<13>, xy_filter_sse_template_v1<16>, xy_filter_sse_template_v1<16>, xy_filter_sse_template_v1<16>,
+        xy_filter_sse_template_v1<17>, xy_filter_sse_template_v1<20>, xy_filter_sse_template_v1<20>, xy_filter_sse_template_v1<20>, 
+        xy_filter_sse_template_v1<21>, xy_filter_sse_template_v1<24>, xy_filter_sse_template_v1<24>, xy_filter_sse_template_v1<24>, 
+        xy_filter_sse_template_v1<25>, xy_filter_sse_template_v1<28>, xy_filter_sse_template_v1<28>, xy_filter_sse_template_v1<28>
+    };
+    if (filter_width<=28 && filter_width<=width)
+    {
+        int tmp = filter_width;
+        // Skip tail zero, but we cannot (and don't have to) support more than 3 tail zeros currently.
+        while( AlmostEqual(filter[tmp-1],0.0f) && filter_width-tmp<3 )
+            tmp--;
+        if (tmp==3&&filter[0]==filter[2])
+        {
+            xy_3_tag_symmetric_filter_sse(dst, width, height, stride, filter);
+        }
+        else
+        {
+            filters[tmp](dst, width, height, stride, filter);
+        }
+    }
+    else
+    {
+        xy_filter_sse_v6(dst, width, height, stride, filter, filter_width);
+    }   
+}
+
+// v8 end
 
 class XyFilterTest : public ::testing::Test 
 {
@@ -1391,9 +1523,14 @@ public:
             }
         }
         float sum = 0;
-        for (int i=0;i<filter_width;i++)
+        for (int i=0;i<filter_width/2+1;i++)
         {
             filter_f[i] = abs((rand()&0xFFFFF)+0xFFFFF);
+            sum += filter_f[i];
+        }
+        for (int i=filter_width/2+1;i<filter_width;i++)
+        {
+            filter_f[i] = filter_f[filter_width-i-1];
             sum += filter_f[i];
         }
         for (int i=0;i<filter_width;i++)
@@ -1427,9 +1564,18 @@ TEST_F(XyFilterTest, function ## _ ## width ## _ ## height ## _ ## FILTER_LENGTH
 }
 
 #define DUAL_TEST(width, height, FILTER_LENGTH, loop_num) \
-    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v5) \
-    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v7)
+    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v7) \
+    FilterTest(width, height, FILTER_LENGTH, loop_num, xy_filter_sse_v8)
 
+DUAL_TEST(128, 16, 3, 30000)
+    DUAL_TEST(256, 16, 3, 30000)
+    DUAL_TEST(512, 16, 3, 30000)
+    DUAL_TEST(128, 32, 3, 30000)
+    DUAL_TEST(256, 32, 3, 30000)
+    DUAL_TEST(512, 32, 3, 30000)
+    DUAL_TEST(128, 64, 3, 30000)
+    DUAL_TEST(256, 64, 3, 30000)
+    DUAL_TEST(512, 64, 3, 30000)
 DUAL_TEST(128, 16, 20, 20000)
     DUAL_TEST(256, 16, 20, 20000)
     DUAL_TEST(512, 16, 20, 20000)

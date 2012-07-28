@@ -133,9 +133,14 @@ public:
             }
         }
         float sum = 0;
-        for (int i=0;i<filter_width;i++)
+        for (int i=0;i<filter_width/2+1;i++)
         {
             filter_f[i] = abs((rand()&0xFFFFF)+0xFFFFF);
+            sum += filter_f[i];
+        }
+        for (int i=filter_width/2+1;i<filter_width;i++)
+        {
+            filter_f[i] = filter_f[filter_width-i-1];
             sum += filter_f[i];
         }
         for (int i=0;i<filter_width;i++)
