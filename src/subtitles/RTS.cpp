@@ -801,7 +801,7 @@ CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     }
     SharedPtrTextInfo text_info;
     TextInfoCacheKey text_info_key;
-    text_info_key.m_str = m_str.Get();
+    text_info_key.m_str_id = m_str.GetId();
     text_info_key.m_style = m_style;
     text_info_key.UpdateHashValue();
     TextInfoMruCache* text_info_cache = CacheManager::GetTextInfoCache();
