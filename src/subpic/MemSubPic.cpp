@@ -444,7 +444,7 @@ void CMemSubPic::SubsampleAndInterlace( const CRect& cRect, bool u_first )
 
     //Todo: fix me. 
     //Walkarround for alignment
-    if ( (m_spd.pitch&15) == 0 ) 
+    if ( ((m_spd.pitch|w)&15) == 0 ) 
     {
         ASSERT(w%16==0);
         for (int i=0;i<h;i+=2)
