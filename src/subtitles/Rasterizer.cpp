@@ -701,6 +701,85 @@ static void be_blur(unsigned char *buf, unsigned *tmp_base, int w, int h, int st
     xy_free(col_pix_buf_base);
 }
 
+/**
+ * see @be_blur
+ */
+static void be_blur_c(unsigned char *buf, unsigned *tmp_base, int w, int h, int stride)
+{   
+    WORD *col_pix_buf_base = reinterpret_cast<WORD*>(xy_malloc(w*sizeof(WORD)));
+    WORD *col_sum_buf_base = reinterpret_cast<WORD*>(xy_malloc(w*sizeof(WORD)));
+    if(!col_sum_buf_base || !col_pix_buf_base)
+    {
+        //ToDo: error handling
+        return;
+    }
+    memset(col_pix_buf_base, 0, w*sizeof(WORD));
+    memset(col_sum_buf_base, 0, w*sizeof(WORD));
+    WORD *col_pix_buf = col_pix_buf_base-2;//for aligment;
+    WORD *col_sum_buf = col_sum_buf_base-2;//for aligment;
+    {
+        int y = 0;
+        unsigned char *src=buf+y*stride;
+
+        int x = 2;
+        int old_pix = src[x-1];
+        int old_sum = old_pix + src[x-2];
+        for ( ; x < w; x++) {
+            int temp1 = src[x];
+            int temp2 = old_pix + temp1;
+            old_pix = temp1;
+            temp1 = old_sum + temp2;
+            old_sum = temp2;
+            col_pix_buf[x] = temp1;
+        }
+    }
+    {
+        int y = 1;
+        unsigned char *src=buf+y*stride;
+
+
+        int x = 2;
+        int old_pix = src[x-1];
+        int old_sum = old_pix + src[x-2];
+        for ( ; x < w; x++) {
+            int temp1 = src[x];
+            int temp2 = old_pix + temp1;
+            old_pix = temp1;
+            temp1 = old_sum + temp2;
+            old_sum = temp2;
+
+            temp2 = col_pix_buf[x] + temp1;
+            col_pix_buf[x] = temp1;
+            //dst[x-1] = (col_sum_buf[x] + temp2) >> 4;
+            col_sum_buf[x] = temp2;
+        }
+    }
+
+    for (int y = 2; y < h; y++) {
+        unsigned char *src=buf+y*stride;
+        unsigned char *dst=buf+(y-1)*stride;
+
+        int x = 2;
+        int old_pix = src[x-1];
+        int old_sum = old_pix + src[x-2];
+        for ( ; x < w; x++) {
+            int temp1 = src[x];
+            int temp2 = old_pix + temp1;
+            old_pix = temp1;
+            temp1 = old_sum + temp2;
+            old_sum = temp2;
+
+            temp2 = col_pix_buf[x] + temp1;
+            col_pix_buf[x] = temp1;
+            dst[x-1] = (col_sum_buf[x] + temp2) >> 4;
+            col_sum_buf[x] = temp2;
+        }
+    }
+
+    xy_free(col_sum_buf_base);
+    xy_free(col_pix_buf_base);
+}
+
 static void Bilinear(unsigned char *buf, int w, int h, int stride, int x_factor, int y_factor)
 {   
     WORD *col_pix_buf_base = reinterpret_cast<WORD*>(xy_malloc(w*sizeof(WORD)));
@@ -946,7 +1025,14 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int fBlur, doub
         {            
             int pitch = output_overlay->mOverlayPitch;
             byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
-            be_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+            if (g_cpuid.m_flags & CCpuID::sse2)
+            {
+                be_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+            }
+            else
+            {
+                be_blur_c(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+            }
         }
     }
     return true;
@@ -1122,7 +1208,14 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, int fBlur, SharedPtrOverl
         {            
             int pitch = output_overlay->mOverlayPitch;
             byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
-            be_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+            if (g_cpuid.m_flags & CCpuID::sse2)
+            {
+                be_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+            }
+            else
+            {
+                be_blur_c(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+            }
         }
     }
     return true;
