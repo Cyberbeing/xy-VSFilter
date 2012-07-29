@@ -80,6 +80,7 @@ extern "C" {
         struct XyFlyWeightInfo
         {
             CacheInfo xy_fw_string_w;
+            CacheInfo xy_fw_grouped_draw_items_hash_key;
         };
     };
 
