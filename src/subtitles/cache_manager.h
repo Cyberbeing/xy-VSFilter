@@ -11,7 +11,7 @@
 class TextInfoCacheKey
 {
 public:
-    CStringW m_str;
+    XyFwStringW::IdType m_str_id;
     FwSTSStyle m_style;
 
     ULONG m_hash_value;

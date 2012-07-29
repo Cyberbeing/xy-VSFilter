@@ -86,16 +86,17 @@ ULONG ClipperTraits::Hash( const CClipper& key )
 bool TextInfoCacheKey::operator==( const TextInfoCacheKey& key ) const
 {
     AddFuncCalls(TextInfoCacheKey_EQUAL);
-    return m_str == key.m_str 
-        && static_cast<const STSStyleBase&>(m_style).operator==(key.m_style)
+    return m_str_id == key.m_str_id 
+        && ( m_style==key.m_style || 
+        (static_cast<const STSStyleBase&>(m_style).operator==(key.m_style)
         && m_style.get().fontScaleX == key.m_style.get().fontScaleX
         && m_style.get().fontScaleY == key.m_style.get().fontScaleY
-        && m_style.get().fontSpacing == key.m_style.get().fontSpacing;
+        && m_style.get().fontSpacing == key.m_style.get().fontSpacing) );
 }
 
 ULONG TextInfoCacheKey::UpdateHashValue() 
 {
-    m_hash_value = CStringElementTraits<CString>::Hash(m_str);
+    m_hash_value = m_str_id;
     m_hash_value += (m_hash_value<<5);
     m_hash_value += hash_value( static_cast<const STSStyleBase&>(m_style.get()) );
     m_hash_value += (m_hash_value<<5);
