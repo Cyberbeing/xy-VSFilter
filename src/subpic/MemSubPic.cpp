@@ -112,6 +112,7 @@ static void SaveNvxx2File(SubPicDesc& spd, const CRect& cRect, const char * file
 // alpha blend functions
 // 
 #include "xy_intrinsics.h"
+#include "../dsutil/vd.h"
 
 //
 // CMemSubPic
@@ -444,26 +445,14 @@ void CMemSubPic::SubsampleAndInterlace( const CRect& cRect, bool u_first )
 
     //Todo: fix me. 
     //Walkarround for alignment
-    if ( ((m_spd.pitch|w)&15) == 0 ) 
+    if ( ((m_spd.pitch|w) &15) == 0 && (g_cpuid.m_flags & CCpuID::sse2) )
     {
         ASSERT(w%16==0);
-        for (int i=0;i<h;i+=2)
-        {
-            hleft_vmid_subsample_and_interlace_2_line_sse2(dst, u_start, v_start, w, m_spd.pitch);
-            u_start += 2*m_spd.pitch;
-            v_start += 2*m_spd.pitch;
-            dst += m_spd.pitch;
-        }
+        SubsampleAndInterlace(dst, u_start, v_start, h, w, m_spd.pitch);
     }
     else
     {
-        for (int i=0;i<h;i+=2)
-        {
-            hleft_vmid_subsample_and_interlace_2_line_c(dst, u_start, v_start, w, m_spd.pitch);
-            u_start += 2*m_spd.pitch;
-            v_start += 2*m_spd.pitch;
-            dst += m_spd.pitch;
-        }
+        SubsampleAndInterlaceC(dst, u_start, v_start, h, w, m_spd.pitch);
     }
 }
 
@@ -1170,7 +1159,7 @@ void CMemSubPic::AlphaBltYv12Luma(byte* dst, int dst_pitch,
          |(reinterpret_cast<intptr_t>(alpha) ^ reinterpret_cast<intptr_t>(dst))
          | static_cast<intptr_t>(sub_pitch)
          | static_cast<intptr_t>(dst_pitch) ) & 15 )==0
-        && w > 32)
+        && w > 32 && (g_cpuid.m_flags & CCpuID::sse2))
     {
         int head = (16 - (reinterpret_cast<intptr_t>(alpha)&15))&15;
         int tail = (w-head) & 15;
@@ -1205,19 +1194,24 @@ void CMemSubPic::AlphaBltYv12Luma(byte* dst, int dst_pitch,
     }
     else //fix me: only a workaround for non-mod-16 size video
     {
-        for(int i=0; i<h; i++, dst += dst_pitch, alpha += sub_pitch, sub += sub_pitch)
+        CMemSubPic::AlphaBltYv12LumaC(dst, dst_pitch, w, h, sub, alpha, sub_pitch);
+    }
+}
+
+void CMemSubPic::AlphaBltYv12LumaC( byte* dst, int dst_pitch, int w, int h, const byte* sub, const byte* alpha, int sub_pitch )
+{
+    for(int i=0; i<h; i++, dst += dst_pitch, alpha += sub_pitch, sub += sub_pitch)
+    {
+        const BYTE* sa = alpha;
+        const BYTE* s2 = sub;
+        const BYTE* s2end = s2 + w;
+        BYTE* d2 = dst;
+        for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
         {
-            const BYTE* sa = alpha;
-            const BYTE* s2 = sub;
-            const BYTE* s2end = s2 + w;
-            BYTE* d2 = dst;
-            for(; s2 < s2end; s2+=1, sa+=1, d2+=1)
+            if(sa[0] < 0xff)
             {
-                if(sa[0] < 0xff)
-                {
-                    //					d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];  
-                    d2[0] = ((d2[0]*sa[0])>>8) + s2[0];
-                }
+                //					d2[0] = (((d2[0]-0x10)*s2[3])>>8) + s2[1];  
+                d2[0] = ((d2[0]*sa[0])>>8) + s2[0];
             }
         }
     }
@@ -1232,7 +1226,7 @@ void CMemSubPic::AlphaBltYv12Chroma(byte* dst_uv, int dst_pitch,
         |(reinterpret_cast<intptr_t>(src_a) ^ (2*reinterpret_cast<intptr_t>(dst_uv)))
         | static_cast<intptr_t>(src_pitch) 
         | (2*static_cast<intptr_t>(dst_pitch)) ) & 15) ==0 &&
-        w > 16 )
+        w > 16 && (g_cpuid.m_flags & CCpuID::sse2))
     {
         int head = (16 - (reinterpret_cast<intptr_t>(src_a)&15))&15;
         int tail = (w-head) & 15;
@@ -1248,155 +1242,194 @@ void CMemSubPic::AlphaBltYv12Chroma(byte* dst_uv, int dst_pitch,
     }
     else//fix me: only a workaround for non-mod-16 size video
     {
-        for(int j = 0; j < chroma_h; j++, src_uv += src_pitch*2, src_a += src_pitch*2, dst_uv += dst_pitch)
-        {
-            hleft_vmid_mix_uv_yv12_c(dst_uv, w, src_uv, src_a, src_pitch);
-        }
+        AlphaBltYv12ChromaC(dst_uv, dst_pitch, w, chroma_h, src_uv, src_a, src_pitch);
+    }
+}
+
+void CMemSubPic::AlphaBltYv12ChromaC( byte* dst, int dst_pitch, int w, int chroma_h, const byte* sub_chroma, const byte* alpha, int sub_pitch )
+{
+    for(int j = 0; j < chroma_h; j++, sub_chroma += sub_pitch*2, alpha += sub_pitch*2, dst += dst_pitch)
+    {
+        hleft_vmid_mix_uv_yv12_c(dst, w, sub_chroma, alpha, sub_pitch);
     }
 }
 
 HRESULT CMemSubPic::AlphaBltAnv12_P010( const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch, 
     BYTE* dst_y, BYTE* dst_uv, int dst_pitch, int w, int h )
 {
-    const BYTE* sa = src_a;
-    if( (
-         ((reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(src_y))         
-         |(reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(dst_y))
-         | static_cast<intptr_t>(src_pitch)
-         | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 && 
-        w > 32 )
+    if ( g_cpuid.m_flags & CCpuID::sse2 )
     {
-        int head = (16 - reinterpret_cast<intptr_t>(src_a)&15)&15;
-        int tail = (w - head) & 15;
-
-        for(int i=0; i<h; i++, sa += src_pitch, src_y += src_pitch, dst_y += dst_pitch)
+        const BYTE* sa = src_a;
+        if( (
+            ((reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(src_y))         
+            |(reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(dst_y))
+            | static_cast<intptr_t>(src_pitch)
+            | static_cast<intptr_t>(dst_pitch) ) & 15 )==0 && 
+            w > 32 )
         {
-            const BYTE* sa2 = sa;
-            const BYTE* s2 = src_y;
-            const BYTE* s2end_mod16 = s2 + (w&~15);
-            BYTE* d2 = dst_y;
-            WORD* d_w=reinterpret_cast<WORD*>(dst_y);
+            int head = (16 - reinterpret_cast<intptr_t>(src_a)&15)&15;
+            int tail = (w - head) & 15;
 
-            switch( head )//important: it is safe since w > 16 
+            for(int i=0; i<h; i++, sa += src_pitch, src_y += src_pitch, dst_y += dst_pitch)
             {
-            case 15:
+                const BYTE* sa2 = sa;
+                const BYTE* s2 = src_y;
+                const BYTE* s2end_mod16 = s2 + (w&~15);
+                BYTE* d2 = dst_y;
+                WORD* d_w=reinterpret_cast<WORD*>(dst_y);
+
+                switch( head )//important: it is safe since w > 16 
+                {
+                case 15:
 #define _XY_MIX_ONE if(sa2[0] < 0xff) { d_w[0] = ((d_w[0]*sa2[0])>>8) + (s2[0]<<8); } sa2++;d_w++;s2++;
-                _XY_MIX_ONE
-            case 14:
-                _XY_MIX_ONE
-            case 13:
-                _XY_MIX_ONE
-            case 12:
-                _XY_MIX_ONE
-            case 11:
-                _XY_MIX_ONE
-            case 10:
-                _XY_MIX_ONE
-            case 9:
-                _XY_MIX_ONE
-            case 8:
-                _XY_MIX_ONE
-            case 7:
-                _XY_MIX_ONE
-            case 6:
-                _XY_MIX_ONE
-            case 5:
-                _XY_MIX_ONE
-            case 4:
-                _XY_MIX_ONE
-            case 3:
-                _XY_MIX_ONE
-            case 2:
-                _XY_MIX_ONE
-            case 1://fall through on purpose
-                _XY_MIX_ONE
-            }
-            for(; s2 < s2end_mod16; s2+=16, sa2+=16, d_w+=16)
-            {
-                mix_16_y_p010_sse2( reinterpret_cast<BYTE*>(d_w), s2, sa2);
-            }
-            switch( tail )//important: it is safe since w > 16 
-            {
-            case 15:
-                _XY_MIX_ONE
-            case 14:
-                _XY_MIX_ONE
-            case 13:
-                _XY_MIX_ONE
-            case 12:
-                _XY_MIX_ONE
-            case 11:
-                _XY_MIX_ONE
-            case 10:
-                _XY_MIX_ONE
-            case 9:
-                _XY_MIX_ONE
-            case 8:
-                _XY_MIX_ONE
-            case 7:
-                _XY_MIX_ONE
-            case 6:
-                _XY_MIX_ONE
-            case 5:
-                _XY_MIX_ONE
-            case 4:
-                _XY_MIX_ONE
-            case 3:
-                _XY_MIX_ONE
-            case 2:
-                _XY_MIX_ONE
-            case 1://fall through on purpose
-                _XY_MIX_ONE
+                    _XY_MIX_ONE
+                case 14:
+                    _XY_MIX_ONE
+                case 13:
+                    _XY_MIX_ONE
+                case 12:
+                    _XY_MIX_ONE
+                case 11:
+                    _XY_MIX_ONE
+                case 10:
+                    _XY_MIX_ONE
+                case 9:
+                    _XY_MIX_ONE
+                case 8:
+                    _XY_MIX_ONE
+                case 7:
+                    _XY_MIX_ONE
+                case 6:
+                    _XY_MIX_ONE
+                case 5:
+                    _XY_MIX_ONE
+                case 4:
+                    _XY_MIX_ONE
+                case 3:
+                    _XY_MIX_ONE
+                case 2:
+                    _XY_MIX_ONE
+                case 1://fall through on purpose
+                    _XY_MIX_ONE
+                }
+                for(; s2 < s2end_mod16; s2+=16, sa2+=16, d_w+=16)
+                {
+                    mix_16_y_p010_sse2( reinterpret_cast<BYTE*>(d_w), s2, sa2);
+                }
+                switch( tail )//important: it is safe since w > 16 
+                {
+                case 15:
+                    _XY_MIX_ONE
+                case 14:
+                    _XY_MIX_ONE
+                case 13:
+                    _XY_MIX_ONE
+                case 12:
+                    _XY_MIX_ONE
+                case 11:
+                    _XY_MIX_ONE
+                case 10:
+                    _XY_MIX_ONE
+                case 9:
+                    _XY_MIX_ONE
+                case 8:
+                    _XY_MIX_ONE
+                case 7:
+                    _XY_MIX_ONE
+                case 6:
+                    _XY_MIX_ONE
+                case 5:
+                    _XY_MIX_ONE
+                case 4:
+                    _XY_MIX_ONE
+                case 3:
+                    _XY_MIX_ONE
+                case 2:
+                    _XY_MIX_ONE
+                case 1://fall through on purpose
+                    _XY_MIX_ONE
+                }
             }
         }
-    }
-    else //fix me: only a workaround for non-mod-16 size video
-    {
-        for(int i=0; i<h; i++, sa += src_pitch, src_y += src_pitch, dst_y += dst_pitch)
+        else //fix me: only a workaround for non-mod-16 size video
         {
-            const BYTE* sa2 = sa;
-            const BYTE* s2 = src_y;
-            const BYTE* s2end = s2 + w;
-            WORD* d_w = reinterpret_cast<WORD*>(dst_y);
-            for(; s2 < s2end; s2+=1, sa2+=1, d_w+=1)
+            for(int i=0; i<h; i++, sa += src_pitch, src_y += src_pitch, dst_y += dst_pitch)
             {
-                if(sa2[0] < 0xff)
-                {                            
-                    d_w[0] = ((d_w[0]*sa2[0])>>8) + (s2[0]<<8);
+                const BYTE* sa2 = sa;
+                const BYTE* s2 = src_y;
+                const BYTE* s2end = s2 + w;
+                WORD* d_w = reinterpret_cast<WORD*>(dst_y);
+                for(; s2 < s2end; s2+=1, sa2+=1, d_w+=1)
+                {
+                    if(sa2[0] < 0xff)
+                    {                            
+                        d_w[0] = ((d_w[0]*sa2[0])>>8) + (s2[0]<<8);
+                    }
                 }
+            }
+        }
+        //UV
+        int h2 = h/2;
+        BYTE* d = dst_uv;
+        if( (
+            ((reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(src_uv)) 
+            |(reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(dst_uv))
+            | static_cast<intptr_t>(src_pitch) 
+            | static_cast<intptr_t>(dst_pitch) ) & 15) ==0 &&
+            w > 16 )
+        {
+            int head = (16-(reinterpret_cast<intptr_t>(src_a)&15))&15;
+            int tail = (w-head) & 15;
+            int w00 = w - head - tail;
+
+            ASSERT(w>0);//the calls to mix may failed if w==0
+            for(int j = 0; j < h2; j++, src_uv += src_pitch, src_a += src_pitch*2, d += dst_pitch)
+            {
+                hleft_vmid_mix_uv_p010_c2(d, head, src_uv, src_a, src_pitch);
+                hleft_vmid_mix_uv_p010_sse2(d+2*head, w00, src_uv+head, src_a+head, src_pitch, head>0 ? -1 : 0);
+                hleft_vmid_mix_uv_p010_c2(d+2*(head+w00), tail, src_uv+head+w00, src_a+head+w00, src_pitch, (w00+head)>0 ? -1 : 0);
+            }
+        }
+        else
+        {        
+            for(int j = 0; j < h2; j++, src_uv += src_pitch, src_a += src_pitch*2, d += dst_pitch)
+            {
+                hleft_vmid_mix_uv_p010_c(d, w, src_uv, src_a, src_pitch);
+            }
+        }
+        __asm emms;
+        return S_OK;
+    }
+    else
+    {
+        return AlphaBltAnv12_P010_C(src_a, src_y, src_uv, src_pitch, dst_y, dst_uv, dst_pitch, w, h);
+    }
+}
+
+HRESULT CMemSubPic::AlphaBltAnv12_P010_C( const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch, BYTE* dst_y, BYTE* dst_uv, int dst_pitch, int w, int h )
+{
+    const BYTE* sa = src_a;
+    for(int i=0; i<h; i++, sa += src_pitch, src_y += src_pitch, dst_y += dst_pitch)
+    {
+        const BYTE* sa2 = sa;
+        const BYTE* s2 = src_y;
+        const BYTE* s2end = s2 + w;
+        WORD* d2 = reinterpret_cast<WORD*>(dst_y);
+        for(; s2 < s2end; s2+=1, sa2+=1, d2+=1)
+        {
+            if(sa2[0] < 0xff)
+            {                            
+                d2[0] = ((d2[0]*sa2[0])>>8) + (s2[0]<<8);
             }
         }
     }
     //UV
     int h2 = h/2;
     BYTE* d = dst_uv;
-    if( (
-        ((reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(src_uv)) 
-        |(reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(dst_uv))
-        | static_cast<intptr_t>(src_pitch) 
-        | static_cast<intptr_t>(dst_pitch) ) & 15) ==0 &&
-        w > 16 )
+    for(int j = 0; j < h2; j++, src_uv += src_pitch, src_a += src_pitch*2, d += dst_pitch)
     {
-        int head = (16-(reinterpret_cast<intptr_t>(src_a)&15))&15;
-        int tail = (w-head) & 15;
-        int w00 = w - head - tail;
-
-        ASSERT(w>0);//the calls to mix may failed if w==0
-        for(int j = 0; j < h2; j++, src_uv += src_pitch, src_a += src_pitch*2, d += dst_pitch)
-        {
-            hleft_vmid_mix_uv_p010_c2(d, head, src_uv, src_a, src_pitch);
-            hleft_vmid_mix_uv_p010_sse2(d+2*head, w00, src_uv+head, src_a+head, src_pitch, head>0 ? -1 : 0);
-            hleft_vmid_mix_uv_p010_c2(d+2*(head+w00), tail, src_uv+head+w00, src_a+head+w00, src_pitch, (w00+head)>0 ? -1 : 0);
-        }
+        hleft_vmid_mix_uv_p010_c(d, w, src_uv, src_a, src_pitch);
     }
-    else
-    {        
-        for(int j = 0; j < h2; j++, src_uv += src_pitch, src_a += src_pitch*2, d += dst_pitch)
-        {
-            hleft_vmid_mix_uv_p010_c(d, w, src_uv, src_a, src_pitch);
-        }
-    }
-    __asm emms;
     return S_OK;
 }
 
@@ -1411,7 +1444,7 @@ HRESULT CMemSubPic::AlphaBltAnv12_Nv12( const BYTE* src_a, const BYTE* src_y, co
          |(reinterpret_cast<intptr_t>(src_a) ^ reinterpret_cast<intptr_t>(dst_uv))
          | static_cast<intptr_t>(src_pitch) 
          | static_cast<intptr_t>(dst_pitch) ) & 15) ==0 &&
-        w > 16 )
+        w > 16 && (g_cpuid.m_flags & CCpuID::sse2) )
     {
         BYTE* d = dst_uv;
 
@@ -1438,6 +1471,40 @@ HRESULT CMemSubPic::AlphaBltAnv12_Nv12( const BYTE* src_a, const BYTE* src_y, co
 
     __asm emms;
     return S_OK;
+}
+
+HRESULT CMemSubPic::AlphaBltAnv12_Nv12_C( const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch, BYTE* dst_y, BYTE* dst_uv, int dst_pitch, int w, int h )
+{
+    AlphaBltYv12LumaC( dst_y, dst_pitch, w, h, src_y, src_a, src_pitch );
+    int h2 = h/2;
+    BYTE* d = dst_uv;
+    for(int j = 0; j < h2; j++, src_uv += src_pitch, src_a += src_pitch*2, d += dst_pitch)
+    {
+        hleft_vmid_mix_uv_nv12_c(d, w, src_uv, src_a, src_pitch);
+    }
+    return S_OK;
+}
+
+void CMemSubPic::SubsampleAndInterlace( BYTE* dst, const BYTE* u, const BYTE* v, int h, int w, int pitch )
+{
+    for (int i=0;i<h;i+=2)
+    {
+        hleft_vmid_subsample_and_interlace_2_line_sse2(dst, u, v, w, pitch);
+        u += 2*pitch;
+        v += 2*pitch;
+        dst += pitch;
+    }
+}
+
+void CMemSubPic::SubsampleAndInterlaceC( BYTE* dst, const BYTE* u, const BYTE* v, int h, int w, int pitch )
+{
+    for (int i=0;i<h;i+=2)
+    {
+        hleft_vmid_subsample_and_interlace_2_line_c(dst, u, v, w, pitch);
+        u += 2*pitch;
+        v += 2*pitch;
+        dst += pitch;
+    }
 }
 
 //
