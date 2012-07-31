@@ -42,11 +42,11 @@
     <IncludePath>$(SolutionDir)\..\..\..\..\test\gtest-1.6.0\include\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">
-    <IncludePath>$(SolutionDir)\..\..\..\..\test\gtest-1.6.0\include;$(SolutionDir)\..\..\..\..\src\subtitles;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(SolutionDir)\..\..\..\..\src\subpic\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\..\..\..\test\gtest-1.6.0\include;$(SolutionDir)\..\..\..\..\src\subtitles;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(SolutionDir)\..\..\..\..\src\subpic\;$(SolutionDir)\..\..\..\..\src\filters\transform\vsfilter\;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
-    <IncludePath>$(SolutionDir)\..\..\..\..\test\gtest-1.6.0\include;$(SolutionDir)\..\..\..\..\src\subtitles;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\..\..\..\test\gtest-1.6.0\include;$(SolutionDir)\..\..\..\..\src\subtitles;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(SolutionDir)\..\..\..\..\src\subpic\;$(SolutionDir)\..\..\..\..\src\filters\transform\vsfilter\;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">
@@ -57,8 +57,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\..\lib\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>gtestDU.lib;subtitlesDU.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\..\lib\;$(SolutionDir)\..\..\..\..\src\filters\transform\vsfilter\Debug Unicode\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>gtestDU.lib;subtitlesDU.lib;VSFilter.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -74,8 +74,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\..\lib\;$(SolutionDir)..\..\..\..\lib\dx\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>gtestRU.lib;subtitlesRU.lib;subpicRU.lib;strmbaseRU.lib;d3d9.lib;ddraw.lib;winmm.lib;delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\..\lib\;$(SolutionDir)..\..\..\..\lib\dx\;$(SolutionDir)\..\..\..\..\src\filters\transform\vsfilter\Release Unicode\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>gtestRU.lib;subtitlesRU.lib;subpicRU.lib;strmbaseRU.lib;d3d9.lib;ddraw.lib;winmm.lib;delayimp.lib;VSFilter.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -98,11 +98,13 @@
     <ClCompile Include="main.cpp">
       <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
+    <ClCompile Include="overall_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="subpic_alphablend_test_data.h" />
     <ClInclude Include="test_alphablend.h" />
     <ClInclude Include="test_instrinsics_macro.h" />
+    <ClInclude Include="test_overall.h" />
     <ClInclude Include="test_subsample_and_interlace.h" />
     <ClInclude Include="test_xy_filter.h" />
     <ClInclude Include="xy_filter_benchmark.h" />
