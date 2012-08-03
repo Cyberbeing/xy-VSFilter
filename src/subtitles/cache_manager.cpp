@@ -8,6 +8,28 @@
 #include "xy_overlay_paint_machine.h"
 #include "xy_clipper_paint_machine.h"
 
+enum { TextInfoCacheKey_EQUAL, ScanLineData2CacheKey_EQUAL, 
+    OverlayNoBlurKey_EQUAL, OverlayKey_EQUAL, 
+    ScanLineDataCacheKey_EQUAL, OverlayNoOffsetKey_EQUAL, 
+    ClipperAlphaMaskCacheKey_EQUAL, DrawItemHashKey_EQUAL, GroupedDrawItemsHashKey_EQUAL,
+    EQUALITY_TEST_FUNC_NUM
+};
+
+#ifdef DEBUG
+
+int g_func_calls_num[EQUALITY_TEST_FUNC_NUM] = {0};
+
+inline void AddFuncCalls(int func)
+{
+    g_func_calls_num[func]++;
+}
+#else
+inline void AddFuncCalls(int func)
+{
+    func;
+}
+#endif
+
 ULONG PathDataTraits::Hash( const PathData& key )
 {
     ULONG hash = 515;
@@ -63,6 +85,7 @@ ULONG ClipperTraits::Hash( const CClipper& key )
 
 bool TextInfoCacheKey::operator==( const TextInfoCacheKey& key ) const
 {
+    AddFuncCalls(TextInfoCacheKey_EQUAL);
     return m_str == key.m_str 
         && static_cast<const STSStyleBase&>(m_style).operator==(key.m_style)
         && m_style.get().fontScaleX == key.m_style.get().fontScaleX
@@ -129,7 +152,8 @@ ULONG PathDataCacheKey::UpdateHashValue()
 // ScanLineData2CacheKey
 
 bool ScanLineData2CacheKey::operator==( const ScanLineData2CacheKey& key ) const
-{ 
+{
+    AddFuncCalls(ScanLineData2CacheKey_EQUAL);
     return 
         this->m_style.get().borderStyle == key.m_style.get().borderStyle
         && fabs(this->m_style.get().outlineWidthX - key.m_style.get().outlineWidthX) < 0.000001
@@ -172,7 +196,8 @@ ULONG ScanLineData2CacheKey::UpdateHashValue()
 // OverlayNoBlurKey
 
 bool OverlayNoBlurKey::operator==( const OverlayNoBlurKey& key ) const
-{ 
+{
+    AddFuncCalls(OverlayNoBlurKey_EQUAL);
     //static_cast will call copy constructer to construct a tmp obj
     //return (static_cast<ScanLineDataCacheKey>(*this)==static_cast<ScanLineDataCacheKey>(key)) 
     //    && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y); 
@@ -195,7 +220,8 @@ ULONG OverlayNoBlurKey::UpdateHashValue()
 // OverlayKey
 
 bool OverlayKey::operator==( const OverlayKey& key ) const
-{    
+{
+    AddFuncCalls(OverlayKey_EQUAL);
     return fabs(this->m_style.get().fGaussianBlur - key.m_style.get().fGaussianBlur) < 0.000001
         && this->m_style.get().fBlur == key.m_style.get().fBlur
         && OverlayNoBlurKey::operator==(key);
@@ -221,6 +247,7 @@ ULONG OverlayKey::UpdateHashValue()
 
 bool ScanLineDataCacheKey::operator==( const ScanLineDataCacheKey& key ) const
 {
+    AddFuncCalls(ScanLineDataCacheKey_EQUAL);
     return (m_path_data && key.m_path_data) ? *m_path_data==*key.m_path_data : m_path_data==key.m_path_data;
 }
 
@@ -236,6 +263,7 @@ ULONG ScanLineDataCacheKey::UpdateHashValue()
 
 bool OverlayNoOffsetKey::operator==( const OverlayNoOffsetKey& key ) const
 {
+    AddFuncCalls(OverlayNoOffsetKey_EQUAL);
     return (this==&key) || ( this->m_border == key.m_border && this->m_rasterize_sub == key.m_rasterize_sub &&
         ScanLineDataCacheKey::operator==(key) );
 }
@@ -257,6 +285,7 @@ ULONG OverlayNoOffsetKey::UpdateHashValue()
 
 bool ClipperAlphaMaskCacheKey::operator==( const ClipperAlphaMaskCacheKey& key ) const
 {
+    AddFuncCalls(ClipperAlphaMaskCacheKey_EQUAL);
     bool result = false;
     if (m_clipper==key.m_clipper)
     {
@@ -323,6 +352,7 @@ DrawItemHashKey::DrawItemHashKey( const DrawItem& draw_item)
 
 bool DrawItemHashKey::operator==( const DrawItemHashKey& key ) const
 {
+    AddFuncCalls(DrawItemHashKey_EQUAL);
     return (this==&key) || (
         (m_clip_rect == key.m_clip_rect)==TRUE &&
         m_xsub == key.m_xsub &&
@@ -352,6 +382,7 @@ ULONG GroupedDrawItemsHashKey::UpdateHashValue()
 
 bool GroupedDrawItemsHashKey::operator==( const GroupedDrawItemsHashKey& key ) const
 {
+    AddFuncCalls(GroupedDrawItemsHashKey_EQUAL);
     if (this==&key)
     {
         return true;
