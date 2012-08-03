@@ -130,9 +130,8 @@ ULONG PathDataCacheKey::UpdateHashValue()
 
 bool ScanLineData2CacheKey::operator==( const ScanLineData2CacheKey& key ) const
 { 
-    return //(static_cast<PathDataCacheKey>(*this)==static_cast<PathDataCacheKey>(key)) 
-        PathDataCacheKey::operator==(key) //static_cast will call copy constructer to construct a tmp obj
-        && this->m_style.get().borderStyle == key.m_style.get().borderStyle
+    return 
+        this->m_style.get().borderStyle == key.m_style.get().borderStyle
         && fabs(this->m_style.get().outlineWidthX - key.m_style.get().outlineWidthX) < 0.000001
         && fabs(this->m_style.get().outlineWidthY - key.m_style.get().outlineWidthY) < 0.000001
         && fabs(this->m_style.get().fontScaleX - key.m_style.get().fontScaleX) < 0.000001
@@ -142,16 +141,29 @@ bool ScanLineData2CacheKey::operator==( const ScanLineData2CacheKey& key ) const
         && fabs(this->m_style.get().fontAngleZ - key.m_style.get().fontAngleZ) < 0.000001
         && fabs(this->m_style.get().fontShiftX - key.m_style.get().fontShiftX) < 0.000001
         && fabs(this->m_style.get().fontShiftY - key.m_style.get().fontShiftY) < 0.000001
-        && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y); 
+        && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y) 
+        && PathDataCacheKey::operator==(key); //NOTE: static_cast will call copy constructer to construct a tmp obj
 }
 
 ULONG ScanLineData2CacheKey::UpdateHashValue()
 {
+    const STSStyle& style = m_style.get();
     m_hash_value = __super::UpdateHashValue();
     m_hash_value += (m_hash_value<<5);
     m_hash_value += m_org.x;
     m_hash_value += (m_hash_value<<5);
-    m_hash_value += m_org.y;//fix me: fontScale and fontAngle are not take into account
+    m_hash_value += m_org.y;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += style.borderStyle;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += ((int)style.outlineWidthX<<16) + (int)style.outlineWidthY;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += ((int)style.fontScaleX<<16) + (int)style.fontScaleY;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += ((int)style.fontAngleX<<20) + ((int)style.fontAngleY<<10) + ((int)style.fontAngleZ);
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += ((int)style.fontShiftX<<16) + (int)style.fontShiftY;
+    
     return  m_hash_value;
 }
 
