@@ -176,7 +176,7 @@ bool OverlayNoBlurKey::operator==( const OverlayNoBlurKey& key ) const
     //static_cast will call copy constructer to construct a tmp obj
     //return (static_cast<ScanLineDataCacheKey>(*this)==static_cast<ScanLineDataCacheKey>(key)) 
     //    && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y); 
-    return ScanLineData2CacheKey::operator==(key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y);
+    return (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) && ScanLineData2CacheKey::operator==(key);
 }
 
 ULONG OverlayNoBlurKey::UpdateHashValue()
@@ -196,9 +196,9 @@ ULONG OverlayNoBlurKey::UpdateHashValue()
 
 bool OverlayKey::operator==( const OverlayKey& key ) const
 {    
-    return OverlayNoBlurKey::operator==(key)
-        && fabs(this->m_style.get().fGaussianBlur - key.m_style.get().fGaussianBlur) < 0.000001
-        && this->m_style.get().fBlur == key.m_style.get().fBlur;
+    return fabs(this->m_style.get().fGaussianBlur - key.m_style.get().fGaussianBlur) < 0.000001
+        && this->m_style.get().fBlur == key.m_style.get().fBlur
+        && OverlayNoBlurKey::operator==(key);
     //static_cast will call copy constructer to construct a tmp obj
     //return ((CWordCacheKey)(*this)==(CWordCacheKey)key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
     //        && (m_org.x==key.m_org.x) && (m_org.y==key.m_org.y);
@@ -286,7 +286,6 @@ ULONG ClipperAlphaMaskCacheKey::UpdateHashValue()
     return m_hash_value;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // DrawItemHashKey
@@ -302,7 +301,10 @@ ULONG DrawItemHashKey::UpdateHashValue()
     m_hash_value += m_fBorder;
     m_hash_value += (m_hash_value<<5);
     m_hash_value += m_fBody;
-    m_hash_value += m_switchpts[0];
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += (m_xsub<<16) + m_ysub;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += m_switchpts[0];//fix me: other m_switchpts elements?
     return m_hash_value;
 }
 
@@ -322,14 +324,14 @@ DrawItemHashKey::DrawItemHashKey( const DrawItem& draw_item)
 bool DrawItemHashKey::operator==( const DrawItemHashKey& key ) const
 {
     return (this==&key) || (
-        *m_overlay_key==*key.m_overlay_key && 
-        m_clipper_key==key.m_clipper_key &&
         (m_clip_rect == key.m_clip_rect)==TRUE &&
         m_xsub == key.m_xsub &&
         m_ysub == key.m_ysub &&
         m_fBody == key.m_fBody &&
         m_fBorder == key.m_fBorder &&
-        !memcmp(m_switchpts, key.m_switchpts, sizeof(m_switchpts)));
+        !memcmp(m_switchpts, key.m_switchpts, sizeof(m_switchpts)) &&
+        *m_overlay_key==*key.m_overlay_key && 
+        m_clipper_key==key.m_clipper_key);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
