@@ -102,7 +102,24 @@ bool PathDataCacheKey::CompareSTSStyle( const STSStyle& lhs, const STSStyle& rhs
 
 ULONG PathDataCacheKey::UpdateHashValue()
 {
+    const STSStyle& style = m_style.get();
     m_hash_value = CStringElementTraits<CString>::Hash(m_str);
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += style.charSet;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += CStringElementTraits<CString>::Hash(style.fontName);
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += style.fontSize;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += style.fontSpacing;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += style.fontWeight;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += style.fItalic;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += style.fUnderline;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += style.fStrikeOut;
     return m_hash_value;
 }
 
@@ -134,7 +151,7 @@ ULONG ScanLineData2CacheKey::UpdateHashValue()
     m_hash_value += (m_hash_value<<5);
     m_hash_value += m_org.x;
     m_hash_value += (m_hash_value<<5);
-    m_hash_value += m_org.y;
+    m_hash_value += m_org.y;//fix me: fontScale and fontAngle are not take into account
     return  m_hash_value;
 }
 
