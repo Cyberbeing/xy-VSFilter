@@ -28,17 +28,18 @@ public:
         POSITION pos;
         if( !_hash.Lookup(key,pos) )
         {
-            pos = _list.AddHead( ListItem(key, value) );
-            _hash[key] = pos;
+            pos = _list.AddHead( ListItem((POSITION)NULL, value) );
+            POSITION pos2 = _hash.SetAt(key, pos);
+            _list.GetAt(pos).first = pos2;
         }
         else
         {
             _list.GetAt(pos).second = value;
-            _list.MoveToHead(pos);            
+            _list.MoveToHead(pos);
         }
         if(_list.GetCount()>_max_item_num)
         {
-            _hash.RemoveKey(_list.GetTail().first);
+            _hash.RemoveAtPos(_list.GetTail().first);
             _list.RemoveTail();
         }
         return pos;
@@ -70,7 +71,7 @@ public:
         _max_item_num = max_item_num;
         while(_list.GetCount()>_max_item_num)
         {
-            _hash.RemoveKey(_list.GetTail().first);
+            _hash.RemoveAtPos(_list.GetTail().first);
             _list.RemoveTail();
         }
         return _max_item_num;
@@ -78,7 +79,7 @@ public:
     inline std::size_t GetMaxItemNum() const { return _max_item_num; }
     inline std::size_t GetCurItemNum() const { return _list.GetCount(); }
 protected:
-    typedef std::pair<K,V> ListItem;
+    typedef std::pair<POSITION,V> ListItem;
     CAtlList<ListItem> _list;
     CAtlMap<K,POSITION,KTraits> _hash;
 
