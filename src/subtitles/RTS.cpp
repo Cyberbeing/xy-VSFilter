@@ -237,12 +237,13 @@ bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const
     OverlayNoOffsetMruCache* overlay_key_cache = CacheManager::GetOverlayNoOffsetMruCache();
     OverlayNoOffsetKey overlay_no_offset_key(shared_ptr_path_data2, psub.x, psub.y, border_x, border_y);
     overlay_no_offset_key.UpdateHashValue();
-    POSITION pos = overlay_key_cache->Lookup(overlay_no_offset_key);
+    POSITION pos_key = overlay_key_cache->Lookup(overlay_no_offset_key);
+    POSITION pos = NULL;
         
     OverlayNoBlurMruCache* overlay_cache = CacheManager::GetOverlayNoBlurMruCache();
-    if (pos!=NULL)
+    if (pos_key!=NULL)
     {
-        OverlayNoBlurKey overlay_key = overlay_key_cache->GetAt(pos);
+        OverlayNoBlurKey overlay_key = overlay_key_cache->GetAt(pos_key);
         pos = overlay_cache->Lookup(overlay_key);        
     }
     if (pos)
@@ -290,7 +291,14 @@ bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const
     }
     if (result)
     {
-        overlay_key_cache->UpdateCache(overlay_no_offset_key, key);
+        if (pos_key!=NULL)
+        {
+            overlay_key_cache->UpdateCache(pos_key, key);
+        }
+        else
+        {
+            overlay_key_cache->UpdateCache(overlay_no_offset_key, key);
+        }
     }
     return result;
 }
