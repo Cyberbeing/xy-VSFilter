@@ -1069,6 +1069,12 @@ public:
         _list.MoveToHead(pos);
         return pos;
     }
+    inline POSITION UpdateCache(POSITION pos, const V& value)
+    {
+        _list.GetAt(pos).second = value;
+        _list.MoveToHead(pos);
+        return pos;
+    }
     inline POSITION UpdateCache(const K& key, const V& value)
     {
         POSITION pos;
