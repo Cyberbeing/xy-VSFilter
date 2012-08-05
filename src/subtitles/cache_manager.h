@@ -7,6 +7,17 @@
 
 #include "RTS.h"
 #include "mru_cache.h"
+#include "flyweight_base_types.h"
+
+template<class CahcheKey>
+class XyCacheKeyTraits:public CElementTraits<CahcheKey>
+{    
+public:
+    static ULONG Hash(const CahcheKey& key)
+    {
+        return key.GetHashValue();
+    }
+};
 
 class TextInfoCacheKey
 {
@@ -224,16 +235,6 @@ private:
     friend struct GroupedDrawItems;
 };
 
-template<class CahcheKey>
-class XyCacheKeyTraits:public CElementTraits<CahcheKey>
-{    
-public:
-    static ULONG Hash(const CahcheKey& key)
-    {
-        return key.GetHashValue();
-    }
-};
-
 class PathDataTraits:public CElementTraits<PathData>
 {
 public:
@@ -274,8 +275,7 @@ typedef EnhancedXyMru<ClipperAlphaMaskCacheKey, SharedPtrGrayImage2, XyCacheKeyT
 
 class XyBitmap;
 typedef ::boost::shared_ptr<XyBitmap> SharedPtrXyBitmap;
-typedef EnhancedXyMru<GroupedDrawItemsHashKey, SharedPtrXyBitmap, XyCacheKeyTraits<GroupedDrawItemsHashKey>> BitmapMruCache;
-
+typedef EnhancedXyMru<std::size_t, SharedPtrXyBitmap> BitmapMruCache;
 
 class CacheManager
 {
@@ -308,6 +308,9 @@ public:
     static ScanLineData2MruCache* GetScanLineData2MruCache();
     static PathDataMruCache* GetPathDataMruCache();
 };
+
+
+typedef XyFlyWeight<GroupedDrawItemsHashKey, CacheManager::BITMAP_MRU_CACHE_ITEM_NUM, XyCacheKeyTraits<GroupedDrawItemsHashKey>> XyFwGroupedDrawItemsHashKey;
 
 #endif // end of __CACHE_MANAGER_H_310C134F_844C_4590_A4D2_AD30165AF10A__
 
