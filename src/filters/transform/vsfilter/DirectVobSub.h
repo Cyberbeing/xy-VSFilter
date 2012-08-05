@@ -47,6 +47,7 @@ public:
     static const int CUR_SUPPORTED_FILTER_VERSION = 39;
 
     typedef DirectVobSubXyIntOptions::CachesInfo CachesInfo;
+    typedef DirectVobSubXyIntOptions::XyFlyWeightInfo XyFlyWeightInfo;
     typedef DirectVobSubXyIntOptions::ColorSpaceOpt ColorSpaceOpt;
 protected:
 	CDirectVobSub();
@@ -93,7 +94,6 @@ protected:
 
     int m_xy_int_opt[DirectVobSubXyIntOptions::INT_COUNT];
     bool m_xy_bool_opt[DirectVobSubXyIntOptions::BOOL_COUNT];
-    ULONGLONG m_xy_ulonglong_opt[DirectVobSubXyIntOptions::ULONGLONG_COUNT];
 public:
     
     // IDirectVobSubXy
@@ -168,6 +168,7 @@ public:
     STDMETHODIMP put_ColorFormat(int iPosition) {return E_NOTIMPL;}
 
     STDMETHOD (get_CachesInfo)(CachesInfo* caches_info);
+    STDMETHOD (get_XyFlyWeightInfo)(XyFlyWeightInfo* xy_fw_info);
     
 	STDMETHODIMP UpdateRegistry();
 

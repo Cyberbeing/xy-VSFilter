@@ -1312,6 +1312,18 @@ STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
     return hr;
 }
 
+STDMETHODIMP CDirectVobSubFilter::get_XyFlyWeightInfo( XyFlyWeightInfo* xy_fw_info )
+{
+    CAutoLock cAutoLock(&m_csQueueLock);
+    HRESULT hr = CDirectVobSub::get_XyFlyWeightInfo(xy_fw_info);
+    
+    xy_fw_info->xy_fw_string_w.cur_item_num = XyFwStringW::GetCacher()->GetCurItemNum();
+    xy_fw_info->xy_fw_string_w.hit_count = XyFwStringW::GetCacher()->GetCacheHitCount();
+    xy_fw_info->xy_fw_string_w.query_count = XyFwStringW::GetCacher()->GetQueryCount();
+
+    return hr;
+}
+
 STDMETHODIMP CDirectVobSubFilter::get_MediaFPS(bool* fEnabled, double* fps)
 {
 	HRESULT hr = CDirectVobSub::get_MediaFPS(fEnabled, fps);
