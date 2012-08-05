@@ -121,22 +121,21 @@ CMyFont::CMyFont(const STSStyleBase& style)
 // CWord
 
 CWord::CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend)
-    : m_style(style), m_str(str)
+    : m_style(style), m_str(new CStringW(str))
     , m_width(0), m_ascent(0), m_descent(0)
     , m_ktype(ktype), m_kstart(kstart), m_kend(kend)
     , m_fLineBreak(false), m_fWhiteSpaceChar(false)
     //, m_pOpaqueBox(NULL)
 {
-    if(m_str.IsEmpty())
+    if(m_str.Get().IsEmpty())
     {
         m_fWhiteSpaceChar = m_fLineBreak = true;
     }
     m_width = 0;
 }
 
-CWord::CWord( const CWord& src)
+CWord::CWord( const CWord& src):m_str(src.m_str)
 {
-    m_str = src.m_str;
     m_fWhiteSpaceChar = src.m_fWhiteSpaceChar;
     m_fLineBreak = src.m_fLineBreak;
     m_style = src.m_style;
@@ -159,8 +158,12 @@ bool CWord::Append(const SharedPtrCWord& w)
     if(!(m_style == w->m_style)
             || m_fLineBreak || w->m_fLineBreak
             || w->m_kstart != w->m_kend || m_ktype != w->m_ktype) return(false);
-    m_fWhiteSpaceChar = m_fWhiteSpaceChar && w->m_fWhiteSpaceChar;    
-    m_str += w->m_str;    
+    m_fWhiteSpaceChar = m_fWhiteSpaceChar && w->m_fWhiteSpaceChar;
+    CStringW *str = new CStringW();//Fix me: anyway to avoid this flyweight update?
+    ASSERT(str);
+    *str = m_str.Get();
+    *str += w->m_str.Get();
+    m_str = XyFwStringW(str);
     m_width += w->m_width;
     return(true);
 }
@@ -773,7 +776,7 @@ bool CWord::CreateOpaqueBox()
 bool CWord::operator==( const CWord& rhs ) const
 {
     return (this==&rhs) || (
-        m_str == rhs.m_str &&
+        m_str.GetId() == rhs.m_str.GetId() &&
         m_fWhiteSpaceChar == rhs.m_fWhiteSpaceChar &&
         m_fLineBreak == rhs.m_fLineBreak &&
         m_style == rhs.m_style && //fix me:?
@@ -792,13 +795,13 @@ bool CWord::operator==( const CWord& rhs ) const
 CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend)
     : CWord(style, str, ktype, kstart, kend)
 {
-    if(m_str == L" ")
+    if(m_str.Get() == L" ")
     {
         m_fWhiteSpaceChar = true;
     }
     SharedPtrTextInfo text_info;
     TextInfoCacheKey text_info_key;
-    text_info_key.m_str = m_str;
+    text_info_key.m_str = m_str.Get();
     text_info_key.m_style = m_style;
     text_info_key.UpdateHashValue();
     TextInfoMruCache* text_info_cache = CacheManager::GetTextInfoCache();
@@ -806,7 +809,7 @@ CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart
     if(pos==NULL)
     {
         TextInfo* tmp=new TextInfo();
-        GetTextInfo(tmp, m_style, m_str);
+        GetTextInfo(tmp, m_style, m_str.Get());
         text_info.reset(tmp);
         text_info_cache->UpdateCache(text_info_key, text_info);
     }
@@ -842,10 +845,11 @@ bool CText::CreatePath(PathData* path_data)
     FwCMyFont font(m_style);
     HFONT hOldFont = SelectFont(g_hDC, font.get());
     int width = 0;
+    const CStringW& str = m_str.Get();
     if(m_style.get().fontSpacing || (long)GetVersion() < 0)
     {
         bool bFirstPath = true;
-        for(LPCWSTR s = m_str; *s; s++)
+        for(LPCWSTR s = str; *s; s++)
         {
             CSize extent;
             if(!GetTextExtentPoint32W(g_hDC, s, 1, &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);}
@@ -859,9 +863,9 @@ bool CText::CreatePath(PathData* path_data)
     else
     {
         CSize extent;
-        if(!GetTextExtentPoint32W(g_hDC, m_str, m_str.GetLength(), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);}
+        if(!GetTextExtentPoint32W(g_hDC, str, str.GetLength(), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);}
         path_data->BeginPath(g_hDC);
-        TextOutW(g_hDC, 0, 0, m_str, m_str.GetLength());
+        TextOutW(g_hDC, 0, 0, str, str.GetLength());
         path_data->EndPath(g_hDC);
     }
     SelectFont(g_hDC, hOldFont);
@@ -951,7 +955,7 @@ bool CPolygon::ParseStr()
     if(m_pathTypesOrg.GetCount() > 0) return(true);
     CPoint p;
     int j, lastsplinestart = -1, firstmoveto = -1, lastmoveto = -1;
-    CStringW str = m_str;
+    CStringW str = m_str.Get();
     str.SpanIncluding(L"mnlbspc 0123456789");
     str.Replace(L"m", L"*m");
     str.Replace(L"n", L"*n");

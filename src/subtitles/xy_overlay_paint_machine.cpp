@@ -58,7 +58,7 @@ void CWordPaintMachine::Paint( LAYER layer, SharedPtrOverlay* overlay )
 
 void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPoint& p, SharedPtrOverlay* overlay )
 {
-    if(!word->m_str || overlay==NULL) return;
+    if(!word->m_str.Get() || overlay==NULL) return;
     bool error = false;
     do 
     {
