@@ -34,24 +34,6 @@ extern "C" {
             BOOL_HIDE_TRAY_ICON,
             BOOL_COUNT
         };
-        enum//ULONGLONG
-        {
-            //read only
-            ULONGLONG_PATH_CACHE_CUR_ITEM_NUM, ULONGLONG_PATH_CACHE_QUERY_COUNT, ULONGLONG_PATH_CACHE_HIT_COUNT,
-            ULONGLONG_SCANLINE_CACHE2_CUR_ITEM_NUM, ULONGLONG_SCANLINE_CACHE2_QUERY_COUNT, ULONGLONG_SCANLINE_CACHE2_HIT_COUNT,
-            ULONGLONG_NON_BLUR_CACHE_CUR_ITEM_NUM, ULONGLONG_NON_BLUR_CACHE_QUERY_COUNT,ULONGLONG_NON_BLUR_CACHE_HIT_COUNT,
-            ULONGLONG_OVERLAY_CACHE_CUR_ITEM_NUM, ULONGLONG_OVERLAY_CACHE_QUERY_COUNT,ULONGLONG_OVERLAY_CACHE_HIT_COUNT,
-            ULONGLONG_BITMAP_CACHE_CUR_ITEM_NUM, ULONGLONG_BITMAP_CACHE_QUERY_COUNT, ULONGLONG_BITMAP_CACHE_HIT_COUNT,
-
-            ULONGLONG_INTERPOLATE_CACHE_CUR_ITEM_NUM, ULONGLONG_INTERPOLATE_CACHE_QUERY_COUNT,ULONGLONG_INTERPOLATE_CACHE_HIT_COUNT,
-            ULONGLONG_TEXT_INFO_CACHE_CUR_ITEM_NUM, ULONGLONG_TEXT_INFO_CACHE_QUERY_COUNT, ULONGLONG_TEXT_INFO_CACHE_HIT_COUNT,
-            ULONGLONG_WORD_INFO_CACHE_CUR_ITEM_NUM, ULONGLONG_WORD_INFO_CACHE_QUERY_COUNT, ULONGLONG_WORD_INFO_CACHE_HIT_COUNT,
-
-            ULONGLONG_SCANLINE_CACHE_CUR_ITEM_NUM, ULONGLONG_SCANLINE_CACHE_QUERY_COUNT,ULONGLONG_SCANLINE_CACHE_HIT_COUNT,
-            ULONGLONG_OVERLAY_KEY_CACHE_CUR_ITEM_NUM, ULONGLONG_OVERLAY_KEY_CACHE_QUERY_COUNT, ULONGLONG_OVERLAY_KEY_CACHE_HIT_COUNT,
-            ULONGLONG_CLIPPER_CACHE_CUR_ITEM_NUM, ULONGLONG_CLIPPER_CACHE_QUERY_COUNT, ULONGLONG_CLIPPER_CACHE_HIT_COUNT,
-            ULONGLONG_COUNT
-        };
         enum
         {
             //[ColorSpaceOpt1...ColorSpaceOptN]
@@ -62,6 +44,10 @@ extern "C" {
             //struct CachesInfo
             //size = 1
             BIN_CACHES_INFO,
+
+            //struct XyFlyWeightInfo
+            //size = 1
+            BIN_XY_FLY_WEIGHT_INFO,
 
             BIN_COUNT
         };
@@ -85,6 +71,15 @@ extern "C" {
                 scanline_cache_cur_item_num, scanline_cache_query_count,scanline_cache_hit_count,
                 overlay_key_cache_cur_item_num, overlay_key_cache_query_count, overlay_key_cache_hit_count,
                 clipper_cache_cur_item_num, clipper_cache_query_count, clipper_cache_hit_count;
+        };
+
+        struct CacheInfo
+        {
+            std::size_t cur_item_num, query_count, hit_count;
+        };
+        struct XyFlyWeightInfo
+        {
+            CacheInfo xy_fw_string_w;
         };
     };
 

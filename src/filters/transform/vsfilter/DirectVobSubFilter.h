@@ -114,7 +114,8 @@ public:
     STDMETHODIMP put_SubtitleTiming(int delay, int speedmul, int speeddiv);
 
     STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
-    
+    STDMETHODIMP get_XyFlyWeightInfo(XyFlyWeightInfo* xy_fw_info);
+
     STDMETHODIMP get_MediaFPS(bool* fEnabled, double* fps);
     STDMETHODIMP put_MediaFPS(bool fEnabled, double fps);
     STDMETHODIMP get_ZoomRect(NORMALIZEDRECT* rect);
