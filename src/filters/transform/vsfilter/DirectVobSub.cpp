@@ -588,6 +588,19 @@ STDMETHODIMP CDirectVobSub::get_CachesInfo(CachesInfo* caches_info)
     }
 }
 
+STDMETHODIMP CDirectVobSub::get_XyFlyWeightInfo(XyFlyWeightInfo* xy_fw_info)
+{
+    CAutoLock cAutoLock(&m_propsLock);
+    if(xy_fw_info)
+    {
+        xy_fw_info->xy_fw_string_w.cur_item_num = 0;
+        xy_fw_info->xy_fw_string_w.hit_count = 0;
+        xy_fw_info->xy_fw_string_w.query_count = 0;
+        return S_OK;
+    }
+    return S_FALSE;
+}
+
 STDMETHODIMP CDirectVobSub::UpdateRegistry()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
@@ -936,12 +949,7 @@ STDMETHODIMP CDirectVobSub::XyGetRect( int field, RECT *value )
 
 STDMETHODIMP CDirectVobSub::XyGetUlonglong( int field, ULONGLONG *value )
 {
-    CAutoLock cAutoLock(&m_propsLock);
-    if (field<0 || field>=DirectVobSubXyIntOptions::ULONGLONG_COUNT)
-    {
-        return E_NOTIMPL;
-    }
-    return value ? *value = m_xy_ulonglong_opt[field], S_OK : E_POINTER;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CDirectVobSub::XyGetDouble( int field, double *value )
@@ -1006,6 +1014,17 @@ STDMETHODIMP CDirectVobSub::XyGetBin( int field, LPVOID *value, int *size )
             *value = new CachesInfo[1];
         }
         return get_CachesInfo(reinterpret_cast<CachesInfo*>(*value));
+    case BIN_XY_FLY_WEIGHT_INFO:
+        if (size)
+        {
+            *size=1;
+        }
+        if (value)
+        {
+            *value = new XyFlyWeightInfo[1];
+        }
+        return get_XyFlyWeightInfo(reinterpret_cast<XyFlyWeightInfo*>(*value));
+
     }
     return E_NOTIMPL;
 }
