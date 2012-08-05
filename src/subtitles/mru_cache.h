@@ -1099,6 +1099,36 @@ public:
         }
         return pos_hash_value;
     }
+    inline POSITION AddHeadIfNotExists(const K& key, const V& value, bool *new_item_added)
+    {
+        POSITION pos;
+        POSITION pos_hash_value = NULL;
+        bool new_hash_item_added = false;
+        pos = _hash.SetAtIfNotExists(key, (POSITION)NULL, &new_hash_item_added);
+        if (new_hash_item_added)
+        {
+            pos_hash_value = _list.AddHead( ListItem(pos, value) );
+            _hash.SetValueAt(pos, pos_hash_value);
+            if (new_item_added)
+            {
+                *new_item_added = true;
+            }
+        }
+        else
+        {
+            pos_hash_value = _hash.GetValueAt(pos);
+            if (new_item_added)
+            {
+                *new_item_added = false;
+            }
+        }
+        if(_list.GetCount()>_max_item_num)
+        {
+            _hash.RemoveAtPos(_list.GetTail().first);
+            _list.RemoveTail();
+        }
+        return pos_hash_value;
+    }
     inline void RemoveAll() 
     { 
         _hash.RemoveAll();
@@ -1117,9 +1147,17 @@ public:
             return NULL;
         }
     }
+    inline V& GetAt(POSITION pos)
+    {
+        return _list.GetAt(pos).second;
+    }
     inline const V& GetAt(POSITION pos) const
     {
         return _list.GetAt(pos).second;
+    }
+    inline const K& GetKeyAt(POSITION pos) const
+    {
+        return _hash.GetKeyAt(_list.GetAt(pos).first);
     }
     inline std::size_t SetMaxItemNum( std::size_t max_item_num )
     {
@@ -1175,6 +1213,16 @@ public:
         _query_count++;
         POSITION pos = __super::Lookup(key);
         _cache_hit += (pos!=NULL);
+        return pos;
+    }
+    inline POSITION AddHeadIfNotExists(const K& key, const V& value, bool *new_item_added)
+    {
+        _query_count++;
+        bool tmp = false;
+        POSITION pos = __super::AddHeadIfNotExists(key, value, &tmp);
+        _cache_hit += (tmp==false);
+        if(new_item_added)
+            *new_item_added = tmp;
         return pos;
     }
 
