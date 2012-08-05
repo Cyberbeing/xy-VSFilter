@@ -52,7 +52,7 @@ ULONG PathDataTraits::Hash( const PathData& key )
 
 ULONG ClipperTraits::Hash( const CClipper& key )
 {
-    ULONG hash = CStringElementTraits<CString>::Hash(key.m_polygon->m_str);;
+    ULONG hash = key.m_polygon->m_str.GetId();
     hash += (hash<<5);
     hash += key.m_inverse;
     hash += (hash<<5);
@@ -126,7 +126,7 @@ bool PathDataCacheKey::CompareSTSStyle( const STSStyle& lhs, const STSStyle& rhs
 ULONG PathDataCacheKey::UpdateHashValue()
 {
     const STSStyle& style = m_style.get();
-    m_hash_value = CStringElementTraits<CString>::Hash(m_str);
+    m_hash_value = m_str_id;
     m_hash_value += (m_hash_value<<5);
     m_hash_value += style.charSet;
     m_hash_value += (m_hash_value<<5);
@@ -295,7 +295,7 @@ bool ClipperAlphaMaskCacheKey::operator==( const ClipperAlphaMaskCacheKey& key )
     {
         const CClipper& lhs = *m_clipper;
         const CClipper& rhs = *key.m_clipper;
-        result = (lhs.m_polygon->m_str == rhs.m_polygon->m_str 
+        result = (lhs.m_polygon->m_str.GetId() == rhs.m_polygon->m_str.GetId() 
             && fabs(lhs.m_polygon->m_scalex - rhs.m_polygon->m_scalex) < 0.000001
             && fabs(lhs.m_polygon->m_scaley - rhs.m_polygon->m_scaley) < 0.000001
             && lhs.m_size == rhs.m_size        

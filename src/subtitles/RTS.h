@@ -93,7 +93,7 @@ public:
     bool PaintFromRawData( const CPoint& psub, const CPoint& trans_org, const OverlayKey& key, SharedPtrOverlay* overlay );
 
 protected:
-    CStringW m_str;
+    XyFwStringW m_str;
 public:
     bool m_fWhiteSpaceChar, m_fLineBreak;
 
