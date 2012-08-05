@@ -72,7 +72,7 @@ public:
 public:
     void Draw(SharedPtrXyBitmap *bitmap, int *bitmap_identity_num);
 	
-    GroupedDrawItemsHashKey GetHashKey();
+    void CreateHashKey(GroupedDrawItemsHashKey *key);
 };
 
 #endif // __DRAW_ITEM_21D18040_C396_4CA5_BFCE_5616A63F2C56_H__

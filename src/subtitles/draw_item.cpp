@@ -424,12 +424,12 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
 
 void GroupedDrawItems::Draw( SharedPtrXyBitmap *bitmap, int *bitmap_identity_num )
 {
-    static int id=0;
-
     ASSERT(bitmap && bitmap_identity_num);
     BitmapMruCache *bitmap_cache = CacheManager::GetBitmapMruCache();
-    GroupedDrawItemsHashKey key = GetHashKey();
-    POSITION pos = bitmap_cache->Lookup(key);
+    GroupedDrawItemsHashKey *key = new GroupedDrawItemsHashKey();
+    CreateHashKey(key);
+    XyFwGroupedDrawItemsHashKey::IdType key_id = XyFwGroupedDrawItemsHashKey(key).GetId();
+    POSITION pos = bitmap_cache->Lookup( key_id );
     if (pos==NULL)
     {
         POSITION pos = draw_item_list.GetHeadPosition();
@@ -439,30 +439,29 @@ void GroupedDrawItems::Draw( SharedPtrXyBitmap *bitmap, int *bitmap_identity_num
         {
             DrawItem::Draw(tmp, *draw_item_list.GetNext(pos), clip_rect);
         }
-        bitmap_cache->UpdateCache(key, *bitmap);
+        bitmap_cache->UpdateCache(key_id, *bitmap);
     }
     else
     {
         *bitmap = bitmap_cache->GetAt(pos);
         bitmap_cache->UpdateCache(pos);
     }
-    *bitmap_identity_num  = id++;//fix me: not really support id yet
+    *bitmap_identity_num  = key_id;
 }
 
-GroupedDrawItemsHashKey GroupedDrawItems::GetHashKey()
+void GroupedDrawItems::CreateHashKey(GroupedDrawItemsHashKey *key)
 {
-    GroupedDrawItemsHashKey key;
-    key.m_clip_rect = clip_rect;
+    ASSERT(key);
+    key->m_clip_rect = clip_rect;
     GroupedDrawItemsHashKey::Keys *inner_key = new GroupedDrawItemsHashKey::Keys();
     ASSERT(inner_key);
-    key.m_key.reset(inner_key);
+    key->m_key.reset(inner_key);
     inner_key->SetCount(draw_item_list.GetCount());
     POSITION pos = draw_item_list.GetHeadPosition();
     for (unsigned i=0;i<inner_key->GetCount();i++)
     {
         inner_key->GetAt(i) = draw_item_list.GetNext(pos)->GetHashKey();
     }
-    key.UpdateHashValue();
-    return key;
+    key->UpdateHashValue();
 }
 
