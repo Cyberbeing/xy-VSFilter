@@ -120,11 +120,13 @@ CMyFont::CMyFont(const STSStyleBase& style)
 
 // CWord
 
-CWord::CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend)
+CWord::CWord( const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend
+    , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/ )
     : m_style(style), m_str(new CStringW(str))
     , m_width(0), m_ascent(0), m_descent(0)
     , m_ktype(ktype), m_kstart(kstart), m_kend(kend)
     , m_fLineBreak(false), m_fWhiteSpaceChar(false)
+    , m_target_scale_x(target_scale_x), m_target_scale_y(target_scale_y)
     //, m_pOpaqueBox(NULL)
 {
     if(m_str.Get().IsEmpty())
@@ -146,6 +148,8 @@ CWord::CWord( const CWord& src):m_str(src.m_str)
     m_width = src.m_width;
     m_ascent = src.m_ascent;
     m_descent = src.m_descent;
+    m_target_scale_x = src.m_target_scale_x;
+    m_target_scale_y = src.m_target_scale_y;
 }
 
 CWord::~CWord()
@@ -369,7 +373,9 @@ bool CWord::NeedTransform()
            (fabs(m_style.get().fontAngleY) > 0.000001) ||
            (fabs(m_style.get().fontAngleZ) > 0.000001) ||
            (fabs(m_style.get().fontShiftX) > 0.000001) ||
-           (fabs(m_style.get().fontShiftY) > 0.000001);
+           (fabs(m_style.get().fontShiftY) > 0.000001) ||
+           (fabs(m_target_scale_x-1.0) > 0.000001) ||
+           (fabs(m_target_scale_y-1.0) > 0.000001);
 }
 
 void CWord::Transform(PathData* path_data, const CPoint& org)
@@ -400,6 +406,10 @@ void CWord::Transform_C(PathData* path_data, const CPoint &org )
 
     double xxx[3][3];
     /******************
+          targetScaleX            0    0
+     S0 =            0 targetScaleY    0
+                     0            0    1
+    /******************
           20000     0    0
      A0 =     0 20000    0
               0     0    1
@@ -416,8 +426,8 @@ void CWord::Transform_C(PathData* path_data, const CPoint &org )
      A3 =-saz  caz    0
             0    0    1
     /******************
-          scalex            scalex*fontShiftX -org.x
-     A4 = scaley*fontShiftY scaley            -org.y
+          scalex            scalex*fontShiftX -org.x/targetScaleX
+     A4 = scaley*fontShiftY scaley            -org.y/targetScaleY
           0                 0                  0
     /******************
               0     0      0
@@ -425,21 +435,24 @@ void CWord::Transform_C(PathData* path_data, const CPoint &org )
               0     0  20000
     /******************
      Formula:
-       (x,y,z)' = (A0*A1*A2*A3*A4 + B0) * (x y 1)'
+       (x,y,z)' = (S0*A0*A1*A2*A3*A4 + B0) * (x y 1)'
        z = max(1000,z)
-       x = x/z + org.x
-       y = y/z + org.y
+       x = x/z + tagetScaleX*org.x
+       y = y/z + tagetScaleY*org.y
     *******************/
 
     //A3*A4
+    ASSERT(m_target_scale_x!=0 && m_target_scale_y!=0);
+    double tmp1 = -org.x/m_target_scale_x;
+    double tmp2 = -org.y/m_target_scale_y;
 
     xxx[0][0] = caz*scalex + saz*scaley*style.fontShiftY;
     xxx[0][1] = caz*scalex*style.fontShiftX + saz*scaley;
-    xxx[0][2] = -caz*org.x - saz*org.y;
+    xxx[0][2] = caz*tmp1 + saz*tmp2;
 
     xxx[1][0] = -saz*scalex + caz*scaley*style.fontShiftY;
     xxx[1][1] = -saz*scalex*style.fontShiftX + caz*scaley;
-    xxx[1][2] = saz*org.x - caz*org.y;
+    xxx[1][2] = -saz*tmp1 + caz*tmp2;
 
     xxx[2][0] = 
     xxx[2][0] = 
@@ -457,8 +470,8 @@ void CWord::Transform_C(PathData* path_data, const CPoint &org )
 
     //A1*A2*A3*A4
 
-    double tmp1 = xxx[0][0];
-    double tmp2 = xxx[0][1];
+    tmp1 = xxx[0][0];
+    tmp2 = xxx[0][1];
     double tmp3 = xxx[0][2];
     xxx[0][0] = cay*tmp1 + say*xxx[2][0];
     xxx[0][1] = cay*tmp2 + say*xxx[2][1];
@@ -468,18 +481,24 @@ void CWord::Transform_C(PathData* path_data, const CPoint &org )
     xxx[2][1] = say*tmp2 - cay*xxx[2][1];
     xxx[2][2] = say*tmp3 - cay*xxx[2][2];
 
-    //A0*A1*A2*A3*A4
+    //S0*A0*A1*A2*A3*A4
 
-    xxx[0][0] *= 20000;
-    xxx[0][1] *= 20000;
-    xxx[0][2] *= 20000;
-    xxx[1][0] *= 20000;
-    xxx[1][1] *= 20000;
-    xxx[1][2] *= 20000;
+    tmp1 = 20000*m_target_scale_x;
+    xxx[0][0] *= tmp1;
+    xxx[0][1] *= tmp1;
+    xxx[0][2] *= tmp1;
+
+    tmp1 = 20000*m_target_scale_y;
+    xxx[1][0] *= tmp1;
+    xxx[1][1] *= tmp1;
+    xxx[1][2] *= tmp1;
 
     //A0*A1*A2*A3*A4+B0
 
     xxx[2][2] += 20000;
+
+    double scaled_org_x = org.x+0.5;
+    double scaled_org_y = org.y+0.5;
 
     for (int i = 0; i < path_data->mPathPoints; i++) {
         double x, y, z, xx;
@@ -490,15 +509,14 @@ void CWord::Transform_C(PathData* path_data, const CPoint &org )
         z = xxx[2][0] * xx + xxx[2][1] * y + xxx[2][2];
         x = xxx[0][0] * xx + xxx[0][1] * y + xxx[0][2];
         y = xxx[1][0] * xx + xxx[1][1] * y + xxx[1][2];
-        
 
         z = z > 1000 ? z : 1000;
 
         x = x / z;
         y = y / z;
 
-        path_data->mpPathPoints[i].x = (long)(x + org.x + 0.5);
-        path_data->mpPathPoints[i].y = (long)(y + org.y + 0.5);
+        path_data->mpPathPoints[i].x = (long)(x + scaled_org_x);
+        path_data->mpPathPoints[i].y = (long)(y + scaled_org_y);
     }
 }
 
@@ -782,7 +800,7 @@ bool CWord::CreateOpaqueBox()
                m_width+w, -h,
                m_width+w, m_ascent+m_descent+h,
                -w, m_ascent+m_descent+h);
-    m_pOpaqueBox.reset( new CPolygon(FwSTSStyle(style), str, 0, 0, 0, 1.0/8, 1.0/8, 0) );
+    m_pOpaqueBox.reset( new CPolygon(FwSTSStyle(style), str, 0, 0, 0, 1.0/8, 1.0/8, 0, m_target_scale_x, m_target_scale_y) );
     return(!!m_pOpaqueBox);
 }
 
@@ -798,15 +816,18 @@ bool CWord::operator==( const CWord& rhs ) const
         m_kend == rhs.m_kend &&
         m_width == rhs.m_width &&
         m_ascent == rhs.m_ascent &&
-        m_descent == rhs.m_descent);
+        m_descent == rhs.m_descent &&
+        m_target_scale_x == rhs.m_target_scale_x &&
+        m_target_scale_y == rhs.m_target_scale_y);
     //m_pOpaqueBox
 }
 
 
 // CText
 
-CText::CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend)
-    : CWord(style, str, ktype, kstart, kend)
+CText::CText( const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend
+    , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/ )
+    : CWord(style, str, ktype, kstart, kend, target_scale_x, target_scale_y)
 {
     if(m_str.Get() == L" ")
     {
@@ -915,8 +936,10 @@ void CText::GetTextInfo(TextInfo *output, const FwSTSStyle& style, const CString
 
 // CPolygon
 
-CPolygon::CPolygon(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline)
-    : CWord(style, str, ktype, kstart, kend)
+CPolygon::CPolygon( const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend 
+    , double scalex, double scaley, int baseline 
+    , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/ )
+    : CWord(style, str, ktype, kstart, kend, target_scale_x, target_scale_y)
     , m_scalex(scalex), m_scaley(scaley), m_baseline(baseline)
 {
     ParseStr();
@@ -933,6 +956,7 @@ CPolygon::CPolygon(CPolygon& src) : CWord(src)
 	m_pathTypesOrg.Copy(src.m_pathTypesOrg);
 	m_pathPointsOrg.Copy(src.m_pathPointsOrg);
 }
+
 CPolygon::~CPolygon()
 {
 }
@@ -1114,8 +1138,9 @@ bool CPolygon::CreatePath(PathData* path_data)
 
 // CClipper
 
-CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse)
-    : m_polygon( new CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0) )
+CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse
+    , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/)
+    : m_polygon( new CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0, target_scale_x, target_scale_y) )
     , m_size(size), m_inverse(inverse)
     , m_effectType(-1), m_painted(false)
 {    
@@ -1509,8 +1534,10 @@ CSubtitle::CSubtitle()
 {
     memset(m_effects, 0, sizeof(Effect*)*EF_NUMBEROFEFFECTS);
     m_clipInverse = false;
-    m_scalex = m_scaley = 1;
+    m_scalex = m_scaley = 1;    
     m_fAnimated2 = false;
+
+    m_target_scale_x = m_target_scale_y = 1.0;
 }
 
 CSubtitle::~CSubtitle()
@@ -1643,7 +1670,7 @@ void CSubtitle::CreateClippers(CSize size)
         {
             CStringW str;
             str.Format(L"m %d %d l %d %d %d %d %d %d", 0, 0, w, 0, w, h, 0, h);
-            m_pClipper.reset( new CClipper(str, size, 1, 1, false) );
+            m_pClipper.reset( new CClipper(str, size, 1, 1, false, m_target_scale_x, m_target_scale_y) );
             if(!m_pClipper) return;
         }
         m_pClipper->SetEffect( *m_effects[EF_BANNER], EF_BANNER );
@@ -1656,7 +1683,7 @@ void CSubtitle::CreateClippers(CSize size)
         {
             CStringW str;
             str.Format(L"m %d %d l %d %d %d %d %d %d", 0, 0, w, 0, w, h, 0, h);
-            m_pClipper.reset( new CClipper(str, size, 1, 1, false) ); 
+            m_pClipper.reset( new CClipper(str, size, 1, 1, false, m_target_scale_x, m_target_scale_y) ); 
             if(!m_pClipper) return;
         }
         m_pClipper->SetEffect(*m_effects[EF_SCROLL], EF_SCROLL);
@@ -1784,6 +1811,7 @@ CAtlMap<CStringW, CRenderedTextSubtitle::AssCmdType, CStringElementTraits<CStrin
 
 CRenderedTextSubtitle::CRenderedTextSubtitle(CCritSec* pLock)
     : CSubPicProviderImpl(pLock)
+    , m_target_scale_x(1.0), m_target_scale_y(1.0)
 {
     if( m_cmdMap.IsEmpty() )
     {
@@ -1990,7 +2018,8 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             continue;
         if(ite < j)
         {
-            if(PCWord tmp_ptr = new CText(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend))
+            if(PCWord tmp_ptr = new CText(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend
+                , m_target_scale_x, m_target_scale_y))
             {
                 SharedPtrCWord w(tmp_ptr);
                 sub->m_words.AddTail(w);
@@ -2003,7 +2032,8 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
         }
         if(c == L'\n')
         {
-            if(PCWord tmp_ptr = new CText(style, CStringW(), m_ktype, m_kstart, m_kend))
+            if(PCWord tmp_ptr = new CText(style, CStringW(), m_ktype, m_kstart, m_kend
+                , m_target_scale_x, m_target_scale_y))
             {
                 SharedPtrCWord w(tmp_ptr);
                 sub->m_words.AddTail(w);
@@ -2016,7 +2046,8 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
         }
         else if(c == L' ')
         {
-            if(PCWord tmp_ptr = new CText(style, CStringW(c), m_ktype, m_kstart, m_kend))
+            if(PCWord tmp_ptr = new CText(style, CStringW(c), m_ktype, m_kstart, m_kend
+                , m_target_scale_x, m_target_scale_y))
             {
                 SharedPtrCWord w(tmp_ptr);
                 sub->m_words.AddTail(w);
@@ -2036,7 +2067,9 @@ void CRenderedTextSubtitle::ParsePolygon(CSubtitle* sub, const CStringW& str, co
 {
     if(!sub || !str.GetLength() || !m_nPolygon) return;
 
-    if(PCWord tmp_ptr = new CPolygon(style, str, m_ktype, m_kstart, m_kend, sub->m_scalex/(1<<(m_nPolygon-1)), sub->m_scaley/(1<<(m_nPolygon-1)), m_polygonBaselineOffset))
+    if(PCWord tmp_ptr = new CPolygon(style, str, m_ktype, m_kstart, m_kend, sub->m_scalex/(1<<(m_nPolygon-1))
+        , sub->m_scaley/(1<<(m_nPolygon-1)), m_polygonBaselineOffset
+        , m_target_scale_x, m_target_scale_y))
     {
         SharedPtrCWord w(tmp_ptr);
         ///Todo: fix me
@@ -2379,12 +2412,12 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 bool invert = (cmd_type == CMD_iclip);
                 if(params.GetCount() == 1 && !sub->m_pClipper)
                 {
-                    sub->m_pClipper.reset( new CClipper(params[0], CSize(m_size.cx>>3, m_size.cy>>3), sub->m_scalex, sub->m_scaley, invert) );
+                    sub->m_pClipper.reset( new CClipper(params[0], CSize(m_size.cx>>3, m_size.cy>>3), sub->m_scalex, sub->m_scaley, invert, m_target_scale_x, m_target_scale_y) );
                 }
                 else if(params.GetCount() == 2 && !sub->m_pClipper)
                 {
                     int scale = max(wcstol(p, NULL, 10), 1);
-                    sub->m_pClipper.reset( new CClipper(params[1], CSize(m_size.cx>>3, m_size.cy>>3), sub->m_scalex/(1<<(scale-1)), sub->m_scaley/(1<<(scale-1)), invert) );
+                    sub->m_pClipper.reset( new CClipper(params[1], CSize(m_size.cx>>3, m_size.cy>>3), sub->m_scalex/(1<<(scale-1)), sub->m_scaley/(1<<(scale-1)), invert, m_target_scale_x, m_target_scale_y) );
                 }
                 else if(params.GetCount() == 4)
                 {
@@ -2961,6 +2994,10 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
     sub->m_relativeTo = stss.relativeTo;
     sub->m_scalex = m_dstScreenSize.cx > 0 ? 1.0 * (stss.relativeTo == 1 ? m_vidrect.Width() : m_size.cx) / (m_dstScreenSize.cx*8) : 1.0;
     sub->m_scaley = m_dstScreenSize.cy > 0 ? 1.0 * (stss.relativeTo == 1 ? m_vidrect.Height() : m_size.cy) / (m_dstScreenSize.cy*8) : 1.0;
+
+    sub->m_target_scale_x = m_target_scale_x;
+    sub->m_target_scale_y = m_target_scale_y;
+
     m_animStart = m_animEnd = 0;
     m_animAccel = 1;
     m_ktype = m_kstart = m_kend = 0;
@@ -3201,8 +3238,8 @@ STDMETHODIMP_(VOID) CRenderedTextSubtitle::GetStartStop(POSITION pos, double fps
 
 STDMETHODIMP_(bool) CRenderedTextSubtitle::IsAnimated(POSITION pos)
 {
-    int iSegment = ((int)pos>>RTS_POS_SEGMENT_INDEX_BITS);
-    if(iSegment>=0 && iSegment<m_segments.GetCount())
+    unsigned int iSegment = ((unsigned int)pos>>RTS_POS_SEGMENT_INDEX_BITS);
+    if(iSegment<m_segments.GetCount())
         return m_segments[iSegment].animated;
     else
         return false;
@@ -3463,7 +3500,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(IXySubRenderFrame**subRenderFrame, 
     if(m_size != CSize(output_size.cx*8, output_size.cy*8) 
         || m_vidrect != CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8))
     {
-        Init(output_size, video_rect);        
+        Init(output_size, video_rect);
         render_frame_creater->SetOutputRect(CRect(0,0,output_size.cx,output_size.cy));
         render_frame_creater->SetClipRect(CRect(0,0,output_size.cx,output_size.cy));
     }
@@ -3516,9 +3553,9 @@ void CRenderedTextSubtitle::RenderOneSubtitle( const SIZE& output_size, const CS
     iclipRect[0] = CRect(0, 0, output_size.cx, clipRect.top);
     iclipRect[1] = CRect(0, clipRect.top, clipRect.left, clipRect.bottom);
     iclipRect[2] = CRect(clipRect.right, clipRect.top, output_size.cx, clipRect.bottom);
-    iclipRect[3] = CRect(0, clipRect.bottom, output_size.cx, output_size.cy);        
+    iclipRect[3] = CRect(0, clipRect.bottom, output_size.cx, output_size.cy);
     CRect bbox2(0,0,0,0);
-    POSITION pos = s->GetHeadLinePosition();       
+    POSITION pos = s->GetHeadLinePosition();
     CPoint p = p2;
     while(pos)
     {
