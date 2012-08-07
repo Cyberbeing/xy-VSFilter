@@ -77,7 +77,9 @@ protected:
 
     bool DoPaint(const CPoint& p, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key);
 public:
-    CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend); // str[0] = 0 -> m_fLineBreak = true (in this case we only need and use the height of m_font from the whole class)
+    // str[0] = 0 -> m_fLineBreak = true (in this case we only need and use the height of m_font from the whole class)
+    CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend
+        , double target_scale_x=1.0, double target_scale_y=1.0);
     CWord(const CWord&);
     virtual ~CWord();
 
@@ -105,13 +107,14 @@ public:
 
     int m_width, m_ascent, m_descent;
 
+    double m_target_scale_x, m_target_scale_y;
+
     //friend class CWordCache;
     friend class PathDataCacheKey;
     friend class ClipperTraits;
     friend class ClipperAlphaMaskCacheKey;
     friend class CWordPaintMachine;
     friend class CWordPaintResultKey;
-    friend std::size_t hash_value(const CWord& key); 
 };
 
 class CText : public CWord
@@ -127,7 +130,8 @@ protected:
 
     static void GetTextInfo(TextInfo *output, const FwSTSStyle& style, const CStringW& str);
 public:
-    CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend);
+    CText(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend
+        , double target_scale_x=1.0, double target_scale_y=1.0);
     CText(const CText& src);
 
     virtual SharedPtrCWord Copy();
@@ -150,8 +154,11 @@ protected:
     virtual bool CreatePath(PathData* path_data);
 
 public:
-    CPolygon(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend, double scalex, double scaley, int baseline);
-	CPolygon(CPolygon&); // can't use a const reference because we need to use CAtlArray::Copy which expects a non-const reference
+    CPolygon(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend
+        , double scalex, double scaley, int baseline
+        , double target_scale_x=1.0, double target_scale_y=1.0);
+	// can't use a const reference because we need to use CAtlArray::Copy which expects a non-const reference
+    CPolygon(CPolygon&); 
     virtual ~CPolygon();
 
     virtual SharedPtrCWord Copy();
@@ -212,7 +219,8 @@ private:
     
     GrayImage2* Paint();
 public:
-    CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse);    
+    CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse
+        , double target_scale_x=1.0, double target_scale_y=1.0);
     void SetEffect(const Effect& effect, int effectType);
     virtual ~CClipper();
 
@@ -266,7 +274,7 @@ public:
     bool m_clipInverse;
 
     double m_scalex, m_scaley;
-
+    double m_target_scale_x, m_target_scale_y;
 public:
     CSubtitle();
     virtual ~CSubtitle();
@@ -410,7 +418,8 @@ private:
     int m_nPolygon;
     int m_polygonBaselineOffset;
     double m_fps;
-    int m_period;//1000/m_fps
+    int m_period;//1000/m_fps    
+    double m_target_scale_x, m_target_scale_y;
 
     static void InitCmdMap();
 
