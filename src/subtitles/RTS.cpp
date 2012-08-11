@@ -385,108 +385,121 @@ void CWord::Transform(PathData* path_data, const CPoint& org)
 
 void CWord::Transform_C(PathData* path_data, const CPoint &org )
 {
-	double scalex = m_style.get().fontScaleX/100;
-	double scaley = m_style.get().fontScaleY/100;
+    ASSERT(path_data);
+    const STSStyle& style = m_style.get();
 
-	double caz = cos((3.1415/180)*m_style.get().fontAngleZ);
-	double saz = sin((3.1415/180)*m_style.get().fontAngleZ);
-	double cax = cos((3.1415/180)*m_style.get().fontAngleX);
-	double sax = sin((3.1415/180)*m_style.get().fontAngleX);
-	double cay = cos((3.1415/180)*m_style.get().fontAngleY);
-	double say = sin((3.1415/180)*m_style.get().fontAngleY);
+    double scalex = style.fontScaleX/100;
+    double scaley = style.fontScaleY/100;
 
-#ifdef _VSMOD
-	// patch m003. random text points
-	double xrnd = m_style.get().mod_rand.X*100;
-	double yrnd = m_style.get().mod_rand.Y*100;
-	double zrnd = m_style.get().mod_rand.Z*100;
+    double caz = cos((3.1415/180)*style.fontAngleZ);
+    double saz = sin((3.1415/180)*style.fontAngleZ);
+    double cax = cos((3.1415/180)*style.fontAngleX);
+    double sax = sin((3.1415/180)*style.fontAngleX);
+    double cay = cos((3.1415/180)*style.fontAngleY);
+    double say = sin((3.1415/180)*style.fontAngleY);
 
-	srand(m_style.get().mod_rand.Seed);
+    double xxx[3][3];
+    /******************
+          20000     0    0
+     A0 =     0 20000    0
+              0     0    1
+    /******************
+          cay    0  say
+     A1 =   0    1    0
+          say    0 -cay
+    /******************
+            1    0    0
+     A2 =   0  cax  sax
+            0  sax -cax
+    /******************
+          caz  saz    0
+     A3 =-saz  caz    0
+            0    0    1
+    /******************
+          scalex            scalex*fontShiftX -org.x
+     A4 = scaley*fontShiftY scaley            -org.y
+          0                 0                  0
+    /******************
+              0     0      0
+     B0 =     0     0      0
+              0     0  20000
+    /******************
+     Formula:
+       (x,y,z)' = (A0*A1*A2*A3*A4 + B0) * (x y 1)'
+       z = max(1000,z)
+       x = x/z + org.x
+       y = y/z + org.y
+    *******************/
 
-	// patch m008. distort
-	int xsz,ysz;
-	double dst1x,dst1y,dst2x,dst2y,dst3x,dst3y;
-	int minx = INT_MAX, miny = INT_MAX, maxx = -INT_MAX, maxy = -INT_MAX;
+    //A3*A4
 
-	bool is_dist = m_style.get().mod_distort.enabled;
-	if (is_dist) {
-		for(int i = 0; i < path_data->mPathPoints; i++) {
-			if(minx > path_data->mpPathPoints[i].x) {
-				minx = path_data->mpPathPoints[i].x;
-			}
-			if(miny > path_data->mpPathPoints[i].y) {
-				miny = path_data->mpPathPoints[i].y;
-			}
-			if(maxx < path_data->mpPathPoints[i].x) {
-				maxx = path_data->mpPathPoints[i].x;
-			}
-			if(maxy < path_data->mpPathPoints[i].y) {
-				maxy = path_data->mpPathPoints[i].y;
-			}
-		}
+    xxx[0][0] = caz*scalex + saz*scaley*style.fontShiftY;
+    xxx[0][1] = caz*scalex*style.fontShiftX + saz*scaley;
+    xxx[0][2] = -caz*org.x - saz*org.y;
 
-		xsz = max(maxx - minx, 0);
-		ysz = max(maxy - miny, 0);
+    xxx[1][0] = -saz*scalex + caz*scaley*style.fontShiftY;
+    xxx[1][1] = -saz*scalex*style.fontShiftX + caz*scaley;
+    xxx[1][2] = saz*org.x - caz*org.y;
 
-		dst1x = m_style.get().mod_distort.pointsx[0];
-		dst1y = m_style.get().mod_distort.pointsy[0];
-		dst2x = m_style.get().mod_distort.pointsx[1];
-		dst2y = m_style.get().mod_distort.pointsy[1];
-		dst3x = m_style.get().mod_distort.pointsx[2];
-		dst3y = m_style.get().mod_distort.pointsy[2];
-	}
-#endif
+    xxx[2][0] = 
+    xxx[2][0] = 
+    xxx[2][0] = 0;
+    
+    //A2*A3*A4
 
-	for (int i = 0; i < path_data->mPathPoints; i++) {
-		double x, y, z, xx, yy, zz;
+    xxx[2][0] = sax*xxx[1][0];
+    xxx[2][1] = sax*xxx[1][1];
+    xxx[2][2] = sax*xxx[1][2];
 
-		x = path_data->mpPathPoints[i].x;
-		y = path_data->mpPathPoints[i].y;
-#ifdef _VSMOD
-		// patch m002. Z-coord
-		z = m_style.get().mod_z;
+    xxx[1][0] = cax*xxx[1][0];
+    xxx[1][1] = cax*xxx[1][1];
+    xxx[1][2] = cax*xxx[1][2];
 
-		double u, v;
-		if (is_dist) {
-			u = (x-minx) / xsz;
-			v = (y-miny) / ysz;
+    //A1*A2*A3*A4
 
-			x = minx+(0 + (dst1x - 0)*u + (dst3x-0)*v+(0+dst2x-dst1x-dst3x)*u*v)*xsz;
-			y = miny+(0 + (dst1y - 0)*u + (dst3y-0)*v+(0+dst2y-dst1y-dst3y)*u*v)*ysz;
-			//P = P0 + (P1 - P0)u + (P3 - P0)v + (P0 + P2 - P1 - P3)uv
-		}
+    double tmp1 = xxx[0][0];
+    double tmp2 = xxx[0][1];
+    double tmp3 = xxx[0][2];
+    xxx[0][0] = cay*tmp1 + say*xxx[2][0];
+    xxx[0][1] = cay*tmp2 + say*xxx[2][1];
+    xxx[0][2] = cay*tmp3 + say*xxx[2][2];
 
-		// patch m003. random text points
-		x = xrnd > 0 ? (xrnd - rand() % (int)(xrnd * 2 + 1)) / 100.0 + x : x;
-		y = yrnd > 0 ? (yrnd - rand() % (int)(yrnd * 2 + 1)) / 100.0 + y : y;
-		z = zrnd > 0 ? (zrnd - rand() % (int)(zrnd * 2 + 1)) / 100.0 + z : z;
-#else
-		z = 0;
-#endif
-		double _x = x;
-		x = scalex * (x + m_style.get().fontShiftX * y) - org.x;
-		y = scaley * (y + m_style.get().fontShiftY * _x) - org.y;
+    xxx[2][0] = say*tmp1 - cay*xxx[2][0];
+    xxx[2][1] = say*tmp2 - cay*xxx[2][1];
+    xxx[2][2] = say*tmp3 - cay*xxx[2][2];
 
-		xx = x*caz + y*saz;
-		yy = -(x*saz - y*caz);
-		zz = z;
+    //A0*A1*A2*A3*A4
 
-		x = xx;
-		y = yy*cax + zz*sax;
-		z = yy*sax - zz*cax;
+    xxx[0][0] *= 20000;
+    xxx[0][1] *= 20000;
+    xxx[0][2] *= 20000;
+    xxx[1][0] *= 20000;
+    xxx[1][1] *= 20000;
+    xxx[1][2] *= 20000;
 
-		xx = x*cay + z*say;
-		yy = y;
-		zz = x*say - z*cay;
+    //A0*A1*A2*A3*A4+B0
 
-		zz = max(zz, -19000);
+    xxx[2][2] += 20000;
 
-		x = (xx * 20000) / (zz + 20000);
-		y = (yy * 20000) / (zz + 20000);
+    for (int i = 0; i < path_data->mPathPoints; i++) {
+        double x, y, z, xx;
 
-		path_data->mpPathPoints[i].x = (LONG)(x + org.x + 0.5);
-		path_data->mpPathPoints[i].y = (LONG)(y + org.y + 0.5);
-	}
+        xx = path_data->mpPathPoints[i].x;
+        y = path_data->mpPathPoints[i].y;
+
+        z = xxx[2][0] * xx + xxx[2][1] * y + xxx[2][2];
+        x = xxx[0][0] * xx + xxx[0][1] * y + xxx[0][2];
+        y = xxx[1][0] * xx + xxx[1][1] * y + xxx[1][2];
+        
+
+        z = z > 1000 ? z : 1000;
+
+        x = x / z;
+        y = y / z;
+
+        path_data->mpPathPoints[i].x = (long)(x + org.x + 0.5);
+        path_data->mpPathPoints[i].y = (long)(y + org.y + 0.5);
+    }
 }
 
 void CWord::Transform_SSE2(PathData* path_data, const CPoint &org )
