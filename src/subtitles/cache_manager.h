@@ -13,9 +13,15 @@ template<class CahcheKey>
 class XyCacheKeyTraits:public CElementTraits<CahcheKey>
 {    
 public:
-    static ULONG Hash(const CahcheKey& key)
+    static inline ULONG Hash(const CahcheKey& key)
     {
         return key.GetHashValue();
+    }
+    static inline bool CompareElements(
+        const CahcheKey& element1,
+        const CahcheKey& element2)
+    {
+        return ( (element1==element2)!=0 );
     }
 };
 
@@ -30,7 +36,7 @@ public:
     bool operator==(const TextInfoCacheKey& key)const;
 
     ULONG UpdateHashValue();
-    ULONG GetHashValue()const
+    inline ULONG GetHashValue()const
     {
         return m_hash_value;
     }
@@ -63,7 +69,7 @@ public:
     static bool CompareSTSStyle(const STSStyle& lhs, const STSStyle& rhs);
     
     ULONG UpdateHashValue();
-    ULONG GetHashValue()const
+    inline ULONG GetHashValue()const
     {
         return m_hash_value;
     }
@@ -87,7 +93,7 @@ public:
     bool operator==(const ScanLineData2CacheKey& key)const;
 
     ULONG UpdateHashValue();
-    ULONG GetHashValue()const
+    inline ULONG GetHashValue()const
     {
         return m_hash_value;
     }
@@ -106,7 +112,7 @@ public:
     bool operator==(const OverlayNoBlurKey& key)const;
 
     ULONG UpdateHashValue();
-    ULONG GetHashValue()const
+    inline ULONG GetHashValue()const
     {
         return m_hash_value;
     }
@@ -124,7 +130,7 @@ public:
     bool operator==(const OverlayKey& key)const;
 
     ULONG UpdateHashValue();
-    ULONG GetHashValue()const
+    inline ULONG GetHashValue()const
     {
         return m_hash_value;
     }
@@ -139,7 +145,7 @@ public:
     bool operator==(const ScanLineDataCacheKey& key)const;
 
     ULONG UpdateHashValue();
-    ULONG GetHashValue()const
+    inline ULONG GetHashValue()const
     {
         return m_hash_value;
     }
@@ -158,7 +164,7 @@ public:
     bool operator==(const OverlayNoOffsetKey& key)const;
 
     ULONG UpdateHashValue();
-    ULONG GetHashValue()const
+    inline ULONG GetHashValue()const
     {
         return m_hash_value;
     }
@@ -176,7 +182,7 @@ public:
     bool operator==(const ClipperAlphaMaskCacheKey& key)const;
 
     ULONG UpdateHashValue();
-    ULONG GetHashValue()const
+    inline ULONG GetHashValue()const
     {
         return m_hash_value;
     }
@@ -194,7 +200,7 @@ public:
     bool operator==(const DrawItemHashKey& hash_key) const;
 
     ULONG UpdateHashValue();
-    ULONG GetHashValue()const
+    inline ULONG GetHashValue()const
     {
         return m_hash_value;
     }
@@ -218,7 +224,7 @@ public:
     bool operator==(const GroupedDrawItemsHashKey& key) const;
 
     ULONG UpdateHashValue();
-    ULONG GetHashValue()const
+    inline ULONG GetHashValue()const
     {
         return m_hash_value;
     }
