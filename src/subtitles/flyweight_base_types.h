@@ -34,17 +34,17 @@ public:
     class SharedVElementTraits:public CElementTraits<SharedConstV>
     {
     public:
-        static ULONG Hash(const SharedConstV& v)
+        static inline ULONG Hash(const SharedConstV& v)
         {
             return VTraits::Hash(*v);
         }
-        static bool CompareElements(
+        static inline bool CompareElements(
             const SharedConstV& element1,
             const SharedConstV& element2)
         {
             return VTraits::CompareElements(*element1, *element2);
         }
-        static int CompareElementsOrdered(
+        static inline int CompareElementsOrdered(
             const SharedConstV& element1,
             const SharedConstV& element2)
         {
