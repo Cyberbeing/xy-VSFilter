@@ -1319,7 +1319,7 @@ GrayImage2* CClipper::PaintScrollClipper()
     if(k < h)
     {
         BYTE* am = &data[k*w];
-        memset(result, 0, am - data);
+        memset(data, 0, am - data);
         for(int j = k; j < l; j++, a += da)
         {
             for(int i = 0; i < w; i++, am++)
