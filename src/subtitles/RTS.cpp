@@ -3388,7 +3388,7 @@ STDMETHODIMP CRenderedTextSubtitle::ParseScript(SubPicDesc& spd, REFERENCE_TIME 
         CSubtitle* s = GetSubtitle(entry);
         if(!s) continue;
         stss->animated |= s->m_fAnimated2;
-        CRect clipRect = s->m_clip;
+        CRect clipRect = s->m_clip & CRect(0,0, spd.w, spd.h);
         CRect r = s->m_rect;
         CSize spaceNeeded = r.Size();
         // apply the effects
