@@ -45,7 +45,7 @@
 #define IDS_RG_WEBLOAD                  140
 #define IDS_RG_EMBEDDEDLOAD             141
 #define IDS_RG_USE_BT709                142
-#define IDS_RG_COLOR_SPACE             142
+#define IDS_RG_COLOR_SPACE              142
 #define IDS_R_PERFORMANCE               143
 #define IDS_R_TIMING                    144
 #define IDS_RTM_SUBTITLEDELAY           145
@@ -96,6 +96,9 @@
 #define IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM   189
 #define IDS_RP_TEXT_INFO_CACHE_ITEM_NUM     190
 #define IDS_RP_ASS_TAG_LIST_CACHE_ITEM_NUM  191
+#define IDS_RG_LAYOUT_SIZE_OPT              192
+#define IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X 193
+#define IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y 194
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
@@ -227,6 +230,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        334
 #define _APS_NEXT_COMMAND_VALUE         32770
 #define _APS_NEXT_CONTROL_VALUE         333
-#define _APS_NEXT_SYMED_VALUE           192
+#define _APS_NEXT_SYMED_VALUE           195
 #endif
 #endif

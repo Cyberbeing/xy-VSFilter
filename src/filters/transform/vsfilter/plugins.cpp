@@ -186,7 +186,7 @@ public:
         if(!m_simple_provider)
         {
             HRESULT hr;
-            if(!(m_simple_provider = new SimpleSubPicProvider2(dst.type, size, size, CRect(CPoint(0,0), size), &hr)) || FAILED(hr))
+            if(!(m_simple_provider = new SimpleSubPicProvider2(dst.type, size, size, CRect(CPoint(0,0), size), this, &hr)) || FAILED(hr))
             {
                 m_simple_provider = NULL;
                 return(false);

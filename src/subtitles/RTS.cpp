@@ -3464,7 +3464,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     rectList.RemoveAll();
 
     CComPtr<IXySubRenderFrame> sub_render_frame;
-    HRESULT hr = RenderEx(&sub_render_frame, spd.type, output_size, spd.vidrect, rt, fps);
+    HRESULT hr = RenderEx(&sub_render_frame, spd.type, output_size, output_size, spd.vidrect, rt, fps);
     if (SUCCEEDED(hr) && sub_render_frame)
     {
         int count = 0;
@@ -3510,7 +3510,9 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     return (!rectList.IsEmpty()) ? S_OK : S_FALSE;
 }
 
-STDMETHODIMP CRenderedTextSubtitle::RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, const SIZE& output_size, const CRect& video_rect, REFERENCE_TIME rt, double fps)
+STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame, int spd_type, 
+    const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect, 
+    REFERENCE_TIME rt, double fps )
 {
     if (!subRenderFrame)
     {
@@ -3536,8 +3538,6 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(IXySubRenderFrame**subRenderFrame, 
 
     XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
     render_frame_creater->SetColorSpace(color_space);
-    CSizeCoor2 size_scale_to = output_size;
-    CSize size1 = output_size;
 
     if( m_size_scale_to != CSize(size_scale_to.cx*8, size_scale_to.cy*8) 
         || m_size != CSize(size1.cx*8, size1.cy*8) 
