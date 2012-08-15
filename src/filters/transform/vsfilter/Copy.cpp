@@ -574,6 +574,13 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
               m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::GUESS ? _T("Guessed") : _T("Forced") );
         msg += tmp;
 
+        SIZE layout_size, script_playres;
+        XyGetSize(SIZE_LAYOUT_WITH, &layout_size);
+        XyGetSize(SIZE_ASS_PLAY_RESOLUTION, &script_playres);
+        tmp.Format( _T("Layout with size %dx%d, script playres %dx%d\n"),
+            layout_size.cx, layout_size.cy, script_playres.cx, script_playres.cy );
+        msg += tmp;
+
         //print cache info
         CachesInfo *caches_info = NULL;
         XyFlyWeightInfo *xy_fw_info = NULL;
