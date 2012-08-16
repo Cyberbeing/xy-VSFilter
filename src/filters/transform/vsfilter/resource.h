@@ -191,10 +191,15 @@
 #define IDC_EDITOverlayNoBlurCache      325
 #define IDC_SPINOverlayNoBlurCache      326
 #define IDC_CACHES_INFO_BTN             327
+#define IDC_COMBO_LAYOUT_SIZE_OPT       328
 #define IDC_CHECK_FOLLOW_UPSTREAM       329
-#define IDC_COMBO_COLOR_SPACE          330
+#define IDC_COMBO_COLOR_SPACE           330
 #define IDC_VERSION                     331
 #define IDC_COMBO_YUV_RANGE             332
+#define IDC_EDIT_LAYOUT_SIZE_X          333
+#define IDC_SPIN_LAYOUT_SIZE_X          334
+#define IDC_EDIT_LAYOUT_SIZE_Y          335
+#define IDC_SPIN_LAYOUT_SIZE_Y          336
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
 #define IDC_LABLE_OVERLAY_CACHE         403
@@ -229,7 +234,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        334
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         333
+#define _APS_NEXT_CONTROL_VALUE         337
 #define _APS_NEXT_SYMED_VALUE           195
 #endif
 #endif

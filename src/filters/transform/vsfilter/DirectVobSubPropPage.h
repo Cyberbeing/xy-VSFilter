@@ -161,10 +161,13 @@ class CDVSMorePPage : public CDVSBasePPage
 {
     int m_overlay_cache_max_item_num, m_overlay_no_blur_cache_max_item_num, m_path_cache_max_item_num, 
         m_scan_line_data_cache_max_item_num, m_subpixel_pos_level;
+    int m_layout_size_opt;
+    SIZE m_layout_size;
 
     CSpinButtonCtrl m_path_cache, m_scanline_cache, m_overlay_no_blur_cache, m_overlay_cache;
 
-    CComboBox m_combo_subpixel_pos;
+    CSpinButtonCtrl m_layout_size_x, m_layout_size_y;
+    CComboBox m_combo_subpixel_pos, m_combo_layout_size_opt;
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
     virtual void UpdateControlData(bool fSave);
