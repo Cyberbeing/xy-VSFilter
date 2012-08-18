@@ -172,7 +172,7 @@ bool CWord::Append(const SharedPtrCWord& w)
     return(true);
 }
 
-void CWord::PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay)
+void CWord::PaintFromOverlay(const CPointCoor2& p, const CPointCoor2& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay)
 {
     if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() )
     {
@@ -206,7 +206,7 @@ void CWord::PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const O
     overlay_cache->UpdateCache(overlay_key, *overlay);
 }
 
-bool CWord::PaintFromScanLineData2(const CPoint& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay)
+bool CWord::PaintFromScanLineData2(const CPointCoor2& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay)
 {
     SharedPtrOverlay raterize_result(new Overlay());
     if(!Rasterizer::Rasterize(scan_line_data2, psub.x, psub.y, raterize_result)) 
@@ -219,7 +219,7 @@ bool CWord::PaintFromScanLineData2(const CPoint& psub, const ScanLineData2& scan
     return true;
 }
 
-bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const PathData& path_data, const OverlayKey& key, SharedPtrOverlay* overlay )
+bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_org, const PathData& path_data, const OverlayKey& key, SharedPtrOverlay* overlay )
 {
     bool result = false;
 
@@ -233,8 +233,8 @@ bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const
     CSize size;
     path_data2->AlignLeftTop(&left_top, &size);
 
-    int border_x = static_cast<int>(m_style.get().outlineWidthX+0.5);
-    int border_y = static_cast<int>(m_style.get().outlineWidthY+0.5);
+    int border_x = static_cast<int>(m_style.get().outlineWidthX*m_target_scale_x+0.5);//fix me: rounding err
+    int border_y = static_cast<int>(m_style.get().outlineWidthY*m_target_scale_y+0.5);//fix me: rounding err
     int wide_border = border_x>border_y ? border_x:border_y;
     if (m_style.get().borderStyle==1)
     {
@@ -310,7 +310,7 @@ bool CWord::PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const
     return result;
 }
 
-bool CWord::PaintFromRawData( const CPoint& psub, const CPoint& trans_org, const OverlayKey& key, SharedPtrOverlay* overlay )
+bool CWord::PaintFromRawData( const CPointCoor2& psub, const CPointCoor2& trans_org, const OverlayKey& key, SharedPtrOverlay* overlay )
 {
     PathDataMruCache* path_data_cache = CacheManager::GetPathDataMruCache();
 
@@ -324,7 +324,7 @@ bool CWord::PaintFromRawData( const CPoint& psub, const CPoint& trans_org, const
     return PaintFromPathData(psub, trans_org, *tmp, key, overlay);
 }
 
-bool CWord::DoPaint(const CPoint& psub, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key)
+bool CWord::DoPaint(const CPointCoor2& psub, const CPointCoor2& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key)
 {
     bool result = true;
     OverlayNoBlurMruCache* overlay_no_blur_cache = CacheManager::GetOverlayNoBlurMruCache();
@@ -378,7 +378,7 @@ bool CWord::NeedTransform()
            (fabs(m_target_scale_y-1.0) > 0.000001);
 }
 
-void CWord::Transform(PathData* path_data, const CPoint& org)
+void CWord::Transform(PathData* path_data, const CPointCoor2& org)
 {
 	//// CPUID from VDub
 	//bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
@@ -389,7 +389,7 @@ void CWord::Transform(PathData* path_data, const CPoint& org)
 		Transform_C(path_data, org);
 }
 
-void CWord::Transform_C(PathData* path_data, const CPoint &org )
+void CWord::Transform_C(PathData* path_data, const CPointCoor2 &org )
 {
     ASSERT(path_data);
     const STSStyle& style = m_style.get();
@@ -520,7 +520,7 @@ void CWord::Transform_C(PathData* path_data, const CPoint &org )
     }
 }
 
-void CWord::Transform_SSE2(PathData* path_data, const CPoint &org )
+void CWord::Transform_SSE2(PathData* path_data, const CPointCoor2 &org )
 {
 	// __m128 union data type currently not supported with Intel C++ Compiler, so just call C version
 #ifdef __ICL
@@ -1138,7 +1138,7 @@ bool CPolygon::CreatePath(PathData* path_data)
 
 // CClipper
 
-CClipper::CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse
+CClipper::CClipper(CStringW str, CSizeCoor2 size, double scalex, double scaley, bool inverse
     , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/)
     : m_polygon( new CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0, target_scale_x, target_scale_y) )
     , m_size(size), m_inverse(inverse)
@@ -1227,7 +1227,9 @@ GrayImage2* CClipper::PaintBaseClipper()
 
 GrayImage2* CClipper::PaintBannerClipper()
 {
-    int width = m_effect.param[2];
+    ASSERT(m_polygon);
+
+    int width = static_cast<int>(m_effect.param[2] * m_polygon->m_target_scale_x);//fix me: rounding err
     int w = m_size.cx, h = m_size.cy;
 
     GrayImage2* result = PaintBaseClipper();
@@ -1253,7 +1255,9 @@ GrayImage2* CClipper::PaintBannerClipper()
 
 GrayImage2* CClipper::PaintScrollClipper()
 {
-    int height = m_effect.param[4];
+    ASSERT(m_polygon);
+
+    int height = static_cast<int>(m_effect.param[4] * m_polygon->m_target_scale_y);//fix me: rounding err
     int w = m_size.cx, h = m_size.cy;
     
     GrayImage2* result = PaintBaseClipper();
@@ -1264,7 +1268,7 @@ GrayImage2* CClipper::PaintScrollClipper()
 
     int da = (64<<8)/height;
     int a = 0;
-    int k = m_effect.param[0]>>3;
+    int k = (static_cast<int>(m_effect.param[0] * m_polygon->m_target_scale_y)>>3);//fix me: rounding err
     int l = k+height;
     if(k < 0) {a += -k*da; k = 0;}
     if(l > h) {l = h;}
@@ -1280,7 +1284,7 @@ GrayImage2* CClipper::PaintScrollClipper()
     }
     da = -(64<<8)/height;
     a = 0x40<<8;
-    l = m_effect.param[1]>>3;
+    l = (static_cast<int>(m_effect.param[1] * m_polygon->m_target_scale_y)>>3);//fix me: rounding err
     k = l-height;
     if(k < 0) {a += -k*da; k = 0;}
     if(l > h) {l = h;}
@@ -1389,10 +1393,10 @@ void CLine::Compact()
     }
 }
 
-CRect CLine::PaintAll( CompositeDrawItemList* output, const CRect& clipRect, 
+CRectCoor2 CLine::PaintAll( CompositeDrawItemList* output, const CRectCoor2& clipRect, 
     const SharedPtrCClipperPaintMachine &clipper, CPoint p, const CPoint& org, const int time, const int alpha )
 {
-    CRect bbox(0, 0, 0, 0);
+    CRectCoor2 bbox(0, 0, 0, 0);
     POSITION pos = GetHeadPosition();
     POSITION outputPos = output->GetHeadPosition();
     while(pos)
@@ -1400,17 +1404,28 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, const CRect& clipRect,
         SharedPtrCWord w = GetNext(pos);
         CompositeDrawItem& outputItem = output->GetNext(outputPos);
         if(w->m_fLineBreak) return(bbox); // should not happen since this class is just a line of text without any breaks
-        CPoint shadowPos, outlinePos, bodyPos, transOrg;
-        shadowPos.x = p.x + static_cast<int>(w->m_style.get().shadowDepthX+0.5);
-        shadowPos.y = p.y + m_ascent - w->m_ascent + static_cast<int>(w->m_style.get().shadowDepthY+0.5);
+        CPointCoor2 shadowPos, outlinePos, bodyPos, org_coor2;
+
+        double shadowPos_x = p.x + w->m_style.get().shadowDepthX;
+        double shadowPos_y = p.y + m_ascent - w->m_ascent + w->m_style.get().shadowDepthY;
         outlinePos = CPoint(p.x, p.y + m_ascent - w->m_ascent);
         bodyPos = CPoint(p.x, p.y + m_ascent - w->m_ascent);
+
+        shadowPos.x = static_cast<int>(shadowPos_x * w->m_target_scale_x + 0.5);
+        shadowPos.y = static_cast<int>(shadowPos_y * w->m_target_scale_y + 0.5);
+        outlinePos.x *= w->m_target_scale_x;
+        outlinePos.y *= w->m_target_scale_y;
+        bodyPos.x *= w->m_target_scale_x;
+        bodyPos.y *= w->m_target_scale_y;
+        org_coor2.x = org.x * w->m_target_scale_x;//fix me: move it out of this loop
+        org_coor2.y = org.y * w->m_target_scale_y;
+
         bool hasShadow = w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0;
         bool hasOutline = w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0 && !(w->m_ktype == 2 && time < w->m_kstart);
         bool hasBody = true;
 
         SharedPtrOverlayPaintMachine shadow_pm, outline_pm, body_pm;
-        CWordPaintMachine::CreatePaintMachines(w, shadowPos, outlinePos, bodyPos, org,
+        CWordPaintMachine::CreatePaintMachines(w, shadowPos, outlinePos, bodyPos, org_coor2,
             hasShadow ? &shadow_pm : NULL, 
             hasOutline ? &outline_pm : NULL, 
             hasBody ? &body_pm : NULL);
@@ -1428,7 +1443,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, const CRect& clipRect,
                 outputItem.shadow.reset( 
                     DrawItem::CreateDrawItem(shadow_pm, clipRect, clipper, shadowPos.x, shadowPos.y, sw,
                     w->m_ktype > 0 || w->m_style.get().alpha[0] < 0xff,
-                    (w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0) && !(w->m_ktype == 2 && time < w->m_kstart))
+                    hasOutline)
                     );
             }
             else if(w->m_style.get().borderStyle == 1)
@@ -1449,7 +1464,8 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, const CRect& clipRect,
             if(w->m_style.get().borderStyle == 0)
             {
                 outputItem.outline.reset( 
-                    DrawItem::CreateDrawItem(outline_pm, clipRect, clipper, outlinePos.x, outlinePos.y, sw, !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
+                    DrawItem::CreateDrawItem(outline_pm, clipRect, clipper, outlinePos.x, outlinePos.y, sw, 
+                    !w->m_style.get().alpha[0] && !w->m_style.get().alpha[1] && !alpha, true)
                     );
             }
             else if(w->m_style.get().borderStyle == 1)
@@ -1497,7 +1513,7 @@ CRect CLine::PaintAll( CompositeDrawItemList* output, const CRect& clipRect,
             {
                 sw[1] = 0xffffffff;
             }
-            sw[3] = (int)(w->m_style.get().outlineWidthX + t*w->m_width) >> 3;
+            sw[3] = (int)( (w->m_style.get().outlineWidthX + t*w->m_width)*w->m_target_scale_x ) >> 3;
             sw[4] = sw[2];
             sw[5] = 0x00ffffff;
             sw[0] = XySubRenderFrameCreater::GetDefaultCreater()->TransColor(sw[0]);
@@ -1659,18 +1675,18 @@ CLine* CSubtitle::GetNextLine(POSITION& pos, int maxwidth)
     return(ret);
 }
 
-void CSubtitle::CreateClippers(CSize size)
+void CSubtitle::CreateClippers( CSize size1, const CSizeCoor2& size_scale_to )
 {
-    size.cx >>= 3;
-    size.cy >>= 3;
+    size1.cx >>= 3;
+    size1.cy >>= 3;
     if(m_effects[EF_BANNER] && m_effects[EF_BANNER]->param[2])
     {
-        int w = size.cx, h = size.cy;
+        int w = size1.cx, h = size1.cy;
         if(!m_pClipper)
         {
             CStringW str;
             str.Format(L"m %d %d l %d %d %d %d %d %d", 0, 0, w, 0, w, h, 0, h);
-            m_pClipper.reset( new CClipper(str, size, 1, 1, false, m_target_scale_x, m_target_scale_y) );
+            m_pClipper.reset( new CClipper(str, size_scale_to, 1, 1, false, m_target_scale_x, m_target_scale_y) );
             if(!m_pClipper) return;
         }
         m_pClipper->SetEffect( *m_effects[EF_BANNER], EF_BANNER );
@@ -1678,12 +1694,12 @@ void CSubtitle::CreateClippers(CSize size)
     else if(m_effects[EF_SCROLL] && m_effects[EF_SCROLL]->param[4])
     {
         int height = m_effects[EF_SCROLL]->param[4];
-        int w = size.cx, h = size.cy;
+        int w = size1.cx, h = size1.cy;
         if(!m_pClipper)
         {
             CStringW str;
             str.Format(L"m %d %d l %d %d %d %d %d %d", 0, 0, w, 0, w, h, 0, h);
-            m_pClipper.reset( new CClipper(str, size, 1, 1, false, m_target_scale_x, m_target_scale_y) ); 
+            m_pClipper.reset( new CClipper(str, size_scale_to, 1, 1, false, m_target_scale_x, m_target_scale_y) ); 
             if(!m_pClipper) return;
         }
         m_pClipper->SetEffect(*m_effects[EF_SCROLL], EF_SCROLL);
@@ -1927,12 +1943,19 @@ void CRenderedTextSubtitle::OnChanged()
     m_sla.Empty();
 }
 
-bool CRenderedTextSubtitle::Init(CSize size, CRect vidrect)
+
+bool CRenderedTextSubtitle::Init( const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect )
 {
     Deinit();
-    m_size = CSize(size.cx*8, size.cy*8);
-    m_vidrect = CRect(vidrect.left*8, vidrect.top*8, vidrect.right*8, vidrect.bottom*8);
-    m_sla.Empty();
+    m_size_scale_to = CSize(size_scale_to.cx*8, size_scale_to.cy*8);//fix me?
+    m_size = CSize(size1.cx*8, size1.cy*8);
+    m_vidrect = CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8);
+    
+    ASSERT(size1.cx!=0 && size1.cy!=0);
+
+    m_target_scale_x = size_scale_to.cx * 1.0 / size1.cx;
+    m_target_scale_y = size_scale_to.cy * 1.0 / size1.cy;
+
     return(true);
 }
 
@@ -1948,16 +1971,27 @@ void CRenderedTextSubtitle::Deinit()
     }
     m_subtitleCache.RemoveAll();
     m_sla.Empty();
+
+    m_size_scale_to = CSize(0, 0);
     m_size = CSize(0, 0);
     m_vidrect.SetRectEmpty();
 
-    CacheManager::GetPathDataMruCache()->RemoveAll();
-    CacheManager::GetScanLineData2MruCache()->RemoveAll();
-    CacheManager::GetOverlayNoBlurMruCache()->RemoveAll();
-    CacheManager::GetOverlayMruCache()->RemoveAll();
-    CacheManager::GetAssTagListMruCache()->RemoveAll();
-    CacheManager::GetSubpixelVarianceCache()->RemoveAll();
+    m_target_scale_x = m_target_scale_y = 1.0;
+
+    CacheManager::GetBitmapMruCache()->RemoveAll();
+
+    CacheManager::GetClipperAlphaMaskMruCache()->RemoveAll();
     CacheManager::GetTextInfoCache()->RemoveAll();
+    CacheManager::GetAssTagListMruCache()->RemoveAll();
+
+    CacheManager::GetScanLineDataMruCache()->RemoveAll();
+    CacheManager::GetOverlayNoOffsetMruCache()->RemoveAll();
+
+    CacheManager::GetSubpixelVarianceCache()->RemoveAll();
+    CacheManager::GetOverlayMruCache()->RemoveAll();
+    CacheManager::GetOverlayNoBlurMruCache()->RemoveAll();
+    CacheManager::GetScanLineData2MruCache()->RemoveAll();
+    CacheManager::GetPathDataMruCache()->RemoveAll();
 }
 
 void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
@@ -2412,12 +2446,12 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 bool invert = (cmd_type == CMD_iclip);
                 if(params.GetCount() == 1 && !sub->m_pClipper)
                 {
-                    sub->m_pClipper.reset( new CClipper(params[0], CSize(m_size.cx>>3, m_size.cy>>3), sub->m_scalex, sub->m_scaley, invert, m_target_scale_x, m_target_scale_y) );
+                    sub->m_pClipper.reset( new CClipper(params[0], CSize(m_size_scale_to.cx>>3, m_size_scale_to.cy>>3), sub->m_scalex, sub->m_scaley, invert, m_target_scale_x, m_target_scale_y) );
                 }
                 else if(params.GetCount() == 2 && !sub->m_pClipper)
                 {
                     int scale = max(wcstol(p, NULL, 10), 1);
-                    sub->m_pClipper.reset( new CClipper(params[1], CSize(m_size.cx>>3, m_size.cy>>3), sub->m_scalex/(1<<(scale-1)), sub->m_scaley/(1<<(scale-1)), invert, m_target_scale_x, m_target_scale_y) );
+                    sub->m_pClipper.reset( new CClipper(params[1], CSize(m_size_scale_to.cx>>3, m_size_scale_to.cy>>3), sub->m_scalex/(1<<(scale-1)), sub->m_scaley/(1<<(scale-1)), invert, m_target_scale_x, m_target_scale_y) );
                 }
                 else if(params.GetCount() == 4)
                 {
@@ -3071,7 +3105,7 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
         marginRect.right += m_size.cx - m_vidrect.right;
         marginRect.bottom += m_size.cy - m_vidrect.bottom;
     }
-    sub->CreateClippers(m_size);
+    sub->CreateClippers(m_size, m_size_scale_to);
     sub->MakeLines(m_size, marginRect);
     m_subtitleCache[entry] = sub;
     return(sub);
@@ -3255,7 +3289,7 @@ static int lscomp(const void* ls1, const void* ls2)
     return(ret);
 }
 
-STDMETHODIMP CRenderedTextSubtitle::ParseScript(const SIZE& output_size, REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List )
+HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List )
 {
     //fix me: check input and log error
     int t = (int)(rt / 10000);
@@ -3304,7 +3338,7 @@ STDMETHODIMP CRenderedTextSubtitle::ParseScript(const SIZE& output_size, REFEREN
         CSubtitle* s = GetSubtitle(entry);
         if(!s) continue;
         stss->animated |= s->m_fAnimated2;
-        CRect clipRect = s->m_clip & CRect(0,0, output_size.cx, output_size.cy);
+        CRect clipRect = s->m_clip & CRect(0,0, (m_size.cx>>3), (m_size.cy>>3));
         CRect r = s->m_rect;
         CSize spaceNeeded = r.Size();
         // apply the effects
@@ -3389,7 +3423,7 @@ STDMETHODIMP CRenderedTextSubtitle::ParseScript(const SIZE& output_size, REFEREN
                     ? s->m_effects[k]->param[0] + (int)(m_time*8.0/s->m_effects[k]->param[2]) - spaceNeeded.cy
                         : s->m_effects[k]->param[1] - (int)(m_time*8.0/s->m_effects[k]->param[2]);
                     r.bottom = r.top + spaceNeeded.cy;
-                    CRect cr(0, (s->m_effects[k]->param[0] + 4) >> 3, output_size.cx, (s->m_effects[k]->param[1] + 4) >> 3);
+                    CRect cr(0, (s->m_effects[k]->param[0] + 4) >> 3, (m_size.cx>>3), (s->m_effects[k]->param[1] + 4) >> 3);
                     if(s->m_relativeTo == 1)
                         r.top += m_vidrect.top,
                         r.bottom += m_vidrect.top,
@@ -3412,13 +3446,18 @@ STDMETHODIMP CRenderedTextSubtitle::ParseScript(const SIZE& output_size, REFEREN
         CPoint p2(0, r.top);
         // Rectangles for inverse clip
 
-        CSubtitle2& sub2 = outputSub2List->GetAt(outputSub2List->AddTail( CSubtitle2(s, clipRect, org, org2, p2, alpha, m_time) ));
+        CRectCoor2 clipRect_coor2;
+        clipRect_coor2.left = clipRect.left * m_target_scale_x;
+        clipRect_coor2.right = clipRect.right * m_target_scale_x;
+        clipRect_coor2.top = clipRect.top * m_target_scale_y;
+        clipRect_coor2.bottom = clipRect.bottom * m_target_scale_y;
+        CSubtitle2& sub2 = outputSub2List->GetAt(outputSub2List->AddTail( CSubtitle2(s, clipRect_coor2, org, org2, p2, alpha, m_time) ));
     }
 
     return (subs.GetCount()) ? S_OK : S_FALSE;
 }
 
-STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList)
+STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRectCoor2>& rectList)
 {
     CSize output_size = CSize(spd.w,spd.h);
     rectList.RemoveAll();
@@ -3496,24 +3535,27 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(IXySubRenderFrame**subRenderFrame, 
 
     XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
     render_frame_creater->SetColorSpace(color_space);
+    CSizeCoor2 size_scale_to = output_size;
+    CSize size1 = output_size;
 
-    if(m_size != CSize(output_size.cx*8, output_size.cy*8) 
+    if( m_size_scale_to != CSize(size_scale_to.cx*8, size_scale_to.cy*8) 
+        || m_size != CSize(size1.cx*8, size1.cy*8) 
         || m_vidrect != CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8))
     {
-        Init(output_size, video_rect);
-        render_frame_creater->SetOutputRect(CRect(0,0,output_size.cx,output_size.cy));
-        render_frame_creater->SetClipRect(CRect(0,0,output_size.cx,output_size.cy));
+        Init(size_scale_to, size1, video_rect);
+        render_frame_creater->SetOutputRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
+        render_frame_creater->SetClipRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
     }
 
     CSubtitle2List sub2List;
-    HRESULT hr = ParseScript(output_size, rt, fps, &sub2List);
+    HRESULT hr = ParseScript(rt, fps, &sub2List);
     if(hr!=S_OK)
     {
         return hr;
     }
 
     CompositeDrawItemListList compDrawItemListList;   
-    DoRender(output_size, sub2List, &compDrawItemListList);
+    DoRender(size_scale_to, sub2List, &compDrawItemListList);
 
     XySubRenderFrame *sub_render_frame;
     CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);
@@ -3522,7 +3564,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(IXySubRenderFrame**subRenderFrame, 
     return hr;
 }
 
-void CRenderedTextSubtitle::DoRender( const SIZE& output_size, const CSubtitle2List& sub2List, 
+void CRenderedTextSubtitle::DoRender( const SIZECoor2& output_size, const CSubtitle2List& sub2List, 
     CompositeDrawItemListList *compDrawItemListList /*output*/)
 {
     //check input and log error
@@ -3535,7 +3577,7 @@ void CRenderedTextSubtitle::DoRender( const SIZE& output_size, const CSubtitle2L
     }
 }
 
-void CRenderedTextSubtitle::RenderOneSubtitle( const SIZE& output_size, const CSubtitle2& sub2, 
+void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size, const CSubtitle2& sub2, 
     CompositeDrawItemList* compDrawItemList /*output*/)
 {   
     CSubtitle* s = sub2.s;
@@ -3597,7 +3639,7 @@ void CRenderedTextSubtitle::RenderOneSubtitle( const SIZE& output_size, const CS
     }
 }
 
-STDMETHODIMP CRenderedTextSubtitle::Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox)
+STDMETHODIMP CRenderedTextSubtitle::Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECTCoor2& bbox)
 {
     CAtlList<CRect> rectList;
     HRESULT result = RenderEx(spd, rt, fps, rectList);
