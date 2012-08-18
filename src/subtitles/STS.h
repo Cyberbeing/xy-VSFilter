@@ -28,6 +28,19 @@
 
 typedef enum {TIME, FRAME} tmode; // the meaning of STSEntry::start/end
 
+//Coordinate System 2: target scale applied
+
+typedef int IntCoor2;
+typedef float FloatCoor2;
+typedef double DoubleCoor2;
+typedef POINT POINTCoor2;
+typedef CPoint CPointCoor2;
+typedef SIZE SIZECoor2;
+typedef CSize CSizeCoor2;
+typedef RECT RECTCoor2;
+typedef CRect CRectCoor2;
+typedef FwRect FwRectCoor2;
+
 struct STSStyleBase
 {
     int		charSet;

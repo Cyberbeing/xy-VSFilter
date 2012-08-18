@@ -20,7 +20,7 @@ void OverlayPaintMachine::Paint(SharedPtrOverlay* overlay)
         *overlay = m_overlay;
 }
 
-CRect OverlayPaintMachine::CalcDirtyRect()
+CRectCoor2 OverlayPaintMachine::CalcDirtyRect()
 {
     ASSERT(m_inner_paint_machine);
     m_inner_paint_machine->Paint(m_layer, &m_overlay);//fix me: not a decent state machine yet
@@ -56,7 +56,7 @@ void CWordPaintMachine::Paint( LAYER layer, SharedPtrOverlay* overlay )
     }
 }
 
-void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPoint& p, SharedPtrOverlay* overlay )
+void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPointCoor2& p, SharedPtrOverlay* overlay )
 {
     if(!word->m_str.Get() || overlay==NULL) return;
     bool error = false;
@@ -113,7 +113,7 @@ void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPoint& p, 
     }
 }
 
-void CWordPaintMachine::PaintOutline( const SharedPtrCWord& word, const CPoint& p, SharedPtrOverlay* overlay )
+void CWordPaintMachine::PaintOutline( const SharedPtrCWord& word, const CPointCoor2& p, SharedPtrOverlay* overlay )
 {
     if (word->m_style.get().borderStyle==0)
     {
@@ -128,14 +128,14 @@ void CWordPaintMachine::PaintOutline( const SharedPtrCWord& word, const CPoint& 
     }
 }
 
-void CWordPaintMachine::PaintShadow( const SharedPtrCWord& word, const CPoint& p, SharedPtrOverlay* overlay )
+void CWordPaintMachine::PaintShadow( const SharedPtrCWord& word, const CPointCoor2& p, SharedPtrOverlay* overlay )
 {
     PaintOutline(word, p, overlay);
 }
 
 void CWordPaintMachine::CreatePaintMachines( const SharedPtrCWord& word
-    , const CPoint& shadow_pos, const CPoint& outline_pos, const CPoint& body_pos
-    , const CPoint& org
+    , const CPointCoor2& shadow_pos, const CPointCoor2& outline_pos, const CPointCoor2& body_pos
+    , const CPointCoor2& org
     , SharedPtrOverlayPaintMachine *shadow, SharedPtrOverlayPaintMachine *outline, SharedPtrOverlayPaintMachine *body)
 {
     SharedCWordPaintMachine machine(new CWordPaintMachine());
@@ -174,7 +174,7 @@ void CWordPaintMachine::CreatePaintMachines( const SharedPtrCWord& word
     }
 }
 
-void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPoint& p, const CPoint& org, SharedPtrOverlay* overlay )
+void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPointCoor2& p, const CPointCoor2& org, SharedPtrOverlay* overlay )
 {
     CWordPaintMachine machine;
     machine.m_word = word;
@@ -203,7 +203,7 @@ const SharedPtrOverlayKey& CWordPaintMachine::GetHashKey(LAYER layer)
     return m_body_key;
 }
 
-OverlayKey* CWordPaintMachine::CreateBodyOverlayHashKey( const SharedPtrCWord& word, const CPoint& p )
+OverlayKey* CWordPaintMachine::CreateBodyOverlayHashKey( const SharedPtrCWord& word, const CPointCoor2& p )
 {
     CPoint trans_org2 = m_trans_org;    
     bool need_transform = word->NeedTransform();
@@ -218,7 +218,7 @@ OverlayKey* CWordPaintMachine::CreateBodyOverlayHashKey( const SharedPtrCWord& w
     return body_overlay_key;
 }
 
-OverlayKey* CWordPaintMachine::CreateOutlineOverlayHashKey( const SharedPtrCWord& word, const CPoint& p )
+OverlayKey* CWordPaintMachine::CreateOutlineOverlayHashKey( const SharedPtrCWord& word, const CPointCoor2& p )
 {
     if (word->m_style.get().borderStyle==0)
     {
@@ -235,7 +235,7 @@ OverlayKey* CWordPaintMachine::CreateOutlineOverlayHashKey( const SharedPtrCWord
     return NULL;
 }
 
-OverlayKey* CWordPaintMachine::CreateShadowOverlayHashKey( const SharedPtrCWord& word, const CPoint& p )
+OverlayKey* CWordPaintMachine::CreateShadowOverlayHashKey( const SharedPtrCWord& word, const CPointCoor2& p )
 {
     return CreateOutlineOverlayHashKey(word, p);
 }

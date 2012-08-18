@@ -30,8 +30,8 @@ public:
 
     SharedPtrDrawItemHashKey m_key;
 public:
-    CRect GetDirtyRect();
-    static CRect Draw( XyBitmap *bitmap, DrawItem& draw_item, const CRect& clip_rect );
+    CRectCoor2 GetDirtyRect();
+    static CRectCoor2 Draw( XyBitmap *bitmap, DrawItem& draw_item, const CRectCoor2& clip_rect );
     const SharedPtrDrawItemHashKey& GetHashKey();
 
     static DrawItem* CreateDrawItem(const SharedPtrOverlayPaintMachine& overlay_paint_machine,
@@ -59,7 +59,7 @@ public:
     SharedPtrDrawItem outline;
     SharedPtrDrawItem body;
 public:    
-    static CRect GetDirtyRect( CompositeDrawItem& item );
+    static CRectCoor2 GetDirtyRect( CompositeDrawItem& item );
 
     static void Draw(XySubRenderFrame**output, CompositeDrawItemListList& compDrawItemListList);
 };
@@ -68,7 +68,7 @@ struct GroupedDrawItems
 {
 public:
     CAtlList<SharedPtrDrawItem> draw_item_list;
-    CRect clip_rect;
+    CRectCoor2 clip_rect;
 public:
     void Draw(SharedPtrXyBitmap *bitmap, int *bitmap_identity_num);
 	

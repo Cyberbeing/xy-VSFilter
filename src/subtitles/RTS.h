@@ -37,7 +37,7 @@ class CMyFont : public CFont
 {
 public:
     int m_ascent, m_descent;
-    
+
     CMyFont(const STSStyleBase& style);
 };
 
@@ -66,16 +66,16 @@ interface IXySubRenderFrame;
 class CWord
 {
     bool NeedTransform();
-    void Transform(PathData* path_data, const CPoint& org);
+    void Transform(PathData* path_data, const CPointCoor2& org);
 
-	void Transform_C(PathData* path_data, const CPoint &org );
-	void Transform_SSE2(PathData* path_data, const CPoint &org );
+	void Transform_C(PathData* path_data, const CPointCoor2 &org );
+	void Transform_SSE2(PathData* path_data, const CPointCoor2 &org );
     bool CreateOpaqueBox();
 
 protected:
     virtual bool CreatePath(PathData* path_data) = 0;
 
-    bool DoPaint(const CPoint& p, const CPoint& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key);
+    bool DoPaint(const CPointCoor2& p, const CPointCoor2& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key);
 public:
     // str[0] = 0 -> m_fLineBreak = true (in this case we only need and use the height of m_font from the whole class)
     CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend
@@ -88,11 +88,11 @@ public:
     
     bool operator==(const CWord& rhs)const;
 
-    static void PaintFromOverlay(const CPoint& p, const CPoint& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay);
+    static void PaintFromOverlay(const CPointCoor2& p, const CPointCoor2& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay);
     void PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const OverlayKey& overlay_key, SharedPtrOverlay* overlay);
-    bool PaintFromScanLineData2(const CPoint& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay);
-    bool PaintFromPathData(const CPoint& psub, const CPoint& trans_org, const PathData& path_data, const OverlayKey& key, SharedPtrOverlay* overlay );
-    bool PaintFromRawData( const CPoint& psub, const CPoint& trans_org, const OverlayKey& key, SharedPtrOverlay* overlay );
+    bool PaintFromScanLineData2(const CPointCoor2& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay);
+    bool PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_org, const PathData& path_data, const OverlayKey& key, SharedPtrOverlay* overlay );
+    bool PaintFromRawData( const CPointCoor2& psub, const CPointCoor2& trans_org, const OverlayKey& key, SharedPtrOverlay* overlay );
 
 protected:
     XyFwStringW m_str;
@@ -115,6 +115,7 @@ public:
     friend class ClipperAlphaMaskCacheKey;
     friend class CWordPaintMachine;
     friend class CWordPaintResultKey;
+    friend class CClipper;
 };
 
 class CText : public CWord
@@ -204,7 +205,7 @@ class CClipper
 private:
     SharedPtrCPolygon m_polygon;
 
-    CSize m_size;
+    CSizeCoor2 m_size;
     bool m_inverse;
     
     Effect m_effect;
@@ -219,7 +220,7 @@ private:
     
     GrayImage2* Paint();
 public:
-    CClipper(CStringW str, CSize size, double scalex, double scaley, bool inverse
+    CClipper(CStringW str, CSizeCoor2 size, double scalex, double scaley, bool inverse
         , double target_scale_x=1.0, double target_scale_y=1.0);
     void SetEffect(const Effect& effect, int effectType);
     virtual ~CClipper();
@@ -244,7 +245,7 @@ public:
     void AddWord2Tail(SharedPtrCWord words);
     bool IsEmpty();
 
-    CRect PaintAll(CompositeDrawItemList* output, const CRect& clipRect, 
+    CRectCoor2 PaintAll(CompositeDrawItemList* output, const CRectCoor2& clipRect, 
         const SharedPtrCClipperPaintMachine &clipper, 
         CPoint p, const CPoint& org, const int time, const int alpha);
 };
@@ -280,7 +281,7 @@ public:
     virtual ~CSubtitle();
     virtual void Empty();
 
-    void CreateClippers(CSize size);
+    void CreateClippers(CSize size1, const CSizeCoor2& size_scale_to);
 
     void MakeLines(CSize size, CRect marginRect);
 
@@ -292,15 +293,15 @@ struct CSubtitle2
 {
     CSubtitle2():s(NULL){}
 
-    CSubtitle2(CSubtitle* s_,const CRect& clipRect_, const CPoint& org_, const CPoint& org2_, const CPoint& p_, 
-        int alpha_, int time_)
+    CSubtitle2(CSubtitle* s_,const CRectCoor2& clipRect_, const CPoint& org_, const CPoint& org2_
+        , const CPoint& p_, int alpha_, int time_)
         : s(s_), clipRect(clipRect_), org(org_), org2(org2_), p(p_), alpha(alpha_), time(time_)
     {
 
     }
 
     CSubtitle *s;
-    const CRect clipRect;
+    const CRectCoor2 clipRect;
     const CPoint org;
     const CPoint org2;
     const CPoint p;
@@ -407,6 +408,8 @@ private:
 
     CScreenLayoutAllocator m_sla;
 
+    CSizeCoor2 m_size_scale_to;
+
     CSize m_size;
     CRect m_vidrect;
 
@@ -418,7 +421,7 @@ private:
     int m_nPolygon;
     int m_polygonBaselineOffset;
     double m_fps;
-    int m_period;//1000/m_fps    
+    int m_period;//1000/m_fps
     double m_target_scale_x, m_target_scale_y;
 
     static void InitCmdMap();
@@ -448,7 +451,7 @@ public:
     virtual void Empty();
 
 public:
-    bool Init(CSize size, CRect vidrect); // will call Deinit()
+    bool Init(const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect); // will call Deinit()
     void Deinit();
 
     DECLARE_IUNKNOWN
@@ -467,12 +470,12 @@ public:
     STDMETHODIMP_(REFERENCE_TIME) GetStop(POSITION pos, double fps);
     STDMETHODIMP_(VOID) GetStartStop(POSITION pos, double fps, /*out*/REFERENCE_TIME &start, /*out*/REFERENCE_TIME &stop);
     STDMETHODIMP_(bool) IsAnimated(POSITION pos);
-    STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECT& bbox);
-    STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList);
-    STDMETHODIMP ParseScript(const SIZE& output_size, REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List );
-    static void DoRender( const SIZE& output_size, const CSubtitle2List& sub2List, 
+    STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECTCoor2& bbox);
+    STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRectCoor2>& rectList);
+    HRESULT ParseScript(REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List );
+    static void DoRender( const SIZECoor2& output_size, const CSubtitle2List& sub2List, 
         CompositeDrawItemListList *compDrawItemListList /*output*/);
-    static void RenderOneSubtitle(const SIZE& output_size, const CSubtitle2& sub2, 
+    static void RenderOneSubtitle(const SIZECoor2& output_size, const CSubtitle2& sub2, 
         CompositeDrawItemList* compDrawItemList /*output*/);
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
 
