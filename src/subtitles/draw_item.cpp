@@ -14,13 +14,13 @@ using namespace std;
 //
 // DrawItem
 // 
-CRect DrawItem::GetDirtyRect()
+CRectCoor2 DrawItem::GetDirtyRect()
 {
-    CRect r;
+    CRectCoor2 r;
     if(!switchpts || !fBody && !fBorder) return(r);
 
     ASSERT(overlay_paint_machine);
-    CRect overlay_rect = overlay_paint_machine->CalcDirtyRect();
+    CRectCoor2 overlay_rect = overlay_paint_machine->CalcDirtyRect();
 
     // Remember that all subtitle coordinates are specified in 1/8 pixels
     // (x+4)>>3 rounds to nearest whole pixel.
@@ -40,12 +40,12 @@ CRect DrawItem::GetDirtyRect()
     return r;
 }
 
-CRect DrawItem::Draw( XyBitmap* bitmap, DrawItem& draw_item, const CRect& clip_rect )
+CRectCoor2 DrawItem::Draw( XyBitmap* bitmap, DrawItem& draw_item, const CRectCoor2& clip_rect )
 {
     CRect result;
     SharedPtrGrayImage2 alpha_mask;
     draw_item.clipper->Paint(&alpha_mask);
-    
+
     SharedPtrOverlay overlay;
     ASSERT(draw_item.overlay_paint_machine);
     draw_item.overlay_paint_machine->Paint(&overlay);
@@ -89,9 +89,9 @@ const SharedPtrDrawItemHashKey& DrawItem::GetHashKey()
 // CompositeDrawItem
 // 
 
-CRect CompositeDrawItem::GetDirtyRect( CompositeDrawItem& item )
+CRectCoor2 CompositeDrawItem::GetDirtyRect( CompositeDrawItem& item )
 {
-    CRect result;    
+    CRectCoor2 result;    
     if (item.shadow)
     {
         result |= item.shadow->GetDirtyRect();

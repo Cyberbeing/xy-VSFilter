@@ -25,28 +25,28 @@ public:
     };
 public:
     static void CreatePaintMachines(const SharedPtrCWord& word
-        , const CPoint& shadow_pos, const CPoint& outline_pos, const CPoint& body_pos
-        , const CPoint& org
+        , const CPointCoor2& shadow_pos, const CPointCoor2& outline_pos, const CPointCoor2& body_pos
+        , const CPointCoor2& org
         , SharedPtrOverlayPaintMachine *shadow, SharedPtrOverlayPaintMachine *outline, SharedPtrOverlayPaintMachine *body);
 
-    static void PaintBody(const SharedPtrCWord& word, const CPoint& p, const CPoint& org, SharedPtrOverlay* overlay);
+    static void PaintBody(const SharedPtrCWord& word, const CPointCoor2& p, const CPointCoor2& org, SharedPtrOverlay* overlay);
 
     void Paint(LAYER layer, SharedPtrOverlay* overlay);
     const SharedPtrOverlayKey& GetHashKey(LAYER layer);
 private:
     CWordPaintMachine(){}
 
-    void PaintBody(const SharedPtrCWord& word, const CPoint& p, SharedPtrOverlay* overlay);
-    void PaintOutline(const SharedPtrCWord& word, const CPoint& p, SharedPtrOverlay* overlay);
-    void PaintShadow(const SharedPtrCWord& word, const CPoint& p, SharedPtrOverlay* overlay);
+    void PaintBody(const SharedPtrCWord& word, const CPointCoor2& p, SharedPtrOverlay* overlay);
+    void PaintOutline(const SharedPtrCWord& word, const CPointCoor2& p, SharedPtrOverlay* overlay);
+    void PaintShadow(const SharedPtrCWord& word, const CPointCoor2& p, SharedPtrOverlay* overlay);
 
-    OverlayKey* CreateBodyOverlayHashKey(const SharedPtrCWord& word, const CPoint& p);
-    OverlayKey* CreateOutlineOverlayHashKey(const SharedPtrCWord& word, const CPoint& p);
-    OverlayKey* CreateShadowOverlayHashKey(const SharedPtrCWord& word, const CPoint& p);
+    OverlayKey* CreateBodyOverlayHashKey(const SharedPtrCWord& word, const CPointCoor2& p);
+    OverlayKey* CreateOutlineOverlayHashKey(const SharedPtrCWord& word, const CPointCoor2& p);
+    OverlayKey* CreateShadowOverlayHashKey(const SharedPtrCWord& word, const CPointCoor2& p);
 
     SharedPtrCWord m_word;
-    CPoint m_shadow_pos, m_outline_pos, m_body_pos;
-    CPoint m_trans_org;
+    CPointCoor2 m_shadow_pos, m_outline_pos, m_body_pos;
+    CPointCoor2 m_trans_org;
 
     SharedPtrOverlayKey m_shadow_key, m_border_key, m_body_key;
 };
@@ -61,7 +61,7 @@ public:
         , m_layer(layer) {}
  
     void Paint(SharedPtrOverlay* overlay);
-    CRect CalcDirtyRect();//return a 8x8 supersampled rect
+    CRectCoor2 CalcDirtyRect();//return a 8x8 supersampled rect
     const SharedPtrOverlayKey& GetHashKey();
 private:
     SharedCWordPaintMachine m_inner_paint_machine;
