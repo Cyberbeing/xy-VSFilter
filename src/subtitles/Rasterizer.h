@@ -232,7 +232,7 @@ public:
         double target_scale_x, double target_scale_y, SharedPtrOverlay output_overlay);
 
     static bool GaussianBlur( const Overlay& input_overlay, double gaussian_blur_strength, 
-        int gaussian_blur_radius_x,int gaussian_blur_radius_y, 
+        double target_scale_x, double target_scale_y, 
         SharedPtrOverlay output_overlay );
 
     static SharedPtrByte CompositeAlphaMask(const SharedPtrOverlay& overlay, const CRect& clipRect, 

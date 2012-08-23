@@ -1151,26 +1151,18 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int be_strength,
 
     if (gaussian_blur_strength>0)
     {
-        int gaussian_blur_radius = (static_cast<int>( ceil(gaussian_blur_strength*3) ) | 1)/2;
-        int gaussian_blur_radius_x = static_cast<int>(gaussian_blur_radius * target_scale_x + 0.5);//fix me: rounding err?    
-        int gaussian_blur_radius_y = static_cast<int>(gaussian_blur_radius * target_scale_y + 0.5);//fix me: rounding err?
-        if( gaussian_blur_radius_x < 1 && gaussian_blur_strength>GAUSSIAN_BLUR_THREHOLD )
-            gaussian_blur_radius_x = 1;//make sure that it really do a blur
-        if( gaussian_blur_radius_y < 1 && gaussian_blur_strength>GAUSSIAN_BLUR_THREHOLD )
-            gaussian_blur_radius_y = 1;//make sure that it really do a blur
-
         if (be_strength)//this insane thing should NEVER happen
         {
             SharedPtrOverlay tmp(new Overlay());
 
-            bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, gaussian_blur_radius_x, gaussian_blur_radius_y, tmp);
+            bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, target_scale_x, target_scale_y, tmp);
             ASSERT(rv);
             rv = BeBlur(*tmp, be_strength, target_scale_x, target_scale_y, output_overlay);
             ASSERT(rv);
         }
         else
         {
-            bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, gaussian_blur_radius_x, gaussian_blur_radius_y, output_overlay);
+            bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, target_scale_x, target_scale_y, output_overlay);
             ASSERT(rv);
         }
     }
@@ -1183,7 +1175,7 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int be_strength,
 }
 
 bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double gaussian_blur_strength, 
-    int gaussian_blur_radius_x,int gaussian_blur_radius_y,
+    double target_scale_x, double target_scale_y, 
     SharedPtrOverlay output_overlay )
 {
     using namespace ::boost::flyweights;
@@ -1193,7 +1185,15 @@ bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double gaussian_blu
     output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
 
     ASSERT(gaussian_blur_strength > 0);
-    
+
+    int gaussian_blur_radius = (static_cast<int>( ceil(gaussian_blur_strength*3) ) | 1)/2;
+    int gaussian_blur_radius_x = static_cast<int>(gaussian_blur_radius * target_scale_x + 0.5);//fix me: rounding err?    
+    int gaussian_blur_radius_y = static_cast<int>(gaussian_blur_radius * target_scale_y + 0.5);//fix me: rounding err?
+    if( gaussian_blur_radius_x < 1 && gaussian_blur_strength>GAUSSIAN_BLUR_THREHOLD )
+        gaussian_blur_radius_x = 1;//make sure that it really do a blur
+    if( gaussian_blur_radius_y < 1 && gaussian_blur_strength>GAUSSIAN_BLUR_THREHOLD )
+        gaussian_blur_radius_y = 1;//make sure that it really do a blur
+
     double step = (2*gaussian_blur_radius_x+1.0) / (static_cast<int>( ceil(gaussian_blur_strength*3) ) | 1);
     flyweight<key_value<GaussianCoefficientsKey, GaussianCoefficients>, no_locking> 
         fw_filter_x( GaussianCoefficientsKey(gaussian_blur_strength, step, gaussian_blur_radius_x) );
