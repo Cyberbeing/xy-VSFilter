@@ -993,9 +993,11 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int be_strength
     output_overlay->mOverlayHeight = input_overlay.mOverlayHeight;
     output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
 
-    int gaussian_blur_radius = (static_cast<int>( ceil(gaussian_blur_strength*3) ) | 1)/2;
-    int gaussian_blur_radius_x = static_cast<int>(gaussian_blur_radius * target_scale_x + 0.5);//fix me: rounding err?
-    int gaussian_blur_radius_y = static_cast<int>(gaussian_blur_radius * target_scale_y + 0.5);//fix me: rounding err?
+    double gaussian_blur_strength_x = gaussian_blur_strength*target_scale_x;
+    double gaussian_blur_strength_y = gaussian_blur_strength*target_scale_y;
+
+    int gaussian_blur_radius_x = (static_cast<int>( ceil(gaussian_blur_strength_x*3) ) | 1)/2;//fix me: rounding err?    
+    int gaussian_blur_radius_y = (static_cast<int>( ceil(gaussian_blur_strength_y*3) ) | 1)/2;//fix me: rounding err?
     if( gaussian_blur_radius_x < 1 && gaussian_blur_strength>GAUSSIAN_BLUR_THREHOLD )
         gaussian_blur_radius_x = 1;//make sure that it really do a blur
     if( gaussian_blur_radius_y < 1 && gaussian_blur_strength>GAUSSIAN_BLUR_THREHOLD )
@@ -1085,14 +1087,13 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int be_strength
     {
         byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
         
-        double step = (2*gaussian_blur_radius_x+1.0) / (static_cast<int>(ceil(3*gaussian_blur_strength))|1);        
+        double step = 1.0;        
 
         flyweight<key_value<GaussianCoefficientsKey, ass_synth_priv>, no_locking> 
-            fw_priv_blur_x( GaussianCoefficientsKey(gaussian_blur_strength, step, gaussian_blur_radius_x) );
+            fw_priv_blur_x( GaussianCoefficientsKey(gaussian_blur_strength_x, step, gaussian_blur_radius_x) );
 
-        step = (2*gaussian_blur_radius_y+1.0) / (static_cast<int>(ceil(3*gaussian_blur_strength))|1);
         flyweight<key_value<GaussianCoefficientsKey, ass_synth_priv>, no_locking> 
-            fw_priv_blur_y( GaussianCoefficientsKey(gaussian_blur_strength, step, gaussian_blur_radius_y) );
+            fw_priv_blur_y( GaussianCoefficientsKey(gaussian_blur_strength_y, step, gaussian_blur_radius_y) );
 
         const ass_synth_priv& priv_blur_x = fw_priv_blur_x.get();
         const ass_synth_priv& priv_blur_y = fw_priv_blur_y.get();
@@ -1186,21 +1187,22 @@ bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double gaussian_blu
 
     ASSERT(gaussian_blur_strength > 0);
 
-    int gaussian_blur_radius = (static_cast<int>( ceil(gaussian_blur_strength*3) ) | 1)/2;
-    int gaussian_blur_radius_x = static_cast<int>(gaussian_blur_radius * target_scale_x + 0.5);//fix me: rounding err?    
-    int gaussian_blur_radius_y = static_cast<int>(gaussian_blur_radius * target_scale_y + 0.5);//fix me: rounding err?
+    double gaussian_blur_strength_x = gaussian_blur_strength*target_scale_x;
+    double gaussian_blur_strength_y = gaussian_blur_strength*target_scale_y;
+    
+    int gaussian_blur_radius_x = (static_cast<int>( ceil(gaussian_blur_strength_x*3) ) | 1)/2;//fix me: rounding err?    
+    int gaussian_blur_radius_y = (static_cast<int>( ceil(gaussian_blur_strength_y*3) ) | 1)/2;//fix me: rounding err?
     if( gaussian_blur_radius_x < 1 && gaussian_blur_strength>GAUSSIAN_BLUR_THREHOLD )
         gaussian_blur_radius_x = 1;//make sure that it really do a blur
     if( gaussian_blur_radius_y < 1 && gaussian_blur_strength>GAUSSIAN_BLUR_THREHOLD )
         gaussian_blur_radius_y = 1;//make sure that it really do a blur
 
-    double step = (2*gaussian_blur_radius_x+1.0) / (static_cast<int>( ceil(gaussian_blur_strength*3) ) | 1);
+    double step = 1.0;
     flyweight<key_value<GaussianCoefficientsKey, GaussianCoefficients>, no_locking> 
-        fw_filter_x( GaussianCoefficientsKey(gaussian_blur_strength, step, gaussian_blur_radius_x) );
+        fw_filter_x( GaussianCoefficientsKey(gaussian_blur_strength_x, step, gaussian_blur_radius_x) );
     
-    step = (2*gaussian_blur_radius_y+1.0) / (static_cast<int>( ceil(gaussian_blur_strength*3) ) | 1);
     flyweight<key_value<GaussianCoefficientsKey, GaussianCoefficients>, no_locking> 
-        fw_filter_y( GaussianCoefficientsKey(gaussian_blur_strength, step, gaussian_blur_radius_y) );
+        fw_filter_y( GaussianCoefficientsKey(gaussian_blur_strength_y, step, gaussian_blur_radius_y) );
 
     const GaussianCoefficients& filter_x = fw_filter_x.get();
     const GaussianCoefficients& filter_y = fw_filter_y.get();
