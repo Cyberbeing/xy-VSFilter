@@ -99,6 +99,9 @@
 #define IDS_RG_LAYOUT_SIZE_OPT              192
 #define IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X 193
 #define IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y 194
+#define IDS_RG_USER_DEFINED_AR              195
+#define IDS_RG_USER_DEFINED_AR_X            196
+#define IDS_RG_USER_DEFINED_AR_Y            197
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
@@ -200,6 +203,11 @@
 #define IDC_SPIN_LAYOUT_SIZE_X          334
 #define IDC_EDIT_LAYOUT_SIZE_Y          335
 #define IDC_SPIN_LAYOUT_SIZE_Y          336
+#define IDC_EDIT_AR_X                   337
+#define IDC_EDIT_AR_Y                   338
+#define IDC_SPIN_AR_X                   339
+#define IDC_SPIN_AR_Y                   340
+#define IDC_CHECKBOX_AR                 341
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
 #define IDC_LABLE_OVERLAY_CACHE         403
@@ -234,7 +242,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        334
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         337
-#define _APS_NEXT_SYMED_VALUE           195
+#define _APS_NEXT_CONTROL_VALUE         342
+#define _APS_NEXT_SYMED_VALUE           198
 #endif
 #endif

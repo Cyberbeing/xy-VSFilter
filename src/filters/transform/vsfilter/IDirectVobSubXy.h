@@ -32,7 +32,8 @@ extern "C" {
         enum//bool
         {
             BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER,
-            BOOL_HIDE_TRAY_ICON,            
+            BOOL_HIDE_TRAY_ICON,
+            BOOL_USER_DEFINED_AR,
             BOOL_COUNT
         };
         enum//SIZE
@@ -41,6 +42,7 @@ extern "C" {
             SIZE_ASS_PLAY_RESOLUTION,
             SIZE_USER_SPECIFIED_LAYOUT_SIZE,
             SIZE_LAYOUT_WITH,//read only
+            SIZE_USER_DEFINED_AR,
             SIZE_COUNT
         };
         enum

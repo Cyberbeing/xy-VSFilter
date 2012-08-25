@@ -839,6 +839,10 @@ CDVSBasePPage(NAME("DirectVobSub More Property Page"), pUnk, IDD_DVSMOREPAGE, ID
     BindControl(IDC_COMBO_LAYOUT_SIZE_OPT, m_combo_layout_size_opt);
     BindControl(IDC_SPIN_LAYOUT_SIZE_X, m_layout_size_x);
     BindControl(IDC_SPIN_LAYOUT_SIZE_Y, m_layout_size_y);
+
+    BindControl(IDC_SPIN_AR_X, m_spin_ar_x);
+    BindControl(IDC_SPIN_AR_Y, m_spin_ar_y);
+    BindControl(IDC_CHECKBOX_AR, m_button_user_defined_ar);
 }
 
 bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -928,6 +932,8 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
 
         m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_LAYOUT_SIZE_OPT, m_layout_size_opt);
         m_pDirectVobSubXy->XySetSize(DirectVobSubXyIntOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, m_layout_size);
+        m_pDirectVobSubXy->XySetBool(DirectVobSubXyIntOptions::BOOL_USER_DEFINED_AR, m_user_defined_ar);
+        m_pDirectVobSubXy->XySetSize(DirectVobSubXyIntOptions::SIZE_USER_DEFINED_AR, m_ar_corrected_size);
     }
     else
     {
@@ -939,6 +945,8 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
 
         m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_LAYOUT_SIZE_OPT, &m_layout_size_opt);
         m_pDirectVobSubXy->XyGetSize(DirectVobSubXyIntOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, &m_layout_size);
+        m_pDirectVobSubXy->XyGetBool(DirectVobSubXyIntOptions::BOOL_USER_DEFINED_AR, &m_user_defined_ar);
+        m_pDirectVobSubXy->XyGetSize(DirectVobSubXyIntOptions::SIZE_USER_DEFINED_AR, &m_ar_corrected_size);
     }
 }
 
@@ -970,6 +978,10 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         }
         m_layout_size.cx = m_layout_size_x.GetPos32();
         m_layout_size.cy = m_layout_size_y.GetPos32();
+
+        m_user_defined_ar = !!m_button_user_defined_ar.GetCheck();
+        m_ar_corrected_size.cx = m_spin_ar_x.GetPos32();
+        m_ar_corrected_size.cy = m_spin_ar_y.GetPos32();
     }
     else
     {
@@ -1025,6 +1037,12 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         m_layout_size_x.SetPos32(m_layout_size.cx);
         m_layout_size_y.SetRange32(1, 12800);
         m_layout_size_y.SetPos32(m_layout_size.cy);
+
+        m_button_user_defined_ar.SetCheck(m_user_defined_ar);
+        m_spin_ar_x.SetRange32(1, 12800);
+        m_spin_ar_x.SetPos32(m_ar_corrected_size.cx);
+        m_spin_ar_y.SetRange32(1, 12800);
+        m_spin_ar_y.SetPos32(m_ar_corrected_size.cy);
     }
 }
 

@@ -164,10 +164,16 @@ class CDVSMorePPage : public CDVSBasePPage
     int m_layout_size_opt;
     SIZE m_layout_size;
 
+    bool m_user_defined_ar;
+    SIZE m_ar_corrected_size;
+
     CSpinButtonCtrl m_path_cache, m_scanline_cache, m_overlay_no_blur_cache, m_overlay_cache;
 
     CSpinButtonCtrl m_layout_size_x, m_layout_size_y;
     CComboBox m_combo_subpixel_pos, m_combo_layout_size_opt;
+
+    CSpinButtonCtrl m_spin_ar_x, m_spin_ar_y;
+    CButton m_button_user_defined_ar;
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
     virtual void UpdateControlData(bool fSave);

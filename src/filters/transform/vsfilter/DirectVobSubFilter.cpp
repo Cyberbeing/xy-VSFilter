@@ -1886,7 +1886,16 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 			}
 
 			pRTS->m_ePARCompensationType = m_ePARCompensationType;
-			if (m_CurrentVIH2.dwPictAspectRatioX != 0 && m_CurrentVIH2.dwPictAspectRatioY != 0&& m_CurrentVIH2.bmiHeader.biWidth != 0 && m_CurrentVIH2.bmiHeader.biHeight != 0)
+            if (m_xy_bool_opt[BOOL_USER_DEFINED_AR])
+            {
+                SIZE layout_size;
+                HRESULT hr = XyGetSize(DirectVobSubXyIntOptions::SIZE_LAYOUT_WITH, &layout_size);
+                ASSERT(SUCCEEDED(hr));
+                pRTS->m_dPARCompensation = 1.0 * 
+                    (m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_USER_DEFINED_AR].cy * layout_size.cx) / 
+                    (m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_USER_DEFINED_AR].cx * layout_size.cy);
+            }
+            else if (m_CurrentVIH2.dwPictAspectRatioX != 0 && m_CurrentVIH2.dwPictAspectRatioY != 0&& m_CurrentVIH2.bmiHeader.biWidth != 0 && m_CurrentVIH2.bmiHeader.biHeight != 0)
 			{
 				pRTS->m_dPARCompensation = ((double)abs(m_CurrentVIH2.bmiHeader.biWidth) / (double)abs(m_CurrentVIH2.bmiHeader.biHeight)) /
 					((double)abs((long)m_CurrentVIH2.dwPictAspectRatioX) / (double)abs((long)m_CurrentVIH2.dwPictAspectRatioY));

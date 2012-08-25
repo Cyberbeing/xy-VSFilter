@@ -136,6 +136,14 @@ CDirectVobSub::CDirectVobSub()
     m_xy_size_opt[SIZE_ASS_PLAY_RESOLUTION] = CSize(0,0);
     m_xy_size_opt[SIZE_ORIGINAL_VIDEO] = CSize(0,0);
 
+    m_xy_size_opt[SIZE_USER_DEFINED_AR].cx = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_DEFINED_AR_X), 1280);
+    m_xy_size_opt[SIZE_USER_DEFINED_AR].cy = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_DEFINED_AR_Y), 720);
+    if (m_xy_size_opt[SIZE_USER_DEFINED_AR].cx <= 0 || m_xy_size_opt[SIZE_USER_DEFINED_AR].cy)
+    {
+        m_xy_size_opt[SIZE_USER_DEFINED_AR].cx = 1280;
+        m_xy_size_opt[SIZE_USER_DEFINED_AR].cy = 720;
+    }
+
     m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USE_UPSTREAM_PREFERRED_ORDER), true);
     // get output colorspace config
     if(pData)
@@ -1150,6 +1158,11 @@ STDMETHODIMP CDirectVobSub::XySetSize( int field, SIZE value )
     {
     case DirectVobSubXyIntOptions::SIZE_LAYOUT_WITH:
         return E_INVALIDARG;
+    case DirectVobSubXyIntOptions::SIZE_USER_DEFINED_AR:
+        if (value.cx<=0 || value.cy<=0)
+        {
+            return E_INVALIDARG;
+        }
     }
 
     CAutoLock cAutoLock(&m_propsLock);
