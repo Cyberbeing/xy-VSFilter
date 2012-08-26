@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../dsutil/vd.h"
 
 typedef const UINT8 CUINT8, *PCUINT8;
 
@@ -933,4 +934,144 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     
     xy_free(buff_base);
     _mm_empty();
+}
+
+/****
+ * filter with [1,2,1]
+ * 1. It is a in-place horizontal filter
+ * 2. Boundary Pixels are filtered by padding 0. E.g. 
+ *      src[0] = (0*1 + src[0]*2 + src[1]*1)/4;
+ **/
+void xy_be_filter_c(PUINT8 src, int width, int height, int stride)
+{
+    ASSERT(width>=1);
+    if (width<=0)
+    {
+        return;
+    }
+    PUINT8 src2 = NULL;    
+    for (int y=0;y<height;y++)
+    {
+        src2 = src + y*stride;
+        int old_sum = src2[0];
+
+        int x=0;
+        for (x=0;x<width-1;x++)
+        {
+            int new_sum = src2[x]+src2[x+1];
+            src2[x] = ((old_sum + new_sum)>>2);//old_sum == src2[x-1]+src2[x];
+            old_sum = new_sum;
+        }
+        src2[x] = ((old_sum + src2[x])>>2);
+    }
+}
+
+/****
+ * See @box_filter_c
+ * No alignment requirement.
+ **/
+void xy_be_filter_sse(PUINT8 src, int width, int height, int stride)
+{
+    ASSERT(width>=1);
+    if (width<=0)
+    {
+        return;
+    }
+    int width_mod8 = ((width-1)&~7);
+    //__m128i round = _mm_set1_epi16(8);
+    for (int y = 0; y < height; y++) {
+        PUINT8 src2=src2+y*stride;
+
+        __m128i old_pix_128 = _mm_cvtsi32_si128(src2[0]);
+        __m128i old_sum_128 = old_pix_128;
+
+        int x = 0;
+        for (; x < width_mod8; x+=8) {
+            __m128i new_pix = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(src2+x+1));
+            new_pix = _mm_unpacklo_epi8(new_pix, _mm_setzero_si128());
+            __m128i temp = _mm_slli_si128(new_pix,2);
+            temp = _mm_add_epi16(temp, old_pix_128);
+            temp = _mm_add_epi16(temp, new_pix);
+            old_pix_128 = _mm_srli_si128(new_pix,14);
+
+            new_pix = _mm_slli_si128(temp,2);
+            new_pix = _mm_add_epi16(new_pix, old_sum_128);
+            new_pix = _mm_add_epi16(new_pix, temp);
+            old_sum_128 = _mm_srli_si128(temp, 14);
+            
+            _mm_storel_epi64( reinterpret_cast<__m128i*>(src2+x), new_pix );
+        }
+        int old_sum = _mm_cvtsi128_si32(old_sum_128);
+        for ( ; x < width-1; x++) {
+            int new_sum = src2[x] + src2[x+1];
+            src2[x] = ((old_sum + new_sum)>>2);
+            old_sum = new_sum;
+        }
+        src2[x] = ((old_sum + src2[x])>>2);
+    }
+}
+
+
+/****
+ * See @xy_float_2_byte_transpose_c
+ **/
+void xy_byte_2_byte_transpose_c(UINT8 *dst, int dst_width, int dst_stride, 
+    PCUINT8 src, int width, int height, int src_stride)
+{
+    ASSERT(dst_width >= height);
+    PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
+    PCUINT8 src_end = src + width;
+    PCUINT8 src2_end = reinterpret_cast<PCUINT8>(src) + height*src_stride;
+    for( ; src<src_end; src++, dst_byte+=dst_stride )
+    {
+        PCUINT8 src2 = reinterpret_cast<PCUINT8>(src);
+
+        UINT8 *dst2 = reinterpret_cast<UINT8*>(dst_byte);
+        for (;src2<src2_end;src2+=src_stride,dst2++)
+        {
+            *dst2 = *src2;
+        }
+        UINT8 *dst2_end = reinterpret_cast<UINT8*>(dst_byte) + dst_width;
+        for (;dst2<dst2_end;dst2++)
+        {
+            *dst2 = 0;
+        }
+    }
+}
+
+/****
+ * Repeat filter [1,2,1] @pass_x times in horizontal and @pass_y times in vertical
+ * Boundary Pixels are filtered by padding 0, see @xy_be_filter_c.
+ **/
+void xy_be_blur(PUINT8 src, int width, int height, int stride, unsigned int pass_x, unsigned int pass_y)
+{
+    //ASSERT(pass_x>0 && pass_y>0);
+
+    typedef void (*XyBeFilter)(PUINT8 src, int width, int height, int stride);
+
+    XyBeFilter filter = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter_sse : xy_be_filter_c;
+
+    int stride_ver = height;
+    PUINT8 tmp = reinterpret_cast<PUINT8>(xy_malloc(width*height));
+    ASSERT(tmp);
+    // horizontal pass
+    for (unsigned i=0;i<pass_x;i++)
+    {
+        filter(src, width, height, stride);
+    }
+
+    // transpose
+    xy_byte_2_byte_transpose_c(tmp, height, stride_ver, src, width, height, stride);
+
+    // vertical pass    
+    for (unsigned i=0;i<pass_y;i++)
+    {
+        filter(tmp, height, width, stride_ver);
+    }
+
+    // transpose
+    xy_byte_2_byte_transpose_c(src, width, stride, tmp, height, width, stride_ver);
+
+    xy_free(tmp);
+    return;
 }

@@ -643,6 +643,8 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     const float *gt_x, int r_x, int gt_ex_width_x, 
     const float *gt_y, int r_y, int gt_ex_width_y);
 
+void xy_be_blur(PUINT8 src, int width, int height, int stride, unsigned int pass_x, unsigned int pass_y);
+
 /**
  * \brief blur with [[1,2,1]. [2,4,2], [1,2,1]] kernel.
  */
@@ -1323,22 +1325,15 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, int be_strength,
 
     ass_tmp_buf tmp_buf( max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0) );
 
-    for (int pass = 0; pass < be_strength; pass++)
+    if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
     {
-        if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
-        {            
-            int pitch = output_overlay->mOverlayPitch;
-            byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
-            if (g_cpuid.m_flags & CCpuID::sse2)
-            {
-                be_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
-            }
-            else
-            {
-                be_blur_c(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
-            }
-        }
+        int pitch = output_overlay->mOverlayPitch;
+        byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
+        plan_selected += (bluradjust_x>>3) + (bluradjust_y>>3)*output_overlay->mOverlayPitch;
+        xy_be_blur(plan_selected, input_overlay.mOverlayWidth, input_overlay.mOverlayHeight, pitch,
+            be_strength, be_strength);
     }
+    
     return true;
 }
 
