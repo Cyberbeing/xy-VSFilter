@@ -643,7 +643,7 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     const float *gt_x, int r_x, int gt_ex_width_x, 
     const float *gt_y, int r_y, int gt_ex_width_y);
 
-void xy_be_blur(PUINT8 src, int width, int height, int stride, unsigned int pass_x, unsigned int pass_y);
+void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, float pass_y);
 
 /**
  * \brief blur with [[1,2,1]. [2,4,2], [1,2,1]] kernel.

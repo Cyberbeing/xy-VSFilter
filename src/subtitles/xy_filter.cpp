@@ -940,37 +940,78 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
  * filter with [1,2,1]
  * 1. It is a in-place horizontal filter
  * 2. Boundary Pixels are filtered by padding 0. E.g. 
- *      src[0] = (0*1 + src[0]*2 + src[1]*1)/4;
+ *      dst[0] = (0*1 + dst[0]*2 + dst[1]*1)/4;
  **/
-void xy_be_filter_c(PUINT8 src, int width, int height, int stride)
+void xy_be_filter_c(PUINT8 dst, int width, int height, int stride)
 {
     ASSERT(width>=1);
     if (width<=0)
     {
         return;
     }
-    PUINT8 src2 = NULL;    
+    PUINT8 dst2 = NULL;    
     for (int y=0;y<height;y++)
     {
-        src2 = src + y*stride;
-        int old_sum = src2[0];
+        dst2 = dst + y*stride;
+        int old_sum = dst2[0];
 
         int x=0;
         for (x=0;x<width-1;x++)
         {
-            int new_sum = src2[x]+src2[x+1];
-            src2[x] = ((old_sum + new_sum)>>2);//old_sum == src2[x-1]+src2[x];
+            int new_sum = dst2[x]+dst2[x+1];
+            dst2[x] = ((old_sum + new_sum)>>2);//old_sum == src2[x-1]+src2[x];
             old_sum = new_sum;
         }
-        src2[x] = ((old_sum + src2[x])>>2);
+        dst2[x] = ((old_sum + dst2[x])>>2);
     }
 }
 
 /****
- * See @box_filter_c
+ * 1. It is a in-place symmetric 3-tag horizontal filter
+ * 2. Boundary Pixels are filtered by padding 0. E.g. 
+ *      dst[0] = (0*1 + dst[0]*2 + dst[1]*1)/4;
+ * 3. sum(filter) == 256
+ **/
+void xy_be_filter2_c(PUINT8 dst, int width, int height, int stride, PCUINT8 filter)
+{
+    ASSERT(width>=1);
+    if (width<=0)
+    {
+        return;
+    }
+
+    const int VOLUME = (1<<8);
+    if (filter[0]==0)
+    {
+        return;//nothing to do;
+    }
+    else if (filter[0]== (VOLUME>>2))
+    {
+        return xy_be_filter_c(dst, width, height, stride);
+    }
+
+    PUINT8 dst2 = NULL;
+    for (int y=0;y<height;y++)
+    {
+        dst2 = dst + y*stride;
+        int old_pix = 0;
+
+        int x=0;
+        for (x=0;x<width-1;x++)
+        {
+            int tmp = (( (old_pix + dst2[x+1]) * filter[0] + dst2[x] * filter[1])>>8);
+            old_pix = dst2[x];
+            dst2[x] = tmp;
+        }
+        dst2[x] = ((old_pix * filter[0] + dst2[x] * filter[1])>>16);
+    }
+}
+
+/****
+ * See @xy_be_filter_c
  * No alignment requirement.
  **/
-void xy_be_filter_sse(PUINT8 src, int width, int height, int stride)
+void xy_be_filter_sse(PUINT8 dst, int width, int height, int stride)
 {
     ASSERT(width>=1);
     if (width<=0)
@@ -980,14 +1021,14 @@ void xy_be_filter_sse(PUINT8 src, int width, int height, int stride)
     int width_mod8 = ((width-1)&~7);
     //__m128i round = _mm_set1_epi16(8);
     for (int y = 0; y < height; y++) {
-        PUINT8 src2=src2+y*stride;
+        PUINT8 dst2=dst2+y*stride;
 
-        __m128i old_pix_128 = _mm_cvtsi32_si128(src2[0]);
+        __m128i old_pix_128 = _mm_cvtsi32_si128(dst2[0]);
         __m128i old_sum_128 = old_pix_128;
 
         int x = 0;
         for (; x < width_mod8; x+=8) {
-            __m128i new_pix = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(src2+x+1));
+            __m128i new_pix = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(dst2+x+1));
             new_pix = _mm_unpacklo_epi8(new_pix, _mm_setzero_si128());
             __m128i temp = _mm_slli_si128(new_pix,2);
             temp = _mm_add_epi16(temp, old_pix_128);
@@ -998,19 +1039,97 @@ void xy_be_filter_sse(PUINT8 src, int width, int height, int stride)
             new_pix = _mm_add_epi16(new_pix, old_sum_128);
             new_pix = _mm_add_epi16(new_pix, temp);
             old_sum_128 = _mm_srli_si128(temp, 14);
-            
-            _mm_storel_epi64( reinterpret_cast<__m128i*>(src2+x), new_pix );
+            new_pix = _mm_srli_epi16(new_pix, 2);
+            new_pix = _mm_packus_epi16(new_pix, new_pix);
+
+            _mm_storel_epi64( reinterpret_cast<__m128i*>(dst2+x), new_pix );
         }
         int old_sum = _mm_cvtsi128_si32(old_sum_128);
+        old_sum &= 0xffff;
         for ( ; x < width-1; x++) {
-            int new_sum = src2[x] + src2[x+1];
-            src2[x] = ((old_sum + new_sum)>>2);
+            int new_sum = dst2[x] + dst2[x+1];
+            dst2[x] = ((old_sum + new_sum)>>2);
             old_sum = new_sum;
         }
-        src2[x] = ((old_sum + src2[x])>>2);
+        dst2[x] = ((old_sum + dst2[x])>>2);
     }
 }
 
+/****
+ * See @xy_be_filter2_c
+ * No alignment requirement.
+ **/
+void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT8 filter)
+{
+    const int VOLUME = (1<<8);
+    ASSERT(filter[0]==filter[2]);
+    ASSERT(filter[0]+filter[1]+filter[2]==VOLUME);
+    ASSERT(width>=1);
+    if (width<=0)
+    {
+        return;
+    }
+    
+    __m128i f3_1 = _mm_set1_epi16(filter[0]);
+    __m128i f3_2 = _mm_set1_epi16(filter[1]);
+
+    int width_mod8 = ((width-1)&~7);
+    //__m128i round = _mm_set1_epi16(8);
+    
+    PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
+    PUINT8 end = dst_byte + height*stride;
+    for( ; dst_byte<end; dst_byte+=stride )
+    {
+        PUINT8 dst2 = dst_byte;
+
+        PUINT8 dst_end0 = dst_byte + width - 4;
+
+        __m128i old_pix1_128 = _mm_setzero_si128();
+        __m128i old_pix2_128 = _mm_cvtsi32_si128(dst2[0]);
+
+        int x = 0;
+        for (; x < width_mod8; x+=8) {
+            __m128i pix2 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(dst2+x+1));
+            pix2 = _mm_unpacklo_epi8(pix2, _mm_setzero_si128());
+            __m128i pix1 =  _mm_slli_si128(pix2,2);
+            pix1 = _mm_add_epi8(pix1, old_pix2_128);
+            __m128i pix0 =  _mm_slli_si128(pix1,2);
+            pix0 = _mm_add_epi8(pix0, old_pix1_128);
+            old_pix1_128 = _mm_srli_si128(pix1,14);
+            old_pix2_128 = _mm_srli_si128(pix2,14);
+
+            pix0 = _mm_add_epi16(pix0, pix2);
+            pix0 = _mm_mullo_epi16(pix0, f3_1);
+            pix1 = _mm_mullo_epi16(pix1, f3_2);
+            
+            pix1 = _mm_adds_epu16(pix1, pix0);
+
+            pix1 = _mm_srli_epi16(pix1, 2);
+            pix1 = _mm_packus_epi16(pix1, pix1);
+
+            _mm_storel_epi64( reinterpret_cast<__m128i*>(dst2+x), pix1 );
+        }
+        int old_pix1 = _mm_cvtsi128_si32(old_pix1_128);
+        old_pix1 &= 0xff;
+        for ( ; x < width-1; x++) {
+            int tmp = ((old_pix1 + dst2[x+1]) * filter[0] + dst2[x] * filter[1])>>8;
+            old_pix1 = dst2[x];
+            dst2[x] = tmp;
+        }
+        dst2[x] = ((old_pix1*filter[0] + dst2[x]*filter[1])>>8);
+    }
+}
+
+/****
+ * filter with [1*@portion, 1*(1-@portion)+2*@portion, 1*@portion] (round to let the sum==2^8 )
+ **/
+void xy_calculate_filter(float portion, PUINT8 filter)
+{
+    const int VOLUME = (1<<8);
+    filter[0] = VOLUME * portion/(1+3*portion);
+    filter[1] = VOLUME - 2*filter[0];
+    filter[2] = filter[0];
+}
 
 /****
  * See @xy_float_2_byte_transpose_c
@@ -1043,30 +1162,46 @@ void xy_byte_2_byte_transpose_c(UINT8 *dst, int dst_width, int dst_stride,
  * Repeat filter [1,2,1] @pass_x times in horizontal and @pass_y times in vertical
  * Boundary Pixels are filtered by padding 0, see @xy_be_filter_c.
  **/
-void xy_be_blur(PUINT8 src, int width, int height, int stride, unsigned int pass_x, unsigned int pass_y)
+void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, float pass_y)
 {
     //ASSERT(pass_x>0 && pass_y>0);
 
     typedef void (*XyBeFilter)(PUINT8 src, int width, int height, int stride);
+    typedef void (*XyFilter2)(PUINT8 src, int width, int height, int stride, PCUINT8 filter);
 
     XyBeFilter filter = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter_sse : xy_be_filter_c;
+    XyFilter2 filter2 = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter2_sse : xy_be_filter2_c;
 
     int stride_ver = height;
     PUINT8 tmp = reinterpret_cast<PUINT8>(xy_malloc(width*height));
     ASSERT(tmp);
     // horizontal pass
-    for (unsigned i=0;i<pass_x;i++)
+    int pass_x_int = static_cast<int>(pass_x);
+    for (int i=0;i<pass_x_int;i++)
     {
         filter(src, width, height, stride);
+    }
+    if (pass_x-pass_x_int>0)
+    {
+        UINT8 f[3] = {0};
+        xy_calculate_filter(pass_x-pass_x_int, f);
+        filter2(src, width, height, stride, f);
     }
 
     // transpose
     xy_byte_2_byte_transpose_c(tmp, height, stride_ver, src, width, height, stride);
 
-    // vertical pass    
-    for (unsigned i=0;i<pass_y;i++)
+    // vertical pass
+    int pass_y_int = static_cast<int>(pass_y);
+    for (int i=0;i<pass_y_int;i++)
     {
         filter(tmp, height, width, stride_ver);
+    }
+    if (pass_y-pass_y_int>0)
+    {
+        UINT8 f[3] = {0};
+        xy_calculate_filter(pass_y-pass_y_int, f);
+        filter2(tmp, height, width, stride_ver, f);
     }
 
     // transpose
