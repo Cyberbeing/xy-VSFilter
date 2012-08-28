@@ -1154,21 +1154,56 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int be_strength,
 
     if (gaussian_blur_strength>0)
     {
+        bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, target_scale_x, target_scale_y, output_overlay);
+        ASSERT(rv);
         if (be_strength)//this insane thing should NEVER happen
         {
-            bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, target_scale_x, target_scale_y, output_overlay);
-            ASSERT(rv);
             rv = BeBlur(be_strength, target_scale_x, target_scale_y, output_overlay);
-            ASSERT(rv);
-        }
-        else
-        {
-            bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, target_scale_x, target_scale_y, output_overlay);
             ASSERT(rv);
         }
     }
     else if (be_strength)
     {
+        output_overlay->CleanUp();
+        output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
+        
+        output_overlay->mOffsetX       = input_overlay.mOffsetX;
+        output_overlay->mOffsetY       = input_overlay.mOffsetY;
+        output_overlay->mWidth         = input_overlay.mWidth;
+        output_overlay->mHeight        = input_overlay.mHeight;
+        output_overlay->mOverlayWidth  = input_overlay.mOverlayWidth;
+        output_overlay->mOverlayHeight = input_overlay.mOverlayHeight;
+
+        output_overlay->mOverlayPitch = input_overlay.mOverlayPitch;
+
+        BYTE* body = reinterpret_cast<BYTE*>(xy_malloc(output_overlay->mOverlayPitch * output_overlay->mOverlayHeight));
+        if( body==NULL )
+        {
+            return false;
+        }
+        output_overlay->mBody.reset(body, xy_free);
+        BYTE* border = NULL;
+        if (!output_overlay->mfWideOutlineEmpty)
+        {
+            border = reinterpret_cast<BYTE*>(xy_malloc(output_overlay->mOverlayPitch * output_overlay->mOverlayHeight));
+            if (border==NULL)
+            {
+                return false;
+            }
+            output_overlay->mBorder.reset(border, xy_free);
+        }
+
+        //copy buffer
+        for(int i = 1; i >= 0; i--)
+        {
+            byte* plan_selected = i==0 ? body : border;
+            const byte* plan_input = i==0 ? input_overlay.mBody.get() : input_overlay.mBorder.get();
+            if ( plan_selected!=NULL && plan_input!=NULL )
+            {
+                memcpy(plan_selected, plan_input, output_overlay->mOverlayPitch*output_overlay->mOverlayHeight);
+            }
+        }
+
         bool rv = BeBlur(be_strength, target_scale_x, target_scale_y, output_overlay);
         ASSERT(rv);
     }
