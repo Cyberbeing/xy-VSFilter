@@ -3274,7 +3274,7 @@ CString& operator <<= (CString& style, const STSStyle& s)
                  _T("0x%02x;0x%02x;0x%02x;0x%02x;")
                  _T("%d;")
                  _T("%s;%f;%f;%f;%f;%d;")
-                 _T("%d;%d;%d;%d;%f;")
+                 _T("%d;%d;%d;%f;%f;")
                  _T("%f;%f;%f;")
                  _T("%d"),
         s.marginRect.get().left, s.marginRect.get().right, s.marginRect.get().top, s.marginRect.get().bottom,
@@ -3310,7 +3310,7 @@ STSStyle& operator <<= (STSStyle& s, const CString& style)
             s.fontName = WToT(GetStr(str,';')); s.fontSize = GetFloat(str,';');
             s.fontScaleX = GetFloat(str,';'); s.fontScaleY = GetFloat(str,';');
             s.fontSpacing = GetFloat(str,';'); s.fontWeight = GetInt(str,';');
-            s.fItalic = !!GetInt(str,';'); s.fUnderline = !!GetInt(str,';'); s.fStrikeOut = !!GetInt(str,';'); s.fBlur = GetInt(str,';'); s.fGaussianBlur = GetFloat(str,';');
+            s.fItalic = !!GetInt(str,';'); s.fUnderline = !!GetInt(str,';'); s.fStrikeOut = !!GetInt(str,';'); s.fBlur = GetFloat(str,';'); s.fGaussianBlur = GetFloat(str,';');
             s.fontAngleZ = GetFloat(str,';'); s.fontAngleX = GetFloat(str,';'); s.fontAngleY = GetFloat(str,';');
             s.relativeTo = GetInt(str,';');
         }

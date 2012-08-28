@@ -964,7 +964,7 @@ bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int y
 
 const float Rasterizer::GAUSSIAN_BLUR_THREHOLD = 0.333333f;
 
-bool Rasterizer::IsItReallyBlur( int be_strength, double gaussian_blur_strength )
+bool Rasterizer::IsItReallyBlur( float be_strength, double gaussian_blur_strength )
 {
     if (be_strength<=0 && gaussian_blur_strength<=GAUSSIAN_BLUR_THREHOLD)
     {
@@ -1127,7 +1127,7 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int be_strength
 }
 
 // @return: true if actually a blur operation has done, or else false and output is leave unset.
-bool Rasterizer::Blur(const Overlay& input_overlay, int be_strength, 
+bool Rasterizer::Blur(const Overlay& input_overlay, float be_strength, 
     double gaussian_blur_strength, 
     double target_scale_x, double target_scale_y, 
     SharedPtrOverlay output_overlay)
@@ -1293,11 +1293,11 @@ bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double gaussian_blu
     return true;
 }
 
-bool Rasterizer::BeBlur( int be_strength, float target_scale_x, float target_scale_y, 
+bool Rasterizer::BeBlur( float be_strength, float target_scale_x, float target_scale_y, 
     SharedPtrOverlay output_overlay )
 {
     ASSERT(output_overlay);
-    if (be_strength<0)
+    if (be_strength<=0)
     {
         return true;
     }

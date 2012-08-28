@@ -2427,9 +2427,9 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
             }
         case CMD_be:
             {
-                int n = (int)(CalcAnimation(wcstod(p, NULL), style.fBlur, fAnimate)+0.5);
+                double d = CalcAnimation(wcstod(p, NULL), style.fBlur, fAnimate);
                 style.fBlur = !p.IsEmpty()
-                              ? n
+                              ? d
                               : org.fBlur;
                 break;
             }
