@@ -1124,8 +1124,19 @@ void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT fil
 }
 
 /****
- * n = floor(pass);
- * filter = [ (pass-n)(n+2)/(1+3pass-n), 1-2*(pass-n)(n+2)/(1+3pass-n), (pass-n)(n+2)/(1+3pass-n)]
+ * See @xy_be_blur
+ * Construct the filter used in the final horizontal/vertical pass of @xy_be_blur when @pass is NOT a integer.
+ * This filter is constructed to satisfy:
+ *   If @p is a pixel in the middle of the image, pixels @(p-1) and @(p+1) lie just at the left and the right
+ *   of @p respectively. The value of @p after all horizontal filtering equals to
+ *      a*value_old(@(p-1)) + b*value_old(@p) + a*value_old(@(p+1)) + other pixels' weighted sum,
+ *   then
+ *      a/b = @pass/(@pass+1).
+ * It makes sense because the above property also holds when @pass is a integer.
+ *
+ * @return
+ *   Let n = floor(pass);
+ *   filter = [ (pass-n)(n+2)/(1+3pass-n), 1-2*(pass-n)(n+2)/(1+3pass-n), (pass-n)(n+2)/(1+3pass-n)]
  **/
 void xy_calculate_filter(float pass, PUINT filter)
 {
@@ -1166,6 +1177,14 @@ void xy_byte_2_byte_transpose_c(UINT8 *dst, int dst_width, int dst_stride,
 /****
  * Repeat filter [1,2,1] @pass_x times in horizontal and @pass_y times in vertical
  * Boundary Pixels are filtered by padding 0, see @xy_be_filter_c.
+ *
+ * @pass_x:
+ *   When @pass_x is not a integer, horizontal filter [1,2,1] is repeated (int)@pass_x times,
+ *   and a 3-tag symmetric filter which generated according to @pass_x is applied.
+ *   The final 3-tag symmetric filter is constructed to satisfy the following property:
+ *     If @pass_xx > @pass_x, the filtered result of @pass_x should NOT be more blur than
+ *     the result of @pass_xx. More specially, the filtered result of @pass_x should NOT be more 
+ *     blur than (int)@pass_x+1 and should NOT be less blur than (int)@pass_x;
  **/
 void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, float pass_y)
 {
