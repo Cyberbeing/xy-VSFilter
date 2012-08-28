@@ -1,6 +1,11 @@
+#include <afx.h>
+
 #define CSRIAPI extern "C" __declspec(dllimport)
 #include "csri.h"
 #include <vector>
+#include <gtest/gtest.h>
+#include <iostream>
+
 
 using namespace std;
 
@@ -33,4 +38,21 @@ void OverallTest( float fps /*= 25*/, int width/*=1280*/, int height/*=720*/, do
         csri_render(g_csri_inst_yyy, &frame, time);
     }
     csri_close(g_csri_inst_yyy);
+}
+
+
+int OverallTest_wmain(int argc, wchar_t ** argv)
+{
+    if (argc!=2)
+    {
+        std::wcout<<argv[0]<<L" script_name"<<std::endl;
+        return -1;
+    }
+    char namebuf[256];
+    WideCharToMultiByte(CP_UTF8, 0, argv[1], -1, namebuf, sizeof(namebuf)/sizeof(char), NULL, NULL);
+    OpenTestScript(namebuf);
+
+    testing::InitGoogleTest(&argc, argv);
+
+    return RUN_ALL_TESTS();
 }

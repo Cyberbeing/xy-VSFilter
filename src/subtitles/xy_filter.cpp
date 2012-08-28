@@ -2,6 +2,7 @@
 #include "../dsutil/vd.h"
 
 typedef const UINT8 CUINT8, *PCUINT8;
+typedef const UINT CUINT, *PCUINT;
 
 //
 // ref: "Comparing floating point numbers" by Bruce Dawson
@@ -972,7 +973,7 @@ void xy_be_filter_c(PUINT8 dst, int width, int height, int stride)
  *      dst[0] = (0*1 + dst[0]*2 + dst[1]*1)/4;
  * 3. sum(filter) == 256
  **/
-void xy_be_filter2_c(PUINT8 dst, int width, int height, int stride, PCUINT8 filter)
+void xy_be_filter2_c(PUINT8 dst, int width, int height, int stride, PCUINT filter)
 {
     ASSERT(width>=1);
     if (width<=0)
@@ -980,7 +981,8 @@ void xy_be_filter2_c(PUINT8 dst, int width, int height, int stride, PCUINT8 filt
         return;
     }
 
-    const int VOLUME = (1<<8);
+    const int VOLUME_BITS = 8;
+    const int VOLUME = (1<<VOLUME_BITS);
     if (filter[0]==0)
     {
         return;//nothing to do;
@@ -999,11 +1001,11 @@ void xy_be_filter2_c(PUINT8 dst, int width, int height, int stride, PCUINT8 filt
         int x=0;
         for (x=0;x<width-1;x++)
         {
-            int tmp = (( (old_pix + dst2[x+1]) * filter[0] + dst2[x] * filter[1])>>8);
+            int tmp = (( (old_pix + dst2[x+1]) * filter[0] + dst2[x] * filter[1])>>VOLUME_BITS);
             old_pix = dst2[x];
             dst2[x] = tmp;
         }
-        dst2[x] = ((old_pix * filter[0] + dst2[x] * filter[1])>>16);
+        dst2[x] = ((old_pix * filter[0] + dst2[x] * filter[1])>>VOLUME_BITS);
     }
 }
 
@@ -1021,7 +1023,7 @@ void xy_be_filter_sse(PUINT8 dst, int width, int height, int stride)
     int width_mod8 = ((width-1)&~7);
     //__m128i round = _mm_set1_epi16(8);
     for (int y = 0; y < height; y++) {
-        PUINT8 dst2=dst2+y*stride;
+        PUINT8 dst2=dst+y*stride;
 
         __m128i old_pix_128 = _mm_cvtsi32_si128(dst2[0]);
         __m128i old_sum_128 = old_pix_128;
@@ -1059,9 +1061,10 @@ void xy_be_filter_sse(PUINT8 dst, int width, int height, int stride)
  * See @xy_be_filter2_c
  * No alignment requirement.
  **/
-void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT8 filter)
+void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT filter)
 {
-    const int VOLUME = (1<<8);
+    const int VOLUME_BITS = 8;
+    const int VOLUME = (1<<VOLUME_BITS);
     ASSERT(filter[0]==filter[2]);
     ASSERT(filter[0]+filter[1]+filter[2]==VOLUME);
     ASSERT(width>=1);
@@ -1104,7 +1107,7 @@ void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT8 fi
             
             pix1 = _mm_adds_epu16(pix1, pix0);
 
-            pix1 = _mm_srli_epi16(pix1, 2);
+            pix1 = _mm_srli_epi16(pix1, VOLUME_BITS);
             pix1 = _mm_packus_epi16(pix1, pix1);
 
             _mm_storel_epi64( reinterpret_cast<__m128i*>(dst2+x), pix1 );
@@ -1112,21 +1115,23 @@ void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT8 fi
         int old_pix1 = _mm_cvtsi128_si32(old_pix1_128);
         old_pix1 &= 0xff;
         for ( ; x < width-1; x++) {
-            int tmp = ((old_pix1 + dst2[x+1]) * filter[0] + dst2[x] * filter[1])>>8;
+            int tmp = ((old_pix1 + dst2[x+1]) * filter[0] + dst2[x] * filter[1])>>VOLUME_BITS;
             old_pix1 = dst2[x];
             dst2[x] = tmp;
         }
-        dst2[x] = ((old_pix1*filter[0] + dst2[x]*filter[1])>>8);
+        dst2[x] = ((old_pix1*filter[0] + dst2[x]*filter[1])>>VOLUME_BITS);
     }
 }
 
 /****
- * filter with [1*@portion, 1*(1-@portion)+2*@portion, 1*@portion] (round to let the sum==2^8 )
+ * n = floor(pass);
+ * filter = [ (pass-n)(n+2)/(1+3pass-n), 1-2*(pass-n)(n+2)/(1+3pass-n), (pass-n)(n+2)/(1+3pass-n)]
  **/
-void xy_calculate_filter(float portion, PUINT8 filter)
+void xy_calculate_filter(float pass, PUINT filter)
 {
     const int VOLUME = (1<<8);
-    filter[0] = VOLUME * portion/(1+3*portion);
+    int n = (int)pass;
+    filter[0] = VOLUME * (pass-n)*(n+2)/(1+3*pass-n);
     filter[1] = VOLUME - 2*filter[0];
     filter[2] = filter[0];
 }
@@ -1167,7 +1172,7 @@ void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, flo
     //ASSERT(pass_x>0 && pass_y>0);
 
     typedef void (*XyBeFilter)(PUINT8 src, int width, int height, int stride);
-    typedef void (*XyFilter2)(PUINT8 src, int width, int height, int stride, PCUINT8 filter);
+    typedef void (*XyFilter2)(PUINT8 src, int width, int height, int stride, PCUINT filter);
 
     XyBeFilter filter = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter_sse : xy_be_filter_c;
     XyFilter2 filter2 = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter2_sse : xy_be_filter2_c;
@@ -1183,8 +1188,8 @@ void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, flo
     }
     if (pass_x-pass_x_int>0)
     {
-        UINT8 f[3] = {0};
-        xy_calculate_filter(pass_x-pass_x_int, f);
+        UINT f[3] = {0};
+        xy_calculate_filter(pass_x, f);
         filter2(src, width, height, stride, f);
     }
 
@@ -1199,8 +1204,8 @@ void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, flo
     }
     if (pass_y-pass_y_int>0)
     {
-        UINT8 f[3] = {0};
-        xy_calculate_filter(pass_y-pass_y_int, f);
+        UINT f[3] = {0};
+        xy_calculate_filter(pass_y, f);
         filter2(tmp, height, width, stride_ver, f);
     }
 
