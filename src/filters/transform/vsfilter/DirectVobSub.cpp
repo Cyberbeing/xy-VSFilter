@@ -136,9 +136,10 @@ CDirectVobSub::CDirectVobSub()
     m_xy_size_opt[SIZE_ASS_PLAY_RESOLUTION] = CSize(0,0);
     m_xy_size_opt[SIZE_ORIGINAL_VIDEO] = CSize(0,0);
 
+    m_xy_bool_opt[BOOL_USER_DEFINED_AR] = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_DEFINED_AR), 0);
     m_xy_size_opt[SIZE_USER_DEFINED_AR].cx = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_DEFINED_AR_X), 1280);
     m_xy_size_opt[SIZE_USER_DEFINED_AR].cy = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_DEFINED_AR_Y), 720);
-    if (m_xy_size_opt[SIZE_USER_DEFINED_AR].cx <= 0 || m_xy_size_opt[SIZE_USER_DEFINED_AR].cy)
+    if (m_xy_size_opt[SIZE_USER_DEFINED_AR].cx <= 0 || m_xy_size_opt[SIZE_USER_DEFINED_AR].cy <=0)
     {
         m_xy_size_opt[SIZE_USER_DEFINED_AR].cx = 1280;
         m_xy_size_opt[SIZE_USER_DEFINED_AR].cy = 720;
