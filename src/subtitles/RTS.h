@@ -79,7 +79,8 @@ protected:
 public:
     // str[0] = 0 -> m_fLineBreak = true (in this case we only need and use the height of m_font from the whole class)
     CWord(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend
-        , double target_scale_x=1.0, double target_scale_y=1.0);
+        , double target_scale_x=1.0, double target_scale_y=1.0
+        , bool round_to_whole_pixel_after_scale_to_target = false);
     CWord(const CWord&);
     virtual ~CWord();
 
@@ -108,6 +109,7 @@ public:
     int m_width, m_ascent, m_descent;
 
     double m_target_scale_x, m_target_scale_y;
+    bool m_round_to_whole_pixel_after_scale_to_target;//it is necessary to avoid some artifacts
 
     //friend class CWordCache;
     friend class PathDataCacheKey;
@@ -157,7 +159,8 @@ protected:
 public:
     CPolygon(const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend
         , double scalex, double scaley, int baseline
-        , double target_scale_x=1.0, double target_scale_y=1.0);
+        , double target_scale_x=1.0, double target_scale_y=1.0
+        , bool round_to_whole_pixel_after_scale_to_target = false);
 	// can't use a const reference because we need to use CAtlArray::Copy which expects a non-const reference
     CPolygon(CPolygon&); 
     virtual ~CPolygon();

@@ -121,12 +121,14 @@ CMyFont::CMyFont(const STSStyleBase& style)
 // CWord
 
 CWord::CWord( const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend
-    , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/ )
+    , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/
+    , bool round_to_whole_pixel_after_scale_to_target/*=false*/)
     : m_style(style), m_str(new CStringW(str))
     , m_width(0), m_ascent(0), m_descent(0)
     , m_ktype(ktype), m_kstart(kstart), m_kend(kend)
     , m_fLineBreak(false), m_fWhiteSpaceChar(false)
     , m_target_scale_x(target_scale_x), m_target_scale_y(target_scale_y)
+    , m_round_to_whole_pixel_after_scale_to_target(round_to_whole_pixel_after_scale_to_target)
     //, m_pOpaqueBox(NULL)
 {
     if(m_str.Get().IsEmpty())
@@ -150,6 +152,7 @@ CWord::CWord( const CWord& src):m_str(src.m_str)
     m_descent = src.m_descent;
     m_target_scale_x = src.m_target_scale_x;
     m_target_scale_y = src.m_target_scale_y;
+    m_round_to_whole_pixel_after_scale_to_target = src.m_round_to_whole_pixel_after_scale_to_target;
 }
 
 CWord::~CWord()
@@ -516,8 +519,13 @@ void CWord::Transform_C(PathData* path_data, const CPointCoor2 &org )
         x = x / z;
         y = y / z;
 
-        path_data->mpPathPoints[i].x = (long)(x + scaled_org_x);
+        path_data->mpPathPoints[i].x = (long)(x + scaled_org_x);        
         path_data->mpPathPoints[i].y = (long)(y + scaled_org_y);
+        if (m_round_to_whole_pixel_after_scale_to_target && (m_target_scale_x!=1.0 || m_target_scale_y!=1.0))
+        {
+            path_data->mpPathPoints[i].x = (path_data->mpPathPoints[i].x + 32)&~63;
+            path_data->mpPathPoints[i].y = (path_data->mpPathPoints[i].y + 32)&~63;//fix me: readability
+        }
     }
 }
 
@@ -939,8 +947,9 @@ void CText::GetTextInfo(TextInfo *output, const FwSTSStyle& style, const CString
 
 CPolygon::CPolygon( const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend 
     , double scalex, double scaley, int baseline 
-    , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/ )
-    : CWord(style, str, ktype, kstart, kend, target_scale_x, target_scale_y)
+    , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/
+    , bool round_to_whole_pixel_after_scale_to_target/*=false*/)
+    : CWord(style, str, ktype, kstart, kend, target_scale_x, target_scale_y, round_to_whole_pixel_after_scale_to_target)
     , m_scalex(scalex), m_scaley(scaley), m_baseline(baseline)
 {
     ParseStr();
@@ -1141,7 +1150,7 @@ bool CPolygon::CreatePath(PathData* path_data)
 
 CClipper::CClipper(CStringW str, CSizeCoor2 size, double scalex, double scaley, bool inverse
     , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/)
-    : m_polygon( new CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0, target_scale_x, target_scale_y) )
+    : m_polygon( new CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0, target_scale_x, target_scale_y, true) )
     , m_size(size), m_inverse(inverse)
     , m_effectType(-1), m_painted(false)
 {    
