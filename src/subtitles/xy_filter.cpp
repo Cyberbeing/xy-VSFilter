@@ -1142,9 +1142,29 @@ void xy_calculate_filter(float pass, PUINT filter)
 {
     const int VOLUME = (1<<8);
     int n = (int)pass;
-    filter[0] = VOLUME * (pass-n)*(n+2)/(1+3*pass-n);
+    if (n==0)
+    {
+        filter[0] = VOLUME * pass/(1+3*pass);
+    }
+    else if (n==1)
+    {
+        filter[0] = VOLUME * (pass-1)/(2*pass);
+    }
+    else
+    {
+        filter[0] = VOLUME * (pass-n)*(n+2)/(1+3*pass-n);
+    }    
     filter[1] = VOLUME - 2*filter[0];
     filter[2] = filter[0];
+
+    if (2*filter[0]>filter[1])
+    {
+        //this should not happen
+        ASSERT(0);
+        filter[0] = VOLUME/4;
+        filter[1] = VOLUME - 2*filter[0];
+        filter[2] = filter[0];
+    }
 }
 
 /****
