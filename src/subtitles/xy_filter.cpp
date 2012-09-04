@@ -1136,7 +1136,7 @@ void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT fil
  *
  * @return
  *   Let n = floor(pass);
- *   filter = [ (pass-n)(n+2)/(1+3pass-n), 1-2*(pass-n)(n+2)/(1+3pass-n), (pass-n)(n+2)/(1+3pass-n)]
+ *   filter = [ (pass-n)(n+2) / (2*(1+3pass-n)), 1-(pass-n)(n+2)/(1+3pass-n), (pass-n)(n+2)/ (2*(1+3pass-n)) ]
  **/
 void xy_calculate_filter(float pass, PUINT filter)
 {
@@ -1152,7 +1152,7 @@ void xy_calculate_filter(float pass, PUINT filter)
     }
     else
     {
-        filter[0] = VOLUME * (pass-n)*(n+2)/(1+3*pass-n);
+        filter[0] = VOLUME * (pass-n)*(n+2)/ (2*(1+3*pass-n));
     }    
     filter[1] = VOLUME - 2*filter[0];
     filter[2] = filter[0];
