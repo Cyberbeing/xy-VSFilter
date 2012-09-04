@@ -228,7 +228,7 @@ public:
     static bool Blur(const Overlay& input_overlay, float be_strength, double gaussian_blur_strength, 
         double target_scale_x, double target_scale_y, SharedPtrOverlay output_overlay);
 
-    static bool BeBlur(float be_strength, float target_scale_x, float target_scale_y, 
+    static bool BeBlur(const Overlay& input_overlay, float be_strength, float target_scale_x, float target_scale_y, 
         SharedPtrOverlay output_overlay);
 
     static bool GaussianBlur( const Overlay& input_overlay, double gaussian_blur_strength, 

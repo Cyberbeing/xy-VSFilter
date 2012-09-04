@@ -1154,57 +1154,24 @@ bool Rasterizer::Blur(const Overlay& input_overlay, float be_strength,
 
     if (gaussian_blur_strength>0)
     {
-        bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, target_scale_x, target_scale_y, output_overlay);
-        ASSERT(rv);
         if (be_strength)//this insane thing should NEVER happen
         {
-            rv = BeBlur(be_strength, target_scale_x, target_scale_y, output_overlay);
+            SharedPtrOverlay tmp(new Overlay());
+
+            bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, target_scale_x, target_scale_y, tmp);
+            ASSERT(rv);
+            rv = BeBlur(*tmp, be_strength, target_scale_x, target_scale_y, output_overlay);
+            ASSERT(rv);
+        }
+        else
+        {
+            bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, target_scale_x, target_scale_y, output_overlay);
             ASSERT(rv);
         }
     }
     else if (be_strength)
     {
-        output_overlay->CleanUp();
-        output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
-        
-        output_overlay->mOffsetX       = input_overlay.mOffsetX;
-        output_overlay->mOffsetY       = input_overlay.mOffsetY;
-        output_overlay->mWidth         = input_overlay.mWidth;
-        output_overlay->mHeight        = input_overlay.mHeight;
-        output_overlay->mOverlayWidth  = input_overlay.mOverlayWidth;
-        output_overlay->mOverlayHeight = input_overlay.mOverlayHeight;
-
-        output_overlay->mOverlayPitch = input_overlay.mOverlayPitch;
-
-        BYTE* body = reinterpret_cast<BYTE*>(xy_malloc(output_overlay->mOverlayPitch * output_overlay->mOverlayHeight));
-        if( body==NULL )
-        {
-            return false;
-        }
-        output_overlay->mBody.reset(body, xy_free);
-        BYTE* border = NULL;
-        if (!output_overlay->mfWideOutlineEmpty)
-        {
-            border = reinterpret_cast<BYTE*>(xy_malloc(output_overlay->mOverlayPitch * output_overlay->mOverlayHeight));
-            if (border==NULL)
-            {
-                return false;
-            }
-            output_overlay->mBorder.reset(border, xy_free);
-        }
-
-        //copy buffer
-        for(int i = 1; i >= 0; i--)
-        {
-            byte* plan_selected = i==0 ? body : border;
-            const byte* plan_input = i==0 ? input_overlay.mBody.get() : input_overlay.mBorder.get();
-            if ( plan_selected!=NULL && plan_input!=NULL )
-            {
-                memcpy(plan_selected, plan_input, output_overlay->mOverlayPitch*output_overlay->mOverlayHeight);
-            }
-        }
-
-        bool rv = BeBlur(be_strength, target_scale_x, target_scale_y, output_overlay);
+        bool rv = BeBlur(input_overlay, be_strength, target_scale_x, target_scale_y, output_overlay);
         ASSERT(rv);
     }
     return true;
@@ -1293,24 +1260,73 @@ bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double gaussian_blu
     return true;
 }
 
-bool Rasterizer::BeBlur( float be_strength, float target_scale_x, float target_scale_y, 
-    SharedPtrOverlay output_overlay )
+bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength, 
+    float target_scale_x, float target_scale_y, SharedPtrOverlay output_overlay )
 {
     ASSERT(output_overlay);
+    output_overlay->CleanUp();
+    output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
+
+    ASSERT(be_strength>0 && target_scale_x>0 && target_scale_y>0);
+    int bluradjust_x = 0;
+    int bluradjust_y = 0;
+
+    output_overlay->mOffsetX       = input_overlay.mOffsetX - bluradjust_x;
+    output_overlay->mOffsetY       = input_overlay.mOffsetY - bluradjust_y;
+    output_overlay->mWidth         = input_overlay.mWidth + (bluradjust_x<<1);
+    output_overlay->mHeight        = input_overlay.mHeight + (bluradjust_y<<1);
+    output_overlay->mOverlayWidth  = input_overlay.mOverlayWidth + (bluradjust_x>>2);
+    output_overlay->mOverlayHeight = input_overlay.mOverlayHeight + (bluradjust_y>>2);
+
+    output_overlay->mOverlayPitch = (output_overlay->mOverlayWidth+15)&~15;
+
+    BYTE* body = reinterpret_cast<BYTE*>(xy_malloc(output_overlay->mOverlayPitch * output_overlay->mOverlayHeight));
+    if( body==NULL )
+    {
+        return false;
+    }
+    output_overlay->mBody.reset(body, xy_free);
+    memset(body, 0, output_overlay->mOverlayPitch * output_overlay->mOverlayHeight);
+    BYTE* border = NULL;
+    if (!output_overlay->mfWideOutlineEmpty)
+    {
+        border = reinterpret_cast<BYTE*>(xy_malloc(output_overlay->mOverlayPitch * output_overlay->mOverlayHeight));
+        if (border==NULL)
+        {
+            return false;
+        }
+        output_overlay->mBorder.reset(border, xy_free);
+        memset(border, 0, output_overlay->mOverlayPitch * output_overlay->mOverlayHeight);
+    }
+
+    //copy buffer
+    for(int i = 1; i >= 0; i--)
+    {
+        byte* plan_selected = i==0 ? body : border;
+        const byte* plan_input = i==0 ? input_overlay.mBody.get() : input_overlay.mBorder.get();
+
+        plan_selected += (bluradjust_x>>3) + (bluradjust_y>>3)*output_overlay->mOverlayPitch;
+        if ( plan_selected!=NULL && plan_input!=NULL )
+        {
+            for (int j=0;j<input_overlay.mOverlayHeight;j++)
+            {
+                memcpy(plan_selected, plan_input, input_overlay.mOverlayWidth*sizeof(plan_input[0]));
+                plan_selected += output_overlay->mOverlayPitch;
+                plan_input += input_overlay.mOverlayPitch;
+            }
+        }
+    }
     if (be_strength<=0)
     {
         return true;
     }
     
-    BYTE* body = output_overlay->mBody.get();
-    BYTE* border = output_overlay->mBorder.get();
-
     if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
     {
         int pitch = output_overlay->mOverlayPitch;
-        byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
+        byte* plan_selected = output_overlay->mfWideOutlineEmpty ? body : border;
         xy_be_blur(plan_selected, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch,
-            be_strength*target_scale_x, be_strength*target_scale_y);
+            be_strength*target_scale_x*target_scale_x, be_strength*target_scale_y*target_scale_y);
     }
     
     return true;
