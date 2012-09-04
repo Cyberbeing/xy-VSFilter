@@ -1268,8 +1268,10 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
     output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
 
     ASSERT(be_strength>0 && target_scale_x>0 && target_scale_y>0);
-    int bluradjust_x = 0;
-    int bluradjust_y = 0;
+    int bluradjust_x = static_cast<int>( target_scale_x*sqrt(be_strength)+0.5 );//fix me: rounding err?
+    bluradjust_x *= 8;
+    int bluradjust_y = static_cast<int>(target_scale_y*sqrt(be_strength)+0.5);//fix me: rounding err?
+    bluradjust_y *= 8;
 
     output_overlay->mOffsetX       = input_overlay.mOffsetX - bluradjust_x;
     output_overlay->mOffsetY       = input_overlay.mOffsetY - bluradjust_y;
