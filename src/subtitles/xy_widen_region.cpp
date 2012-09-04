@@ -492,13 +492,29 @@ int gen_left_arc(int left_arc[], int rx, int ry)
         dx += b2;
         if (2*err+dy > 0) 
         {
-            y--;
+            y--;            
             stopy -= a2;
             err += dy;
             dy += a2;
+            
+            left_arc2[y] = -x;
+            left_arc2[-y] = -x;
         }
     }
-    ASSERT(y<last_y_stop);
+    while(y>last_y_stop)
+    {
+        y--;
+        left_arc2[y] = left_arc2[y+1];
+        left_arc2[-y] = left_arc2[y+1];        
+        if (y<=last_y_stop)
+        {
+            break;
+        }
+        left_arc2[last_y_stop] = left_arc[last_y_stop-1];
+        left_arc2[-last_y_stop] = left_arc[last_y_stop-1];
+        last_y_stop++;
+    }
+    //ASSERT(y<last_y_stop);
     return 0;
 }
 
