@@ -937,12 +937,112 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     _mm_empty();
 }
 
+
+enum RoundingPolicy
+{
+    ROUND_DOWN
+    , ROUND_HALF_DOWN
+    , ROUND_HALF_UP
+    , ROUND_HALF_TO_EVEN
+    , COUNT_ROUND_POLICY
+};
+
+template<int ROUNDING_POLICY, int precision>
+struct XyRounding
+{
+    __forceinline void init_sse();
+    __forceinline __m128i round(__m128i in);
+    __forceinline int round(int in);
+};
+
+template<int precision>
+struct XyRounding<ROUND_DOWN, precision>
+{
+    __forceinline void init_sse()
+    {
+
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        return in;
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in;
+    }
+};
+
+
+template<int precision>
+struct XyRounding<ROUND_HALF_DOWN, precision>
+{
+    __forceinline void init_sse()
+    {
+        m_rounding_patch = _mm_set1_epi16( (1<<(precision-1))-1 );
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        return _mm_adds_epu16(in, m_rounding_patch);
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in + ((1<<(precision-1))-1);
+    }
+    __m128i m_rounding_patch;
+};
+
+
+template<int precision>
+struct XyRounding<ROUND_HALF_UP, precision>
+{
+    __forceinline void init_sse()
+    {
+        m_rounding_patch = _mm_set1_epi16( 1<<(precision-1) );
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        return _mm_adds_epu16(in, m_rounding_patch);
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in + (1<<(precision-1));
+    }
+    __m128i m_rounding_patch;
+};
+
+
+template<int precision>
+struct XyRounding<ROUND_HALF_TO_EVEN, precision>
+{
+    __forceinline void init_sse()
+    {
+        m_rounding_patch = _mm_set1_epi16( 1<<(precision-1) );
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        in = _mm_adds_epu16(in, m_rounding_patch);
+        __m128i tmp = _mm_slli_epi16(in, 15-precision);
+        tmp = _mm_srli_epi16(tmp, 15);
+        return _mm_adds_epu16(in, tmp);
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in + (1<<(precision-1)) + ((in>>precision)&1);
+    }
+    __m128i m_rounding_patch;
+};
+
 /****
  * filter with [1,2,1]
  * 1. It is a in-place horizontal filter
  * 2. Boundary Pixels are filtered by padding 0. E.g. 
  *      dst[0] = (0*1 + dst[0]*2 + dst[1]*1)/4;
  **/
+template<int ROUNDING_POLICY>
 void xy_be_filter_c(PUINT8 dst, int width, int height, int stride)
 {
     ASSERT(width>=1);
@@ -950,20 +1050,23 @@ void xy_be_filter_c(PUINT8 dst, int width, int height, int stride)
     {
         return;
     }
-    PUINT8 dst2 = NULL;    
+    PUINT8 dst2 = NULL;
+    XyRounding<ROUNDING_POLICY, 2> xy_rounding;
     for (int y=0;y<height;y++)
     {
         dst2 = dst + y*stride;
         int old_sum = dst2[0];
-
+        int tmp = 0;
         int x=0;
         for (x=0;x<width-1;x++)
         {
             int new_sum = dst2[x]+dst2[x+1];
-            dst2[x] = ((old_sum + new_sum)>>2);//old_sum == src2[x-1]+src2[x];
+            tmp = old_sum + new_sum;//old_sum == src2[x-1]+src2[x];
+            dst2[x] = (xy_rounding.round(tmp)>>2);
             old_sum = new_sum;
         }
-        dst2[x] = ((old_sum + dst2[x])>>2);
+        tmp = old_sum + dst2[x];
+        dst2[x] = (xy_rounding.round(tmp)>>2);
     }
 }
 
@@ -973,6 +1076,7 @@ void xy_be_filter_c(PUINT8 dst, int width, int height, int stride)
  *      dst[0] = (0*1 + dst[0]*2 + dst[1]*1)/4;
  * 3. sum(filter) == 256
  **/
+template<int ROUNDING_POLICY>
 void xy_be_filter2_c(PUINT8 dst, int width, int height, int stride, PCUINT filter)
 {
     ASSERT(width>=1);
@@ -989,23 +1093,25 @@ void xy_be_filter2_c(PUINT8 dst, int width, int height, int stride, PCUINT filte
     }
     else if (filter[0]== (VOLUME>>2))
     {
-        return xy_be_filter_c(dst, width, height, stride);
+        return xy_be_filter_c<ROUNDING_POLICY>(dst, width, height, stride);
     }
 
     PUINT8 dst2 = NULL;
+    XyRounding<ROUNDING_POLICY, VOLUME_BITS> xy_rounding;
     for (int y=0;y<height;y++)
     {
         dst2 = dst + y*stride;
         int old_pix = 0;
-
+        int tmp = 0;
         int x=0;
         for (x=0;x<width-1;x++)
         {
-            int tmp = (( (old_pix + dst2[x+1]) * filter[0] + dst2[x] * filter[1])>>VOLUME_BITS);
+            tmp = (old_pix + dst2[x+1]) * filter[0] + dst2[x] * filter[1];
             old_pix = dst2[x];
-            dst2[x] = tmp;
+            dst2[x] = (xy_rounding.round(tmp)>>VOLUME_BITS);
         }
-        dst2[x] = ((old_pix * filter[0] + dst2[x] * filter[1])>>VOLUME_BITS);
+        tmp = old_pix * filter[0] + dst2[x] * filter[1];
+        dst2[x] = (xy_rounding.round(tmp)>>VOLUME_BITS);
     }
 }
 
@@ -1013,6 +1119,7 @@ void xy_be_filter2_c(PUINT8 dst, int width, int height, int stride, PCUINT filte
  * See @xy_be_filter_c
  * No alignment requirement.
  **/
+template<int ROUNDING_POLICY>
 void xy_be_filter_sse(PUINT8 dst, int width, int height, int stride)
 {
     ASSERT(width>=1);
@@ -1021,7 +1128,8 @@ void xy_be_filter_sse(PUINT8 dst, int width, int height, int stride)
         return;
     }
     int width_mod8 = ((width-1)&~7);
-    //__m128i round = _mm_set1_epi16(8);
+    XyRounding<ROUNDING_POLICY, 2> xy_rounding;
+    xy_rounding.init_sse();
     for (int y = 0; y < height; y++) {
         PUINT8 dst2=dst+y*stride;
 
@@ -1041,6 +1149,9 @@ void xy_be_filter_sse(PUINT8 dst, int width, int height, int stride)
             new_pix = _mm_add_epi16(new_pix, old_sum_128);
             new_pix = _mm_add_epi16(new_pix, temp);
             old_sum_128 = _mm_srli_si128(temp, 14);
+
+            new_pix = xy_rounding.round(new_pix);
+
             new_pix = _mm_srli_epi16(new_pix, 2);
             new_pix = _mm_packus_epi16(new_pix, new_pix);
 
@@ -1048,12 +1159,15 @@ void xy_be_filter_sse(PUINT8 dst, int width, int height, int stride)
         }
         int old_sum = _mm_cvtsi128_si32(old_sum_128);
         old_sum &= 0xffff;
+        int tmp = 0;
         for ( ; x < width-1; x++) {
             int new_sum = dst2[x] + dst2[x+1];
-            dst2[x] = ((old_sum + new_sum)>>2);
+            tmp = old_sum + new_sum;
+            dst2[x] = (xy_rounding.round(tmp)>>2);
             old_sum = new_sum;
         }
-        dst2[x] = ((old_sum + dst2[x])>>2);
+        tmp = old_sum + dst2[x];
+        dst2[x] = (xy_rounding.round(tmp)>>2);
     }
 }
 
@@ -1061,6 +1175,7 @@ void xy_be_filter_sse(PUINT8 dst, int width, int height, int stride)
  * See @xy_be_filter2_c
  * No alignment requirement.
  **/
+template<int ROUNDING_POLICY>
 void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT filter)
 {
     const int VOLUME_BITS = 8;
@@ -1073,6 +1188,8 @@ void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT fil
         return;
     }
     
+    XyRounding<ROUNDING_POLICY, VOLUME_BITS> xy_rounding;
+    xy_rounding.init_sse();
     __m128i f3_1 = _mm_set1_epi16(filter[0]);
     __m128i f3_2 = _mm_set1_epi16(filter[1]);
 
@@ -1107,6 +1224,8 @@ void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT fil
             
             pix1 = _mm_adds_epu16(pix1, pix0);
 
+            pix1 = xy_rounding.round(pix1);
+
             pix1 = _mm_srli_epi16(pix1, VOLUME_BITS);
             pix1 = _mm_packus_epi16(pix1, pix1);
 
@@ -1114,12 +1233,15 @@ void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT fil
         }
         int old_pix1 = _mm_cvtsi128_si32(old_pix1_128);
         old_pix1 &= 0xff;
+        int tmp = 0;
         for ( ; x < width-1; x++) {
-            int tmp = ((old_pix1 + dst2[x+1]) * filter[0] + dst2[x] * filter[1])>>VOLUME_BITS;
+            tmp = (old_pix1 + dst2[x+1]) * filter[0] + dst2[x] * filter[1];
             old_pix1 = dst2[x];
-            dst2[x] = tmp;
+
+            dst2[x] = (xy_rounding.round(tmp)>>VOLUME_BITS);
         }
-        dst2[x] = ((old_pix1*filter[0] + dst2[x]*filter[1])>>VOLUME_BITS);
+        tmp = old_pix1*filter[0] + dst2[x]*filter[1];
+        dst2[x] = (xy_rounding.round(tmp)>>VOLUME_BITS);
     }
 }
 
@@ -1213,8 +1335,8 @@ void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, flo
     typedef void (*XyBeFilter)(PUINT8 src, int width, int height, int stride);
     typedef void (*XyFilter2)(PUINT8 src, int width, int height, int stride, PCUINT filter);
 
-    XyBeFilter filter = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter_sse : xy_be_filter_c;
-    XyFilter2 filter2 = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter2_sse : xy_be_filter2_c;
+    XyBeFilter filter = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter_sse<ROUND_HALF_TO_EVEN> : xy_be_filter_c<ROUND_HALF_TO_EVEN>;
+    XyFilter2 filter2 = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter2_sse<ROUND_HALF_TO_EVEN> : xy_be_filter2_c<ROUND_HALF_TO_EVEN>;
 
     int stride_ver = height;
     PUINT8 tmp = reinterpret_cast<PUINT8>(xy_malloc(width*height));
