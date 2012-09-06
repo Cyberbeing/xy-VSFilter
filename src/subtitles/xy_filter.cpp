@@ -1333,6 +1333,8 @@ void xy_byte_2_byte_transpose_c(UINT8 *dst, int dst_width, int dst_stride,
  *   That rounding error is really huge with big @pass value. It has become one part of the \be effect that 
  *   we have to simulate. Since this function needs twice the number of pass as VSFilter's for the same \be effect.
  *   A rounding strategy is adopted to make rounding bias per pass close to -7.5/16/2.
+ *   Edit1: Something in my error analysis may be wrong, this new combination simulate the error better according to 
+ *   a simple test.
  **/
 void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, float pass_y)
 {
@@ -1354,7 +1356,17 @@ void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, flo
     int pass_x_int = static_cast<int>(pass_x);
     for (int i=0; i<pass_x_int; i++)
     {
-        filter_bias_125(src, width, height, stride);
+        filter_bias_375(src, width, height, stride);
+        i++;
+        if (i<pass_x_int)
+        {
+            filter_bias_125(src, width, height, stride);
+        }
+        i++;
+        if (i<pass_x_int)
+        {
+            filter_bias_375(src, width, height, stride);
+        }
         i++;
         if (i<pass_x_int)
         {
@@ -1375,7 +1387,17 @@ void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, flo
     int pass_y_int = static_cast<int>(pass_y);
     for (int i=0;i<pass_y_int;i++)
     {
-        filter_bias_125(tmp, height, width, stride_ver);
+        filter_bias_375(tmp, height, width, stride_ver);
+        i++;
+        if (i<pass_x_int)
+        {
+            filter_bias_125(tmp, height, width, stride_ver);
+        }
+        i++;
+        if (i<pass_x_int)
+        {
+            filter_bias_375(tmp, height, width, stride_ver);
+        }
         i++;
         if (i<pass_x_int)
         {
