@@ -1322,17 +1322,32 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
     {
         return true;
     }
-    
-    if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
-    {
-        int pitch = output_overlay->mOverlayPitch;
-        byte* plan_selected = output_overlay->mfWideOutlineEmpty ? body : border;
 
-        xy_be_blur(plan_selected, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch,
-            be_strength*target_scale_x, be_strength*target_scale_y);
-        
+    float scaled_be_strength = be_strength * 0.5 * (target_scale_x+target_scale_y);
+    int pass_num = static_cast<int>(scaled_be_strength);
+    int pitch = output_overlay->mOverlayPitch;
+    byte* blur_plan = output_overlay->mfWideOutlineEmpty ? body : border;
+    ass_tmp_buf tmp_buf( max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0) );
+    for (int pass = 0; pass < pass_num; pass++)
+    {
+        if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
+        {
+            if (g_cpuid.m_flags & CCpuID::sse2)
+            {
+                be_blur(blur_plan, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+            }
+            else
+            {
+                be_blur_c(blur_plan, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+            }
+        }
     }
-    
+    if (scaled_be_strength>pass_num)
+    {
+        xy_be_blur(blur_plan, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch, 
+            scaled_be_strength-pass_num, scaled_be_strength-pass_num);
+    }    
+
     return true;
 }
 
