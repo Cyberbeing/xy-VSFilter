@@ -1268,9 +1268,9 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
     output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
 
     ASSERT(be_strength>0 && target_scale_x>0 && target_scale_y>0);
-    int bluradjust_x = static_cast<int>( target_scale_x*sqrt(be_strength)+0.5 );//fix me: rounding err?
+    int bluradjust_x = static_cast<int>( target_scale_x*sqrt(be_strength)*0.5+0.5 );//fix me: rounding err?
     bluradjust_x *= 8;
-    int bluradjust_y = static_cast<int>(target_scale_y*sqrt(be_strength)+0.5);//fix me: rounding err?
+    int bluradjust_y = static_cast<int>(target_scale_y*sqrt(be_strength)*0.5+0.5);//fix me: rounding err?
     bluradjust_y *= 8;
 
     output_overlay->mOffsetX       = input_overlay.mOffsetX - bluradjust_x;
@@ -1327,8 +1327,10 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
     {
         int pitch = output_overlay->mOverlayPitch;
         byte* plan_selected = output_overlay->mfWideOutlineEmpty ? body : border;
+
         xy_be_blur(plan_selected, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch,
-            be_strength*target_scale_x*target_scale_x, be_strength*target_scale_y*target_scale_y);
+            be_strength*target_scale_x, be_strength*target_scale_y);
+        
     }
     
     return true;
