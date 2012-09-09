@@ -51,7 +51,8 @@ public IUnknown {
     STDMETHOD_(bool, IsAnimated) (POSITION pos) PURE;
 
     STDMETHOD_(VOID, GetStartStop) (POSITION pos, double fps, /*out*/REFERENCE_TIME& start, /*out*/REFERENCE_TIME& stop) PURE;
-    STDMETHOD (RenderEx) (IXySubRenderFrame**subRenderFrame, int spd_type, const SIZE& output_size, const CRect& video_rect, 
+    STDMETHOD (RenderEx) (IXySubRenderFrame**subRenderFrame, int spd_type, 
+        const SIZE& size_scale_to, const SIZE& size1, const CRect& video_rect, 
         REFERENCE_TIME rt, double fps) PURE;
 
     STDMETHOD_(bool, IsColorTypeSupported) (int type) PURE;

@@ -186,15 +186,27 @@ public:
         if(!m_simple_provider)
         {
             HRESULT hr;
-            if(!(m_simple_provider = new SimpleSubPicProvider2(dst.type, size, size, CRect(CPoint(0,0), size), &hr)) || FAILED(hr))
+            if(!(m_simple_provider = new SimpleSubPicProvider2(dst.type, size, size, CRect(CPoint(0,0), size), this, &hr)) || FAILED(hr))
             {
                 m_simple_provider = NULL;
                 return(false);
             }
+            XySetSize(SIZE_ORIGINAL_VIDEO, size);
         }
 
         if(m_SubPicProviderId != (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider)
         {
+            CSize playres(0,0);
+            CLSID clsid;
+            CComQIPtr<IPersist> tmp = m_pSubPicProvider;
+            tmp->GetClassID(&clsid);
+            if(clsid == __uuidof(CRenderedTextSubtitle))
+            {
+                CRenderedTextSubtitle* pRTS = dynamic_cast<CRenderedTextSubtitle*>((ISubPicProvider*)m_pSubPicProvider);
+                playres = pRTS->m_dstScreenSize;
+            }
+            XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
+
             m_simple_provider->SetSubPicProvider(m_pSubPicProvider);
             m_SubPicProviderId = (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider;
         }

@@ -4,6 +4,7 @@
 #include "../subtitles/xy_bitmap.h"
 #include "SimpleSubpicImpl.h"
 #include "PooledSubPic.h"
+#include "IDirectVobSubXy.h"
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -11,16 +12,18 @@
 // 
 
 
-SimpleSubPicProvider::SimpleSubPicProvider( int alpha_blt_dst_type, SIZE spd_size, RECT video_rect, HRESULT* phr )
+SimpleSubPicProvider::SimpleSubPicProvider( int alpha_blt_dst_type, SIZE spd_size, RECT video_rect, IDirectVobSubXy *consumer
+    , HRESULT* phr/*=NULL*/ )
     : CUnknown(NAME("CSubPicQueueImpl"), NULL)
     , m_alpha_blt_dst_type(alpha_blt_dst_type)
     , m_spd_size(spd_size)
     , m_video_rect(video_rect)
     , m_rtNow(0)
     , m_fps(25.0)
+    , m_consumer(consumer)
 {
     if(phr) {
-        *phr = S_OK;
+        *phr = consumer ? S_OK : E_INVALIDARG;
     }
 
     m_prefered_colortype.AddTail(MSP_AYUV_PLANAR);
@@ -237,7 +240,16 @@ HRESULT SimpleSubPicProvider::RenderTo( IXySubRenderFrame** pSubPic, REFERENCE_T
     CAtlList<CRect> rectList;
 
     CComPtr<IXySubRenderFrame> sub_render_frame;
-    hr = pSubPicProviderEx->RenderEx(pSubPic, m_spd_type, m_spd_size, m_video_rect, 
+    SIZE size_render_with;
+    ASSERT(m_consumer);
+    hr = m_consumer->XyGetSize(DirectVobSubXyIntOptions::SIZE_LAYOUT_WITH, &size_render_with);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+
+    hr = pSubPicProviderEx->RenderEx(pSubPic, m_spd_type, m_spd_size, 
+        size_render_with, CRect(0,0,size_render_with.cx,size_render_with.cy), 
         bIsAnimated ? rtStart : ((rtStart+rtStop)/2), fps);
 
     POSITION pos = pSubPicProviderEx->GetStartPosition(rtStart, fps);
@@ -275,7 +287,7 @@ bool SimpleSubPicProvider::IsSpdColorTypeSupported( int type )
 //
 
 SimpleSubPicProvider2::SimpleSubPicProvider2( int alpha_blt_dst_type, SIZE max_size, SIZE cur_size, RECT video_rect, 
-    HRESULT* phr)
+    IDirectVobSubXy *consumer, HRESULT* phr/*=NULL*/)
     : CUnknown(NAME("SimpleSubPicProvider2"), NULL)
     , m_alpha_blt_dst_type(alpha_blt_dst_type)
     , m_max_size(max_size)
@@ -283,10 +295,11 @@ SimpleSubPicProvider2::SimpleSubPicProvider2( int alpha_blt_dst_type, SIZE max_s
     , m_video_rect(video_rect)
     , m_now(0)
     , m_fps(25.0)
+    , m_consumer(consumer)
 {
     if (phr)
     {
-        *phr=S_OK;
+        *phr= consumer ? S_OK : E_INVALIDARG;
     }
     m_ex_provider = NULL;
     m_old_provider = NULL;
@@ -318,7 +331,7 @@ STDMETHODIMP SimpleSubPicProvider2::SetSubPicProvider( IUnknown* subpic_provider
         m_old_provider = NULL;
         if (!m_ex_provider)
         {
-            m_ex_provider = new SimpleSubPicProvider(m_alpha_blt_dst_type, m_cur_size, m_video_rect, &hr);
+            m_ex_provider = new SimpleSubPicProvider(m_alpha_blt_dst_type, m_cur_size, m_video_rect, m_consumer, &hr);
             m_ex_provider->SetFPS(m_fps);
             m_ex_provider->SetTime(m_now);
         }
