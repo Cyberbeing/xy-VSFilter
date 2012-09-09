@@ -94,6 +94,7 @@ protected:
 
     int m_xy_int_opt[DirectVobSubXyIntOptions::INT_COUNT];
     bool m_xy_bool_opt[DirectVobSubXyIntOptions::BOOL_COUNT];
+    CSize m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_COUNT];
 public:
     
     // IDirectVobSubXy

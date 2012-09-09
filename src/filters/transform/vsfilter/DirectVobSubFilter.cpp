@@ -757,10 +757,11 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	//m_pSubPicQueue = m_fDoPreBuffering
 	//	? (ISubPicQueue*)new CSubPicQueue(MAX_SUBPIC_QUEUE_LENGTH, pSubPicAllocator, &hr)
 	//	: (ISubPicQueue*)new CSubPicQueueNoThread(pSubPicAllocator, &hr);
-    m_simple_provider = new SimpleSubPicProvider2(m_spd.type, CSize(m_w, m_h), window, video_rect, &hr);
+    m_simple_provider = new SimpleSubPicProvider2(m_spd.type, CSize(m_w, m_h), window, video_rect, this, &hr);
 
 	if(FAILED(hr)) m_simple_provider = NULL;
 
+    XySetSize(DirectVobSubXyIntOptions::SIZE_ORIGINAL_VIDEO, CSize(m_w, m_h));
 	UpdateSubtitle(false);
 
 	if(m_hbm) {DeleteObject(m_hbm); m_hbm = NULL;}
@@ -1830,6 +1831,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 	DbgLog((LOG_TRACE, 3, "\tpSubStream:%x fApplyDefStyle:%d", pSubStream, (int)fApplyDefStyle));
     CAutoLock cAutolock(&m_csQueueLock);
 
+    CSize playres(0,0);
     m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
     m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
 	if(pSubStream)
@@ -1898,6 +1900,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
             m_script_selected_yuv = pRTS->m_eYCbCrMatrix;
             m_script_selected_range = pRTS->m_eYCbCrRange;
 			pRTS->Deinit();
+            playres = pRTS->m_dstScreenSize;
 		}
 	}
 
@@ -1924,6 +1927,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 
     SetYuvMatrix();
 
+    XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
 	if(m_simple_provider)
 		m_simple_provider->SetSubPicProvider(CComQIPtr<ISubPicProviderEx>(pSubStream));
 }

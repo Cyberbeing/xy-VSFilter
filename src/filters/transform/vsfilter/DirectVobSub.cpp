@@ -113,6 +113,29 @@ CDirectVobSub::CDirectVobSub()
     if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]<0) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=0;
     else if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]>=SubpixelPositionControler::MAX_COUNT) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=SubpixelPositionControler::EIGHT_X_EIGHT;
 
+    m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), LAYOUT_SIZE_OPT_FOLLOW_SCRIPT);
+    switch(m_xy_int_opt[INT_LAYOUT_SIZE_OPT])
+    {
+    case LAYOUT_SIZE_OPT_FOLLOW_SCRIPT:
+    case LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
+    case LAYOUT_SIZE_OPT_USER_SPECIFIED:
+        break;
+    default:
+        m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = LAYOUT_SIZE_OPT_FOLLOW_SCRIPT;
+        break;
+    }
+    
+    m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X), 0);
+    m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y), 0);
+    if (m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx<=0 || m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy<=0)
+    {
+        m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx = 1280;
+        m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy = 720;
+    }
+
+    m_xy_size_opt[SIZE_ASS_PLAY_RESOLUTION] = CSize(0,0);
+    m_xy_size_opt[SIZE_ORIGINAL_VIDEO] = CSize(0,0);
+
     m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USE_UPSTREAM_PREFERRED_ORDER), true);
     // get output colorspace config
     if(pData)
@@ -652,7 +675,11 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USE_UPSTREAM_PREFERRED_ORDER), m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER]);
-    
+
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), m_xy_int_opt[INT_LAYOUT_SIZE_OPT]);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy);
+
     //save output color config
     {
         int count = GetOutputColorSpaceNumber();
@@ -949,7 +976,43 @@ STDMETHODIMP CDirectVobSub::XyGetInt( int field, int *value )
 
 STDMETHODIMP CDirectVobSub::XyGetSize( int field, SIZE *value )
 {
-    return E_NOTIMPL;
+    CAutoLock cAutoLock(&m_propsLock);
+    if (field<0 || field>=DirectVobSubXyIntOptions::SIZE_COUNT)
+    {
+        return E_NOTIMPL;
+    }
+    if (!value)
+    {
+        return E_POINTER;
+    }
+    switch(field)
+    {
+    case SIZE_LAYOUT_WITH:
+        switch(m_xy_int_opt[DirectVobSubXyIntOptions::INT_LAYOUT_SIZE_OPT])
+        {
+        case LAYOUT_SIZE_OPT_FOLLOW_SCRIPT:
+            *value = m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_ASS_PLAY_RESOLUTION];
+            break;
+        case LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
+            *value = m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_ORIGINAL_VIDEO];
+            break;
+        case LAYOUT_SIZE_OPT_USER_SPECIFIED:
+            *value = m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE];
+            break;
+        default:
+            *value = m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_ASS_PLAY_RESOLUTION];
+            break;
+        }
+        if (value->cx * value->cy == 0)
+        {
+            *value = m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_ORIGINAL_VIDEO];
+        }
+        break;
+    default:
+        *value = m_xy_size_opt[field];
+        break;
+    }
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::XyGetRect( int field, RECT *value )
@@ -1060,7 +1123,15 @@ STDMETHODIMP CDirectVobSub::XySetInt( int field, int value )
     {
         return E_NOTIMPL;
     }
-
+    switch (field)
+    {
+    case DirectVobSubXyIntOptions::INT_LAYOUT_SIZE_OPT:
+        if (value<0 || value>=DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_COUNT)
+        {
+            return E_INVALIDARG;
+        }
+        break;
+    }
     CAutoLock cAutoLock(&m_propsLock);
 
     if(m_xy_int_opt[field] == value) return S_FALSE;
@@ -1071,7 +1142,22 @@ STDMETHODIMP CDirectVobSub::XySetInt( int field, int value )
 
 STDMETHODIMP CDirectVobSub::XySetSize( int field, SIZE value )
 {
-    return E_NOTIMPL;
+    if (field<0 || field>=DirectVobSubXyIntOptions::SIZE_COUNT)
+    {
+        return E_NOTIMPL;
+    }
+    switch (field)
+    {
+    case DirectVobSubXyIntOptions::SIZE_LAYOUT_WITH:
+        return E_INVALIDARG;
+    }
+
+    CAutoLock cAutoLock(&m_propsLock);
+
+    if(m_xy_size_opt[field].cx == value.cx && m_xy_size_opt[field].cy == value.cy) return S_FALSE;
+    m_xy_size_opt[field] = value;
+
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::XySetRect( int field, RECT value )

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../../../subtitles/STS.h"
 #include "../BaseVideoFilter/BaseVideoFilter.h"
 
 #ifdef __cplusplus
@@ -26,6 +25,8 @@ extern "C" {
             INT_SUBPIXEL_VARIANCE_CACHE_ITEM_NUM,
 
             INT_SUBPIXEL_POS_LEVEL,
+
+            INT_LAYOUT_SIZE_OPT,//see @RenderSizeOpt
             INT_COUNT
         };
         enum//bool
@@ -33,6 +34,14 @@ extern "C" {
             BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER,
             BOOL_HIDE_TRAY_ICON,
             BOOL_COUNT
+        };
+        enum//SIZE
+        {
+            SIZE_ORIGINAL_VIDEO,
+            SIZE_ASS_PLAY_RESOLUTION,
+            SIZE_USER_SPECIFIED_LAYOUT_SIZE,
+            SIZE_LAYOUT_WITH,//read only
+            SIZE_COUNT
         };
         enum
         {
@@ -81,6 +90,13 @@ extern "C" {
         {
             CacheInfo xy_fw_string_w;
             CacheInfo xy_fw_grouped_draw_items_hash_key;
+        };
+        enum LayoutSizeOpt
+        {
+            LAYOUT_SIZE_OPT_FOLLOW_SCRIPT,
+            LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE,
+            LAYOUT_SIZE_OPT_USER_SPECIFIED,
+            LAYOUT_SIZE_OPT_COUNT
         };
     };
 
