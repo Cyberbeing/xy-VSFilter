@@ -966,7 +966,7 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         }
         else
         {
-            m_layout_size_opt = DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_SCRIPT;
+            m_layout_size_opt = DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE;
         }
         m_layout_size.cx = m_layout_size_x.GetPos32();
         m_layout_size.cy = m_layout_size_y.GetPos32();
@@ -1001,24 +1001,19 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         switch(m_layout_size_opt)
         {
         default:
-        case DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_SCRIPT:
+        case DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
             temp = 0;
             break;
-        case DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
-            temp = 1;
-            break;
         case DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED:            
-            temp = 2;
+            temp = 1;
             break;
         }
 
         m_combo_layout_size_opt.ResetContent();
-        m_combo_layout_size_opt.AddString( CString(_T("Use ASS playres")) );
-        m_combo_layout_size_opt.SetItemData(0, DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_SCRIPT);
         m_combo_layout_size_opt.AddString( CString(_T("Use Original Video Size")) );
-        m_combo_layout_size_opt.SetItemData(1, DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE);
+        m_combo_layout_size_opt.SetItemData(0, DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE);
         m_combo_layout_size_opt.AddString( CString(_T("Customize ...")) );
-        m_combo_layout_size_opt.SetItemData(2, DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED);
+        m_combo_layout_size_opt.SetItemData(1, DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED);
         m_combo_layout_size_opt.SetCurSel( temp );
 
         m_layout_size_x.SetRange32(1, 12800);
