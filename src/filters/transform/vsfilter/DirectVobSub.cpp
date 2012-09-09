@@ -113,15 +113,14 @@ CDirectVobSub::CDirectVobSub()
     if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]<0) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=0;
     else if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]>=SubpixelPositionControler::MAX_COUNT) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=SubpixelPositionControler::EIGHT_X_EIGHT;
 
-    m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), LAYOUT_SIZE_OPT_FOLLOW_SCRIPT);
+    m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE);
     switch(m_xy_int_opt[INT_LAYOUT_SIZE_OPT])
     {
-    case LAYOUT_SIZE_OPT_FOLLOW_SCRIPT:
     case LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
     case LAYOUT_SIZE_OPT_USER_SPECIFIED:
         break;
     default:
-        m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = LAYOUT_SIZE_OPT_FOLLOW_SCRIPT;
+        m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE;
         break;
     }
     
@@ -990,9 +989,6 @@ STDMETHODIMP CDirectVobSub::XyGetSize( int field, SIZE *value )
     case SIZE_LAYOUT_WITH:
         switch(m_xy_int_opt[DirectVobSubXyIntOptions::INT_LAYOUT_SIZE_OPT])
         {
-        case LAYOUT_SIZE_OPT_FOLLOW_SCRIPT:
-            *value = m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_ASS_PLAY_RESOLUTION];
-            break;
         case LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
             *value = m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_ORIGINAL_VIDEO];
             break;
