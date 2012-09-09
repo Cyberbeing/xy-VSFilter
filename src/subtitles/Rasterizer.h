@@ -221,12 +221,12 @@ public:
 
     static bool Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay);
     
-    static bool IsItReallyBlur(int fBlur, double fGaussianBlur);
-    static bool OldFixedPointBlur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, 
+    static bool IsItReallyBlur(int be_strength, double gaussian_blur_strength);
+    static bool OldFixedPointBlur(const Overlay& input_overlay, int be_strength, double gaussian_blur_strength, 
         SharedPtrOverlay output_overlay);
-    static bool Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, SharedPtrOverlay output_overlay);
-    static bool BeBlur(const Overlay& input_overlay, int fBlur, SharedPtrOverlay output_overlay);
-    static bool GaussianBlur(const Overlay& input_overlay, double fGaussianBlur, SharedPtrOverlay output_overlay);
+    static bool Blur(const Overlay& input_overlay, int be_strength, double gaussian_blur_strength, SharedPtrOverlay output_overlay);
+    static bool BeBlur(const Overlay& input_overlay, int be_strength, SharedPtrOverlay output_overlay);
+    static bool GaussianBlur(const Overlay& input_overlay, double gaussian_blur_strength, SharedPtrOverlay output_overlay);
 
     static SharedPtrByte CompositeAlphaMask(const SharedPtrOverlay& overlay, const CRect& clipRect, 
         const GrayImage2* alpha_mask, 

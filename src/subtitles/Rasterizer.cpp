@@ -912,9 +912,9 @@ bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int y
 
 const float Rasterizer::GAUSSIAN_BLUR_THREHOLD = 0.333333f;
 
-bool Rasterizer::IsItReallyBlur( int fBlur, double fGaussianBlur )
+bool Rasterizer::IsItReallyBlur( int be_strength, double gaussian_blur_strength )
 {
-    if (fBlur<=0 && fGaussianBlur<=GAUSSIAN_BLUR_THREHOLD)
+    if (be_strength<=0 && gaussian_blur_strength<=GAUSSIAN_BLUR_THREHOLD)
     {
         return false;
     }
@@ -923,12 +923,12 @@ bool Rasterizer::IsItReallyBlur( int fBlur, double fGaussianBlur )
 
 // @return: true if actually a blur operation has done, or else false and output is leave unset.
 // To Do: rewrite it or delete it
-bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, 
+bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int be_strength, double gaussian_blur_strength, 
     SharedPtrOverlay output_overlay)
 {
     using namespace ::boost::flyweights;
     
-    ASSERT(IsItReallyBlur(fBlur, fGaussianBlur));
+    ASSERT(IsItReallyBlur(be_strength, gaussian_blur_strength));
     if(!output_overlay)
     {
         return false;
@@ -944,11 +944,11 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int fBlur, doub
     output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
 
     int bluradjust = 0;
-    if ( IsItReallyBlur(fBlur, fGaussianBlur) )
+    if ( IsItReallyBlur(be_strength, gaussian_blur_strength) )
     {
-        if (fGaussianBlur > 0)
-            bluradjust += (int)(fGaussianBlur*3*8 + 0.5) | 1;
-        if (fBlur)
+        if (gaussian_blur_strength > 0)
+            bluradjust += (int)(gaussian_blur_strength*3*8 + 0.5) | 1;
+        if (be_strength)
             bluradjust += 8;
         // Expand the buffer a bit when we're blurring, since that can also widen the borders a bit
         bluradjust = (bluradjust+7)&~7;
@@ -1007,10 +1007,10 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int fBlur, doub
     ass_tmp_buf tmp_buf( max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0) );        
     //flyweight<key_value<int, ass_tmp_buf, ass_tmp_buf_get_size>, no_locking> tmp_buf((overlay->mOverlayWidth+1)*(overlay->mOverlayPitch+1));
     // Do some gaussian blur magic    
-    if ( fGaussianBlur > GAUSSIAN_BLUR_THREHOLD )
+    if ( gaussian_blur_strength > GAUSSIAN_BLUR_THREHOLD )
     {
         byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
-        flyweight<key_value<double, ass_synth_priv, GaussianFilterKey<ass_synth_priv>>, no_locking> fw_priv_blur(fGaussianBlur);
+        flyweight<key_value<double, ass_synth_priv, GaussianFilterKey<ass_synth_priv>>, no_locking> fw_priv_blur(gaussian_blur_strength);
         const ass_synth_priv& priv_blur = fw_priv_blur.get();
         if (output_overlay->mOverlayWidth>=priv_blur.g_w && output_overlay->mOverlayHeight>=priv_blur.g_w)
         {   
@@ -1019,7 +1019,7 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int fBlur, doub
         }
     }
 
-    for (int pass = 0; pass < fBlur; pass++)
+    for (int pass = 0; pass < be_strength; pass++)
     {
         if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
         {            
@@ -1039,7 +1039,7 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int fBlur, doub
 }
 
 // @return: true if actually a blur operation has done, or else false and output is leave unset.
-bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianBlur, 
+bool Rasterizer::Blur(const Overlay& input_overlay, int be_strength, double gaussian_blur_strength, 
     SharedPtrOverlay output_overlay)
 {
     using namespace ::boost::flyweights;
@@ -1048,11 +1048,11 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianB
     {
         // C code path of floating point version is extreamly slow,
         // so we fall back to fixed point version instead
-        return Rasterizer::OldFixedPointBlur(input_overlay, fBlur, fGaussianBlur, output_overlay);
+        return Rasterizer::OldFixedPointBlur(input_overlay, be_strength, gaussian_blur_strength, output_overlay);
     }
     
-    ASSERT(IsItReallyBlur(fBlur, fGaussianBlur));
-    if(!output_overlay || !IsItReallyBlur(fBlur, fGaussianBlur))
+    ASSERT(IsItReallyBlur(be_strength, gaussian_blur_strength));
+    if(!output_overlay || !IsItReallyBlur(be_strength, gaussian_blur_strength))
     {
         return false;
     }
@@ -1060,32 +1060,32 @@ bool Rasterizer::Blur(const Overlay& input_overlay, int fBlur, double fGaussianB
     {
         return true;
     }
-    if (fGaussianBlur>0)
+    if (gaussian_blur_strength>0)
     {
-        if (fBlur)//this insane thing should NEVER happen
+        if (be_strength)//this insane thing should NEVER happen
         {
             SharedPtrOverlay tmp(new Overlay());
 
-            bool rv = GaussianBlur(input_overlay, fGaussianBlur, tmp);
+            bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, tmp);
             ASSERT(rv);
-            rv = BeBlur(*tmp, fBlur, output_overlay);
+            rv = BeBlur(*tmp, be_strength, output_overlay);
             ASSERT(rv);
         }
         else
         {
-            bool rv = GaussianBlur(input_overlay, fGaussianBlur, output_overlay);
+            bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, output_overlay);
             ASSERT(rv);
         }
     }
-    else if (fBlur)
+    else if (be_strength)
     {
-        bool rv = BeBlur(input_overlay, fBlur, output_overlay);
+        bool rv = BeBlur(input_overlay, be_strength, output_overlay);
         ASSERT(rv);
     }
     return true;
 }
 
-bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double fGaussianBlur, SharedPtrOverlay output_overlay )
+bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double gaussian_blur_strength, SharedPtrOverlay output_overlay )
 {
     using namespace ::boost::flyweights;
 
@@ -1093,8 +1093,8 @@ bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double fGaussianBlu
     output_overlay->CleanUp();
     output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
 
-    ASSERT(fGaussianBlur > 0);
-    flyweight<key_value<double, GaussianCoefficients, GaussianFilterKey<GaussianCoefficients>>, no_locking> fw_priv_blur(fGaussianBlur);
+    ASSERT(gaussian_blur_strength > 0);
+    flyweight<key_value<double, GaussianCoefficients, GaussianFilterKey<GaussianCoefficients>>, no_locking> fw_priv_blur(gaussian_blur_strength);
     const GaussianCoefficients& priv_blur = fw_priv_blur.get();
 
     int bluradjust = priv_blur.g_r * 8;
@@ -1146,13 +1146,13 @@ bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double fGaussianBlu
     return true;
 }
 
-bool Rasterizer::BeBlur( const Overlay& input_overlay, int fBlur, SharedPtrOverlay output_overlay )
+bool Rasterizer::BeBlur( const Overlay& input_overlay, int be_strength, SharedPtrOverlay output_overlay )
 {
     ASSERT(output_overlay);
     output_overlay->CleanUp();
     output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
 
-    ASSERT(fBlur>0);
+    ASSERT(be_strength>0);
     int bluradjust = 8;
     output_overlay->mOffsetX       = input_overlay.mOffsetX - bluradjust;
     output_overlay->mOffsetY       = input_overlay.mOffsetY - bluradjust;
@@ -1202,7 +1202,7 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, int fBlur, SharedPtrOverl
 
     ass_tmp_buf tmp_buf( max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0) );
 
-    for (int pass = 0; pass < fBlur; pass++)
+    for (int pass = 0; pass < be_strength; pass++)
     {
         if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
         {            
