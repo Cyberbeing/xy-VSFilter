@@ -595,6 +595,8 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     const float *gt_x, int r_x, int gt_ex_width_x, 
     const float *gt_y, int r_y, int gt_ex_width_y);
 
+void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, float pass_y);
+
 /**
  * \brief blur with [[1,2,1]. [2,4,2], [1,2,1]] kernel.
  */
@@ -914,7 +916,7 @@ bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int y
 
 const float Rasterizer::GAUSSIAN_BLUR_THREHOLD = 0.333333f;
 
-bool Rasterizer::IsItReallyBlur( int be_strength, double gaussian_blur_strength )
+bool Rasterizer::IsItReallyBlur( float be_strength, double gaussian_blur_strength )
 {
     if (be_strength<=0 && gaussian_blur_strength<=GAUSSIAN_BLUR_THREHOLD)
     {
@@ -925,7 +927,7 @@ bool Rasterizer::IsItReallyBlur( int be_strength, double gaussian_blur_strength 
 
 // @return: true if actually a blur operation has done, or else false and output is leave unset.
 // To Do: rewrite it or delete it
-bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int be_strength, double gaussian_blur_strength, 
+bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, float be_strength, double gaussian_blur_strength, 
     double target_scale_x, double target_scale_y, SharedPtrOverlay output_overlay)
 {
     using namespace ::boost::flyweights;
@@ -1059,23 +1061,27 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, int be_strength
     {
         if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
         {
-            int pitch = output_overlay->mOverlayPitch;
-            byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
             if (g_cpuid.m_flags & CCpuID::sse2)
             {
-                be_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+                be_blur(blur_plan, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
             }
             else
             {
-                be_blur_c(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+                be_blur_c(blur_plan, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
             }
         }
     }
+    if (scaled_be_strength>pass_num)
+    {
+        xy_be_blur(blur_plan, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch, 
+            scaled_be_strength-pass_num, scaled_be_strength-pass_num);
+    }
+
     return true;
 }
 
 // @return: true if actually a blur operation has done, or else false and output is leave unset.
-bool Rasterizer::Blur(const Overlay& input_overlay, int be_strength, 
+bool Rasterizer::Blur(const Overlay& input_overlay, float be_strength, 
     double gaussian_blur_strength, 
     double target_scale_x, double target_scale_y, 
     SharedPtrOverlay output_overlay)
@@ -1206,8 +1212,8 @@ bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double gaussian_blu
     return true;
 }
 
-bool Rasterizer::BeBlur( const Overlay& input_overlay, int be_strength, 
-    double target_scale_x, double target_scale_y, SharedPtrOverlay output_overlay )
+bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength, 
+    float target_scale_x, float target_scale_y, SharedPtrOverlay output_overlay )
 {
     ASSERT(output_overlay);
     output_overlay->CleanUp();
@@ -1287,6 +1293,11 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, int be_strength,
                 be_blur_c(blur_plan, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
             }
         }
+    }
+    if (scaled_be_strength>pass_num)
+    {
+        xy_be_blur(blur_plan, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch, 
+            scaled_be_strength-pass_num, scaled_be_strength-pass_num);
     }
 
     return true;

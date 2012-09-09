@@ -71,7 +71,7 @@ public:
 	double	fontScaleX, fontScaleY; // percent
 	double	fontSpacing; // +/- pixels
 
-	int		fBlur;
+	double	fBlur;
 	double	fGaussianBlur;
 	double	fontAngleZ, fontAngleX, fontAngleY;
 	double	fontShiftX, fontShiftY;

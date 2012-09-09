@@ -224,7 +224,7 @@ bool OverlayKey::operator==( const OverlayKey& key ) const
 {
     AddFuncCalls(OverlayKey_EQUAL);
     return fabs(this->m_style.get().fGaussianBlur - key.m_style.get().fGaussianBlur) < 0.000001
-        && this->m_style.get().fBlur == key.m_style.get().fBlur
+        && fabs(this->m_style.get().fBlur - key.m_style.get().fBlur) < 0.000001
         && OverlayNoBlurKey::operator==(key);
     //static_cast will call copy constructer to construct a tmp obj
     //return ((CWordCacheKey)(*this)==(CWordCacheKey)key) && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) 
@@ -235,7 +235,7 @@ ULONG OverlayKey::UpdateHashValue()
 {
     m_hash_value = __super::UpdateHashValue();
     m_hash_value += (m_hash_value<<5);
-    m_hash_value += m_style.get().fBlur;
+    m_hash_value += *(UINT*)(&m_style.get().fBlur);
     m_hash_value += (m_hash_value<<5);
     m_hash_value += hash_value(m_style.get().fGaussianBlur);
     return  m_hash_value;

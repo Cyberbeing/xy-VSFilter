@@ -1,6 +1,8 @@
 #include "stdafx.h"
+#include "../dsutil/vd.h"
 
 typedef const UINT8 CUINT8, *PCUINT8;
+typedef const UINT CUINT, *PCUINT;
 
 //
 // ref: "Comparing floating point numbers" by Bruce Dawson
@@ -928,4 +930,455 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     
     xy_free(buff_base);
     _mm_empty();
+}
+
+
+enum RoundingPolicy
+{
+    ROUND_DOWN
+    , ROUND_HALF_DOWN
+    , ROUND_HALF_UP
+    , ROUND_HALF_TO_EVEN
+    , COUNT_ROUND_POLICY
+};
+
+template<int ROUNDING_POLICY, int precision>
+struct XyRounding
+{
+    __forceinline void init_sse();
+    __forceinline __m128i round(__m128i in);
+    __forceinline int round(int in);
+};
+
+template<int precision>
+struct XyRounding<ROUND_DOWN, precision>
+{
+    __forceinline void init_sse()
+    {
+
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        return in;
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in;
+    }
+};
+
+
+template<int precision>
+struct XyRounding<ROUND_HALF_DOWN, precision>
+{
+    __forceinline void init_sse()
+    {
+        m_rounding_patch = _mm_set1_epi16( (1<<(precision-1))-1 );
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        return _mm_adds_epu16(in, m_rounding_patch);
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in + ((1<<(precision-1))-1);
+    }
+    __m128i m_rounding_patch;
+};
+
+
+template<int precision>
+struct XyRounding<ROUND_HALF_UP, precision>
+{
+    __forceinline void init_sse()
+    {
+        m_rounding_patch = _mm_set1_epi16( 1<<(precision-1) );
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        return _mm_adds_epu16(in, m_rounding_patch);
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in + (1<<(precision-1));
+    }
+    __m128i m_rounding_patch;
+};
+
+
+template<int precision>
+struct XyRounding<ROUND_HALF_TO_EVEN, precision>
+{
+    __forceinline void init_sse()
+    {
+        m_rounding_patch = _mm_set1_epi16( 1<<(precision-1) );
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        in = _mm_adds_epu16(in, m_rounding_patch);
+        __m128i tmp = _mm_slli_epi16(in, 15-precision);
+        tmp = _mm_srli_epi16(tmp, 15);
+        return _mm_adds_epu16(in, tmp);
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in + (1<<(precision-1)) + ((in>>precision)&1);
+    }
+    __m128i m_rounding_patch;
+};
+
+/****
+ * filter with [1,2,1]
+ * 1. It is a in-place horizontal filter
+ * 2. Boundary Pixels are filtered by padding 0. E.g. 
+ *      dst[0] = (0*1 + dst[0]*2 + dst[1]*1)/4;
+ **/
+template<int ROUNDING_POLICY>
+void xy_be_filter_c(PUINT8 dst, int width, int height, int stride)
+{
+    ASSERT(width>=1);
+    if (width<=0)
+    {
+        return;
+    }
+    PUINT8 dst2 = NULL;
+    XyRounding<ROUNDING_POLICY, 2> xy_rounding;
+    for (int y=0;y<height;y++)
+    {
+        dst2 = dst + y*stride;
+        int old_sum = dst2[0];
+        int tmp = 0;
+        int x=0;
+        for (x=0;x<width-1;x++)
+        {
+            int new_sum = dst2[x]+dst2[x+1];
+            tmp = old_sum + new_sum;//old_sum == src2[x-1]+src2[x];
+            dst2[x] = (xy_rounding.round(tmp)>>2);
+            old_sum = new_sum;
+        }
+        tmp = old_sum + dst2[x];
+        dst2[x] = (xy_rounding.round(tmp)>>2);
+    }
+}
+
+/****
+ * 1. It is a in-place symmetric 3-tag horizontal filter
+ * 2. Boundary Pixels are filtered by padding 0. E.g. 
+ *      dst[0] = (0*1 + dst[0]*2 + dst[1]*1)/4;
+ * 3. sum(filter) == 256
+ **/
+template<int ROUNDING_POLICY>
+void xy_be_filter2_c(PUINT8 dst, int width, int height, int stride, PCUINT filter)
+{
+    ASSERT(width>=1);
+    if (width<=0)
+    {
+        return;
+    }
+
+    const int VOLUME_BITS = 8;
+    const int VOLUME = (1<<VOLUME_BITS);
+    if (filter[0]==0)
+    {
+        return;//nothing to do;
+    }
+    else if (filter[0]== (VOLUME>>2))
+    {
+        return xy_be_filter_c<ROUNDING_POLICY>(dst, width, height, stride);
+    }
+
+    PUINT8 dst2 = NULL;
+    XyRounding<ROUNDING_POLICY, VOLUME_BITS> xy_rounding;
+    for (int y=0;y<height;y++)
+    {
+        dst2 = dst + y*stride;
+        int old_pix = 0;
+        int tmp = 0;
+        int x=0;
+        for (x=0;x<width-1;x++)
+        {
+            tmp = (old_pix + dst2[x+1]) * filter[0] + dst2[x] * filter[1];
+            old_pix = dst2[x];
+            dst2[x] = (xy_rounding.round(tmp)>>VOLUME_BITS);
+        }
+        tmp = old_pix * filter[0] + dst2[x] * filter[1];
+        dst2[x] = (xy_rounding.round(tmp)>>VOLUME_BITS);
+    }
+}
+
+/****
+ * See @xy_be_filter_c
+ * No alignment requirement.
+ **/
+template<int ROUNDING_POLICY>
+void xy_be_filter_sse(PUINT8 dst, int width, int height, int stride)
+{
+    ASSERT(width>=1);
+    if (width<=0)
+    {
+        return;
+    }
+    int width_mod8 = ((width-1)&~7);
+    XyRounding<ROUNDING_POLICY, 2> xy_rounding;
+    xy_rounding.init_sse();
+    for (int y = 0; y < height; y++) {
+        PUINT8 dst2=dst+y*stride;
+
+        __m128i old_pix_128 = _mm_cvtsi32_si128(dst2[0]);
+        __m128i old_sum_128 = old_pix_128;
+
+        int x = 0;
+        for (; x < width_mod8; x+=8) {
+            __m128i new_pix = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(dst2+x+1));
+            new_pix = _mm_unpacklo_epi8(new_pix, _mm_setzero_si128());
+            __m128i temp = _mm_slli_si128(new_pix,2);
+            temp = _mm_add_epi16(temp, old_pix_128);
+            temp = _mm_add_epi16(temp, new_pix);
+            old_pix_128 = _mm_srli_si128(new_pix,14);
+
+            new_pix = _mm_slli_si128(temp,2);
+            new_pix = _mm_add_epi16(new_pix, old_sum_128);
+            new_pix = _mm_add_epi16(new_pix, temp);
+            old_sum_128 = _mm_srli_si128(temp, 14);
+
+            new_pix = xy_rounding.round(new_pix);
+
+            new_pix = _mm_srli_epi16(new_pix, 2);
+            new_pix = _mm_packus_epi16(new_pix, new_pix);
+
+            _mm_storel_epi64( reinterpret_cast<__m128i*>(dst2+x), new_pix );
+        }
+        int old_sum = _mm_cvtsi128_si32(old_sum_128);
+        old_sum &= 0xffff;
+        int tmp = 0;
+        for ( ; x < width-1; x++) {
+            int new_sum = dst2[x] + dst2[x+1];
+            tmp = old_sum + new_sum;
+            dst2[x] = (xy_rounding.round(tmp)>>2);
+            old_sum = new_sum;
+        }
+        tmp = old_sum + dst2[x];
+        dst2[x] = (xy_rounding.round(tmp)>>2);
+    }
+}
+
+/****
+ * See @xy_be_filter2_c
+ * No alignment requirement.
+ **/
+template<int ROUNDING_POLICY>
+void xy_be_filter2_sse(PUINT8 dst, int width, int height, int stride, PCUINT filter)
+{
+    const int VOLUME_BITS = 8;
+    const int VOLUME = (1<<VOLUME_BITS);
+    ASSERT(filter[0]==filter[2]);
+    ASSERT(filter[0]+filter[1]+filter[2]==VOLUME);
+    ASSERT(width>=1);
+    if (width<=0)
+    {
+        return;
+    }
+    
+    XyRounding<ROUNDING_POLICY, VOLUME_BITS> xy_rounding;
+    xy_rounding.init_sse();
+    __m128i f3_1 = _mm_set1_epi16(filter[0]);
+    __m128i f3_2 = _mm_set1_epi16(filter[1]);
+
+    int width_mod8 = ((width-1)&~7);
+    //__m128i round = _mm_set1_epi16(8);
+    
+    PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
+    PUINT8 end = dst_byte + height*stride;
+    for( ; dst_byte<end; dst_byte+=stride )
+    {
+        PUINT8 dst2 = dst_byte;
+
+        PUINT8 dst_end0 = dst_byte + width - 4;
+
+        __m128i old_pix1_128 = _mm_setzero_si128();
+        __m128i old_pix2_128 = _mm_cvtsi32_si128(dst2[0]);
+
+        int x = 0;
+        for (; x < width_mod8; x+=8) {
+            __m128i pix2 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(dst2+x+1));
+            pix2 = _mm_unpacklo_epi8(pix2, _mm_setzero_si128());
+            __m128i pix1 =  _mm_slli_si128(pix2,2);
+            pix1 = _mm_add_epi8(pix1, old_pix2_128);
+            __m128i pix0 =  _mm_slli_si128(pix1,2);
+            pix0 = _mm_add_epi8(pix0, old_pix1_128);
+            old_pix1_128 = _mm_srli_si128(pix1,14);
+            old_pix2_128 = _mm_srli_si128(pix2,14);
+
+            pix0 = _mm_add_epi16(pix0, pix2);
+            pix0 = _mm_mullo_epi16(pix0, f3_1);
+            pix1 = _mm_mullo_epi16(pix1, f3_2);
+            
+            pix1 = _mm_adds_epu16(pix1, pix0);
+
+            pix1 = xy_rounding.round(pix1);
+
+            pix1 = _mm_srli_epi16(pix1, VOLUME_BITS);
+            pix1 = _mm_packus_epi16(pix1, pix1);
+
+            _mm_storel_epi64( reinterpret_cast<__m128i*>(dst2+x), pix1 );
+        }
+        int old_pix1 = _mm_cvtsi128_si32(old_pix1_128);
+        old_pix1 &= 0xff;
+        int tmp = 0;
+        for ( ; x < width-1; x++) {
+            tmp = (old_pix1 + dst2[x+1]) * filter[0] + dst2[x] * filter[1];
+            old_pix1 = dst2[x];
+
+            dst2[x] = (xy_rounding.round(tmp)>>VOLUME_BITS);
+        }
+        tmp = old_pix1*filter[0] + dst2[x]*filter[1];
+        dst2[x] = (xy_rounding.round(tmp)>>VOLUME_BITS);
+    }
+}
+
+/****
+ * See @xy_be_blur
+ * Construct the filter used in the final horizontal/vertical pass of @xy_be_blur when @pass is NOT a integer.
+ * This filter is constructed to satisfy:
+ *   If @p is a pixel in the middle of the image, pixels @(p-1) and @(p+1) lie just at the left and the right
+ *   of @p respectively. The value of @p after all horizontal filtering equals to
+ *      a*value_old(@(p-1)) + b*value_old(@p) + a*value_old(@(p+1)) + other pixels' weighted sum,
+ *   then
+ *      a/b = @pass/(@pass+1).
+ * It makes sense because the above property also holds when @pass is a integer.
+ *
+ * @return
+ *   Let n = floor(pass);
+ *   filter = [ (pass-n)(n+2) / (2*(1+3pass-n)), 1-(pass-n)(n+2)/(1+3pass-n), (pass-n)(n+2)/ (2*(1+3pass-n)) ]
+ **/
+void xy_calculate_filter(float pass, PUINT filter)
+{
+    const int VOLUME = (1<<8);
+    int n = (int)pass;
+    if (n==0)
+    {
+        filter[0] = VOLUME * pass/(1+3*pass);
+    }
+    else if (n==1)
+    {
+        filter[0] = VOLUME * (pass-1)/(2*pass);
+    }
+    else
+    {
+        filter[0] = VOLUME * (pass-n)*(n+2)/ (2*(1+3*pass-n));
+    }    
+    filter[1] = VOLUME - 2*filter[0];
+    filter[2] = filter[0];
+
+    if (2*filter[0]>filter[1])
+    {
+        //this should not happen
+        ASSERT(0);
+        filter[0] = VOLUME/4;
+        filter[1] = VOLUME - 2*filter[0];
+        filter[2] = filter[0];
+    }
+}
+
+/****
+ * See @xy_float_2_byte_transpose_c
+ **/
+void xy_byte_2_byte_transpose_c(UINT8 *dst, int dst_width, int dst_stride, 
+    PCUINT8 src, int width, int height, int src_stride)
+{
+    ASSERT(dst_width >= height);
+    PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
+    PCUINT8 src_end = src + width;
+    PCUINT8 src2_end = reinterpret_cast<PCUINT8>(src) + height*src_stride;
+    for( ; src<src_end; src++, dst_byte+=dst_stride )
+    {
+        PCUINT8 src2 = reinterpret_cast<PCUINT8>(src);
+
+        UINT8 *dst2 = reinterpret_cast<UINT8*>(dst_byte);
+        for (;src2<src2_end;src2+=src_stride,dst2++)
+        {
+            *dst2 = *src2;
+        }
+        UINT8 *dst2_end = reinterpret_cast<UINT8*>(dst_byte) + dst_width;
+        for (;dst2<dst2_end;dst2++)
+        {
+            *dst2 = 0;
+        }
+    }
+}
+
+/****
+ * Repeat filter [1,2,1] @pass_x times in horizontal and @pass_y times in vertical
+ * Boundary Pixels are filtered by padding 0, see @xy_be_filter_c.
+ *
+ * @pass_x:
+ *   When @pass_x is not a integer, horizontal filter [1,2,1] is repeated (int)@pass_x times,
+ *   and a 3-tag symmetric filter which generated according to @pass_x is applied.
+ *   The final 3-tag symmetric filter is constructed to satisfy the following property:
+ *     If @pass_xx > @pass_x, the filtered result of @pass_x should NOT be more blur than
+ *     the result of @pass_xx. More specially, the filtered result of @pass_x should NOT be more 
+ *     blur than (int)@pass_x+1 and should NOT be less blur than (int)@pass_x;
+ *     
+ * Rounding:
+ *   Original VSFilter \be effect uses a simple a round down, which has an bias of -7.5/16 per pass.
+ *   That rounding error is really huge with big @pass value. It has become one part of the \be effect.
+ *   We can simulate VSFilter's rounding bias by combining different rounding methods. However a simple
+ *   test shows that result still has some visual difference from VSFilter's.
+ *   
+ * Know issue:
+ *   It seems that this separated filter implementation is more sensitive to precision in comparison to 
+ *   VSFilter's simple implementation. Vertical blocky artifact can be observe with big pass value 
+ *   (and @pass_x==@pass_y). So it is only used for filtering of fractional part of \be strength.
+ **/
+void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, float pass_y)
+{
+    //ASSERT(pass_x>0 && pass_y>0);
+
+    typedef void (*XyBeFilter)(PUINT8 src, int width, int height, int stride);
+    typedef void (*XyFilter2)(PUINT8 src, int width, int height, int stride, PCUINT filter);
+
+    XyBeFilter filter = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter_sse<ROUND_HALF_TO_EVEN> : xy_be_filter_c<ROUND_HALF_TO_EVEN>;
+    XyFilter2 filter2 = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter2_sse<ROUND_HALF_TO_EVEN> : xy_be_filter2_c<ROUND_HALF_TO_EVEN>;
+
+    int stride_ver = height;
+    PUINT8 tmp = reinterpret_cast<PUINT8>(xy_malloc(width*height));
+    ASSERT(tmp);
+    // horizontal pass
+    int pass_x_int = static_cast<int>(pass_x);
+    for (int i=0; i<pass_x_int; i++)
+    {
+        filter(src, width, height, stride);
+    }
+    if (pass_x-pass_x_int>0)
+    {
+        UINT f[3] = {0};
+        xy_calculate_filter(pass_x, f);
+        filter2(src, width, height, stride, f);
+    }
+
+    // transpose
+    xy_byte_2_byte_transpose_c(tmp, height, stride_ver, src, width, height, stride);
+
+    // vertical pass
+    int pass_y_int = static_cast<int>(pass_y);
+    for (int i=0;i<pass_y_int;i++)
+    {
+        filter(tmp, height, width, stride_ver);
+    }
+    if (pass_y-pass_y_int>0)
+    {
+        UINT f[3] = {0};
+        xy_calculate_filter(pass_y, f);
+        filter2(tmp, height, width, stride_ver, f);
+    }
+
+    // transpose
+    xy_byte_2_byte_transpose_c(src, width, stride, tmp, height, width, stride_ver);
+
+    xy_free(tmp);
+    return;
 }
