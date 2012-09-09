@@ -193,7 +193,8 @@ void CWord::PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const O
     if( Rasterizer::IsItReallyBlur(m_style.get().fBlur, m_style.get().fGaussianBlur) )
     {
         overlay->reset(new Overlay());
-        if(!Rasterizer::Blur(*raterize_result, m_style.get().fBlur, m_style.get().fGaussianBlur, *overlay))
+        if(!Rasterizer::Blur(*raterize_result, m_style.get().fBlur, m_style.get().fGaussianBlur, 
+            m_target_scale_x, m_target_scale_y, *overlay))
         {
             *overlay = raterize_result;
         }

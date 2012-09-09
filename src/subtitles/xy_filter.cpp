@@ -871,49 +871,60 @@ void xy_float_2_byte_transpose_sse(UINT8 *dst, int dst_width, int dst_stride,
  **/
 void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     PCUINT8 src, int width, int height, int stride, 
-    const float *gt, int r, int gt_ex_width)
+    const float *gt_x, int r_x, int gt_ex_width_x, 
+    const float *gt_y, int r_y, int gt_ex_width_y)
 {
-    ASSERT(width<=stride && width+2*r<=dst_stride);
-    int ex_mask_width = ((r*2+1)+3)&~3;
-    ASSERT(ex_mask_width<=gt_ex_width);
-    if (ex_mask_width>gt_ex_width)
+    ASSERT(width<=stride && width+2*r_x<=dst_stride);
+    int ex_mask_width_x = ((r_x*2+1)+3)&~3;
+    ASSERT(ex_mask_width_x<=gt_ex_width_x);
+    if (ex_mask_width_x>gt_ex_width_x)
     {
         int o=0;
         o=o/o;
         exit(-1);
     }
 
-    int fwidth = (width+3)&~3;
-    int fstride = (fwidth + ex_mask_width)*sizeof(float);
-    int fheight = (height+3)&~3;
-    int fstride_ver = (fheight+ex_mask_width)*sizeof(float);
+    int ex_mask_width_y = ((r_y*2+1)+3)&~3;
+    ASSERT(ex_mask_width_y<=gt_ex_width_y);
+    if (ex_mask_width_y>gt_ex_width_y)
+    {
+        int o=0;
+        o=o/o;
+        exit(-1);
+    }
 
-    PUINT8 buff_base = reinterpret_cast<PUINT8>(xy_malloc(height*fstride + (fwidth + ex_mask_width)*fstride_ver));
+
+    int fwidth = (width+3)&~3;
+    int fstride = (fwidth + ex_mask_width_x)*sizeof(float);
+    int fheight = (height+3)&~3;
+    int fstride_ver = (fheight+ex_mask_width_y)*sizeof(float);
+
+    PUINT8 buff_base = reinterpret_cast<PUINT8>(xy_malloc(height*fstride + (fwidth + ex_mask_width_x)*fstride_ver));
     
     float *hor_buff_base = reinterpret_cast<float*>(buff_base);
-    float *hor_buff = hor_buff_base + ex_mask_width;    
+    float *hor_buff = hor_buff_base + ex_mask_width_x;    
 
     // byte to float
     ASSERT( ((width+15)&~15)<=stride );
     xy_byte_2_float_sse(hor_buff, fwidth, fstride, src, width, height, stride);
 
     // horizontal pass
-    xy_filter_sse(hor_buff, fwidth, height, fstride, gt, ex_mask_width);
+    xy_filter_sse(hor_buff, fwidth, height, fstride, gt_x, ex_mask_width_x);
 
 
     // transpose
     float *ver_buff_base = reinterpret_cast<float*>(buff_base + height*fstride);
-    float *ver_buff = ver_buff_base + ex_mask_width;
+    float *ver_buff = ver_buff_base + ex_mask_width_y;
 
-    int true_width = width+r*2;
-    xy_float_2_float_transpose_sse(ver_buff, fheight, fstride_ver, hor_buff-r*2, true_width, height, fstride);
+    int true_width = width+r_x*2;
+    xy_float_2_float_transpose_sse(ver_buff, fheight, fstride_ver, hor_buff-r_x*2, true_width, height, fstride);
 
     // vertical pass
-    xy_filter_sse(ver_buff, fheight, true_width, fstride_ver, gt, ex_mask_width);
+    xy_filter_sse(ver_buff, fheight, true_width, fstride_ver, gt_y, ex_mask_width_y);
     
     // transpose
-    int true_height = height + 2*r;
-    xy_float_2_byte_transpose_sse(dst, true_width, dst_stride, ver_buff-r*2, true_height, true_width, fstride_ver);
+    int true_height = height + 2*r_y;
+    xy_float_2_byte_transpose_sse(dst, true_width, dst_stride, ver_buff-r_y*2, true_height, true_width, fstride_ver);
     
     xy_free(buff_base);
     _mm_empty();
