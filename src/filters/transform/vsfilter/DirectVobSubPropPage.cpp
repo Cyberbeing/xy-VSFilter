@@ -835,6 +835,10 @@ CDVSBasePPage(NAME("DirectVobSub More Property Page"), pUnk, IDD_DVSMOREPAGE, ID
     BindControl(IDC_SPINOverlayNoBlurCache, m_overlay_no_blur_cache);
     BindControl(IDC_SPINOverlayCache, m_overlay_cache);
     BindControl(IDC_COMBO_SUBPIXEL_POS, m_combo_subpixel_pos);
+
+    BindControl(IDC_COMBO_LAYOUT_SIZE_OPT, m_combo_layout_size_opt);
+    BindControl(IDC_SPIN_LAYOUT_SIZE_X, m_layout_size_x);
+    BindControl(IDC_SPIN_LAYOUT_SIZE_Y, m_layout_size_y);
 }
 
 bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -921,6 +925,9 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
         m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, m_scan_line_data_cache_max_item_num);
         m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, m_path_cache_max_item_num);
         m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_SUBPIXEL_POS_LEVEL, m_subpixel_pos_level);
+
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_LAYOUT_SIZE_OPT, m_layout_size_opt);
+        m_pDirectVobSubXy->XySetSize(DirectVobSubXyIntOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, m_layout_size);
     }
     else
     {
@@ -929,6 +936,9 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
         m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, &m_scan_line_data_cache_max_item_num);
         m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, &m_path_cache_max_item_num);
         m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_SUBPIXEL_POS_LEVEL, &m_subpixel_pos_level);
+
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_LAYOUT_SIZE_OPT, &m_layout_size_opt);
+        m_pDirectVobSubXy->XyGetSize(DirectVobSubXyIntOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, &m_layout_size);
     }
 }
 
@@ -949,6 +959,17 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         {
             m_subpixel_pos_level = 0;
         }
+
+        if (m_combo_layout_size_opt.GetCurSel() != CB_ERR)
+        {
+            m_layout_size_opt = m_combo_layout_size_opt.GetItemData(m_combo_layout_size_opt.GetCurSel());
+        }
+        else
+        {
+            m_layout_size_opt = DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_SCRIPT;
+        }
+        m_layout_size.cx = m_layout_size_x.GetPos32();
+        m_layout_size.cy = m_layout_size_y.GetPos32();
     }
     else
     {
@@ -975,7 +996,35 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         m_combo_subpixel_pos.AddString( CString(_T("8x8(vsfilter2.39 default)")) );m_combo_subpixel_pos.SetItemData(3, 3);
         m_combo_subpixel_pos.AddString( CString(_T("8x8(bilinear)")) );m_combo_subpixel_pos.SetItemData(4, 4);
 
-        m_combo_subpixel_pos.SetCurSel( temp );        
+        m_combo_subpixel_pos.SetCurSel( temp );
+
+        switch(m_layout_size_opt)
+        {
+        default:
+        case DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_SCRIPT:
+            temp = 0;
+            break;
+        case DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
+            temp = 1;
+            break;
+        case DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED:            
+            temp = 2;
+            break;
+        }
+
+        m_combo_layout_size_opt.ResetContent();
+        m_combo_layout_size_opt.AddString( CString(_T("Use ASS playres")) );
+        m_combo_layout_size_opt.SetItemData(0, DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_SCRIPT);
+        m_combo_layout_size_opt.AddString( CString(_T("Use Original Video Size")) );
+        m_combo_layout_size_opt.SetItemData(1, DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE);
+        m_combo_layout_size_opt.AddString( CString(_T("Customize ...")) );
+        m_combo_layout_size_opt.SetItemData(2, DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED);
+        m_combo_layout_size_opt.SetCurSel( temp );
+
+        m_layout_size_x.SetRange32(1, 12800);
+        m_layout_size_x.SetPos32(m_layout_size.cx);
+        m_layout_size_y.SetRange32(1, 12800);
+        m_layout_size_y.SetPos32(m_layout_size.cy);
     }
 }
 
@@ -1424,3 +1473,4 @@ void CDVSPathsPPage::UpdateControlData(bool fSave)
 		m_add.EnableWindow(TRUE);
 	}
 }
+
