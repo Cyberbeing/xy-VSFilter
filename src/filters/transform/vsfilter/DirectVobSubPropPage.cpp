@@ -388,7 +388,7 @@ void CDVSMainPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->put_VobSubSettings(true, m_fOnlyShowForcedVobSubs, false);
 		m_pDirectVobSub->put_TextSettings(&m_defStyle);
 		m_pDirectVobSub->put_AspectRatioSettings(&m_ePARCompensationType);
-        m_pDirectVobSubXy->XySetBool(DirectVobSubXyIntOptions::BOOL_HIDE_TRAY_ICON, m_fHideTrayIcon);
+        m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_HIDE_TRAY_ICON, m_fHideTrayIcon);
 	}
 	else
 	{
@@ -402,7 +402,7 @@ void CDVSMainPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->get_VobSubSettings(NULL, &m_fOnlyShowForcedVobSubs, NULL);
 		m_pDirectVobSub->get_TextSettings(&m_defStyle);
 		m_pDirectVobSub->get_AspectRatioSettings(&m_ePARCompensationType);
-        m_pDirectVobSubXy->XyGetBool(DirectVobSubXyIntOptions::BOOL_HIDE_TRAY_ICON, &m_fHideTrayIcon);
+        m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_HIDE_TRAY_ICON, &m_fHideTrayIcon);
 	}
 }
 
@@ -636,8 +636,8 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->put_HideSubtitles(m_fHideSubtitles);
 		m_pDirectVobSub->put_OSD(m_fOSD);
 		m_pDirectVobSub->put_PreBuffering(m_fDoPreBuffering);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_COLOR_SPACE, m_colorSpace);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_YUV_RANGE, m_yuvRange);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_COLOR_SPACE, m_colorSpace);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_YUV_RANGE, m_yuvRange);
 		m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
 		m_pDirectVobSub->put_SaveFullPath(m_fSaveFullPath);
 	}
@@ -647,8 +647,8 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->get_HideSubtitles(&m_fHideSubtitles);
 		m_pDirectVobSub->get_OSD(&m_fOSD);
 		m_pDirectVobSub->get_PreBuffering(&m_fDoPreBuffering);        
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_COLOR_SPACE, &m_colorSpace);
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_YUV_RANGE, &m_yuvRange);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_COLOR_SPACE, &m_colorSpace);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_YUV_RANGE, &m_yuvRange);
 		m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
 		m_pDirectVobSub->get_SaveFullPath(&m_fSaveFullPath);
 	}
@@ -855,11 +855,11 @@ bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                     {
                         AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-                        DirectVobSubXyIntOptions::CachesInfo *caches_info = NULL;
-                        DirectVobSubXyIntOptions::XyFlyWeightInfo *xy_fw_info = NULL;
+                        DirectVobSubXyOptions::CachesInfo *caches_info = NULL;
+                        DirectVobSubXyOptions::XyFlyWeightInfo *xy_fw_info = NULL;
                         int tmp;
-                        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyIntOptions::BIN_CACHES_INFO, reinterpret_cast<LPVOID*>(&caches_info), &tmp);
-                        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyIntOptions::BIN_XY_FLY_WEIGHT_INFO, reinterpret_cast<LPVOID*>(&xy_fw_info), &tmp);
+                        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_CACHES_INFO, reinterpret_cast<LPVOID*>(&caches_info), &tmp);
+                        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_XY_FLY_WEIGHT_INFO, reinterpret_cast<LPVOID*>(&xy_fw_info), &tmp);
                         ASSERT(caches_info);
                         ASSERT(xy_fw_info);
                         CString msg;
@@ -920,25 +920,25 @@ void CDVSMorePPage::UpdateObjectData(bool fSave)
 {
     if(fSave)
     {
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, m_overlay_cache_max_item_num);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, m_overlay_no_blur_cache_max_item_num);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, m_scan_line_data_cache_max_item_num);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, m_path_cache_max_item_num);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_SUBPIXEL_POS_LEVEL, m_subpixel_pos_level);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, m_overlay_cache_max_item_num);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, m_overlay_no_blur_cache_max_item_num);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, m_scan_line_data_cache_max_item_num);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, m_path_cache_max_item_num);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL, m_subpixel_pos_level);
 
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyIntOptions::INT_LAYOUT_SIZE_OPT, m_layout_size_opt);
-        m_pDirectVobSubXy->XySetSize(DirectVobSubXyIntOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, m_layout_size);
+        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT, m_layout_size_opt);
+        m_pDirectVobSubXy->XySetSize(DirectVobSubXyOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, m_layout_size);
     }
     else
     {
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, &m_overlay_cache_max_item_num);
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, &m_overlay_no_blur_cache_max_item_num);
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, &m_scan_line_data_cache_max_item_num);
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, &m_path_cache_max_item_num);
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_SUBPIXEL_POS_LEVEL, &m_subpixel_pos_level);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, &m_overlay_cache_max_item_num);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, &m_overlay_no_blur_cache_max_item_num);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, &m_scan_line_data_cache_max_item_num);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, &m_path_cache_max_item_num);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL, &m_subpixel_pos_level);
 
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyIntOptions::INT_LAYOUT_SIZE_OPT, &m_layout_size_opt);
-        m_pDirectVobSubXy->XyGetSize(DirectVobSubXyIntOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, &m_layout_size);
+        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT, &m_layout_size_opt);
+        m_pDirectVobSubXy->XyGetSize(DirectVobSubXyOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, &m_layout_size);
     }
 }
 
@@ -966,7 +966,7 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         }
         else
         {
-            m_layout_size_opt = DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE;
+            m_layout_size_opt = DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE;
         }
         m_layout_size.cx = m_layout_size_x.GetPos32();
         m_layout_size.cy = m_layout_size_y.GetPos32();
@@ -1001,19 +1001,19 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         switch(m_layout_size_opt)
         {
         default:
-        case DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
+        case DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
             temp = 0;
             break;
-        case DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED:            
+        case DirectVobSubXyOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED:            
             temp = 1;
             break;
         }
 
         m_combo_layout_size_opt.ResetContent();
         m_combo_layout_size_opt.AddString( CString(_T("Use Original Video Size")) );
-        m_combo_layout_size_opt.SetItemData(0, DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE);
+        m_combo_layout_size_opt.SetItemData(0, DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE);
         m_combo_layout_size_opt.AddString( CString(_T("Customize ...")) );
-        m_combo_layout_size_opt.SetItemData(1, DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED);
+        m_combo_layout_size_opt.SetItemData(1, DirectVobSubXyOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED);
         m_combo_layout_size_opt.SetCurSel( temp );
 
         m_layout_size_x.SetRange32(1, 12800);
@@ -1222,17 +1222,17 @@ void CDVSColorPPage::UpdateObjectData(bool fSave)
 {
 	if(fSave)
 	{
-        m_pDirectVobSubXy->XySetBool(DirectVobSubXyIntOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER, m_fFollowUpstream);
-        m_pDirectVobSubXy->XySetBin(DirectVobSubXyIntOptions::BIN_OUTPUT_COLOR_FORMAT, m_outputColorSpace, m_outputColorSpaceCount);
-        m_pDirectVobSubXy->XySetBin(DirectVobSubXyIntOptions::BIN_INPUT_COLOR_FORMAT, m_inputColorSpace, m_inputColorSpaceCount);
+        m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER, m_fFollowUpstream);
+        m_pDirectVobSubXy->XySetBin(DirectVobSubXyOptions::BIN_OUTPUT_COLOR_FORMAT, m_outputColorSpace, m_outputColorSpaceCount);
+        m_pDirectVobSubXy->XySetBin(DirectVobSubXyOptions::BIN_INPUT_COLOR_FORMAT, m_inputColorSpace, m_inputColorSpaceCount);
 	}
 	else
 	{
         delete []m_outputColorSpace; m_outputColorSpace=NULL;
         delete []m_inputColorSpace;  m_inputColorSpace=NULL;
-        m_pDirectVobSubXy->XyGetBool(DirectVobSubXyIntOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER, &m_fFollowUpstream);
-        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyIntOptions::BIN_OUTPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&m_outputColorSpace), &m_outputColorSpaceCount);
-        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyIntOptions::BIN_INPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&m_inputColorSpace), &m_inputColorSpaceCount);
+        m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER, &m_fFollowUpstream);
+        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_OUTPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&m_outputColorSpace), &m_outputColorSpaceCount);
+        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_INPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&m_inputColorSpace), &m_inputColorSpaceCount);
 	}
 }
 

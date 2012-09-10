@@ -242,7 +242,7 @@ HRESULT SimpleSubPicProvider::RenderTo( IXySubRenderFrame** pSubPic, REFERENCE_T
     CComPtr<IXySubRenderFrame> sub_render_frame;
     SIZE size_render_with;
     ASSERT(m_consumer);
-    hr = m_consumer->XyGetSize(DirectVobSubXyIntOptions::SIZE_LAYOUT_WITH, &size_render_with);
+    hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_LAYOUT_WITH, &size_render_with);
     if (FAILED(hr))
     {
         return hr;

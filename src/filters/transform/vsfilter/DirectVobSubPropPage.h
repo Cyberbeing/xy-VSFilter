@@ -210,7 +210,7 @@ class CDVSColorPPage : public CDVSBasePPage
     
     static const int MAX_COLOR_SPACE = 256;
 
-    typedef DirectVobSubXyIntOptions::ColorSpaceOpt ColorSpaceOpt;
+    typedef DirectVobSubXyOptions::ColorSpaceOpt ColorSpaceOpt;
     ColorSpaceOpt *m_outputColorSpace;
     int m_outputColorSpaceCount;
 

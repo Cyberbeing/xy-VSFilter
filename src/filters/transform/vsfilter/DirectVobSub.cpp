@@ -23,7 +23,7 @@
 #include "DirectVobSub.h"
 #include "VSFilter.h"
 
-using namespace DirectVobSubXyIntOptions;
+using namespace DirectVobSubXyOptions;
 
 CDirectVobSub::CDirectVobSub()
 {
@@ -956,7 +956,7 @@ UINT CDirectVobSub::GetCompatibleProfileInt( LPCTSTR lpszSection, LPCTSTR lpszEn
 STDMETHODIMP CDirectVobSub::XyGetBool( int field, bool *value )
 {
     CAutoLock cAutoLock(&m_propsLock);
-    if (field<0 || field>=DirectVobSubXyIntOptions::BOOL_COUNT)
+    if (field<0 || field>=DirectVobSubXyOptions::BOOL_COUNT)
     {
         return E_NOTIMPL;
     }
@@ -966,7 +966,7 @@ STDMETHODIMP CDirectVobSub::XyGetBool( int field, bool *value )
 STDMETHODIMP CDirectVobSub::XyGetInt( int field, int *value )
 {
     CAutoLock cAutoLock(&m_propsLock);
-    if (field<0 || field>=DirectVobSubXyIntOptions::INT_COUNT)
+    if (field<0 || field>=DirectVobSubXyOptions::INT_COUNT)
     {
         return E_NOTIMPL;
     }
@@ -976,7 +976,7 @@ STDMETHODIMP CDirectVobSub::XyGetInt( int field, int *value )
 STDMETHODIMP CDirectVobSub::XyGetSize( int field, SIZE *value )
 {
     CAutoLock cAutoLock(&m_propsLock);
-    if (field<0 || field>=DirectVobSubXyIntOptions::SIZE_COUNT)
+    if (field<0 || field>=DirectVobSubXyOptions::SIZE_COUNT)
     {
         return E_NOTIMPL;
     }
@@ -987,21 +987,21 @@ STDMETHODIMP CDirectVobSub::XyGetSize( int field, SIZE *value )
     switch(field)
     {
     case SIZE_LAYOUT_WITH:
-        switch(m_xy_int_opt[DirectVobSubXyIntOptions::INT_LAYOUT_SIZE_OPT])
+        switch(m_xy_int_opt[DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT])
         {
         case LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
-            *value = m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_ORIGINAL_VIDEO];
+            *value = m_xy_size_opt[DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO];
             break;
         case LAYOUT_SIZE_OPT_USER_SPECIFIED:
-            *value = m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE];
+            *value = m_xy_size_opt[DirectVobSubXyOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE];
             break;
         default:
-            *value = m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_ASS_PLAY_RESOLUTION];
+            *value = m_xy_size_opt[DirectVobSubXyOptions::SIZE_ASS_PLAY_RESOLUTION];
             break;
         }
         if (value->cx * value->cy == 0)
         {
-            *value = m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_ORIGINAL_VIDEO];
+            *value = m_xy_size_opt[DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO];
         }
         break;
     default:
@@ -1034,7 +1034,7 @@ STDMETHODIMP CDirectVobSub::XyGetString( int field, LPWSTR *value, int *chars )
 STDMETHODIMP CDirectVobSub::XyGetBin( int field, LPVOID *value, int *size )
 {
     CAutoLock cAutoLock(&m_propsLock);
-    if (field<0 || field>=DirectVobSubXyIntOptions::BIN_COUNT)
+    if (field<0 || field>=DirectVobSubXyOptions::BIN_COUNT)
     {
         return E_NOTIMPL;
     }
@@ -1100,7 +1100,7 @@ STDMETHODIMP CDirectVobSub::XyGetBin( int field, LPVOID *value, int *size )
 
 STDMETHODIMP CDirectVobSub::XySetBool( int field, bool value )
 {
-    if (field<0 || field>=DirectVobSubXyIntOptions::BOOL_COUNT)
+    if (field<0 || field>=DirectVobSubXyOptions::BOOL_COUNT)
     {
         return E_NOTIMPL;
     }
@@ -1115,14 +1115,14 @@ STDMETHODIMP CDirectVobSub::XySetBool( int field, bool value )
 
 STDMETHODIMP CDirectVobSub::XySetInt( int field, int value )
 {
-    if (field<0 || field>=DirectVobSubXyIntOptions::INT_COUNT)
+    if (field<0 || field>=DirectVobSubXyOptions::INT_COUNT)
     {
         return E_NOTIMPL;
     }
     switch (field)
     {
-    case DirectVobSubXyIntOptions::INT_LAYOUT_SIZE_OPT:
-        if (value<0 || value>=DirectVobSubXyIntOptions::LAYOUT_SIZE_OPT_COUNT)
+    case DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT:
+        if (value<0 || value>=DirectVobSubXyOptions::LAYOUT_SIZE_OPT_COUNT)
         {
             return E_INVALIDARG;
         }
@@ -1138,13 +1138,13 @@ STDMETHODIMP CDirectVobSub::XySetInt( int field, int value )
 
 STDMETHODIMP CDirectVobSub::XySetSize( int field, SIZE value )
 {
-    if (field<0 || field>=DirectVobSubXyIntOptions::SIZE_COUNT)
+    if (field<0 || field>=DirectVobSubXyOptions::SIZE_COUNT)
     {
         return E_NOTIMPL;
     }
     switch (field)
     {
-    case DirectVobSubXyIntOptions::SIZE_LAYOUT_WITH:
+    case DirectVobSubXyOptions::SIZE_LAYOUT_WITH:
         return E_INVALIDARG;
     }
 
@@ -1179,7 +1179,7 @@ STDMETHODIMP CDirectVobSub::XySetString( int field, LPWSTR value, int chars )
 STDMETHODIMP CDirectVobSub::XySetBin( int field, LPVOID value, int size )
 {
     CAutoLock cAutoLock(&m_propsLock);
-    if (field<0 || field>=DirectVobSubXyIntOptions::BIN_COUNT)
+    if (field<0 || field>=DirectVobSubXyOptions::BIN_COUNT)
     {
         return E_NOTIMPL;
     }

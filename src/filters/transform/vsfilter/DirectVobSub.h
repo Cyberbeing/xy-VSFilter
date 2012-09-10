@@ -46,9 +46,9 @@ public:
     static const int REQUIRED_CONFIG_VERSION = 39;
     static const int CUR_SUPPORTED_FILTER_VERSION = 39;
 
-    typedef DirectVobSubXyIntOptions::CachesInfo CachesInfo;
-    typedef DirectVobSubXyIntOptions::XyFlyWeightInfo XyFlyWeightInfo;
-    typedef DirectVobSubXyIntOptions::ColorSpaceOpt ColorSpaceOpt;
+    typedef DirectVobSubXyOptions::CachesInfo CachesInfo;
+    typedef DirectVobSubXyOptions::XyFlyWeightInfo XyFlyWeightInfo;
+    typedef DirectVobSubXyOptions::ColorSpaceOpt ColorSpaceOpt;
 protected:
 	CDirectVobSub();
 	virtual ~CDirectVobSub();
@@ -92,9 +92,9 @@ protected:
 	CComPtr<ISubClock> m_pSubClock;
 	bool m_fForced;
 
-    int m_xy_int_opt[DirectVobSubXyIntOptions::INT_COUNT];
-    bool m_xy_bool_opt[DirectVobSubXyIntOptions::BOOL_COUNT];
-    CSize m_xy_size_opt[DirectVobSubXyIntOptions::SIZE_COUNT];
+    int m_xy_int_opt[DirectVobSubXyOptions::INT_COUNT];
+    bool m_xy_bool_opt[DirectVobSubXyOptions::BOOL_COUNT];
+    CSize m_xy_size_opt[DirectVobSubXyOptions::SIZE_COUNT];
 public:
     
     // IDirectVobSubXy
