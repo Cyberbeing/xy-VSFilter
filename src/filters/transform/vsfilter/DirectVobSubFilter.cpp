@@ -52,7 +52,7 @@ bool g_RegOK = true;//false; // doesn't work with the dvd graph builder
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #endif
 
-using namespace DirectVobSubXyIntOptions;
+using namespace DirectVobSubXyOptions;
 
 ////////////////////////////////////////////////////////////////////////////
 //
@@ -761,7 +761,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 
 	if(FAILED(hr)) m_simple_provider = NULL;
 
-    XySetSize(DirectVobSubXyIntOptions::SIZE_ORIGINAL_VIDEO, CSize(m_w, m_h));
+    XySetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, CSize(m_w, m_h));
 	UpdateSubtitle(false);
 
 	if(m_hbm) {DeleteObject(m_hbm); m_hbm = NULL;}
@@ -2311,7 +2311,7 @@ STDMETHODIMP CDirectVobSubFilter::XySetBool( int field, bool value )
     }
     switch(field)
     {
-    case DirectVobSubXyIntOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER:
+    case DirectVobSubXyOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER:
         m_donot_follow_upstream_preferred_order = !m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER];
         break;
     default:
@@ -2331,35 +2331,35 @@ STDMETHODIMP CDirectVobSubFilter::XySetInt( int field, int value )
     }
     switch(field)
     {
-    case DirectVobSubXyIntOptions::INT_COLOR_SPACE:
-    case DirectVobSubXyIntOptions::INT_YUV_RANGE:
+    case DirectVobSubXyOptions::INT_COLOR_SPACE:
+    case DirectVobSubXyOptions::INT_YUV_RANGE:
         SetYuvMatrix();
         break;
-    case DirectVobSubXyIntOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM:
+    case DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM:
         CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
-    case DirectVobSubXyIntOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM:
+    case DirectVobSubXyOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM:
         CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
-    case DirectVobSubXyIntOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM:
+    case DirectVobSubXyOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM:
         CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
-    case DirectVobSubXyIntOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM:
+    case DirectVobSubXyOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM:
         CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
-    case DirectVobSubXyIntOptions::INT_BITMAP_MRU_CACHE_ITEM_NUM:
+    case DirectVobSubXyOptions::INT_BITMAP_MRU_CACHE_ITEM_NUM:
         CacheManager::GetBitmapMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
-    case DirectVobSubXyIntOptions::INT_CLIPPER_MRU_CACHE_ITEM_NUM:
+    case DirectVobSubXyOptions::INT_CLIPPER_MRU_CACHE_ITEM_NUM:
         CacheManager::GetClipperAlphaMaskMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
-    case DirectVobSubXyIntOptions::INT_TEXT_INFO_CACHE_ITEM_NUM:
+    case DirectVobSubXyOptions::INT_TEXT_INFO_CACHE_ITEM_NUM:
         CacheManager::GetTextInfoCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
-    case DirectVobSubXyIntOptions::INT_ASS_TAG_LIST_CACHE_ITEM_NUM:
+    case DirectVobSubXyOptions::INT_ASS_TAG_LIST_CACHE_ITEM_NUM:
         CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
-    case DirectVobSubXyIntOptions::INT_SUBPIXEL_POS_LEVEL:
+    case DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL:
         SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[field]) );
         break;
     default:

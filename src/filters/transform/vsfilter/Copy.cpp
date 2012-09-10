@@ -28,7 +28,7 @@
 
 #include "xy_logger.h"
 
-using namespace DirectVobSubXyIntOptions;
+using namespace DirectVobSubXyOptions;
 
 static void LogSubPicStartStop( const REFERENCE_TIME& rtStart, const REFERENCE_TIME& rtStop, const CString& msg)
 {
@@ -585,8 +585,8 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
         CachesInfo *caches_info = NULL;
         XyFlyWeightInfo *xy_fw_info = NULL;
         int tmp_size;
-        XyGetBin(DirectVobSubXyIntOptions::BIN_CACHES_INFO, reinterpret_cast<LPVOID*>(&caches_info), &tmp_size);
-        XyGetBin(DirectVobSubXyIntOptions::BIN_XY_FLY_WEIGHT_INFO, reinterpret_cast<LPVOID*>(&xy_fw_info), &tmp_size);
+        XyGetBin(DirectVobSubXyOptions::BIN_CACHES_INFO, reinterpret_cast<LPVOID*>(&caches_info), &tmp_size);
+        XyGetBin(DirectVobSubXyOptions::BIN_XY_FLY_WEIGHT_INFO, reinterpret_cast<LPVOID*>(&xy_fw_info), &tmp_size);
         ASSERT(caches_info);
         ASSERT(xy_fw_info);
         tmp.Format(

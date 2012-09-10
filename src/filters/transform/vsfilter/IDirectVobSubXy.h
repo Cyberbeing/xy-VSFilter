@@ -5,7 +5,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    namespace DirectVobSubXyIntOptions
+    namespace DirectVobSubXyOptions
     {
         enum//int
         {

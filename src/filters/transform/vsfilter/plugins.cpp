@@ -33,7 +33,7 @@
 #include "DirectVobSub.h"
 #include "vfr.h"
 
-using namespace DirectVobSubXyIntOptions;
+using namespace DirectVobSubXyOptions;
 
 //
 // Generic interface
