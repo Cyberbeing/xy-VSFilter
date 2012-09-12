@@ -1431,7 +1431,8 @@ CRectCoor2 CLine::PaintAll( CompositeDrawItemList* output, const CRectCoor2& cli
         org_coor2.y = org.y * w->m_target_scale_y;
 
         bool hasShadow = w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0;
-        bool hasOutline = w->m_style.get().outlineWidthX+w->m_style.get().outlineWidthY > 0 && !(w->m_ktype == 2 && time < w->m_kstart);
+        bool hasOutline = ((w->m_style.get().outlineWidthX*w->m_target_scale_x+0.5>=1.0) ||
+            (w->m_style.get().outlineWidthY*w->m_target_scale_y+0.5)>=1.0) && !(w->m_ktype == 2 && time < w->m_kstart);
         bool hasBody = true;
 
         SharedPtrOverlayPaintMachine shadow_pm, outline_pm, body_pm;
