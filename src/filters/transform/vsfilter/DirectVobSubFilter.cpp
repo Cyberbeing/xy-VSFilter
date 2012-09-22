@@ -39,6 +39,7 @@
 #include "CAutoTiming.h"
 #include "xy_logger.h"
 
+#include "xy_sub_filter.h"
 
 #define MAX_SUBPIC_QUEUE_LENGTH 1
 
@@ -101,6 +102,8 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	CAMThread::Create();
 	m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
 	m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
+    
+    m_xy_sub_filter = new XySubFilter(this, 0);
 
 	memset(&m_CurrentVIH2, 0, sizeof(VIDEOINFOHEADER2));
 
@@ -128,6 +131,7 @@ CDirectVobSubFilter::~CDirectVobSubFilter()
 	m_frd.EndThreadEvent.Set();
 	CAMThread::Close();
 
+    delete m_xy_sub_filter; m_xy_sub_filter = NULL;
 	DbgLog((LOG_TRACE, 3, _T("CDirectVobSubFilter::~CDirectVobSubFilter")));
 
 	//Trace(_T("CDirectVobSubFilter::~CDirectVobSubFilter"));
@@ -790,19 +794,7 @@ bool CDirectVobSubFilter::AdjustFrameSize(CSize& s)
 
 STDMETHODIMP CDirectVobSubFilter::Count(DWORD* pcStreams)
 {
-	if(!pcStreams) return E_POINTER;
-
-	*pcStreams = 0;
-
-	int nLangs = 0;
-	if(SUCCEEDED(get_LanguageCount(&nLangs)))
-		(*pcStreams) += nLangs;
-
-	(*pcStreams) += 2; // enable ... disable
-
-	(*pcStreams) += 2; // normal flipped
-
-	return S_OK;
+    return m_xy_sub_filter->Count(pcStreams);
 }
 
 #define MAXPREFLANGS 5
@@ -903,153 +895,12 @@ void CDirectVobSubFilter::UpdatePreferedLanguages(CString l)
 
 STDMETHODIMP CDirectVobSubFilter::Enable(long lIndex, DWORD dwFlags)
 {
-	if(!(dwFlags & AMSTREAMSELECTENABLE_ENABLE))
-		return E_NOTIMPL;
-
-	int nLangs = 0;
-	get_LanguageCount(&nLangs);
-
-	if(!(lIndex >= 0 && lIndex < nLangs+2+2))
-		return E_INVALIDARG;
-
-	int i = lIndex-1;
-
-	if(i == -1 && !m_fLoading) // we need this because when loading something stupid media player pushes the first stream it founds, which is "enable" in our case
-	{
-		put_HideSubtitles(false);
-	}
-	else if(i >= 0 && i < nLangs)
-	{
-		put_HideSubtitles(false);
-		put_SelectedLanguage(i);
-
-		WCHAR* pName = NULL;
-		if(SUCCEEDED(get_LanguageName(i, &pName)))
-		{
-			UpdatePreferedLanguages(CString(pName));
-			if(pName) CoTaskMemFree(pName);
-		}
-	}
-	else if(i == nLangs && !m_fLoading)
-	{
-		put_HideSubtitles(true);
-	}
-	else if((i == nLangs+1 || i == nLangs+2) && !m_fLoading)
-	{
-		put_Flip(i == nLangs+2, m_fFlipSubtitles);
-	}
-
-	return S_OK;
+	return m_xy_sub_filter->Enable(lIndex, dwFlags);
 }
 
 STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlags, LCID* plcid, DWORD* pdwGroup, WCHAR** ppszName, IUnknown** ppObject, IUnknown** ppUnk)
 {
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-    const int FLAG_CMD = 1;
-    const int FLAG_EXTERNAL_SUB = 2;
-    const int FLAG_PICTURE_CMD = 4;
-    const int FLAG_VISIBILITY_CMD = 8;
-    
-    const int GROUP_NUM_BASE = 0x648E40;//random number
-
-	int nLangs = 0;
-	get_LanguageCount(&nLangs);
-
-	if(!(lIndex >= 0 && lIndex < nLangs+2+2))
-		return E_INVALIDARG;
-
-	int i = lIndex-1;
-
-	if(ppmt) *ppmt = CreateMediaType(&m_pInput->CurrentMediaType());
-
-	if(pdwFlags)
-	{
-		*pdwFlags = 0;
-
-		if(i == -1 && !m_fHideSubtitles
-		|| i >= 0 && i < nLangs && i == m_iSelectedLanguage
-		|| i == nLangs && m_fHideSubtitles
-		|| i == nLangs+1 && !m_fFlipPicture
-		|| i == nLangs+2 && m_fFlipPicture)
-		{
-			*pdwFlags |= AMSTREAMSELECTINFO_ENABLED;
-		}
-	}
-
-	if(plcid) *plcid = 0;
-
-	if(pdwGroup)
-    {
-        *pdwGroup = GROUP_NUM_BASE;
-        if(i == -1)
-        {
-            *pdwGroup = GROUP_NUM_BASE | FLAG_CMD | FLAG_VISIBILITY_CMD;
-        }
-        else if(i >= 0 && i < nLangs)
-        {
-            bool isEmbedded = false;
-            if( SUCCEEDED(GetIsEmbeddedSubStream(i, &isEmbedded)) )
-            {
-                if(isEmbedded)
-                {
-                    *pdwGroup = GROUP_NUM_BASE & ~(FLAG_CMD | FLAG_EXTERNAL_SUB);
-                }
-                else
-                {
-                    *pdwGroup = (GROUP_NUM_BASE & ~FLAG_CMD) | FLAG_EXTERNAL_SUB;
-                }
-            }            
-        }
-        else if(i == nLangs)
-        {
-            *pdwGroup = GROUP_NUM_BASE | FLAG_CMD | FLAG_VISIBILITY_CMD;
-        }
-        else if(i == nLangs+1)
-        {
-            *pdwGroup = GROUP_NUM_BASE | FLAG_CMD | FLAG_PICTURE_CMD;
-        }
-        else if(i == nLangs+2)
-        {
-            *pdwGroup = GROUP_NUM_BASE | FLAG_CMD | FLAG_PICTURE_CMD;
-        }
-    }
-
-	if(ppszName)
-	{
-		*ppszName = NULL;
-
-		CStringW str;
-		if(i == -1) str = ResStr(IDS_M_SHOWSUBTITLES);
-		else if(i >= 0 && i < nLangs)
-        {
-            get_LanguageName(i, ppszName);
-        }
-		else if(i == nLangs)
-        {
-            str = ResStr(IDS_M_HIDESUBTITLES);
-        }
-		else if(i == nLangs+1)
-        {
-            str = ResStr(IDS_M_ORIGINALPICTURE);
-        }
-		else if(i == nLangs+2)
-        {
-            str = ResStr(IDS_M_FLIPPEDPICTURE);
-        }
-
-		if(!str.IsEmpty())
-		{
-			*ppszName = (WCHAR*)CoTaskMemAlloc((str.GetLength()+1)*sizeof(WCHAR));
-			if(*ppszName == NULL) return S_FALSE;
-			wcscpy(*ppszName, str);
-		}
-	}
-
-	if(ppObject) *ppObject = NULL;
-
-	if(ppUnk) *ppUnk = NULL;
-
-	return S_OK;
+	return m_xy_sub_filter->Info(lIndex, ppmt, pdwFlags, plcid, pdwGroup, ppszName, ppObject, ppUnk);
 }
 
 STDMETHODIMP CDirectVobSubFilter::GetClassID(CLSID* pClsid)

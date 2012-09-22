@@ -37,6 +37,8 @@ typedef struct
 	bool fRunOnce, fShowIcon;
 } SystrayIconData;
 
+class XySubFilter;
+
 /* This is for graphedit */
 
 [uuid("93A22E7A-5091-45ef-BA61-6DA26156A5D0")]
@@ -48,6 +50,7 @@ class CDirectVobSubFilter
 	, public CAMThread
 {
     friend class CTextInputPin;
+    friend class XySubFilter;
 
 	CCritSec m_csQueueLock;
 	CComPtr<ISimpleSubPicProvider> m_simple_provider;
@@ -207,6 +210,9 @@ private:
 
 	//xy TIMING
 	long m_time_rasterization, m_time_alphablt;
+
+protected:
+    XySubFilter *m_xy_sub_filter;
 };
 
 /* The "auto-loading" version */

@@ -235,6 +235,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Unicode log|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug Unicode|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\xy_sub_filter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\CAutoTiming.h" />
@@ -255,6 +256,7 @@
     <ClInclude Include="..\vfr.h" />
     <ClInclude Include="..\VSFilter.h" />
     <ClInclude Include="..\xy_logger.h" />
+    <ClInclude Include="..\xy_sub_filter.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\res\Icon_147.ico" />
