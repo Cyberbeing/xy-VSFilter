@@ -727,7 +727,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	//m_pSubPicQueue = m_fDoPreBuffering
 	//	? (ISubPicQueue*)new CSubPicQueue(MAX_SUBPIC_QUEUE_LENGTH, pSubPicAllocator, &hr)
 	//	: (ISubPicQueue*)new CSubPicQueueNoThread(pSubPicAllocator, &hr);
-    m_simple_provider = new SimpleSubPicProvider2(m_spd.type, CSize(m_w, m_h), window, video_rect, this, &hr);
+    m_simple_provider = new SimpleSubPicProvider2(m_spd.type, CSize(m_w, m_h), window, video_rect, m_xy_sub_filter, &hr);
 
 	if(FAILED(hr)) m_simple_provider = NULL;
 

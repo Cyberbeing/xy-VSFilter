@@ -459,7 +459,7 @@ STDMETHODIMP XySubFilter::Count(DWORD* pcStreams)
 	*pcStreams = 0;
 
 	int nLangs = 0;
-	if(SUCCEEDED(m_dvs->get_LanguageCount(&nLangs)))
+	if(SUCCEEDED(get_LanguageCount(&nLangs)))
 		(*pcStreams) += nLangs;
 
 	(*pcStreams) += 2; // enable ... disable
@@ -475,7 +475,7 @@ STDMETHODIMP XySubFilter::Enable(long lIndex, DWORD dwFlags)
 		return E_NOTIMPL;
 
 	int nLangs = 0;
-	m_dvs->get_LanguageCount(&nLangs);
+	get_LanguageCount(&nLangs);
 
 	if(!(lIndex >= 0 && lIndex < nLangs+2+2))
 		return E_INVALIDARG;
@@ -484,15 +484,15 @@ STDMETHODIMP XySubFilter::Enable(long lIndex, DWORD dwFlags)
 
 	if(i == -1 && !m_dvs->m_fLoading) // we need this because when loading something stupid media player pushes the first stream it founds, which is "enable" in our case
 	{
-		m_dvs->put_HideSubtitles(false);
+		put_HideSubtitles(false);
 	}
 	else if(i >= 0 && i < nLangs)
 	{
-		m_dvs->put_HideSubtitles(false);
-		m_dvs->put_SelectedLanguage(i);
+		put_HideSubtitles(false);
+		put_SelectedLanguage(i);
 
 		WCHAR* pName = NULL;
-		if(SUCCEEDED(m_dvs->get_LanguageName(i, &pName)))
+		if(SUCCEEDED(get_LanguageName(i, &pName)))
 		{
 			m_dvs->UpdatePreferedLanguages(CString(pName));
 			if(pName) CoTaskMemFree(pName);
@@ -500,7 +500,7 @@ STDMETHODIMP XySubFilter::Enable(long lIndex, DWORD dwFlags)
 	}
 	else if(i == nLangs && !m_dvs->m_fLoading)
 	{
-		m_dvs->put_HideSubtitles(true);
+		put_HideSubtitles(true);
 	}
 	else if((i == nLangs+1 || i == nLangs+2) && !m_dvs->m_fLoading)
 	{
@@ -521,7 +521,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
     const int GROUP_NUM_BASE = 0x648E40;//random number
 
 	int nLangs = 0;
-	m_dvs->get_LanguageCount(&nLangs);
+	get_LanguageCount(&nLangs);
 
 	if(!(lIndex >= 0 && lIndex < nLangs+2+2))
 		return E_INVALIDARG;
@@ -590,7 +590,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
 		if(i == -1) str = ResStr(IDS_M_SHOWSUBTITLES);
 		else if(i >= 0 && i < nLangs)
         {
-            m_dvs->get_LanguageName(i, ppszName);
+            get_LanguageName(i, ppszName);
         }
 		else if(i == nLangs)
         {
