@@ -139,14 +139,20 @@ public:
 	STDMETHODIMP GetClassID(CLSID* pClsid);
 
 protected:
+    //OSD
+    void ZeroObj4OSD();
+    void DeleteObj4OSD();
+    void InitObj4OSD();
+    void PrintMessages(BYTE* pOut);
+
+    HDC m_hdc;
+    HBITMAP m_hbm;
+    HFONT m_hfont;
+    
+protected:
 	HRESULT ChangeMediaType(int iPosition);
 
-	HDC m_hdc;
-	HBITMAP m_hbm;
-	HFONT m_hfont;
-	void PrintMessages(BYTE* pOut);
-
-/* ResX2 */
+    /* ResX2 */
 	CAutoVectorPtr<BYTE> m_pTempPicBuff;
 	HRESULT Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, int bpp, const GUID& subtype, DWORD black);
 	// segment start time, absolute time
@@ -168,7 +174,7 @@ protected:
 
 	CCritSec m_csSubLock;
 
-	CInterfaceList<ISubStream> m_pSubStreams;    
+	CInterfaceList<ISubStream> m_pSubStreams;
     CAtlList<bool> m_fIsSubStreamEmbeded;
 
 	DWORD_PTR m_nSubtitleId;
