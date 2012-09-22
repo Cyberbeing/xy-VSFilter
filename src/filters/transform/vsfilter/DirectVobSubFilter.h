@@ -198,7 +198,7 @@ private:
 	long m_time_rasterization, m_time_alphablt;
 
 protected:
-    XySubFilter *m_xy_sub_filter;
+    XySubFilter* m_xy_sub_filter;
 };
 
 /* The "auto-loading" version */

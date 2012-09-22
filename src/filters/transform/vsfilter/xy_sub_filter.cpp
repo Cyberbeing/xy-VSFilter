@@ -2,6 +2,7 @@
 #include "xy_sub_filter.h"
 #include "DirectVobSubFilter.h"
 #include "VSFilter.h"
+#include "DirectVobSubPropPage.h"
 
 ////////////////////////////////////////////////////////////////////////////
 //
@@ -28,8 +29,34 @@ STDMETHODIMP XySubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
     CheckPointer(ppv, E_POINTER);
 
     return
+        QI(ISpecifyPropertyPages)
 		QI(IAMStreamSelect)
 		__super::NonDelegatingQueryInterface(riid, ppv);
+}
+
+//
+// ISpecifyPropertyPages
+// 
+STDMETHODIMP XySubFilter::GetPages(CAUUID* pPages)
+{
+    CheckPointer(pPages, E_POINTER);
+
+    pPages->cElems = 8;
+    pPages->pElems = (GUID*)CoTaskMemAlloc(sizeof(GUID)*pPages->cElems);
+
+    if(pPages->pElems == NULL) return E_OUTOFMEMORY;
+
+    int i = 0;
+    pPages->pElems[i++] = __uuidof(CDVSMainPPage);
+    pPages->pElems[i++] = __uuidof(CDVSGeneralPPage);
+    pPages->pElems[i++] = __uuidof(CDVSMiscPPage);
+    pPages->pElems[i++] = __uuidof(CDVSMorePPage);
+    pPages->pElems[i++] = __uuidof(CDVSTimingPPage);
+    pPages->pElems[i++] = __uuidof(CDVSColorPPage);
+    pPages->pElems[i++] = __uuidof(CDVSPathsPPage);
+    pPages->pElems[i++] = __uuidof(CDVSAboutPPage);
+
+    return NOERROR;
 }
 
 //

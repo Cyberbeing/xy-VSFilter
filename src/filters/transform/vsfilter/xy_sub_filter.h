@@ -7,6 +7,7 @@ class CDirectVobSubFilter;
 [uuid("2dfcb782-ec20-4a7c-b530-4577adb33f21")]
 class XySubFilter
     : public CUnknown
+    , public ISpecifyPropertyPages
     , public IAMStreamSelect
     , public CAMThread
 {
@@ -18,6 +19,9 @@ public:
 
     DECLARE_IUNKNOWN;
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
+
+    // ISpecifyPropertyPages
+    STDMETHODIMP GetPages(CAUUID* pPages);
 
 	// IAMStreamSelect
 	STDMETHODIMP Count(DWORD* pcStreams); 

@@ -24,7 +24,7 @@
 #include <time.h>
 #include "DirectVobSubFilter.h"
 #include "TextInputPin.h"
-#include "DirectVobSubPropPage.h"
+
 #include "VSFilter.h"
 #include "systray.h"
 #include "../../../DSUtil/MediaTypes.h"
@@ -127,9 +127,6 @@ CDirectVobSubFilter::~CDirectVobSubFilter()
     delete m_xy_sub_filter; m_xy_sub_filter = NULL;
 
 	DbgLog((LOG_TRACE, 3, _T("CDirectVobSubFilter::~CDirectVobSubFilter")));
-
-	//Trace(_T("CDirectVobSubFilter::~CDirectVobSubFilter"));
-	//ReleaseTracer;
 }
 
 STDMETHODIMP CDirectVobSubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
@@ -906,24 +903,7 @@ STDMETHODIMP CDirectVobSubFilter::GetClassID(CLSID* pClsid)
 
 STDMETHODIMP CDirectVobSubFilter::GetPages(CAUUID* pPages)
 {
-    CheckPointer(pPages, E_POINTER);
-
-	pPages->cElems = 8;
-    pPages->pElems = (GUID*)CoTaskMemAlloc(sizeof(GUID)*pPages->cElems);
-
-	if(pPages->pElems == NULL) return E_OUTOFMEMORY;
-
-	int i = 0;
-    pPages->pElems[i++] = __uuidof(CDVSMainPPage);
-    pPages->pElems[i++] = __uuidof(CDVSGeneralPPage);
-    pPages->pElems[i++] = __uuidof(CDVSMiscPPage);
-    pPages->pElems[i++] = __uuidof(CDVSMorePPage);
-    pPages->pElems[i++] = __uuidof(CDVSTimingPPage);
-    pPages->pElems[i++] = __uuidof(CDVSColorPPage);
-    pPages->pElems[i++] = __uuidof(CDVSPathsPPage);
-    pPages->pElems[i++] = __uuidof(CDVSAboutPPage);
-
-    return NOERROR;
+    return m_xy_sub_filter->GetPages(pPages);
 }
 
 // IDirectVobSub
