@@ -12,12 +12,15 @@ XySubFilter::XySubFilter( CDirectVobSubFilter *p_dvs, LPUNKNOWN punk )
     : CUnknown( NAME("XySubFilter"), punk )
     , m_dvs(p_dvs)
 {
-
+    CAMThread::Create();
+    m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
+    m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
 }
-
 
 XySubFilter::~XySubFilter()
 {
+    m_frd.EndThreadEvent.Set();
+    CAMThread::Close();
 }
 
 STDMETHODIMP XySubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
@@ -198,4 +201,146 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
 	if(ppUnk) *ppUnk = NULL;
 
 	return S_OK;
+}
+
+//
+// FRD
+// 
+void XySubFilter::SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles)
+{
+    CAutoLock cAutolock(&m_dvs->m_csSubLock);
+
+    for(unsigned i = 2; i < handles.GetCount(); i++)
+    {
+        FindCloseChangeNotification(handles[i]);
+    }
+
+    paths.RemoveAll();
+    handles.RemoveAll();
+
+    handles.Add(m_frd.EndThreadEvent);
+    handles.Add(m_frd.RefreshEvent);
+
+    m_frd.mtime.SetCount(m_frd.files.GetCount());
+
+    POSITION pos = m_frd.files.GetHeadPosition();
+    for(unsigned i = 0; pos; i++)
+    {
+        CString fn = m_frd.files.GetNext(pos);
+
+        CFileStatus status;
+        if(CFileGetStatus(fn, status))
+            m_frd.mtime[i] = status.m_mtime;
+
+        fn.Replace('\\', '/');
+        fn = fn.Left(fn.ReverseFind('/')+1);
+
+        bool fFound = false;
+
+        for(int j = 0; !fFound && j < paths.GetCount(); j++)
+        {
+            if(paths[j] == fn) fFound = true;
+        }
+
+        if(!fFound)
+        {
+            paths.Add(fn);
+
+            HANDLE h = FindFirstChangeNotification(fn, FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE);
+            if(h != INVALID_HANDLE_VALUE) handles.Add(h);
+        }
+    }
+}
+
+DWORD XySubFilter::ThreadProc()
+{
+    SetThreadPriority(m_hThread, THREAD_PRIORITY_LOWEST/*THREAD_PRIORITY_BELOW_NORMAL*/);
+
+    CStringArray paths;
+    CAtlArray<HANDLE> handles;
+
+    SetupFRD(paths, handles);
+
+    while(1)
+    {
+        DWORD idx = WaitForMultipleObjects(handles.GetCount(), handles.GetData(), FALSE, INFINITE);
+
+        if(idx == (WAIT_OBJECT_0 + 0)) // m_frd.hEndThreadEvent
+        {
+            break;
+        }
+        if(idx == (WAIT_OBJECT_0 + 1)) // m_frd.hRefreshEvent
+        {
+            SetupFRD(paths, handles);
+        }
+        else if(idx >= (WAIT_OBJECT_0 + 2) && idx < (WAIT_OBJECT_0 + handles.GetCount()))
+        {
+            bool fLocked = true;
+            m_dvs->IsSubtitleReloaderLocked(&fLocked);
+            if(fLocked) continue;
+
+            if(FindNextChangeNotification(handles[idx - WAIT_OBJECT_0]) == FALSE)
+                break;
+
+            int j = 0;
+
+            POSITION pos = m_frd.files.GetHeadPosition();
+            for(int i = 0; pos && j == 0; i++)
+            {
+                CString fn = m_frd.files.GetNext(pos);
+
+                CFileStatus status;
+                if(CFileGetStatus(fn, status) && m_frd.mtime[i] != status.m_mtime)
+                {
+                    for(j = 0; j < 10; j++)
+                    {
+                        if(FILE* f = _tfopen(fn, _T("rb+")))
+                        {
+                            fclose(f);
+                            j = 0;
+                            break;
+                        }
+                        else
+                        {
+                            Sleep(100);
+                            j++;
+                        }
+                    }
+                }
+            }
+
+            if(j > 0)
+            {
+                SetupFRD(paths, handles);
+            }
+            else
+            {
+                Sleep(500);
+
+                POSITION pos = m_frd.files.GetHeadPosition();
+                for(int i = 0; pos; i++)
+                {
+                    CFileStatus status;
+                    if(CFileGetStatus(m_frd.files.GetNext(pos), status)
+                        && m_frd.mtime[i] != status.m_mtime)
+                    {
+                        m_dvs->Open();
+                        SetupFRD(paths, handles);
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    for(unsigned i = 2; i < handles.GetCount(); i++)
+    {
+        FindCloseChangeNotification(handles[i]);
+    }
+
+    return 0;
 }

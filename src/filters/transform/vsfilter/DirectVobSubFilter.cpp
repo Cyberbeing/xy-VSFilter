@@ -79,7 +79,7 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 #endif
 
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
+    
 	ZeroObj4OSD();
 
 	theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Hint"), _T("The first three are fixed, but you can add more up to ten entries."));
@@ -99,10 +99,6 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, &hr));
 	ASSERT(SUCCEEDED(hr));
 
-	CAMThread::Create();
-	m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
-	m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
-    
     m_xy_sub_filter = new XySubFilter(this, 0);
 
 	memset(&m_CurrentVIH2, 0, sizeof(VIDEOINFOHEADER2));
@@ -128,10 +124,8 @@ CDirectVobSubFilter::~CDirectVobSubFilter()
 	for(int i = 0; i < m_pTextInput.GetCount(); i++)
 		delete m_pTextInput[i];
 
-	m_frd.EndThreadEvent.Set();
-	CAMThread::Close();
-
     delete m_xy_sub_filter; m_xy_sub_filter = NULL;
+
 	DbgLog((LOG_TRACE, 3, _T("CDirectVobSubFilter::~CDirectVobSubFilter")));
 
 	//Trace(_T("CDirectVobSubFilter::~CDirectVobSubFilter"));
@@ -148,7 +142,7 @@ STDMETHODIMP CDirectVobSubFilter::NonDelegatingQueryInterface(REFIID riid, void*
         QI(IDirectVobSubXy)
 		QI(IFilterVersion)
 		QI(ISpecifyPropertyPages)
-		QI(IAMStreamSelect)
+        QI(IAMStreamSelect)
 		__super::NonDelegatingQueryInterface(riid, ppv);
 }
 
@@ -1533,7 +1527,7 @@ bool CDirectVobSubFilter::Open()
 	m_pSubStreams.RemoveAll();
     m_fIsSubStreamEmbeded.RemoveAll();
 
-	m_frd.files.RemoveAll();
+	m_xy_sub_filter->m_frd.files.RemoveAll();
 
 	CAtlArray<CString> paths;
 
@@ -1550,7 +1544,7 @@ bool CDirectVobSubFilter::Open()
 
 	for(int i = 0; i < ret.GetCount(); i++)
 	{
-		if(m_frd.files.Find(ret[i].fn))
+		if(m_xy_sub_filter->m_frd.files.Find(ret[i].fn))
 			continue;
 
 		CComPtr<ISubStream> pSubStream;
@@ -1563,7 +1557,7 @@ bool CDirectVobSubFilter::Open()
             if(pRTS && pRTS->Open(ret[i].fn, DEFAULT_CHARSET) && pRTS->GetStreamCount() > 0)
             {
                 pSubStream = pRTS.Detach();
-                m_frd.files.AddTail(ret[i].fn + _T(".style"));
+                m_xy_sub_filter->m_frd.files.AddTail(ret[i].fn + _T(".style"));
             }
         }
 
@@ -1574,7 +1568,7 @@ bool CDirectVobSubFilter::Open()
 			if(pVSF && pVSF->Open(ret[i].fn) && pVSF->GetStreamCount() > 0)
 			{
 				pSubStream = pVSF.Detach();
-				m_frd.files.AddTail(ret[i].fn.Left(ret[i].fn.GetLength()-4) + _T(".sub"));
+				m_xy_sub_filter->m_frd.files.AddTail(ret[i].fn.Left(ret[i].fn.GetLength()-4) + _T(".sub"));
 			}
 		}
 
@@ -1592,7 +1586,7 @@ bool CDirectVobSubFilter::Open()
 		{
 			m_pSubStreams.AddTail(pSubStream);
             m_fIsSubStreamEmbeded.AddTail(false);
-			m_frd.files.AddTail(ret[i].fn);
+			m_xy_sub_filter->m_frd.files.AddTail(ret[i].fn);
 		}
 	}
 
@@ -1608,7 +1602,7 @@ bool CDirectVobSubFilter::Open()
 	if(S_FALSE == put_SelectedLanguage(FindPreferedLanguage()))
         UpdateSubtitle(false); // make sure pSubPicProvider of our queue gets updated even if the stream number hasn't changed
 
-	m_frd.RefreshEvent.Set();
+	m_xy_sub_filter->m_frd.RefreshEvent.Set();
 
 	return(m_pSubStreams.GetCount() > 0);
 }
@@ -1829,145 +1823,6 @@ void CDirectVobSubFilter::Post_EC_OLE_EVENT(CString str, DWORD_PTR nSubtitleId)
 }
 
 ////////////////////////////////////////////////////////////////
-
-void CDirectVobSubFilter::SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles)
-{
-    CAutoLock cAutolock(&m_csSubLock);
-
-	for(int i = 2; i < handles.GetCount(); i++)
-	{
-		FindCloseChangeNotification(handles[i]);
-	}
-
-	paths.RemoveAll();
-	handles.RemoveAll();
-
-	handles.Add(m_frd.EndThreadEvent);
-	handles.Add(m_frd.RefreshEvent);
-
-	m_frd.mtime.SetCount(m_frd.files.GetCount());
-
-	POSITION pos = m_frd.files.GetHeadPosition();
-	for(int i = 0; pos; i++)
-	{
-		CString fn = m_frd.files.GetNext(pos);
-
-		CFileStatus status;
-		if(CFileGetStatus(fn, status))
-			m_frd.mtime[i] = status.m_mtime;
-
-		fn.Replace('\\', '/');
-		fn = fn.Left(fn.ReverseFind('/')+1);
-
-		bool fFound = false;
-
-		for(int j = 0; !fFound && j < paths.GetCount(); j++)
-		{
-			if(paths[j] == fn) fFound = true;
-		}
-
-		if(!fFound)
-		{
-			paths.Add(fn);
-
-			HANDLE h = FindFirstChangeNotification(fn, FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE);
-			if(h != INVALID_HANDLE_VALUE) handles.Add(h);
-		}
-	}
-}
-
-DWORD CDirectVobSubFilter::ThreadProc()
-{
-	SetThreadPriority(m_hThread, THREAD_PRIORITY_LOWEST/*THREAD_PRIORITY_BELOW_NORMAL*/);
-
-	CStringArray paths;
-	CAtlArray<HANDLE> handles;
-
-	SetupFRD(paths, handles);
-
-	while(1)
-	{
-		DWORD idx = WaitForMultipleObjects(handles.GetCount(), handles.GetData(), FALSE, INFINITE);
-
-		if(idx == (WAIT_OBJECT_0 + 0)) // m_frd.hEndThreadEvent
-		{
-			break;
-		}
-		if(idx == (WAIT_OBJECT_0 + 1)) // m_frd.hRefreshEvent
-		{
-			SetupFRD(paths, handles);
-		}
-		else if(idx >= (WAIT_OBJECT_0 + 2) && idx < (WAIT_OBJECT_0 + handles.GetCount()))
-		{
-			bool fLocked = true;
-			IsSubtitleReloaderLocked(&fLocked);
-			if(fLocked) continue;
-
-			if(FindNextChangeNotification(handles[idx - WAIT_OBJECT_0]) == FALSE)
-				break;
-
-			int j = 0;
-
-			POSITION pos = m_frd.files.GetHeadPosition();
-			for(int i = 0; pos && j == 0; i++)
-			{
-				CString fn = m_frd.files.GetNext(pos);
-
-				CFileStatus status;
-				if(CFileGetStatus(fn, status) && m_frd.mtime[i] != status.m_mtime)
-				{
-					for(j = 0; j < 10; j++)
-					{
-						if(FILE* f = _tfopen(fn, _T("rb+")))
-						{
-							fclose(f);
-							j = 0;
-							break;
-						}
-						else
-						{
-							Sleep(100);
-							j++;
-						}
-					}
-				}
-			}
-
-			if(j > 0)
-			{
-				SetupFRD(paths, handles);
-			}
-			else
-			{
-				Sleep(500);
-
-				POSITION pos = m_frd.files.GetHeadPosition();
-				for(int i = 0; pos; i++)
-				{
-					CFileStatus status;
-					if(CFileGetStatus(m_frd.files.GetNext(pos), status)
-						&& m_frd.mtime[i] != status.m_mtime)
-					{
-						Open();
-						SetupFRD(paths, handles);
-						break;
-					}
-				}
-			}
-		}
-		else
-		{
-			break;
-		}
-	}
-
-	for(int i = 2; i < handles.GetCount(); i++)
-	{
-		FindCloseChangeNotification(handles[i]);
-	}
-
-	return 0;
-}
 
 void CDirectVobSubFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
 {

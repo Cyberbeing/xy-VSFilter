@@ -47,7 +47,6 @@ class CDirectVobSubFilter
 	, public CDirectVobSub
 	, public ISpecifyPropertyPages
 	, public IAMStreamSelect
-	, public CAMThread
 {
     friend class CTextInputPin;
     friend class XySubFilter;
@@ -189,19 +188,6 @@ protected:
 	void AddSubStream(ISubStream* pSubStream);
 	void RemoveSubStream(ISubStream* pSubStream);
 	void Post_EC_OLE_EVENT(CString str, DWORD_PTR nSubtitleId = -1);
-
-private:
-	class CFileReloaderData
-	{
-	public:
-		ATL::CEvent EndThreadEvent, RefreshEvent;
-		CAtlList<CString> files;
-		CAtlArray<CTime> mtime;
-	} m_frd;
-
-	void SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles);
-	DWORD ThreadProc();
-
 private:
 	HANDLE m_hSystrayThread;
 	SystrayIconData m_tbid;
