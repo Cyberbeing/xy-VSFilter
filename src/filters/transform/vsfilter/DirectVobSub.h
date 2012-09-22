@@ -29,6 +29,9 @@
 class CDirectVobSub : public IDirectVobSub2, public IDirectVobSubXy, public IFilterVersion
 {
 public:
+    friend class CDirectVobSubFilter;
+    friend class CDirectVobSubFilter2;
+
     enum ColorSpaceOption
     {
         YuvMatrix_AUTO = 0

@@ -1,12 +1,14 @@
 #pragma once
 
 #include <atlsync.h>
+#include "DirectVobSub.h"
 
 class CDirectVobSubFilter;
 
 [uuid("2dfcb782-ec20-4a7c-b530-4577adb33f21")]
 class XySubFilter
     : public CUnknown
+    , public CDirectVobSub
     , public ISpecifyPropertyPages
     , public IAMStreamSelect
     , public CAMThread
@@ -20,6 +22,37 @@ public:
     DECLARE_IUNKNOWN;
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
+    // IDirectVobSubXy
+    STDMETHODIMP XySetBool     (int field, bool      value);
+    STDMETHODIMP XySetInt      (int field, int       value);
+
+    // IDirectVobSub
+    STDMETHODIMP put_FileName(WCHAR* fn);
+    STDMETHODIMP get_LanguageCount(int* nLangs);
+    STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
+    STDMETHODIMP put_SelectedLanguage(int iSelected);
+    STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
+    STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
+
+    STDMETHODIMP put_Placement(bool fOverridePlacement, int xperc, int yperc);
+    STDMETHODIMP put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fPolygonize);
+    STDMETHODIMP put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer);
+    STDMETHODIMP put_SubtitleTiming(int delay, int speedmul, int speeddiv);
+
+    STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
+    STDMETHODIMP get_XyFlyWeightInfo(XyFlyWeightInfo* xy_fw_info);
+
+    STDMETHODIMP get_MediaFPS(bool* fEnabled, double* fps);
+    STDMETHODIMP put_MediaFPS(bool fEnabled, double fps);
+    STDMETHODIMP get_ZoomRect(NORMALIZEDRECT* rect);
+    STDMETHODIMP put_ZoomRect(NORMALIZEDRECT* rect);
+    STDMETHODIMP HasConfigDialog(int iSelected);
+    STDMETHODIMP ShowConfigDialog(int iSelected, HWND hWndParent);
+
+    // IDirectVobSub2
+    STDMETHODIMP put_TextSettings(STSStyle* pDefStyle);
+    STDMETHODIMP put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType);
+
     // ISpecifyPropertyPages
     STDMETHODIMP GetPages(CAUUID* pPages);
 
@@ -27,6 +60,9 @@ public:
 	STDMETHODIMP Count(DWORD* pcStreams); 
 	STDMETHODIMP Enable(long lIndex, DWORD dwFlags); 
 	STDMETHODIMP Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlags, LCID* plcid, DWORD* pdwGroup, WCHAR** ppszName, IUnknown** ppObject, IUnknown** ppUnk);
+
+private:
+    void SetYuvMatrix();
 
 private:
     class CFileReloaderData
@@ -41,5 +77,8 @@ private:
     DWORD ThreadProc();
 
 private:
+    CSimpleTextSubtitle::YCbCrMatrix m_script_selected_yuv;
+    CSimpleTextSubtitle::YCbCrRange m_script_selected_range;
+
     CDirectVobSubFilter *m_dvs;
 };

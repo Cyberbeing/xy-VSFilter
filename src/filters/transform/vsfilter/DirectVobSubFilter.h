@@ -43,8 +43,10 @@ class XySubFilter;
 
 [uuid("93A22E7A-5091-45ef-BA61-6DA26156A5D0")]
 class CDirectVobSubFilter
-	: public CBaseVideoFilter
-	, public CDirectVobSub
+    : public CBaseVideoFilter
+    , public IDirectVobSub2 
+    , public IDirectVobSubXy
+    , public IFilterVersion
 	, public ISpecifyPropertyPages
 	, public IAMStreamSelect
 {
@@ -60,10 +62,6 @@ class CDirectVobSubFilter
 	bool AdjustFrameSize(CSize& s);
 
     HRESULT TryNotCopy( IMediaSample* pIn, const CMediaType& mt, const BITMAPINFOHEADER& bihIn );
-
-    CSimpleTextSubtitle::YCbCrMatrix m_script_selected_yuv;
-    CSimpleTextSubtitle::YCbCrRange m_script_selected_range;
-    void SetYuvMatrix();
 protected:
 	void GetOutputSize(int& w, int& h, int& arx, int& ary);
 	HRESULT Transform(IMediaSample* pIn);    
@@ -98,36 +96,94 @@ public:
     void GetInputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
     void GetOutputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
 
-    // IDirectVobSubXy
-    STDMETHODIMP XySetBool     (int field, bool      value);
-    STDMETHODIMP XySetInt      (int field, int       value);
-
     // IDirectVobSub
+
+    STDMETHODIMP get_FileName(WCHAR* fn);
     STDMETHODIMP put_FileName(WCHAR* fn);
-	STDMETHODIMP get_LanguageCount(int* nLangs);
-	STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
-	STDMETHODIMP put_SelectedLanguage(int iSelected);
+    STDMETHODIMP get_LanguageCount(int* nLangs);
+    STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
+    STDMETHODIMP get_SelectedLanguage(int* iSelected);
+    STDMETHODIMP put_SelectedLanguage(int iSelected);
+    STDMETHODIMP get_HideSubtitles(bool* fHideSubtitles);
     STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
-	STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
-
+    STDMETHODIMP get_PreBuffering(bool* fDoPreBuffering);
+    STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
+    STDMETHODIMP get_SubPictToBuffer(unsigned int* uSubPictToBuffer);
+    STDMETHODIMP put_SubPictToBuffer(unsigned int uSubPictToBuffer);
+    STDMETHODIMP get_AnimWhenBuffering(bool* fAnimWhenBuffering);
+    STDMETHODIMP put_AnimWhenBuffering(bool fAnimWhenBuffering);
+    STDMETHODIMP get_Placement(bool* fOverridePlacement, int* xperc, int* yperc);
     STDMETHODIMP put_Placement(bool fOverridePlacement, int xperc, int yperc);
+    STDMETHODIMP get_VobSubSettings(bool* fBuffer, bool* fOnlyShowForcedSubs, bool* fPolygonize);
     STDMETHODIMP put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fPolygonize);
+    STDMETHODIMP get_TextSettings(void* lf, int lflen, COLORREF* color, bool* fShadow, bool* fOutline, bool* fAdvancedRenderer);
     STDMETHODIMP put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer);
+    STDMETHODIMP get_Flip(bool* fPicture, bool* fSubtitles);
+    STDMETHODIMP put_Flip(bool fPicture, bool fSubtitles);
+    STDMETHODIMP get_OSD(bool* fShowOSD);
+    STDMETHODIMP put_OSD(bool fShowOSD);
+    STDMETHODIMP get_SaveFullPath(bool* fSaveFullPath);
+    STDMETHODIMP put_SaveFullPath(bool fSaveFullPath);
+    STDMETHODIMP get_SubtitleTiming(int* delay, int* speedmul, int* speeddiv);
     STDMETHODIMP put_SubtitleTiming(int delay, int speedmul, int speeddiv);
-
-    STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
-    STDMETHODIMP get_XyFlyWeightInfo(XyFlyWeightInfo* xy_fw_info);
-
     STDMETHODIMP get_MediaFPS(bool* fEnabled, double* fps);
     STDMETHODIMP put_MediaFPS(bool fEnabled, double fps);
     STDMETHODIMP get_ZoomRect(NORMALIZEDRECT* rect);
     STDMETHODIMP put_ZoomRect(NORMALIZEDRECT* rect);
-	STDMETHODIMP HasConfigDialog(int iSelected);
-	STDMETHODIMP ShowConfigDialog(int iSelected, HWND hWndParent);
 
-	// IDirectVobSub2
-	STDMETHODIMP put_TextSettings(STSStyle* pDefStyle);
-	STDMETHODIMP put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType);
+    STDMETHODIMP UpdateRegistry();
+
+    STDMETHODIMP get_ColorFormat(int* iPosition);
+    STDMETHODIMP put_ColorFormat(int iPosition);
+    
+    STDMETHODIMP HasConfigDialog(int iSelected);
+    STDMETHODIMP ShowConfigDialog(int iSelected, HWND hWndParent);
+
+    // settings for the rest are stored in the registry
+
+    STDMETHODIMP IsSubtitleReloaderLocked(bool* fLocked);
+    STDMETHODIMP LockSubtitleReloader(bool fLock);
+    STDMETHODIMP get_SubtitleReloader(bool* fDisabled);
+    STDMETHODIMP put_SubtitleReloader(bool fDisable);
+
+    // the followings need a partial or full reloading of the filter
+
+    STDMETHODIMP get_ExtendPicture(int* horizontal, int* vertical, int* resx2, int* resx2minw, int* resx2minh);
+    STDMETHODIMP put_ExtendPicture(int horizontal, int vertical, int resx2, int resx2minw, int resx2minh);
+    STDMETHODIMP get_LoadSettings(int* level, bool* fExternalLoad, bool* fWebLoad, bool* fEmbeddedLoad);
+    STDMETHODIMP put_LoadSettings(int level, bool fExternalLoad, bool fWebLoad, bool fEmbeddedLoad);
+
+    // IDirectVobSub2
+
+    STDMETHODIMP AdviseSubClock(ISubClock* pSubClock);
+    STDMETHODIMP_(bool) get_Forced();
+    STDMETHODIMP put_Forced(bool fForced);
+    STDMETHODIMP get_TextSettings(STSStyle* pDefStyle);
+    STDMETHODIMP put_TextSettings(STSStyle* pDefStyle);
+    STDMETHODIMP get_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType);
+    STDMETHODIMP put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType);
+
+    // IDirectVobSubXy
+    STDMETHODIMP XyGetBool     (int field, bool      *value);
+    STDMETHODIMP XyGetInt      (int field, int       *value);
+    STDMETHODIMP XyGetSize     (int field, SIZE      *value);
+    STDMETHODIMP XyGetRect     (int field, RECT      *value);
+    STDMETHODIMP XyGetUlonglong(int field, ULONGLONG *value);
+    STDMETHODIMP XyGetDouble   (int field, double    *value);
+    STDMETHODIMP XyGetString   (int field, LPWSTR    *value, int *chars);
+    STDMETHODIMP XyGetBin      (int field, LPVOID    *value, int *size );
+
+    STDMETHODIMP XySetBool     (int field, bool      value);
+    STDMETHODIMP XySetInt      (int field, int       value);
+    STDMETHODIMP XySetSize     (int field, SIZE      value);
+    STDMETHODIMP XySetRect     (int field, RECT      value);
+    STDMETHODIMP XySetUlonglong(int field, ULONGLONG value);
+    STDMETHODIMP XySetDouble   (int field, double    value);
+    STDMETHODIMP XySetString   (int field, LPWSTR    value, int chars);
+    STDMETHODIMP XySetBin      (int field, LPVOID    value, int size );
+
+    // IFilterVersion
+    STDMETHODIMP_(DWORD) GetFilterVersion();
 
     // ISpecifyPropertyPages
     STDMETHODIMP GetPages(CAUUID* pPages);

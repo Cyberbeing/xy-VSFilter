@@ -27,6 +27,7 @@
 #include "../../subpic/color_conv_table.h"
 
 #include "xy_logger.h"
+#include "xy_sub_filter.h"
 
 using namespace DirectVobSubXyOptions;
 
@@ -531,7 +532,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 
 	CString msg, tmp;
 
-	if(m_fOSD)
+	if(m_xy_sub_filter->m_fOSD)
 	{
 		tmp.Format(_T("in: %dx%d %s\nout: %dx%d %s\n"), 
 			m_w, m_h, 
@@ -541,7 +542,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 		msg += tmp;
 
 		tmp.Format(_T("real fps: %.3f, current fps: %.3f\nmedia time: %d, subtitle time: %d [ms]\nframe number: %d (calculated)\nrate: %.4f\n"), 
-			m_fps, m_fMediaFPSEnabled?m_MediaFPS:fabs(m_fps),
+			m_fps, m_xy_sub_filter->m_fMediaFPSEnabled?m_xy_sub_filter->m_MediaFPS:fabs(m_fps),
 			(int)m_tPrev.Millisecs(), (int)(CalcCurrentTime()/10000),
 			(int)(m_tPrev.m_time * m_fps / 10000000),
 			m_pInput->CurrentRate());
@@ -570,8 +571,8 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
         tmp.Format( _T("Colorspace: %ls %ls (%ls)\n"), 
             ColorConvTable::GetDefaultRangeType()==ColorConvTable::RANGE_PC ? _T("PC"):_T("TV"),
             ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT601 ? _T("BT.601"):_T("BT.709"),
-            m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::YuvMatrix_AUTO ? _T("Auto") :
-              m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::GUESS ? _T("Guessed") : _T("Forced") );
+            m_xy_sub_filter->m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::YuvMatrix_AUTO ? _T("Auto") :
+              m_xy_sub_filter->m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::GUESS ? _T("Guessed") : _T("Forced") );
         msg += tmp;
 
         SIZE layout_size, script_playres;
