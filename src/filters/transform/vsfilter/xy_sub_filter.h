@@ -15,6 +15,7 @@ class XySubFilter
 {
 public:
     friend class CDirectVobSubFilter;
+    friend class CTextInputPin;
 
     XySubFilter(CDirectVobSubFilter *p_dvs, LPUNKNOWN punk);
 	virtual ~XySubFilter();
@@ -71,6 +72,10 @@ private:
 
     int FindPreferedLanguage(bool fHideToo = true);
     void UpdatePreferedLanguages(CString l);
+
+    // the text input pin is using these
+    void AddSubStream(ISubStream* pSubStream);
+    void RemoveSubStream(ISubStream* pSubStream);
 private:
     class CFileReloaderData
     {

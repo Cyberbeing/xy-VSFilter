@@ -24,6 +24,8 @@
 #include "TextInputPin.h"
 #include "..\..\..\DSUtil\DSUtil.h"
 
+#include "xy_sub_filter.h"
+
 CTextInputPin::CTextInputPin(CDirectVobSubFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr)
 	: CSubtitleInputPin(pFilter, pLock, pSubLock, phr)
 	, m_pDVS(pFilter)
@@ -32,15 +34,15 @@ CTextInputPin::CTextInputPin(CDirectVobSubFilter* pFilter, CCritSec* pLock, CCri
 
 void CTextInputPin::AddSubStream(ISubStream* pSubStream)
 {
-	m_pDVS->AddSubStream(pSubStream);
+	m_pDVS->m_xy_sub_filter->AddSubStream(pSubStream);
 }
 
 void CTextInputPin::RemoveSubStream(ISubStream* pSubStream)
 {
-	m_pDVS->RemoveSubStream(pSubStream);
+	m_pDVS->m_xy_sub_filter->RemoveSubStream(pSubStream);
 }
 
 void CTextInputPin::InvalidateSubtitle(REFERENCE_TIME rtStart, ISubStream* pSubStream)
 {
-	m_pDVS->InvalidateSubtitle(rtStart, (DWORD_PTR)(ISubStream*)pSubStream);
+	m_pDVS->m_xy_sub_filter->InvalidateSubtitle(rtStart, (DWORD_PTR)(ISubStream*)pSubStream);
 }

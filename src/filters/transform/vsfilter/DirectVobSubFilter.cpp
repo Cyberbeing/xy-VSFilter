@@ -639,7 +639,7 @@ HRESULT CDirectVobSubFilter::StartStreaming()
 
 HRESULT CDirectVobSubFilter::StopStreaming()
 {
-	InvalidateSubtitle();
+	m_xy_sub_filter->InvalidateSubtitle();
 
 	//xy Timing
 	//FILE * timingFile = fopen("C:\\vsfilter_timing.txt", "at");
@@ -1083,57 +1083,6 @@ void CDirectVobSubFilter2::GetRidOfInternalScriptRenderer()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-
-void CDirectVobSubFilter::InvalidateSubtitle( REFERENCE_TIME rtInvalidate /*= -1*/, DWORD_PTR nSubtitleId /*= -1*/ )
-{
-    return m_xy_sub_filter->InvalidateSubtitle(rtInvalidate, nSubtitleId);
-}
-
-void CDirectVobSubFilter::AddSubStream(ISubStream* pSubStream)
-{
-	CAutoLock cAutoLock(&m_csQueueLock);
-
-	POSITION pos = m_pSubStreams.Find(pSubStream);
-	if(!pos)
-    {
-        m_pSubStreams.AddTail(pSubStream);
-        m_fIsSubStreamEmbeded.AddTail(true);//todo: fix me
-    }
-
-	int len = m_pTextInput.GetCount();
-	for(int i = 0; i < m_pTextInput.GetCount(); i++)
-		if(m_pTextInput[i]->IsConnected()) len--;
-
-	if(len == 0)
-	{
-		HRESULT hr = S_OK;
-		m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, &hr));
-	}
-}
-
-void CDirectVobSubFilter::RemoveSubStream(ISubStream* pSubStream)
-{
-	CAutoLock cAutoLock(&m_csQueueLock);
-
-    POSITION pos = m_pSubStreams.GetHeadPosition();
-    POSITION pos2 = m_fIsSubStreamEmbeded.GetHeadPosition();
-    while(pos!=NULL)
-    {
-        if( m_pSubStreams.GetAt(pos)==pSubStream )
-        {
-            m_pSubStreams.RemoveAt(pos);
-            m_fIsSubStreamEmbeded.RemoveAt(pos2);
-            break;
-        }
-        else
-        {
-            m_pSubStreams.GetNext(pos);
-            m_fIsSubStreamEmbeded.GetNext(pos2);
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////
 
 void CDirectVobSubFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
 {

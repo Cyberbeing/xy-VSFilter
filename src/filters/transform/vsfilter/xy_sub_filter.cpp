@@ -1183,3 +1183,47 @@ void XySubFilter::UpdatePreferedLanguages(CString l)
         theApp.WriteProfileString(ResStr(IDS_R_PREFLANGS), tmp, langs[i]);
     }
 }
+
+void XySubFilter::AddSubStream(ISubStream* pSubStream)
+{
+    CAutoLock cAutoLock(&m_dvs->m_csQueueLock);
+
+    POSITION pos = m_dvs->m_pSubStreams.Find(pSubStream);
+    if(!pos)
+    {
+        m_dvs->m_pSubStreams.AddTail(pSubStream);
+        m_dvs->m_fIsSubStreamEmbeded.AddTail(true);//todo: fix me
+    }
+
+    int len = m_dvs->m_pTextInput.GetCount();
+    for(unsigned i = 0; i < m_dvs->m_pTextInput.GetCount(); i++)
+        if(m_dvs->m_pTextInput[i]->IsConnected()) len--;
+
+    if(len == 0)
+    {
+        HRESULT hr = S_OK;
+        m_dvs->m_pTextInput.Add(new CTextInputPin(m_dvs, m_dvs->m_pLock, &m_dvs->m_csSubLock, &hr));
+    }
+}
+
+void XySubFilter::RemoveSubStream(ISubStream* pSubStream)
+{
+    CAutoLock cAutoLock(&m_dvs->m_csQueueLock);
+
+    POSITION pos = m_dvs->m_pSubStreams.GetHeadPosition();
+    POSITION pos2 = m_dvs->m_fIsSubStreamEmbeded.GetHeadPosition();
+    while(pos!=NULL)
+    {
+        if( m_dvs->m_pSubStreams.GetAt(pos)==pSubStream )
+        {
+            m_dvs->m_pSubStreams.RemoveAt(pos);
+            m_dvs->m_fIsSubStreamEmbeded.RemoveAt(pos2);
+            break;
+        }
+        else
+        {
+            m_dvs->m_pSubStreams.GetNext(pos);
+            m_dvs->m_fIsSubStreamEmbeded.GetNext(pos2);
+        }
+    }
+}

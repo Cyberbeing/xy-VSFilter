@@ -229,12 +229,6 @@ protected:
 
 	CInterfaceList<ISubStream> m_pSubStreams;
     CAtlList<bool> m_fIsSubStreamEmbeded;
-	
-	void InvalidateSubtitle(REFERENCE_TIME rtInvalidate = -1, DWORD_PTR nSubtitleId = -1);
-
-	// the text input pin is using these
-	void AddSubStream(ISubStream* pSubStream);
-	void RemoveSubStream(ISubStream* pSubStream);
 
 private:
 	HANDLE m_hSystrayThread;
