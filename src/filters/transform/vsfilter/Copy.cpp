@@ -550,17 +550,17 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 
 		CAutoLock cAutoLock(&m_csQueueLock);
 
-		if(m_simple_provider)
+		if(m_xy_sub_filter->m_simple_provider)
 		{
 			int nSubPics = -1;
 			REFERENCE_TIME rtNow = -1, rtStart = -1, rtStop = -1;
-			m_simple_provider->GetStats(nSubPics, rtNow, rtStart, rtStop);
+			m_xy_sub_filter->m_simple_provider->GetStats(nSubPics, rtNow, rtStart, rtStop);
 			tmp.Format(_T("queue stats: %I64d - %I64d [ms]\n"), rtStart/10000, rtStop/10000);
 			msg += tmp;
 
 			for(int i = 0; i < nSubPics; i++)
 			{
-				m_simple_provider->GetStats(i, rtStart, rtStop);
+				m_xy_sub_filter->m_simple_provider->GetStats(i, rtStart, rtStop);
 				tmp.Format(_T("%d: %I64d - %I64d [ms]\n"), i, rtStart/10000, rtStop/10000);
 				msg += tmp;
 			}

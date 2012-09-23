@@ -110,12 +110,6 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 CDirectVobSubFilter::~CDirectVobSubFilter()
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
-	if(m_simple_provider)
-	{
-		DbgLog((LOG_TRACE, 3, "~CDirectVobSubFilter::Invalidate"));
-		m_simple_provider->Invalidate();
-	}
-	m_simple_provider = NULL;
 
 	for(int i = 0; i < m_pTextInput.GetCount(); i++)
 		delete m_pTextInput[i];
@@ -247,10 +241,10 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	{
 		CAutoLock cAutoLock(&m_csQueueLock);
 
-		if(m_simple_provider)
+		if(m_xy_sub_filter->m_simple_provider)
 		{
-			m_simple_provider->SetTime(CalcCurrentTime());
-			m_simple_provider->SetFPS(m_fps);
+			m_xy_sub_filter->m_simple_provider->SetTime(CalcCurrentTime());
+			m_xy_sub_filter->m_simple_provider->SetFPS(m_fps);
 		}
 	}
 
@@ -302,11 +296,11 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	{
 		CAutoLock cAutoLock(&m_csQueueLock);
 
-		if(m_simple_provider)
+		if(m_xy_sub_filter->m_simple_provider)
 		{
             CComPtr<ISimpleSubPic> pSubPic;
 			//int timeStamp1 = GetTickCount();
-			bool lookupResult = m_simple_provider->LookupSubPic(CalcCurrentTime(), &pSubPic);
+			bool lookupResult = m_xy_sub_filter->m_simple_provider->LookupSubPic(CalcCurrentTime(), &pSubPic);
 			//int timeStamp2 = GetTickCount();
 			//m_time_rasterization += timeStamp2-timeStamp1;
 
@@ -612,7 +606,7 @@ HRESULT CDirectVobSubFilter::BreakConnect(PIN_DIRECTION dir)
 	{
 		// not really needed, but may free up a little memory
 		CAutoLock cAutoLock(&m_csQueueLock);
-		m_simple_provider = NULL;
+		m_xy_sub_filter->m_simple_provider = NULL;
 	}
 
 	return __super::BreakConnect(dir);
@@ -681,7 +675,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 
     SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_sub_filter->m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]) );
 
-	m_simple_provider = NULL;
+	m_xy_sub_filter->m_simple_provider = NULL;
 
 	const GUID& subtype = m_pInput->CurrentMediaType().subtype;
 
@@ -726,9 +720,9 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	//m_pSubPicQueue = m_fDoPreBuffering
 	//	? (ISubPicQueue*)new CSubPicQueue(MAX_SUBPIC_QUEUE_LENGTH, pSubPicAllocator, &hr)
 	//	: (ISubPicQueue*)new CSubPicQueueNoThread(pSubPicAllocator, &hr);
-    m_simple_provider = new SimpleSubPicProvider2(m_spd.type, CSize(m_w, m_h), window, video_rect, m_xy_sub_filter, &hr);
+    m_xy_sub_filter->m_simple_provider = new SimpleSubPicProvider2(m_spd.type, CSize(m_w, m_h), window, video_rect, m_xy_sub_filter, &hr);
 
-	if(FAILED(hr)) m_simple_provider = NULL;
+	if(FAILED(hr)) m_xy_sub_filter->m_simple_provider = NULL;
 
     XySetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, CSize(m_w, m_h));
 	m_xy_sub_filter->UpdateSubtitle(false);
@@ -920,7 +914,7 @@ HRESULT CDirectVobSubFilter2::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pNam
 				if(fVideoInputPin)
 				{
 					CComPtr<IBaseFilter> pDVS;
-					if(ShouldWeAutoload(pGraph) && SUCCEEDED(pDVS.CoCreateInstance(__uuidof(CDirectVobSubFilter2))))
+					if(m_xy_sub_filter->ShouldWeAutoload(pGraph) && SUCCEEDED(pDVS.CoCreateInstance(__uuidof(CDirectVobSubFilter2))))
 					{
 						CComQIPtr<IDirectVobSub2>(pDVS)->put_Forced(true);
 						CComQIPtr<IGraphConfig>(pGraph)->AddFilterToCache(pDVS);
@@ -946,116 +940,11 @@ HRESULT CDirectVobSubFilter2::CheckInputType(const CMediaType* mtIn)
 
 	if(FAILED(hr) || m_pInput->IsConnected()) return hr;
 
-	if(!ShouldWeAutoload(m_pGraph)) return VFW_E_TYPE_NOT_ACCEPTED;
+	if(!m_xy_sub_filter->ShouldWeAutoload(m_pGraph)) return VFW_E_TYPE_NOT_ACCEPTED;
 
 	GetRidOfInternalScriptRenderer();
 
 	return NOERROR;
-}
-
-bool CDirectVobSubFilter2::ShouldWeAutoload(IFilterGraph* pGraph)
-{
-    XY_AUTO_TIMING(_T("CDirectVobSubFilter2::ShouldWeAutoload"));
-	TCHAR blacklistedapps[][32] =
-	{
-		_T("WM8EUTIL."), // wmp8 encoder's dummy renderer releases the outputted media sample after calling Receive on its input pin (yes, even when dvobsub isn't registered at all)
-		_T("explorer."), // as some users reported thumbnail preview loads dvobsub, I've never experienced this yet...
-		_T("producer."), // this is real's producer
-		_T("GoogleDesktopIndex."), // Google Desktop
-		_T("GoogleDesktopDisplay."), // Google Desktop
-		_T("GoogleDesktopCrawl."), // Google Desktop
-	};
-
-	for(int i = 0; i < countof(blacklistedapps); i++)
-	{
-		if(theApp.m_AppName.Find(blacklistedapps[i]) >= 0)
-			return(false);
-	}
-
-	int level;
-	bool m_fExternalLoad, m_fWebLoad, m_fEmbeddedLoad;
-	get_LoadSettings(&level, &m_fExternalLoad, &m_fWebLoad, &m_fEmbeddedLoad);
-
-	if(level < 0 || level >= 2) return(false);
-
-	bool fRet = false;
-
-	if(level == 1)
-		fRet = m_fExternalLoad = m_fWebLoad = m_fEmbeddedLoad = true;
-
-	// find text stream on known splitters
-
-	if(!fRet && m_fEmbeddedLoad)
-	{
-		CComPtr<IBaseFilter> pBF;
-		if((pBF = FindFilter(CLSID_OggSplitter, pGraph)) || (pBF = FindFilter(CLSID_AviSplitter, pGraph))
-		|| (pBF = FindFilter(L"{34293064-02F2-41D5-9D75-CC5967ACA1AB}", pGraph)) // matroska demux
-		|| (pBF = FindFilter(L"{0A68C3B5-9164-4a54-AFAF-995B2FF0E0D4}", pGraph)) // matroska source
-		|| (pBF = FindFilter(L"{149D2E01-C32E-4939-80F6-C07B81015A7A}", pGraph)) // matroska splitter
-		|| (pBF = FindFilter(L"{55DA30FC-F16B-49fc-BAA5-AE59FC65F82D}", pGraph)) // Haali Media Splitter
-		|| (pBF = FindFilter(L"{564FD788-86C9-4444-971E-CC4A243DA150}", pGraph)) // Haali Media Splitter (AR)
-		|| (pBF = FindFilter(L"{8F43B7D9-9D6B-4F48-BE18-4D787C795EEA}", pGraph)) // Haali Simple Media Splitter
-		|| (pBF = FindFilter(L"{52B63861-DC93-11CE-A099-00AA00479A58}", pGraph)) // 3ivx splitter
-		|| (pBF = FindFilter(L"{6D3688CE-3E9D-42F4-92CA-8A11119D25CD}", pGraph)) // our ogg source
-		|| (pBF = FindFilter(L"{9FF48807-E133-40AA-826F-9B2959E5232D}", pGraph)) // our ogg splitter
-		|| (pBF = FindFilter(L"{803E8280-F3CE-4201-982C-8CD8FB512004}", pGraph)) // dsm source
-		|| (pBF = FindFilter(L"{0912B4DD-A30A-4568-B590-7179EBB420EC}", pGraph)) // dsm splitter
-		|| (pBF = FindFilter(L"{3CCC052E-BDEE-408a-BEA7-90914EF2964B}", pGraph)) // mp4 source
-		|| (pBF = FindFilter(L"{61F47056-E400-43d3-AF1E-AB7DFFD4C4AD}", pGraph)) // mp4 splitter
-        || (pBF = FindFilter(L"{171252A0-8820-4AFE-9DF8-5C92B2D66B04}", pGraph)) // LAV splitter
-        || (pBF = FindFilter(L"{B98D13E7-55DB-4385-A33D-09FD1BA26338}", pGraph)) // LAV Splitter Source
-        || (pBF = FindFilter(L"{E436EBB5-524F-11CE-9F53-0020AF0BA770}", pGraph)) // Solveig matroska splitter
-        || (pBF = FindFilter(L"{1365BE7A-C86A-473C-9A41-C0A6E82C9FA3}", pGraph)) // MPC-HC MPEG PS/TS/PVA source
-        || (pBF = FindFilter(L"{DC257063-045F-4BE2-BD5B-E12279C464F0}", pGraph)) // MPC-HC MPEG splitter
-        || (pBF = FindFilter(L"{529A00DB-0C43-4f5b-8EF2-05004CBE0C6F}", pGraph)) // AV splitter
-        || (pBF = FindFilter(L"{D8980E15-E1F6-4916-A10F-D7EB4E9E10B8}", pGraph)) // AV source
-        ) 
-		{
-			BeginEnumPins(pBF, pEP, pPin)
-			{
-				BeginEnumMediaTypes(pPin, pEM, pmt)
-				{
-					if(pmt->majortype == MEDIATYPE_Text || pmt->majortype == MEDIATYPE_Subtitle)
-					{
-						fRet = true;
-						break;
-					}
-				}
-				EndEnumMediaTypes(pmt)
-				if(fRet) break;
-			}
-			EndEnumFilters
-		}
-	}
-
-	// find file name
-
-	CStringW fn;
-
-	BeginEnumFilters(pGraph, pEF, pBF)
-	{
-		if(CComQIPtr<IFileSourceFilter> pFSF = pBF)
-		{
-			LPOLESTR fnw = NULL;
-			if(!pFSF || FAILED(pFSF->GetCurFile(&fnw, NULL)) || !fnw)
-				continue;
-			fn = CString(fnw);
-			CoTaskMemFree(fnw);
-			break;
-		}
-	}
-	EndEnumFilters
-
-	if((m_fExternalLoad || m_fWebLoad) && (m_fWebLoad || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
-	{
-		bool fTemp = m_xy_sub_filter->m_fHideSubtitles;
-		fRet = !fn.IsEmpty() && SUCCEEDED(put_FileName((LPWSTR)(LPCWSTR)fn))
-			|| SUCCEEDED(put_FileName(L"c:\\tmp.srt"))
-			|| fRet;
-		if(fTemp) m_xy_sub_filter->m_fHideSubtitles = true;
-	}
-
-	return(fRet);
 }
 
 void CDirectVobSubFilter2::GetRidOfInternalScriptRenderer()

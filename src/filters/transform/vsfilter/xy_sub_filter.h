@@ -15,6 +15,7 @@ class XySubFilter
 {
 public:
     friend class CDirectVobSubFilter;
+    friend class CDirectVobSubFilter2;
     friend class CTextInputPin;
 
     XySubFilter(CDirectVobSubFilter *p_dvs, LPUNKNOWN punk);
@@ -78,6 +79,8 @@ private:
     void RemoveSubStream(ISubStream* pSubStream);
 
     HRESULT GetIsEmbeddedSubStream(int iSelected, bool *fIsEmbedded);
+
+    bool ShouldWeAutoload(IFilterGraph* pGraph);
 private:
     class CFileReloaderData
     {
@@ -88,7 +91,7 @@ private:
     } m_frd;
 
     void SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles);
-    DWORD ThreadProc();
+    DWORD ThreadProc();    
 private:
     CSimpleTextSubtitle::YCbCrMatrix m_script_selected_yuv;
     CSimpleTextSubtitle::YCbCrRange m_script_selected_range;
@@ -98,6 +101,8 @@ private:
     CAtlList<bool> m_fIsSubStreamEmbeded;
 
     CCritSec m_csSubLock;
+
+    CComPtr<ISimpleSubPicProvider> m_simple_provider;
 
     CDirectVobSubFilter *m_dvs;
 };

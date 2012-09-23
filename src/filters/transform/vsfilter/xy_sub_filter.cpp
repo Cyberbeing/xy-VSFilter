@@ -10,6 +10,8 @@
 #include "CAutoTiming.h"
 #include "xy_logger.h"
 
+#include "..\..\..\..\include\moreuuids.h"
+
 using namespace DirectVobSubXyOptions;
 
 ////////////////////////////////////////////////////////////////////////////
@@ -34,6 +36,13 @@ XySubFilter::~XySubFilter()
 {
     m_frd.EndThreadEvent.Set();
     CAMThread::Close();
+
+    if(m_simple_provider)
+    {
+        DbgLog((LOG_TRACE, 3, "~XySubFilter::Invalidate"));
+        m_simple_provider->Invalidate();
+    }
+    m_simple_provider = NULL;
 }
 
 STDMETHODIMP XySubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
@@ -939,7 +948,7 @@ void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
 {
     CAutoLock cAutolock(&m_dvs->m_csQueueLock);
 
-    if(!m_dvs->m_simple_provider) return;
+    if(!m_simple_provider) return;
 
     InvalidateSubtitle();
 
@@ -1070,20 +1079,20 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
     SetYuvMatrix();
 
     XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
-    if(m_dvs->m_simple_provider)
-        m_dvs->m_simple_provider->SetSubPicProvider(CComQIPtr<ISubPicProviderEx>(pSubStream));
+    if(m_simple_provider)
+        m_simple_provider->SetSubPicProvider(CComQIPtr<ISubPicProviderEx>(pSubStream));
 }
 
 void XySubFilter::InvalidateSubtitle( REFERENCE_TIME rtInvalidate /*= -1*/, DWORD_PTR nSubtitleId /*= -1*/ )
 {
     CAutoLock cAutolock(&m_dvs->m_csQueueLock);
 
-    if(m_dvs->m_simple_provider)
+    if(m_simple_provider)
     {
         if(nSubtitleId == -1 || nSubtitleId == m_nSubtitleId)
         {
             DbgLog((LOG_TRACE, 3, "InvalidateSubtitle::Invalidate"));
-            m_dvs->m_simple_provider->Invalidate(rtInvalidate);
+            m_simple_provider->Invalidate(rtInvalidate);
         }
     }
 }
@@ -1259,3 +1268,107 @@ HRESULT XySubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
     return hr;
 }
 
+bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
+{
+    XY_AUTO_TIMING(_T("XySubFilter::ShouldWeAutoload"));
+    TCHAR blacklistedapps[][32] =
+    {
+        _T("WM8EUTIL."), // wmp8 encoder's dummy renderer releases the outputted media sample after calling Receive on its input pin (yes, even when dvobsub isn't registered at all)
+        _T("explorer."), // as some users reported thumbnail preview loads dvobsub, I've never experienced this yet...
+        _T("producer."), // this is real's producer
+        _T("GoogleDesktopIndex."), // Google Desktop
+        _T("GoogleDesktopDisplay."), // Google Desktop
+        _T("GoogleDesktopCrawl."), // Google Desktop
+    };
+
+    for(int i = 0; i < countof(blacklistedapps); i++)
+    {
+        if(theApp.m_AppName.Find(blacklistedapps[i]) >= 0)
+            return(false);
+    }
+
+    int level;
+    bool m_fExternalLoad, m_fWebLoad, m_fEmbeddedLoad;
+    get_LoadSettings(&level, &m_fExternalLoad, &m_fWebLoad, &m_fEmbeddedLoad);
+
+    if(level < 0 || level >= 2) return(false);
+
+    bool fRet = false;
+
+    if(level == 1)
+        fRet = m_fExternalLoad = m_fWebLoad = m_fEmbeddedLoad = true;
+
+    // find text stream on known splitters
+
+    if(!fRet && m_fEmbeddedLoad)
+    {
+        CComPtr<IBaseFilter> pBF;
+        if((pBF = FindFilter(CLSID_OggSplitter, pGraph)) || (pBF = FindFilter(CLSID_AviSplitter, pGraph))
+            || (pBF = FindFilter(L"{34293064-02F2-41D5-9D75-CC5967ACA1AB}", pGraph)) // matroska demux
+            || (pBF = FindFilter(L"{0A68C3B5-9164-4a54-AFAF-995B2FF0E0D4}", pGraph)) // matroska source
+            || (pBF = FindFilter(L"{149D2E01-C32E-4939-80F6-C07B81015A7A}", pGraph)) // matroska splitter
+            || (pBF = FindFilter(L"{55DA30FC-F16B-49fc-BAA5-AE59FC65F82D}", pGraph)) // Haali Media Splitter
+            || (pBF = FindFilter(L"{564FD788-86C9-4444-971E-CC4A243DA150}", pGraph)) // Haali Media Splitter (AR)
+            || (pBF = FindFilter(L"{8F43B7D9-9D6B-4F48-BE18-4D787C795EEA}", pGraph)) // Haali Simple Media Splitter
+            || (pBF = FindFilter(L"{52B63861-DC93-11CE-A099-00AA00479A58}", pGraph)) // 3ivx splitter
+            || (pBF = FindFilter(L"{6D3688CE-3E9D-42F4-92CA-8A11119D25CD}", pGraph)) // our ogg source
+            || (pBF = FindFilter(L"{9FF48807-E133-40AA-826F-9B2959E5232D}", pGraph)) // our ogg splitter
+            || (pBF = FindFilter(L"{803E8280-F3CE-4201-982C-8CD8FB512004}", pGraph)) // dsm source
+            || (pBF = FindFilter(L"{0912B4DD-A30A-4568-B590-7179EBB420EC}", pGraph)) // dsm splitter
+            || (pBF = FindFilter(L"{3CCC052E-BDEE-408a-BEA7-90914EF2964B}", pGraph)) // mp4 source
+            || (pBF = FindFilter(L"{61F47056-E400-43d3-AF1E-AB7DFFD4C4AD}", pGraph)) // mp4 splitter
+            || (pBF = FindFilter(L"{171252A0-8820-4AFE-9DF8-5C92B2D66B04}", pGraph)) // LAV splitter
+            || (pBF = FindFilter(L"{B98D13E7-55DB-4385-A33D-09FD1BA26338}", pGraph)) // LAV Splitter Source
+            || (pBF = FindFilter(L"{E436EBB5-524F-11CE-9F53-0020AF0BA770}", pGraph)) // Solveig matroska splitter
+            || (pBF = FindFilter(L"{1365BE7A-C86A-473C-9A41-C0A6E82C9FA3}", pGraph)) // MPC-HC MPEG PS/TS/PVA source
+            || (pBF = FindFilter(L"{DC257063-045F-4BE2-BD5B-E12279C464F0}", pGraph)) // MPC-HC MPEG splitter
+            || (pBF = FindFilter(L"{529A00DB-0C43-4f5b-8EF2-05004CBE0C6F}", pGraph)) // AV splitter
+            || (pBF = FindFilter(L"{D8980E15-E1F6-4916-A10F-D7EB4E9E10B8}", pGraph)) // AV source
+            ) 
+        {
+            BeginEnumPins(pBF, pEP, pPin)
+            {
+                BeginEnumMediaTypes(pPin, pEM, pmt)
+                {
+                    if(pmt->majortype == MEDIATYPE_Text || pmt->majortype == MEDIATYPE_Subtitle)
+                    {
+                        fRet = true;
+                        break;
+                    }
+                }
+                EndEnumMediaTypes(pmt)
+                    if(fRet) break;
+            }
+            EndEnumFilters
+        }
+    }
+
+    // find file name
+
+    CStringW fn;
+
+    BeginEnumFilters(pGraph, pEF, pBF)
+    {
+        if(CComQIPtr<IFileSourceFilter> pFSF = pBF)
+        {
+            LPOLESTR fnw = NULL;
+            if(!pFSF || FAILED(pFSF->GetCurFile(&fnw, NULL)) || !fnw)
+                continue;
+            fn = CString(fnw);
+            CoTaskMemFree(fnw);
+            break;
+        }
+    }
+    EndEnumFilters
+
+        if((m_fExternalLoad || m_fWebLoad) && (m_fWebLoad || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
+        {
+            bool fTemp = m_fHideSubtitles;
+            fRet = !fn.IsEmpty() && SUCCEEDED(put_FileName((LPWSTR)(LPCWSTR)fn))
+                || SUCCEEDED(put_FileName(L"c:\\tmp.srt"))
+                || fRet;
+            if(fTemp) m_fHideSubtitles = true;
+        }
+
+        return(fRet);
+}

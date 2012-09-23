@@ -54,7 +54,6 @@ class CDirectVobSubFilter
     friend class XySubFilter;
 
 	CCritSec m_csQueueLock;
-	CComPtr<ISimpleSubPicProvider> m_simple_provider;
 
 	void InitSubPicQueue();
 	SubPicDesc m_spd;
@@ -242,7 +241,6 @@ protected:
 [uuid("9852A670-F845-491b-9BE6-EBD841B8A613")]
 class CDirectVobSubFilter2 : public CDirectVobSubFilter
 {
-	bool ShouldWeAutoload(IFilterGraph* pGraph);
 	void GetRidOfInternalScriptRenderer();
 
 public:
