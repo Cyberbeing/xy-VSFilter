@@ -225,19 +225,11 @@ protected:
 	// don't set the "hide subtitles" stream until we are finished with loading
 	bool m_fLoading;
 
-	bool Open();
-
-	int FindPreferedLanguage(bool fHideToo = true);
-	void UpdatePreferedLanguages(CString lang);
-
 	CCritSec m_csSubLock;
 
 	CInterfaceList<ISubStream> m_pSubStreams;
     CAtlList<bool> m_fIsSubStreamEmbeded;
-
-	DWORD_PTR m_nSubtitleId;
-	void UpdateSubtitle(bool fApplyDefStyle = true);
-	void SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyle = true);
+	
 	void InvalidateSubtitle(REFERENCE_TIME rtInvalidate = -1, DWORD_PTR nSubtitleId = -1);
 
 	// the text input pin is using these

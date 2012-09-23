@@ -62,7 +62,6 @@ using namespace DirectVobSubXyOptions;
 
 CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid)
 	: CBaseVideoFilter(NAME("CDirectVobSubFilter"), punk, phr, clsid)
-	, m_nSubtitleId(-1)
 	, m_fMSMpeg4Fix(false)
 	, m_fps(25)
 {
@@ -732,7 +731,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	if(FAILED(hr)) m_simple_provider = NULL;
 
     XySetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, CSize(m_w, m_h));
-	UpdateSubtitle(false);
+	m_xy_sub_filter->UpdateSubtitle(false);
 
 	InitObj4OSD();
 }
@@ -783,102 +782,6 @@ bool CDirectVobSubFilter::AdjustFrameSize(CSize& s)
 STDMETHODIMP CDirectVobSubFilter::Count(DWORD* pcStreams)
 {
     return m_xy_sub_filter->Count(pcStreams);
-}
-
-#define MAXPREFLANGS 5
-
-int CDirectVobSubFilter::FindPreferedLanguage(bool fHideToo)
-{
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-	int nLangs;
-	get_LanguageCount(&nLangs);
-
-	if(nLangs <= 0) return(0);
-
-	for(int i = 0; i < MAXPREFLANGS; i++)
-	{
-		CString tmp;
-		tmp.Format(IDS_RL_LANG, i);
-
-		CString lang = theApp.GetProfileString(ResStr(IDS_R_PREFLANGS), tmp);
-
-		if(!lang.IsEmpty())
-		{
-			for(int ret = 0; ret < nLangs; ret++)
-			{
-				CString l;
-				WCHAR* pName = NULL;
-				get_LanguageName(ret, &pName);
-				l = pName;
-				CoTaskMemFree(pName);
-
-				if(!l.CompareNoCase(lang)) return(ret);
-			}
-		}
-	}
-
-	return(0);
-}
-
-void CDirectVobSubFilter::UpdatePreferedLanguages(CString l)
-{
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-	CString langs[MAXPREFLANGS+1];
-
-	int i = 0, j = 0, k = -1;
-	for(; i < MAXPREFLANGS; i++)
-	{
-		CString tmp;
-		tmp.Format(IDS_RL_LANG, i);
-
-		langs[j] = theApp.GetProfileString(ResStr(IDS_R_PREFLANGS), tmp);
-
-		if(!langs[j].IsEmpty())
-		{
-			if(!langs[j].CompareNoCase(l)) k = j;
-			j++;
-		}
-	}
-
-	if(k == -1)
-	{
-		langs[k = j] = l;
-		j++;
-	}
-
-	// move the selected to the top of the list
-
-	while(k > 0)
-	{
-		CString tmp = langs[k]; langs[k] = langs[k-1]; langs[k-1] = tmp;
-		k--;
-	}
-
-	// move "Hide subtitles" to the last position if it wasn't our selection
-
-	CString hidesubs;
-	hidesubs.LoadString(IDS_M_HIDESUBTITLES);
-
-	for(k = 1; k < j; k++)
-	{
-		if(!langs[k].CompareNoCase(hidesubs)) break;
-	}
-
-	while(k < j-1)
-	{
-		CString tmp = langs[k]; langs[k] = langs[k+1]; langs[k+1] = tmp;
-		k++;
-	}
-
-	for(i = 0; i < j; i++)
-	{
-		CString tmp;
-		tmp.Format(IDS_RL_LANG, i);
-
-		theApp.WriteProfileString(ResStr(IDS_R_PREFLANGS), tmp, langs[i]);
-	}
 }
 
 STDMETHODIMP CDirectVobSubFilter::Enable(long lIndex, DWORD dwFlags)
@@ -1179,254 +1082,12 @@ void CDirectVobSubFilter2::GetRidOfInternalScriptRenderer()
 	}
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-bool CDirectVobSubFilter::Open()
-{
-    AMTRACE((TEXT(__FUNCTION__),0));
-    XY_AUTO_TIMING(TEXT("CDirectVobSubFilter::Open"));
-
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-	CAutoLock cAutolock(&m_csQueueLock);
-
-	m_pSubStreams.RemoveAll();
-    m_fIsSubStreamEmbeded.RemoveAll();
-
-	m_xy_sub_filter->m_frd.files.RemoveAll();
-
-	CAtlArray<CString> paths;
-
-	for(int i = 0; i < 10; i++)
-	{
-		CString tmp;
-		tmp.Format(IDS_RP_PATH, i);
-		CString path = theApp.GetProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp);
-		if(!path.IsEmpty()) paths.Add(path);
-	}
-
-	CAtlArray<SubFile> ret;
-	GetSubFileNames(m_xy_sub_filter->m_FileName, paths, ret);
-
-	for(int i = 0; i < ret.GetCount(); i++)
-	{
-		if(m_xy_sub_filter->m_frd.files.Find(ret[i].fn))
-			continue;
-
-		CComPtr<ISubStream> pSubStream;
-
-        if(!pSubStream)
-        {
-//            CAutoTiming t(TEXT("CRenderedTextSubtitle::Open"), 0);
-            XY_AUTO_TIMING(TEXT("CRenderedTextSubtitle::Open"));
-            CAutoPtr<CRenderedTextSubtitle> pRTS(new CRenderedTextSubtitle(&m_csSubLock));
-            if(pRTS && pRTS->Open(ret[i].fn, DEFAULT_CHARSET) && pRTS->GetStreamCount() > 0)
-            {
-                pSubStream = pRTS.Detach();
-                m_xy_sub_filter->m_frd.files.AddTail(ret[i].fn + _T(".style"));
-            }
-        }
-
-		if(!pSubStream)
-		{
-            CAutoTiming t(TEXT("CVobSubFile::Open"), 0);
-			CAutoPtr<CVobSubFile> pVSF(new CVobSubFile(&m_csSubLock));
-			if(pVSF && pVSF->Open(ret[i].fn) && pVSF->GetStreamCount() > 0)
-			{
-				pSubStream = pVSF.Detach();
-				m_xy_sub_filter->m_frd.files.AddTail(ret[i].fn.Left(ret[i].fn.GetLength()-4) + _T(".sub"));
-			}
-		}
-
-		if(!pSubStream)
-		{
-            CAutoTiming t(TEXT("ssf::CRenderer::Open"), 0);
-			CAutoPtr<ssf::CRenderer> pSSF(new ssf::CRenderer(&m_csSubLock));
-			if(pSSF && pSSF->Open(ret[i].fn) && pSSF->GetStreamCount() > 0)
-			{
-				pSubStream = pSSF.Detach();
-			}
-		}
-
-		if(pSubStream)
-		{
-			m_pSubStreams.AddTail(pSubStream);
-            m_fIsSubStreamEmbeded.AddTail(false);
-			m_xy_sub_filter->m_frd.files.AddTail(ret[i].fn);
-		}
-	}
-
-	for(int i = 0; i < m_pTextInput.GetCount(); i++)
-	{
-		if(m_pTextInput[i]->IsConnected())
-        {
-			m_pSubStreams.AddTail(m_pTextInput[i]->GetSubStream());
-            m_fIsSubStreamEmbeded.AddTail(true);
-        }
-	}
-
-	if(S_FALSE == put_SelectedLanguage(FindPreferedLanguage()))
-        UpdateSubtitle(false); // make sure pSubPicProvider of our queue gets updated even if the stream number hasn't changed
-
-	m_xy_sub_filter->m_frd.RefreshEvent.Set();
-
-	return(m_pSubStreams.GetCount() > 0);
-}
-
-void CDirectVobSubFilter::UpdateSubtitle(bool fApplyDefStyle)
-{
-	CAutoLock cAutolock(&m_csQueueLock);
-
-	if(!m_simple_provider) return;
-
-	InvalidateSubtitle();
-
-	CComPtr<ISubStream> pSubStream;
-
-	if(!m_xy_sub_filter->m_fHideSubtitles)
-	{
-		int i = m_xy_sub_filter->m_iSelectedLanguage;
-
-		for(POSITION pos = m_pSubStreams.GetHeadPosition(); i >= 0 && pos; pSubStream = NULL)
-		{
-			pSubStream = m_pSubStreams.GetNext(pos);
-
-			if(i < pSubStream->GetStreamCount())
-			{
-				CAutoLock cAutoLock(&m_csSubLock);
-				pSubStream->SetStream(i);
-				break;
-			}
-
-			i -= pSubStream->GetStreamCount();
-		}
-	}
-
-	SetSubtitle(pSubStream, fApplyDefStyle);
-}
-
-void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyle)
-{
-	DbgLog((LOG_TRACE, 3, "%s(%d): %s", __FILE__, __LINE__, __FUNCTION__));
-	DbgLog((LOG_TRACE, 3, "\tpSubStream:%x fApplyDefStyle:%d", pSubStream, (int)fApplyDefStyle));
-    CAutoLock cAutolock(&m_csQueueLock);
-
-    CSize playres(0,0);
-    m_xy_sub_filter->m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
-    m_xy_sub_filter->m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
-	if(pSubStream)
-	{
-		CAutoLock cAutolock(&m_csSubLock);
-
-		CLSID clsid;
-		pSubStream->GetClassID(&clsid);
-
-		if(clsid == __uuidof(CVobSubFile))
-		{
-			CVobSubSettings* pVSS = dynamic_cast<CVobSubFile*>(pSubStream);
-
-			if(fApplyDefStyle)
-			{
-				pVSS->SetAlignment(m_xy_sub_filter->m_fOverridePlacement, m_xy_sub_filter->m_PlacementXperc, m_xy_sub_filter->m_PlacementYperc, 1, 1);
-				pVSS->m_fOnlyShowForcedSubs = m_xy_sub_filter->m_fOnlyShowForcedVobSubs;
-			}
-		}
-		else if(clsid == __uuidof(CVobSubStream))
-		{
-			CVobSubSettings* pVSS = dynamic_cast<CVobSubStream*>(pSubStream);
-
-			if(fApplyDefStyle)
-			{
-				pVSS->SetAlignment(m_xy_sub_filter->m_fOverridePlacement, m_xy_sub_filter->m_PlacementXperc, m_xy_sub_filter->m_PlacementYperc, 1, 1);
-				pVSS->m_fOnlyShowForcedSubs = m_xy_sub_filter->m_fOnlyShowForcedVobSubs;
-			}
-		}
-		else if(clsid == __uuidof(CRenderedTextSubtitle))
-		{
-			CRenderedTextSubtitle* pRTS = dynamic_cast<CRenderedTextSubtitle*>(pSubStream);
-
-			if(fApplyDefStyle || pRTS->m_fUsingAutoGeneratedDefaultStyle)
-			{
-				STSStyle s = m_xy_sub_filter->m_defStyle;
-
-				if(m_xy_sub_filter->m_fOverridePlacement)
-				{
-					s.scrAlignment = 2;
-					int w = pRTS->m_dstScreenSize.cx;
-					int h = pRTS->m_dstScreenSize.cy;
-                    CRect tmp_rect = s.marginRect.get();
-					int mw = w - tmp_rect.left - tmp_rect.right;
-					tmp_rect.bottom = h - MulDiv(h, m_xy_sub_filter->m_PlacementYperc, 100);
-					tmp_rect.left = MulDiv(w, m_xy_sub_filter->m_PlacementXperc, 100) - mw/2;
-					tmp_rect.right = w - (tmp_rect.left + mw);
-                    s.marginRect = tmp_rect;
-				}
-
-				pRTS->SetDefaultStyle(s);
-			}
-
-			pRTS->m_ePARCompensationType = m_xy_sub_filter->m_ePARCompensationType;
-			if (m_CurrentVIH2.dwPictAspectRatioX != 0 && m_CurrentVIH2.dwPictAspectRatioY != 0&& m_CurrentVIH2.bmiHeader.biWidth != 0 && m_CurrentVIH2.bmiHeader.biHeight != 0)
-			{
-				pRTS->m_dPARCompensation = ((double)abs(m_CurrentVIH2.bmiHeader.biWidth) / (double)abs(m_CurrentVIH2.bmiHeader.biHeight)) /
-					((double)abs((long)m_CurrentVIH2.dwPictAspectRatioX) / (double)abs((long)m_CurrentVIH2.dwPictAspectRatioY));
-
-			}
-			else
-			{
-				pRTS->m_dPARCompensation = 1.00;
-			}
-
-            m_xy_sub_filter->m_script_selected_yuv = pRTS->m_eYCbCrMatrix;
-            m_xy_sub_filter->m_script_selected_range = pRTS->m_eYCbCrRange;
-			pRTS->Deinit();
-            playres = pRTS->m_dstScreenSize;
-		}
-	}
-
-	if(!fApplyDefStyle)
-	{
-		int i = 0;
-
-		POSITION pos = m_pSubStreams.GetHeadPosition();
-		while(pos)
-		{
-			CComPtr<ISubStream> pSubStream2 = m_pSubStreams.GetNext(pos);
-
-			if(pSubStream == pSubStream2)
-			{
-				m_xy_sub_filter->m_iSelectedLanguage = i + pSubStream2->GetStream();
-				break;
-			}
-
-			i += pSubStream2->GetStreamCount();
-		}
-	}
-
-	m_nSubtitleId = reinterpret_cast<DWORD_PTR>(pSubStream);
-
-    m_xy_sub_filter->SetYuvMatrix();
-
-    XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
-	if(m_simple_provider)
-		m_simple_provider->SetSubPicProvider(CComQIPtr<ISubPicProviderEx>(pSubStream));
-}
-
-void CDirectVobSubFilter::InvalidateSubtitle(REFERENCE_TIME rtInvalidate, DWORD_PTR nSubtitleId)
-{
-    CAutoLock cAutolock(&m_csQueueLock);
-
-	if(m_simple_provider)
-	{
-		if(nSubtitleId == -1 || nSubtitleId == m_nSubtitleId)
-		{
-			DbgLog((LOG_TRACE, 3, "InvalidateSubtitle::Invalidate"));
-			m_simple_provider->Invalidate(rtInvalidate);
-		}
-	}
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////
+
+void CDirectVobSubFilter::InvalidateSubtitle( REFERENCE_TIME rtInvalidate /*= -1*/, DWORD_PTR nSubtitleId /*= -1*/ )
+{
+    return m_xy_sub_filter->InvalidateSubtitle(rtInvalidate, nSubtitleId);
+}
 
 void CDirectVobSubFilter::AddSubStream(ISubStream* pSubStream)
 {
@@ -1474,7 +1135,7 @@ void CDirectVobSubFilter::RemoveSubStream(ISubStream* pSubStream)
 
 void CDirectVobSubFilter::Post_EC_OLE_EVENT(CString str, DWORD_PTR nSubtitleId)
 {
-	if(nSubtitleId != -1 && nSubtitleId != m_nSubtitleId)
+	if(nSubtitleId != -1 && nSubtitleId != m_xy_sub_filter->m_nSubtitleId)
 		return;
 
 	CComQIPtr<IMediaEventSink> pMES = m_pGraph;

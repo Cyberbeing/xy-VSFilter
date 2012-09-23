@@ -63,7 +63,14 @@ public:
 
 private:
     void SetYuvMatrix();
+    bool Open();
 
+    void UpdateSubtitle(bool fApplyDefStyle = true);
+    void SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyle = true);
+    void InvalidateSubtitle(REFERENCE_TIME rtInvalidate = -1, DWORD_PTR nSubtitleId = -1);
+
+    int FindPreferedLanguage(bool fHideToo = true);
+    void UpdatePreferedLanguages(CString l);
 private:
     class CFileReloaderData
     {
@@ -75,10 +82,11 @@ private:
 
     void SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles);
     DWORD ThreadProc();
-
 private:
     CSimpleTextSubtitle::YCbCrMatrix m_script_selected_yuv;
     CSimpleTextSubtitle::YCbCrRange m_script_selected_range;
+
+    DWORD_PTR m_nSubtitleId;
 
     CDirectVobSubFilter *m_dvs;
 };
