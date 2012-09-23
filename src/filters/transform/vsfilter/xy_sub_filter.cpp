@@ -19,17 +19,18 @@ using namespace DirectVobSubXyOptions;
 // Constructor
 //
 
-XySubFilter::XySubFilter( CDirectVobSubFilter *p_dvs, LPUNKNOWN punk )
-    : CUnknown( NAME("XySubFilter"), punk )
+XySubFilter::XySubFilter( CDirectVobSubFilter *p_dvs, LPUNKNOWN punk, 
+    HRESULT* phr, const GUID& clsid /*= __uuidof(XySubFilter)*/ )
+    : CBaseFilter(NAME("XySubFilter"), punk, &m_csFilter, clsid)
     , m_nSubtitleId(-1)
     , m_dvs(p_dvs)
 {
     m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
     m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
 
-    HRESULT hr = S_OK;
-    m_pTextInput.Add(new CTextInputPin(m_dvs, m_dvs->m_pLock, &m_csSubLock, &hr));
-    ASSERT(SUCCEEDED(hr));
+    m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, phr));
+    ASSERT(SUCCEEDED(*phr));
+    if(phr && FAILED(*phr)) return;
 
     CAMThread::Create();
     m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
@@ -64,6 +65,52 @@ STDMETHODIMP XySubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
         QI(ISpecifyPropertyPages)
 		QI(IAMStreamSelect)
 		__super::NonDelegatingQueryInterface(riid, ppv);
+}
+
+//
+// CBaseFilter
+//
+CBasePin* XySubFilter::GetPin(int n)
+{
+    if(n >= 0 && n < (int)m_pTextInput.GetCount())
+        return m_pTextInput[n];
+
+    return NULL;
+}
+
+int XySubFilter::GetPinCount()
+{
+    return m_pTextInput.GetCount();
+}
+
+STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
+{
+    XY_AUTO_TIMING(_T("XySubFilter::JoinFilterGraph"));
+    DbgLog((LOG_TRACE, 3, "XySubFilter::JoinFilterGraph"));
+    DumpGraph(m_pGraph,0);
+    if(pGraph)
+    {
+        BeginEnumFilters(pGraph, pEF, pBF)
+        {
+        	if(pBF != (IBaseFilter*)this && CComQIPtr<IDirectVobSub>(pBF))
+            {
+                CLSID clsid;
+                pBF->GetClassID(&clsid);
+                if (clsid==__uuidof(XySubFilter))
+                {
+                    DbgLog((LOG_TRACE, 3, "XySubFilter::JoinFilterGraph Failed"));
+                    return E_FAIL;
+                }
+            }
+        }
+        EndEnumFilters;
+    }
+    else
+    {
+    }
+    
+    HRESULT hr = __super::JoinFilterGraph(pGraph, pName);
+    return hr;
 }
 
 //
@@ -1218,7 +1265,7 @@ void XySubFilter::AddSubStream(ISubStream* pSubStream)
     if(len == 0)
     {
         HRESULT hr = S_OK;
-        m_pTextInput.Add(new CTextInputPin(m_dvs, m_dvs->m_pLock, &m_csSubLock, &hr));
+        m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, &hr));
     }
 }
 
@@ -1343,8 +1390,9 @@ bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
                         break;
                     }
                 }
-                EndEnumMediaTypes(pmt)
-                    if(fRet) break;
+                EndEnumMediaTypes(pmt);
+
+                if(fRet) break;
             }
             EndEnumFilters
         }
@@ -1366,16 +1414,16 @@ bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
             break;
         }
     }
-    EndEnumFilters
+    EndEnumFilters;
 
-        if((m_fExternalLoad || m_fWebLoad) && (m_fWebLoad || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
-        {
-            bool fTemp = m_fHideSubtitles;
-            fRet = !fn.IsEmpty() && SUCCEEDED(put_FileName((LPWSTR)(LPCWSTR)fn))
-                || SUCCEEDED(put_FileName(L"c:\\tmp.srt"))
-                || fRet;
-            if(fTemp) m_fHideSubtitles = true;
-        }
+    if((m_fExternalLoad || m_fWebLoad) && (m_fWebLoad || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
+    {
+        bool fTemp = m_fHideSubtitles;
+        fRet = !fn.IsEmpty() && SUCCEEDED(put_FileName((LPWSTR)(LPCWSTR)fn))
+            || SUCCEEDED(put_FileName(L"c:\\tmp.srt"))
+            || fRet;
+        if(fTemp) m_fHideSubtitles = true;
+    }
 
-        return(fRet);
+    return(fRet);
 }

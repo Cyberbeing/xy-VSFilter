@@ -94,7 +94,9 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	m_tbid.fRunOnce = false;
 	m_tbid.fShowIcon = (theApp.m_AppName.Find(_T("zplayer"), 0) < 0 || !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0));
 
-    m_xy_sub_filter = new XySubFilter(this, 0);
+    m_xy_sub_filter = new XySubFilter(this, 0, phr);
+    if(phr && FAILED(*phr)) return;
+    m_xy_sub_filter2 = m_xy_sub_filter;
 
 	memset(&m_CurrentVIH2, 0, sizeof(VIDEOINFOHEADER2));
 
@@ -107,7 +109,7 @@ CDirectVobSubFilter::~CDirectVobSubFilter()
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
 
-    delete m_xy_sub_filter; m_xy_sub_filter = NULL;
+    //delete m_xy_sub_filter; m_xy_sub_filter = NULL;
 
 	DbgLog((LOG_TRACE, 3, _T("CDirectVobSubFilter::~CDirectVobSubFilter")));
 }
@@ -449,7 +451,6 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
 	if(dir == PINDIR_INPUT)
 	{
         DbgLog((LOG_TRACE, 3, TEXT("connect input")));
-        DumpGraph(m_pGraph,0);
 		CComPtr<IBaseFilter> pFilter;
 
 		// needed when we have a decoder with a version number of 3.x
@@ -465,7 +466,6 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
 	else if(dir == PINDIR_OUTPUT)
 	{        
         DbgLog((LOG_TRACE, 3, TEXT("connect output")));
-        DumpGraph(m_pGraph,0);
         const CMediaType* mtIn = &(m_pInput->CurrentMediaType());
         const CMediaType* mtOut = &(m_pOutput->CurrentMediaType());
         CMediaType desiredMt;        
@@ -545,7 +545,6 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
             if (SUCCEEDED(ReconnectPin(m_pInput, &desiredMt)))
             {
                 reconnected = true;
-                DumpGraph(m_pGraph,0);
                 //m_pInput->SetMediaType(&desiredMt);
                 DbgLog((LOG_TRACE, 3, TEXT("reconnected succeed!")));
             }
@@ -581,7 +580,6 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
 
     HRESULT hr = __super::CompleteConnect(dir, pReceivePin);
     DbgLog((LOG_TRACE, 3, TEXT("connect fininshed!")));
-    DumpGraph(m_pGraph,0);
 	return hr;    
 }
 
@@ -824,14 +822,34 @@ HRESULT CDirectVobSubFilter2::CheckConnect(PIN_DIRECTION dir, IPin* pPin)
 HRESULT CDirectVobSubFilter2::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
 {
     XY_AUTO_TIMING(_T("CDirectVobSubFilter2::JoinFilterGraph"));
+    DbgLog((LOG_TRACE, 3, "CDirectVobSubFilter2::JoinFilterGraph"));
+    DumpGraph(m_pGraph,0);
 	if(pGraph)
 	{
-		BeginEnumFilters(pGraph, pEF, pBF)
-		{
-			if(pBF != (IBaseFilter*)this && CComQIPtr<IDirectVobSub>(pBF))
-				return E_FAIL;
-		}
-		EndEnumFilters
+        BeginEnumFilters(pGraph, pEF, pBF)
+        {
+            if(pBF != (IBaseFilter*)this && CComQIPtr<IDirectVobSub>(pBF))
+            {
+                CLSID clsid;
+                pBF->GetClassID(&clsid);
+                if (clsid==__uuidof(CDirectVobSubFilter2))
+                {
+                    DbgLog((LOG_TRACE, 3, "CDirectVobSubFilter2::JoinFilterGraph Failed"));
+                    return E_FAIL;
+                }
+            }
+        }
+        EndEnumFilters;
+
+        if (m_xy_sub_filter->ShouldWeAutoload(pGraph))
+        {
+            CComQIPtr<IBaseFilter> sub_filter = m_xy_sub_filter2;
+            HRESULT hr = pGraph->AddFilter(sub_filter, L"xy_sub_filter");
+            if (FAILED(hr))
+            {
+                return hr;
+            }
+        }
 
 		// don't look... we will do some serious graph hacking again...
 		//
@@ -909,6 +927,7 @@ HRESULT CDirectVobSubFilter2::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pNam
 					CComPtr<IBaseFilter> pDVS;
 					if(m_xy_sub_filter->ShouldWeAutoload(pGraph) && SUCCEEDED(pDVS.CoCreateInstance(__uuidof(CDirectVobSubFilter2))))
 					{
+                        DbgLog((LOG_TRACE, 3, "We Should Auto load"));
 						CComQIPtr<IDirectVobSub2>(pDVS)->put_Forced(true);
 						CComQIPtr<IGraphConfig>(pGraph)->AddFilterToCache(pDVS);
 					}

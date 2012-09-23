@@ -73,8 +73,8 @@ public:
 
     // CBaseFilter
 
-	CBasePin* GetPin(int n);
-	int GetPinCount();
+    CBasePin* GetPin(int n);
+    int GetPinCount();
 
 	STDMETHODIMP JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName);
 	STDMETHODIMP QueryFilterInfo(FILTER_INFO* pInfo);
@@ -231,6 +231,7 @@ private:
 	long m_time_rasterization, m_time_alphablt;
 
 protected:
+    CComPtr<IBaseFilter> m_xy_sub_filter2;
     XySubFilter* m_xy_sub_filter;
 };
 

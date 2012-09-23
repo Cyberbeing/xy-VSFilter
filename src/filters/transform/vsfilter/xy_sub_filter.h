@@ -7,7 +7,7 @@ class CDirectVobSubFilter;
 
 [uuid("2dfcb782-ec20-4a7c-b530-4577adb33f21")]
 class XySubFilter
-    : public CUnknown
+    : public CBaseFilter
     , public CDirectVobSub
     , public ISpecifyPropertyPages
     , public IAMStreamSelect
@@ -18,11 +18,16 @@ public:
     friend class CDirectVobSubFilter2;
     friend class CTextInputPin;
 
-    XySubFilter(CDirectVobSubFilter *p_dvs, LPUNKNOWN punk);
+    XySubFilter(CDirectVobSubFilter *p_dvs, LPUNKNOWN punk, HRESULT* phr, const GUID& clsid = __uuidof(XySubFilter));
 	virtual ~XySubFilter();
 
     DECLARE_IUNKNOWN;
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
+
+    //CBaseFilter
+    CBasePin* GetPin(int n);
+    int GetPinCount();
+    STDMETHODIMP JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName);
 
     // IDirectVobSubXy
     STDMETHODIMP XySetBool     (int field, bool      value);
@@ -91,7 +96,7 @@ private:
     } m_frd;
 
     void SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles);
-    DWORD ThreadProc();    
+    DWORD ThreadProc();
 private:
     CSimpleTextSubtitle::YCbCrMatrix m_script_selected_yuv;
     CSimpleTextSubtitle::YCbCrRange m_script_selected_range;
@@ -100,6 +105,7 @@ private:
     CInterfaceList<ISubStream> m_pSubStreams;
     CAtlList<bool> m_fIsSubStreamEmbeded;
 
+    CCritSec m_csFilter;
     CCritSec m_csSubLock;
 
     CComPtr<ISimpleSubPicProvider> m_simple_provider;

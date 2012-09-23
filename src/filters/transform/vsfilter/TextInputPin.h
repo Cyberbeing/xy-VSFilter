@@ -23,11 +23,11 @@
 
 #include "..\..\..\subtitles\SubtitleInputPin.h"
 
-class CDirectVobSubFilter;
+class XySubFilter;
 
 class CTextInputPin : public CSubtitleInputPin
 {
-    CDirectVobSubFilter* m_pDVS;
+    XySubFilter* m_xy_sub_filter;
 
 protected:
 	void AddSubStream(ISubStream* pSubStream);
@@ -35,6 +35,6 @@ protected:
 	void InvalidateSubtitle(REFERENCE_TIME rtStart, ISubStream* pSubStream);
 
 public:
-    CTextInputPin(CDirectVobSubFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr);
+    CTextInputPin(XySubFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr);
 };
 
