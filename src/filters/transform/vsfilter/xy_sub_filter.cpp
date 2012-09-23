@@ -27,6 +27,10 @@ XySubFilter::XySubFilter( CDirectVobSubFilter *p_dvs, LPUNKNOWN punk )
     m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
     m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
 
+    HRESULT hr = S_OK;
+    m_pTextInput.Add(new CTextInputPin(m_dvs, m_dvs->m_pLock, &m_csSubLock, &hr));
+    ASSERT(SUCCEEDED(hr));
+
     CAMThread::Create();
     m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
     m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
@@ -36,6 +40,9 @@ XySubFilter::~XySubFilter()
 {
     m_frd.EndThreadEvent.Set();
     CAMThread::Close();
+
+    for(unsigned i = 0; i < m_pTextInput.GetCount(); i++)
+        delete m_pTextInput[i];
 
     if(m_simple_provider)
     {
@@ -927,11 +934,11 @@ bool XySubFilter::Open()
         }
     }
 
-    for(unsigned i = 0; i < m_dvs->m_pTextInput.GetCount(); i++)
+    for(unsigned i = 0; i < m_pTextInput.GetCount(); i++)
     {
-        if(m_dvs->m_pTextInput[i]->IsConnected())
+        if(m_pTextInput[i]->IsConnected())
         {
-            m_pSubStreams.AddTail(m_dvs->m_pTextInput[i]->GetSubStream());
+            m_pSubStreams.AddTail(m_pTextInput[i]->GetSubStream());
             m_fIsSubStreamEmbeded.AddTail(true);
         }
     }
@@ -1204,14 +1211,14 @@ void XySubFilter::AddSubStream(ISubStream* pSubStream)
         m_fIsSubStreamEmbeded.AddTail(true);//todo: fix me
     }
 
-    int len = m_dvs->m_pTextInput.GetCount();
-    for(unsigned i = 0; i < m_dvs->m_pTextInput.GetCount(); i++)
-        if(m_dvs->m_pTextInput[i]->IsConnected()) len--;
+    int len = m_pTextInput.GetCount();
+    for(unsigned i = 0; i < m_pTextInput.GetCount(); i++)
+        if(m_pTextInput[i]->IsConnected()) len--;
 
     if(len == 0)
     {
         HRESULT hr = S_OK;
-        m_dvs->m_pTextInput.Add(new CTextInputPin(m_dvs, m_dvs->m_pLock, &m_csSubLock, &hr));
+        m_pTextInput.Add(new CTextInputPin(m_dvs, m_dvs->m_pLock, &m_csSubLock, &hr));
     }
 }
 

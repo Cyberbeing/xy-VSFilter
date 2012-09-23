@@ -88,8 +88,6 @@ public:
 			StopStreaming(),
 			NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 
-    CAtlArray<CTextInputPin*> m_pTextInput;
-
     //CBaseVideoFilter
     void GetInputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
     void GetOutputColorspaces(ColorSpaceId *preferredOrder, UINT *count);

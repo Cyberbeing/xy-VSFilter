@@ -104,5 +104,7 @@ private:
 
     CComPtr<ISimpleSubPicProvider> m_simple_provider;
 
+    CAtlArray<CTextInputPin*> m_pTextInput;
+
     CDirectVobSubFilter *m_dvs;
 };

@@ -94,10 +94,6 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	m_tbid.fRunOnce = false;
 	m_tbid.fShowIcon = (theApp.m_AppName.Find(_T("zplayer"), 0) < 0 || !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0));
 
-	HRESULT hr = S_OK;
-	m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_xy_sub_filter->m_csSubLock, &hr));
-	ASSERT(SUCCEEDED(hr));
-
     m_xy_sub_filter = new XySubFilter(this, 0);
 
 	memset(&m_CurrentVIH2, 0, sizeof(VIDEOINFOHEADER2));
@@ -110,9 +106,6 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 CDirectVobSubFilter::~CDirectVobSubFilter()
 {
 	CAutoLock cAutoLock(&m_csQueueLock);
-
-	for(int i = 0; i < m_pTextInput.GetCount(); i++)
-		delete m_pTextInput[i];
 
     delete m_xy_sub_filter; m_xy_sub_filter = NULL;
 
@@ -328,17 +321,17 @@ CBasePin* CDirectVobSubFilter::GetPin(int n)
 
 	n -= __super::GetPinCount();
 
-	if(n >= 0 && n < m_pTextInput.GetCount())
-		return m_pTextInput[n];
+	if(n >= 0 && n < m_xy_sub_filter->m_pTextInput.GetCount())
+		return m_xy_sub_filter->m_pTextInput[n];
 
-	n -= m_pTextInput.GetCount();
+	n -= m_xy_sub_filter->m_pTextInput.GetCount();
 
 	return NULL;
 }
 
 int CDirectVobSubFilter::GetPinCount()
 {
-	return __super::GetPinCount() + m_pTextInput.GetCount();
+	return __super::GetPinCount() + m_xy_sub_filter->m_pTextInput.GetCount();
 }
 
 HRESULT CDirectVobSubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
@@ -961,7 +954,7 @@ void CDirectVobSubFilter2::GetRidOfInternalScriptRenderer()
 			{
 				m_pGraph->Disconnect(pPinTo);
 				m_pGraph->Disconnect(pPin);
-				m_pGraph->ConnectDirect(pPinTo, GetPin(2 + m_pTextInput.GetCount()-1), NULL);
+				m_pGraph->ConnectDirect(pPinTo, GetPin(2 + m_xy_sub_filter->m_pTextInput.GetCount()-1), NULL);
 			}
 		}
 		EndEnumPins
