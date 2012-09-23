@@ -846,7 +846,7 @@ void XySubFilter::SetYuvMatrix()
 bool XySubFilter::Open()
 {
     AMTRACE((TEXT(__FUNCTION__),0));
-    XY_AUTO_TIMING(TEXT("CDirectVobSubFilter::Open"));
+    XY_AUTO_TIMING(TEXT("XySubFilter::Open"));
 
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
