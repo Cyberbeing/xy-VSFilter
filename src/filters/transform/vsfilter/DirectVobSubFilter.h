@@ -95,7 +95,7 @@ public:
     //CBaseVideoFilter
     void GetInputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
     void GetOutputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
-
+    
     // IDirectVobSub
 
     STDMETHODIMP get_FileName(WCHAR* fn);
@@ -162,7 +162,7 @@ public:
     STDMETHODIMP put_TextSettings(STSStyle* pDefStyle);
     STDMETHODIMP get_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType);
     STDMETHODIMP put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType);
-
+    
     // IDirectVobSubXy
     STDMETHODIMP XyGetBool     (int field, bool      *value);
     STDMETHODIMP XyGetInt      (int field, int       *value);
@@ -235,7 +235,7 @@ protected:
 	// the text input pin is using these
 	void AddSubStream(ISubStream* pSubStream);
 	void RemoveSubStream(ISubStream* pSubStream);
-	void Post_EC_OLE_EVENT(CString str, DWORD_PTR nSubtitleId = -1);
+
 private:
 	HANDLE m_hSystrayThread;
 	SystrayIconData m_tbid;

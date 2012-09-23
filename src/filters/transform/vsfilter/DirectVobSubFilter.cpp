@@ -1133,22 +1133,6 @@ void CDirectVobSubFilter::RemoveSubStream(ISubStream* pSubStream)
     }
 }
 
-void CDirectVobSubFilter::Post_EC_OLE_EVENT(CString str, DWORD_PTR nSubtitleId)
-{
-	if(nSubtitleId != -1 && nSubtitleId != m_xy_sub_filter->m_nSubtitleId)
-		return;
-
-	CComQIPtr<IMediaEventSink> pMES = m_pGraph;
-	if(!pMES) return;
-
-	CComBSTR bstr1("Text"), bstr2(" ");
-
-	str.Trim();
-	if(!str.IsEmpty()) bstr2 = CStringA(str);
-
-	pMES->Notify(EC_OLE_EVENT, (LONG_PTR)bstr1.Detach(), (LONG_PTR)bstr2.Detach());
-}
-
 ////////////////////////////////////////////////////////////////
 
 void CDirectVobSubFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
