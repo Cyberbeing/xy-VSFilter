@@ -76,6 +76,8 @@ private:
     // the text input pin is using these
     void AddSubStream(ISubStream* pSubStream);
     void RemoveSubStream(ISubStream* pSubStream);
+
+    HRESULT GetIsEmbeddedSubStream(int iSelected, bool *fIsEmbedded);
 private:
     class CFileReloaderData
     {
@@ -92,6 +94,10 @@ private:
     CSimpleTextSubtitle::YCbCrRange m_script_selected_range;
 
     DWORD_PTR m_nSubtitleId;
+    CInterfaceList<ISubStream> m_pSubStreams;
+    CAtlList<bool> m_fIsSubStreamEmbeded;
+
+    CCritSec m_csSubLock;
 
     CDirectVobSubFilter *m_dvs;
 };

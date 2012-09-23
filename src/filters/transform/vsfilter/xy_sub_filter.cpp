@@ -148,8 +148,8 @@ STDMETHODIMP XySubFilter::get_LanguageCount(int* nLangs)
         CAutoLock cAutolock(&m_dvs->m_csQueueLock);
 
         *nLangs = 0;
-        POSITION pos = m_dvs->m_pSubStreams.GetHeadPosition();
-        while(pos) (*nLangs) += m_dvs->m_pSubStreams.GetNext(pos)->GetStreamCount();
+        POSITION pos = m_pSubStreams.GetHeadPosition();
+        while(pos) (*nLangs) += m_pSubStreams.GetNext(pos)->GetStreamCount();
     }
 
     return hr;
@@ -169,10 +169,10 @@ STDMETHODIMP XySubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 
         int i = iLanguage;
 
-        POSITION pos = m_dvs->m_pSubStreams.GetHeadPosition();
+        POSITION pos = m_pSubStreams.GetHeadPosition();
         while(i >= 0 && pos)
         {
-            CComPtr<ISubStream> pSubStream = m_dvs->m_pSubStreams.GetNext(pos);
+            CComPtr<ISubStream> pSubStream = m_pSubStreams.GetNext(pos);
 
             if(i < pSubStream->GetStreamCount())
             {
@@ -561,7 +561,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
         else if(i >= 0 && i < nLangs)
         {
             bool isEmbedded = false;
-            if( SUCCEEDED(m_dvs->GetIsEmbeddedSubStream(i, &isEmbedded)) )
+            if( SUCCEEDED(GetIsEmbeddedSubStream(i, &isEmbedded)) )
             {
                 if(isEmbedded)
                 {
@@ -630,7 +630,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
 // 
 void XySubFilter::SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles)
 {
-    CAutoLock cAutolock(&m_dvs->m_csSubLock);
+    CAutoLock cAutolock(&m_csSubLock);
 
     for(unsigned i = 2; i < handles.GetCount(); i++)
     {
@@ -852,8 +852,8 @@ bool XySubFilter::Open()
 
     CAutoLock cAutolock(&m_dvs->m_csQueueLock);
 
-    m_dvs->m_pSubStreams.RemoveAll();
-    m_dvs->m_fIsSubStreamEmbeded.RemoveAll();
+    m_pSubStreams.RemoveAll();
+    m_fIsSubStreamEmbeded.RemoveAll();
 
     m_frd.files.RemoveAll();
 
@@ -881,7 +881,7 @@ bool XySubFilter::Open()
         {
             //            CAutoTiming t(TEXT("CRenderedTextSubtitle::Open"), 0);
             XY_AUTO_TIMING(TEXT("CRenderedTextSubtitle::Open"));
-            CAutoPtr<CRenderedTextSubtitle> pRTS(new CRenderedTextSubtitle(&m_dvs->m_csSubLock));
+            CAutoPtr<CRenderedTextSubtitle> pRTS(new CRenderedTextSubtitle(&m_csSubLock));
             if(pRTS && pRTS->Open(ret[i].fn, DEFAULT_CHARSET) && pRTS->GetStreamCount() > 0)
             {
                 pSubStream = pRTS.Detach();
@@ -892,7 +892,7 @@ bool XySubFilter::Open()
         if(!pSubStream)
         {
             CAutoTiming t(TEXT("CVobSubFile::Open"), 0);
-            CAutoPtr<CVobSubFile> pVSF(new CVobSubFile(&m_dvs->m_csSubLock));
+            CAutoPtr<CVobSubFile> pVSF(new CVobSubFile(&m_csSubLock));
             if(pVSF && pVSF->Open(ret[i].fn) && pVSF->GetStreamCount() > 0)
             {
                 pSubStream = pVSF.Detach();
@@ -903,7 +903,7 @@ bool XySubFilter::Open()
         if(!pSubStream)
         {
             CAutoTiming t(TEXT("ssf::CRenderer::Open"), 0);
-            CAutoPtr<ssf::CRenderer> pSSF(new ssf::CRenderer(&m_dvs->m_csSubLock));
+            CAutoPtr<ssf::CRenderer> pSSF(new ssf::CRenderer(&m_csSubLock));
             if(pSSF && pSSF->Open(ret[i].fn) && pSSF->GetStreamCount() > 0)
             {
                 pSubStream = pSSF.Detach();
@@ -912,8 +912,8 @@ bool XySubFilter::Open()
 
         if(pSubStream)
         {
-            m_dvs->m_pSubStreams.AddTail(pSubStream);
-            m_dvs->m_fIsSubStreamEmbeded.AddTail(false);
+            m_pSubStreams.AddTail(pSubStream);
+            m_fIsSubStreamEmbeded.AddTail(false);
             m_frd.files.AddTail(ret[i].fn);
         }
     }
@@ -922,8 +922,8 @@ bool XySubFilter::Open()
     {
         if(m_dvs->m_pTextInput[i]->IsConnected())
         {
-            m_dvs->m_pSubStreams.AddTail(m_dvs->m_pTextInput[i]->GetSubStream());
-            m_dvs->m_fIsSubStreamEmbeded.AddTail(true);
+            m_pSubStreams.AddTail(m_dvs->m_pTextInput[i]->GetSubStream());
+            m_fIsSubStreamEmbeded.AddTail(true);
         }
     }
 
@@ -932,7 +932,7 @@ bool XySubFilter::Open()
 
     m_frd.RefreshEvent.Set();
 
-    return(m_dvs->m_pSubStreams.GetCount() > 0);
+    return(m_pSubStreams.GetCount() > 0);
 }
 
 void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
@@ -949,13 +949,13 @@ void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
     {
         int i = m_iSelectedLanguage;
 
-        for(POSITION pos = m_dvs->m_pSubStreams.GetHeadPosition(); i >= 0 && pos; pSubStream = NULL)
+        for(POSITION pos = m_pSubStreams.GetHeadPosition(); i >= 0 && pos; pSubStream = NULL)
         {
-            pSubStream = m_dvs->m_pSubStreams.GetNext(pos);
+            pSubStream = m_pSubStreams.GetNext(pos);
 
             if(i < pSubStream->GetStreamCount())
             {
-                CAutoLock cAutoLock(&m_dvs->m_csSubLock);
+                CAutoLock cAutoLock(&m_csSubLock);
                 pSubStream->SetStream(i);
                 break;
             }
@@ -978,7 +978,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
     m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
     if(pSubStream)
     {
-        CAutoLock cAutolock(&m_dvs->m_csSubLock);
+        CAutoLock cAutolock(&m_csSubLock);
 
         CLSID clsid;
         pSubStream->GetClassID(&clsid);
@@ -1050,10 +1050,10 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
     {
         int i = 0;
 
-        POSITION pos = m_dvs->m_pSubStreams.GetHeadPosition();
+        POSITION pos = m_pSubStreams.GetHeadPosition();
         while(pos)
         {
-            CComPtr<ISubStream> pSubStream2 = m_dvs->m_pSubStreams.GetNext(pos);
+            CComPtr<ISubStream> pSubStream2 = m_pSubStreams.GetNext(pos);
 
             if(pSubStream == pSubStream2)
             {
@@ -1188,11 +1188,11 @@ void XySubFilter::AddSubStream(ISubStream* pSubStream)
 {
     CAutoLock cAutoLock(&m_dvs->m_csQueueLock);
 
-    POSITION pos = m_dvs->m_pSubStreams.Find(pSubStream);
+    POSITION pos = m_pSubStreams.Find(pSubStream);
     if(!pos)
     {
-        m_dvs->m_pSubStreams.AddTail(pSubStream);
-        m_dvs->m_fIsSubStreamEmbeded.AddTail(true);//todo: fix me
+        m_pSubStreams.AddTail(pSubStream);
+        m_fIsSubStreamEmbeded.AddTail(true);//todo: fix me
     }
 
     int len = m_dvs->m_pTextInput.GetCount();
@@ -1202,7 +1202,7 @@ void XySubFilter::AddSubStream(ISubStream* pSubStream)
     if(len == 0)
     {
         HRESULT hr = S_OK;
-        m_dvs->m_pTextInput.Add(new CTextInputPin(m_dvs, m_dvs->m_pLock, &m_dvs->m_csSubLock, &hr));
+        m_dvs->m_pTextInput.Add(new CTextInputPin(m_dvs, m_dvs->m_pLock, &m_csSubLock, &hr));
     }
 }
 
@@ -1210,20 +1210,52 @@ void XySubFilter::RemoveSubStream(ISubStream* pSubStream)
 {
     CAutoLock cAutoLock(&m_dvs->m_csQueueLock);
 
-    POSITION pos = m_dvs->m_pSubStreams.GetHeadPosition();
-    POSITION pos2 = m_dvs->m_fIsSubStreamEmbeded.GetHeadPosition();
+    POSITION pos = m_pSubStreams.GetHeadPosition();
+    POSITION pos2 = m_fIsSubStreamEmbeded.GetHeadPosition();
     while(pos!=NULL)
     {
-        if( m_dvs->m_pSubStreams.GetAt(pos)==pSubStream )
+        if( m_pSubStreams.GetAt(pos)==pSubStream )
         {
-            m_dvs->m_pSubStreams.RemoveAt(pos);
-            m_dvs->m_fIsSubStreamEmbeded.RemoveAt(pos2);
+            m_pSubStreams.RemoveAt(pos);
+            m_fIsSubStreamEmbeded.RemoveAt(pos2);
             break;
         }
         else
         {
-            m_dvs->m_pSubStreams.GetNext(pos);
-            m_dvs->m_fIsSubStreamEmbeded.GetNext(pos2);
+            m_pSubStreams.GetNext(pos);
+            m_fIsSubStreamEmbeded.GetNext(pos2);
         }
     }
 }
+
+HRESULT XySubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
+{
+    CAutoLock cAutolock(&m_dvs->m_csQueueLock);
+
+    HRESULT hr = E_INVALIDARG;
+    if (!fIsEmbedded)
+    {
+        return S_FALSE;
+    }
+
+    int i = iSelected;
+    *fIsEmbedded = false;
+
+    POSITION pos = m_pSubStreams.GetHeadPosition();
+    POSITION pos2 = m_fIsSubStreamEmbeded.GetHeadPosition();
+    while(i >= 0 && pos)
+    {
+        CComPtr<ISubStream> pSubStream = m_pSubStreams.GetNext(pos);
+        bool isEmbedded = m_fIsSubStreamEmbeded.GetNext(pos2);
+        if(i < pSubStream->GetStreamCount())
+        {
+            hr = NOERROR;
+            *fIsEmbedded = isEmbedded;
+            break;
+        }
+
+        i -= pSubStream->GetStreamCount();
+    }
+    return hr;
+}
+

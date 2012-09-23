@@ -64,8 +64,7 @@ class CDirectVobSubFilter
     HRESULT TryNotCopy( IMediaSample* pIn, const CMediaType& mt, const BITMAPINFOHEADER& bihIn );
 protected:
 	void GetOutputSize(int& w, int& h, int& arx, int& ary);
-	HRESULT Transform(IMediaSample* pIn);    
-    HRESULT GetIsEmbeddedSubStream(int iSelected, bool *fIsEmbedded);
+	HRESULT Transform(IMediaSample* pIn);
 public:
     CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid = __uuidof(CDirectVobSubFilter));
 	virtual ~CDirectVobSubFilter();
@@ -224,11 +223,6 @@ protected:
 
 	// don't set the "hide subtitles" stream until we are finished with loading
 	bool m_fLoading;
-
-	CCritSec m_csSubLock;
-
-	CInterfaceList<ISubStream> m_pSubStreams;
-    CAtlList<bool> m_fIsSubStreamEmbeded;
 
 private:
 	HANDLE m_hSystrayThread;

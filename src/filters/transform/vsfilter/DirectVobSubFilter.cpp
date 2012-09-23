@@ -95,7 +95,7 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	m_tbid.fShowIcon = (theApp.m_AppName.Find(_T("zplayer"), 0) < 0 || !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0));
 
 	HRESULT hr = S_OK;
-	m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, &hr));
+	m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_xy_sub_filter->m_csSubLock, &hr));
 	ASSERT(SUCCEEDED(hr));
 
     m_xy_sub_filter = new XySubFilter(this, 0);
@@ -1128,37 +1128,6 @@ void CDirectVobSubFilter::GetOutputColorspaces( ColorSpaceId *preferredOrder, UI
         CBaseVideoFilter::GetInputColorspaces(preferredOrder, count);
     }
     delete []color_space;
-}
-
-HRESULT CDirectVobSubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
-{
-    CAutoLock cAutolock(&m_csQueueLock);
-
-    HRESULT hr = E_INVALIDARG;
-    if (!fIsEmbedded)
-    {
-        return S_FALSE;
-    }
-
-    int i = iSelected;
-    *fIsEmbedded = false;
-
-    POSITION pos = m_pSubStreams.GetHeadPosition();
-    POSITION pos2 = m_fIsSubStreamEmbeded.GetHeadPosition();
-    while(i >= 0 && pos)
-    {
-        CComPtr<ISubStream> pSubStream = m_pSubStreams.GetNext(pos);
-        bool isEmbedded = m_fIsSubStreamEmbeded.GetNext(pos2);
-        if(i < pSubStream->GetStreamCount())
-        {
-            hr = NOERROR;
-            *fIsEmbedded = isEmbedded;
-            break;
-        }
-
-        i -= pSubStream->GetStreamCount();
-    }
-    return hr;
 }
 
 //
