@@ -122,11 +122,11 @@ CBaseVideoFilter::CBaseVideoFilter(TCHAR* pName, LPUNKNOWN lpunk, HRESULT* phr, 
     , m_donot_follow_upstream_preferred_order(false)
 {
 	if(phr) *phr = S_OK;
-	if(!(m_pInput = new CBaseVideoInputPin(NAME("CBaseVideoInputPin"), this, phr, L"Video"))) *phr = E_OUTOFMEMORY;
-	if(FAILED(*phr)) return;
+	if(!(m_pInput = new CBaseVideoInputPin(NAME("CBaseVideoInputPin"), this, phr, L"Video")) && phr) *phr = E_OUTOFMEMORY;
+	if(phr && FAILED(*phr)) return;
 
-	if(!(m_pOutput = new CBaseVideoOutputPin(NAME("CBaseVideoOutputPin"), this, phr, L"Output"))) *phr = E_OUTOFMEMORY;
-	if(FAILED(*phr))  {delete m_pInput, m_pInput = NULL; return;}
+	if(!(m_pOutput = new CBaseVideoOutputPin(NAME("CBaseVideoOutputPin"), this, phr, L"Output")) && phr) *phr = E_OUTOFMEMORY;
+	if(phr && FAILED(*phr))  {delete m_pInput, m_pInput = NULL; return;}
 
 	m_wout = m_win = m_w = 0;
 	m_hout = m_hin = m_h = 0;
