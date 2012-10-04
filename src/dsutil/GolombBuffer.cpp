@@ -1,16 +1,14 @@
 /*
- * $Id: GolombBuffer.cpp 3526 2011-08-01 15:46:29Z XhmikosR $
+ * (C) 2006-2012 see Authors.txt
  *
- * (C) 2006-2010 see AUTHORS
+ * This file is part of MPC-HC.
  *
- * This file is part of mplayerc.
- *
- * Mplayerc is free software; you can redistribute it and/or modify
+ * MPC-HC is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * Mplayerc is distributed in the hope that it will be useful,
+ * MPC-HC is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -20,98 +18,97 @@
  *
  */
 
-
 #include "stdafx.h"
 #include "GolombBuffer.h"
 
 CGolombBuffer::CGolombBuffer(BYTE* pBuffer, int nSize)
 {
-	m_pBuffer	= pBuffer;
-	m_nSize		= nSize;
+    m_pBuffer = pBuffer;
+    m_nSize   = nSize;
 
-	Reset();
+    Reset();
 }
 
 UINT64 CGolombBuffer::BitRead(int nBits, bool fPeek)
 {
-	//	ASSERT(nBits >= 0 && nBits <= 64);
+    //ASSERT(nBits >= 0 && nBits <= 64);
 
-	while(m_bitlen < nBits) {
-		m_bitbuff <<= 8;
+    while (m_bitlen < nBits) {
+        m_bitbuff <<= 8;
 
-		if (m_nBitPos >= m_nSize) {
-			return 0;
-		}
+        if (m_nBitPos >= m_nSize) {
+            return 0;
+        }
 
-		*(BYTE*)&m_bitbuff = m_pBuffer[m_nBitPos++];
-		m_bitlen += 8;
-	}
+        *(BYTE*)&m_bitbuff = m_pBuffer[m_nBitPos++];
+        m_bitlen += 8;
+    }
 
-	int bitlen = m_bitlen - nBits;
+    int bitlen = m_bitlen - nBits;
 
-	UINT64 ret = (m_bitbuff >> bitlen) & ((1ui64 << nBits) - 1);
+    UINT64 ret = (m_bitbuff >> bitlen) & ((1ui64 << nBits) - 1);
 
-	if(!fPeek) {
-		m_bitbuff &= ((1ui64 << bitlen) - 1);
-		m_bitlen = bitlen;
-	}
+    if (!fPeek) {
+        m_bitbuff &= ((1ui64 << bitlen) - 1);
+        m_bitlen = bitlen;
+    }
 
-	return ret;
+    return ret;
 }
 
 UINT64 CGolombBuffer::UExpGolombRead()
 {
-	int n = -1;
-	for(BYTE b = 0; !b; n++) {
-		b = (BYTE)BitRead(1);
-	}
-	return (1ui64 << n) - 1 + BitRead(n);
+    int n = -1;
+    for (BYTE b = 0; !b; n++) {
+        b = (BYTE)BitRead(1);
+    }
+    return (1ui64 << n) - 1 + BitRead(n);
 }
 
 INT64 CGolombBuffer::SExpGolombRead()
 {
-	UINT64 k = UExpGolombRead();
-	return ((k&1) ? 1 : -1) * ((k + 1) >> 1);
+    UINT64 k = UExpGolombRead();
+    return ((k & 1) ? 1 : -1) * ((k + 1) >> 1);
 }
 
 void CGolombBuffer::BitByteAlign()
 {
-	m_bitlen &= ~7;
+    m_bitlen &= ~7;
 }
 
-__int64 CGolombBuffer::GetPos()
+int CGolombBuffer::GetPos()
 {
-	return m_nBitPos - (m_bitlen>>3);
+    return m_nBitPos - (m_bitlen >> 3);
 }
 
 void CGolombBuffer::ReadBuffer(BYTE* pDest, int nSize)
 {
-	ASSERT (m_nBitPos + nSize <= m_nSize);
-	ASSERT (m_bitlen == 0);
-	nSize = min (nSize, m_nSize - m_nBitPos);
+    ASSERT(m_nBitPos + nSize <= m_nSize);
+    ASSERT(m_bitlen == 0);
+    nSize = min(nSize, m_nSize - m_nBitPos);
 
-	memcpy (pDest, m_pBuffer+m_nBitPos, nSize);
-	m_nBitPos += nSize;
+    memcpy(pDest, m_pBuffer + m_nBitPos, nSize);
+    m_nBitPos += nSize;
 }
 
 void CGolombBuffer::Reset()
 {
-	m_nBitPos	= 0;
-	m_bitlen	= 0;
-	m_bitbuff	= 0;
+    m_nBitPos = 0;
+    m_bitlen  = 0;
+    m_bitbuff = 0;
 }
 
 void CGolombBuffer::Reset(BYTE* pNewBuffer, int nNewSize)
 {
-	m_pBuffer	= pNewBuffer;
-	m_nSize		= nNewSize;
+    m_pBuffer = pNewBuffer;
+    m_nSize   = nNewSize;
 
-	Reset();
+    Reset();
 }
 
 void CGolombBuffer::SkipBytes(int nCount)
 {
-	m_nBitPos  += nCount;
-	m_bitlen	= 0;
-	m_bitbuff	= 0;
+    m_nBitPos += nCount;
+    m_bitlen   = 0;
+    m_bitbuff  = 0;
 }
