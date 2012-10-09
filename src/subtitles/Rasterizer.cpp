@@ -1952,8 +1952,6 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     }
     break;
     }
-    // Remember to EMMS!
-    // Rendering fails in funny ways if we don't do this.
     return;
 }
 
@@ -2026,6 +2024,7 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
 void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const byte* pBorder, int x, int y, int w, int h, 
     const byte* pAlphaMask, int pitch, DWORD color_alpha )
 {
+#ifndef _WIN64
     if (g_cpuid.m_flags & CCpuID::sse2)
     {
         pBody = pBody!=NULL ? pBody + y*mOverlayPitch + x: NULL;
@@ -2329,6 +2328,10 @@ void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const b
         _DoFillAlphaMash_c(outputAlphaMask, pBody, pBorder, x, y, w, h, pAlphaMask, pitch, color_alpha);
         return;
     }
+#else
+    _DoFillAlphaMash_c(outputAlphaMask, pBody, pBorder, x, y, w, h, pAlphaMask, pitch, color_alpha);
+    return;
+#endif
 }
 
 void Overlay::_DoFillAlphaMash_c(byte* outputAlphaMask, const byte* pBody, const byte* pBorder, int x, int y, int w, int h, 

@@ -278,48 +278,7 @@ HRESULT SimpleSubpic::AlphaBlt( SubPicDesc* target, const Bitmap& src )
         }
         break;
     case MSP_YUY2:
-        for(int j = 0; j < h; j++, s += src.pitch, d += dst.pitch)
-        {
-            unsigned int ia, c;
-            const BYTE* s2 = s;
-            const BYTE* s2end = s2 + w*4;
-            DWORD* d2 = reinterpret_cast<DWORD*>(d);
-            int last_a = w > 0 ? s2[3] : 0;
-            for(; s2 < s2end; s2 += 8, d2++)
-            {
-                ia = (last_a + 2*s2[3] + s2[7])>>2;
-                last_a = s2[7];
-                if(ia < 0xff)
-                {
-                    //int y1 = (BYTE)(((((*d2&0xff))*s2[3])>>8) + s2[1]); // + y1;
-                    //int u = (BYTE)((((((*d2>>8)&0xff))*ia)>>8) + s2[0]); // + u;
-                    //int y2 = (BYTE)((((((*d2>>16)&0xff))*s2[7])>>8) + s2[5]); // + y2;                    
-                    //int v = (BYTE)((((((*d2>>24)&0xff))*ia)>>8) + s2[4]); // + v;
-                    //*d2 = (v<<24)|(y2<<16)|(u<<8)|y1;
-                    
-                    ia = (ia<<24)|(s2[7]<<16)|(ia<<8)|s2[3];
-                    c = (s2[4]<<24)|(s2[5]<<16)|(s2[0]<<8)|s2[1]; // (v<<24)|(y2<<16)|(u<<8)|y1;
-                    __asm
-                    {
-                            mov			edi, d2
-                            pxor		mm0, mm0
-                            movd		mm2, c
-                            punpcklbw	mm2, mm0
-                            movd		mm3, [edi]
-                            punpcklbw	mm3, mm0
-                            movd		mm4, ia
-                            punpcklbw	mm4, mm0
-                            psraw		mm4, 1          //or else, overflow because psraw shift in sign bit
-                            pmullw		mm3, mm4
-                            psraw		mm3, 7
-                            paddsw		mm3, mm2
-                            packuswb	mm3, mm3
-                            movd		[edi], mm3
-                    };
-                }
-            }
-        }
-        __asm emms;
+        CMemSubPic::AlphaBlt_YUY2(w,h,d,dst.pitch,s, src.pitch);
         break;
     case MSP_YV12:
     case MSP_IYUV:
@@ -360,7 +319,7 @@ HRESULT SimpleSubpic::AlphaBlt( SubPicDesc* target, const Bitmap& src )
             CMemSubPic::AlphaBltYv12Chroma( dd[0], dst.pitchUV, w, h2, su, sa, src.pitch);
             CMemSubPic::AlphaBltYv12Chroma( dd[1], dst.pitchUV, w, h2, sv, sa, src.pitch);
 
-            __asm emms;
+            _mm_empty();
         }
         break;
     default:
