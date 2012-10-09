@@ -454,11 +454,11 @@ namespace VirtualDub
 			CFileDialog fd(TRUE, NULL, GetFileName(), OFN_EXPLORER|OFN_ENABLESIZING|OFN_HIDEREADONLY|OFN_ENABLETEMPLATE|OFN_ENABLEHOOK, 
 				formats, CWnd::FromHandle(hwnd), OPENFILENAME_SIZE_VERSION_400 /*0*/);
 
-			UINT CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam);
+			UINT_PTR CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam);
 
 			fd.m_pOFN->hInstance = AfxGetResourceHandle();
 			fd.m_pOFN->lpTemplateName = MAKEINTRESOURCE(IDD_TEXTSUBOPENTEMPLATE);
-			fd.m_pOFN->lpfnHook = OpenHookProc;
+			fd.m_pOFN->lpfnHook = (LPOFNHOOKPROC)OpenHookProc;
 			fd.m_pOFN->lCustData = (LPARAM)DEFAULT_CHARSET;
 
 			if(fd.DoModal() != IDOK) return 1;
@@ -918,7 +918,7 @@ namespace AviSynth25
 
 }
 
-UINT CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+UINT_PTR CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch(uiMsg)
 	{
@@ -936,7 +936,11 @@ UINT CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 
 		case WM_INITDIALOG:
 		{
-			SetWindowLong(hDlg, GWL_USERDATA, lParam);
+#ifdef _WIN64
+            SetWindowLongPtr(hDlg, GWLP_USERDATA, lParam);
+#else
+            SetWindowLongPtr(hDlg, GWL_USERDATA, lParam);
+#endif
 
 			for(int i = 0; i < CharSetLen; i++)
 			{

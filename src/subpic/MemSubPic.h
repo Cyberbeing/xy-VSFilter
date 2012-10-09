@@ -25,6 +25,8 @@
 
 // CMemSubPic
 
+typedef const UINT8 CUINT8, *PCUINT8;
+
 class CMemSubPic : public CSubPicExImpl
 {
 public:
@@ -48,6 +50,8 @@ public:
     static HRESULT AlphaBltAnv12_Nv12_C(const BYTE* src_a, const BYTE* src_y, const BYTE* src_uv, int src_pitch,
         BYTE* dst_y, BYTE* dst_uv, int dst_pitch,
         int w, int h);
+
+    static void AlphaBlt_YUY2(int w, int h, BYTE* d, int dstpitch, PCUINT8 s, int srcpitch);
 
     static void SubsampleAndInterlace(BYTE* dst, const BYTE* u, const BYTE* v, int h, int w, int pitch);
     static void SubsampleAndInterlaceC(BYTE* dst, const BYTE* u, const BYTE* v, int h, int w, int pitch);
