@@ -13,10 +13,6 @@
       <Configuration>Release Unicode</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Template|Win32">
-      <Configuration>Template</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>subtitles</ProjectName>
@@ -72,9 +68,6 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release Unicode log|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release Unicode log|Win32'" />
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" />
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">$(WindowsSdkDir)include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(FrameworkSDKDir)\include;$(VCInstallDir)PlatformSDK\include;$(SolutionDir);$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\BaseClasses;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release Unicode log|Win32'">$(WindowsSdkDir)include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(FrameworkSDKDir)\include;$(VCInstallDir)PlatformSDK\include;$(SolutionDir);$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\BaseClasses;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\</IncludePath>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release Unicode|Win32'">$(Configuration)\</IntDir>
