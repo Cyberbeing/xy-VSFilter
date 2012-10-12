@@ -318,8 +318,10 @@ HRESULT SimpleSubpic::AlphaBlt( SubPicDesc* target, const Bitmap& src )
             CMemSubPic::AlphaBltYv12Luma( d, dst.pitch, w, h, sy, sa, src.pitch );
             CMemSubPic::AlphaBltYv12Chroma( dd[0], dst.pitchUV, w, h2, su, sa, src.pitch);
             CMemSubPic::AlphaBltYv12Chroma( dd[1], dst.pitchUV, w, h2, sv, sa, src.pitch);
-
+#ifndef _WIN64
+            // TODOX64 : fixme!
             _mm_empty();
+#endif
         }
         break;
     default:
