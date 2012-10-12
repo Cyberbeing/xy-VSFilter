@@ -3,9 +3,10 @@
 function Usage()
 {
   echo "Usage:"
-  echo -e "\t$1 [-conf "'"Release"|"Debug"'"] [-action build|clean|rebuild] [-proj project] [-voff|--versioning-off] [-solution sln_file]"
+  echo -e "\t$1 [-conf "'"Release"|"Debug"'"]  [-plat platform "'"Win32"|"x64"'"] [-action build|clean|rebuild] [-proj project] [-voff|--versioning-off] [-solution sln_file]"
   echo "Default:"
   echo -e '-conf\t\t"Release"'
+  echo -e '-plat\t\t"Win32"'
   echo -e '-action\t\tbuild'
   echo -e '-project\tvsfilter_2010'
   echo -e '-solution\tsrc/filters/transform/vsfilter/VSFilter_vs2010.sln'
@@ -17,6 +18,7 @@ cd $script_dir
 solution="src/filters/transform/vsfilter/VSFilter_vs2010.sln"
 action="build"
 configuration="Release"
+platform="Win32"
 project="vsfilter_2010"
 update_version=1
 
@@ -25,6 +27,8 @@ do
   if [ "$flag"x == ""x ]; then
     if [ "$1"x == "-conf"x ]; then
       flag="configuration"
+    elif [ "$1"x == "-plat"x ]; then
+      flag="platform"
     elif [ "$1"x == "-action"x ]; then
       flag="action"
     elif [ "$1"x == "-proj"x ]; then
@@ -78,9 +82,16 @@ echo "#define XY_VSFILTER_VERSION_MAJOR $ver_major
 #define XY_VSFILTER_VERSION_COMMIT_SHA1 \"$rev_sha1\"" > src/filters/transform/vsfilter/version_in.h
 fi
 
+platform_type="x86"
+if [ "$platform"x = "x64"x ]; then
+  platform_type="x86_amd64"
+fi
+
+configuration=$configuration"|"$platform
+
 #build
 echo '
-CALL "%VS100COMNTOOLS%../../VC/vcvarsall.bat" x86
+CALL "%VS100COMNTOOLS%../../VC/vcvarsall.bat" '$platform_type'
 devenv "'$solution'" /'$action' "'$configuration'" /project "'$project'"
 exit
 ' | cmd
