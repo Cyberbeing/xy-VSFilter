@@ -3,9 +3,9 @@
 function Usage()
 {
   echo "Usage:"
-  echo -e "\t$1 [-conf "'"Release Unicode"|"Debug Unicode"'"] [-action build|clean|rebuild] [-proj project] [-voff|--versioning-off] [-solution sln_file]"
+  echo -e "\t$1 [-conf "'"Release"|"Debug"'"] [-action build|clean|rebuild] [-proj project] [-voff|--versioning-off] [-solution sln_file]"
   echo "Default:"
-  echo -e '-conf\t\t"Release Unicode"'
+  echo -e '-conf\t\t"Release"'
   echo -e '-action\t\tbuild'
   echo -e '-project\tvsfilter_2010'
   echo -e '-solution\tsrc/filters/transform/vsfilter/VSFilter_vs2010.sln'
@@ -16,7 +16,7 @@ cd $script_dir
 
 solution="src/filters/transform/vsfilter/VSFilter_vs2010.sln"
 action="build"
-configuration="Release Unicode"
+configuration="Release"
 project="vsfilter_2010"
 update_version=1
 
