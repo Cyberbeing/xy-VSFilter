@@ -929,7 +929,10 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     xy_float_2_byte_transpose_sse(dst, true_width, dst_stride, ver_buff-r_y*2, true_height, true_width, fstride_ver);
     
     xy_free(buff_base);
+#ifndef _WIN64
+    // TODOX64 : fixme!
     _mm_empty();
+#endif
 }
 
 

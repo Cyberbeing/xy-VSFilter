@@ -770,7 +770,10 @@ HRESULT CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc
 
             AlphaBltYv12Chroma( dd[0], dst.pitchUV, w, h2, ss[0], src_origin, src.pitch);
             AlphaBltYv12Chroma( dd[1], dst.pitchUV, w, h2, ss[1], src_origin, src.pitch);
+#ifndef _WIN64
+            // TODOX64 : fixme!
             _mm_empty();
+#endif
         }
         break;
     default:
@@ -1430,7 +1433,10 @@ HRESULT CMemSubPic::AlphaBltAnv12_P010( const BYTE* src_a, const BYTE* src_y, co
                 hleft_vmid_mix_uv_p010_c(d, w, src_uv, src_a, src_pitch);
             }
         }
+#ifndef _WIN64
+        // TODOX64 : fixme!
         _mm_empty();
+#endif
         return S_OK;
     }
     else
@@ -1492,7 +1498,10 @@ HRESULT CMemSubPic::AlphaBltAnv12_Nv12( const BYTE* src_a, const BYTE* src_y, co
             hleft_vmid_mix_uv_nv12_sse2(d+head, w00, src_uv+head, src_a+head, src_pitch, head>0 ? -1 : 0);
             hleft_vmid_mix_uv_nv12_c2(d+head+w00, tail, src_uv+head+w00, src_a+head+w00, src_pitch, (w00+head)>0 ? -1 : 0);
         }
+#ifndef _WIN64
+        // TODOX64 : fixme!
         _mm_empty();
+#endif
     }
     else
     {
