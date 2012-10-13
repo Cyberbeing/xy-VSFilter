@@ -90,6 +90,22 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
 			}
 		}
 	}
+    else if (subtype == MEDIASUBTYPE_AYUV)
+    {
+        //TODO: Fix ME!
+        BYTE* db = (BYTE*)d;
+        db += 2;
+        BYTE* dbtend = db + w;
+
+        for(; db < dbtend; sub+=4, db+=4)
+        {
+            if(sub[3] < 0xff)
+            {
+                int y = ColorConvTable::Rgb2Y(sub[2], sub[1], sub[0]);
+                *db = y; // w/o colors
+            }
+        }
+    }
 	else if(subtype == MEDIASUBTYPE_RGB555)
 	{
 		WORD* ds = (WORD*)d;

@@ -410,7 +410,8 @@ HRESULT CMemSubPic::UnlockOther(CAtlList<CRect>* dirtyRectList)
 
             XY_DO_ONCE( xy_logger::write_file("G:\\a1_ul", top, m_spd.pitch*(h-1)) );
         }
-        else if(m_alpha_blt_dst_type == MSP_YV12 || m_alpha_blt_dst_type == MSP_IYUV )
+        else if(m_alpha_blt_dst_type == MSP_YV12 || m_alpha_blt_dst_type == MSP_IYUV 
+            || m_alpha_blt_dst_type == MSP_AYUV)
         {
             //nothing to do
         }
@@ -646,7 +647,6 @@ HRESULT CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc
         }
         break;
     case MSP_RGB32:
-    case MSP_AYUV: //ToDo: fix me MSP_VUYA indeed?
         for(int j = 0; j < h; j++, s += src.pitch, d += dst.pitch)
         {
             BYTE* s2 = s;
@@ -654,19 +654,28 @@ HRESULT CMemSubPic::AlphaBltOther(const RECT* pSrc, const RECT* pDst, SubPicDesc
             DWORD* d2 = (DWORD*)d;
             for(; s2 < s2end; s2 += 4, d2++)
             {
-#ifdef _WIN64
-							DWORD ia = 256-s2[3];
-							if(s2[3] < 0xff) {
-								*d2 = ((((*d2&0x00ff00ff)*s2[3])>>8) + (((*((DWORD*)s2)&0x00ff00ff)*ia)>>8)&0x00ff00ff)
-									  | ((((*d2&0x0000ff00)*s2[3])>>8) + (((*((DWORD*)s2)&0x0000ff00)*ia)>>8)&0x0000ff00);
-							}
-#else
                 if(s2[3] < 0xff)
                 {
                     *d2 = (((((*d2&0x00ff00ff)*s2[3])>>8) + (*((DWORD*)s2)&0x00ff00ff))&0x00ff00ff)
                         | (((((*d2&0x0000ff00)*s2[3])>>8) + (*((DWORD*)s2)&0x0000ff00))&0x0000ff00);
                 }
-#endif
+            }
+        }
+        break;
+    case MSP_AYUV:
+        for(int j = 0; j < h; j++, s += src.pitch, d += dst.pitch)
+        {
+            BYTE* s2 = s;
+            BYTE* s2end = s2 + w*4;
+            DWORD* d2 = (DWORD*)d;
+            for(; s2 < s2end; s2 += 4, d2++)
+            {
+                if(s2[3] < 0xff)
+                {
+                    *d2 = (((((*d2&0x00ff00ff)*s2[3])>>8) + (*((DWORD*)s2)&0x00ff00ff))&0x00ff00ff)
+                        | (((((*d2&0x0000ff00)*s2[3])>>8) + (*((DWORD*)s2)&0x0000ff00))&0x0000ff00)
+                        | (*d2&0xff000000);
+                }
             }
         }
         break;

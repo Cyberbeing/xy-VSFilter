@@ -113,6 +113,16 @@ VIH vihs[] =
 		VIH_NORMAL,														// size
 		&MEDIASUBTYPE_IYUV												// subtype
 	},
+    // AYUV
+    {
+        {
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 32, mmioFOURCC('A','Y','U','V'), 0, 0, 0, 0, 0}     // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH_NORMAL,                                                     // size
+        &MEDIASUBTYPE_AYUV                                              // subtype
+    },
 	// 8888 normal
 	{
 		{					
@@ -297,6 +307,16 @@ VIH2 vih2s[] =
 		VIH2_NORMAL,													// size
 		&MEDIASUBTYPE_IYUV												// subtype
 	},
+    // AYUV
+    {
+        {
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 32, mmioFOURCC('A','Y','U','V'), 0, 0, 0, 0, 0}     // bmiHeader
+        },
+        {0, 0, 0},                                                      // mask[3]
+        VIH2_NORMAL,                                                    // size
+        &MEDIASUBTYPE_AYUV                                              // subtype
+    },
 	// 8888 normal
 	{
 		{					
