@@ -1954,7 +1954,6 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     }
     // Remember to EMMS!
     // Rendering fails in funny ways if we don't do this.
-    _mm_empty();
     return;
 }
 
@@ -2017,7 +2016,6 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
     }
     break;
     }
-    _mm_empty();
 }
 
 
@@ -2324,6 +2322,7 @@ void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const b
                 dst += mOverlayPitch;
             }
         }
+        _mm_empty();
     }
     else
     {
