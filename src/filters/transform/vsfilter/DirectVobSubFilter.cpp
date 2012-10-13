@@ -732,6 +732,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	else if(subtype == MEDIASUBTYPE_RGB555) m_spd.type = MSP_RGB15;
     else if(subtype == MEDIASUBTYPE_NV12) m_spd.type = MSP_NV12;
     else if(subtype == MEDIASUBTYPE_NV21) m_spd.type = MSP_NV21;
+    else if(subtype == MEDIASUBTYPE_AYUV) m_spd.type = MSP_AYUV;
 
 	m_spd.w = m_w;
 	m_spd.h = m_h;

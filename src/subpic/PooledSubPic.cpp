@@ -180,7 +180,7 @@ STDMETHODIMP_(bool) CPooledSubPicAllocator::IsSpdColorTypeSupported( int type )
         ||
         (type==MSP_XY_AUYV &&  _alpha_blt_dst_type == MSP_YUY2)
         ||
-        (type==MSP_AYUV &&  _alpha_blt_dst_type == MSP_AYUV)//ToDo: fix me MSP_AYUV 
+        (type==MSP_AYUV &&  _alpha_blt_dst_type == MSP_AYUV)
         ||
         (type==MSP_AYUV_PLANAR && (_alpha_blt_dst_type == MSP_IYUV ||
                             _alpha_blt_dst_type == MSP_YV12 ||

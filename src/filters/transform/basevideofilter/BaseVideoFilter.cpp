@@ -39,6 +39,7 @@ const GUID* InputFmts[] =
     &MEDIASUBTYPE_I420, 
     &MEDIASUBTYPE_IYUV, 
     &MEDIASUBTYPE_YUY2, 
+    &MEDIASUBTYPE_AYUV,
     &MEDIASUBTYPE_ARGB32, 
     &MEDIASUBTYPE_RGB32,
     &MEDIASUBTYPE_RGB24,
@@ -56,6 +57,7 @@ const OutputFormatBase OutputFmts[] =
     {&MEDIASUBTYPE_I420, 3, 12, '024I'},
     {&MEDIASUBTYPE_IYUV, 3, 12, 'VUYI'},
     {&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
+    {&MEDIASUBTYPE_AYUV, 1, 32, 'VUYA'},
     {&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
     {&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},
     {&MEDIASUBTYPE_RGB24, 1, 24, BI_RGB},
@@ -318,7 +320,7 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
 
 	int pitchOut = 0;
 
-	if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
+	if (bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
 	{
 		pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
 
@@ -329,7 +331,10 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
 			if(h < 0) h = -h;
 		}
 	}
-
+    if (bihOut.biCompression == 'VUYA')
+    {
+        pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
+    }
 	if(h < 0)
 	{
 		h = -h;
@@ -411,10 +416,11 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
             }
         }
     }
-	else if(subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_RGB24 || subtype == MEDIASUBTYPE_RGB565)
+	else if(subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_RGB24 || subtype == MEDIASUBTYPE_RGB565
+        || subtype == MEDIASUBTYPE_AYUV)
 	{
 		int sbpp = 
-			subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 ? 32 :
+			subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_AYUV ? 32 :
 			subtype == MEDIASUBTYPE_RGB24 ? 24 :
 			subtype == MEDIASUBTYPE_RGB565 ? 16 : 0;
 
@@ -423,7 +429,8 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
 			// TODO
 			// BitBltFromRGBToYUY2();
 		}
-		else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
+		else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS ||
+            bihOut.biCompression == 'VUYA' )
 		{
 			if(!BitBltFromRGBToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, ppIn[0], pitchIn, sbpp))
 			{
@@ -514,7 +521,8 @@ HRESULT CBaseVideoFilter::DoCheckTransform( const CMediaType* mtIn, const CMedia
     if ( mtIn->subtype == MEDIASUBTYPE_P010 
         || mtIn->subtype == MEDIASUBTYPE_P016
         || mtIn->subtype == MEDIASUBTYPE_NV12
-        || mtIn->subtype == MEDIASUBTYPE_NV21 )
+        || mtIn->subtype == MEDIASUBTYPE_NV21
+        || mtIn->subtype == MEDIASUBTYPE_AYUV )
     {
         if( mtOut->subtype!=mtIn->subtype )
             can_transform = false;
