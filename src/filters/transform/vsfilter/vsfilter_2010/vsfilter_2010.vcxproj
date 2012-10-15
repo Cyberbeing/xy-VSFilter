@@ -52,7 +52,7 @@
   <PropertyGroup>
     <TargetExt>.dll</TargetExt>
     <TargetName>VSFilter</TargetName>
-    <IncludePath>$(SolutionDir)..\..\..\log4cplus\include;$(SolutionDir)..\..\BaseClasses;$(SolutionDir)..\..\..\thirdparty\boost_1_47_0;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\BaseClasses;$(SolutionDir)..\..\..\thirdparty\boost_1_47_0\;$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\..\thirdparty\VirtualDub\h\;$(SolutionDir)..\..\..\..\include\;$(IncludePath)</IncludePath>
     <IntDir>$(SolutionDir)..\..\..\..\bin\obj\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
     <OutDir>$(SolutionDir)..\..\..\..\bin\lib\$(PlatformName)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -129,9 +129,9 @@
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\..\lib;$(SolutionDir)..\..\..\..\bin\lib\$(PlatformName)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>$(SolutionDir)VSFilter.def</ModuleDefinitionFile>
       <RegisterOutput>false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Release log'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesRL.lib;subpicRL.lib;basevideofilterRL.lib;libssfR.lib;log4cplus_staticR.lib;winmm.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;winmm.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Release log'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesRL.lib;subpicRL.lib;basevideofilterRL.lib;libssfR.lib;log4cplus_staticR.lib;KasumiR.lib;systemR.lib;winmm.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;KasumiD.lib;systemD.lib;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;KasumiR.lib;systemR.lib;winmm.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
