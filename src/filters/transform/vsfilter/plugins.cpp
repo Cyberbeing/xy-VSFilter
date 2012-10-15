@@ -371,7 +371,7 @@ public:
 
 namespace VirtualDub
 {
-	#include "..\..\..\..\include\VirtualDub\VirtualDub.h"
+	#include <vd2/extras/FilterSDK/VirtualDub.h>
 
 	class CVirtualDubFilter : virtual public CFilter
 	{
