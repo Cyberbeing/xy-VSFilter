@@ -81,7 +81,14 @@ STDMETHODIMP CSubPicQueueImpl::NonDelegatingQueryInterface(REFIID riid, void** p
 
 STDMETHODIMP CSubPicQueueImpl::SetSubPicProvider(ISubPicProvider* pSubPicProvider)
 {
-    return SetSubPicProviderEx( CSubPicProviderExWrapper::GetSubPicProviderExWrapper(pSubPicProvider) );
+    if (pSubPicProvider!=NULL)
+    {
+        return SetSubPicProviderEx( CSubPicProviderExWrapper::GetSubPicProviderExWrapper(pSubPicProvider) );
+    }
+    else
+    {
+        return SetSubPicProviderEx( NULL );
+    }
 }
 
 STDMETHODIMP CSubPicQueueImpl::GetSubPicProvider(ISubPicProvider** pSubPicProvider)
@@ -118,20 +125,27 @@ STDMETHODIMP CSubPicQueueImpl::SetTime(REFERENCE_TIME rtNow)
 
 STDMETHODIMP CSubPicQueueImpl::SetSubPicProvider( IUnknown* subpic_provider )
 {
-    CComQIPtr<ISubPicProviderEx> tmp = subpic_provider;
-    if (tmp)
+    if (subpic_provider!=NULL)
     {
-        return SetSubPicProviderEx(tmp);
+        CComQIPtr<ISubPicProviderEx> tmp = subpic_provider;
+        if (tmp)
+        {
+            return SetSubPicProviderEx(tmp);
+        }
+        else
+        {
+            CComQIPtr<ISubPicProvider> tmp2 = subpic_provider;
+            if (tmp2)
+            {
+                return SetSubPicProvider(tmp);
+            }
+        }
+        return E_NOTIMPL;
     }
     else
     {
-        CComQIPtr<ISubPicProvider> tmp2 = subpic_provider;
-        if (tmp2)
-        {
-            return SetSubPicProvider(tmp);
-        }
+        return SetSubPicProviderEx(NULL);
     }
-    return E_NOTIMPL;
 }
 
 STDMETHODIMP CSubPicQueueImpl::GetSubPicProvider( IUnknown** subpic_provider )
