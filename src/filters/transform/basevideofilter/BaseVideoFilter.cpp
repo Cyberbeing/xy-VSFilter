@@ -388,17 +388,13 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
     {
         if (bihOut.biCompression != subtype.Data1)
             return VFW_E_TYPE_NOT_ACCEPTED;
-        //TODO: FIX ME!
-        BitBltFromYUY2ToYUY2(w*2, h, pOut, bihOut.biWidth*2, ppIn[0], pitchIn);
-        BitBltFromYUY2ToYUY2(w*2, h/2, pOut+bihOut.biWidth*2*h, bihOut.biWidth*2, ppIn[1], pitchIn);
+        BitBltFromP010ToP010(w, h, pOut, bihOut.biWidth*2, ppIn[0], pitchIn);
     }
     else if(subtype == MEDIASUBTYPE_NV12 || subtype == MEDIASUBTYPE_NV21) 
     {
         if (bihOut.biCompression != subtype.Data1)
             return VFW_E_TYPE_NOT_ACCEPTED;
-        //TODO: FIX ME!
-        BitBltFromYUY2ToYUY2(w/2, h, pOut, bihOut.biWidth, ppIn[0], pitchIn);
-        BitBltFromYUY2ToYUY2(w/2, h/2, pOut+bihOut.biWidth*h, bihOut.biWidth, ppIn[1], pitchIn);
+        BitBltFromNV12ToNV12(w, h, pOut, bihOut.biWidth, ppIn[0], pitchIn);
     }
     else if(subtype == MEDIASUBTYPE_YUY2)
     {
