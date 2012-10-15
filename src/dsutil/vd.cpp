@@ -376,3 +376,25 @@ bool BitBltFromI420ToYUY2Interlaced(int w, int h, BYTE* dst, int dstpitch, BYTE*
 
 	return true;
 }
+
+bool BitBltFromP010ToP010(int w, int h, BYTE* dst, int dstpitch, const BYTE* src, int srcpitch)
+{
+    if (w <= 0 || h <= 0) {
+        return true;
+    }
+    ASSERT(dst && src && w*2<=srcpitch && w*2<=dstpitch && ((h&1)==0));
+    VDMemcpyRect(dst, dstpitch, src, srcpitch, w*2, h+h/2);
+
+    return true;
+}
+
+bool BitBltFromNV12ToNV12(int w, int h, BYTE* dst, int dstpitch, const BYTE* src, int srcpitch)
+{
+    if (w <= 0 || h <= 0) {
+        return true;
+    }
+    ASSERT(dst && src && w<=srcpitch && w<=dstpitch && ((h&1)==0));
+    VDMemcpyRect(dst, dstpitch, src, srcpitch, w, h+h/2);
+
+    return true;
+}
