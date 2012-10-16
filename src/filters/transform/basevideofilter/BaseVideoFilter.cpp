@@ -25,9 +25,14 @@
 #include "..\..\..\DSUtil\DSUtil.h"
 #include "..\..\..\DSUtil\MediaTypes.h"
 
+#pragma warning(push) 
+#pragma warning(disable:4995) 
+
 #include <initguid.h>
 #include "..\..\..\..\include\moreuuids.h"
 #include <algorithm>
+
+#pragma warning(pop) 
 
 const GUID* InputFmts[] =
 {
@@ -102,7 +107,7 @@ UINT GetInputColorSpaceNumber()
 ColorSpaceId Subtype2OutputColorSpaceId( const GUID& subtype, ColorSpaceId startId /*=0 */ )
 {
     ColorSpaceId i=startId;
-    UINT num = GetOutputColorSpaceNumber();
+    int num = GetOutputColorSpaceNumber();
     for(i=startId;i<num;i++)
     {
         if (*(OutputFmts[i].subtype)==subtype)
@@ -123,12 +128,33 @@ CBaseVideoFilter::CBaseVideoFilter(TCHAR* pName, LPUNKNOWN lpunk, HRESULT* phr, 
     , m_inputFmtCount(-1),m_outputFmtCount(-1)
     , m_donot_follow_upstream_preferred_order(false)
 {
-	if(phr) *phr = S_OK;
-	if(!(m_pInput = new CBaseVideoInputPin(NAME("CBaseVideoInputPin"), this, phr, L"Video"))) *phr = E_OUTOFMEMORY;
-	if(FAILED(*phr)) return;
-
-	if(!(m_pOutput = new CBaseVideoOutputPin(NAME("CBaseVideoOutputPin"), this, phr, L"Output"))) *phr = E_OUTOFMEMORY;
-	if(FAILED(*phr))  {delete m_pInput, m_pInput = NULL; return;}
+	if(phr) 
+        *phr = S_OK;
+    HRESULT hr = S_OK;
+    m_pInput = new CBaseVideoInputPin(NAME("CBaseVideoInputPin"), this, &hr, L"Video");
+	if(!m_pInput)
+    {
+        if (phr) *phr = E_OUTOFMEMORY;
+        return;
+    }
+	if(FAILED(hr))
+    {
+        if (phr) *phr = hr;
+        return;
+    }
+    m_pOutput = new CBaseVideoOutputPin(NAME("CBaseVideoOutputPin"), this, &hr, L"Output");
+	if(!m_pOutput)
+    {
+        delete m_pInput, m_pInput = NULL;
+        if (phr) *phr = E_OUTOFMEMORY;
+        return;
+    }
+	if(FAILED(hr))
+    {
+        delete m_pInput, m_pInput = NULL;
+        if (phr) *phr = hr;
+        return;
+    }
 
 	m_wout = m_win = m_w = 0;
 	m_hout = m_hin = m_h = 0;
@@ -384,7 +410,7 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
 		{
 			if(!BitBltFromI420ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn))
 			{
-				for(DWORD y = 0; y < h; y++, pOut += pitchOut)
+				for(int y = 0; y < h; y++, pOut += pitchOut)
 					memset(pOut, 0, pitchOut);
 			}
 		}
@@ -411,7 +437,7 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
         {
             if(!BitBltFromYUY2ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, ppIn[0], pitchIn))
             {
-                for(DWORD y = 0; y < h; y++, pOut += pitchOut)
+                for(int y = 0; y < h; y++, pOut += pitchOut)
                     memset(pOut, 0, pitchOut);
             }
         }
@@ -434,7 +460,7 @@ HRESULT CBaseVideoFilter::CopyBuffer(BYTE* pOut, BYTE** ppIn, int w, int h, int 
 		{
 			if(!BitBltFromRGBToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, ppIn[0], pitchIn, sbpp))
 			{
-				for(DWORD y = 0; y < h; y++, pOut += pitchOut)
+				for(int y = 0; y < h; y++, pOut += pitchOut)
 					memset(pOut, 0, pitchOut);
 			}
 		}
@@ -656,7 +682,7 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 	CComPtr<IBaseFilter> pBF = this;
 	CComPtr<IPin> pPin = m_pInput;
 	for(; !fFoundDVDNavigator && (pBF = GetUpStreamFilter(pBF, pPin)); pPin = GetFirstPin(pBF))
-        fFoundDVDNavigator = GetCLSID(pBF) == CLSID_DVDNavigator;
+        fFoundDVDNavigator = ((GetCLSID(pBF) == CLSID_DVDNavigator)==TRUE);
 
 	if(fFoundDVDNavigator || m_pInput->CurrentMediaType().formattype == FORMAT_VideoInfo2)
 		iPosition = iPosition*2;
@@ -787,7 +813,7 @@ void CBaseVideoFilter::InitInputColorSpaces()
     UINT count = 0;
     GetInputColorspaces(preferredOrder, &count);
     m_inputFmtCount = count;
-    for (int i=0;i<count;i++)
+    for (UINT i=0;i<count;i++)
     {
         m_inputFmt[i] = InputFmts[preferredOrder[i]];
     }
@@ -801,7 +827,7 @@ void CBaseVideoFilter::InitOutputColorSpaces()
     if( CombineOutputPriority(preferredOrder, &count)==S_OK )
     {
         m_outputFmtCount = count;
-        for (int i=0;i<count;i++)
+        for (UINT i=0;i<count;i++)
         {
             m_outputFmt[i] = OutputFmts + preferredOrder[i];
         }
@@ -815,7 +841,7 @@ void CBaseVideoFilter::InitOutputColorSpaces()
 void CBaseVideoFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
 {
     *count = GetInputColorSpaceNumber();
-    for (int i=0;i<*count;i++)
+    for (UINT i=0;i<*count;i++)
     {
         preferredOrder[i] = i;
     }    
@@ -824,7 +850,7 @@ void CBaseVideoFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UINT *
 void CBaseVideoFilter::GetOutputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
 {
     *count = GetOutputColorSpaceNumber();
-    for (int i=0;i<*count;i++)
+    for (UINT i=0;i<*count;i++)
     {
         preferredOrder[i] = i;
     }
@@ -899,7 +925,7 @@ HRESULT CBaseVideoFilter::CombineOutputPriority( ColorSpaceId *preferredOrder, U
             return VFW_E_ALREADY_CONNECTED;
         }
 
-        for (int i=0;i<*count;i++)
+        for (UINT i=0;i<*count;i++)
         {
             int c = preferredOrder[i];
             priorities1[c] = ((priorities1[c]+1)<<16) + c;
