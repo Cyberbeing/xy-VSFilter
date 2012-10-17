@@ -182,7 +182,7 @@ void CompositionObject::AppendRLEData(const BYTE* pBuffer, int nSize)
 
 void CompositionObject::RenderHdmv(SubPicDesc& spd)
 {
-    if (!m_pRLEData) {
+    if (!m_pRLEData || !HavePalette()) {
         return;
     }
 
