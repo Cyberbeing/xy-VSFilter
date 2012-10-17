@@ -56,6 +56,9 @@ public:
 	void WriteString(LPCWSTR lpsz/*CStringW str*/);
 	BOOL ReadString(CStringA& str);
 	BOOL ReadString(CStringW& str);
+
+protected:
+    virtual bool ReopenAsText();
 };
 
 class CWebTextFile : public CTextFile
@@ -64,7 +67,7 @@ class CWebTextFile : public CTextFile
 	CString m_tempfn;
 
 public:
-	CWebTextFile(LONGLONG llMaxSize = 1024*1024);
+    CWebTextFile(CTextFile::enc e = ASCII, LONGLONG llMaxSize = 1024 * 1024);
 
 	bool Open(LPCTSTR lpszFileName);
 	bool Save(LPCTSTR lpszFileName, enc e /*= ASCII*/);
@@ -73,7 +76,7 @@ public:
 
 CStringW AToW(const CStringA& str);
 CStringA WToA(const CStringW& str);
-CString AToT(const CStringA& str);
-CString WToT(const CStringW& str);
-CStringA TToA(const CString& str);
-CStringW TToW(const CString& str);
+CString  AToT(const CStringA& str);
+CString  WToT(const CStringW& str);
+CStringA TToA(const CString&  str);
+CStringW TToW(const CString&  str);

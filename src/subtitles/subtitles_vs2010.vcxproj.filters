@@ -42,9 +42,6 @@
     <ClCompile Include="SubtitleInputPin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TextFile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="USFSubtitles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -97,6 +94,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="xy_filter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
