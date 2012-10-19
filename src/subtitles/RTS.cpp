@@ -2642,8 +2642,8 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                            ? wcstod(p, NULL)*10
                            : 0;
                 m_kend = m_kstart;
-                break;
                 sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
+                break;
             }
         case CMD_kf:
         case CMD_K:
