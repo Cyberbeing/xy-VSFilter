@@ -2315,79 +2315,34 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
         switch ( cmd_type )
         {
         case CMD_1c :
-            {
-                const int i = 0;
-                DWORD c = wcstol(p, NULL, 16);
-                style.colors[i] = !p.IsEmpty()
-                    ? (((int)CalcAnimation(c&0xff, style.colors[i]&0xff, fAnimate))&0xff
-                    |((int)CalcAnimation(c&0xff00, style.colors[i]&0xff00, fAnimate))&0xff00
-                    |((int)CalcAnimation(c&0xff0000, style.colors[i]&0xff0000, fAnimate))&0xff0000)
-                    : org.colors[i];
-                break;
-            }
         case CMD_2c :
-            {
-                const int i = 1;
-                DWORD c = wcstol(p, NULL, 16);
-                style.colors[i] = !p.IsEmpty()
-                    ? (((int)CalcAnimation(c&0xff, style.colors[i]&0xff, fAnimate))&0xff
-                    |((int)CalcAnimation(c&0xff00, style.colors[i]&0xff00, fAnimate))&0xff00
-                    |((int)CalcAnimation(c&0xff0000, style.colors[i]&0xff0000, fAnimate))&0xff0000)
-                    : org.colors[i];
-                break;
-            }
         case CMD_3c :
-            {
-                const int i = 2;
-                DWORD c = wcstol(p, NULL, 16);
-                style.colors[i] = !p.IsEmpty()
-                    ? (((int)CalcAnimation(c&0xff, style.colors[i]&0xff, fAnimate))&0xff
-                    |((int)CalcAnimation(c&0xff00, style.colors[i]&0xff00, fAnimate))&0xff00
-                    |((int)CalcAnimation(c&0xff0000, style.colors[i]&0xff0000, fAnimate))&0xff0000)
-                    : org.colors[i];
-                break;
-            }
         case CMD_4c :
             {
-                const int i = 3;
+                const int i = cmd_type==CMD_1c ? 0 : 
+                    cmd_type==CMD_2c ? 1 :
+                    cmd_type==CMD_3c ? 2 :
+                    /*cmd_type==CMD_4c ?*/ 3;
                 DWORD c = wcstol(p, NULL, 16);
                 style.colors[i] = !p.IsEmpty()
-                                  ? (((int)CalcAnimation(c&0xff, style.colors[i]&0xff, fAnimate))&0xff
-                                     |((int)CalcAnimation(c&0xff00, style.colors[i]&0xff00, fAnimate))&0xff00
-                                     |((int)CalcAnimation(c&0xff0000, style.colors[i]&0xff0000, fAnimate))&0xff0000)
-                                  : org.colors[i];
+                    ? (((int)CalcAnimation(c&0xff, style.colors[i]&0xff, fAnimate))&0xff
+                    |((int)CalcAnimation(c&0xff00, style.colors[i]&0xff00, fAnimate))&0xff00
+                    |((int)CalcAnimation(c&0xff0000, style.colors[i]&0xff0000, fAnimate))&0xff0000)
+                    : org.colors[i];
                 break;
             }
         case CMD_1a :
-            {
-                int i = 0;
-                style.alpha[i] = !p.IsEmpty()
-                    ? (BYTE)CalcAnimation(wcstol(p, NULL, 16), style.alpha[i], fAnimate)
-                    : org.alpha[i];
-                break;
-            }
         case CMD_2a :
-            {
-                int i = 1;
-                style.alpha[i] = !p.IsEmpty()
-                    ? (BYTE)CalcAnimation(wcstol(p, NULL, 16), style.alpha[i], fAnimate)
-                    : org.alpha[i];
-                break;
-            }
         case CMD_3a :
-            {
-                int i = 2;
-                style.alpha[i] = !p.IsEmpty()
-                    ? (BYTE)CalcAnimation(wcstol(p, NULL, 16), style.alpha[i], fAnimate)
-                    : org.alpha[i];
-                break;
-            }
         case CMD_4a :
             {
-                int i = 3;
+                const int i = cmd_type==CMD_1a ? 0 : 
+                    cmd_type==CMD_2a ? 1 :
+                    cmd_type==CMD_3a ? 2 :
+                    /*cmd_type==CMD_4a ?*/ 3;
                 style.alpha[i] = !p.IsEmpty()
-                                 ? (BYTE)CalcAnimation(wcstol(p, NULL, 16), style.alpha[i], fAnimate)
-                                 : org.alpha[i];
+                    ? (BYTE)CalcAnimation(wcstol(p, NULL, 16), style.alpha[i], fAnimate)
+                    : org.alpha[i];
                 break;
             }
         case CMD_alpha:
