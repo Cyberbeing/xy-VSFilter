@@ -2284,7 +2284,7 @@ bool CRenderedTextSubtitle::ParseSSATag( AssTagList *assTags, const CStringW& st
         case CMD_pos:
             break;
         case CMD_t:
-            if (!params.IsEmpty())
+            if (!params.IsEmpty() && params.GetCount()<=4)
                 ParseSSATag(&assTag.embeded, params[params.GetCount()-1]);
             break;
         case CMD_COUNT:
