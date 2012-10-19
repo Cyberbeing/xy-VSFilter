@@ -259,7 +259,7 @@ LRESULT CSystrayWindow::OnNotifyIcon(WPARAM wParam, LPARAM lParam)
 			CMenu popup;
 			popup.CreatePopupMenu();
 
-			for(int j = 0; j < pStreams.GetCount(); j++)
+			for(size_t j = 0; j < pStreams.GetCount(); j++)
 			{
 				bool fMMSwitcher = !names[j].Compare(_T("Morgan Stream Switcher"));
 

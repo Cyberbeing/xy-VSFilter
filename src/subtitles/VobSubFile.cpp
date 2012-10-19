@@ -312,7 +312,7 @@ bool CVobSubFile::Open(CString fn)
 		{
 			CAtlArray<SubPos>& sp = m_langs[i].subpos;
 
-			for(int j = 0; j < sp.GetCount(); j++)
+			for(size_t j = 0; j < sp.GetCount(); j++)
 			{
 				sp[j].stop = sp[j].start;
 				sp[j].fForced = false;
@@ -1238,7 +1238,8 @@ STDMETHODIMP CVobSubFile::GetStreamInfo(int iStream, WCHAR** ppName, LCID* pLCID
 
 		if(ppName)
 		{
-			if(!(*ppName = (WCHAR*)CoTaskMemAlloc((sl.alt.GetLength()+1)*sizeof(WCHAR))))
+            *ppName = (WCHAR*)CoTaskMemAlloc((sl.alt.GetLength()+1)*sizeof(WCHAR));
+			if(!(*ppName))
 				return E_OUTOFMEMORY;
 
 			wcscpy(*ppName, CStringW(sl.alt));
@@ -1470,7 +1471,8 @@ void CVobSubSettings::GetDestrect(CRect& r, int w, int h)
 
 void CVobSubSettings::SetAlignment(bool fAlign, int x, int y, int hor, int ver)
 {
-	if(m_fAlign = fAlign)
+    m_fAlign = fAlign;
+	if(m_fAlign)
 	{
 		m_org.x = MulDiv(m_size.cx, x, 100);
 		m_org.y = MulDiv(m_size.cy, y, 100);
@@ -1547,7 +1549,7 @@ bool CVobSubFile::SaveWinSubMux(CString fn)
 		return(false);
 
 	CAtlArray<SubPos>& sp = m_langs[m_iLang].subpos;
-	for(int i = 0; i < sp.GetCount(); i++)
+	for(size_t i = 0; i < sp.GetCount(); i++)
 	{
 		if(!GetFrame(i)) continue;
 
@@ -1786,7 +1788,7 @@ bool CVobSubFile::SaveScenarist(CString fn)
 	int pc[4] = {1, 1, 1, 1}, pa[4] = {15, 15, 15, 0};
 
 	CAtlArray<SubPos>& sp = m_langs[m_iLang].subpos;
-	for(int i = 0, k = 0; i < sp.GetCount(); i++)
+	for(size_t i = 0, k = 0; i < sp.GetCount(); i++)
 	{
 		if(!GetFrame(i)) continue;
 
@@ -2348,7 +2350,8 @@ STDMETHODIMP CVobSubStream::GetStreamInfo(int i, WCHAR** ppName, LCID* pLCID)
 
 	if(ppName)
 	{
-		if(!(*ppName = (WCHAR*)CoTaskMemAlloc((m_name.GetLength()+1)*sizeof(WCHAR))))
+        *ppName = (WCHAR*)CoTaskMemAlloc((m_name.GetLength()+1)*sizeof(WCHAR));
+		if(!(*ppName))
 			return E_OUTOFMEMORY;
 		wcscpy(*ppName, CStringW(m_name));
 	}

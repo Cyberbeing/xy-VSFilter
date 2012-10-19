@@ -3010,12 +3010,14 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
         int i;
         if(str[0] == L'{' && (i = str.Find(L'}')) > 0)
         {
-            if(fParsed = ParseSSATag(sub, str.Mid(1, i-1), stss, orgstss))
+            fParsed = ParseSSATag(sub, str.Mid(1, i-1), stss, orgstss);
+            if(fParsed)
                 str = str.Mid(i+1);
         }
         else if(str[0] == L'<' && (i = str.Find(L'>')) > 0)
         {
-            if(fParsed = ParseHtmlTag(sub, str.Mid(1, i-1), stss, orgstss))
+            fParsed = ParseHtmlTag(sub, str.Mid(1, i-1), stss, orgstss);
+            if(fParsed)
                 str = str.Mid(i+1);
         }
         if(fParsed)
@@ -3638,7 +3640,8 @@ STDMETHODIMP CRenderedTextSubtitle::GetStreamInfo(int iStream, WCHAR** ppName, L
     if(iStream != 0) return E_INVALIDARG;
     if(ppName)
     {
-        if(!(*ppName = (WCHAR*)CoTaskMemAlloc((m_name.GetLength()+1)*sizeof(WCHAR))))
+        *ppName = (WCHAR*)CoTaskMemAlloc((m_name.GetLength()+1)*sizeof(WCHAR));
+        if(!(*ppName))
             return E_OUTOFMEMORY;
         wcscpy(*ppName, CStringW(m_name));
     }
