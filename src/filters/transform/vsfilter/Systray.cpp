@@ -92,7 +92,6 @@ public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnClose();
 	afx_msg void OnDestroy();
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg LRESULT OnDVSPrevSub(WPARAM, LPARAM);
 	afx_msg LRESULT OnDVSNextSub(WPARAM, LPARAM);
 	afx_msg LRESULT OnDVSHideSub(WPARAM, LPARAM);
@@ -155,21 +154,6 @@ void CSystrayWindow::OnDestroy()
 	}
 
 	PostQuitMessage(0); 
-}
-
-void CSystrayWindow::OnTimer(UINT_PTR nIDEvent)
-{
-	if(nIDEvent == 1)
-	{
-		UINT fScreenSaver = 0;
-		if(SystemParametersInfo(SPI_GETSCREENSAVEACTIVE, 0, (PVOID)&fScreenSaver, 0))
-		{
-			SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, 0, 0, SPIF_SENDWININICHANGE); // this might not be needed at all...
-			SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, fScreenSaver, 0, SPIF_SENDWININICHANGE);
-		}
-	}
-
-	CWnd::OnTimer(nIDEvent);
 }
 
 LRESULT CSystrayWindow::OnDVSPrevSub(WPARAM, LPARAM)
