@@ -1245,7 +1245,7 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
             for(int i = 0; i < m_outputColorSpaceCount; i++)
             {
                 m_outputColorSpace[i].color_space = static_cast<ColorSpaceId>(m_outputFmtList.GetItemData(i));
-                m_outputColorSpace[i].selected = static_cast<bool>(m_outputFmtList.GetCheck(i));                
+                m_outputColorSpace[i].selected = (m_outputFmtList.GetCheck(i)==TRUE);
             }
 		}
 		else ASSERT(0);
@@ -1254,7 +1254,7 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
             for(int i = 0; i < m_inputColorSpaceCount; i++)
             {
                 m_inputColorSpace[i].color_space = static_cast<ColorSpaceId>(m_inputFmtList.GetItemData(i));
-                m_inputColorSpace[i].selected = static_cast<bool>(m_inputFmtList.GetCheck(i));                
+                m_inputColorSpace[i].selected = (m_inputFmtList.GetCheck(i)==TRUE);
             }
         }
         else ASSERT(0);
