@@ -1,0 +1,216 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\wxutil.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\amextra.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\amfilter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cache.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\combase.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cprop.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ctlutil.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ddmm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dllsetup.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dsschedule.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\fourcc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\measure.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\msgthrd.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mtype.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\outputq.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pstream.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pullpin.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\refclock.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\reftime.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\renbase.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\seekpt.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\streams.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\strmctl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sysclock.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\transfrm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\transip.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\videoctl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vtrans.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\winctrl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\winutil.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wxdebug.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wxlist.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\amextra.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\amfilter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\amvideo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\combase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cprop.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ctlutil.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ddmm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dllentry.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dllsetup.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mtype.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\outputq.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pstream.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pullpin.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\refclock.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\renbase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\schedule.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\seekpt.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\strmctl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sysclock.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\transfrm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\transip.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\videoctl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vtrans.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\winctrl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\winutil.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wxdebug.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wxlist.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wxutil.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\readme.txt" />
+    <None Include="..\activex.rcv">
+      <Filter>头文件</Filter>
+    </None>
+    <None Include="..\activex.ver">
+      <Filter>头文件</Filter>
+    </None>
+  </ItemGroup>
+</Project>
