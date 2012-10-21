@@ -1,13 +1,23 @@
 /* MPC-HC comment out
 // Detect the Windows SDK in use and select Windows 2000 baseline
 // if the Vista SDK, else Windows 98 baseline.
+#ifdef _MSC_VER
 #include <ntverp.h>
+#else
+#define VER_PRODUCTBUILD 6001
+#endif
 #if VER_PRODUCTBUILD > 6000
 #define _WIN32_WINNT 0x0500
 #else
 #define _WIN32_WINNT 0x0410
 #endif
 */
+
+// Start patch MPC-HC
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+#endif
+// End patch MPC-HC
 
 #include <vd2/system/vdtypes.h>
 #include <vd2/system/atomic.h>
