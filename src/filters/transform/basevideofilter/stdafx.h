@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "../../../DSUtil/SharedInclude.h"
 #include "../../../../include/stdafx_common.h"
 #include "../../../../include/stdafx_common_afx.h"
 #include "../../../../include/stdafx_common_dshow.h"

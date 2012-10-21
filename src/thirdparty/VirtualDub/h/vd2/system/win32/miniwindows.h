@@ -29,9 +29,15 @@
 #define VDZCALLBACK __stdcall
 
 #ifndef _WIN64
-	typedef __w64 int		VDZINT_PTR;
-	typedef __w64 unsigned	VDZUINT_PTR;
-	typedef __w64 long		VDZLONG_PTR;
+	#ifdef VD_COMPILER_MSVC
+		typedef __w64 int		VDZINT_PTR;
+		typedef __w64 unsigned	VDZUINT_PTR;
+		typedef __w64 long		VDZLONG_PTR;
+	#else
+		typedef int			VDZINT_PTR;
+		typedef unsigned	VDZUINT_PTR;
+		typedef long		VDZLONG_PTR;
+	#endif
 #else
 	typedef __int64				VDZINT_PTR;
 	typedef unsigned __int64	VDZUINT_PTR;
@@ -40,6 +46,7 @@
 
 typedef struct HWND__	*VDZHWND;
 typedef struct HDC__	*VDZHDC;
+typedef struct HKEY__	*VDZHKEY;
 typedef unsigned		VDZUINT;
 typedef unsigned short	VDZWORD;
 typedef unsigned long	VDZDWORD;
