@@ -26,7 +26,6 @@ extern int g_log_once_id;
     }\
 }
 
-
 #define XY_DO_ONCE(expr) do {\
 	static bool entered=false;\
     if(!entered) { \
@@ -35,12 +34,24 @@ extern int g_log_once_id;
     }\
 } while(0)
 
+
+#define DO_FOR(num, expr) do {\
+    static int repeat_num=(num);\
+    if (repeat_num>0)\
+    {\
+        repeat_num--;\
+        expr;\
+    }\
+} while(0)
+
+
 #else //__DO_LOG
 
 #define XY_LOG_INFO(msg)
 #define XY_AUTO_TIMING(msg)
 #define XY_LOG_ONCE(id, msg)
 #define XY_DO_ONCE(expr)
+#define DO_FOR(num, expr)
 
 #endif
 
@@ -59,6 +70,8 @@ static void write_file(const char * filename, const void * buff, int size)
 	fwrite(buff, size, 1, out_file);
 	fclose(out_file);
 }
+
+void DumpPackBitmap2File(POINT pos, SIZE size, LPCVOID pixels, int pitch, const char *filename);
 
 } //namespace xy
 
