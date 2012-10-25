@@ -2028,7 +2028,6 @@ void float_2_byte_transpose_sse_v0(UINT8 *dst, int dst_width, int dst_stride,
     SrcT* src_end = src + width;
     PCUINT8 src2_end00 = reinterpret_cast<PCUINT8>(src) + (height&~15)*src_stride;
     PCUINT8 src2_end = reinterpret_cast<PCUINT8>(src) + height*src_stride;
-    __m128 m0 = _mm_set1_ps(0.5f);
     for( ; src<src_end; src++, dst_byte+=dst_stride )
     {
         PCUINT8 src2 = reinterpret_cast<PCUINT8>(src);
@@ -2056,10 +2055,6 @@ void float_2_byte_transpose_sse_v0(UINT8 *dst, int dst_width, int dst_stride,
                 *(SrcT*)(src2+14*src_stride),
                 *(SrcT*)(src2+13*src_stride),
                 *(SrcT*)(src2+12*src_stride));
-            m1 = _mm_add_ps(m1,m0);
-            m2 = _mm_add_ps(m2,m0);
-            m3 = _mm_add_ps(m3,m0);
-            m4 = _mm_add_ps(m4,m0);
 
             __m128i i1 = _mm_cvtps_epi32(m1);
             __m128i i2 = _mm_cvtps_epi32(m2);
