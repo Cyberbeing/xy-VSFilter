@@ -2873,10 +2873,10 @@ bool CSimpleTextSubtitle::Open(BYTE* data, int len, int CharSet, CString name)
 
 bool CSimpleTextSubtitle::SaveAs(CString fn, exttype et, double fps, CTextFile::enc e)
 {
-    if(fn.Mid(fn.ReverseFind('.')+1).CompareNoCase(exttypestr[et]))
+    if(fn.Mid(fn.ReverseFind('.')+1).CompareNoCase(G_EXTTYPESTR[et]))
     {
         if(fn[fn.GetLength()-1] != '.') fn += _T(".");
-        fn += exttypestr[et];
+        fn += G_EXTTYPESTR[et];
     }
 
     CTextFile f;
