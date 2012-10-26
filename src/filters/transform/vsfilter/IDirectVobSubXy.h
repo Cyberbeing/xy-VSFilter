@@ -43,6 +43,11 @@ extern "C" {
             SIZE_LAYOUT_WITH,//read only
             SIZE_COUNT
         };
+        enum//string
+        {
+            STRING_LOAD_EXT_LIST,
+            STRING_COUNT
+        };
         enum
         {
             //[ColorSpaceOpt1...ColorSpaceOptN]

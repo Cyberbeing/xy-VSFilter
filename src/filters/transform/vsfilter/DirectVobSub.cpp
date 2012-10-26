@@ -204,6 +204,10 @@ CDirectVobSub::CDirectVobSub()
         delete [] pData;
         pData = NULL;
     }
+
+    //fix me: CStringw = CString
+    m_xy_str_opt[STRING_LOAD_EXT_LIST] = 
+        theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), _T("ass;ssa;srt;sub;idx;sup;txt;usf;xss;ssf;smi;psb;rt"));
 }
 
 CDirectVobSub::~CDirectVobSub()
@@ -679,6 +683,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy);
 
+    theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), m_xy_str_opt[STRING_LOAD_EXT_LIST]);//fix me:m_xy_str_opt[] is wide char string
     //save output color config
     {
         int count = GetOutputColorSpaceNumber();
@@ -1028,7 +1033,19 @@ STDMETHODIMP CDirectVobSub::XyGetDouble( int field, double *value )
 
 STDMETHODIMP CDirectVobSub::XyGetString( int field, LPWSTR *value, int *chars )
 {
-    return E_NOTIMPL;
+    if (field<0 || field>=DirectVobSubXyOptions::STRING_COUNT)
+    {
+        return E_NOTIMPL;
+    }
+    if (value)
+    {
+        *value = const_cast<LPWSTR>(m_xy_str_opt[field].GetString());
+    }
+    if (chars)
+    {
+        *chars = m_xy_str_opt[field].GetLength();
+    }
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::XyGetBin( int field, LPVOID *value, int *size )
@@ -1173,7 +1190,12 @@ STDMETHODIMP CDirectVobSub::XySetDouble( int field, double value )
 
 STDMETHODIMP CDirectVobSub::XySetString( int field, LPWSTR value, int chars )
 {
-    return E_NOTIMPL;
+    if (field<0 || field>=DirectVobSubXyOptions::STRING_COUNT)
+    {
+        return E_NOTIMPL;
+    }
+    m_xy_str_opt[field] = value ? CStringW(value).Left(chars) : L"";
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::XySetBin( int field, LPVOID value, int size )
