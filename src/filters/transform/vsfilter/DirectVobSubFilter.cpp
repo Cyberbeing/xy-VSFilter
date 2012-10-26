@@ -1727,11 +1727,11 @@ bool CDirectVobSubFilter::Open()
 	}
 
 	CAtlArray<SubFile> ret;
-	GetSubFileNames(m_FileName, paths, ret);
+	GetSubFileNames(m_FileName, paths, m_xy_str_opt[DirectVobSubXyOptions::STRING_LOAD_EXT_LIST], ret);
 
 	for(size_t i = 0; i < ret.GetCount(); i++)
 	{
-		if(m_frd.files.Find(ret[i].fn))
+		if(m_frd.files.Find(ret[i].full_file_name))
 			continue;
 
 		CComPtr<ISubStream> pSubStream;
@@ -1741,10 +1741,10 @@ bool CDirectVobSubFilter::Open()
 //            CAutoTiming t(TEXT("CRenderedTextSubtitle::Open"), 0);
             XY_AUTO_TIMING(TEXT("CRenderedTextSubtitle::Open"));
             CAutoPtr<CRenderedTextSubtitle> pRTS(new CRenderedTextSubtitle(&m_csSubLock));
-            if(pRTS && pRTS->Open(ret[i].fn, DEFAULT_CHARSET) && pRTS->GetStreamCount() > 0)
+            if(pRTS && pRTS->Open(ret[i].full_file_name, DEFAULT_CHARSET) && pRTS->GetStreamCount() > 0)
             {
                 pSubStream = pRTS.Detach();
-                m_frd.files.AddTail(ret[i].fn + _T(".style"));
+                m_frd.files.AddTail(ret[i].full_file_name + _T(".style"));
             }
         }
 
@@ -1752,10 +1752,10 @@ bool CDirectVobSubFilter::Open()
 		{
             CAutoTiming t(TEXT("CVobSubFile::Open"), 0);
 			CAutoPtr<CVobSubFile> pVSF(new CVobSubFile(&m_csSubLock));
-			if(pVSF && pVSF->Open(ret[i].fn) && pVSF->GetStreamCount() > 0)
+			if(pVSF && pVSF->Open(ret[i].full_file_name) && pVSF->GetStreamCount() > 0)
 			{
 				pSubStream = pVSF.Detach();
-				m_frd.files.AddTail(ret[i].fn.Left(ret[i].fn.GetLength()-4) + _T(".sub"));
+				m_frd.files.AddTail(ret[i].full_file_name.Left(ret[i].full_file_name.GetLength()-4) + _T(".sub"));
 			}
 		}
 
@@ -1763,7 +1763,7 @@ bool CDirectVobSubFilter::Open()
 		{
             CAutoTiming t(TEXT("ssf::CRenderer::Open"), 0);
 			CAutoPtr<ssf::CRenderer> pSSF(new ssf::CRenderer(&m_csSubLock));
-			if(pSSF && pSSF->Open(ret[i].fn) && pSSF->GetStreamCount() > 0)
+			if(pSSF && pSSF->Open(ret[i].full_file_name) && pSSF->GetStreamCount() > 0)
 			{
 				pSubStream = pSSF.Detach();
 			}
@@ -1773,7 +1773,7 @@ bool CDirectVobSubFilter::Open()
 		{
 			m_pSubStreams.AddTail(pSubStream);
             m_fIsSubStreamEmbeded.AddTail(false);
-			m_frd.files.AddTail(ret[i].fn);
+			m_frd.files.AddTail(ret[i].full_file_name);
 		}
 	}
 

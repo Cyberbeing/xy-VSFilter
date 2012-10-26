@@ -99,6 +99,7 @@
 #define IDS_RG_LAYOUT_SIZE_OPT              192
 #define IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X 193
 #define IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y 194
+#define IDS_RG_LOAD_EXT_LIST                195
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
