@@ -129,6 +129,10 @@ ULONG PathDataCacheKey::UpdateHashValue()
     const STSStyle& style = m_style.get();
     m_hash_value = m_str_id;
     m_hash_value += (m_hash_value<<5);
+    m_hash_value += hash_value(m_scalex);
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += hash_value(m_scaley);
+    m_hash_value += (m_hash_value<<5);
     m_hash_value += style.charSet;
     m_hash_value += (m_hash_value<<5);
     m_hash_value += CStringElementTraits<CString>::Hash(style.fontName);
