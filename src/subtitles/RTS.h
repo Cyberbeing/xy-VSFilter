@@ -170,6 +170,7 @@ public:
 
     friend class ClipperTraits;
     friend class ClipperAlphaMaskCacheKey;
+    friend class PathDataCacheKey;
 };
 
 enum eftype

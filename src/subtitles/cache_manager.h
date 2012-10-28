@@ -47,23 +47,35 @@ class PathDataCacheKey
 public:
     PathDataCacheKey(const CWord& word):m_style(word.m_style)
     {
+        const CPolygon *tmp = dynamic_cast<const CPolygon *>(&word);
+        if (tmp)
+        {
+            m_scalex = tmp->m_scalex;
+            m_scaley = tmp->m_scaley;
+        }
+        else
+        {
+            m_scalex = 0;
+            m_scaley = 0;
+        }
         m_str_id = word.m_str.GetId();
     }
     PathDataCacheKey(const PathDataCacheKey& key)
         :m_str_id(key.m_str_id)
+        ,m_scalex(key.m_scalex)
+        ,m_scaley(key.m_scaley)
         ,m_style(key.m_style)
         ,m_hash_value(key.m_hash_value){}
-    PathDataCacheKey(const FwSTSStyle& style, XyFwStringW::IdType str_id):m_style(style)
-    {
-        m_str_id = str_id;
-    }
     bool operator==(const PathDataCacheKey& key)const
     {
-        return m_str_id==key.m_str_id && ( m_style==key.m_style || CompareSTSStyle(m_style, key.m_style) );
+        return m_str_id==key.m_str_id 
+            && fabs(m_scalex-key.m_scalex)<0.000001
+            && fabs(m_scaley-key.m_scaley)<0.000001 
+            && ( m_style==key.m_style || CompareSTSStyle(m_style, key.m_style) );
     }
     bool operator==(const CWord& key)const
     {
-        return m_str_id==key.m_str.GetId() && ( m_style==key.m_style || CompareSTSStyle(m_style.get(), key.m_style.get()) );
+        return operator==(PathDataCacheKey(key));
     }
 
     static bool CompareSTSStyle(const STSStyle& lhs, const STSStyle& rhs);
@@ -76,6 +88,7 @@ public:
 public:
     ULONG m_hash_value;
 protected:
+    double m_scalex, m_scaley;//for CPolygon 
     XyFwStringW::IdType m_str_id;
     FwSTSStyle m_style;
 };
@@ -88,8 +101,7 @@ public:
         :PathDataCacheKey(key)
         ,m_org(key.m_org)
         ,m_hash_value(key.m_hash_value) { }
-    ScanLineData2CacheKey(const FwSTSStyle& style, XyFwStringW::IdType str_id, const POINT& org)
-        :PathDataCacheKey(style, str_id),m_org(org) { }
+
     bool operator==(const ScanLineData2CacheKey& key)const;
 
     ULONG UpdateHashValue();
@@ -107,8 +119,7 @@ class OverlayNoBlurKey: public ScanLineData2CacheKey
 public:
     OverlayNoBlurKey(const CWord& word, const POINT& p, const POINT& org):ScanLineData2CacheKey(word,org),m_p(p) {}
     OverlayNoBlurKey(const OverlayNoBlurKey& key):ScanLineData2CacheKey(key),m_p(key.m_p),m_hash_value(key.m_hash_value) {}
-    OverlayNoBlurKey(const FwSTSStyle& style, XyFwStringW::IdType str_id, const POINT& p, const POINT& org)
-        :ScanLineData2CacheKey(style, str_id, org),m_p(p) {}
+
     bool operator==(const OverlayNoBlurKey& key)const;
 
     ULONG UpdateHashValue();
