@@ -1230,7 +1230,7 @@ GrayImage2* CClipper::PaintBaseClipper()
     {
         BYTE* dst = result_data;
         for(int i = m_size.cx*m_size.cy; i>0; --i, ++dst)
-            *dst = 0x40 - *dst; // mask is 6 bit
+            *dst = ~*dst; // mask is 6 bit
     }
     return result;
 }
@@ -1246,19 +1246,19 @@ GrayImage2* CClipper::PaintBannerClipper()
     if(!result)
         return result;
 
-    int da = (64<<8)/width;
+    int da = (0x100<<8)/width;
     BYTE* am = result->data.get();
     for(int j = 0; j < h; j++, am += w)
     {
         int a = 0;
         int k = min(width, w);
         for(int i = 0; i < k; i++, a += da)
-            am[i] = (am[i]*a)>>14;
-        a = 0x40<<8;
+            am[i] = (am[i]*a)>>16;
+        a = 0x100<<8;
         k = w-width;
         if(k < 0) {a -= -k*da; k = 0;}
         for(int i = k; i < w; i++, a -= da)
-            am[i] = (am[i]*a)>>14;
+            am[i] = (am[i]*a)>>16;
     }
     return result;
 }
@@ -1276,7 +1276,7 @@ GrayImage2* CClipper::PaintScrollClipper()
 
     BYTE* data = result->data.get();
 
-    int da = (64<<8)/height;
+    int da = (0x100<<8)/height;
     int a = 0;
     int k = (static_cast<int>(m_effect.param[0] * m_polygon->m_target_scale_y)>>3);//fix me: rounding err
     int l = k+height;
@@ -1289,11 +1289,11 @@ GrayImage2* CClipper::PaintScrollClipper()
         for(int j = k; j < l; j++, a += da)
         {
             for(int i = 0; i < w; i++, am++)
-                *am = ((*am)*a)>>14;
+                *am = ((*am)*a)>>16;
         }
     }
-    da = -(64<<8)/height;
-    a = 0x40<<8;
+    da = -(0x100<<8)/height;
+    a = 0x100<<8;
     l = (static_cast<int>(m_effect.param[1] * m_polygon->m_target_scale_y)>>3);//fix me: rounding err
     k = l-height;
     if(k < 0) {a += -k*da; k = 0;}
@@ -1305,7 +1305,7 @@ GrayImage2* CClipper::PaintScrollClipper()
         for(; j < l; j++, a += da)
         {
             for(int i = 0; i < w; i++, am++)
-                *am = ((*am)*a)>>14;
+                *am = ((*am)*a)>>16;
         }
         memset(am, 0, (h-j)*w);
     }
