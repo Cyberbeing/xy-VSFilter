@@ -1390,6 +1390,14 @@ void AlphaBlt(byte* pY,
     __m128i zero = _mm_setzero_si128();
     __m128i s = _mm_set1_epi16(Y);               //s = c  0  c  0  c  0  c  0  c  0  c  0  c  0  c  0    
 
+    __m128i ones;
+#ifdef _DEBUG
+    ones = _mm_setzero_si128();
+#endif // _DEBUG
+    ones = _mm_cmpeq_epi32(ones, ones);
+    ones = _mm_srli_epi16(ones, 15);
+    ones = _mm_slli_epi16(ones, 8);
+
     if( w>16 )//IMPORTANT! The result of the following code is undefined with w<15.
     {
         for( ; h>0; h--, pAlphaMask += src_stride, pY += dst_stride )
@@ -1411,34 +1419,28 @@ void AlphaBlt(byte* pY,
                 //Y
                 __m128i d = _mm_load_si128((__m128i*)dy);
 
-                //__m128i ones = _mm_cmpeq_epi32(zero,zero); //ones = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-                //__m128i ia = _mm_xor_si128(a,ones);        //ia   = ~a
-                //ia = _mm_unpacklo_epi8(ia,zero);           //ia   = ~a0 0 ~a1 0 ~a2 0 ~a3 0 ~a4 0 ~a5 0 ~a6 0 ~a7 0
-                a = _mm_unpacklo_epi8(a,zero);               //a= a0 0  a1 0  a2 0  a3 0  a4 0  a5 0  a6 0  a7 0            
-                __m128i ones = _mm_set1_epi16(256);          //ones = 0  1  0  1  0  1  0  1  0  1  0  1  0  1  0  1
-                __m128i ia = _mm_sub_epi16(ones, a);         //ia   = 256-a0 ... 256-a7
-                ones = _mm_srli_epi16(ones, 8);
-                a = _mm_add_epi16(a, ones);                  //a= 1+a0 ... 1+a7
+                a = _mm_unpacklo_epi8(a,zero);               //a= a0 0  a1 0  a2 0  a3 0  a4 0  a5 0  a6 0  a7 0
+                __m128i ia = _mm_sub_epi16(ones,a);         //ia   = 256-a0 ... 256-a7
 
                 __m128i dl = _mm_unpacklo_epi8(d,zero);               //d    = b0 0  b1 0  b2 0  b3 0  b4 0  b5 0  b6 0  b7 0 
                 __m128i sl = _mm_mullo_epi16(s,a);            //sl   = c0*a0  c1*a1  ... c7*a7
+                sl = _mm_add_epi16(sl,s);
 
                 dl = _mm_mullo_epi16(dl,ia);                   //d    = b0*~a0 b1*~a1 ... b7*~a7
 
-                dl = _mm_add_epi16(dl,sl);                     //d   = d + sl
-                dl = _mm_srli_epi16(dl, 8);                    //d   = d>>8
+                dl = _mm_add_epi16(dl,sl);                     //d   = (256-a)*d + s + a*s
+                dl = _mm_srli_epi16(dl,8);                    //d   = d>>8
 
                 sa += 8;
                 a = _mm_loadl_epi64((__m128i*)sa);
 
-                a = _mm_unpacklo_epi8(a,zero);            
-                ones = _mm_slli_epi16(ones, 8);
-                ia = _mm_sub_epi16(ones, a);
-                ones = _mm_srli_epi16(ones, 8);
-                a = _mm_add_epi16(a,ones);
+                a = _mm_unpacklo_epi8(a,zero);
+                ia = _mm_sub_epi16(ones,a);
 
                 d = _mm_unpackhi_epi8(d,zero);
                 sl = _mm_mullo_epi16(s,a);
+                sl = _mm_add_epi16(sl,s);
+
                 d = _mm_mullo_epi16(d,ia);
                 d = _mm_add_epi16(d,sl);
                 d = _mm_srli_epi16(d, 8);
