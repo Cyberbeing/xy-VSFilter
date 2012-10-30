@@ -163,8 +163,8 @@ public:
     }
 private:
     value_type* _elements;
-    volatile uint32_t _head;
-    volatile uint32_t _tail;
+    int32_t  _head;
+    int32_t  _tail;
     size_t   _CAPACITY;
 
 };
