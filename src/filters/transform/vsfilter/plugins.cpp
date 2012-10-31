@@ -71,6 +71,8 @@ public:
         , CDirectVobSub(DirectVobFilterOptions)
         , m_fps(-1), m_SubPicProviderId(0), m_fLazyInit(false)
     {
+        m_xy_str_opt[STRING_NAME] = L"CFilter";
+
         //fix me: should not do init here
         CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
         CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]);

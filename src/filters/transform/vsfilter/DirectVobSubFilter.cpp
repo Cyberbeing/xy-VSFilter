@@ -65,6 +65,7 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
     , m_fMSMpeg4Fix(false)
     , m_fps(25)
 {
+    m_xy_str_opt[STRING_NAME] = L"DirectVobSubFilter";
 
     DbgLog((LOG_TRACE, 3, _T("CDirectVobSubFilter::CDirectVobSubFilter")));
 
@@ -1401,6 +1402,7 @@ STDMETHODIMP CDirectVobSubFilter::ShowConfigDialog(int iSelected, HWND hWndParen
 CDirectVobSubFilter2::CDirectVobSubFilter2(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid)
     : CDirectVobSubFilter(punk, phr, clsid)
 {
+    m_xy_str_opt[STRING_NAME] = L"DirectVobSubFilter2";
 }
 
 HRESULT CDirectVobSubFilter2::CheckConnect(PIN_DIRECTION dir, IPin* pPin)

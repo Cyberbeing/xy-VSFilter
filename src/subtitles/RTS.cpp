@@ -3517,6 +3517,9 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     case MSP_AYUV:
         color_space = XY_CS_AYUV;
         break;
+    case MSP_RGBA_F:
+        color_space = XY_CS_ARGB_F;
+        break;
     default:
         color_space = XY_CS_ARGB;
         break;

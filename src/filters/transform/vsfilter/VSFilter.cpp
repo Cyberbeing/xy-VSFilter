@@ -27,6 +27,7 @@
 
 #include <initguid.h>
 #include "..\..\..\..\include\moreuuids.h"
+#include "xy_sub_filter.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CVSFilterApp 
@@ -68,12 +69,12 @@ int CVSFilterApp::ExitInstance()
 
 HINSTANCE CVSFilterApp::LoadAppLangResourceDLL()
 {
-	CString fn;
-	fn.ReleaseBufferSetLength(::GetModuleFileName(m_hInstance, fn.GetBuffer(MAX_PATH), MAX_PATH));
-	fn = fn.Mid(fn.ReverseFind('\\')+1);
-	fn = fn.Left(fn.ReverseFind('.')+1);
-	fn = fn + _T("lang");
-	return ::LoadLibrary(fn);
+    CString fn;
+    fn.ReleaseBufferSetLength(::GetModuleFileName(m_hInstance, fn.GetBuffer(MAX_PATH), MAX_PATH));
+    fn = fn.Mid(fn.ReverseFind('\\')+1);
+    fn = fn.Left(fn.ReverseFind('.')+1);
+    fn = fn + _T("lang");
+    return ::LoadLibrary(fn);
 }
 
 CVSFilterApp theApp;
@@ -115,25 +116,32 @@ const AMOVIESETUP_PIN sudpPins[] =
     {L"Input2", TRUE, FALSE, FALSE, TRUE, &CLSID_NULL, NULL, countof(sudPinTypesIn2), sudPinTypesIn2}
 };
 
+const AMOVIESETUP_PIN sudpPins2[] =
+{
+    {L"Input", TRUE, FALSE, FALSE, TRUE, &CLSID_NULL, NULL, countof(sudPinTypesIn2), sudPinTypesIn2}
+};
+
 /*const*/ AMOVIESETUP_FILTER sudFilter[] =
 {
-	{&__uuidof(CDirectVobSubFilter), L"DirectVobSub", MERIT_DO_NOT_USE, countof(sudpPins), sudpPins},
-	{&__uuidof(CDirectVobSubFilter2), L"DirectVobSub (auto-loading version)", MERIT_PREFERRED+2, countof(sudpPins), sudpPins},
+    {&__uuidof(CDirectVobSubFilter), L"DirectVobSub", MERIT_DO_NOT_USE, countof(sudpPins), sudpPins},
+    {&__uuidof(CDirectVobSubFilter2), L"DirectVobSub (auto-loading version)", MERIT_PREFERRED+2, countof(sudpPins), sudpPins},
+    {&__uuidof(XySubFilter), L"XySubFilter", MERIT_PREFERRED+2, countof(sudpPins2), sudpPins2}, 
 };
 
 CFactoryTemplate g_Templates[] =
 {
-	{sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<CDirectVobSubFilter>, NULL, &sudFilter[0]},
+    {sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<CDirectVobSubFilter>, NULL, &sudFilter[0]},
     {sudFilter[1].strName, sudFilter[1].clsID, CreateInstance<CDirectVobSubFilter2>, NULL, &sudFilter[1]},
+    {sudFilter[2].strName, sudFilter[2].clsID, CreateInstance<XySubFilter>, NULL, &sudFilter[2]},
     {L"DVSMainPPage", &__uuidof(CDVSMainPPage), CreateInstance<CDVSMainPPage>},
     {L"DVSGeneralPPage", &__uuidof(CDVSGeneralPPage), CreateInstance<CDVSGeneralPPage>},
     {L"DVSMiscPPage", &__uuidof(CDVSMiscPPage), CreateInstance<CDVSMiscPPage>},
     {L"DVSMorePPage", &__uuidof(CDVSMorePPage), CreateInstance<CDVSMorePPage>},
     {L"DVSTimingPPage", &__uuidof(CDVSTimingPPage), CreateInstance<CDVSTimingPPage>},
-	{L"DVSZoomPPage", &__uuidof(CDVSZoomPPage), CreateInstance<CDVSZoomPPage>},
+    {L"DVSZoomPPage", &__uuidof(CDVSZoomPPage), CreateInstance<CDVSZoomPPage>},
     {L"DVSColorPPage", &__uuidof(CDVSColorPPage), CreateInstance<CDVSColorPPage>},
     {L"DVSPathsPPage", &__uuidof(CDVSPathsPPage), CreateInstance<CDVSPathsPPage>},
-	{L"DVSAboutPPage", &__uuidof(CDVSAboutPPage), CreateInstance<CDVSAboutPPage>},
+    {L"DVSAboutPPage", &__uuidof(CDVSAboutPPage), CreateInstance<CDVSAboutPPage>},
 };
 
 int g_cTemplates = countof(g_Templates);
@@ -141,6 +149,38 @@ int g_cTemplates = countof(g_Templates);
 //////////////////////////////
 /*removeme*/
 extern void JajDeGonoszVagyok();
+
+extern void RegisterXySubFilterAsAutoLoad();
+
+CString XyUuidToString(const UUID& in_uuid)
+{
+    CString ret;
+    ret.Format(_T("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}"),
+        in_uuid.Data1, in_uuid.Data2, in_uuid.Data3, in_uuid.Data4[0], in_uuid.Data4[1], 
+        in_uuid.Data4[2], in_uuid.Data4[3], in_uuid.Data4[4], 
+        in_uuid.Data4[5], in_uuid.Data4[6], in_uuid.Data4[7]);
+    return ret;
+}
+
+void RegisterXySubFilterAsAutoLoad()
+{
+    HKEY hKey;
+
+    if(RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("Autoload.SubtitleProvider"), 0, NULL, REG_OPTION_NON_VOLATILE,
+        KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+    {
+        CString in_uuid = XyUuidToString(*sudFilter[2].clsID);
+        if(RegSetValueEx(hKey, _T("(Default)"), NULL, REG_SZ, reinterpret_cast<const BYTE*>(in_uuid.GetString()), in_uuid.GetLength()*2+1) != ERROR_SUCCESS)
+        {
+            MessageBox(NULL, _T("Failed to install as autoload subtitle provider"), _T("Warning"), 0);
+        }
+        RegCloseKey(hKey);
+    }
+    else
+    {
+        MessageBox(NULL, _T("Failed to install as autoload subtitle provider"), _T("Warning"), 0);
+    }
+}
 
 STDAPI DllRegisterServer()
 {
@@ -158,6 +198,8 @@ STDAPI DllRegisterServer()
 	/*removeme*/
 	JajDeGonoszVagyok();
 
+    RegisterXySubFilterAsAutoLoad();
+
 	return AMovieDllRegisterServer2(TRUE);
 }
 
@@ -165,20 +207,22 @@ STDAPI DllUnregisterServer()
 {
 //	DVS_WriteProfileInt2(IDS_R_GENERAL, IDS_RG_SEENDIVXWARNING, 0);
 
+    //ToDo: reset auto subtitle provider setting
+
 	return AMovieDllRegisterServer2(FALSE);
 }
 
 void CALLBACK DirectVobSub(HWND hwnd, HINSTANCE hinst, LPSTR lpszCmdLine, int nCmdShow)
 {
-	if(FAILED(::CoInitialize(0))) return;
+    if(FAILED(::CoInitialize(0))) return;
 
     CComPtr<IBaseFilter> pFilter;
-	CComQIPtr<ISpecifyPropertyPages> pSpecify;
+    CComQIPtr<ISpecifyPropertyPages> pSpecify;
 
-	if(SUCCEEDED(pFilter.CoCreateInstance(__uuidof(CDirectVobSubFilter))) && (pSpecify = pFilter))
-	{
-		ShowPPage(pFilter, hwnd);
-	}
+    if(SUCCEEDED(pFilter.CoCreateInstance(__uuidof(CDirectVobSubFilter))) && (pSpecify = pFilter))
+    {
+        ShowPPage(pFilter, hwnd);
+    }
 
-	::CoUninitialize();
+    ::CoUninitialize();
 }

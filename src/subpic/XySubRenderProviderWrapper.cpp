@@ -1,0 +1,324 @@
+#include "stdafx.h"
+#include "XySubRenderProviderWrapper.h"
+
+XySubRenderProviderWrapper::XySubRenderProviderWrapper( ISubPicProviderEx *provider, IXyOptions *consumer
+    , HRESULT* phr/*=NULL*/ )
+    : CUnknown(NAME("XySubRenderProviderWrapper"), NULL, phr)
+    , m_provider(provider)
+    , m_consumer(consumer)
+{
+    HRESULT hr = NOERROR;
+    if (!provider || !consumer)
+    {
+        hr = E_INVALIDARG;
+    }
+
+    if (phr)
+    {
+        *phr = hr;
+    }
+}
+
+STDMETHODIMP XySubRenderProviderWrapper::NonDelegatingQueryInterface( REFIID riid, void** ppv )
+{
+    return
+        QI(IXySubRenderProvider)
+        __super::NonDelegatingQueryInterface(riid, ppv);
+}
+
+STDMETHODIMP_(POSITION) XySubRenderProviderWrapper::GetStartPosition( REFERENCE_TIME rt )
+{
+    double fps;
+    HRESULT hr = m_consumer->XyGetDouble(DirectVobSubXyOptions::DOUBLE_FPS, &fps);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get fps. "<<XY_LOG_VAR_2_STR(hr));
+        return NULL;
+    }
+    return m_provider->GetStartPosition(rt, fps);
+}
+
+STDMETHODIMP_(POSITION) XySubRenderProviderWrapper::GetNext( POSITION pos )
+{
+    return m_provider->GetNext(pos);
+}
+
+STDMETHODIMP XySubRenderProviderWrapper::RequestFrame( IXySubRenderFrame**subRenderFrame, REFERENCE_TIME *start,
+    REFERENCE_TIME *stop, POSITION pos )
+{
+    double fps;
+    if ( !subRenderFrame && !start && !stop )
+    {
+        return S_FALSE;
+    }
+    if ( !pos )
+    {
+        return E_INVALIDARG;
+    }
+    HRESULT hr = m_consumer->XyGetDouble(DirectVobSubXyOptions::DOUBLE_FPS, &fps);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get fps. "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+    REFERENCE_TIME tmp_start = m_provider->GetStart(pos, fps);
+    REFERENCE_TIME tmp_stop = m_provider->GetStop(pos, fps);
+    if (start)
+    {
+        *start = tmp_start;
+    }
+    if (stop)
+    {
+        *stop = tmp_stop;
+    }
+    if (subRenderFrame)
+    {
+        CRect output_rect;
+        ASSERT(m_consumer);
+        hr = m_consumer->XyGetRect(DirectVobSubXyOptions::RECT_VIDEO_OUTPUT, &output_rect);
+        if (m_output_rect!=output_rect)
+        {
+            Invalidate();
+            m_output_rect = output_rect;
+        }
+        if(!m_pSubPic)
+        {
+            if (!m_allocator)
+            {
+                ResetAllocator();
+            }
+            if(FAILED(m_allocator->AllocDynamicEx(&m_pSubPic))) {
+                XY_LOG_ERROR("Failed to allocate subpic");
+                return E_FAIL;
+            }
+        }
+        hr = Render( tmp_start, tmp_stop, fps );
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+        if (m_xy_sub_render_frame)
+        {
+            *subRenderFrame = m_xy_sub_render_frame;
+            (*subRenderFrame)->AddRef();
+        }
+    }
+    return hr;
+}
+
+HRESULT XySubRenderProviderWrapper::Render( REFERENCE_TIME start, REFERENCE_TIME stop, double fps )
+{
+    REFERENCE_TIME rtNow = (start+stop)/2;
+
+    ASSERT(m_pSubPic);
+    if(m_pSubPic->GetStart() <= rtNow && rtNow < m_pSubPic->GetStop())
+    {
+        return S_OK;
+    }
+    HRESULT hr = E_FAIL;
+
+    if(FAILED(m_provider->Lock())) {
+        return hr;
+    }
+
+    CMemSubPic * mem_subpic = dynamic_cast<CMemSubPic*>((ISubPicEx *)m_pSubPic);
+    ASSERT(mem_subpic);
+    SubPicDesc spd;
+    if(SUCCEEDED(m_pSubPic->Lock(spd)))
+    {
+        CAtlList<CRect> rectList;
+        DWORD color = 0xFF000000;
+        if(SUCCEEDED(m_pSubPic->ClearDirtyRect(color)))
+        {
+            hr = m_provider->RenderEx(spd, rtNow, fps, rectList);
+
+            m_pSubPic->SetStart(start);
+            m_pSubPic->SetStop(stop);
+        }
+        m_pSubPic->Unlock(&rectList);
+        CRect dirty_rect;
+        hr = m_pSubPic->GetDirtyRect(&dirty_rect);
+        ASSERT(SUCCEEDED(hr));
+        hr = mem_subpic->FlipAlphaValue(dirty_rect);//fixme: mem_subpic.type is now MSP_RGBA_F, not MSP_RGBA
+        ASSERT(SUCCEEDED(hr));
+    }
+
+    m_provider->Unlock();
+
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+
+    ASSERT(SUCCEEDED(hr));
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+    m_xy_sub_render_frame = new XySubRenderFrameWrapper(mem_subpic, m_output_rect, m_output_rect, rtNow, &hr);
+    return hr;
+}
+
+HRESULT XySubRenderProviderWrapper::ResetAllocator()
+{
+    const int MAX_SUBPIC_QUEUE_LENGTH = 1;
+
+    CSize size(m_output_rect.right, m_output_rect.bottom);
+    m_allocator = new CPooledSubPicAllocator(MSP_RGB32, size, MAX_SUBPIC_QUEUE_LENGTH + 1);
+    ASSERT(m_allocator);
+
+    m_allocator->SetCurSize(size);
+    m_allocator->SetCurVidRect(CRect(CPoint(0,0),size));
+    return S_OK;
+}
+
+HRESULT XySubRenderProviderWrapper::Invalidate()
+{
+    m_pSubPic = NULL;
+    m_xy_sub_render_frame = NULL;
+    m_allocator = NULL;
+    return S_OK;
+}
+
+//
+// XySubRenderProviderWrapper2
+//
+XySubRenderProviderWrapper2::XySubRenderProviderWrapper2( ISubPicProviderEx2 *provider, IXyOptions *consumer 
+    , HRESULT* phr/*=NULL*/ )
+    : CUnknown(NAME("XySubRenderProviderWrapper"), NULL, phr)
+    , m_provider(provider)
+    , m_consumer(consumer)
+    , m_start(0), m_stop(0)
+    , m_fps(0)
+{
+    HRESULT hr = NOERROR;
+    if (!provider || !consumer)
+    {
+        hr = E_INVALIDARG;
+    }
+
+    if (phr)
+    {
+        *phr = hr;
+    }
+}
+
+STDMETHODIMP XySubRenderProviderWrapper2::NonDelegatingQueryInterface( REFIID riid, void** ppv )
+{
+    return
+        QI(IXySubRenderProvider)
+        __super::NonDelegatingQueryInterface(riid, ppv);
+}
+
+POSITION XySubRenderProviderWrapper2::GetStartPosition( REFERENCE_TIME rt )
+{
+    double fps;
+    HRESULT hr = m_consumer->XyGetDouble(DirectVobSubXyOptions::DOUBLE_FPS, &fps);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get fps. "<<XY_LOG_VAR_2_STR(hr));
+        return NULL;
+    }
+    return m_provider->GetStartPosition(rt, fps);
+}
+
+POSITION XySubRenderProviderWrapper2::GetNext( POSITION pos )
+{
+    return m_provider->GetNext(pos);
+}
+
+STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRenderFrame, REFERENCE_TIME *start
+    , REFERENCE_TIME *stop, POSITION pos )
+{
+    double fps;
+    if ( !subRenderFrame && !start && !stop )
+    {
+        return S_FALSE;
+    }
+    if ( !pos )
+    {
+        return E_INVALIDARG;
+    }
+    HRESULT hr = m_consumer->XyGetDouble(DirectVobSubXyOptions::DOUBLE_FPS, &fps);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get fps. "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+    m_fps = fps;//fix me: invalidate
+    REFERENCE_TIME tmp_start = m_provider->GetStart(pos, fps);
+    REFERENCE_TIME tmp_stop = m_provider->GetStop(pos, fps);
+    if (start)
+    {
+        *start = tmp_start;
+    }
+    if (stop)
+    {
+        *stop = tmp_stop;
+    }
+    if (subRenderFrame)
+    {
+        CRect output_rect, subtitle_target_rect;
+        CSize original_video_size;
+        ASSERT(m_consumer);
+        hr = m_consumer->XyGetRect(DirectVobSubXyOptions::RECT_VIDEO_OUTPUT, &output_rect);
+        ASSERT(SUCCEEDED(hr));
+        hr = m_consumer->XyGetRect(DirectVobSubXyOptions::RECT_SUBTITLE_TARGET, &subtitle_target_rect);
+        ASSERT(SUCCEEDED(hr));
+        ASSERT(output_rect==subtitle_target_rect);
+        hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, &original_video_size);
+        ASSERT(SUCCEEDED(hr));
+
+        if (m_output_rect!=output_rect || m_original_video_size!=original_video_size)
+        {
+            Invalidate();
+            m_output_rect = output_rect;
+            m_original_video_size = original_video_size;
+        }
+        hr = Render( tmp_start, tmp_stop, fps );
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+        if (m_xy_sub_render_frame)
+        {
+            *subRenderFrame = m_xy_sub_render_frame;
+            (*subRenderFrame)->AddRef();
+        }
+    }
+    return hr;
+}
+
+HRESULT XySubRenderProviderWrapper2::Invalidate()
+{
+    m_xy_sub_render_frame = NULL;
+    m_start = m_stop = 0;
+
+    return S_OK;
+}
+
+HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME start, REFERENCE_TIME stop, double fps )
+{
+    REFERENCE_TIME rtNow = (start+stop)/2;
+
+    if(m_start <= rtNow && rtNow < m_stop && m_xy_sub_render_frame)
+    {
+        return S_OK;
+    }
+    m_xy_sub_render_frame = NULL;
+    HRESULT hr = E_FAIL;
+
+    if(FAILED(m_provider->Lock())) {
+        return hr;
+    }
+    ASSERT(m_output_rect.TopLeft()==CPoint(0,0));
+    hr = m_provider->RenderEx(&m_xy_sub_render_frame, MSP_RGBA, m_output_rect.Size(), m_original_video_size,
+        CRect(CPoint(0,0),m_original_video_size), rtNow, m_fps);
+    ASSERT(SUCCEEDED(hr));
+    m_start = start;
+    m_stop = stop;
+
+    m_provider->Unlock();
+
+    return hr;
+}

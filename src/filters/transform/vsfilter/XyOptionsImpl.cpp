@@ -80,9 +80,9 @@ STDMETHODIMP XyOptionsImpl::XyGetString(unsigned field, LPWSTR *value, int *char
     if (!value && !chars) return S_FALSE;
     if (value)
     {
-        *value = new WCHAR[m_xy_str_opt[field].GetLength()];
+        *value = static_cast<LPWSTR>(CoTaskMemAlloc(sizeof(WCHAR)*(m_xy_str_opt[field].GetLength()+1)));
         ASSERT(*value);
-        memcpy(*value, m_xy_str_opt[field].GetString(), m_xy_str_opt[field].GetLength()*sizeof(WCHAR));
+        memcpy(*value, m_xy_str_opt[field].GetString(), (m_xy_str_opt[field].GetLength()+1)*sizeof(WCHAR));
     }
     if (chars)
     {

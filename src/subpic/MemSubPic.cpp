@@ -256,7 +256,7 @@ STDMETHODIMP CMemSubPic::ClearDirtyRect(DWORD color)
 {
     if(m_rectListDirty.IsEmpty()) {
         return S_OK;
-	}
+    }
     while(!m_rectListDirty.IsEmpty())
     {
         //pDirtyRect = m_rectListDirty.RemoveHead();
@@ -298,7 +298,7 @@ STDMETHODIMP CMemSubPic::ClearDirtyRect(DWORD color)
             }
         }
     }
-	m_rectListDirty.RemoveAll();
+    m_rectListDirty.RemoveAll();
     return S_OK;
 }
 
@@ -1567,6 +1567,32 @@ void CMemSubPic::AlphaBlt_YUY2(int w, int h, BYTE* d, int dstpitch, PCUINT8 s, i
 #else
     AlphaBlt_YUY2_MMX(w, h, d, dstpitch, s, srcpitch);
 #endif
+}
+
+HRESULT CMemSubPic::FlipAlphaValue( const CRect& dirtyRect )
+{
+    const CRect& cRect = dirtyRect;
+    int w = cRect.Width(), h = cRect.Height();
+    if (w<=0 || h<=0)
+    {
+        return S_OK;
+    }
+    ASSERT(m_spd.type == MSP_RGBA);
+    BYTE* top = (BYTE*)m_spd.bits + m_spd.pitch*(cRect.top) + cRect.left*4;
+    BYTE* bottom = top + m_spd.pitch*h;
+    if(m_spd.type == MSP_RGBA)
+    {
+        for(; top < bottom ; top += m_spd.pitch)
+        {
+            DWORD* s = (DWORD*)top;
+            DWORD* e = s + w;
+            for(; s < e; s++)
+            {
+                *s = *s ^ 0xFF000000;
+            }
+        }
+    }
+    return S_OK;
 }
 
 //

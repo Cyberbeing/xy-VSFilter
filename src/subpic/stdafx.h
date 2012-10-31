@@ -42,3 +42,10 @@
 #endif
 
 #include "xy_logger.h"
+#include "XySubRenderIntf.h"
+#include "ISubPic.h"
+#include "MemSubPic.h"
+#include "IDirectVobSubXy.h"
+#include "XySubRenderFrameWrapper.h"
+#include "PooledSubPic.h"
+#include "ISimpleSubPic.h"

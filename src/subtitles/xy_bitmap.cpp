@@ -4,6 +4,29 @@
 #include "../SubPic/ISubPic.h"
 #include "../subpic/color_conv_table.h"
 
+static inline void FlipAlphaValueSSE(BYTE *data, int w)
+{
+    int w00 = w&~3;
+    __m128i mask = _mm_set1_epi32(0xff000000);
+    for (int i=0;i<w00;i++)
+    {
+        __m128i argb = _mm_loadu_si128(reinterpret_cast<const __m128i*>(data+i));
+        argb = _mm_xor_si128(argb, mask);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(data+i), argb);
+    }
+    for (int i=w00;i<w;i++)
+    {
+        *(data+i) = *(data+i) ^ 0xFF000000;
+    }
+}
+static inline void FlipAlphaValueC(BYTE *data, int w)
+{
+    for (int i=0;i<w;i++)
+    {
+        *(data+i) = *(data+i) ^ 0xFF000000;
+    }
+}
+
 XyBitmap::~XyBitmap()
 {
     xy_free(bits);
@@ -163,6 +186,37 @@ void XyBitmap::AlphaBltPlannar( SubPicDesc& spd, POINT pos, SIZE size, const XyP
             dst_V[j] = ((dst_V[j]*(src_A[j]+1))>>8) + src_V[j];
         }
     }
+}
+
+void XyBitmap::FlipAlphaValue( LPVOID pixels, int w, int h, int pitch )
+{
+    ASSERT(pixels);
+
+    if (w<=0 || h<=0)
+    {
+        return;
+    }
+
+    BYTE* top = static_cast<BYTE*>(pixels);
+    BYTE* bottom = top + pitch*h;
+
+    bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
+    if ( fSSE2 )
+    {
+        for(; top < bottom ; top += pitch)
+        {
+            FlipAlphaValueSSE(top, w);
+        }
+    }
+    else
+    {
+        for(; top < bottom ; top += pitch)
+        {
+            FlipAlphaValueC(top, w);
+        }
+    }
+
+    return;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -375,6 +429,7 @@ DWORD XySubRenderFrameCreater::TransColor( DWORD argb )
         return ColorConvTable::Argb2Auyv(argb);
         break;
     case XY_CS_ARGB:
+    case XY_CS_ARGB_F:
         return argb;
         break;
     }

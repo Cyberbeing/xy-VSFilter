@@ -236,6 +236,14 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     {
         m_xy_str_opt[STRING_PGS_YUV_MATRIX] = _T("GUESS");
     }
+
+    CStringA version = XY_ABOUT_VERSION_STR;
+    m_xy_str_opt[STRING_VERSION] = "";
+    for (int i=0;i<version.GetLength();i++)
+    {
+        m_xy_str_opt[STRING_VERSION] += version[i];
+    }
+    m_xy_str_opt[STRING_YUV_MATRIX] = "None";
 }
 
 CDirectVobSub::~CDirectVobSub()

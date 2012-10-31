@@ -241,6 +241,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\StyleEditorDialog.cpp" />
+    <ClCompile Include="..\SubRenderOptionsImpl.cpp" />
     <ClCompile Include="..\Systray.cpp" />
     <ClCompile Include="..\TextInputPin.cpp" />
     <ClCompile Include="..\vfr.cpp" />
@@ -249,6 +250,7 @@
     <ClCompile Include="..\xy_logger.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\xy_sub_filter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\CAutoTiming.h" />
@@ -262,6 +264,7 @@
     <ClInclude Include="..\resource.h" />
     <ClInclude Include="..\StdAfx.h" />
     <ClInclude Include="..\StyleEditorDialog.h" />
+    <ClInclude Include="..\SubRenderOptionsImpl.h" />
     <ClInclude Include="..\Systray.h" />
     <ClInclude Include="..\TextInputPin.h" />
     <ClInclude Include="..\Timing_Logger.h" />
@@ -271,6 +274,7 @@
     <ClInclude Include="..\XyOptionsImpl.h" />
     <ClInclude Include="..\XySubRenderIntf.h" />
     <ClInclude Include="..\xy_logger.h" />
+    <ClInclude Include="..\xy_sub_filter.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\res\Icon_147.ico" />

@@ -34,7 +34,8 @@ enum ColorType {
     MSP_YV12,
     MSP_IYUV,
     MSP_AYUV,
-    MSP_RGBA,
+    MSP_RGBA,        //pre-multiplied alpha. Use A*g + RGB to mix
+    MSP_RGBA_F,      //pre-multiplied alpha. Use (0xff-A)*g + RGB to mix
     MSP_AYUV_PLANAR, //AYUV in planar form
     MSP_XY_AUYV,
     MSP_P010,

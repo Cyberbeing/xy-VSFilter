@@ -29,6 +29,7 @@ public:
 
     static XyBitmap *CreateBitmap(const CRect& target_rect, MemLayout layout);
 
+    static void FlipAlphaValue( LPVOID pixels, int w, int h, int pitch );
     static void AlphaBltPack(SubPicDesc& spd, POINT pos, SIZE size, LPCVOID pixels, int pitch);
     static void AlphaBltPlannar(SubPicDesc& spd, POINT pos, SIZE size, const XyPlannerFormatExtra& pixels, int pitch);
 private:

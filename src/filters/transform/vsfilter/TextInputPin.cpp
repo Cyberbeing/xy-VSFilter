@@ -22,25 +22,89 @@
 #include "stdafx.h"
 #include "DirectVobSubFilter.h"
 #include "TextInputPin.h"
-#include "..\..\..\DSUtil\DSUtil.h"
+#include "xy_sub_filter.h"
 
-CTextInputPin::CTextInputPin(CDirectVobSubFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr)
-	: CSubtitleInputPin(pFilter, pLock, pSubLock, phr)
-	, m_pDVS(pFilter)
+CTextInputPin::CTextInputPin(CBaseFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr)
+    : CSubtitleInputPin(pFilter, pLock, pSubLock, phr)
 {
+    HRESULT hr = NOERROR;
+    if (!m_pFilter)
+    {
+        hr = E_INVALIDARG;
+    }
+    else
+    {
+        //fix me: better design
+        if (!dynamic_cast<XySubFilter*>(pFilter) && !dynamic_cast<CDirectVobSubFilter*>(pFilter))
+        {
+            hr = E_INVALIDARG;
+        }
+    }
+    if (FAILED(hr) && phr)
+    {
+        *phr = hr;
+    }
 }
 
 void CTextInputPin::AddSubStream(ISubStream* pSubStream)
 {
-	m_pDVS->AddSubStream(pSubStream);
+    CDirectVobSubFilter * dvs = dynamic_cast<CDirectVobSubFilter*>(m_pFilter);
+    if (dvs)
+    {
+        dvs->AddSubStream(pSubStream);
+    }
+    else
+    {
+        XySubFilter * xy_sub_filter = dynamic_cast<XySubFilter*>(m_pFilter);
+        if (xy_sub_filter)
+        {
+            xy_sub_filter->AddSubStream(pSubStream);
+        }
+        else
+        {
+            ASSERT(0);
+        }
+    }
 }
 
 void CTextInputPin::RemoveSubStream(ISubStream* pSubStream)
 {
-	m_pDVS->RemoveSubStream(pSubStream);
+    CDirectVobSubFilter * dvs = dynamic_cast<CDirectVobSubFilter*>(m_pFilter);
+    if (dvs)
+    {
+        dvs->RemoveSubStream(pSubStream);
+    }
+    else
+    {
+        XySubFilter * xy_sub_filter = dynamic_cast<XySubFilter*>(m_pFilter);
+        if (xy_sub_filter)
+        {
+            xy_sub_filter->RemoveSubStream(pSubStream);
+        }
+        else
+        {
+            ASSERT(0);
+        }
+    }
 }
 
 void CTextInputPin::InvalidateSubtitle(REFERENCE_TIME rtStart, ISubStream* pSubStream)
 {
-	m_pDVS->InvalidateSubtitle(rtStart, (DWORD_PTR)(ISubStream*)pSubStream);
+    CDirectVobSubFilter * dvs = dynamic_cast<CDirectVobSubFilter*>(m_pFilter);
+    if (dvs)
+    {
+        dvs->InvalidateSubtitle(rtStart, (DWORD_PTR)(ISubStream*)pSubStream);
+    }
+    else
+    {
+        XySubFilter * xy_sub_filter = dynamic_cast<XySubFilter*>(m_pFilter);
+        if (xy_sub_filter)
+        {
+            xy_sub_filter->InvalidateSubtitle(rtStart, (DWORD_PTR)(ISubStream*)pSubStream);
+        }
+        else
+        {
+            ASSERT(0);
+        }
+    }
 }

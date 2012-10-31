@@ -28,15 +28,27 @@ namespace DirectVobSubXyOptions
 
         BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER,
         BOOL_HIDE_TRAY_ICON,
+        BOOL_COMBINE_BITMAPS,
 
         SIZE_ORIGINAL_VIDEO,
         SIZE_ASS_PLAY_RESOLUTION,
         SIZE_USER_SPECIFIED_LAYOUT_SIZE,
         SIZE_LAYOUT_WITH,//read only
+        SIZE_AR_ADJUSTED_VIDEO,
+
+        RECT_VIDEO_OUTPUT,
+        RECT_SUBTITLE_TARGET,
+
+        DOUBLE_FPS,
 
         STRING_LOAD_EXT_LIST,
         STRING_PGS_YUV_RANGE,//TV,PC,GUESS(default)
         STRING_PGS_YUV_MATRIX,//BT601,BT709,GUESS(default)
+
+        STRING_NAME,
+        STRING_VERSION,
+        STRING_YUV_MATRIX,
+        STRING_CONNECTED_CONSUMER,
 
         //[ColorSpaceOpt1...ColorSpaceOptN]
         //size=N
@@ -113,15 +125,27 @@ namespace DirectVobSubXyOptions
 
         {XyOptionsImpl::OPTION_TYPE_BOOL  , BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , BOOL_HIDE_TRAY_ICON},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , BOOL_COMBINE_BITMAPS},
 
         {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_ORIGINAL_VIDEO},
         {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_ASS_PLAY_RESOLUTION},
         {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_USER_SPECIFIED_LAYOUT_SIZE},
         {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_LAYOUT_WITH},
+        {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_AR_ADJUSTED_VIDEO},
+
+        {XyOptionsImpl::OPTION_TYPE_RECT  , RECT_VIDEO_OUTPUT},
+        {XyOptionsImpl::OPTION_TYPE_RECT  , RECT_SUBTITLE_TARGET},
+
+        {XyOptionsImpl::OPTION_TYPE_DOUBLE, DOUBLE_FPS},
 
         {XyOptionsImpl::OPTION_TYPE_STRING, STRING_LOAD_EXT_LIST},
         {XyOptionsImpl::OPTION_TYPE_STRING, STRING_PGS_YUV_RANGE},
         {XyOptionsImpl::OPTION_TYPE_STRING, STRING_PGS_YUV_MATRIX},
+
+        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_NAME},
+        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_VERSION},
+        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_YUV_MATRIX},
+        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_CONNECTED_CONSUMER},
 
         {XyOptionsImpl::OPTION_TYPE_BIN   , BIN_OUTPUT_COLOR_FORMAT},
         {XyOptionsImpl::OPTION_TYPE_BIN   , BIN_INPUT_COLOR_FORMAT},

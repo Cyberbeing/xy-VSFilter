@@ -439,6 +439,13 @@ void GroupedDrawItems::Draw( SharedPtrXyBitmap *bitmap, int *bitmap_identity_num
         {
             DrawItem::Draw(tmp, *draw_item_list.GetNext(pos), clip_rect);
         }
+
+        XyColorSpace color_space;
+        HRESULT hr = XySubRenderFrameCreater::GetDefaultCreater()->GetColorSpace(&color_space);
+        ASSERT(SUCCEEDED(hr));
+        if (color_space==XY_CS_ARGB_F)
+            XyBitmap::FlipAlphaValue(tmp->bits, tmp->w, tmp->h, tmp->pitch);
+
         bitmap_cache->UpdateCache(key_id, *bitmap);
     }
     else
