@@ -2634,8 +2634,12 @@ bool PathData::BeginPath(HDC hdc)
 
 bool PathData::EndPath(HDC hdc)
 {
-    ::CloseFigure(hdc);
-    if(::EndPath(hdc))
+    bool succeeded = false;
+    succeeded = !!::CloseFigure(hdc);
+    ASSERT(succeeded);
+    succeeded = !!::EndPath(hdc);
+    ASSERT(succeeded);
+    if(succeeded)
     {
         mPathPoints = GetPath(hdc, NULL, NULL, 0);
         if(!mPathPoints)
@@ -2645,7 +2649,8 @@ bool PathData::EndPath(HDC hdc)
         if(mPathPoints == GetPath(hdc, mpPathPoints, mpPathTypes, mPathPoints))
             return true;
     }
-    ::AbortPath(hdc);
+    succeeded = !!::AbortPath(hdc);
+    ASSERT(succeeded);
     return false;
 }
 
