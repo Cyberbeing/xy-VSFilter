@@ -885,8 +885,11 @@ bool CText::Append(const SharedPtrCWord& w)
 
 bool CText::CreatePath(PathData* path_data)
 {
+    bool succeeded = false;
     FwCMyFont font(m_style);
     HFONT hOldFont = SelectFont(g_hDC, font.get());
+    ASSERT(hOldFont);
+
     int width = 0;
     const CStringW& str = m_str.Get();
     if(m_style.get().fontSpacing || (long)GetVersion() < 0)
@@ -905,13 +908,29 @@ bool CText::CreatePath(PathData* path_data)
     }
     else
     {
-        CSize extent;
-        if(!GetTextExtentPoint32W(g_hDC, str, str.GetLength(), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);}
-        path_data->BeginPath(g_hDC);
-        TextOutW(g_hDC, 0, 0, str, str.GetLength());
-        path_data->EndPath(g_hDC);
+        CSize extent;        
+        succeeded = !!GetTextExtentPoint32W(g_hDC, str, str.GetLength(), &extent);
+        if(!succeeded) 
+        {
+            SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);
+        }
+        succeeded = path_data->BeginPath(g_hDC);
+        if(!succeeded)
+        {
+            SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);
+        }
+        succeeded = !!TextOutW(g_hDC, 0, 0, str, str.GetLength());
+        if(!succeeded)
+        {
+            SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);
+        }
+        succeeded = path_data->EndPath(g_hDC);
+        if(!succeeded)
+        {
+            SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);
+        }
     }
-    SelectFont(g_hDC, hOldFont);
+    ASSERT(SelectFont(g_hDC, hOldFont));
     return(true);
 }
 
