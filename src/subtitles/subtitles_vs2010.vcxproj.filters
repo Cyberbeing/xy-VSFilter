@@ -188,9 +188,6 @@
     <ClInclude Include="xy_bitmap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="XySubRenderIntf.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="xy_circular_array_queue.h">
       <Filter>Source Files</Filter>
     </ClInclude>

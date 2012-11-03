@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ISubPic.h"
-#include "../subtitles/XySubRenderIntf.h"
+#include "XySubRenderIntf.h"
 
 //
 // ISimpleSubPic

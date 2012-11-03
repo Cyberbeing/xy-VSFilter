@@ -267,6 +267,7 @@
     <ClInclude Include="..\version.h" />
     <ClInclude Include="..\vfr.h" />
     <ClInclude Include="..\VSFilter.h" />
+    <ClInclude Include="..\XySubRenderIntf.h" />
     <ClInclude Include="..\xy_logger.h" />
   </ItemGroup>
   <ItemGroup>
