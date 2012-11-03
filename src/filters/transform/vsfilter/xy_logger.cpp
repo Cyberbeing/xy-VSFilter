@@ -24,13 +24,34 @@ namespace xy_logger
     log4cplus::Logger g_logger = log4cplus::Logger::getInstance( XY_TEXT("global_logger_xy") );
 #endif
 
-void doConfigure(const log4cplus::tstring& configFilename)
+bool doConfigure(const log4cplus::tstring& configFilename)
 {
 #ifdef __DO_LOG
     log4cplus::Hierarchy& h = log4cplus::Logger::getDefaultHierarchy();
     unsigned flags = 0;
     log4cplus::PropertyConfigurator::doConfigure(configFilename, h, flags);
 #endif
+    return true;
+}
+
+bool doConfigure( log4cplus::tistream& property_stream )
+{
+#ifdef __DO_LOG
+    PropertyConfigurator p(property_stream);
+    p.configure();
+#endif
+    return true;
+}
+
+void write_file(const char * filename, const void * buff, int size)
+{
+    FILE* out_file = fopen(filename,"ab");
+    if (!out_file)
+    {
+        XY_LOG_ERROR("Failed to open file: "<<filename);
+    }
+    fwrite(buff, size, 1, out_file);
+    fclose(out_file);
 }
 
 void DumpPackBitmap2File(POINT pos, SIZE size, LPCVOID pixels, int pitch, const char *filename)

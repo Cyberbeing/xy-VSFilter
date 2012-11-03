@@ -12,9 +12,17 @@
 #include <stdio.h>
 
 #ifdef __DO_LOG
+
+#define XY_LOG_VAR_2_STR(var) " "#var"='"<<(var)<<"' "
+#define XY_LOG_TRACE(msg) LOG4CPLUS_TRACE(xy_logger::g_logger, msg)
+#define XY_LOG_DEBUG(msg) LOG4CPLUS_DEBUG(xy_logger::g_logger, msg)
+#define XY_LOG_INFO(msg) LOG4CPLUS_INFO(xy_logger::g_logger, msg)
+#define XY_LOG_WARN(msg) LOG4CPLUS_WARN(xy_logger::g_logger, msg)
+#define XY_LOG_ERROR(msg) LOG4CPLUS_ERROR(xy_logger::g_logger, msg)
+#define XY_LOG_FATAL(msg) LOG4CPLUS_FATAL(xy_logger::g_logger, msg)
+
 extern int g_log_once_id;
 
-#define XY_LOG_INFO(msg) LOG4CPLUS_INFO(xy_logger::g_logger, __FUNCTION__<<"\t:"<<msg)
 #define XY_AUTO_TIMING(msg) TimingLogger(xy_logger::g_logger, msg, __FILE__, __LINE__)
 #define XY_LOG_ONCE(id, msg) OnceLogger(id, xy_logger::g_logger, msg, __FILE__, __LINE__)
 #define XY_LOG_ONCE2(msg) {\
@@ -44,10 +52,16 @@ extern int g_log_once_id;
     }\
 } while(0)
 
-
 #else //__DO_LOG
 
+#define XY_LOG_VAR_2_STR(var)
+#define XY_LOG_TRACE(msg)
+#define XY_LOG_DEBUG(msg)
 #define XY_LOG_INFO(msg)
+#define XY_LOG_WARN(msg)
+#define XY_LOG_ERROR(msg)
+#define XY_LOG_FATAL(msg)
+
 #define XY_AUTO_TIMING(msg)
 #define XY_LOG_ONCE(id, msg)
 #define XY_DO_ONCE(expr)
@@ -55,21 +69,18 @@ extern int g_log_once_id;
 
 #endif
 
+
+
 namespace xy_logger
 {
-
 #ifdef __DO_LOG
 extern log4cplus::Logger g_logger;
 #endif
 
-void doConfigure(const log4cplus::tstring& configFilename);
+bool doConfigure(log4cplus::tistream& property_stream);
+bool doConfigure(const log4cplus::tstring& configFilename);
 
-static void write_file(const char * filename, const void * buff, int size)
-{
-    FILE* out_file = fopen(filename,"ab");
-	fwrite(buff, size, 1, out_file);
-	fclose(out_file);
-}
+void write_file(const char * filename, const void * buff, int size);
 
 void DumpPackBitmap2File(POINT pos, SIZE size, LPCVOID pixels, int pitch, const char *filename);
 
