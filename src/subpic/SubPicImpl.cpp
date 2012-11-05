@@ -245,7 +245,7 @@ STDMETHODIMP CSubPicExImpl::SetDirtyRect(RECT* pDirtyRect)
 }
 
 STDMETHODIMP CSubPicExImpl::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList)
-{    
+{
     if(dirtyRectList!=NULL)
     {
         m_rectListDirty.RemoveAll();

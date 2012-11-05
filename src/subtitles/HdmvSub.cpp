@@ -361,6 +361,12 @@ void CHdmvSub::Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox)
                 bbox.right  = max(pObject->m_horizontal_position + pObject->m_width, bbox.right);
                 bbox.bottom = max(pObject->m_vertical_position + pObject->m_height, bbox.bottom);
 
+                ASSERT(spd.h>=0);
+                bbox.left = bbox.left > 0 ? bbox.left : 0;
+                bbox.top = bbox.top > 0 ? bbox.top : 0;
+                bbox.right = bbox.right < spd.w ? bbox.right : spd.w;
+                bbox.bottom = bbox.bottom < spd.h ? bbox.bottom : spd.h;
+
                 pObject->InitColor(spd);
                 TRACE_HDMVSUB( (_T(" --> Object %d (Res=%dx%d, SPDRes=%dx%d)\n"), pObject->m_object_id_ref, pObject->m_width, pObject->m_height, spd.w, spd.h) );
                 pObject->RenderHdmv(spd);
