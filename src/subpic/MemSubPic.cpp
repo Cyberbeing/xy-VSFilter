@@ -1176,6 +1176,7 @@ STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
                 }
                 cRectSrc.top &= ~1;
                 cRectSrc.bottom = (cRectSrc.bottom+1)&~1;
+                ASSERT(cRectSrc.bottom<=m_spd.h);
             }
         }
         else if(m_spd.type == MSP_XY_AUYV || m_alpha_blt_dst_type==MSP_YUY2)
@@ -1185,6 +1186,8 @@ STDMETHODIMP CMemSubPic::SetDirtyRectEx(CAtlList<CRect>* dirtyRectList )
                 CRect& cRectSrc = dirtyRectList->GetNext(pos);
                 cRectSrc.left &= ~3;
                 cRectSrc.right = (cRectSrc.right+3)&~3;
+                cRectSrc.right = cRectSrc.right < m_spd.w ? cRectSrc.right : m_spd.w;
+                ASSERT((cRectSrc.right & 3)==0);
             }
         }
     }
@@ -1605,23 +1608,23 @@ CMemSubPicAllocator::CMemSubPicAllocator(int alpha_blt_dst_type, SIZE maxsize, i
 
 bool CMemSubPicAllocator::AllocEx(bool fStatic, ISubPicEx** ppSubPic)
 {
-	if(!ppSubPic) {
-		return false;
-	}
+    if(!ppSubPic) {
+        return false;
+    }
     SubPicDesc spd;
     spd.w = m_maxsize.cx;
     spd.h = m_maxsize.cy;
     spd.bpp = 32;
     spd.pitch = (spd.w*spd.bpp)>>3;
     spd.type = m_type;
-	spd.bits = DNew BYTE[spd.pitch*spd.h];
-	if(!spd.bits) {
-		return false;
-	}    
-	*ppSubPic = DNew CMemSubPic(spd, m_alpha_blt_dst_type);
-	if(!(*ppSubPic)) {
-		return false;
-	}
+    spd.bits = DNew BYTE[spd.pitch*spd.h];
+    if(!spd.bits) {
+        return false;
+    }    
+    *ppSubPic = DNew CMemSubPic(spd, m_alpha_blt_dst_type);
+    if(!(*ppSubPic)) {
+        return false;
+    }
     (*ppSubPic)->AddRef();
-	return true;
+    return true;
 }
