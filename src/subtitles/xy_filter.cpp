@@ -29,6 +29,153 @@ bool AlmostEqual(float A, float B, int maxUlps=0)
     return false;
 }
 
+
+enum RoundingPolicy
+{
+    ROUND_DOWN
+    , ROUND_HALF_DOWN
+    , ROUND_HALF_UP
+    , ROUND_HALF_TO_EVEN
+    , COUNT_ROUND_POLICY
+};
+
+template<int ROUNDING_POLICY, int precision>
+struct XyRounding
+{
+    __forceinline void init_sse();
+    __forceinline __m128i round(__m128i in);
+    __forceinline int round(int in);
+    static __forceinline __m128i round_float(__m128 in);
+    static __forceinline int round_float(float in);
+};
+
+template<int precision>
+struct XyRounding<ROUND_DOWN, precision>
+{
+    __forceinline void init_sse()
+    {
+
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        return in;
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in;
+    }
+
+    static __forceinline __m128i round_float(__m128 in)
+    {
+        return _mm_cvttps_epi32(in);
+    }
+
+    static __forceinline int round_float(float in)
+    {
+        return static_cast<int>(in);
+    }
+};
+
+
+template<int precision>
+struct XyRounding<ROUND_HALF_DOWN, precision>
+{
+    __forceinline void init_sse()
+    {
+        m_rounding_patch = _mm_set1_epi16( (1<<(precision-1))-1 );
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        return _mm_adds_epu16(in, m_rounding_patch);
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in + ((1<<(precision-1))-1);
+    }
+
+    // NOT supported
+    //static __forceinline __m128i round(__m128 in);
+    //static __forceinline int round(float in);
+
+    __m128i m_rounding_patch;
+};
+
+
+template<int precision>
+struct XyRounding<ROUND_HALF_UP, precision>
+{
+    __forceinline void init_sse()
+    {
+        m_rounding_patch = _mm_set1_epi16( 1<<(precision-1) );
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        return _mm_adds_epu16(in, m_rounding_patch);
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in + (1<<(precision-1));
+    }
+
+    // NOT supported
+    //static __forceinline __m128i round(__m128 in);
+    
+    static __forceinline int round_float(float in)
+    {
+        return in+0.5;
+    }
+
+    __m128i m_rounding_patch;
+};
+
+
+template<int precision>
+struct XyRounding<ROUND_HALF_TO_EVEN, precision>
+{
+    __forceinline void init_sse()
+    {
+        m_rounding_patch = _mm_set1_epi16( 1<<(precision-1) );
+    }
+    __forceinline __m128i round(__m128i in)
+    {
+        in = _mm_adds_epu16(in, m_rounding_patch);
+        __m128i tmp = _mm_slli_epi16(in, 15-precision);
+        tmp = _mm_srli_epi16(tmp, 15);
+        return _mm_adds_epu16(in, tmp);
+    }
+
+    __forceinline int round(unsigned in)
+    {
+        return in + (1<<(precision-1)) + ((in>>precision)&1);
+    }
+
+    static __forceinline __m128i round_float(__m128 in)
+    {
+        return _mm_cvtps_epi32(in);
+    }
+
+    static __forceinline int round_float(float in)
+    {
+        int tmp;
+        if (ceil(in)-in==0.5)
+        {
+            tmp = static_cast<int>(ceil(in));
+            tmp -= (tmp&1);
+        }
+        else
+        {
+            tmp = static_cast<int>(in+0.5);
+        }
+        return tmp;
+    }
+
+    __m128i m_rounding_patch;
+};
+
+
 /****
  * See @xy_filter_c
  **/
@@ -777,10 +924,12 @@ void xy_float_2_float_transpose_sse(float *dst, int dst_width, int dst_stride,
 }
 
 /****
- * Transpose and round Matrix src, then copy to dst.
+ * Transpose and round Matrix src and clip out values smaller then @CLIP_MIN (for VSFilter compatible),
+ * then copy to dst.
  * @dst_width MUST >= @height.
  * if @dst_width > @height, the extra elements will be filled with 0.
  **/
+template<int ROUNDING_POLICY, int CLIP_MIN>
 void xy_float_2_byte_transpose_c(UINT8 *dst, int dst_width, int dst_stride, 
     const float *src, int width, int height, int src_stride)
 {
@@ -795,7 +944,11 @@ void xy_float_2_byte_transpose_c(UINT8 *dst, int dst_width, int dst_stride,
         UINT8 *dst2 = reinterpret_cast<UINT8*>(dst_byte);
         for (;src2<src2_end;src2+=src_stride,dst2++)
         {
-            *dst2 = static_cast<UINT8>(*reinterpret_cast<const float*>(src2)+0.5);
+            *dst2 = XyRounding<ROUNDING_POLICY, 0>::round_float(*reinterpret_cast<const float*>(src2));
+            if (CLIP_MIN>0)
+            {
+                *dst2 = *dst2 >= CLIP_MIN ? *dst2 : 0;
+            }
         }
         UINT8 *dst2_end = reinterpret_cast<UINT8*>(dst_byte) + dst_width;
         for (;dst2<dst2_end;dst2++)
@@ -805,6 +958,7 @@ void xy_float_2_byte_transpose_c(UINT8 *dst, int dst_width, int dst_stride,
     }
 }
 
+template<int ROUNDING_POLICY, unsigned CLIP_MIN>
 void xy_float_2_byte_transpose_sse(UINT8 *dst, int dst_width, int dst_stride, 
     const float *src, int width, int height, int src_stride)
 {
@@ -817,6 +971,12 @@ void xy_float_2_byte_transpose_sse(UINT8 *dst, int dst_width, int dst_stride,
     SrcT* src_end = src + width;
     PCUINT8 src2_end00 = reinterpret_cast<PCUINT8>(src) + (height&~15)*src_stride;
     PCUINT8 src2_end = reinterpret_cast<PCUINT8>(src) + height*src_stride;
+
+    __m128i clip_min;
+    if (CLIP_MIN>0)
+    {
+        clip_min = _mm_set1_epi8(CLIP_MIN);
+    }
     for( ; src<src_end; src++, dst_byte+=dst_stride )
     {
         PCUINT8 src2 = reinterpret_cast<PCUINT8>(src);
@@ -845,20 +1005,31 @@ void xy_float_2_byte_transpose_sse(UINT8 *dst, int dst_width, int dst_stride,
                 *(SrcT*)(src2+13*src_stride),
                 *(SrcT*)(src2+12*src_stride));
 
-            __m128i i1 = _mm_cvtps_epi32(m1);
-            __m128i i2 = _mm_cvtps_epi32(m2);
-            __m128i i3 = _mm_cvtps_epi32(m3);
-            __m128i i4 = _mm_cvtps_epi32(m4);
+            __m128i i1 = XyRounding<ROUNDING_POLICY,0>::round_float(m1);
+            __m128i i2 = XyRounding<ROUNDING_POLICY,0>::round_float(m2);
+            __m128i i3 = XyRounding<ROUNDING_POLICY,0>::round_float(m3);
+            __m128i i4 = XyRounding<ROUNDING_POLICY,0>::round_float(m4);
 
             i1 = _mm_packs_epi32(i1,i2);
             i3 = _mm_packs_epi32(i3,i4);
             i1 = _mm_packus_epi16(i1,i3);
 
+            if (CLIP_MIN>0)
+            {
+                i3 = _mm_max_epu8(i1, clip_min);
+                i3 = _mm_cmpeq_epi8(i3,i1);
+                i1 = _mm_and_si128(i1, i3);
+            }
+
             _mm_store_si128((__m128i*)dst2, i1);
         }
         for (;src2<src2_end;src2+=src_stride,dst2++)
         {
-            *dst2 = static_cast<DstT>(*reinterpret_cast<SrcT*>(src2)+0.5);
+            *dst2 = XyRounding<ROUNDING_POLICY,0>::round_float(*reinterpret_cast<SrcT*>(src2));
+            if (CLIP_MIN>0)
+            {
+                *dst2 = *dst2 >= CLIP_MIN ? *dst2 : 0;
+            }
         }
         DstT *dst2_end = reinterpret_cast<DstT*>(dst_byte) + dst_width;
         for (;dst2<dst2_end;dst2++)
@@ -913,7 +1084,6 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     // horizontal pass
     xy_filter_sse(hor_buff, fwidth, height, fstride, gt_x, ex_mask_width_x);
 
-
     // transpose
     float *ver_buff_base = reinterpret_cast<float*>(buff_base + height*fstride);
     float *ver_buff = ver_buff_base + ex_mask_width_y;
@@ -926,8 +1096,14 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     
     // transpose
     int true_height = height + 2*r_y;
-    xy_float_2_byte_transpose_sse(dst, true_width, dst_stride, ver_buff-r_y*2, true_height, true_width, fstride_ver);
-    
+    // NOTE: VSFilter's blur code truncates result to 6-bit after each pass.
+    //  But we only do one truncate to 8-bit at this point.
+    //  So we'll still slightly different with VSFilter.
+    const int VSFILTER_COMPATIBLE_ROUNDING = ROUND_DOWN;
+    const unsigned VSFILTER_COMPATIBLE_CLIP = 4;
+    xy_float_2_byte_transpose_sse<VSFILTER_COMPATIBLE_ROUNDING, VSFILTER_COMPATIBLE_CLIP>(dst, true_width, dst_stride, 
+        ver_buff-r_y*2, true_height, true_width, fstride_ver);
+
     xy_free(buff_base);
 #ifndef _WIN64
     // TODOX64 : fixme!
@@ -935,104 +1111,6 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
 #endif
 }
 
-
-enum RoundingPolicy
-{
-    ROUND_DOWN
-    , ROUND_HALF_DOWN
-    , ROUND_HALF_UP
-    , ROUND_HALF_TO_EVEN
-    , COUNT_ROUND_POLICY
-};
-
-template<int ROUNDING_POLICY, int precision>
-struct XyRounding
-{
-    __forceinline void init_sse();
-    __forceinline __m128i round(__m128i in);
-    __forceinline int round(int in);
-};
-
-template<int precision>
-struct XyRounding<ROUND_DOWN, precision>
-{
-    __forceinline void init_sse()
-    {
-
-    }
-    __forceinline __m128i round(__m128i in)
-    {
-        return in;
-    }
-
-    __forceinline int round(unsigned in)
-    {
-        return in;
-    }
-};
-
-
-template<int precision>
-struct XyRounding<ROUND_HALF_DOWN, precision>
-{
-    __forceinline void init_sse()
-    {
-        m_rounding_patch = _mm_set1_epi16( (1<<(precision-1))-1 );
-    }
-    __forceinline __m128i round(__m128i in)
-    {
-        return _mm_adds_epu16(in, m_rounding_patch);
-    }
-
-    __forceinline int round(unsigned in)
-    {
-        return in + ((1<<(precision-1))-1);
-    }
-    __m128i m_rounding_patch;
-};
-
-
-template<int precision>
-struct XyRounding<ROUND_HALF_UP, precision>
-{
-    __forceinline void init_sse()
-    {
-        m_rounding_patch = _mm_set1_epi16( 1<<(precision-1) );
-    }
-    __forceinline __m128i round(__m128i in)
-    {
-        return _mm_adds_epu16(in, m_rounding_patch);
-    }
-
-    __forceinline int round(unsigned in)
-    {
-        return in + (1<<(precision-1));
-    }
-    __m128i m_rounding_patch;
-};
-
-
-template<int precision>
-struct XyRounding<ROUND_HALF_TO_EVEN, precision>
-{
-    __forceinline void init_sse()
-    {
-        m_rounding_patch = _mm_set1_epi16( 1<<(precision-1) );
-    }
-    __forceinline __m128i round(__m128i in)
-    {
-        in = _mm_adds_epu16(in, m_rounding_patch);
-        __m128i tmp = _mm_slli_epi16(in, 15-precision);
-        tmp = _mm_srli_epi16(tmp, 15);
-        return _mm_adds_epu16(in, tmp);
-    }
-
-    __forceinline int round(unsigned in)
-    {
-        return in + (1<<(precision-1)) + ((in>>precision)&1);
-    }
-    __m128i m_rounding_patch;
-};
 
 /****
  * filter with [1,2,1]
