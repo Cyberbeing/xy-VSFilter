@@ -79,7 +79,7 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
                 {
                     for (int i=0;i<paletteNumber;i++)
                     {
-                        DWORD argb = ColorConvTable::A8Y8U8V8_To_ARGB_TV_BT709(m_Palette[i].T, m_Palette[i].Y, m_Palette[i].Cr, m_Palette[i].Cb);
+                        DWORD argb = YCrCbToRGB_Rec709(m_Palette[i].T, m_Palette[i].Y, m_Palette[i].Cr, m_Palette[i].Cb);
                         m_Colors[m_Palette[i].entry_id] = ColorConvTable::Argb2Ayuv(argb);
                     }
                 }
@@ -87,7 +87,7 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
                 {
                     for (int i=0;i<paletteNumber;i++)
                     {
-                        DWORD argb = ColorConvTable::A8Y8U8V8_To_ARGB_TV_BT601(m_Palette[i].T, m_Palette[i].Y, m_Palette[i].Cr, m_Palette[i].Cb);
+                        DWORD argb = YCrCbToRGB_Rec601(m_Palette[i].T, m_Palette[i].Y, m_Palette[i].Cr, m_Palette[i].Cb);
                         m_Colors[m_Palette[i].entry_id] = ColorConvTable::Argb2Ayuv(argb);
                     }
                 }
