@@ -219,7 +219,7 @@ CPooledSubPic* CPooledSubPicAllocator::DoAlloc()
         return(NULL);
     }
     CPooledSubPic* temp = NULL;
-    if(!(temp = DNew CPooledSubPic(spd, _alpha_blt_dst_type, this)))
+    if(!(temp = DEBUG_NEW CPooledSubPic(spd, _alpha_blt_dst_type, this)))
     {
         xy_free(spd.bits);
         ASSERT(0);

@@ -973,7 +973,7 @@ CPolygon::~CPolygon()
 
 SharedPtrCWord CPolygon::Copy()
 {
-    SharedPtrCWord result(DNew CPolygon(*this));
+    SharedPtrCWord result(DEBUG_NEW CPolygon(*this));
 	return result;
 }
 

@@ -1617,11 +1617,11 @@ bool CMemSubPicAllocator::AllocEx(bool fStatic, ISubPicEx** ppSubPic)
     spd.bpp = 32;
     spd.pitch = (spd.w*spd.bpp)>>3;
     spd.type = m_type;
-    spd.bits = DNew BYTE[spd.pitch*spd.h];
+    spd.bits = DEBUG_NEW BYTE[spd.pitch*spd.h];
     if(!spd.bits) {
         return false;
     }    
-    *ppSubPic = DNew CMemSubPic(spd, m_alpha_blt_dst_type);
+    *ppSubPic = DEBUG_NEW CMemSubPic(spd, m_alpha_blt_dst_type);
     if(!(*ppSubPic)) {
         return false;
     }
