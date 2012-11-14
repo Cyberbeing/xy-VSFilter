@@ -301,7 +301,7 @@ public:
     static const int CLIPPER_MRU_CACHE_ITEM_NUM = 48;
 
     static const int TEXT_INFO_CACHE_ITEM_NUM = 2048;
-    static const int ASS_TAG_LIST_CACHE_ITEM_NUM = 256;
+    static const int ASS_TAG_LIST_CACHE_ITEM_NUM = 2048;
     static const int SUBPIXEL_VARIANCE_CACHE_ITEM_NUM = 256;
     static const int OVERLAY_CACHE_ITEM_NUM = 256;
 

@@ -975,8 +975,8 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
     {
         m_overlay_cache.SetRange32(0, 2048);
         m_overlay_no_blur_cache.SetRange32(0, 2048);
-        m_scanline_cache.SetRange32(0, 2048);
-        m_path_cache.SetRange32(0, 2048);
+        m_scanline_cache.SetRange32(0, 16384);
+        m_path_cache.SetRange32(0, 16384);
 
         m_overlay_cache.SetPos32(m_overlay_cache_max_item_num);
         m_overlay_no_blur_cache.SetPos32(m_overlay_no_blur_cache_max_item_num);
