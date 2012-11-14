@@ -118,7 +118,7 @@ public:
     void      Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox);
     HRESULT   GetTextureSize(POSITION pos, SIZE& MaxTextureSize, SIZE& VideoSize, POINT& VideoTopLeft);
     void      Reset();
-
+    virtual HRESULT         SetYuvType(ColorType colorType, YuvRangeType yuvRangeType);
 private:
 
     HDMV_SEGMENT_TYPE            m_nCurSegment;

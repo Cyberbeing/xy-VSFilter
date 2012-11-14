@@ -31,6 +31,8 @@ enum SUBTITLE_TYPE {
 class CBaseSub
 {
 public:
+    typedef CompositionObject::ColorType ColorType;
+    typedef CompositionObject::YuvRangeType YuvRangeType;
 
     static const REFERENCE_TIME INVALID_TIME = _I64_MIN;
 
@@ -45,7 +47,9 @@ public:
     virtual REFERENCE_TIME  GetStop(POSITION nPos) = NULL;
     virtual void            Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox) = NULL;
     virtual HRESULT         GetTextureSize(POSITION pos, SIZE& MaxTextureSize, SIZE& VideoSize, POINT& VideoTopLeft) = NULL;
-
+    virtual HRESULT         SetYuvType(ColorType colorType, YuvRangeType yuvRangeType) = NULL;
 protected:
     SUBTITLE_TYPE           m_nType;
+    ColorType               m_colorTypeSetting;
+    YuvRangeType            m_yuvRangeSetting;
 };

@@ -185,3 +185,9 @@ STDMETHODIMP_(bool) CRenderedHdmvSubtitle::IsColorTypeSupported( int type )
         type==MSP_XY_AUYV ||
         type==MSP_RGBA;
 }
+
+HRESULT CRenderedHdmvSubtitle::SetYuvType( CBaseSub::ColorType colorType, CBaseSub::YuvRangeType yuvRangeType )
+{
+    CAutoLock cAutoLock(&m_csCritSec);
+    return m_pSub->SetYuvType(colorType, yuvRangeType);
+}

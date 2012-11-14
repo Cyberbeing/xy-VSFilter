@@ -25,7 +25,7 @@ DWORD func(int r8, int g8, int b8)\
     const int c2y_cyb = int(double_cyb*Y_RANGE/255*FRACTION_SCALE+0.5);\
     const int c2y_cyg = int(double_cyg*Y_RANGE/255*FRACTION_SCALE+0.5);\
     const int c2y_cyr = int(double_cyr*Y_RANGE/255*FRACTION_SCALE+0.5);\
-    const int c2y_cu = int(1.0/double_cu*1024+0.5);\
+    const int c2y_cu = int(1.0/double_cu*1024+0.5);/*Fix me: BT.601 uv range should be 16~240? */\
     const int c2y_cv = int(1.0/double_cv*1024+0.5);\
     const int cy_cy = int(255.0/Y_RANGE*FRACTION_SCALE+0.5);\
     \
@@ -242,6 +242,13 @@ DWORD ColorConvTable::Argb2Ayuv( DWORD argb )
     return (argb & 0xff000000) | s_default_conv_set.r8g8b8_to_yuv_func(r, g, b);
 }
 
+DWORD ColorConvTable::Ayuv2Auyv( DWORD ayuv )
+{
+    int y = (ayuv & 0x00ff0000) >> 8;
+    int u = (ayuv & 0x0000ff00) << 8;
+    return (ayuv & 0xff0000ff)| u | y;
+}
+
 DWORD ColorConvTable::PreMulArgb2Ayuv( int a8, int r8, int g8, int b8 )
 {
     return s_default_conv_set.pre_mul_argb_to_ayuv_func(a8, r8, g8, b8);
@@ -281,9 +288,43 @@ DWORD ColorConvTable::A8Y8U8V8_To_ARGB_TV_BT601( int a8, int y8, int u8, int v8 
     return (a8<<24) | YUVToRGB_TV_BT601(y8, u8, v8);
 }
 
+DWORD ColorConvTable::A8Y8U8V8_To_ARGB_PC_BT601( int a8, int y8, int u8, int v8 )
+{
+    return (a8<<24) | YUVToRGB_PC_BT601(y8, u8, v8);
+}
+
 DWORD ColorConvTable::A8Y8U8V8_To_ARGB_TV_BT709( int a8, int y8, int u8, int v8 )
 {
     return (a8<<24) | YUVToRGB_TV_BT709(y8, u8, v8);
+}
+
+DWORD ColorConvTable::A8Y8U8V8_To_ARGB_PC_BT709( int a8, int y8, int u8, int v8 )
+{
+    return (a8<<24) | YUVToRGB_PC_BT709(y8, u8, v8);
+}
+
+DWORD ColorConvTable::A8Y8U8V8_PC_To_TV( int a8, int y8, int u8, int v8 )
+{
+    const int FRACTION_SCALE = 1<<16;
+    const int YUV_MIN = 16;
+    const int cy = int(219.0/255*FRACTION_SCALE+0.5);
+    const int cuv = int(224.0/255*FRACTION_SCALE+0.5);/*Fixme: the RGBToYUVs we used doesnot seem to stretch chroma correctly*/
+    y8 = ((y8*cy)>>16) + YUV_MIN;
+    u8 = ((u8*cuv)>>16) + YUV_MIN;
+    v8 = ((v8*cuv)>>16) + YUV_MIN;
+    return (a8<<24) | (y8<<16) | (u8<<8) | v8;
+}
+
+DWORD ColorConvTable::A8Y8U8V8_TV_To_PC( int a8, int y8, int u8, int v8 )
+{
+    const int FRACTION_SCALE = 1<<16;
+    const int YUV_MIN = 16;
+    const int cy = int(255/219.0*FRACTION_SCALE+0.5);
+    const int cuv = int(255/224.0*FRACTION_SCALE+0.5);/*Fixme: the RGBToYUVs we used doesnot seem to stretch chroma correctly*/
+    y8 = ((y8-YUV_MIN)*cy)>>16;
+    u8 = ((u8-YUV_MIN)*cuv)>>16;
+    v8 = ((v8-YUV_MIN)*cuv)>>16;
+    return (a8<<24) | (y8<<16) | (u8<<8) | v8;
 }
 
 struct YuvPos

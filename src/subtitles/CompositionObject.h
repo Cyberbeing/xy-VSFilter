@@ -36,6 +36,20 @@ class CGolombBuffer;
 class CompositionObject : Rasterizer
 {
 public:
+    enum ColorType 
+    {
+        NONE,
+        YUV_Rec601,
+        YUV_Rec709,
+        RGB
+    };
+    enum YuvRangeType 
+    {
+        RANGE_NONE
+        , RANGE_TV
+        , RANGE_PC
+    };
+public:
     short m_object_id_ref;
     BYTE  m_window_id_ref;
     bool  m_object_cropped_flag;
@@ -64,7 +78,7 @@ public:
     void  RenderDvb(SubPicDesc& spd, short nX, short nY);
     void  WriteSeg(SubPicDesc& spd, short nX, short nY, short nCount, short nPaletteIndex);
     void  InitColor(const SubPicDesc& spd);
-    void  SetPalette(int nNbEntry, HDMV_PALETTE* pPalette, bool bIsHD);
+    void  SetPalette(int nNbEntry, HDMV_PALETTE* pPalette, ColorType color_type, YuvRangeType yuv_range);
     void  SetPalette(int nNbEntry, DWORD* dwColors);
     bool  HavePalette() {
         return !m_Palette.IsEmpty();
@@ -76,16 +90,10 @@ private:
     int   m_nRLEPos;
 
     CAtlArray<HDMV_PALETTE> m_Palette;
-    enum ColorType 
-    {
-        NONE,
-        YUV_Rec601,
-        YUV_Rec709,
-        RGB
-    };
     ColorType   m_OriginalColorType;
+    YuvRangeType m_OriginalYuvRangeType;
 
-	DWORD       m_Colors[256];
+    DWORD       m_Colors[256];
     int         m_colorType;
 
     void  DvbRenderField(SubPicDesc& spd, CGolombBuffer& gb, short nXStart, short nYStart, short nLength);

@@ -1900,10 +1900,33 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 
             m_script_selected_yuv = pRTS->m_eYCbCrMatrix;
             m_script_selected_range = pRTS->m_eYCbCrRange;
-			pRTS->Deinit();
+            pRTS->Deinit();
             playres = pRTS->m_dstScreenSize;
-		}
-	}
+        }
+        else if(clsid == __uuidof(CRenderedHdmvSubtitle))
+        {
+            CRenderedHdmvSubtitle *sub = dynamic_cast<CRenderedHdmvSubtitle*>(pSubStream);
+            CompositionObject::ColorType color_type = CompositionObject::NONE;
+            CompositionObject::YuvRangeType range_type = CompositionObject::RANGE_NONE;
+            if ( m_xy_str_opt[STRING_PGS_YUV_RANGE].CompareNoCase(_T("PC"))==0 )
+            {
+                range_type = CompositionObject::RANGE_PC;
+            }
+            else if ( m_xy_str_opt[STRING_PGS_YUV_RANGE].CompareNoCase(_T("TV"))==0 )
+            {
+                range_type = CompositionObject::RANGE_TV;
+            }
+            if ( m_xy_str_opt[STRING_PGS_YUV_MATRIX].CompareNoCase(_T("BT601"))==0 )
+            {
+                color_type = CompositionObject::YUV_Rec601;
+            }
+            else if ( m_xy_str_opt[STRING_PGS_YUV_MATRIX].CompareNoCase(_T("BT709"))==0 )
+            {
+                color_type = CompositionObject::YUV_Rec709;
+            }
+            sub->SetYuvType(color_type, range_type);
+        }
+    }
 
 	if(!fApplyDefStyle)
 	{
@@ -1929,8 +1952,8 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
     SetYuvMatrix();
 
     XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
-	if(m_simple_provider)
-		m_simple_provider->SetSubPicProvider(CComQIPtr<ISubPicProviderEx>(pSubStream));
+    if(m_simple_provider)
+        m_simple_provider->SetSubPicProvider(CComQIPtr<ISubPicProviderEx>(pSubStream));
 }
 
 void CDirectVobSubFilter::InvalidateSubtitle(REFERENCE_TIME rtInvalidate, DWORD_PTR nSubtitleId)

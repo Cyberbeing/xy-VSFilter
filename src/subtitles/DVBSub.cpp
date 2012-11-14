@@ -330,7 +330,14 @@ void CDVBSub::Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox)
                         nY = pRegion->vertAddr  + pRegion->objects[j].object_vertical_position;
                         pObject->m_width  = pRegion->width;
                         pObject->m_height = pRegion->height;
-                        pObject->SetPalette(pCLUT->size, pCLUT->palette, m_Display.width > 720);
+
+                        CompositionObject::ColorType color_type = m_colorTypeSetting;
+                        if (color_type==CompositionObject::NONE)
+                        {
+                            color_type = m_Display.width > 720 ? CompositionObject::YUV_Rec709 : CompositionObject::YUV_Rec601;
+                        }
+                        pObject->SetPalette(pCLUT->size, pCLUT->palette, color_type, 
+                            m_yuvRangeSetting==CompositionObject::RANGE_NONE ? CompositionObject::RANGE_TV : m_yuvRangeSetting);
                         pObject->InitColor(spd);
                         pObject->RenderDvb(spd, nX, nY);
                         TRACE_DVB(_T(" --> %d/%d - %d/%d\n"), i + 1, pPage->regionCount, j + 1, pRegion->objectCount);
@@ -424,6 +431,13 @@ void CDVBSub::Reset()
         pPage = m_Pages.RemoveHead();
         delete pPage;
     }
+}
+
+HRESULT CDVBSub::SetYuvType( ColorType colorType, YuvRangeType yuvRangeType )
+{
+    m_colorTypeSetting = colorType;
+    m_yuvRangeSetting = yuvRangeType;
+    return S_OK;
 }
 
 HRESULT CDVBSub::ParsePage(CGolombBuffer& gb, WORD wSegLength, CAutoPtr<DVB_PAGE>& pPage)

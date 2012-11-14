@@ -62,8 +62,9 @@ public:
 	STDMETHODIMP Reload();
 
 	HRESULT ParseSample (IMediaSample* pSample);
-	HRESULT	NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
+    HRESULT NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 
+    HRESULT SetYuvType(CBaseSub::ColorType colorType, CBaseSub::YuvRangeType yuvRangeType);
 private :
 	CString			m_name;
 	LCID			m_lcid;
