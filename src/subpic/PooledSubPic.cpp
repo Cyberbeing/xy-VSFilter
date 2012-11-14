@@ -118,7 +118,7 @@ bool CPooledSubPicAllocator::AllocEx( bool fStatic, ISubPicEx** ppSubPic )
 		if(!_free.IsEmpty())
 		{
 			CPooledSubPic *item = _free.RemoveHead();
-            if(item->m_type!=_type)
+            if(item->m_spd.type!=_type)
             {
                 item->_pool = NULL;
                 item->Release();

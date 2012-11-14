@@ -71,12 +71,11 @@ public:
     STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);
 
 protected:
-    int m_type;
     bool converted;
 
     int m_alpha_blt_dst_type;
 
-	SubPicDesc m_spd;
+    SubPicDesc m_spd;
 
 protected:
 	STDMETHODIMP_(void*) GetObject() const; // returns SubPicDesc*
