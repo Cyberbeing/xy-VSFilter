@@ -310,7 +310,7 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
 void CompositionObject::SetRLEData(const BYTE* pBuffer, int nSize, int nTotalSize)
 {
     delete [] m_pRLEData;
-    m_pRLEData     = DNew BYTE[nTotalSize];
+    m_pRLEData     = DEBUG_NEW BYTE[nTotalSize];
     m_nRLEDataSize = nTotalSize;
     m_nRLEPos      = nSize;
 

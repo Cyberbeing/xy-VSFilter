@@ -487,13 +487,13 @@ public:
 
         int vobsubInitProc(FilterActivation* fa, const FilterFunctions* ff)
         {
-            *(CVirtualDubFilter**)fa->filter_data = DNew CVobSubVirtualDubFilter();
+            *(CVirtualDubFilter**)fa->filter_data = DEBUG_NEW CVobSubVirtualDubFilter();
             return !(*(CVirtualDubFilter**)fa->filter_data);
         }
 
         int textsubInitProc(FilterActivation* fa, const FilterFunctions* ff)
         {
-            *(CVirtualDubFilter**)fa->filter_data = DNew CTextSubVirtualDubFilter();
+            *(CVirtualDubFilter**)fa->filter_data = DEBUG_NEW CTextSubVirtualDubFilter();
             return !(*(CVirtualDubFilter**)fa->filter_data);
         }
 
@@ -542,7 +542,7 @@ public:
             if (f) {
                 delete f;
             }
-            f = DNew CVobSubVirtualDubFilter(CString(*argv[0].asString()));
+            f = DEBUG_NEW CVobSubVirtualDubFilter(CString(*argv[0].asString()));
             *(CVirtualDubFilter**)fa->filter_data = f;
         }
 
@@ -553,7 +553,7 @@ public:
             if (f) {
                 delete f;
             }
-            f = DNew CTextSubVirtualDubFilter(CString(*argv[0].asString()), argv[1].asInt());
+            f = DEBUG_NEW CTextSubVirtualDubFilter(CString(*argv[0].asString()), argv[1].asInt());
             *(CVirtualDubFilter**)fa->filter_data = f;
         }
 
@@ -760,12 +760,12 @@ public:
 
         int vobsubInitProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff)
         {
-            return ((*(CVirtualDubFilter**)fa->filter_data = DNew CVobSubVirtualDubFilter()) == NULL);
+            return ((*(CVirtualDubFilter**)fa->filter_data = DEBUG_NEW CVobSubVirtualDubFilter()) == NULL);
         }
 
         int textsubInitProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff)
         {
-            return ((*(CVirtualDubFilter**)fa->filter_data = DNew CTextSubVirtualDubFilter()) == NULL);
+            return ((*(CVirtualDubFilter**)fa->filter_data = DEBUG_NEW CTextSubVirtualDubFilter()) == NULL);
         }
 
         void baseDeinitProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff)
@@ -813,7 +813,7 @@ public:
             if (f) {
                 delete f;
             }
-            f = DNew CVobSubVirtualDubFilter(CString(*argv[0].asString()));
+            f = DEBUG_NEW CVobSubVirtualDubFilter(CString(*argv[0].asString()));
             *(CVirtualDubFilter**)fa->filter_data = f;
         }
 
@@ -824,7 +824,7 @@ public:
             if (f) {
                 delete f;
             }
-            f = DNew CTextSubVirtualDubFilter(CString(*argv[0].asString()), argv[1].asInt());
+            f = DEBUG_NEW CTextSubVirtualDubFilter(CString(*argv[0].asString()), argv[1].asInt());
             *(CVirtualDubFilter**)fa->filter_data = f;
         }
 
@@ -959,7 +959,7 @@ public:
 
         AVSValue __cdecl VobSubCreateS(AVSValue args, void* user_data, IScriptEnvironment* env)
         {
-            return (DNew CVobSubAvisynthFilter(args[0].AsClip(), args[1].AsString(), env));
+            return (DEBUG_NEW CVobSubAvisynthFilter(args[0].AsClip(), args[1].AsString(), env));
         }
 
         class CTextSubAvisynthFilter : public CTextSubFilter, public CAvisynthFilter
@@ -976,17 +976,17 @@ public:
 
         AVSValue __cdecl TextSubCreateS(AVSValue args, void* user_data, IScriptEnvironment* env)
         {
-            return (DNew CTextSubAvisynthFilter(args[0].AsClip(), env, args[1].AsString()));
+            return (DEBUG_NEW CTextSubAvisynthFilter(args[0].AsClip(), env, args[1].AsString()));
         }
 
         AVSValue __cdecl TextSubCreateSI(AVSValue args, void* user_data, IScriptEnvironment* env)
         {
-            return (DNew CTextSubAvisynthFilter(args[0].AsClip(), env, args[1].AsString(), args[2].AsInt()));
+            return (DEBUG_NEW CTextSubAvisynthFilter(args[0].AsClip(), env, args[1].AsString(), args[2].AsInt()));
         }
 
         AVSValue __cdecl TextSubCreateSIF(AVSValue args, void* user_data, IScriptEnvironment* env)
         {
-            return (DNew CTextSubAvisynthFilter(args[0].AsClip(), env, args[1].AsString(), args[2].AsInt(), (float)args[3].AsFloat()));
+            return (DEBUG_NEW CTextSubAvisynthFilter(args[0].AsClip(), env, args[1].AsString(), args[2].AsInt(), (float)args[3].AsFloat()));
         }
 
         AVSValue __cdecl MaskSubCreateSIIFI(AVSValue args, void* user_data, IScriptEnvironment* env)
@@ -1009,7 +1009,7 @@ public:
             };
             AVSValue clip(env->Invoke("Blackness", value, nom));
             env->SetVar(env->SaveString("RGBA"), true);
-            return (DNew CTextSubAvisynthFilter(clip.AsClip(), env, args[0].AsString()));
+            return (DEBUG_NEW CTextSubAvisynthFilter(clip.AsClip(), env, args[0].AsString()));
         }
 
         extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit(IScriptEnvironment* env)
@@ -1089,7 +1089,7 @@ public:
 
         AVSValue __cdecl VobSubCreateS(AVSValue args, void* user_data, IScriptEnvironment* env)
         {
-            return (DNew CVobSubAvisynthFilter(args[0].AsClip(), args[1].AsString(), env));
+            return (DEBUG_NEW CVobSubAvisynthFilter(args[0].AsClip(), args[1].AsString(), env));
         }
 
         class CTextSubAvisynthFilter : public CTextSubFilter, public CAvisynthFilter
@@ -1114,7 +1114,7 @@ public:
                 vfr = GetVFRTranslator(args[4].AsString());
             }
 
-            return (DNew CTextSubAvisynthFilter(
+            return (DEBUG_NEW CTextSubAvisynthFilter(
                         args[0].AsClip(),
                         env,
                         args[1].AsString(),
@@ -1162,7 +1162,7 @@ public:
             AVSValue clip(env->Invoke("Blackness", value, nom));
             env->SetVar(env->SaveString("RGBA"), true);
             //return (DNew CTextSubAvisynthFilter(clip.AsClip(), env, args[0].AsString()));
-            return (DNew CTextSubAvisynthFilter(
+            return (DEBUG_NEW CTextSubAvisynthFilter(
                         clip.AsClip(),
                         env,
                         args[0].AsString(),
