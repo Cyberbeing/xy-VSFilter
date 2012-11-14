@@ -1,10 +1,11 @@
 #pragma once
 
 #include "../BaseVideoFilter/BaseVideoFilter.h"
+#include "XyOptionsImpl.h"
 
 namespace DirectVobSubXyOptions
 {
-    enum//int
+    enum
     {
         INT_COLOR_SPACE = 0,
         INT_YUV_RANGE,
@@ -24,31 +25,19 @@ namespace DirectVobSubXyOptions
         INT_SUBPIXEL_POS_LEVEL,
 
         INT_LAYOUT_SIZE_OPT,//see @LayoutSizeOpt
-        INT_COUNT
-    };
-    enum//bool
-    {
+
         BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER,
         BOOL_HIDE_TRAY_ICON,
-        BOOL_COUNT
-    };
-    enum//SIZE
-    {
+
         SIZE_ORIGINAL_VIDEO,
         SIZE_ASS_PLAY_RESOLUTION,
         SIZE_USER_SPECIFIED_LAYOUT_SIZE,
         SIZE_LAYOUT_WITH,//read only
-        SIZE_COUNT
-    };
-    enum//string
-    {
+
         STRING_LOAD_EXT_LIST,
         STRING_PGS_YUV_RANGE,//TV,PC,GUESS(default)
         STRING_PGS_YUV_MATRIX,//BT601,BT709,GUESS(default)
-        STRING_COUNT
-    };
-    enum
-    {
+
         //[ColorSpaceOpt1...ColorSpaceOptN]
         //size=N
         BIN_OUTPUT_COLOR_FORMAT,
@@ -62,7 +51,7 @@ namespace DirectVobSubXyOptions
         //size = 1
         BIN_XY_FLY_WEIGHT_INFO,
 
-        BIN_COUNT
+        OPTION_COUNT
     };
     struct ColorSpaceOpt
     {
@@ -101,26 +90,45 @@ namespace DirectVobSubXyOptions
         LAYOUT_SIZE_OPT_USER_SPECIFIED,
         LAYOUT_SIZE_OPT_COUNT
     };
-};
 
-[uuid("85E5D6F9-BEFB-4E01-B047-758359CDF9AB")]
-interface IDirectVobSubXy : public IUnknown 
-{
-    STDMETHOD(XyGetBool     )(int field, bool      *value) = 0;
-    STDMETHOD(XyGetInt      )(int field, int       *value) = 0;
-    STDMETHOD(XyGetSize     )(int field, SIZE      *value) = 0;
-    STDMETHOD(XyGetRect     )(int field, RECT      *value) = 0;
-    STDMETHOD(XyGetUlonglong)(int field, ULONGLONG *value) = 0;
-    STDMETHOD(XyGetDouble   )(int field, double    *value) = 0;
-    STDMETHOD(XyGetString   )(int field, LPWSTR    *value, int *chars) = 0;
-    STDMETHOD(XyGetBin      )(int field, LPVOID    *value, int *size ) = 0;
+    const XyOptionsImpl::Option DirectVobFilterOptions[] = {
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_COLOR_SPACE},
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_YUV_RANGE},
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_OVERLAY_CACHE_MAX_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_PATH_DATA_CACHE_MAX_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM},
 
-    STDMETHOD(XySetBool     )(int field, bool      value) = 0;
-    STDMETHOD(XySetInt      )(int field, int       value) = 0;
-    STDMETHOD(XySetSize     )(int field, SIZE      value) = 0;
-    STDMETHOD(XySetRect     )(int field, RECT      value) = 0;
-    STDMETHOD(XySetUlonglong)(int field, ULONGLONG value) = 0;
-    STDMETHOD(XySetDouble   )(int field, double    value) = 0;
-    STDMETHOD(XySetString   )(int field, LPWSTR    value, int chars) = 0;
-    STDMETHOD(XySetBin      )(int field, LPVOID    value, int size ) = 0;
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_BITMAP_MRU_CACHE_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_CLIPPER_MRU_CACHE_ITEM_NUM},
+
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_TEXT_INFO_CACHE_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_ASS_TAG_LIST_CACHE_ITEM_NUM},
+
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_SUBPIXEL_VARIANCE_CACHE_ITEM_NUM},
+
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_SUBPIXEL_POS_LEVEL},
+
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_LAYOUT_SIZE_OPT},
+
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , BOOL_HIDE_TRAY_ICON},
+
+        {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_ORIGINAL_VIDEO},
+        {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_ASS_PLAY_RESOLUTION},
+        {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_USER_SPECIFIED_LAYOUT_SIZE},
+        {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_LAYOUT_WITH},
+
+        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_LOAD_EXT_LIST},
+        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_PGS_YUV_RANGE},
+        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_PGS_YUV_MATRIX},
+
+        {XyOptionsImpl::OPTION_TYPE_BIN   , BIN_OUTPUT_COLOR_FORMAT},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , BIN_INPUT_COLOR_FORMAT},
+
+        {XyOptionsImpl::OPTION_TYPE_BIN   , BIN_CACHES_INFO},
+
+        {XyOptionsImpl::OPTION_TYPE_BIN   , BIN_XY_FLY_WEIGHT_INFO},
+        {XyOptionsImpl::OPTION_TYPE_END_FLAG}
+    };
 };

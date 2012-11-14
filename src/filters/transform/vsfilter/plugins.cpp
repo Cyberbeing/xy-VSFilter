@@ -66,7 +66,10 @@ protected:
 
     bool m_fLazyInit;
 public:
-    CFilter() : CUnknown(NAME("CFilter"), NULL), m_fps(-1), m_SubPicProviderId(0), m_fLazyInit(false)
+    CFilter() 
+        : CUnknown(NAME("CFilter"), NULL)
+        , CDirectVobSub(DirectVobFilterOptions)
+        , m_fps(-1), m_SubPicProviderId(0), m_fLazyInit(false)
     {
         //fix me: should not do init here
         CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
@@ -97,7 +100,7 @@ public:
         
         return QI(IDirectVobSub)
             QI(IDirectVobSub2)
-            QI(IDirectVobSubXy)
+            QI(IXyOptions)
             QI(IFilterVersion)
             __super::NonDelegatingQueryInterface(riid, ppv);
     }

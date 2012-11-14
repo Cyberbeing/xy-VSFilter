@@ -245,6 +245,7 @@
     <ClCompile Include="..\TextInputPin.cpp" />
     <ClCompile Include="..\vfr.cpp" />
     <ClCompile Include="..\VSFilter.cpp" />
+    <ClCompile Include="..\XyOptionsImpl.cpp" />
     <ClCompile Include="..\xy_logger.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -267,6 +268,7 @@
     <ClInclude Include="..\version.h" />
     <ClInclude Include="..\vfr.h" />
     <ClInclude Include="..\VSFilter.h" />
+    <ClInclude Include="..\XyOptionsImpl.h" />
     <ClInclude Include="..\XySubRenderIntf.h" />
     <ClInclude Include="..\xy_logger.h" />
   </ItemGroup>

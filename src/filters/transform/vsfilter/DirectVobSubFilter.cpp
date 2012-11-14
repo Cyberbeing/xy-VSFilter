@@ -59,12 +59,14 @@ using namespace DirectVobSubXyOptions;
 //
 
 CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid)
-	: CBaseVideoFilter(NAME("CDirectVobSubFilter"), punk, phr, clsid)
-	, m_nSubtitleId(-1)
-	, m_fMSMpeg4Fix(false)
-	, m_fps(25)
+    : CDirectVobSub(DirectVobFilterOptions)
+    , CBaseVideoFilter(NAME("CDirectVobSubFilter"), punk, phr, clsid)
+    , m_nSubtitleId(-1)
+    , m_fMSMpeg4Fix(false)
+    , m_fps(25)
 {
-	DbgLog((LOG_TRACE, 3, _T("CDirectVobSubFilter::CDirectVobSubFilter")));
+
+    DbgLog((LOG_TRACE, 3, _T("CDirectVobSubFilter::CDirectVobSubFilter")));
 
     // and then, anywhere you need it:
 
@@ -76,32 +78,32 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
     xy_logger::doConfigure( dllPath.GetString() );
 #endif
 
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+    AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-	ZeroObj4OSD();
+    ZeroObj4OSD();
 
-	theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Hint"), _T("The first three are fixed, but you can add more up to ten entries."));
-	theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Path0"), _T("."));
-	theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Path1"), _T("c:\\subtitles"));
-	theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Path2"), _T(".\\subtitles"));
+    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Hint"), _T("The first three are fixed, but you can add more up to ten entries."));
+    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Path0"), _T("."));
+    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Path1"), _T("c:\\subtitles"));
+    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Path2"), _T(".\\subtitles"));
 
-	m_fLoading = true;
+    m_fLoading = true;
 
-	m_hSystrayThread = 0;
-	m_tbid.hSystrayWnd = NULL;
-	m_tbid.graph = NULL;
-	m_tbid.fRunOnce = false;
-	m_tbid.fShowIcon = (theApp.m_AppName.Find(_T("zplayer"), 0) < 0 || !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0));
+    m_hSystrayThread = 0;
+    m_tbid.hSystrayWnd = NULL;
+    m_tbid.graph = NULL;
+    m_tbid.fRunOnce = false;
+    m_tbid.fShowIcon = (theApp.m_AppName.Find(_T("zplayer"), 0) < 0 || !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0));
 
-	HRESULT hr = S_OK;
-	m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, &hr));
-	ASSERT(SUCCEEDED(hr));
+    HRESULT hr = S_OK;
+    m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, &hr));
+    ASSERT(SUCCEEDED(hr));
 
-	CAMThread::Create();
-	m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
-	m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
+    CAMThread::Create();
+    m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
+    m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
 
-	memset(&m_CurrentVIH2, 0, sizeof(VIDEOINFOHEADER2));
+    memset(&m_CurrentVIH2, 0, sizeof(VIDEOINFOHEADER2));
 
     m_donot_follow_upstream_preferred_order = !m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER];
 
@@ -142,7 +144,7 @@ STDMETHODIMP CDirectVobSubFilter::NonDelegatingQueryInterface(REFIID riid, void*
     return
 		QI(IDirectVobSub)
 		QI(IDirectVobSub2)
-        QI(IDirectVobSubXy)
+        QI(IXyOptions)
 		QI(IFilterVersion)
 		QI(ISpecifyPropertyPages)
 		QI(IAMStreamSelect)
@@ -1396,8 +1398,8 @@ STDMETHODIMP CDirectVobSubFilter::ShowConfigDialog(int iSelected, HWND hWndParen
 
 ///////////////////////////////////////////////////////////////////////////
 
-CDirectVobSubFilter2::CDirectVobSubFilter2(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid) :
-	CDirectVobSubFilter(punk, phr, clsid)
+CDirectVobSubFilter2::CDirectVobSubFilter2(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid)
+    : CDirectVobSubFilter(punk, phr, clsid)
 {
 }
 
@@ -2304,9 +2306,9 @@ void CDirectVobSubFilter::SetYuvMatrix()
     ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
 }
 
-// IDirectVobSubXy
+// IXyOptions
 
-STDMETHODIMP CDirectVobSubFilter::XySetBool( int field, bool value )
+STDMETHODIMP CDirectVobSubFilter::XySetBool( unsigned field, bool value )
 {
     CAutoLock cAutolock(&m_csQueueLock);
     HRESULT hr = CDirectVobSub::XySetBool(field, value);
@@ -2326,7 +2328,7 @@ STDMETHODIMP CDirectVobSubFilter::XySetBool( int field, bool value )
     return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::XySetInt( int field, int value )
+STDMETHODIMP CDirectVobSubFilter::XySetInt( unsigned field, int value )
 {
     CAutoLock cAutolock(&m_csQueueLock);
     HRESULT hr = CDirectVobSub::XySetInt(field, value);

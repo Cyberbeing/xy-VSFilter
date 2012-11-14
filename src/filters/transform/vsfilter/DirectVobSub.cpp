@@ -25,19 +25,20 @@
 
 using namespace DirectVobSubXyOptions;
 
-CDirectVobSub::CDirectVobSub()
+CDirectVobSub::CDirectVobSub(const Option *options)
+    : XyOptionsImpl(options)
 {
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+    AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-	BYTE* pData = NULL;
-	UINT nSize = 0;
+    BYTE* pData = NULL;
+    UINT nSize = 0;
 
     m_supported_filter_verion = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), 0);
     m_config_info_version = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), 0);
 
     m_iSelectedLanguage = 0;
     m_fHideSubtitles = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), 0);
-	m_fDoPreBuffering = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), 1);
+    m_fDoPreBuffering = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), 1);
     
     m_xy_int_opt[INT_COLOR_SPACE] = GetCompatibleProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOR_SPACE), CDirectVobSub::YuvMatrix_AUTO);
     if( m_xy_int_opt[INT_COLOR_SPACE]!=CDirectVobSub::YuvMatrix_AUTO && 
@@ -58,23 +59,23 @@ CDirectVobSub::CDirectVobSub()
     m_bt601Width = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
     m_bt601Height = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_HEIGHT), 600);
 
-	m_fOverridePlacement = !!theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), 0);
-	m_PlacementXperc = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), 50);
-	m_PlacementYperc = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), 90);
-	m_fBufferVobSub = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_BUFFER), 1);
-	m_fOnlyShowForcedVobSubs = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), 0);
-	m_fPolygonize = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), 0);
-	m_defStyle <<= theApp.GetProfileString(ResStr(IDS_R_TEXT), ResStr(IDS_RT_STYLE), _T(""));
-	m_fFlipPicture = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), 0);
-	m_fFlipSubtitles = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), 0);
-	m_fOSD = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SHOWOSDSTATS), 0);
-	m_fSaveFullPath = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SAVEFULLPATH), 0);
-	m_nReloaderDisableCount = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0) ? 1 : 0;
-	m_SubtitleDelay = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), 0);
-	m_SubtitleSpeedMul = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), 1000);
-	m_SubtitleSpeedDiv = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), 1000);
-	m_fMediaFPSEnabled = !!theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), 0);
-	m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), 0));
+    m_fOverridePlacement = !!theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), 0);
+    m_PlacementXperc = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), 50);
+    m_PlacementYperc = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), 90);
+    m_fBufferVobSub = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_BUFFER), 1);
+    m_fOnlyShowForcedVobSubs = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), 0);
+    m_fPolygonize = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), 0);
+    m_defStyle <<= theApp.GetProfileString(ResStr(IDS_R_TEXT), ResStr(IDS_RT_STYLE), _T(""));
+    m_fFlipPicture = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), 0);
+    m_fFlipSubtitles = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), 0);
+    m_fOSD = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SHOWOSDSTATS), 0);
+    m_fSaveFullPath = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SAVEFULLPATH), 0);
+    m_nReloaderDisableCount = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0) ? 1 : 0;
+    m_SubtitleDelay = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), 0);
+    m_SubtitleSpeedMul = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), 1000);
+    m_SubtitleSpeedDiv = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), 1000);
+    m_fMediaFPSEnabled = !!theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), 0);
+    m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), 0));
     m_xy_bool_opt[BOOL_HIDE_TRAY_ICON] =  !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), 0);
 
     m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM)
@@ -190,15 +191,15 @@ CDirectVobSub::CDirectVobSub()
         delete [] pData;
         pData = NULL;
     }
-	if(theApp.GetProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), &pData, &nSize) && pData)
-	{
-		if(nSize != sizeof(m_MediaFPS)) m_MediaFPS = 25.0;
-		else memcpy(&m_MediaFPS, pData, sizeof(m_MediaFPS));
-	}
-	m_ZoomRect.left = m_ZoomRect.top = 0;
-	m_ZoomRect.right = m_ZoomRect.bottom = 1;
+    if(theApp.GetProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), &pData, &nSize) && pData)
+    {
+        if(nSize != sizeof(m_MediaFPS)) m_MediaFPS = 25.0;
+        else memcpy(&m_MediaFPS, pData, sizeof(m_MediaFPS));
+    }
+    m_ZoomRect.left = m_ZoomRect.top = 0;
+    m_ZoomRect.right = m_ZoomRect.bottom = 1;
 
-	m_fForced = false;
+    m_fForced = false;
     if(pData)
     {
         delete [] pData;
@@ -987,38 +988,27 @@ UINT CDirectVobSub::GetCompatibleProfileInt( LPCTSTR lpszSection, LPCTSTR lpszEn
     return result;
 }
 
-// IDirectVobSubXy
+// IXyOptions
 
-STDMETHODIMP CDirectVobSub::XyGetBool( int field, bool *value )
+STDMETHODIMP CDirectVobSub::XyGetBool( unsigned field, bool *value )
 {
     CAutoLock cAutoLock(&m_propsLock);
-    if (field<0 || field>=DirectVobSubXyOptions::BOOL_COUNT)
-    {
-        return E_NOTIMPL;
-    }
-    return value ? *value = m_xy_bool_opt[field], S_OK : E_POINTER;
+    return XyOptionsImpl::XyGetBool(field, value);
 }
 
-STDMETHODIMP CDirectVobSub::XyGetInt( int field, int *value )
+STDMETHODIMP CDirectVobSub::XyGetInt( unsigned field, int *value )
 {
     CAutoLock cAutoLock(&m_propsLock);
-    if (field<0 || field>=DirectVobSubXyOptions::INT_COUNT)
-    {
-        return E_NOTIMPL;
-    }
-    return value ? *value = m_xy_int_opt[field], S_OK : E_POINTER;
+    return XyOptionsImpl::XyGetInt(field, value);
 }
 
-STDMETHODIMP CDirectVobSub::XyGetSize( int field, SIZE *value )
+STDMETHODIMP CDirectVobSub::XyGetSize( unsigned field, SIZE *value )
 {
     CAutoLock cAutoLock(&m_propsLock);
-    if (field<0 || field>=DirectVobSubXyOptions::SIZE_COUNT)
+    HRESULT hr = XyOptionsImpl::XyGetSize(field, value);
+    if (hr != S_OK)
     {
-        return E_NOTIMPL;
-    }
-    if (!value)
-    {
-        return E_POINTER;
+        return hr;
     }
     switch(field)
     {
@@ -1040,52 +1030,37 @@ STDMETHODIMP CDirectVobSub::XyGetSize( int field, SIZE *value )
             *value = m_xy_size_opt[DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO];
         }
         break;
-    default:
-        *value = m_xy_size_opt[field];
-        break;
     }
-    return S_OK;
+    return hr;
 }
 
-STDMETHODIMP CDirectVobSub::XyGetRect( int field, RECT *value )
-{
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CDirectVobSub::XyGetUlonglong( int field, ULONGLONG *value )
-{
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CDirectVobSub::XyGetDouble( int field, double *value )
-{
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CDirectVobSub::XyGetString( int field, LPWSTR *value, int *chars )
-{
-    if (field<0 || field>=DirectVobSubXyOptions::STRING_COUNT)
-    {
-        return E_NOTIMPL;
-    }
-    if (value)
-    {
-        *value = const_cast<LPWSTR>(m_xy_str_opt[field].GetString());
-    }
-    if (chars)
-    {
-        *chars = m_xy_str_opt[field].GetLength();
-    }
-    return S_OK;
-}
-
-STDMETHODIMP CDirectVobSub::XyGetBin( int field, LPVOID *value, int *size )
+STDMETHODIMP CDirectVobSub::XyGetRect( unsigned field, RECT *value )
 {
     CAutoLock cAutoLock(&m_propsLock);
-    if (field<0 || field>=DirectVobSubXyOptions::BIN_COUNT)
-    {
-        return E_NOTIMPL;
-    }
+    return XyOptionsImpl::XyGetRect(field, value);
+}
+
+STDMETHODIMP CDirectVobSub::XyGetUlonglong( unsigned field, ULONGLONG *value )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+    return XyOptionsImpl::XyGetUlonglong(field, value);
+}
+
+STDMETHODIMP CDirectVobSub::XyGetDouble( unsigned field, double *value )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+    return XyOptionsImpl::XyGetDouble(field, value);
+}
+
+STDMETHODIMP CDirectVobSub::XyGetString( unsigned field, LPWSTR *value, int *chars )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+    return XyOptionsImpl::XyGetString(field, value, chars);
+}
+
+STDMETHODIMP CDirectVobSub::XyGetBin( unsigned field, LPVOID *value, int *size )
+{
+    CAutoLock cAutoLock(&m_propsLock);
     if (!size)
     {
         return E_INVALIDARG;
@@ -1146,27 +1121,14 @@ STDMETHODIMP CDirectVobSub::XyGetBin( int field, LPVOID *value, int *size )
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CDirectVobSub::XySetBool( int field, bool value )
+STDMETHODIMP CDirectVobSub::XySetBool( unsigned field, bool value )
 {
-    if (field<0 || field>=DirectVobSubXyOptions::BOOL_COUNT)
-    {
-        return E_NOTIMPL;
-    }
-
     CAutoLock cAutoLock(&m_propsLock);
-
-    if(m_xy_bool_opt[field] == value) return S_FALSE;
-    m_xy_bool_opt[field] = value;
-
-    return S_OK;
+    return XyOptionsImpl::XySetBool(field, value);
 }
 
-STDMETHODIMP CDirectVobSub::XySetInt( int field, int value )
+STDMETHODIMP CDirectVobSub::XySetInt( unsigned field, int value )
 {
-    if (field<0 || field>=DirectVobSubXyOptions::INT_COUNT)
-    {
-        return E_NOTIMPL;
-    }
     switch (field)
     {
     case DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT:
@@ -1176,20 +1138,15 @@ STDMETHODIMP CDirectVobSub::XySetInt( int field, int value )
         }
         break;
     }
+
     CAutoLock cAutoLock(&m_propsLock);
+    HRESULT hr = XyOptionsImpl::XySetInt(field, value);
 
-    if(m_xy_int_opt[field] == value) return S_FALSE;
-    m_xy_int_opt[field] = value;
-
-    return S_OK;
+    return hr;
 }
 
-STDMETHODIMP CDirectVobSub::XySetSize( int field, SIZE value )
+STDMETHODIMP CDirectVobSub::XySetSize( unsigned field, SIZE value )
 {
-    if (field<0 || field>=DirectVobSubXyOptions::SIZE_COUNT)
-    {
-        return E_NOTIMPL;
-    }
     switch (field)
     {
     case DirectVobSubXyOptions::SIZE_LAYOUT_WITH:
@@ -1197,45 +1154,50 @@ STDMETHODIMP CDirectVobSub::XySetSize( int field, SIZE value )
     }
 
     CAutoLock cAutoLock(&m_propsLock);
+    HRESULT hr = XyOptionsImpl::XySetSize(field, value);
 
-    if(m_xy_size_opt[field].cx == value.cx && m_xy_size_opt[field].cy == value.cy) return S_FALSE;
-    m_xy_size_opt[field] = value;
-
-    return S_OK;
+    return hr;
 }
 
-STDMETHODIMP CDirectVobSub::XySetRect( int field, RECT value )
-{
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CDirectVobSub::XySetUlonglong( int field, ULONGLONG value )
-{
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CDirectVobSub::XySetDouble( int field, double value )
-{
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CDirectVobSub::XySetString( int field, LPWSTR value, int chars )
-{
-    if (field<0 || field>=DirectVobSubXyOptions::STRING_COUNT)
-    {
-        return E_NOTIMPL;
-    }
-    m_xy_str_opt[field] = value ? CStringW(value).Left(chars) : L"";
-    return S_OK;
-}
-
-STDMETHODIMP CDirectVobSub::XySetBin( int field, LPVOID value, int size )
+STDMETHODIMP CDirectVobSub::XySetRect( unsigned field, RECT value )
 {
     CAutoLock cAutoLock(&m_propsLock);
-    if (field<0 || field>=DirectVobSubXyOptions::BIN_COUNT)
-    {
-        return E_NOTIMPL;
-    }
+
+    HRESULT hr = XyOptionsImpl::XySetRect(field, value);
+
+    return hr;
+}
+
+STDMETHODIMP CDirectVobSub::XySetUlonglong( unsigned field, ULONGLONG value )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    HRESULT hr = XyOptionsImpl::XySetUlonglong(field, value);
+
+    return hr;
+}
+
+STDMETHODIMP CDirectVobSub::XySetDouble( unsigned field, double value )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    HRESULT hr = XyOptionsImpl::XySetDouble(field, value);
+
+    return hr;
+}
+
+STDMETHODIMP CDirectVobSub::XySetString( unsigned field, LPWSTR value, int chars )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+
+    HRESULT hr = XyOptionsImpl::XySetString(field, value, chars);
+
+    return hr;
+}
+
+STDMETHODIMP CDirectVobSub::XySetBin( unsigned field, LPVOID value, int size )
+{
+    CAutoLock cAutoLock(&m_propsLock);
     switch(field)
     {
     case BIN_OUTPUT_COLOR_FORMAT:

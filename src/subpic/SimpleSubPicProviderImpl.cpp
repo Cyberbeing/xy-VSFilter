@@ -12,7 +12,7 @@
 // 
 
 
-SimpleSubPicProvider::SimpleSubPicProvider( int alpha_blt_dst_type, SIZE spd_size, RECT video_rect, IDirectVobSubXy *consumer
+SimpleSubPicProvider::SimpleSubPicProvider( int alpha_blt_dst_type, SIZE spd_size, RECT video_rect, IXyOptions *consumer
     , HRESULT* phr/*=NULL*/ )
     : CUnknown(NAME("CSubPicQueueImpl"), NULL)
     , m_alpha_blt_dst_type(alpha_blt_dst_type)
@@ -293,7 +293,7 @@ bool SimpleSubPicProvider::IsSpdColorTypeSupported( int type )
 //
 
 SimpleSubPicProvider2::SimpleSubPicProvider2( int alpha_blt_dst_type, SIZE max_size, SIZE cur_size, RECT video_rect, 
-    IDirectVobSubXy *consumer, HRESULT* phr/*=NULL*/)
+    IXyOptions *consumer, HRESULT* phr/*=NULL*/)
     : CUnknown(NAME("SimpleSubPicProvider2"), NULL)
     , m_alpha_blt_dst_type(alpha_blt_dst_type)
     , m_max_size(max_size)

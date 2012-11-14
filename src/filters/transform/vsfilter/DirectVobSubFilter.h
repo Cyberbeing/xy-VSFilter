@@ -97,9 +97,9 @@ public:
     void GetInputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
     void GetOutputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
 
-    // IDirectVobSubXy
-    STDMETHODIMP XySetBool     (int field, bool      value);
-    STDMETHODIMP XySetInt      (int field, int       value);
+    // IXyOptions
+    STDMETHODIMP XySetBool     (unsigned field, bool      value);
+    STDMETHODIMP XySetInt      (unsigned field, int       value);
 
     // IDirectVobSub
     STDMETHODIMP put_FileName(WCHAR* fn);

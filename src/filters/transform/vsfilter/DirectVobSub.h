@@ -25,10 +25,13 @@
 #include "IDirectVobSubXy.h"
 #include "..\..\..\..\include\IFilterVersion.h"
 #include "version.h"
+#include "XyOptionsImpl.h"
 
-class CDirectVobSub : public IDirectVobSub2, public IDirectVobSubXy, public IFilterVersion
+class CDirectVobSub : public IDirectVobSub2, public XyOptionsImpl, public IFilterVersion
 {
 public:
+    typedef XyOptionsImpl::Option Option;
+
     enum ColorSpaceOption
     {
         YuvMatrix_AUTO = 0
@@ -50,8 +53,8 @@ public:
     typedef DirectVobSubXyOptions::XyFlyWeightInfo XyFlyWeightInfo;
     typedef DirectVobSubXyOptions::ColorSpaceOpt ColorSpaceOpt;
 protected:
-	CDirectVobSub();
-	virtual ~CDirectVobSub();
+    CDirectVobSub(const Option *options);
+    virtual ~CDirectVobSub();
 
     bool is_compatible();
     UINT GetCompatibleProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault);
@@ -92,31 +95,27 @@ protected:
 	CComPtr<ISubClock> m_pSubClock;
 	bool m_fForced;
 
-    int m_xy_int_opt[DirectVobSubXyOptions::INT_COUNT];
-    bool m_xy_bool_opt[DirectVobSubXyOptions::BOOL_COUNT];
-    CSize m_xy_size_opt[DirectVobSubXyOptions::SIZE_COUNT];
-    CStringW m_xy_str_opt[DirectVobSubXyOptions::STRING_COUNT];
 public:
-    
-    // IDirectVobSubXy
 
-    STDMETHODIMP XyGetBool     (int field, bool      *value);
-    STDMETHODIMP XyGetInt      (int field, int       *value);
-    STDMETHODIMP XyGetSize     (int field, SIZE      *value);
-    STDMETHODIMP XyGetRect     (int field, RECT      *value);
-    STDMETHODIMP XyGetUlonglong(int field, ULONGLONG *value);
-    STDMETHODIMP XyGetDouble   (int field, double    *value);
-    STDMETHODIMP XyGetString   (int field, LPWSTR    *value, int *chars);
-    STDMETHODIMP XyGetBin      (int field, LPVOID    *value, int *size );
+    // IXyOptions
 
-    STDMETHODIMP XySetBool     (int field, bool      value);
-    STDMETHODIMP XySetInt      (int field, int       value);
-    STDMETHODIMP XySetSize     (int field, SIZE      value);
-    STDMETHODIMP XySetRect     (int field, RECT      value);
-    STDMETHODIMP XySetUlonglong(int field, ULONGLONG value);
-    STDMETHODIMP XySetDouble   (int field, double    value);
-    STDMETHODIMP XySetString   (int field, LPWSTR    value, int chars);
-    STDMETHODIMP XySetBin      (int field, LPVOID    value, int size );
+    STDMETHODIMP XyGetBool     (unsigned field, bool      *value);
+    STDMETHODIMP XyGetInt      (unsigned field, int       *value);
+    STDMETHODIMP XyGetSize     (unsigned field, SIZE      *value);
+    STDMETHODIMP XyGetRect     (unsigned field, RECT      *value);
+    STDMETHODIMP XyGetUlonglong(unsigned field, ULONGLONG *value);
+    STDMETHODIMP XyGetDouble   (unsigned field, double    *value);
+    STDMETHODIMP XyGetString   (unsigned field, LPWSTR    *value, int *chars);
+    STDMETHODIMP XyGetBin      (unsigned field, LPVOID    *value, int *size );
+
+    STDMETHODIMP XySetBool     (unsigned field, bool      value);
+    STDMETHODIMP XySetInt      (unsigned field, int       value);
+    STDMETHODIMP XySetSize     (unsigned field, SIZE      value);
+    STDMETHODIMP XySetRect     (unsigned field, RECT      value);
+    STDMETHODIMP XySetUlonglong(unsigned field, ULONGLONG value);
+    STDMETHODIMP XySetDouble   (unsigned field, double    value);
+    STDMETHODIMP XySetString   (unsigned field, LPWSTR    value, int chars);
+    STDMETHODIMP XySetBin      (unsigned field, LPVOID    value, int size );
 
 	// IDirectVobSub
 

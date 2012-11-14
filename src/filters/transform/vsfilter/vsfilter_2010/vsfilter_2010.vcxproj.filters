@@ -71,6 +71,9 @@
     <ClCompile Include="..\..\..\..\thirdparty\mfc\winmdi.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\XyOptionsImpl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\csri.h">
@@ -128,6 +131,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\XySubRenderIntf.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\XyOptionsImpl.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
