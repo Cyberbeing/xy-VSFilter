@@ -44,8 +44,7 @@
 #define IDS_RG_EXTERNALLOAD             139
 #define IDS_RG_WEBLOAD                  140
 #define IDS_RG_EMBEDDEDLOAD             141
-#define IDS_RG_USE_BT709                142
-#define IDS_RG_COLOR_SPACE             142
+#define IDS_RG_COLOR_SPACE              142
 #define IDS_R_PERFORMANCE               143
 #define IDS_R_TIMING                    144
 #define IDS_RTM_SUBTITLEDELAY           145
@@ -100,6 +99,7 @@
 #define IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X 193
 #define IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y 194
 #define IDS_RG_LOAD_EXT_LIST                195
+#define IDS_RG_PGS_COLOR_TYPE               196
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202

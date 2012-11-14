@@ -41,6 +41,7 @@ public:
     virtual REFERENCE_TIME  GetStart(POSITION nPos);
     virtual REFERENCE_TIME  GetStop(POSITION nPos);
     virtual void            Reset();
+    virtual HRESULT         SetYuvType(ColorType colorType, YuvRangeType yuvRangeType);
 
     // EN 300-743, table 2
     enum DVB_SEGMENT_TYPE {

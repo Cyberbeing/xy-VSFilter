@@ -353,8 +353,17 @@ void CHdmvSub::Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox)
             CompositionObject* pObject = pPresentationSegment->objects.GetNext(pos);
 
             if (pObject->GetRLEDataSize() && pObject->m_width > 0 && pObject->m_height > 0
-                    && spd.w >= (pObject->m_horizontal_position + pObject->m_width) && spd.h >= (pObject->m_vertical_position + pObject->m_height)) {
-                pObject->SetPalette(pPresentationSegment->CLUT.size, pPresentationSegment->CLUT.palette, pPresentationSegment->video_descriptor.nVideoWidth > 720);
+                && spd.w >= (pObject->m_horizontal_position + pObject->m_width) 
+                && spd.h >= (pObject->m_vertical_position + pObject->m_height)) 
+            {
+                CompositionObject::ColorType color_type = m_colorTypeSetting;
+                if (color_type==CompositionObject::NONE)
+                {
+                    color_type = pPresentationSegment->video_descriptor.nVideoWidth > 720 ? 
+                        CompositionObject::YUV_Rec709 : CompositionObject::YUV_Rec601;
+                }
+                pObject->SetPalette(pPresentationSegment->CLUT.size, pPresentationSegment->CLUT.palette, color_type, 
+                    m_yuvRangeSetting==CompositionObject::RANGE_NONE ? CompositionObject::RANGE_TV : m_yuvRangeSetting);
 
                 bbox.left   = min(pObject->m_horizontal_position, bbox.left);
                 bbox.top    = min(pObject->m_vertical_position, bbox.top);
@@ -402,6 +411,13 @@ void CHdmvSub::Reset()
         pPresentationSegment = m_pPresentationSegments.RemoveHead();
         delete pPresentationSegment;
     }
+}
+
+HRESULT CHdmvSub::SetYuvType( ColorType colorType, YuvRangeType yuvRangeType )
+{
+    m_colorTypeSetting = colorType;
+    m_yuvRangeSetting = yuvRangeType;
+    return S_OK;
 }
 
 CHdmvSub::HDMV_PRESENTATION_SEGMENT* CHdmvSub::FindPresentationSegment(REFERENCE_TIME rt)

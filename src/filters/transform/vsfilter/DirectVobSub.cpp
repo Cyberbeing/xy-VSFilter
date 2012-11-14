@@ -208,6 +208,33 @@ CDirectVobSub::CDirectVobSub()
     //fix me: CStringw = CString
     m_xy_str_opt[STRING_LOAD_EXT_LIST] = 
         theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), _T("ass;ssa;srt;idx;txt;usf;xss;ssf;smi;psb;rt"));
+
+    CString str_pgs_yuv_setting = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_PGS_COLOR_TYPE), _T("GUESS.GUESS"));
+    if (str_pgs_yuv_setting.Left(2).CompareNoCase(_T("TV"))==0)
+    {
+        m_xy_str_opt[STRING_PGS_YUV_RANGE] = _T("TV");
+    }
+    else if (str_pgs_yuv_setting.Left(2).CompareNoCase(_T("PC"))==0)
+    {
+        m_xy_str_opt[STRING_PGS_YUV_RANGE] = _T("PC");
+    }
+    else
+    {
+        m_xy_str_opt[STRING_PGS_YUV_RANGE] = _T("GUESS");
+    }
+
+    if (str_pgs_yuv_setting.Right(3).CompareNoCase(_T("601"))==0)
+    {
+        m_xy_str_opt[STRING_PGS_YUV_MATRIX] = _T("BT601");
+    }
+    else if (str_pgs_yuv_setting.Right(3).CompareNoCase(_T("709"))==0)
+    {
+        m_xy_str_opt[STRING_PGS_YUV_MATRIX] = _T("BT709");
+    }
+    else
+    {
+        m_xy_str_opt[STRING_PGS_YUV_MATRIX] = _T("GUESS");
+    }
 }
 
 CDirectVobSub::~CDirectVobSub()
@@ -684,6 +711,10 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy);
 
     theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), m_xy_str_opt[STRING_LOAD_EXT_LIST]);//fix me:m_xy_str_opt[] is wide char string
+
+    CString str_pgs_yuv_type = m_xy_str_opt[STRING_PGS_YUV_RANGE] + m_xy_str_opt[STRING_PGS_YUV_MATRIX];
+    theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_PGS_COLOR_TYPE), str_pgs_yuv_type);
+
     //save output color config
     {
         int count = GetOutputColorSpaceNumber();

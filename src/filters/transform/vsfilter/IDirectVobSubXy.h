@@ -46,6 +46,8 @@ extern "C" {
         enum//string
         {
             STRING_LOAD_EXT_LIST,
+            STRING_PGS_YUV_RANGE,//TV,PC,GUESS(default)
+            STRING_PGS_YUV_MATRIX,//BT601,BT709,GUESS(default)
             STRING_COUNT
         };
         enum

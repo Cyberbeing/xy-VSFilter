@@ -32,3 +32,4 @@
 #include "../../../subtitles/RTS.h"
 #include "../../../subtitles/cache_manager.h"
 #include "../../../subtitles/subpixel_position_controler.h"
+#include "../../../subtitles/RenderedHdmvSubtitle.h"
