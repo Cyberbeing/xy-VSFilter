@@ -43,7 +43,7 @@ public:
         ,YuvRange_PC
     };
 
-    static const int REQUIRED_CONFIG_VERSION = 39;
+    static const int REQUIRED_CONFIG_VERSION = 209;
     static const int CUR_SUPPORTED_FILTER_VERSION = 39;
 
     typedef DirectVobSubXyOptions::CachesInfo CachesInfo;
