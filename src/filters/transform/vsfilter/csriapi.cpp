@@ -138,7 +138,7 @@ CSRIAPI void csri_render(csri_inst *inst, struct csri_frame *frame, double time)
 	spd.h = inst->screen_res.cy;
 	switch (inst->pixfmt) {
 		case CSRI_F_BGR_:
-			spd.type = MSP_RGB32;
+			spd.type = MSP_RGBA;
 			spd.bpp = 32;
 			spd.bits = frame->planes[0];
 			spd.pitch = frame->strides[0];

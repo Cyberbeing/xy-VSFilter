@@ -160,7 +160,7 @@ namespace ssf
 		CheckPointer(m_file, E_UNEXPECTED);
 		CheckPointer(m_renderer, E_UNEXPECTED);	
 
-		if(spd.type != MSP_RGB32) return E_INVALIDARG;
+		if(spd.type != MSP_RGBA) return E_INVALIDARG;
 
 		CAutoLock csAutoLock(m_pLock);
 
