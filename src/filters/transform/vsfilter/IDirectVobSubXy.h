@@ -26,7 +26,7 @@ extern "C" {
 
             INT_SUBPIXEL_POS_LEVEL,
 
-            INT_LAYOUT_SIZE_OPT,//see @RenderSizeOpt
+            INT_LAYOUT_SIZE_OPT,//see @LayoutSizeOpt
             INT_COUNT
         };
         enum//bool
