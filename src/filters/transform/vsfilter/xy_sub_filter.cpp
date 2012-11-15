@@ -153,13 +153,14 @@ STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
         hr = m_consumer->GetString("name", &fix_me, &name_len);
         if (FAILED(hr))
         {
+            CoTaskMemFree(fix_me);
             //delete name; //fix me: important! should we? delete?
             return hr;
         }
         CStringW new_name;
         new_name.Format(L"XySubFilter (Connected with %s)", fix_me);
+        CoTaskMemFree(fix_me);
         wcscpy_s(pInfo->achName, countof(pInfo->achName)-1, new_name.GetString());
-        //delete name; //fix me: important! should we? delete?
     }
     return hr;
 }
