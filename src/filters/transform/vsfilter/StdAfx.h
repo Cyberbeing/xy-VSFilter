@@ -33,3 +33,4 @@
 #include "../../../subtitles/cache_manager.h"
 #include "../../../subtitles/subpixel_position_controler.h"
 #include "../../../subtitles/RenderedHdmvSubtitle.h"
+#include "../../../subpic/color_conv_table.h"

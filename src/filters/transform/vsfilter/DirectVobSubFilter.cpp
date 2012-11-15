@@ -30,7 +30,6 @@
 #include "../../../DSUtil/MediaTypes.h"
 #include "../../../SubPic/SimpleSubPicProviderImpl.h"
 #include "../../../SubPic/PooledSubPic.h"
-#include "../../../subpic/color_conv_table.h"
 #include "../../../subpic/SimpleSubPicWrapper.h"
 
 #include <initguid.h>
@@ -124,10 +123,10 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 
     m_donot_follow_upstream_preferred_order = !m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER];
 
-	m_time_alphablt = m_time_rasterization = 0;
+    m_time_alphablt = m_time_rasterization = 0;
 
-    m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
-    m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
+    m_video_yuv_matrix_decided_by_sub = ColorConvTable::NONE;
+    m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_NONE;
 }
 
 CDirectVobSubFilter::~CDirectVobSubFilter()
@@ -1833,8 +1832,8 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
     CAutoLock cAutolock(&m_csQueueLock);
 
     CSize playres(0,0);
-    m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
-    m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
+    m_video_yuv_matrix_decided_by_sub = ColorConvTable::NONE;
+    m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_NONE;
 	if(pSubStream)
 	{
 		CAutoLock cAutolock(&m_csSubLock);
@@ -1898,8 +1897,30 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 				pRTS->m_dPARCompensation = 1.00;
 			}
 
-            m_script_selected_yuv = pRTS->m_eYCbCrMatrix;
-            m_script_selected_range = pRTS->m_eYCbCrRange;
+            switch(pRTS->m_eYCbCrMatrix)
+            {
+            case CSimpleTextSubtitle::YCbCrMatrix_BT601:
+                m_video_yuv_matrix_decided_by_sub = ColorConvTable::BT601;
+                break;
+            case CSimpleTextSubtitle::YCbCrMatrix_BT709:
+                m_video_yuv_matrix_decided_by_sub = ColorConvTable::BT709;
+                break;
+            default:
+                m_video_yuv_matrix_decided_by_sub = ColorConvTable::NONE;
+                break;
+            }
+            switch(pRTS->m_eYCbCrRange)
+            {
+            case CSimpleTextSubtitle::YCbCrRange_PC:
+                m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_PC;
+                break;
+            case CSimpleTextSubtitle::YCbCrRange_TV:
+                m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_TV;
+                break;
+            default:
+                m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_NONE;
+                break;
+            }
             pRTS->Deinit();
             playres = pRTS->m_dstScreenSize;
         }
@@ -1924,6 +1945,9 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
             {
                 color_type = CompositionObject::YUV_Rec709;
             }
+
+            m_video_yuv_matrix_decided_by_sub = (m_w > m_bt601Width || m_h > m_bt601Height) ? ColorConvTable::BT709 : 
+                ColorConvTable::BT601;
             sub->SetYuvType(color_type, range_type);
         }
     }
@@ -2257,18 +2281,13 @@ void CDirectVobSubFilter::SetYuvMatrix()
 
     if ( m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::YuvMatrix_AUTO )
     {
-        switch(m_script_selected_yuv)
+        if (m_video_yuv_matrix_decided_by_sub!=ColorConvTable::NONE)
         {
-        case CSimpleTextSubtitle::YCbCrMatrix_BT601:
+            yuv_matrix = m_video_yuv_matrix_decided_by_sub;
+        }
+        else
+        {
             yuv_matrix = ColorConvTable::BT601;
-            break;
-        case CSimpleTextSubtitle::YCbCrMatrix_BT709:
-            yuv_matrix = ColorConvTable::BT709;
-            break;
-        case CSimpleTextSubtitle::YCbCrMatrix_AUTO:
-        default:        
-            yuv_matrix = ColorConvTable::BT601;
-            break;
         }
     }
     else
@@ -2290,19 +2309,10 @@ void CDirectVobSubFilter::SetYuvMatrix()
 
     if( m_xy_int_opt[INT_YUV_RANGE]==CDirectVobSub::YuvRange_Auto )
     {
-        switch(m_script_selected_range)
-        {
-        case CSimpleTextSubtitle::YCbCrRange_PC:
-            yuv_range = ColorConvTable::RANGE_PC;
-            break;
-        case CSimpleTextSubtitle::YCbCrRange_TV:
+        if (m_video_yuv_range_decided_by_sub!=ColorConvTable::RANGE_NONE)
+            yuv_range = m_video_yuv_range_decided_by_sub;
+        else
             yuv_range = ColorConvTable::RANGE_TV;
-            break;
-        case CSimpleTextSubtitle::YCbCrRange_AUTO:
-        default:        
-            yuv_range = ColorConvTable::RANGE_TV;
-            break;
-        }
     }
     else
     {
