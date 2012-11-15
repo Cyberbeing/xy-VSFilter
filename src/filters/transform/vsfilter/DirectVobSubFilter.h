@@ -59,8 +59,9 @@ class CDirectVobSubFilter
 
     HRESULT TryNotCopy( IMediaSample* pIn, const CMediaType& mt, const BITMAPINFOHEADER& bihIn );
 
-    CSimpleTextSubtitle::YCbCrMatrix m_script_selected_yuv;
-    CSimpleTextSubtitle::YCbCrRange m_script_selected_range;
+    ColorConvTable::YuvMatrixType m_video_yuv_matrix_decided_by_sub;
+    ColorConvTable::YuvRangeType m_video_yuv_range_decided_by_sub;
+
     void SetYuvMatrix();
 protected:
 	void GetOutputSize(int& w, int& h, int& arx, int& ary);
