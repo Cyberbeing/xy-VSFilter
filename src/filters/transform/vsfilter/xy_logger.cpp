@@ -37,7 +37,7 @@ bool doConfigure(const log4cplus::tstring& configFilename)
 bool doConfigure( log4cplus::tistream& property_stream )
 {
 #ifdef __DO_LOG
-    PropertyConfigurator p(property_stream);
+    log4cplus::PropertyConfigurator p(property_stream);
     p.configure();
 #endif
     return true;
