@@ -207,7 +207,7 @@ CDirectVobSub::CDirectVobSub()
 
     //fix me: CStringw = CString
     m_xy_str_opt[STRING_LOAD_EXT_LIST] = 
-        theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), _T("ass;ssa;srt;sub;idx;sup;txt;usf;xss;ssf;smi;psb;rt"));
+        theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), _T("ass;ssa;srt;idx;txt;usf;xss;ssf;smi;psb;rt"));
 
     CString str_pgs_yuv_setting = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_PGS_COLOR_TYPE), _T("GUESS.GUESS"));
     if (str_pgs_yuv_setting.Left(2).CompareNoCase(_T("TV"))==0)
