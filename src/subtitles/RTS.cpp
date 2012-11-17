@@ -3265,7 +3265,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
     //const
     STSSegment* stss = SearchSubs2(t, fps, &segment);
     if(!stss) return S_FALSE;
-    // clear any cached subs not in the range of +/-30secs measured from the segment's bounds
+    // clear any cached subs not in the range of +/-90secs measured from the segment's bounds
     {
         POSITION pos = m_subtitleCache.GetStartPosition();
         while(pos)
@@ -3274,7 +3274,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
             CSubtitle* value;
             m_subtitleCache.GetNextAssoc(pos, key, value);
             STSEntry& stse = m_entries.GetAt(key);
-            if(stse.end <= (t-30000) || stse.start > (t+30000))
+            if(stse.end <= (t-90000) || stse.start > (t+90000))
             {
                 delete value;
                 m_subtitleCache.RemoveKey(key);
