@@ -688,19 +688,20 @@ static int PASCAL MyProcessDataProc(unsigned char* Addr, int Size)
 
 bool CVobSubFile::ReadRar(CString fn)
 {
-	HMODULE h = LoadLibrary(_T("unrar.dll"));
+#ifdef _WIN64
+    HMODULE h = LoadLibrary(_T("unrar64.dll"));
+#else
+    HMODULE h = LoadLibrary(_T("unrar.dll"));
+#endif
 	if(!h) return(false);
 
 	RAROpenArchiveEx OpenArchiveEx = (RAROpenArchiveEx)GetProcAddress(h, "RAROpenArchiveEx");
 	RARCloseArchive CloseArchive = (RARCloseArchive)GetProcAddress(h, "RARCloseArchive");
 	RARReadHeaderEx ReadHeaderEx = (RARReadHeaderEx)GetProcAddress(h, "RARReadHeaderEx");
 	RARProcessFile ProcessFile = (RARProcessFile)GetProcAddress(h, "RARProcessFile");
-	RARSetChangeVolProc SetChangeVolProc = (RARSetChangeVolProc)GetProcAddress(h, "RARSetChangeVolProc");
 	RARSetProcessDataProc SetProcessDataProc = (RARSetProcessDataProc)GetProcAddress(h, "RARSetProcessDataProc");
-	RARSetPassword SetPassword = (RARSetPassword)GetProcAddress(h, "RARSetPassword");
 
-	if(!(OpenArchiveEx && CloseArchive && ReadHeaderEx && ProcessFile 
-	&& SetChangeVolProc && SetProcessDataProc && SetPassword))
+	if(!(OpenArchiveEx && CloseArchive && ReadHeaderEx && ProcessFile && SetProcessDataProc))
 	{
 		FreeLibrary(h);
 		return(false);
