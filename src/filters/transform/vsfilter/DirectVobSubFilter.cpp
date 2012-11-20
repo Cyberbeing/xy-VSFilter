@@ -36,7 +36,6 @@
 #include "..\..\..\..\include\moreuuids.h"
 
 #include "CAutoTiming.h"
-#include "xy_logger.h"
 
 
 #define MAX_SUBPIC_QUEUE_LENGTH 1
@@ -70,14 +69,6 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
     DbgLog((LOG_TRACE, 3, _T("CDirectVobSubFilter::CDirectVobSubFilter")));
 
     // and then, anywhere you need it:
-
-#ifdef __DO_LOG
-    LPTSTR  strDLLPath = new TCHAR[_MAX_PATH];
-    ::GetModuleFileName( reinterpret_cast<HINSTANCE>(&__ImageBase), strDLLPath, _MAX_PATH);
-    CString dllPath = strDLLPath;
-    dllPath += ".properties";
-    xy_logger::doConfigure( dllPath.GetString() );
-#endif
 
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 

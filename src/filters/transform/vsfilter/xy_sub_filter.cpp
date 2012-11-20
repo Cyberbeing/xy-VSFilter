@@ -107,7 +107,7 @@ int XySubFilter::GetPinCount()
 
 STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
 {
-    XY_LOG_TRACE("JoinFilterGraph");
+    XY_LOG_TRACE("JoinFilterGraph. pGraph:"<<(void*)pGraph);
     if(pGraph)
     {
         BeginEnumFilters(pGraph, pEF, pBF)
@@ -148,18 +148,17 @@ STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
     HRESULT hr = __super::QueryFilterInfo(pInfo);
     if (SUCCEEDED(hr) && m_consumer)
     {
-        LPWSTR fix_me = NULL;
+        LPWSTR name = NULL;
         int name_len = 0;
-        hr = m_consumer->GetString("name", &fix_me, &name_len);
+        hr = m_consumer->GetString("name", &name, &name_len);
         if (FAILED(hr))
         {
-            CoTaskMemFree(fix_me);
-            //delete name; //fix me: important! should we? delete?
+            CoTaskMemFree(name);
             return hr;
         }
         CStringW new_name;
-        new_name.Format(L"XySubFilter (Connected with %s)", fix_me);
-        CoTaskMemFree(fix_me);
+        new_name.Format(L"XySubFilter (Connected with %s)", name);
+        CoTaskMemFree(name);
         wcscpy_s(pInfo->achName, countof(pInfo->achName)-1, new_name.GetString());
     }
     return hr;
@@ -991,19 +990,16 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
     {
         CComPtr<ISimpleSubPic> pSubPic;
         XY_LOG_TRACE("Look up subpic for "<<XY_LOG_VAR_2_STR(now));
-        POSITION pos = m_sub_provider->GetStartPosition(now);
-        if (pos)
+
+        hr = m_sub_provider->RequestFrame(&sub_render_frame, now);
+        if (FAILED(hr))
         {
-            hr = m_sub_provider->RequestFrame(&sub_render_frame, NULL, NULL, pos);
-            if (FAILED(hr))
-            {
-                return hr;
-            }
-            if(m_fFlipSubtitles)
-            {
-                //fix me:
-                ASSERT(0);
-            }
+            return hr;
+        }
+        if(m_fFlipSubtitles)
+        {
+            //fix me:
+            ASSERT(0);
         }
     }
 

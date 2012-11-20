@@ -28,8 +28,5 @@ interface IXySubRenderFrame : public ISubRenderFrame
 [uuid("68f052bf-dcf2-476e-baab-494b6288c58e")]
 interface IXySubRenderProvider: public IUnknown
 {
-    STDMETHOD_(POSITION, GetStartPosition) (REFERENCE_TIME rt) = 0;
-    STDMETHOD_(POSITION, GetNext) (POSITION pos) = 0;
-
-    STDMETHOD(RequestFrame)(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME *start, REFERENCE_TIME *stop, POSITION pos) = 0;
+    STDMETHOD(RequestFrame)(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now) = 0;
 };

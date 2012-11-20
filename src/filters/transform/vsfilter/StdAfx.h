@@ -42,3 +42,4 @@
 #include "../../../subpic/MemSubPic.h"
 #include "IDirectVobSubXy.h"
 #include "Systray.h"
+#include "xy_logger.h"

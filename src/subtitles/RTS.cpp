@@ -3544,7 +3544,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         return hr;
     }
 
-    CompositeDrawItemListList compDrawItemListList;   
+    CompositeDrawItemListList compDrawItemListList;
     DoRender(size_scale_to, sub2List, &compDrawItemListList);
 
     XySubRenderFrame *sub_render_frame;

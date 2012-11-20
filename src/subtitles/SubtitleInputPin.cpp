@@ -58,103 +58,104 @@ CSubtitleInputPin::CSubtitleInputPin(CBaseFilter* pFilter, CCritSec* pLock, CCri
 
 HRESULT CSubtitleInputPin::CheckMediaType(const CMediaType* pmt)
 {
-	return pmt->majortype == MEDIATYPE_Text && (pmt->subtype == MEDIASUBTYPE_NULL || pmt->subtype == FOURCCMap((DWORD)0))
-		|| pmt->majortype == MEDIATYPE_Subtitle && pmt->subtype == MEDIASUBTYPE_UTF8
-		|| pmt->majortype == MEDIATYPE_Subtitle && (pmt->subtype == MEDIASUBTYPE_SSA || pmt->subtype == MEDIASUBTYPE_ASS || pmt->subtype == MEDIASUBTYPE_ASS2)
-		|| pmt->majortype == MEDIATYPE_Subtitle && pmt->subtype == MEDIASUBTYPE_SSF
-		|| pmt->majortype == MEDIATYPE_Subtitle && (pmt->subtype == MEDIASUBTYPE_VOBSUB)
+    XY_LOG_TRACE(XY_LOG_VAR_2_STR(pmt));
+    return pmt->majortype == MEDIATYPE_Text && (pmt->subtype == MEDIASUBTYPE_NULL || pmt->subtype == FOURCCMap((DWORD)0))
+        || pmt->majortype == MEDIATYPE_Subtitle && pmt->subtype == MEDIASUBTYPE_UTF8
+        || pmt->majortype == MEDIATYPE_Subtitle && (pmt->subtype == MEDIASUBTYPE_SSA || pmt->subtype == MEDIASUBTYPE_ASS || pmt->subtype == MEDIASUBTYPE_ASS2)
+        || pmt->majortype == MEDIATYPE_Subtitle && pmt->subtype == MEDIASUBTYPE_SSF
+        || pmt->majortype == MEDIATYPE_Subtitle && (pmt->subtype == MEDIASUBTYPE_VOBSUB)
         || IsHdmvSub(pmt)
-		? S_OK 
-		: E_FAIL;
+        ? S_OK 
+        : E_FAIL;
 }
 
 HRESULT CSubtitleInputPin::CompleteConnect(IPin* pReceivePin)
 {
-    AMTRACE((TEXT(__FUNCTION__),0));
-	if(m_mt.majortype == MEDIATYPE_Text)
-	{
+    XY_LOG_TRACE(XY_LOG_VAR_2_STR(pReceivePin));
+    if(m_mt.majortype == MEDIATYPE_Text)
+    {
         CRenderedTextSubtitle* pRTS = new CRenderedTextSubtitle(m_pSubLock);
-		if(!(m_pSubStream = pRTS)) return E_FAIL;
-		pRTS->m_name = CString(GetPinName(pReceivePin)) + _T(" (embeded)");
-		pRTS->m_dstScreenSize = CSize(384, 288);
-		pRTS->CreateDefaultStyle(DEFAULT_CHARSET);
-	}
-	else if(m_mt.majortype == MEDIATYPE_Subtitle)
-	{
-		SUBTITLEINFO* psi = (SUBTITLEINFO*)m_mt.pbFormat;
-		DWORD			dwOffset	= 0;
-		CString			name;
-		LCID			lcid = 0;
+        if(!(m_pSubStream = pRTS)) return E_FAIL;
+        pRTS->m_name = CString(GetPinName(pReceivePin)) + _T(" (embeded)");
+        pRTS->m_dstScreenSize = CSize(384, 288);
+        pRTS->CreateDefaultStyle(DEFAULT_CHARSET);
+    }
+    else if(m_mt.majortype == MEDIATYPE_Subtitle)
+    {
+        SUBTITLEINFO* psi = (SUBTITLEINFO*)m_mt.pbFormat;
+        DWORD			dwOffset	= 0;
+        CString			name;
+        LCID			lcid = 0;
 
-		if (psi != NULL) {
-			dwOffset = psi->dwOffset;
+        if (psi != NULL) {
+            dwOffset = psi->dwOffset;
 
-			name = ISO6392ToLanguage(psi->IsoLang);
-			lcid = ISO6392ToLcid(psi->IsoLang);
+            name = ISO6392ToLanguage(psi->IsoLang);
+            lcid = ISO6392ToLcid(psi->IsoLang);
 
-			if(wcslen(psi->TrackName) > 0) {
-				name += (!name.IsEmpty() ? _T(", ") : _T("")) + CString(psi->TrackName);
-			}
-			if(name.IsEmpty()) {
-				name = _T("Unknown");
-			}
-		}
+            if(wcslen(psi->TrackName) > 0) {
+                name += (!name.IsEmpty() ? _T(", ") : _T("")) + CString(psi->TrackName);
+            }
+            if(name.IsEmpty()) {
+                name = _T("Unknown");
+            }
+        }
 
-		name.Replace(_T(""), _T(""));//CAUTION: VS may show name.Replace(_T(""),_T("")), however there is a character in the first _T("")
-		name.Replace(_T(""), _T(""));//CAUTION: VS may show name.Replace(_T(""),_T("")), however there is a character in the first _T("")
+        name.Replace(_T(""), _T(""));//CAUTION: VS may show name.Replace(_T(""),_T("")), however there is a character in the first _T("")
+        name.Replace(_T(""), _T(""));//CAUTION: VS may show name.Replace(_T(""),_T("")), however there is a character in the first _T("")
 
-		if(m_mt.subtype == MEDIASUBTYPE_UTF8 
-		/*|| m_mt.subtype == MEDIASUBTYPE_USF*/
-		|| m_mt.subtype == MEDIASUBTYPE_SSA 
-		|| m_mt.subtype == MEDIASUBTYPE_ASS 
-		|| m_mt.subtype == MEDIASUBTYPE_ASS2)
-		{
+        if(m_mt.subtype == MEDIASUBTYPE_UTF8 
+            /*|| m_mt.subtype == MEDIASUBTYPE_USF*/
+            || m_mt.subtype == MEDIASUBTYPE_SSA 
+            || m_mt.subtype == MEDIASUBTYPE_ASS 
+            || m_mt.subtype == MEDIASUBTYPE_ASS2)
+        {
             CRenderedTextSubtitle* pRTS = new CRenderedTextSubtitle(m_pSubLock);
-			if(!(m_pSubStream = pRTS)) return E_FAIL;
-			pRTS->m_name = name;
-			pRTS->m_lcid = lcid;
-			pRTS->m_dstScreenSize = CSize(384, 288);
-			pRTS->CreateDefaultStyle(DEFAULT_CHARSET);
+            if(!(m_pSubStream = pRTS)) return E_FAIL;
+            pRTS->m_name = name;
+            pRTS->m_lcid = lcid;
+            pRTS->m_dstScreenSize = CSize(384, 288);
+            pRTS->CreateDefaultStyle(DEFAULT_CHARSET);
 
-			if(dwOffset > 0 && m_mt.cbFormat - dwOffset > 0)
-			{
-				CMediaType mt = m_mt;
-				if(mt.pbFormat[dwOffset+0] != 0xef
-				&& mt.pbFormat[dwOffset+1] != 0xbb
-				&& mt.pbFormat[dwOffset+2] != 0xfb)
-				{
-					dwOffset -= 3;
-					mt.pbFormat[dwOffset+0] = 0xef;
-					mt.pbFormat[dwOffset+1] = 0xbb;
-					mt.pbFormat[dwOffset+2] = 0xbf;
-				}
+            if(dwOffset > 0 && m_mt.cbFormat - dwOffset > 0)
+            {
+                CMediaType mt = m_mt;
+                if(mt.pbFormat[dwOffset+0] != 0xef
+                    && mt.pbFormat[dwOffset+1] != 0xbb
+                    && mt.pbFormat[dwOffset+2] != 0xfb)
+                {
+                    dwOffset -= 3;
+                    mt.pbFormat[dwOffset+0] = 0xef;
+                    mt.pbFormat[dwOffset+1] = 0xbb;
+                    mt.pbFormat[dwOffset+2] = 0xbf;
+                }
 
                 pRTS->Open(mt.pbFormat + dwOffset, mt.cbFormat - dwOffset, DEFAULT_CHARSET, pRTS->m_name);
-			}
+            }
 
-		}
-		else if(m_mt.subtype == MEDIASUBTYPE_SSF)
-		{
+        }
+        else if(m_mt.subtype == MEDIASUBTYPE_SSF)
+        {
             ssf::CRenderer* pSSF = new ssf::CRenderer(m_pSubLock);
-			if(!(m_pSubStream = pSSF)) return E_FAIL;
-			
-			pSSF->Open(ssf::MemoryInputStream(m_mt.pbFormat + dwOffset, m_mt.cbFormat - dwOffset, false, false), name);
-		}
-		else if(m_mt.subtype == MEDIASUBTYPE_VOBSUB)
-		{
-            CVobSubStream* pVSS = new CVobSubStream(m_pSubLock);
-			if(!(m_pSubStream = pVSS)) return E_FAIL;			
-			pVSS->Open(name, m_mt.pbFormat + dwOffset, m_mt.cbFormat - dwOffset);
-		}
-		else if (IsHdmvSub(&m_mt)) 
-		{
-			if(!(m_pSubStream = DEBUG_NEW CRenderedHdmvSubtitle(m_pSubLock, (m_mt.subtype == MEDIASUBTYPE_DVB_SUBTITLES) ? ST_DVB : ST_HDMV, name, lcid))) {
-				return E_FAIL;
-			}
-		}
-	}
+            if(!(m_pSubStream = pSSF)) return E_FAIL;
 
-	AddSubStream(m_pSubStream);
+            pSSF->Open(ssf::MemoryInputStream(m_mt.pbFormat + dwOffset, m_mt.cbFormat - dwOffset, false, false), name);
+        }
+        else if(m_mt.subtype == MEDIASUBTYPE_VOBSUB)
+        {
+            CVobSubStream* pVSS = new CVobSubStream(m_pSubLock);
+            if(!(m_pSubStream = pVSS)) return E_FAIL;			
+            pVSS->Open(name, m_mt.pbFormat + dwOffset, m_mt.cbFormat - dwOffset);
+        }
+        else if (IsHdmvSub(&m_mt)) 
+        {
+            if(!(m_pSubStream = DEBUG_NEW CRenderedHdmvSubtitle(m_pSubLock, (m_mt.subtype == MEDIASUBTYPE_DVB_SUBTITLES) ? ST_DVB : ST_HDMV, name, lcid))) {
+                return E_FAIL;
+            }
+        }
+    }
+
+    AddSubStream(m_pSubStream);
 
     return __super::CompleteConnect(pReceivePin);
 }
@@ -171,6 +172,7 @@ HRESULT CSubtitleInputPin::BreakConnect()
 
 STDMETHODIMP CSubtitleInputPin::ReceiveConnection(IPin* pConnector, const AM_MEDIA_TYPE* pmt)
 {
+    XY_LOG_TRACE(XY_LOG_VAR_2_STR(pConnector)<<XY_LOG_VAR_2_STR(pmt));
 	if(m_Connected)
 	{
 		RemoveSubStream(m_pSubStream);
@@ -185,7 +187,7 @@ STDMETHODIMP CSubtitleInputPin::ReceiveConnection(IPin* pConnector, const AM_MED
 
 STDMETHODIMP CSubtitleInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
-    DbgLog(( LOG_TRACE, 4, TEXT(__FUNCTION__) ));
+    XY_LOG_TRACE(XY_LOG_VAR_2_STR(tStart)<<XY_LOG_VAR_2_STR(tStop)<<XY_LOG_VAR_2_STR(dRate));
 	CAutoLock cAutoLock(&m_csReceive);
 
 	if(m_mt.majortype == MEDIATYPE_Text

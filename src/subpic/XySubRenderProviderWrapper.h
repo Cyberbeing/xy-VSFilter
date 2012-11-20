@@ -18,16 +18,13 @@ public:
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
     // IXySubRenderProvider
-    STDMETHODIMP_(POSITION) GetStartPosition(REFERENCE_TIME rt);
-    STDMETHODIMP_(POSITION) GetNext(POSITION pos);
-
-    STDMETHODIMP RequestFrame(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME *start, REFERENCE_TIME *stop, POSITION pos);
+    STDMETHODIMP RequestFrame(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now);
 
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
     STDMETHODIMP SetColorType(int type);
 
 private:
-    HRESULT Render( REFERENCE_TIME start, REFERENCE_TIME stop, double fps );
+    HRESULT Render( REFERENCE_TIME now, REFERENCE_TIME start, REFERENCE_TIME stop, double fps );
     HRESULT ResetAllocator();
     HRESULT Invalidate();
 private:
@@ -36,7 +33,7 @@ private:
     CComPtr<ISubPicExAllocator> m_allocator;
     CComPtr<ISubPicEx> m_pSubPic;
     CComPtr<IXySubRenderFrame> m_xy_sub_render_frame;
-    CRect m_output_rect;
+    CSize m_original_video_size;
 };
 
 class XySubRenderProviderWrapper2: public CUnknown, public IXySubRenderProvider
@@ -50,16 +47,13 @@ public:
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
     // IXySubRenderProvider
-    STDMETHODIMP_(POSITION) GetStartPosition(REFERENCE_TIME rt);
-    STDMETHODIMP_(POSITION) GetNext(POSITION pos);
-
-    STDMETHODIMP RequestFrame(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME *start, REFERENCE_TIME *stop, POSITION pos);
+    STDMETHODIMP RequestFrame(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now);
 
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
     STDMETHODIMP SetColorType(int type);
 
 private:
-    HRESULT Render( REFERENCE_TIME start, REFERENCE_TIME stop, double fps );
+    HRESULT Render( REFERENCE_TIME now, REFERENCE_TIME start, REFERENCE_TIME stop );
 
     HRESULT Invalidate();
 private:

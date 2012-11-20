@@ -37,6 +37,13 @@ END_MESSAGE_MAP()
 
 CVSFilterApp::CVSFilterApp()
 {
+#ifdef __DO_LOG
+    LPTSTR  strDLLPath = new TCHAR[_MAX_PATH];
+    ::GetModuleFileName( reinterpret_cast<HINSTANCE>(&__ImageBase), strDLLPath, _MAX_PATH);
+    CString dllPath = strDLLPath;
+    dllPath += ".properties";
+    xy_logger::doConfigure( dllPath.GetString() );
+#endif
 }
 
 extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
@@ -83,25 +90,35 @@ CVSFilterApp theApp;
 
 const AMOVIESETUP_MEDIATYPE sudPinTypesIn[] =
 {
-	{&MEDIATYPE_NULL, &MEDIASUBTYPE_NULL},
-	{&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2},
-	{&MEDIATYPE_Video, &MEDIASUBTYPE_YV12},
-	{&MEDIATYPE_Video, &MEDIASUBTYPE_I420},
-	{&MEDIATYPE_Video, &MEDIASUBTYPE_IYUV},
+    {&MEDIATYPE_NULL, &MEDIASUBTYPE_NULL},
+    {&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2},
+    {&MEDIATYPE_Video, &MEDIASUBTYPE_YV12},
+    {&MEDIATYPE_Video, &MEDIASUBTYPE_I420},
+    {&MEDIATYPE_Video, &MEDIASUBTYPE_IYUV},
     {&MEDIATYPE_Video, &MEDIASUBTYPE_P010},
     {&MEDIATYPE_Video, &MEDIASUBTYPE_P016},
     {&MEDIATYPE_Video, &MEDIASUBTYPE_NV12},
     {&MEDIATYPE_Video, &MEDIASUBTYPE_NV21},
     {&MEDIATYPE_Video, &MEDIASUBTYPE_AYUV},
-	{&MEDIATYPE_Video, &MEDIASUBTYPE_RGB32},
-	{&MEDIATYPE_Video, &MEDIASUBTYPE_RGB565},
-	{&MEDIATYPE_Video, &MEDIASUBTYPE_RGB555},
-	{&MEDIATYPE_Video, &MEDIASUBTYPE_RGB24},
+    {&MEDIATYPE_Video, &MEDIASUBTYPE_RGB32},
+    {&MEDIATYPE_Video, &MEDIASUBTYPE_RGB565},
+    {&MEDIATYPE_Video, &MEDIASUBTYPE_RGB555},
+    {&MEDIATYPE_Video, &MEDIASUBTYPE_RGB24},
 };
 
 const AMOVIESETUP_MEDIATYPE sudPinTypesIn2[] =
 {
-	{&MEDIATYPE_Text, &MEDIASUBTYPE_None},
+    {&MEDIATYPE_Text, &MEDIASUBTYPE_None},
+    {&MEDIATYPE_Text, &GUID_NULL},
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_None},
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_UTF8},
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_SSA},
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_ASS},
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_ASS2},
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_SSF},
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_VOBSUB},
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_HDMVSUB},
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_DVB_SUBTITLES}
 };
 
 const AMOVIESETUP_MEDIATYPE sudPinTypesOut[] =
@@ -130,8 +147,8 @@ const AMOVIESETUP_PIN sudpPins2[] =
 
 CFactoryTemplate g_Templates[] =
 {
-    {sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<CDirectVobSubFilter>, NULL, &sudFilter[0]},
-    {sudFilter[1].strName, sudFilter[1].clsID, CreateInstance<CDirectVobSubFilter2>, NULL, &sudFilter[1]},
+    //{sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<CDirectVobSubFilter>, NULL, &sudFilter[0]},
+    //{sudFilter[1].strName, sudFilter[1].clsID, CreateInstance<CDirectVobSubFilter2>, NULL, &sudFilter[1]},
     {sudFilter[2].strName, sudFilter[2].clsID, CreateInstance<XySubFilter>, NULL, &sudFilter[2]},
     {L"DVSMainPPage", &__uuidof(CDVSMainPPage), CreateInstance<CDVSMainPPage>},
     {L"DVSGeneralPPage", &__uuidof(CDVSGeneralPPage), CreateInstance<CDVSGeneralPPage>},
