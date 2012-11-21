@@ -135,7 +135,8 @@ int CSystrayWindow::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CSystrayWindow::OnClose()
 {
-	DestroyWindow();
+    XY_LOG_TRACE("Systray close.");
+    DestroyWindow();
 }
 
 void CSystrayWindow::OnDestroy()
