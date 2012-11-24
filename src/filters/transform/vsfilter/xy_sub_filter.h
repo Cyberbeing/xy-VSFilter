@@ -124,12 +124,6 @@ private:
     CSimpleTextSubtitle::YCbCrMatrix m_script_selected_yuv;
     CSimpleTextSubtitle::YCbCrRange m_script_selected_range;
 
-    CSize m_originalVideoSize;
-    CSize m_arAdjustedVideoSize;
-    CRect m_videoOutputRect;
-    CRect m_subtitleTargetRect;
-    double m_fps;
-
     DWORD_PTR m_nSubtitleId;
     CInterfaceList<ISubStream> m_pSubStreams;
     CAtlList<bool> m_fIsSubStreamEmbeded;

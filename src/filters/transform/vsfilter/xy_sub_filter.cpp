@@ -35,7 +35,6 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     , CDirectVobSub(DirectVobFilterOptions)
     , SubRenderOptionsImpl(::options, this)
     , m_nSubtitleId(-1)
-    , m_fps(0)
     , m_not_first_pause(false)
     , m_consumer(NULL)
     , m_hSystrayThread(0)
@@ -1447,17 +1446,17 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
         hr = XySetSize(SIZE_AR_ADJUSTED_VIDEO, originalVideoSize);
         ASSERT(SUCCEEDED(hr));
     }
-    if (m_videoOutputRect!=videoOutputRect)
+    if (m_xy_rect_opt[RECT_VIDEO_OUTPUT]!=videoOutputRect)
     {
         hr = XySetRect(RECT_VIDEO_OUTPUT, videoOutputRect);
         ASSERT(SUCCEEDED(hr));
     }
-    if (m_subtitleTargetRect!=subtitleTargetRect)
+    if (m_xy_rect_opt[RECT_SUBTITLE_TARGET]!=subtitleTargetRect)
     {
         hr = XySetRect(RECT_SUBTITLE_TARGET, subtitleTargetRect);
         ASSERT(SUCCEEDED(hr));
     }
-    if (m_fps!=fps)
+    if (m_xy_double_opt[DOUBLE_FPS]!=fps)
     {
         hr = XySetDouble(DOUBLE_FPS, fps);
         ASSERT(SUCCEEDED(hr));
