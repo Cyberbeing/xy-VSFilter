@@ -44,49 +44,44 @@ STDMETHODIMP XySubRenderProviderWrapper::RequestFrame( IXySubRenderFrame**subRen
     {
         return S_FALSE;
     }
-    REFERENCE_TIME start = m_provider->GetStart(pos, fps);
-    REFERENCE_TIME stop = m_provider->GetStop(pos, fps);
-    XY_LOG_TRACE(XY_LOG_VAR_2_STR(start)<<XY_LOG_VAR_2_STR(stop));
 
-    if (start<=now && now<stop)
+    CRect output_rect, subtitle_target_rect;
+    CSize original_video_size;
+    ASSERT(m_consumer);
+    hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, &original_video_size);
+    ASSERT(SUCCEEDED(hr));
+
+    if (m_original_video_size!=original_video_size)
     {
-        CRect output_rect, subtitle_target_rect;
-        CSize original_video_size;
-        ASSERT(m_consumer);
-        hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, &original_video_size);
-        ASSERT(SUCCEEDED(hr));
-
-        if (m_original_video_size!=original_video_size)
+        Invalidate();
+        m_original_video_size = original_video_size;
+    }
+    if(!m_pSubPic)
+    {
+        if (!m_allocator)
         {
-            Invalidate();
-            m_original_video_size = original_video_size;
+            ResetAllocator();
         }
-        if(!m_pSubPic)
-        {
-            if (!m_allocator)
-            {
-                ResetAllocator();
-            }
-            if(FAILED(m_allocator->AllocDynamicEx(&m_pSubPic))) {
-                XY_LOG_ERROR("Failed to allocate subpic");
-                return E_FAIL;
-            }
-        }
-        hr = Render( now, start, stop, fps );
-        if (FAILED(hr))
-        {
-            return hr;
-        }
-        if (m_xy_sub_render_frame)
-        {
-            *subRenderFrame = m_xy_sub_render_frame;
-            (*subRenderFrame)->AddRef();
+        if(FAILED(m_allocator->AllocDynamicEx(&m_pSubPic))) {
+            XY_LOG_ERROR("Failed to allocate subpic");
+            return E_FAIL;
         }
     }
+    hr = Render( now, pos, fps );
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+    if (m_xy_sub_render_frame)
+    {
+        *subRenderFrame = m_xy_sub_render_frame;
+        (*subRenderFrame)->AddRef();
+    }
+
     return hr;
 }
 
-HRESULT XySubRenderProviderWrapper::Render( REFERENCE_TIME now, REFERENCE_TIME start, REFERENCE_TIME stop, double fps )
+HRESULT XySubRenderProviderWrapper::Render( REFERENCE_TIME now, POSITION pos, double fps )
 {
     ASSERT(m_pSubPic);
     if(m_pSubPic->GetStart() <= now && now < m_pSubPic->GetStop())
@@ -109,6 +104,10 @@ HRESULT XySubRenderProviderWrapper::Render( REFERENCE_TIME now, REFERENCE_TIME s
         if(SUCCEEDED(m_pSubPic->ClearDirtyRect(color)))
         {
             hr = m_provider->RenderEx(spd, now, fps, rectList);
+
+            REFERENCE_TIME start = m_provider->GetStart(pos, fps);
+            REFERENCE_TIME stop = m_provider->GetStop(pos, fps);
+            XY_LOG_TRACE(XY_LOG_VAR_2_STR(start)<<XY_LOG_VAR_2_STR(stop));
 
             m_pSubPic->SetStart(start);
             m_pSubPic->SetStop(stop);
@@ -207,40 +206,34 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     {
         return S_FALSE;
     }
-    REFERENCE_TIME start = m_provider->GetStart(pos, fps);
-    REFERENCE_TIME stop = m_provider->GetStop(pos, fps);
-    XY_LOG_TRACE(XY_LOG_VAR_2_STR(start)<<XY_LOG_VAR_2_STR(stop));
 
-    if (start<=now && now<stop)
+    CRect output_rect, subtitle_target_rect;
+    CSize original_video_size;
+    ASSERT(m_consumer);
+    hr = m_consumer->XyGetRect(DirectVobSubXyOptions::RECT_VIDEO_OUTPUT, &output_rect);
+    ASSERT(SUCCEEDED(hr));
+    hr = m_consumer->XyGetRect(DirectVobSubXyOptions::RECT_SUBTITLE_TARGET, &subtitle_target_rect);
+    ASSERT(SUCCEEDED(hr));
+    ASSERT(output_rect==subtitle_target_rect);
+    hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, &original_video_size);
+    ASSERT(SUCCEEDED(hr));
+
+    if (m_output_rect!=output_rect || m_original_video_size!=original_video_size)
     {
-        CRect output_rect, subtitle_target_rect;
-        CSize original_video_size;
-        ASSERT(m_consumer);
-        hr = m_consumer->XyGetRect(DirectVobSubXyOptions::RECT_VIDEO_OUTPUT, &output_rect);
-        ASSERT(SUCCEEDED(hr));
-        hr = m_consumer->XyGetRect(DirectVobSubXyOptions::RECT_SUBTITLE_TARGET, &subtitle_target_rect);
-        ASSERT(SUCCEEDED(hr));
-        ASSERT(output_rect==subtitle_target_rect);
-        hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, &original_video_size);
-        ASSERT(SUCCEEDED(hr));
+        Invalidate();
+        m_output_rect = output_rect;
+        m_original_video_size = original_video_size;
+    }
 
-        if (m_output_rect!=output_rect || m_original_video_size!=original_video_size)
-        {
-            Invalidate();
-            m_output_rect = output_rect;
-            m_original_video_size = original_video_size;
-        }
-
-        hr = Render( now, start, stop );
-        if (FAILED(hr))
-        {
-            return hr;
-        }
-        if (m_xy_sub_render_frame)
-        {
-            *subRenderFrame = m_xy_sub_render_frame;
-            (*subRenderFrame)->AddRef();
-        }
+    hr = Render( now, pos );
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+    if (m_xy_sub_render_frame)
+    {
+        *subRenderFrame = m_xy_sub_render_frame;
+        (*subRenderFrame)->AddRef();
     }
     return hr;
 }
@@ -253,7 +246,7 @@ HRESULT XySubRenderProviderWrapper2::Invalidate()
     return S_OK;
 }
 
-HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, REFERENCE_TIME start, REFERENCE_TIME stop )
+HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
 {
     if(m_start <= now && now < m_stop && m_xy_sub_render_frame)
     {
@@ -268,9 +261,12 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, REFERENCE_TIME 
     ASSERT(m_output_rect.TopLeft()==CPoint(0,0));
     hr = m_provider->RenderEx(&m_xy_sub_render_frame, MSP_RGBA_F, m_output_rect.Size(), m_original_video_size,
         CRect(CPoint(0,0),m_original_video_size), now, m_fps);
+
     ASSERT(SUCCEEDED(hr));
-    m_start = start;
-    m_stop = stop;
+
+    m_start = m_provider->GetStart(pos, m_fps);
+    m_stop = m_provider->GetStop(pos, m_fps);
+    XY_LOG_TRACE(XY_LOG_VAR_2_STR(m_start)<<XY_LOG_VAR_2_STR(m_stop));
 
     m_provider->Unlock();
     return hr;

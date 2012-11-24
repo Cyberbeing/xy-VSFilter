@@ -24,7 +24,7 @@ public:
     STDMETHODIMP SetColorType(int type);
 
 private:
-    HRESULT Render( REFERENCE_TIME now, REFERENCE_TIME start, REFERENCE_TIME stop, double fps );
+    HRESULT Render( REFERENCE_TIME now, POSITION pos, double fps );
     HRESULT ResetAllocator();
     HRESULT Invalidate();
 private:
@@ -53,7 +53,7 @@ public:
     STDMETHODIMP SetColorType(int type);
 
 private:
-    HRESULT Render( REFERENCE_TIME now, REFERENCE_TIME start, REFERENCE_TIME stop );
+    HRESULT Render( REFERENCE_TIME now, POSITION pos );
 
     HRESULT Invalidate();
 private:
