@@ -149,7 +149,7 @@ HRESULT XySubRenderProviderWrapper::ResetAllocator()
     return S_OK;
 }
 
-HRESULT XySubRenderProviderWrapper::Invalidate()
+STDMETHODIMP XySubRenderProviderWrapper::Invalidate( REFERENCE_TIME rtInvalidate /*= -1*/ )
 {
     m_pSubPic = NULL;
     m_xy_sub_render_frame = NULL;
@@ -238,7 +238,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     return hr;
 }
 
-HRESULT XySubRenderProviderWrapper2::Invalidate()
+STDMETHODIMP XySubRenderProviderWrapper2::Invalidate( REFERENCE_TIME rtInvalidate /*= -1*/ )
 {
     m_xy_sub_render_frame = NULL;
     m_start = m_stop = 0;

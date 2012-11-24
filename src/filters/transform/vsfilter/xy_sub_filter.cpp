@@ -1411,7 +1411,7 @@ void XySubFilter::InvalidateSubtitle( REFERENCE_TIME rtInvalidate /*= -1*/, DWOR
     {
         if(nSubtitleId == -1 || nSubtitleId == m_nSubtitleId)
         {
-            //fix me: invalidate buffer
+            m_sub_provider->Invalidate(rtInvalidate);
         }
     }
 }

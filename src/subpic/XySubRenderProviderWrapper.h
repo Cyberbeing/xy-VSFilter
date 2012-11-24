@@ -19,11 +19,11 @@ public:
 
     // IXySubRenderProvider
     STDMETHODIMP RequestFrame(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now);
+    STDMETHODIMP Invalidate(REFERENCE_TIME rtInvalidate = -1);
 
 private:
     HRESULT Render( REFERENCE_TIME now, POSITION pos, double fps );
     HRESULT ResetAllocator();
-    HRESULT Invalidate();
 private:
     IXyOptions *m_consumer;
     CComPtr<ISubPicProviderEx> m_provider;
@@ -45,11 +45,10 @@ public:
 
     // IXySubRenderProvider
     STDMETHODIMP RequestFrame(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now);
+    STDMETHODIMP Invalidate(REFERENCE_TIME rtInvalidate = -1);
 
 private:
     HRESULT Render( REFERENCE_TIME now, POSITION pos );
-
-    HRESULT Invalidate();
 private:
     IXyOptions *m_consumer;
     CComPtr<ISubPicProviderEx2> m_provider;

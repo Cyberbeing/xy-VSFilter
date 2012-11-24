@@ -29,4 +29,5 @@ interface IXySubRenderFrame : public ISubRenderFrame
 interface IXySubRenderProvider: public IUnknown
 {
     STDMETHOD(RequestFrame)(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now) = 0;
+    STDMETHOD (Invalidate) (REFERENCE_TIME rtInvalidate = -1) = 0;
 };
