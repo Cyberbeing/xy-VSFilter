@@ -615,7 +615,8 @@ STDMETHODIMP XySubFilter::Count(DWORD* pcStreams)
 
     (*pcStreams) += 2; // enable ... disable
 
-    (*pcStreams) += 2; // normal flipped
+    //fix me: support subtitle flipping
+    //(*pcStreams) += 2; // normal flipped
 
     return S_OK;
 }
@@ -628,7 +629,7 @@ STDMETHODIMP XySubFilter::Enable(long lIndex, DWORD dwFlags)
     int nLangs = 0;
     get_LanguageCount(&nLangs);
 
-    if(!(lIndex >= 0 && lIndex < nLangs+2+2))
+    if(!(lIndex >= 0 && lIndex < nLangs+2 /* +2 fix me: support subtitle flipping */))
         return E_INVALIDARG;
 
     int i = lIndex-1;
@@ -699,7 +700,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
     int nLangs = 0;
     get_LanguageCount(&nLangs);
 
-    if(!(lIndex >= 0 && lIndex < nLangs+2+2))
+    if(!(lIndex >= 0 && lIndex < nLangs+2 /* +2 fix me: support subtitle flipping */))
         return E_INVALIDARG;
 
     int i = lIndex-1;
