@@ -14,12 +14,12 @@
 #ifdef __DO_LOG
 
 #define XY_LOG_VAR_2_STR(var) " "#var"='"<<(var)<<"' "
-#define XY_LOG_TRACE(msg) LOG4CPLUS_TRACE(xy_logger::g_logger, msg)
-#define XY_LOG_DEBUG(msg) LOG4CPLUS_DEBUG(xy_logger::g_logger, msg)
-#define XY_LOG_INFO(msg) LOG4CPLUS_INFO(xy_logger::g_logger, msg)
-#define XY_LOG_WARN(msg) LOG4CPLUS_WARN(xy_logger::g_logger, msg)
-#define XY_LOG_ERROR(msg) LOG4CPLUS_ERROR(xy_logger::g_logger, msg)
-#define XY_LOG_FATAL(msg) LOG4CPLUS_FATAL(xy_logger::g_logger, msg)
+#define XY_LOG_TRACE(msg) LOG4CPLUS_TRACE(xy_logger::g_logger, __FUNCTION__<<"\t:"<<msg)
+#define XY_LOG_DEBUG(msg) LOG4CPLUS_DEBUG(xy_logger::g_logger, __FUNCTION__<<"\t:"<<msg)
+#define XY_LOG_INFO(msg) LOG4CPLUS_INFO(xy_logger::g_logger, __FUNCTION__<<"\t:"<<msg)
+#define XY_LOG_WARN(msg) LOG4CPLUS_WARN(xy_logger::g_logger, __FUNCTION__<<"\t:"<<msg)
+#define XY_LOG_ERROR(msg) LOG4CPLUS_ERROR(xy_logger::g_logger, __FUNCTION__<<"\t:"<<msg)
+#define XY_LOG_FATAL(msg) LOG4CPLUS_FATAL(xy_logger::g_logger, __FUNCTION__<<"\t:"<<msg)
 
 extern int g_log_once_id;
 
