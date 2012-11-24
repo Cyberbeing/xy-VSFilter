@@ -74,7 +74,7 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
         }
         else
         {
-            XY_LOG_ERROR("Not supported");
+            XY_LOG_ERROR("Not supported. "<<XY_LOG_VAR_2_STR(m_OriginalColorType));
             ASSERT(0);
             return;
         }
@@ -88,7 +88,7 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
         }
         else
         {
-            XY_LOG_ERROR("Not supported");
+            XY_LOG_ERROR("Not supported. "<<XY_LOG_VAR_2_STR(m_OriginalYuvRangeType));
             ASSERT(0);
             return;
         }
@@ -168,7 +168,7 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
             }
             else
             {
-                XY_LOG_ERROR("Not supported");
+                XY_LOG_ERROR("Not supported. "<<XY_LOG_VAR_2_STR(cur_type)<<XY_LOG_VAR_2_STR(cur_range));
                 ASSERT(0);
                 return;
             }
@@ -246,7 +246,7 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
             }
             else
             {
-                XY_LOG_ERROR("Not supported");
+                XY_LOG_ERROR("Not supported. "<<XY_LOG_VAR_2_STR(cur_type)<<XY_LOG_VAR_2_STR(cur_range));
                 ASSERT(0);
                 return;
             }
@@ -294,13 +294,13 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
             }
             else
             {
-                XY_LOG_ERROR("Not supported");
+                XY_LOG_ERROR("Not supported. "<<XY_LOG_VAR_2_STR(cur_type)<<XY_LOG_VAR_2_STR(cur_range));
                 ASSERT(0);
                 return;
             }
             break;
         default:
-            XY_LOG_ERROR("Not supported");
+            XY_LOG_ERROR("Not supported. "<<XY_LOG_VAR_2_STR(spd.type));
             ASSERT(0);
             return;
         }

@@ -58,7 +58,7 @@ CSubtitleInputPin::CSubtitleInputPin(CBaseFilter* pFilter, CCritSec* pLock, CCri
 
 HRESULT CSubtitleInputPin::CheckMediaType(const CMediaType* pmt)
 {
-    XY_LOG_TRACE(XY_LOG_VAR_2_STR(pmt));
+    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(pmt));
     return pmt->majortype == MEDIATYPE_Text && (pmt->subtype == MEDIASUBTYPE_NULL || pmt->subtype == FOURCCMap((DWORD)0))
         || pmt->majortype == MEDIATYPE_Subtitle && pmt->subtype == MEDIASUBTYPE_UTF8
         || pmt->majortype == MEDIATYPE_Subtitle && (pmt->subtype == MEDIASUBTYPE_SSA || pmt->subtype == MEDIASUBTYPE_ASS || pmt->subtype == MEDIASUBTYPE_ASS2)
@@ -71,7 +71,7 @@ HRESULT CSubtitleInputPin::CheckMediaType(const CMediaType* pmt)
 
 HRESULT CSubtitleInputPin::CompleteConnect(IPin* pReceivePin)
 {
-    XY_LOG_TRACE(XY_LOG_VAR_2_STR(pReceivePin));
+    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(pReceivePin));
     if(m_mt.majortype == MEDIATYPE_Text)
     {
         CRenderedTextSubtitle* pRTS = new CRenderedTextSubtitle(m_pSubLock);
@@ -162,6 +162,7 @@ HRESULT CSubtitleInputPin::CompleteConnect(IPin* pReceivePin)
 
 HRESULT CSubtitleInputPin::BreakConnect()
 {
+    XY_LOG_DEBUG("");
 	RemoveSubStream(m_pSubStream);
 	m_pSubStream = NULL;
 
@@ -172,7 +173,7 @@ HRESULT CSubtitleInputPin::BreakConnect()
 
 STDMETHODIMP CSubtitleInputPin::ReceiveConnection(IPin* pConnector, const AM_MEDIA_TYPE* pmt)
 {
-    XY_LOG_TRACE(XY_LOG_VAR_2_STR(pConnector)<<XY_LOG_VAR_2_STR(pmt));
+    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(pConnector)<<XY_LOG_VAR_2_STR(pmt));
 	if(m_Connected)
 	{
 		RemoveSubStream(m_pSubStream);
@@ -236,7 +237,7 @@ public IUnknown {
 
 STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
 {
-    DbgLog(( LOG_TRACE, 4, TEXT(__FUNCTION__) ));
+    XY_LOG_TRACE(pSample);
 	HRESULT hr;
 
 	hr = __super::Receive(pSample);

@@ -135,7 +135,7 @@ int CSystrayWindow::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CSystrayWindow::OnClose()
 {
-    XY_LOG_TRACE("Systray close.");
+    XY_LOG_DEBUG("Systray close.");
     DestroyWindow();
 }
 
@@ -338,6 +338,7 @@ LRESULT CSystrayWindow::OnNotifyIcon(WPARAM wParam, LPARAM lParam)
 
 DWORD CALLBACK SystrayThreadProc(void* pParam)
 {
+    XY_LOG_DEBUG(pParam);
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	CSystrayWindow wnd((SystrayIconData*)pParam);
