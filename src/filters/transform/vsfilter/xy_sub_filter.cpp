@@ -38,14 +38,15 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     , m_not_first_pause(false)
     , m_consumer(NULL)
     , m_hSystrayThread(0)
+    , m_consumer_options_read(false)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
     m_xy_str_opt[STRING_NAME] = L"xy_sub_filter";
     m_fLoading = true;
 
-    m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
-    m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
+    m_video_yuv_matrix_decided_by_sub = ColorConvTable::NONE;
+    m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_NONE;
 
     m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, phr));
     ASSERT(SUCCEEDED(*phr));
@@ -1057,18 +1058,13 @@ void XySubFilter::SetYuvMatrix()
 
     if ( m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::YuvMatrix_AUTO )
     {
-        switch(m_script_selected_yuv)
+        if (m_video_yuv_matrix_decided_by_sub!=ColorConvTable::NONE)
         {
-        case CSimpleTextSubtitle::YCbCrMatrix_BT601:
+            yuv_matrix = m_video_yuv_matrix_decided_by_sub;
+        }
+        else
+        {
             yuv_matrix = ColorConvTable::BT601;
-            break;
-        case CSimpleTextSubtitle::YCbCrMatrix_BT709:
-            yuv_matrix = ColorConvTable::BT709;
-            break;
-        case CSimpleTextSubtitle::YCbCrMatrix_AUTO:
-        default:
-            yuv_matrix = ColorConvTable::BT601;
-            break;
         }
     }
     else
@@ -1091,19 +1087,10 @@ void XySubFilter::SetYuvMatrix()
 
     if( m_xy_int_opt[INT_YUV_RANGE]==CDirectVobSub::YuvRange_Auto )
     {
-        switch(m_script_selected_range)
-        {
-        case CSimpleTextSubtitle::YCbCrRange_PC:
-            yuv_range = ColorConvTable::RANGE_PC;
-            break;
-        case CSimpleTextSubtitle::YCbCrRange_TV:
+        if (m_video_yuv_range_decided_by_sub!=ColorConvTable::RANGE_NONE)
+            yuv_range = m_video_yuv_range_decided_by_sub;
+        else
             yuv_range = ColorConvTable::RANGE_TV;
-            break;
-        case CSimpleTextSubtitle::YCbCrRange_AUTO:
-        default:
-            yuv_range = ColorConvTable::RANGE_TV;
-            break;
-        }
     }
     else
     {
@@ -1253,8 +1240,8 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
     CAutoLock cAutolock(&m_csQueueLock);
 
     CSize playres(0,0);
-    m_script_selected_yuv = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
-    m_script_selected_range = CSimpleTextSubtitle::YCbCrRange_AUTO;
+    m_video_yuv_matrix_decided_by_sub = ColorConvTable::NONE;
+    m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_NONE;
     if(pSubStream)
     {
         CAutoLock cAutolock(&m_csSubLock);
@@ -1311,16 +1298,66 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             {
                 pRTS->m_dPARCompensation = abs(m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cx * m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO].cy) /
                     (double)abs(m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cy * m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO].cx);
+
             }
             else
             {
                 pRTS->m_dPARCompensation = 1.00;
             }
 
-            m_script_selected_yuv = pRTS->m_eYCbCrMatrix;
-            m_script_selected_range = pRTS->m_eYCbCrRange;
+            switch(pRTS->m_eYCbCrMatrix)
+            {
+            case CSimpleTextSubtitle::YCbCrMatrix_BT601:
+                m_video_yuv_matrix_decided_by_sub = ColorConvTable::BT601;
+                break;
+            case CSimpleTextSubtitle::YCbCrMatrix_BT709:
+                m_video_yuv_matrix_decided_by_sub = ColorConvTable::BT709;
+                break;
+            default:
+                m_video_yuv_matrix_decided_by_sub = ColorConvTable::NONE;
+                break;
+            }
+            switch(pRTS->m_eYCbCrRange)
+            {
+            case CSimpleTextSubtitle::YCbCrRange_PC:
+                m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_PC;
+                break;
+            case CSimpleTextSubtitle::YCbCrRange_TV:
+                m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_TV;
+                break;
+            default:
+                m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_NONE;
+                break;
+            }
             pRTS->Deinit();
             playres = pRTS->m_dstScreenSize;
+        }
+        else if(clsid == __uuidof(CRenderedHdmvSubtitle))
+        {
+            CRenderedHdmvSubtitle *sub = dynamic_cast<CRenderedHdmvSubtitle*>(pSubStream);
+            CompositionObject::ColorType color_type = CompositionObject::NONE;
+            CompositionObject::YuvRangeType range_type = CompositionObject::RANGE_NONE;
+            if ( m_xy_str_opt[STRING_PGS_YUV_RANGE].CompareNoCase(_T("PC"))==0 )
+            {
+                range_type = CompositionObject::RANGE_PC;
+            }
+            else if ( m_xy_str_opt[STRING_PGS_YUV_RANGE].CompareNoCase(_T("TV"))==0 )
+            {
+                range_type = CompositionObject::RANGE_TV;
+            }
+            if ( m_xy_str_opt[STRING_PGS_YUV_MATRIX].CompareNoCase(_T("BT601"))==0 )
+            {
+                color_type = CompositionObject::YUV_Rec601;
+            }
+            else if ( m_xy_str_opt[STRING_PGS_YUV_MATRIX].CompareNoCase(_T("BT709"))==0 )
+            {
+                color_type = CompositionObject::YUV_Rec709;
+            }
+
+            m_video_yuv_matrix_decided_by_sub = (m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cx > m_bt601Width 
+                || m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cy > m_bt601Height) ? ColorConvTable::BT709 : 
+                ColorConvTable::BT601;
+            sub->SetYuvType(color_type, range_type);
         }
     }
 
@@ -1435,16 +1472,29 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
     //fix me: is it right?
     //fix me: use REFERENCE_TIME instead?
     double fps = 10000000.0/rt_fps;
+    bool update_subtitle = m_consumer_options_read;/* have we read the options */
 
     if (m_xy_size_opt[SIZE_ORIGINAL_VIDEO]!=originalVideoSize)
     {
+        if (m_consumer_options_read)
+        {
+            XY_LOG_WARN("Size original video changed."<<XY_LOG_VAR_2_STR(m_xy_size_opt[SIZE_ORIGINAL_VIDEO])
+                <<XY_LOG_VAR_2_STR(originalVideoSize));
+        }
         hr = XySetSize(SIZE_ORIGINAL_VIDEO, originalVideoSize);
         ASSERT(SUCCEEDED(hr));
+        update_subtitle &= true;
     }
     if (m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO]!=arAdjustedVideoSize)
     {
+        if (m_consumer_options_read)
+        {
+            XY_LOG_WARN("Size AR adjusted video changed."<<XY_LOG_VAR_2_STR(m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO])
+                <<XY_LOG_VAR_2_STR(arAdjustedVideoSize));
+        }
         hr = XySetSize(SIZE_AR_ADJUSTED_VIDEO, originalVideoSize);
         ASSERT(SUCCEEDED(hr));
+        update_subtitle &= true;
     }
     if (m_xy_rect_opt[RECT_VIDEO_OUTPUT]!=videoOutputRect)
     {
@@ -1458,10 +1508,23 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
     }
     if (m_xy_double_opt[DOUBLE_FPS]!=fps)
     {
+        if (m_consumer_options_read)
+        {
+            XY_LOG_WARN("Size AR adjusted video changed."<<XY_LOG_VAR_2_STR(m_xy_double_opt[DOUBLE_FPS])
+                <<XY_LOG_VAR_2_STR(fps));
+        }
         hr = XySetDouble(DOUBLE_FPS, fps);
         ASSERT(SUCCEEDED(hr));
+        if (m_consumer_options_read)
+        {
+            XY_LOG_WARN("Size original video changed");
+        }
     }
 
+    if (update_subtitle)
+    {
+        UpdateSubtitle(false);
+    }
     return hr;
 }
 
@@ -1791,8 +1854,11 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
             if (FAILED(hr))
             {
                 XY_LOG_ERROR("Failed to connect "<<XY_LOG_VAR_2_STR(consumer)<<XY_LOG_VAR_2_STR(hr));
+                return hr;
             }
             m_consumer = consumer;
+            m_consumer_options_read = false;
+            UpdateParamFromConsumer();
             XY_LOG_INFO("Connected with "<<XY_LOG_VAR_2_STR(consumer));
         }
         else

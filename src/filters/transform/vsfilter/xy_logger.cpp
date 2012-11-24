@@ -15,6 +15,26 @@
 
 #endif
 
+std::ostream& operator<<(std::ostream& os, const SIZE& obj)
+{
+    return os<<"("<<obj.cx<<","<<obj.cy<<")";
+}
+
+std::wostream& operator<<( std::wostream& os, const SIZE& obj )
+{
+    return os<<L"("<<obj.cx<<L","<<obj.cy<<L")";
+}
+
+std::ostream& operator<<(std::ostream& os, const RECT& obj)
+{
+    return os<<"("<<obj.left<<","<<obj.top<<","<<obj.right<<","<<obj.bottom<<")";
+}
+
+std::wostream& operator<<( std::wostream& os, const RECT& obj )
+{
+    return os<<L"("<<obj.left<<L","<<obj.top<<L","<<obj.right<<L","<<obj.bottom<<L")";
+}
+
 namespace xy_logger
 {
 

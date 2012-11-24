@@ -121,12 +121,14 @@ private:
 private:
     CCritSec m_csQueueLock;
 
-    CSimpleTextSubtitle::YCbCrMatrix m_script_selected_yuv;
-    CSimpleTextSubtitle::YCbCrRange m_script_selected_range;
+    ColorConvTable::YuvMatrixType m_video_yuv_matrix_decided_by_sub;
+    ColorConvTable::YuvRangeType m_video_yuv_range_decided_by_sub;
 
     DWORD_PTR m_nSubtitleId;
     CInterfaceList<ISubStream> m_pSubStreams;
     CAtlList<bool> m_fIsSubStreamEmbeded;
+
+    bool m_consumer_options_read;
 
     // critical section protecting filter state.
     CCritSec m_csFilter;

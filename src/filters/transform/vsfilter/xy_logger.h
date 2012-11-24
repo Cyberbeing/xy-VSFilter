@@ -10,6 +10,7 @@
 #include "timing_logger.h"
 #include "once_logger.h"
 #include <stdio.h>
+#include <ostream>
 
 #ifdef __DO_LOG
 
@@ -70,6 +71,11 @@ extern int g_log_once_id;
 #endif
 
 
+std::ostream& operator<<(std::ostream& os, const SIZE& obj);
+std::wostream& operator<<(std::wostream& os, const SIZE& obj);
+
+std::ostream& operator<<(std::ostream& os, const RECT& obj);
+std::wostream& operator<<(std::wostream& os, const RECT& obj);
 
 namespace xy_logger
 {
