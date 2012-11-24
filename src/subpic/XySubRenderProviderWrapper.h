@@ -20,9 +20,6 @@ public:
     // IXySubRenderProvider
     STDMETHODIMP RequestFrame(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now);
 
-    STDMETHODIMP_(bool) IsColorTypeSupported(int type);
-    STDMETHODIMP SetColorType(int type);
-
 private:
     HRESULT Render( REFERENCE_TIME now, POSITION pos, double fps );
     HRESULT ResetAllocator();
@@ -48,9 +45,6 @@ public:
 
     // IXySubRenderProvider
     STDMETHODIMP RequestFrame(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now);
-
-    STDMETHODIMP_(bool) IsColorTypeSupported(int type);
-    STDMETHODIMP SetColorType(int type);
 
 private:
     HRESULT Render( REFERENCE_TIME now, POSITION pos );
