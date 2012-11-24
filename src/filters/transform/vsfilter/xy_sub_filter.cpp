@@ -1476,49 +1476,40 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
 
     if (m_xy_size_opt[SIZE_ORIGINAL_VIDEO]!=originalVideoSize)
     {
-        if (m_consumer_options_read)
-        {
-            XY_LOG_WARN("Size original video changed."<<XY_LOG_VAR_2_STR(m_xy_size_opt[SIZE_ORIGINAL_VIDEO])
-                <<XY_LOG_VAR_2_STR(originalVideoSize));
-        }
+        XY_LOG_INFO("Size original video changed."<<XY_LOG_VAR_2_STR(m_xy_size_opt[SIZE_ORIGINAL_VIDEO])
+            <<XY_LOG_VAR_2_STR(originalVideoSize));
         hr = XySetSize(SIZE_ORIGINAL_VIDEO, originalVideoSize);
         ASSERT(SUCCEEDED(hr));
         update_subtitle &= true;
     }
     if (m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO]!=arAdjustedVideoSize)
     {
-        if (m_consumer_options_read)
-        {
-            XY_LOG_WARN("Size AR adjusted video changed."<<XY_LOG_VAR_2_STR(m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO])
-                <<XY_LOG_VAR_2_STR(arAdjustedVideoSize));
-        }
+        XY_LOG_INFO("Size AR adjusted video changed."<<XY_LOG_VAR_2_STR(m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO])
+            <<XY_LOG_VAR_2_STR(arAdjustedVideoSize));
         hr = XySetSize(SIZE_AR_ADJUSTED_VIDEO, originalVideoSize);
         ASSERT(SUCCEEDED(hr));
         update_subtitle &= true;
     }
     if (m_xy_rect_opt[RECT_VIDEO_OUTPUT]!=videoOutputRect)
     {
+        XY_LOG_INFO("Video output rect changed."<<XY_LOG_VAR_2_STR(m_xy_double_opt[RECT_VIDEO_OUTPUT])
+            <<XY_LOG_VAR_2_STR(videoOutputRect));
         hr = XySetRect(RECT_VIDEO_OUTPUT, videoOutputRect);
         ASSERT(SUCCEEDED(hr));
     }
     if (m_xy_rect_opt[RECT_SUBTITLE_TARGET]!=subtitleTargetRect)
     {
+        XY_LOG_INFO("Subtitle target rect changed."<<XY_LOG_VAR_2_STR(m_xy_double_opt[RECT_SUBTITLE_TARGET])
+            <<XY_LOG_VAR_2_STR(subtitleTargetRect));
         hr = XySetRect(RECT_SUBTITLE_TARGET, subtitleTargetRect);
         ASSERT(SUCCEEDED(hr));
     }
     if (m_xy_double_opt[DOUBLE_FPS]!=fps)
     {
-        if (m_consumer_options_read)
-        {
-            XY_LOG_WARN("Size AR adjusted video changed."<<XY_LOG_VAR_2_STR(m_xy_double_opt[DOUBLE_FPS])
-                <<XY_LOG_VAR_2_STR(fps));
-        }
+        XY_LOG_INFO("FPS changed."<<XY_LOG_VAR_2_STR(m_xy_double_opt[DOUBLE_FPS])
+            <<XY_LOG_VAR_2_STR(fps));
         hr = XySetDouble(DOUBLE_FPS, fps);
         ASSERT(SUCCEEDED(hr));
-        if (m_consumer_options_read)
-        {
-            XY_LOG_WARN("Size original video changed");
-        }
     }
 
     if (update_subtitle)
