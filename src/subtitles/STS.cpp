@@ -2002,7 +2002,7 @@ void CSimpleTextSubtitle::Empty()
 void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, 
     CString style, const CString& actor, const CString& effect, const CRect& marginRect, int layer, int readorder)
 {
-    XY_LOG_INFO(start<<_T(" ")<<end<<_T(" ")<<str.GetString()<<_T(" style:")<<style.GetString()
+    XY_LOG_TRACE(start<<_T(" ")<<end<<_T(" ")<<str.GetString()<<_T(" style:")<<style.GetString()
         <<_T(" Unicode:")<<fUnicode
         <<_T(" actor:")<<actor.GetString()<<_T(" effect:")<<effect.GetString()
         <<_T(" (l:")<<marginRect.left<<_T(",t:")<<marginRect.top<<_T(",r:")<<marginRect.right<<_T(",b:")<<marginRect.bottom
