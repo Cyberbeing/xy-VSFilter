@@ -183,7 +183,13 @@ LRESULT CSystrayWindow::OnTaskBarRestart(WPARAM, LPARAM)
 //		tnid.hIcon = (HICON)LoadImage(AfxGetResourceHandle(), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 0, 0, LR_LOADTRANSPARENT);
 		tnid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP; 
 		tnid.uCallbackMessage = WM_NOTIFYICON;
-		lstrcpyn(tnid.szTip, TEXT("DirectVobSub"), sizeof(tnid.szTip)); 
+        CComQIPtr<IXyOptions> dvs_xy = m_tbid->dvs;
+        LPWSTR name = NULL;
+        int chars = 0;
+        dvs_xy->XyGetString(DirectVobSubXyOptions::STRING_NAME, &name, &chars);
+        CStringW str_name(name, chars);
+        CoTaskMemFree(name);
+        lstrcpyn(tnid.szTip, str_name.GetString(), sizeof(tnid.szTip));
 
 		BOOL res = Shell_NotifyIcon(NIM_ADD, &tnid); 
 
