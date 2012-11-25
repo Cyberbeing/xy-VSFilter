@@ -155,13 +155,6 @@ private:
 
     bool m_not_first_pause;
 
-    typedef struct
-    {
-        HWND hSystrayWnd;
-        IFilterGraph* graph;
-        IDirectVobSub* dvs;
-        bool fRunOnce, fShowIcon;
-    } SystrayIconData;
     SystrayIconData m_tbid;
     HANDLE m_hSystrayThread;
 

@@ -40,6 +40,6 @@
 #include "../../../subpic/XySubRenderFrameWrapper.h"
 #include "../../../subpic/XySubRenderProviderWrapper.h"
 #include "../../../subpic/MemSubPic.h"
-#include "IDirectVobSubXy.h"
+#include "DirectVobSub.h"
 #include "Systray.h"
 #include "xy_logger.h"
