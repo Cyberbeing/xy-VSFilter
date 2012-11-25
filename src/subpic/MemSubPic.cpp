@@ -1571,6 +1571,8 @@ void CMemSubPic::AlphaBlt_YUY2(int w, int h, BYTE* d, int dstpitch, PCUINT8 s, i
 
 HRESULT CMemSubPic::FlipAlphaValue( const CRect& dirtyRect )
 {
+    ONCER( SaveArgb2File(m_spd, CRect(CPoint(0,0), m_size), "E:/ProgramFiles/mplayer/MinGW/home/xy/xy_vsfilter/test/debug.argb") );
+    XY_LOG_TRACE(dirtyRect);
     const CRect& cRect = dirtyRect;
     int w = cRect.Width(), h = cRect.Height();
     if (w<=0 || h<=0)
@@ -1591,6 +1593,10 @@ HRESULT CMemSubPic::FlipAlphaValue( const CRect& dirtyRect )
                 *s = *s ^ 0xFF000000;
             }
         }
+    }
+    else
+    {
+        XY_LOG_ERROR("Unexpected color type "<<m_spd.type);
     }
     return S_OK;
 }
