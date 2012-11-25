@@ -46,7 +46,7 @@ XyBitmap * XyBitmap::CreateBitmap( const CRect& target_rect, MemLayout layout )
     result->x = target_rect.left;
     result->y = target_rect.top;
     result->w = target_rect.Width();
-    result->h = target_rect.Height();    
+    result->h = target_rect.Height();
     int w16 = (result->w + 15) & ~15;
         
     switch (result->type)
@@ -62,7 +62,7 @@ XyBitmap * XyBitmap::CreateBitmap( const CRect& target_rect, MemLayout layout )
         result->plans[0] = reinterpret_cast<BYTE*>(result->bits);
         result->plans[1] = result->plans[0] + result->pitch * result->h;
         result->plans[2] = result->plans[1] + result->pitch * result->h;
-        result->plans[3] = result->plans[2] + result->pitch * result->h;        
+        result->plans[3] = result->plans[2] + result->pitch * result->h;
         break;
     default:
         ASSERT(0);
@@ -296,8 +296,8 @@ STDMETHODIMP XySubRenderFrame::GetBitmap( int index, ULONGLONG *id, POINT *posit
     const XyBitmap& bitmap = *(m_bitmaps.GetAt(index));
     if (position)
     {
-        position->x = bitmap.x;
-        position->y = bitmap.y;
+        position->x = bitmap.x + m_output_rect.left;
+        position->y = bitmap.y + m_output_rect.top;
     }
     if (size)
     {
