@@ -29,13 +29,6 @@
 #include "../../../subtitles/SSF.h"
 #include "../../../subpic/ISimpleSubPic.h"
 
-typedef struct
-{
-	HWND hSystrayWnd;
-	IFilterGraph* graph;
-	IDirectVobSub* dvs;
-	bool fRunOnce, fShowIcon;
-} SystrayIconData;
 
 /* This is for graphedit */
 

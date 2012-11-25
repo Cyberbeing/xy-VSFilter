@@ -182,7 +182,7 @@ LRESULT CSystrayWindow::OnTaskBarRestart(WPARAM, LPARAM)
 		tnid.hIcon = (HICON)LoadIcon(AfxGetResourceHandle(), MAKEINTRESOURCE(IDI_ICON1));
 //		tnid.hIcon = (HICON)LoadImage(AfxGetResourceHandle(), MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 0, 0, LR_LOADTRANSPARENT);
 		tnid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP; 
-		tnid.uCallbackMessage = WM_NOTIFYICON; 
+		tnid.uCallbackMessage = WM_NOTIFYICON;
 		lstrcpyn(tnid.szTip, TEXT("DirectVobSub"), sizeof(tnid.szTip)); 
 
 		BOOL res = Shell_NotifyIcon(NIM_ADD, &tnid); 

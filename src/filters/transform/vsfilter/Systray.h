@@ -21,4 +21,12 @@
 
 #pragma once
 
+typedef struct
+{
+    HWND hSystrayWnd;
+    IFilterGraph* graph;
+    IDirectVobSub* dvs;
+    bool fRunOnce, fShowIcon;
+} SystrayIconData;
+
 extern DWORD CALLBACK SystrayThreadProc(void* pParam);
