@@ -187,7 +187,7 @@ void RegisterXySubFilterAsAutoLoad()
         KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
         CString in_uuid = XyUuidToString(*sudFilter[2].clsID);
-        if(RegSetValueEx(hKey, _T("(Default)"), NULL, REG_SZ, reinterpret_cast<const BYTE*>(in_uuid.GetString()), in_uuid.GetLength()*2+1) != ERROR_SUCCESS)
+        if(RegSetValueEx(hKey, _T(""), NULL, REG_SZ, reinterpret_cast<const BYTE*>(in_uuid.GetString()), in_uuid.GetLength()*2+1) != ERROR_SUCCESS)
         {
             MessageBox(NULL, _T("Failed to install as autoload subtitle provider"), _T("Warning"), 0);
         }
