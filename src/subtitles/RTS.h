@@ -408,14 +408,15 @@ public:
         AssTagList embeded;
     };
 private:
-    CAtlMap<int, CSubtitle*> m_subtitleCache;   
+    CAtlMap<int, CSubtitle*> m_subtitleCache;
 
     CScreenLayoutAllocator m_sla;
 
-    CSizeCoor2 m_size_scale_to;
+    CRectCoor2 m_video_rect;//scaled video rect
+    CRectCoor2 m_subtitle_target_rect;
 
-    CSize m_size;
-    CRect m_vidrect;
+    CSize m_size;    //it is the original video size if it is initiated for RenderEx. And I don't know wtf if initiated from Render
+    CRect m_vidrect; //it is the ((0,0),original video size) if it is initiated for RenderEx. And I don't know wtf if initiated from Render
 
     // temp variables, used when parsing the script
     int m_time, m_delay;
@@ -443,7 +444,6 @@ private:
     double CalcAnimation(double dst, double src, bool fAnimate);
 
     CSubtitle* GetSubtitle(int entry);
-
 protected:
     virtual void OnChanged();
     
@@ -455,7 +455,8 @@ public:
     virtual void Empty();
 
 public:
-    bool Init(const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect); // will call Deinit()
+    bool Init(const CRectCoor2& video_rect, const CRectCoor2& subtitle_target_rect,
+        const SIZE& size1, const CRect& wtf_vidrect_of_spd); // will call Deinit()
     void Deinit();
 
     DECLARE_IUNKNOWN
@@ -465,8 +466,8 @@ public:
     STDMETHODIMP Lock();
     STDMETHODIMP Unlock();
     STDMETHODIMP RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, 
-        const SIZECoor2& size_scale_to,
-        const SIZE& size1, const CRect& video_rect, 
+        const RECT& video_rect, const RECT& subtitle_target_rect,
+        const SIZE& original_video_size,
         REFERENCE_TIME rt, double fps);
 
     // ISubPicProviderEx && ISubPicProviderEx2

@@ -54,7 +54,7 @@ private:
     CComPtr<ISubPicProviderEx2> m_provider;
     CComPtr<IXySubRenderFrame> m_xy_sub_render_frame;
     REFERENCE_TIME m_start, m_stop;
-    CRect m_output_rect;
+    CRect m_output_rect, m_subtitle_target_rect;
     CSize m_original_video_size;
     double m_fps;
 };

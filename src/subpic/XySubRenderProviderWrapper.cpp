@@ -218,11 +218,13 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, &original_video_size);
     ASSERT(SUCCEEDED(hr));
 
-    if (m_output_rect!=output_rect || m_original_video_size!=original_video_size)
+    if (m_output_rect!=output_rect || m_subtitle_target_rect==subtitle_target_rect
+        || m_original_video_size!=original_video_size)
     {
         Invalidate();
         m_output_rect = output_rect;
         m_original_video_size = original_video_size;
+        m_subtitle_target_rect = subtitle_target_rect;
     }
 
     hr = Render( now, pos );
@@ -258,9 +260,10 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
     if(FAILED(m_provider->Lock())) {
         return hr;
     }
-    ASSERT(m_output_rect.TopLeft()==CPoint(0,0));
-    hr = m_provider->RenderEx(&m_xy_sub_render_frame, MSP_RGBA_F, m_output_rect.Size(), m_original_video_size,
-        CRect(CPoint(0,0),m_original_video_size), now, m_fps);
+
+    hr = m_provider->RenderEx(&m_xy_sub_render_frame, MSP_RGBA_F, 
+        m_output_rect, m_subtitle_target_rect,
+        m_original_video_size, now, m_fps);
 
     ASSERT(SUCCEEDED(hr));
 

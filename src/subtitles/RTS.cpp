@@ -1974,17 +1974,21 @@ void CRenderedTextSubtitle::OnChanged()
 }
 
 
-bool CRenderedTextSubtitle::Init( const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect )
+bool CRenderedTextSubtitle::Init( const CRectCoor2& video_rect, const CRectCoor2& subtitle_target_rect,
+    const SIZE& size1, const CRect& wtf_vidrect_of_spd )
 {
     Deinit();
-    m_size_scale_to = CSize(size_scale_to.cx*8, size_scale_to.cy*8);//fix me?
+    m_video_rect = CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8);
+    m_subtitle_target_rect = CRect(subtitle_target_rect.left*8, subtitle_target_rect.top*8, 
+        subtitle_target_rect.right*8, subtitle_target_rect.bottom*8);
     m_size = CSize(size1.cx*8, size1.cy*8);
-    m_vidrect = CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8);
-    
+    m_vidrect = CRect(wtf_vidrect_of_spd.left*8, wtf_vidrect_of_spd.top*8, 
+        wtf_vidrect_of_spd.right*8, wtf_vidrect_of_spd.bottom*8);
+
     ASSERT(size1.cx!=0 && size1.cy!=0);
 
-    m_target_scale_x = size_scale_to.cx * 1.0 / size1.cx;
-    m_target_scale_y = size_scale_to.cy * 1.0 / size1.cy;
+    m_target_scale_x = (video_rect.right-video_rect.left) * 1.0 / size1.cx;
+    m_target_scale_y = (video_rect.bottom-video_rect.top) * 1.0 / size1.cy;
 
     return(true);
 }
@@ -2002,7 +2006,8 @@ void CRenderedTextSubtitle::Deinit()
     m_subtitleCache.RemoveAll();
     m_sla.Empty();
 
-    m_size_scale_to = CSize(0, 0);
+    m_video_rect.SetRectEmpty();
+    m_subtitle_target_rect.SetRectEmpty();
     m_size = CSize(0, 0);
     m_vidrect.SetRectEmpty();
 
@@ -2431,12 +2436,17 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 bool invert = (cmd_type == CMD_iclip);
                 if(params.GetCount() == 1 && !sub->m_pClipper)
                 {
-                    sub->m_pClipper.reset( new CClipper(params[0], CSize(m_size_scale_to.cx>>3, m_size_scale_to.cy>>3), sub->m_scalex, sub->m_scaley, invert, m_target_scale_x, m_target_scale_y) );
+                    sub->m_pClipper.reset( new CClipper(params[0], 
+                        CSize((m_video_rect.right-m_video_rect.left)>>3, (m_video_rect.bottom-m_video_rect.top)>>3), 
+                        sub->m_scalex, sub->m_scaley, invert, m_target_scale_x, m_target_scale_y) );
                 }
                 else if(params.GetCount() == 2 && !sub->m_pClipper)
                 {
                     int scale = max(wcstol(p, NULL, 10), 1);
-                    sub->m_pClipper.reset( new CClipper(params[1], CSize(m_size_scale_to.cx>>3, m_size_scale_to.cy>>3), sub->m_scalex/(1<<(scale-1)), sub->m_scaley/(1<<(scale-1)), invert, m_target_scale_x, m_target_scale_y) );
+                    sub->m_pClipper.reset( new CClipper(params[1], 
+                        CSize((m_video_rect.right-m_video_rect.left)>>3, (m_video_rect.bottom-m_video_rect.top)>>3), 
+                        sub->m_scalex/(1<<(scale-1)), sub->m_scaley/(1<<(scale-1)), 
+                        invert, m_target_scale_x, m_target_scale_y) );
                 }
                 else if(params.GetCount() == 4)
                 {
@@ -3092,7 +3102,7 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
         marginRect.right += m_size.cx - m_vidrect.right;
         marginRect.bottom += m_size.cy - m_vidrect.bottom;
     }
-    sub->CreateClippers(m_size, m_size_scale_to);
+    sub->CreateClippers(m_size, m_video_rect.Size());
     sub->MakeLines(m_size, marginRect);
     m_subtitleCache[entry] = sub;
     return(sub);
@@ -3447,10 +3457,11 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
 STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRectCoor2>& rectList)
 {
     CSize output_size = CSize(spd.w,spd.h);
+    CRectCoor2 video_rect = CRect(0,0,spd.w,spd.h);//fix me: it should be subtitle target rect while spd.vidrect is video rect?
     rectList.RemoveAll();
 
     CComPtr<IXySubRenderFrame> sub_render_frame;
-    HRESULT hr = RenderEx(&sub_render_frame, spd.type, output_size, output_size, spd.vidrect, rt, fps);
+    HRESULT hr = RenderEx(&sub_render_frame, spd.type, video_rect, video_rect, output_size, rt, fps);
     if (SUCCEEDED(hr) && sub_render_frame)
     {
         int count = 0;
@@ -3496,8 +3507,9 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     return (!rectList.IsEmpty()) ? S_OK : S_FALSE;
 }
 
-STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame, int spd_type, 
-    const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect, 
+STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame, int spd_type,
+    const RECT& video_rect, const RECT& subtitle_target_rect,
+    const SIZE& original_video_size,
     REFERENCE_TIME rt, double fps )
 {
     if (!subRenderFrame)
@@ -3528,13 +3540,15 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
     render_frame_creater->SetColorSpace(color_space);
 
-    if( m_size_scale_to != CSize(size_scale_to.cx*8, size_scale_to.cy*8) 
-        || m_size != CSize(size1.cx*8, size1.cy*8) 
-        || m_vidrect != CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8))
+    if( m_video_rect != CRect(video_rect.left*8,video_rect.top*8,video_rect.right,video_rect.bottom*8)
+        || m_subtitle_target_rect != CRect(subtitle_target_rect.left*8, subtitle_target_rect.top*8
+        , subtitle_target_rect.right*8, subtitle_target_rect.bottom*8)
+        || m_size != CSize(original_video_size.cx*8, original_video_size.cy*8) 
+        || m_vidrect != CRect(0, 0, original_video_size.cx*8, original_video_size.cy*8))
     {
-        Init(size_scale_to, size1, video_rect);
-        render_frame_creater->SetOutputRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
-        render_frame_creater->SetClipRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
+        Init(video_rect, subtitle_target_rect, original_video_size, CRect(CPoint(0,0),original_video_size));
+        render_frame_creater->SetOutputRect(video_rect);
+        render_frame_creater->SetClipRect(video_rect);
     }
 
     CSubtitle2List sub2List;
@@ -3545,7 +3559,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     }
 
     CompositeDrawItemListList compDrawItemListList;
-    DoRender(size_scale_to, sub2List, &compDrawItemListList);
+    DoRender(CRect(video_rect).Size(), sub2List, &compDrawItemListList);
 
     XySubRenderFrame *sub_render_frame;
     CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);
