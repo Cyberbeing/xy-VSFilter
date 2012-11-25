@@ -103,7 +103,7 @@ STDMETHODIMP XySubRenderFrameWrapper::GetBitmap( int index, ULONGLONG *id, POINT
     {
         ASSERT(m_inner_obj->m_spd.bpp==32);
         *pixels = (BYTE*)(m_inner_obj->m_spd.bits) + dirty_rect.top * m_inner_obj->m_spd.pitch 
-            + dirty_rect.left * 32;
+            + dirty_rect.left * (32/8);
     }
     XY_LOG_TRACE(index<<" id: "<<m_id<<" "<<dirty_rect<<" pitch:"<<m_inner_obj->m_spd.pitch<<" pixels:"<<(pixels?*pixels:NULL)
         <<XY_LOG_VAR_2_STR(m_inner_obj->m_spd.bits) );
