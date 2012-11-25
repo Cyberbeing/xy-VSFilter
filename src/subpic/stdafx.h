@@ -49,3 +49,4 @@
 #include "XySubRenderFrameWrapper.h"
 #include "PooledSubPic.h"
 #include "ISimpleSubPic.h"
+#include "../subtitles/xy_bitmap.h"

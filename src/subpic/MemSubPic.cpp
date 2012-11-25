@@ -1580,24 +1580,12 @@ HRESULT CMemSubPic::FlipAlphaValue( const CRect& dirtyRect )
         return S_OK;
     }
     ASSERT(m_spd.type == MSP_RGBA);
-    BYTE* top = (BYTE*)m_spd.bits + m_spd.pitch*(cRect.top) + cRect.left*4;
-    BYTE* bottom = top + m_spd.pitch*h;
-    if(m_spd.type == MSP_RGBA)
-    {
-        for(; top < bottom ; top += m_spd.pitch)
-        {
-            DWORD* s = (DWORD*)top;
-            DWORD* e = s + w;
-            for(; s < e; s++)
-            {
-                *s = *s ^ 0xFF000000;
-            }
-        }
-    }
-    else
+    if(m_spd.type != MSP_RGBA)
     {
         XY_LOG_ERROR("Unexpected color type "<<m_spd.type);
     }
+    BYTE* top = (BYTE*)m_spd.bits + m_spd.pitch*(cRect.top) + cRect.left*4;
+    XyBitmap::FlipAlphaValue(top, w, h, m_spd.pitch);
     return S_OK;
 }
 
