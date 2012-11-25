@@ -107,7 +107,7 @@ int XySubFilter::GetPinCount()
 
 STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
 {
-    XY_LOG_DEBUG("JoinFilterGraph. pGraph:"<<(void*)pGraph);
+    XY_LOG_INFO("JoinFilterGraph. pGraph:"<<(void*)pGraph);
     if(pGraph)
     {
         BeginEnumFilters(pGraph, pEF, pBF)
@@ -298,7 +298,7 @@ STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
 //
 STDMETHODIMP XySubFilter::put_FileName(WCHAR* fn)
 {
-    XY_LOG_DEBUG(fn);
+    XY_LOG_INFO(fn);
     HRESULT hr = CDirectVobSub::put_FileName(fn);
 
     if(hr == S_OK && !Open())
@@ -361,7 +361,7 @@ STDMETHODIMP XySubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 
 STDMETHODIMP XySubFilter::put_SelectedLanguage(int iSelected)
 {
-    XY_LOG_DEBUG(iSelected);
+    XY_LOG_INFO(iSelected);
     HRESULT hr = CDirectVobSub::put_SelectedLanguage(iSelected);
 
     if(hr == NOERROR)
@@ -374,7 +374,7 @@ STDMETHODIMP XySubFilter::put_SelectedLanguage(int iSelected)
 
 STDMETHODIMP XySubFilter::put_HideSubtitles(bool fHideSubtitles)
 {
-    XY_LOG_DEBUG(fHideSubtitles);
+    XY_LOG_INFO(fHideSubtitles);
     HRESULT hr = CDirectVobSub::put_HideSubtitles(fHideSubtitles);
 
     if(hr == NOERROR)
@@ -387,7 +387,7 @@ STDMETHODIMP XySubFilter::put_HideSubtitles(bool fHideSubtitles)
 
 STDMETHODIMP XySubFilter::put_PreBuffering(bool fDoPreBuffering)
 {
-    XY_LOG_DEBUG(fDoPreBuffering);
+    XY_LOG_INFO(fDoPreBuffering);
     HRESULT hr = CDirectVobSub::put_PreBuffering(fDoPreBuffering);
 
     if(hr == NOERROR)
@@ -400,7 +400,7 @@ STDMETHODIMP XySubFilter::put_PreBuffering(bool fDoPreBuffering)
 
 STDMETHODIMP XySubFilter::put_Placement(bool fOverridePlacement, int xperc, int yperc)
 {
-    XY_LOG_DEBUG(fOverridePlacement<<XY_LOG_VAR_2_STR(xperc)<<XY_LOG_VAR_2_STR(yperc));
+    XY_LOG_INFO(fOverridePlacement<<XY_LOG_VAR_2_STR(xperc)<<XY_LOG_VAR_2_STR(yperc));
     HRESULT hr = CDirectVobSub::put_Placement(fOverridePlacement, xperc, yperc);
 
     if(hr == NOERROR)
@@ -415,7 +415,7 @@ STDMETHODIMP XySubFilter::put_Placement(bool fOverridePlacement, int xperc, int 
 
 STDMETHODIMP XySubFilter::put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fReserved)
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(fBuffer)<<XY_LOG_VAR_2_STR(fOnlyShowForcedSubs)<<XY_LOG_VAR_2_STR(fReserved));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(fBuffer)<<XY_LOG_VAR_2_STR(fOnlyShowForcedSubs)<<XY_LOG_VAR_2_STR(fReserved));
     HRESULT hr = CDirectVobSub::put_VobSubSettings(fBuffer, fOnlyShowForcedSubs, fReserved);
 
     if(hr == NOERROR)
@@ -428,7 +428,7 @@ STDMETHODIMP XySubFilter::put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedS
 
 STDMETHODIMP XySubFilter::put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer)
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(lf)<<XY_LOG_VAR_2_STR(lflen)<<XY_LOG_VAR_2_STR(color)
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(lf)<<XY_LOG_VAR_2_STR(lflen)<<XY_LOG_VAR_2_STR(color)
         <<XY_LOG_VAR_2_STR(fShadow)<<XY_LOG_VAR_2_STR(fOutline)<<XY_LOG_VAR_2_STR(fAdvancedRenderer));
     HRESULT hr = CDirectVobSub::put_TextSettings(lf, lflen, color, fShadow, fOutline, fAdvancedRenderer);
 
@@ -442,7 +442,7 @@ STDMETHODIMP XySubFilter::put_TextSettings(void* lf, int lflen, COLORREF color, 
 
 STDMETHODIMP XySubFilter::put_SubtitleTiming(int delay, int speedmul, int speeddiv)
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(delay)<<XY_LOG_VAR_2_STR(speedmul)<<XY_LOG_VAR_2_STR(speeddiv));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(delay)<<XY_LOG_VAR_2_STR(speedmul)<<XY_LOG_VAR_2_STR(speeddiv));
     HRESULT hr = CDirectVobSub::put_SubtitleTiming(delay, speedmul, speeddiv);
 
     if(hr == NOERROR)
@@ -455,7 +455,7 @@ STDMETHODIMP XySubFilter::put_SubtitleTiming(int delay, int speedmul, int speedd
 
 STDMETHODIMP XySubFilter::get_CachesInfo(CachesInfo* caches_info)
 {
-    XY_LOG_DEBUG(caches_info);
+    XY_LOG_INFO(caches_info);
     CAutoLock cAutolock(&m_csQueueLock);
     HRESULT hr = CDirectVobSub::get_CachesInfo(caches_info);
 
@@ -504,7 +504,7 @@ STDMETHODIMP XySubFilter::get_CachesInfo(CachesInfo* caches_info)
 
 STDMETHODIMP XySubFilter::get_XyFlyWeightInfo( XyFlyWeightInfo* xy_fw_info )
 {
-    XY_LOG_DEBUG(xy_fw_info);
+    XY_LOG_INFO(xy_fw_info);
     CAutoLock cAutolock(&m_csQueueLock);
     HRESULT hr = CDirectVobSub::get_XyFlyWeightInfo(xy_fw_info);
 
@@ -521,31 +521,31 @@ STDMETHODIMP XySubFilter::get_XyFlyWeightInfo( XyFlyWeightInfo* xy_fw_info )
 
 STDMETHODIMP XySubFilter::get_MediaFPS( bool* fEnabled, double* fps )
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
     return E_NOTIMPL;
 }
 
 STDMETHODIMP XySubFilter::put_MediaFPS( bool fEnabled, double fps )
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
     return E_NOTIMPL;
 }
 
 STDMETHODIMP XySubFilter::get_ZoomRect(NORMALIZEDRECT* rect)
 {
-    XY_LOG_DEBUG(rect);
+    XY_LOG_INFO(rect);
     return E_NOTIMPL;
 }
 
 STDMETHODIMP XySubFilter::put_ZoomRect(NORMALIZEDRECT* rect)
 {
-    XY_LOG_DEBUG(rect);
+    XY_LOG_INFO(rect);
     return E_NOTIMPL;
 }
 
 STDMETHODIMP XySubFilter::HasConfigDialog(int iSelected)
 {
-    XY_LOG_DEBUG(iSelected);
+    XY_LOG_INFO(iSelected);
     int nLangs;
     if(FAILED(get_LanguageCount(&nLangs))) return E_FAIL;
     return E_FAIL;
@@ -555,7 +555,7 @@ STDMETHODIMP XySubFilter::HasConfigDialog(int iSelected)
 
 STDMETHODIMP XySubFilter::ShowConfigDialog(int iSelected, HWND hWndParent)
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(iSelected)<<XY_LOG_VAR_2_STR(hWndParent));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(iSelected)<<XY_LOG_VAR_2_STR(hWndParent));
     // TODO: temporally disabled since we don't have a new textsub/vobsub editor dlg for dvs yet
     return(E_FAIL);
 }
@@ -565,7 +565,7 @@ STDMETHODIMP XySubFilter::ShowConfigDialog(int iSelected, HWND hWndParent)
 //
 STDMETHODIMP XySubFilter::put_TextSettings(STSStyle* pDefStyle)
 {
-    XY_LOG_DEBUG(pDefStyle);
+    XY_LOG_INFO(pDefStyle);
     HRESULT hr = CDirectVobSub::put_TextSettings(pDefStyle);
 
     if(hr == NOERROR)
@@ -578,7 +578,7 @@ STDMETHODIMP XySubFilter::put_TextSettings(STSStyle* pDefStyle)
 
 STDMETHODIMP XySubFilter::put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType)
 {
-    XY_LOG_DEBUG(ePARCompensationType);
+    XY_LOG_INFO(ePARCompensationType);
     HRESULT hr = CDirectVobSub::put_AspectRatioSettings(ePARCompensationType);
 
     if(hr == NOERROR)
@@ -596,7 +596,7 @@ STDMETHODIMP XySubFilter::put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompe
 // 
 STDMETHODIMP XySubFilter::GetPages(CAUUID* pPages)
 {
-    XY_LOG_DEBUG(pPages);
+    XY_LOG_INFO(pPages);
     CheckPointer(pPages, E_POINTER);
 
     pPages->cElems = 8;
@@ -622,7 +622,7 @@ STDMETHODIMP XySubFilter::GetPages(CAUUID* pPages)
 //
 STDMETHODIMP XySubFilter::Count(DWORD* pcStreams)
 {
-    XY_LOG_DEBUG(pcStreams);
+    XY_LOG_INFO(pcStreams);
     if(!pcStreams) return E_POINTER;
 
     *pcStreams = 0;
@@ -641,7 +641,7 @@ STDMETHODIMP XySubFilter::Count(DWORD* pcStreams)
 
 STDMETHODIMP XySubFilter::Enable(long lIndex, DWORD dwFlags)
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(lIndex)<<XY_LOG_VAR_2_STR(dwFlags));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(lIndex)<<XY_LOG_VAR_2_STR(dwFlags));
     if(!(dwFlags & AMSTREAMSELECTENABLE_ENABLE))
         return E_NOTIMPL;
 
@@ -708,7 +708,7 @@ STDMETHODIMP XySubFilter::Enable(long lIndex, DWORD dwFlags)
 
 STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlags, LCID* plcid, DWORD* pdwGroup, WCHAR** ppszName, IUnknown** ppObject, IUnknown** ppUnk)
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(lIndex)<<XY_LOG_VAR_2_STR(ppmt)
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(lIndex)<<XY_LOG_VAR_2_STR(ppmt)
         <<XY_LOG_VAR_2_STR(pdwFlags)<<XY_LOG_VAR_2_STR(plcid)<<XY_LOG_VAR_2_STR(pdwGroup)<<XY_LOG_VAR_2_STR(ppszName)
         <<XY_LOG_VAR_2_STR(ppObject)<<XY_LOG_VAR_2_STR(ppUnk));
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
@@ -829,7 +829,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
 
 void XySubFilter::DeleteSystray()
 {
-    XY_LOG_DEBUG("");
+    XY_LOG_INFO("");
     if(m_hSystrayThread)
     {
         XY_LOG_TRACE(XY_LOG_VAR_2_STR(m_tbid.hSystrayWnd));
@@ -856,7 +856,7 @@ void XySubFilter::DeleteSystray()
 // 
 void XySubFilter::SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles)
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(paths.GetCount())<<XY_LOG_VAR_2_STR(handles.GetCount()));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(paths.GetCount())<<XY_LOG_VAR_2_STR(handles.GetCount()));
     CAutoLock cAutolock(&m_csSubLock);
 
     for(unsigned i = 2; i < handles.GetCount(); i++)
@@ -903,7 +903,7 @@ void XySubFilter::SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles)
 
 DWORD XySubFilter::ThreadProc()
 {
-    XY_LOG_DEBUG("");
+    XY_LOG_INFO("");
     SetThreadPriority(m_hThread, THREAD_PRIORITY_LOWEST/*THREAD_PRIORITY_BELOW_NORMAL*/);
 
     CStringArray paths;
@@ -1205,7 +1205,7 @@ bool XySubFilter::Open()
 
 void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(fApplyDefStyle));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(fApplyDefStyle));
     CAutoLock cAutolock(&m_csQueueLock);
 
     InvalidateSubtitle();
@@ -1236,7 +1236,7 @@ void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
 
 void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= true*/ )
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(pSubStream)<<XY_LOG_VAR_2_STR(fApplyDefStyle));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(pSubStream)<<XY_LOG_VAR_2_STR(fApplyDefStyle));
     CAutoLock cAutolock(&m_csQueueLock);
 
     CSize playres(0,0);
@@ -1476,38 +1476,38 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
 
     if (m_xy_size_opt[SIZE_ORIGINAL_VIDEO]!=originalVideoSize)
     {
-        XY_LOG_INFO("Size original video changed."<<XY_LOG_VAR_2_STR(m_xy_size_opt[SIZE_ORIGINAL_VIDEO])
-            <<XY_LOG_VAR_2_STR(originalVideoSize));
+        XY_LOG_INFO("Size original video changed from "<<m_xy_size_opt[SIZE_ORIGINAL_VIDEO]
+            <<" to "<<originalVideoSize);
         hr = XySetSize(SIZE_ORIGINAL_VIDEO, originalVideoSize);
         ASSERT(SUCCEEDED(hr));
         update_subtitle &= true;
     }
     if (m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO]!=arAdjustedVideoSize)
     {
-        XY_LOG_INFO("Size AR adjusted video changed."<<XY_LOG_VAR_2_STR(m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO])
-            <<XY_LOG_VAR_2_STR(arAdjustedVideoSize));
+        XY_LOG_INFO("Size AR adjusted video changed from "<<m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO]
+            <<" to "<<arAdjustedVideoSize);
         hr = XySetSize(SIZE_AR_ADJUSTED_VIDEO, originalVideoSize);
         ASSERT(SUCCEEDED(hr));
         update_subtitle &= true;
     }
     if (m_xy_rect_opt[RECT_VIDEO_OUTPUT]!=videoOutputRect)
     {
-        XY_LOG_INFO("Video output rect changed."<<XY_LOG_VAR_2_STR(m_xy_double_opt[RECT_VIDEO_OUTPUT])
-            <<XY_LOG_VAR_2_STR(videoOutputRect));
+        XY_LOG_INFO("Video output rect changed from "<<m_xy_rect_opt[RECT_VIDEO_OUTPUT]
+            <<" to "<<videoOutputRect);
         hr = XySetRect(RECT_VIDEO_OUTPUT, videoOutputRect);
         ASSERT(SUCCEEDED(hr));
     }
     if (m_xy_rect_opt[RECT_SUBTITLE_TARGET]!=subtitleTargetRect)
     {
-        XY_LOG_INFO("Subtitle target rect changed."<<XY_LOG_VAR_2_STR(m_xy_double_opt[RECT_SUBTITLE_TARGET])
-            <<XY_LOG_VAR_2_STR(subtitleTargetRect));
+        XY_LOG_INFO("Subtitle target rect changed from "<<m_xy_rect_opt[RECT_SUBTITLE_TARGET]
+            <<" to "<<subtitleTargetRect);
         hr = XySetRect(RECT_SUBTITLE_TARGET, subtitleTargetRect);
         ASSERT(SUCCEEDED(hr));
     }
     if (m_xy_double_opt[DOUBLE_FPS]!=fps)
     {
-        XY_LOG_INFO("FPS changed."<<XY_LOG_VAR_2_STR(m_xy_double_opt[DOUBLE_FPS])
-            <<XY_LOG_VAR_2_STR(fps));
+        XY_LOG_INFO("FPS changed from "<<m_xy_double_opt[DOUBLE_FPS]
+            <<" to "<<fps);
         hr = XySetDouble(DOUBLE_FPS, fps);
         ASSERT(SUCCEEDED(hr));
     }
@@ -1523,7 +1523,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
 
 int XySubFilter::FindPreferedLanguage( bool fHideToo /*= true*/ )
 {
-    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(fHideToo));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(fHideToo));
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
     int nLangs;
@@ -1558,7 +1558,7 @@ int XySubFilter::FindPreferedLanguage( bool fHideToo /*= true*/ )
 
 void XySubFilter::UpdatePreferedLanguages(CString l)
 {
-    XY_LOG_DEBUG(l);
+    XY_LOG_INFO(l);
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
     CString langs[MAXPREFLANGS+1];
@@ -1619,7 +1619,7 @@ void XySubFilter::UpdatePreferedLanguages(CString l)
 
 void XySubFilter::AddSubStream(ISubStream* pSubStream)
 {
-    XY_LOG_DEBUG(pSubStream);
+    XY_LOG_INFO(pSubStream);
     CAutoLock cAutolock(&m_csQueueLock);
 
     POSITION pos = m_pSubStreams.Find(pSubStream);
@@ -1642,7 +1642,7 @@ void XySubFilter::AddSubStream(ISubStream* pSubStream)
 
 void XySubFilter::RemoveSubStream(ISubStream* pSubStream)
 {
-    XY_LOG_DEBUG(pSubStream);
+    XY_LOG_INFO(pSubStream);
     CAutoLock cAutolock(&m_csQueueLock);
 
     POSITION pos = m_pSubStreams.GetHeadPosition();
@@ -1696,7 +1696,7 @@ HRESULT XySubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
 
 bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
 {
-    XY_LOG_DEBUG(pGraph);
+    XY_LOG_INFO(pGraph);
 
     int level;
     bool m_fExternalLoad, m_fWebLoad, m_fEmbeddedLoad;
@@ -1786,7 +1786,7 @@ bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
 
 HRESULT XySubFilter::StartStreaming()
 {
-    XY_LOG_DEBUG("");
+    XY_LOG_INFO("");
     /* WARNING: calls to m_pGraph member functions from within this function will generate deadlock with Haali
      * Video Renderer in MPC. Reason is that CAutoLock's variables in IFilterGraph functions are overriden by
      * CFGManager class.
@@ -1803,7 +1803,7 @@ HRESULT XySubFilter::StartStreaming()
 
 HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
 {
-    XY_LOG_DEBUG(pGraph);
+    XY_LOG_INFO(pGraph);
     HRESULT hr = NOERROR;
     CComPtr<ISubRenderConsumer> consumer;
     ULONG meric = 0;
