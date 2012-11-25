@@ -25,6 +25,7 @@ STDMETHODIMP XySubRenderFrameWrapper::NonDelegatingQueryInterface( REFIID riid, 
 
 STDMETHODIMP XySubRenderFrameWrapper::GetOutputRect( RECT *outputRect )
 {
+    XY_LOG_TRACE(outputRect<<" "<<m_output_rect);
     if (!outputRect)
     {
         return E_INVALIDARG;
@@ -35,6 +36,7 @@ STDMETHODIMP XySubRenderFrameWrapper::GetOutputRect( RECT *outputRect )
 
 STDMETHODIMP XySubRenderFrameWrapper::GetClipRect( RECT *clipRect )
 {
+    XY_LOG_TRACE(clipRect<<" "<<m_clip_rect);
     if (!clipRect)
     {
         return E_INVALIDARG;
@@ -55,6 +57,7 @@ STDMETHODIMP XySubRenderFrameWrapper::GetXyColorSpace( int *xyColorSpace )
 
 STDMETHODIMP XySubRenderFrameWrapper::GetBitmapCount( int *count )
 {
+    XY_LOG_TRACE(count<<" "<<1);
     if (!count)
     {
         return S_FALSE;
@@ -102,6 +105,8 @@ STDMETHODIMP XySubRenderFrameWrapper::GetBitmap( int index, ULONGLONG *id, POINT
         *pixels = (BYTE*)(m_inner_obj->m_spd.bits) + dirty_rect.top * m_inner_obj->m_spd.pitch 
             + dirty_rect.left * 32;
     }
+    XY_LOG_TRACE(index<<" id: "<<m_id<<" "<<dirty_rect<<" pitch:"<<m_inner_obj->m_spd.pitch<<" pixels:"<<(pixels?*pixels:NULL)
+        <<XY_LOG_VAR_2_STR(m_inner_obj->m_spd.bits) );
     return S_OK;
 }
 
