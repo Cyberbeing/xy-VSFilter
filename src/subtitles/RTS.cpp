@@ -1007,7 +1007,7 @@ bool CPolygon::Get6BitFixedPoint(CStringW& str, LONG& ret)
     LPWSTR s = (LPWSTR)(LPCWSTR)str, e = s;
     ret = wcstod(str, &e) * 64;
     str.Delete(0,e-s); 
-    XY_LOG_INFO(ret);
+    XY_LOG_TRACE(ret);//fix me: use a specific logger for it
     return(e > s);
 }
 

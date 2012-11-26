@@ -47,6 +47,7 @@ STDMETHODIMP XySubRenderProviderWrapper::RequestFrame( IXySubRenderFrame**subRen
 
     if (m_original_video_size!=original_video_size)
     {
+        XY_LOG_WARN("Original video size changed from "<<m_original_video_size<<" to "<<original_video_size);
         Invalidate();
         m_original_video_size = original_video_size;
     }
@@ -239,6 +240,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     }
     if (should_invalidate)
     {
+        XY_LOG_INFO("Output rects changed.");
         Invalidate();
     }
     if (should_invalidate_allocator)
