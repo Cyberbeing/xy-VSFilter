@@ -273,7 +273,7 @@ public:
     STDMETHODIMP GetDirtyRects(CAtlList<const CRect>& dirtyRectList /*[out]*/) const;
     STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList /*[in]*/);
 
-    STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList /*[in]*/) = 0;
+    STDMETHODIMP UnlockEx(CAtlList<CRect>* dirtyRectList /*[in]*/) = 0;
 };
 
 class CSubPicAllocatorImpl : public CUnknown, public ISubPicAllocator

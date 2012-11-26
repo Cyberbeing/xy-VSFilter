@@ -67,7 +67,7 @@ public:
 
     // ISubPicEx
     STDMETHODIMP CopyTo(ISubPicEx* pSubPic);
-    STDMETHODIMP Unlock(CAtlList<CRect>* dirtyRectList);
+    STDMETHODIMP UnlockEx(CAtlList<CRect>* dirtyRectList);
     STDMETHODIMP SetDirtyRectEx(CAtlList<CRect>* dirtyRectList);
 
     //

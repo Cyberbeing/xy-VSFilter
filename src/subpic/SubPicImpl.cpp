@@ -279,11 +279,11 @@ STDMETHODIMP CSubPicExImpl::Unlock( RECT* pDirtyRect /*[in]*/ )
     {
         CAtlList<CRect> tmp;
         tmp.AddTail(*pDirtyRect);
-        return Unlock(&tmp);
+        return UnlockEx(&tmp);
     }
     else
     {
-        return Unlock( reinterpret_cast<CAtlList<CRect>*>(NULL) );
+        return UnlockEx( reinterpret_cast<CAtlList<CRect>*>(NULL) );
     }
 }
 

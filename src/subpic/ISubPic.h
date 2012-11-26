@@ -107,7 +107,7 @@ public ISubPic {
     STDMETHOD (GetDirtyRects) (CAtlList<const CRect>& dirtyRectList /*[out]*/) const PURE;
     STDMETHOD (SetDirtyRectEx) (CAtlList<CRect>* dirtyRectList /*[in]*/) PURE;
     
-	STDMETHOD (Unlock) (CAtlList<CRect>* dirtyRectList /*[in]*/) PURE;
+	STDMETHOD (UnlockEx) (CAtlList<CRect>* dirtyRectList /*[in]*/) PURE;
 };
 
 //

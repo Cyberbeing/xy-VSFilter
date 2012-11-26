@@ -113,7 +113,7 @@ HRESULT XySubRenderProviderWrapper::Render( REFERENCE_TIME now, POSITION pos, do
             m_pSubPic->SetStart(start);
             m_pSubPic->SetStop(stop);
         }
-        m_pSubPic->Unlock(&rectList);
+        m_pSubPic->UnlockEx(&rectList);
         CRect dirty_rect;
         hr = m_pSubPic->GetDirtyRect(&dirty_rect);
         ASSERT(SUCCEEDED(hr));
