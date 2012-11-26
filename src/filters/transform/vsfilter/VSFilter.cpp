@@ -37,7 +37,7 @@ END_MESSAGE_MAP()
 
 CVSFilterApp::CVSFilterApp()
 {
-#ifdef __DO_LOG
+#if ENABLE_XY_LOG
     LPTSTR  strDLLPath = new TCHAR[_MAX_PATH];
     ::GetModuleFileName( reinterpret_cast<HINSTANCE>(&__ImageBase), strDLLPath, _MAX_PATH);
     CString dllPath = strDLLPath;
