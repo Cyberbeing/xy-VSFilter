@@ -32,7 +32,7 @@ using namespace DirectVobSubXyOptions;
 
 static void LogSubPicStartStop( const REFERENCE_TIME& rtStart, const REFERENCE_TIME& rtStop, const CString& msg)
 {
-#ifdef __DO_LOG
+#if ENABLE_XY_LOG
     static REFERENCE_TIME s_rtStart = -1, s_rtStop = -1;
     if(s_rtStart!=rtStart || s_rtStop!=rtStop)
     {

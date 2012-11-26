@@ -46,7 +46,7 @@
 bool g_RegOK = true;//false; // doesn't work with the dvd graph builder
 #include "valami.cpp"
 
-#ifdef __DO_LOG
+#if ENABLE_XY_LOG
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #endif
 

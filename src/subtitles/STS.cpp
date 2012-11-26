@@ -246,7 +246,7 @@ int CharSetLen = countof(CharSetList);
 
 static void LogSegments(const CAtlArray<STSSegment>& segments)
 {
-#ifdef __DO_LOG
+#if ENABLE_XY_LOG
     for (int i=0;i<segments.GetCount();i++)
     {
         const STSSegment& s = segments[i];

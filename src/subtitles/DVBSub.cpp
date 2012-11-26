@@ -23,7 +23,7 @@
 #include "DVBSub.h"
 #include "../DSUtil/GolombBuffer.h"
 
-#if __DO_LOG
+#if ENABLE_XY_LOG_DVB
 #define TRACE_DVB(_x_)		{CString tmp;tmp.Format _x_; XY_LOG_TRACE( tmp.GetString() );}
 #else
 #define TRACE_DVB __noop

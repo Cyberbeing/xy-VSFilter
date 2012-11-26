@@ -22,7 +22,7 @@
 #include "HdmvSub.h"
 #include "../DSUtil/GolombBuffer.h"
 
-#if __DO_LOG
+#if ENABLE_XY_LOG_HDMVSUB
 #define TRACE_HDMVSUB(_x_)		{CString tmp;tmp.Format _x_; XY_LOG_TRACE( tmp.GetString() );}
 #else
 #define TRACE_HDMVSUB __noop

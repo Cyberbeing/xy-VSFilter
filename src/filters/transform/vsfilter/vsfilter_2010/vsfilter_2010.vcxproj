@@ -5,20 +5,12 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release log|Win32">
-      <Configuration>Release log</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release log|x64">
-      <Configuration>Release log</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
@@ -41,10 +33,6 @@
     <UseOfAtl>false</UseOfAtl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)'=='Release log'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
@@ -149,64 +137,13 @@
       <Profile>false</Profile>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release log|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;__DO_LOG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerOutput>NoListing</AssemblerOutput>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <OpenMPSupport>false</OpenMPSupport>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <IgnoreSpecificDefaultLibraries>
-      </IgnoreSpecificDefaultLibraries>
-      <DelayLoadDLLs>oleacc.dll</DelayLoadDLLs>
-      <Profile>false</Profile>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\..\lib;$(SolutionDir)..\..\..\..\bin\lib\$(PlatformName)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>$(SolutionDir)VSFilter.def</ModuleDefinitionFile>
       <RegisterOutput>false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Release log'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesRL.lib;subpicRL.lib;basevideofilterRL.lib;libssfR.lib;log4cplus_staticR.lib;KasumiR.lib;systemR.lib;winmm.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;KasumiD.lib;systemD.lib;</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;KasumiR.lib;systemR.lib;winmm.lib</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release log|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>_WIN64;NDEBUG;__DO_LOG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerOutput>NoListing</AssemblerOutput>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <OpenMPSupport>false</OpenMPSupport>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <IgnoreSpecificDefaultLibraries>
-      </IgnoreSpecificDefaultLibraries>
-      <DelayLoadDLLs>oleacc.dll</DelayLoadDLLs>
-      <Profile>false</Profile>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;log4cplus_staticD.lib;KasumiD.lib;systemD.lib;</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;log4cplus_staticR.lib;KasumiR.lib;systemR.lib;winmm.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
@@ -247,9 +184,7 @@
     <ClCompile Include="..\vfr.cpp" />
     <ClCompile Include="..\VSFilter.cpp" />
     <ClCompile Include="..\XyOptionsImpl.cpp" />
-    <ClCompile Include="..\xy_logger.cpp">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="..\xy_logger.cpp" />
     <ClCompile Include="..\xy_sub_filter.cpp" />
   </ItemGroup>
   <ItemGroup>
