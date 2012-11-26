@@ -237,9 +237,6 @@ STDMETHODIMP XySubFilter::XySetBool( unsigned field, bool value )
     case DirectVobSubXyOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER:
         hr = E_INVALIDARG;
         break;
-    case DirectVobSubXyOptions::BOOL_COMBINE_BITMAPS:
-        hr = E_NOTIMPL;
-        break;
     default:
         break;
     }

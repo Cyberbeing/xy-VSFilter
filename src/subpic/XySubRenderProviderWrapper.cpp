@@ -167,7 +167,7 @@ XySubRenderProviderWrapper2::XySubRenderProviderWrapper2( ISubPicProviderEx2 *pr
     , m_provider(provider)
     , m_consumer(consumer)
     , m_start(0), m_stop(0)
-    , m_fps(0)
+    , m_fps(0), m_combine_bitmap(false)
 {
     HRESULT hr = NOERROR;
     if (!provider || !consumer)
@@ -204,6 +204,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
 
     CRect output_rect, subtitle_target_rect;
     CSize original_video_size;
+    bool combine_bitmap = false;
     ASSERT(m_consumer);
     hr = m_consumer->XyGetRect(DirectVobSubXyOptions::RECT_VIDEO_OUTPUT, &output_rect);
     ASSERT(SUCCEEDED(hr));
@@ -212,14 +213,57 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     ASSERT(output_rect==subtitle_target_rect);
     hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, &original_video_size);
     ASSERT(SUCCEEDED(hr));
+    hr = m_consumer->XyGetBool(DirectVobSubXyOptions::BOOL_COMBINE_BITMAPS, &combine_bitmap);
+    ASSERT(SUCCEEDED(hr));
 
-    if (m_output_rect!=output_rect || m_subtitle_target_rect!=subtitle_target_rect
+    bool should_invalidate = false;
+    bool should_invalidate_allocator = false;
+    if (m_output_rect!=output_rect 
+        || m_subtitle_target_rect!=subtitle_target_rect
         || m_original_video_size!=original_video_size)
     {
-        Invalidate();
+        should_invalidate = true;
+        should_invalidate_allocator = (m_subtitle_target_rect!=subtitle_target_rect)==TRUE;
+
         m_output_rect = output_rect;
         m_original_video_size = original_video_size;
         m_subtitle_target_rect = subtitle_target_rect;
+    }
+
+    if (combine_bitmap && !m_combine_bitmap && m_xy_sub_render_frame)
+    {
+        int count = 0;
+        hr = m_xy_sub_render_frame->GetBitmapCount(&count);
+        should_invalidate = (count>1);
+        m_combine_bitmap = combine_bitmap;
+    }
+    if (should_invalidate)
+    {
+        Invalidate();
+    }
+    if (should_invalidate_allocator)
+    {
+        m_subpic = NULL;
+        m_allocator = NULL;
+    }
+    if (combine_bitmap)
+    {
+        if (!m_allocator)
+        {
+            CSize max_size(m_output_rect.right, m_output_rect.bottom);
+            m_allocator = new CPooledSubPicAllocator(MSP_RGB32, max_size,2);
+            ASSERT(m_allocator);
+
+            m_allocator->SetCurSize(max_size);
+            m_allocator->SetCurVidRect(CRect(CPoint(0,0),max_size));
+        }
+        if(!m_subpic)
+        {
+            if(FAILED(m_allocator->AllocDynamicEx(&m_subpic))) {
+                XY_LOG_ERROR("Failed to allocate subpic");
+                return E_FAIL;
+            }
+        }
     }
 
     POSITION pos = m_provider->GetStartPosition(now, fps);
@@ -262,9 +306,15 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
         return hr;
     }
 
-    hr = m_provider->RenderEx(&m_xy_sub_render_frame, MSP_RGBA_F
-        , m_output_rect, m_subtitle_target_rect
-        , m_original_video_size, now, m_fps);
+    hr = m_provider->RenderEx(&m_xy_sub_render_frame, MSP_RGBA_F, 
+        m_output_rect, m_subtitle_target_rect,
+        m_original_video_size, now, m_fps);
+    ASSERT(SUCCEEDED(hr));
+
+    if (m_xy_sub_render_frame && m_combine_bitmap)
+    {
+        hr = CombineBitmap(now);
+    }
 
     ASSERT(SUCCEEDED(hr));
 
@@ -274,4 +324,65 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
 
     m_provider->Unlock();
     return hr;
+}
+
+HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
+{
+    HRESULT hr = NOERROR;
+    if (m_xy_sub_render_frame)
+    {
+        int count = 0;
+        hr = m_xy_sub_render_frame->GetBitmapCount(&count);
+        ASSERT(SUCCEEDED(hr));
+        if (count==1)
+        {
+            return S_OK;
+        }
+        SubPicDesc spd;
+        hr = m_subpic->Lock(spd);
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to lock spd. "<<XY_LOG_VAR_2_STR(hr));
+            return hr;
+        }
+        DWORD color = 0xFF000000;
+        hr = m_subpic->ClearDirtyRect(color);
+        if(FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to clear dirty rect. "<<XY_LOG_VAR_2_STR(hr));
+            return hr;
+        }
+        CRect dirty_rect;
+        for (int i=0;i<count;i++)
+        {
+            POINT pos;
+            SIZE size;
+            LPCVOID pixels;
+            int pitch;
+            hr = m_xy_sub_render_frame->GetBitmap(i, NULL, &pos, &size, &pixels, &pitch );
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed to get bitmap. "<<XY_LOG_VAR_2_STR(hr));
+                return hr;
+            }
+            ASSERT(SUCCEEDED(hr));
+            dirty_rect |= CRect(pos, size);
+            XyBitmap::AlphaBltPack(spd, pos, size, pixels, pitch);
+        }
+        hr = m_subpic->Unlock(&dirty_rect);
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to unlock. "<<XY_LOG_VAR_2_STR(dirty_rect)<<XY_LOG_VAR_2_STR(hr));
+            return hr;
+        }
+        hr = m_subpic->GetDirtyRect(&dirty_rect);
+        ASSERT(SUCCEEDED(hr));
+        CMemSubPic * mem_subpic = dynamic_cast<CMemSubPic*>((ISubPicEx *)m_subpic);
+        ASSERT(mem_subpic);
+        hr = mem_subpic->FlipAlphaValue(dirty_rect);//fixme: mem_subpic.type is now MSP_RGBA_F, not MSP_RGBA
+        ASSERT(SUCCEEDED(hr));
+
+        m_xy_sub_render_frame = new XySubRenderFrameWrapper(mem_subpic, m_output_rect, m_subtitle_target_rect, now, &hr);
+        return S_OK;
+    }
 }
