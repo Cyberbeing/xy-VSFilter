@@ -49,6 +49,7 @@ public:
 
 private:
     HRESULT Render( REFERENCE_TIME now, POSITION pos );
+    HRESULT CombineBitmap(REFERENCE_TIME now);
 private:
     IXyOptions *m_consumer;
     CComPtr<ISubPicProviderEx2> m_provider;
@@ -56,5 +57,10 @@ private:
     REFERENCE_TIME m_start, m_stop;
     CRect m_output_rect, m_subtitle_target_rect;
     CSize m_original_video_size;
+
     double m_fps;
+
+    bool m_combine_bitmap;
+    CComPtr<ISubPicExAllocator> m_allocator;
+    CComPtr<ISubPicEx> m_subpic;
 };
