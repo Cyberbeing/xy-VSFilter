@@ -213,7 +213,8 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, &original_video_size);
     ASSERT(SUCCEEDED(hr));
 
-    if (m_output_rect!=output_rect || m_subtitle_target_rect==subtitle_target_rect
+    if (m_output_rect!=output_rect 
+        || m_subtitle_target_rect!=subtitle_target_rect
         || m_original_video_size!=original_video_size)
     {
         Invalidate();
