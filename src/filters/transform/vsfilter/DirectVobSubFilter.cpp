@@ -629,6 +629,7 @@ HRESULT CDirectVobSubFilter::StartStreaming()
 	 * CFGManager class.
 	 */
 
+    HRESULT hr = NOERROR;
 	m_fLoading = false;
 
 	DbgLog((LOG_TRACE, 3, "StartStreaming => InitSubPicQueue"));
@@ -636,7 +637,8 @@ HRESULT CDirectVobSubFilter::StartStreaming()
 
 	m_tbid.fRunOnce = true;
 
-	put_MediaFPS(m_fMediaFPSEnabled, m_MediaFPS);
+    hr = put_MediaFPS(m_fMediaFPSEnabled, m_MediaFPS);
+    CHECK_N_LOG(hr, "Failed to set option");
 
 	return __super::StartStreaming();
 }
@@ -735,7 +737,8 @@ void CDirectVobSubFilter::InitSubPicQueue()
 
 	if(FAILED(hr)) m_simple_provider = NULL;
 
-    XySetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, CSize(m_w, m_h));
+    hr = XySetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, CSize(m_w, m_h));
+    CHECK_N_LOG(hr, "Failed to set option");
 	UpdateSubtitle(false);
 
 	InitObj4OSD();
@@ -899,43 +902,48 @@ void CDirectVobSubFilter::UpdatePreferedLanguages(CString l)
 
 STDMETHODIMP CDirectVobSubFilter::Enable(long lIndex, DWORD dwFlags)
 {
-	if(!(dwFlags & AMSTREAMSELECTENABLE_ENABLE))
-		return E_NOTIMPL;
+    HRESULT hr = NOERROR;
+    if(!(dwFlags & AMSTREAMSELECTENABLE_ENABLE))
+        return E_NOTIMPL;
 
-	int nLangs = 0;
-	get_LanguageCount(&nLangs);
+    int nLangs = 0;
+    hr = get_LanguageCount(&nLangs);
+    CHECK_N_LOG(hr, "Failed to get option");
 
-	if(!(lIndex >= 0 && lIndex < nLangs+2+2))
-		return E_INVALIDARG;
+    if(!(lIndex >= 0 && lIndex < nLangs+2+2))
+        return E_INVALIDARG;
 
-	int i = lIndex-1;
+    int i = lIndex-1;
 
-	if(i == -1 && !m_fLoading) // we need this because when loading something stupid media player pushes the first stream it founds, which is "enable" in our case
-	{
-		put_HideSubtitles(false);
-	}
-	else if(i >= 0 && i < nLangs)
-	{
-		put_HideSubtitles(false);
-		put_SelectedLanguage(i);
+    if(i == -1 && !m_fLoading) // we need this because when loading something stupid media player pushes the first stream it founds, which is "enable" in our case
+    {
+        hr = put_HideSubtitles(false);
+    }
+    else if(i >= 0 && i < nLangs)
+    {
+        hr = put_HideSubtitles(false);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = put_SelectedLanguage(i);
+        CHECK_N_LOG(hr, "Failed to get option");
 
-		WCHAR* pName = NULL;
-		if(SUCCEEDED(get_LanguageName(i, &pName)))
-		{
-			UpdatePreferedLanguages(CString(pName));
-			if(pName) CoTaskMemFree(pName);
-		}
-	}
-	else if(i == nLangs && !m_fLoading)
-	{
-		put_HideSubtitles(true);
-	}
-	else if((i == nLangs+1 || i == nLangs+2) && !m_fLoading)
-	{
-		put_Flip(i == nLangs+2, m_fFlipSubtitles);
-	}
-
-	return S_OK;
+        WCHAR* pName = NULL;
+        hr = get_LanguageName(i, &pName);
+        if(SUCCEEDED(hr))
+        {
+            UpdatePreferedLanguages(CString(pName));
+            if(pName) CoTaskMemFree(pName);
+        }
+    }
+    else if(i == nLangs && !m_fLoading)
+    {
+        hr = put_HideSubtitles(true);
+    }
+    else if((i == nLangs+1 || i == nLangs+2) && !m_fLoading)
+    {
+        hr = put_Flip(i == nLangs+2, m_fFlipSubtitles);
+    }
+    CHECK_N_LOG(hr, "Failed "<<XY_LOG_VAR_2_STR(lIndex)<<XY_LOG_VAR_2_STR(dwFlags));
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlags, LCID* plcid, DWORD* pdwGroup, WCHAR** ppszName, IUnknown** ppObject, IUnknown** ppUnk)
@@ -1082,7 +1090,7 @@ STDMETHODIMP CDirectVobSubFilter::GetPages(CAUUID* pPages)
 STDMETHODIMP CDirectVobSubFilter::put_FileName(WCHAR* fn)
 {
     AMTRACE((TEXT(__FUNCTION__),0));
-	HRESULT hr = CDirectVobSub::put_FileName(fn);
+    HRESULT hr = CDirectVobSub::put_FileName(fn);
 
 	if(hr == S_OK && !Open())
 	{
@@ -1419,6 +1427,7 @@ HRESULT CDirectVobSubFilter2::CheckConnect(PIN_DIRECTION dir, IPin* pPin)
 
 HRESULT CDirectVobSubFilter2::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
 {
+    HRESULT hr = NOERROR;
     XY_AUTO_TIMING(_T("CDirectVobSubFilter2::JoinFilterGraph"));
 	if(pGraph)
 	{
@@ -1505,8 +1514,10 @@ HRESULT CDirectVobSubFilter2::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pNam
 					CComPtr<IBaseFilter> pDVS;
 					if(ShouldWeAutoload(pGraph) && SUCCEEDED(pDVS.CoCreateInstance(__uuidof(CDirectVobSubFilter2))))
 					{
-						CComQIPtr<IDirectVobSub2>(pDVS)->put_Forced(true);
-						CComQIPtr<IGraphConfig>(pGraph)->AddFilterToCache(pDVS);
+                        hr = CComQIPtr<IDirectVobSub2>(pDVS)->put_Forced(true);
+                        CHECK_N_LOG(hr, "Failed to set option");
+                        hr = CComQIPtr<IGraphConfig>(pGraph)->AddFilterToCache(pDVS);
+                        CHECK_N_LOG(hr, "Failed to AddFilterToCache. "<<XY_LOG_VAR_2_STR(pGraph)<<XY_LOG_VAR_2_STR(pDVS));
 					}
 
 					break;
@@ -1669,8 +1680,8 @@ void CDirectVobSubFilter2::GetRidOfInternalScriptRenderer()
 
 bool CDirectVobSubFilter::Open()
 {
-    AMTRACE((TEXT(__FUNCTION__),0));
     XY_AUTO_TIMING(TEXT("CDirectVobSubFilter::Open"));
+    HRESULT hr = NOERROR;
 
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
@@ -1751,7 +1762,9 @@ bool CDirectVobSubFilter::Open()
         }
 	}
 
-	if(S_FALSE == put_SelectedLanguage(FindPreferedLanguage()))
+    hr = put_SelectedLanguage(FindPreferedLanguage());
+    CHECK_N_LOG(hr, "Failed to set option");
+    if(S_FALSE == hr)
         UpdateSubtitle(false); // make sure pSubPicProvider of our queue gets updated even if the stream number hasn't changed
 
 	m_frd.RefreshEvent.Set();
@@ -1793,6 +1806,7 @@ void CDirectVobSubFilter::UpdateSubtitle(bool fApplyDefStyle)
 
 void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyle)
 {
+    HRESULT hr = NOERROR;
 	DbgLog((LOG_TRACE, 3, "%s(%d): %s", __FILE__, __LINE__, __FUNCTION__));
 	DbgLog((LOG_TRACE, 3, "\tpSubStream:%x fApplyDefStyle:%d", pSubStream, (int)fApplyDefStyle));
     CAutoLock cAutolock(&m_csQueueLock);
@@ -1941,7 +1955,8 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 
     SetYuvMatrix();
 
-    XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
+    hr = XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
+    CHECK_N_LOG(hr, "Failed to set option");
     if(m_simple_provider)
         m_simple_provider->SetSubPicProvider(CComQIPtr<ISubPicProviderEx>(pSubStream));
 }
@@ -2165,9 +2180,12 @@ DWORD CDirectVobSubFilter::ThreadProc()
 
 void CDirectVobSubFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
 {
+    HRESULT hr = NOERROR;
     ColorSpaceOpt *color_space=NULL;
     int tempCount = 0;
-    if( XyGetBin(BIN_INPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&color_space), &tempCount)==S_OK )
+    hr = XyGetBin(BIN_INPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&color_space), &tempCount);
+    CHECK_N_LOG(hr, "Failed to get option");
+    if( hr==S_OK )
     {
         *count = 0;
         for (int i=0;i<tempCount;i++)
@@ -2188,9 +2206,12 @@ void CDirectVobSubFilter::GetInputColorspaces( ColorSpaceId *preferredOrder, UIN
 
 void CDirectVobSubFilter::GetOutputColorspaces( ColorSpaceId *preferredOrder, UINT *count )
 {
+    HRESULT hr = NOERROR;
     ColorSpaceOpt *color_space=NULL;
     int tempCount = 0;
-    if( XyGetBin(BIN_OUTPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&color_space), &tempCount)==S_OK )
+    hr = XyGetBin(BIN_OUTPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&color_space), &tempCount);
+    CHECK_N_LOG(hr, "Failed to get option");
+    if( hr==S_OK )
     {
         *count = 0;
         for (int i=0;i<tempCount;i++)

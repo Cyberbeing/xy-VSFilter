@@ -372,37 +372,62 @@ bool CDVSMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void CDVSMainPPage::UpdateObjectData(bool fSave)
 {
+    HRESULT hr = NOERROR;
     if(fSave)
     {
-        if(m_pDirectVobSub->put_FileName(m_fn) == S_OK)
+        hr = m_pDirectVobSub->put_FileName(m_fn);
+        CHECK_N_LOG(hr, "Failed to set option");
+        if(hr == S_OK)
         {
             int nLangs;
-            m_pDirectVobSub->get_LanguageCount(&nLangs); 
+            hr = m_pDirectVobSub->get_LanguageCount(&nLangs);
+            CHECK_N_LOG(hr, "Failed to get option");
             AllocLangs(nLangs);
-            for(int i = 0; i < m_nLangs; i++) m_pDirectVobSub->get_LanguageName(i, &m_ppLangs[i]);
-            m_pDirectVobSub->get_SelectedLanguage(&m_iSelectedLanguage);
+            for(int i = 0; i < m_nLangs; i++) {
+                hr = m_pDirectVobSub->get_LanguageName(i, &m_ppLangs[i]);
+                CHECK_N_LOG(hr, "Failed to get option");
+            }
+            hr = m_pDirectVobSub->get_SelectedLanguage(&m_iSelectedLanguage);
+            CHECK_N_LOG(hr, "Failed to get option");
         }
 
-        m_pDirectVobSub->put_SelectedLanguage(m_iSelectedLanguage);
-        m_pDirectVobSub->put_Placement(m_fOverridePlacement, m_PlacementXperc, m_PlacementYperc);
-        m_pDirectVobSub->put_VobSubSettings(true, m_fOnlyShowForcedVobSubs, false);
-        m_pDirectVobSub->put_TextSettings(&m_defStyle);
-        m_pDirectVobSub->put_AspectRatioSettings(&m_ePARCompensationType);
-        m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_HIDE_TRAY_ICON, m_fHideTrayIcon);
+        hr = m_pDirectVobSub->put_SelectedLanguage(m_iSelectedLanguage);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_Placement(m_fOverridePlacement, m_PlacementXperc, m_PlacementYperc);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_VobSubSettings(true, m_fOnlyShowForcedVobSubs, false);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_TextSettings(&m_defStyle);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_AspectRatioSettings(&m_ePARCompensationType);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_HIDE_TRAY_ICON, m_fHideTrayIcon);
+        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
-        m_pDirectVobSub->get_FileName(m_fn);
+        hr = m_pDirectVobSub->get_FileName(m_fn);
+        CHECK_N_LOG(hr, "Failed to get option");
         int nLangs;
-        m_pDirectVobSub->get_LanguageCount(&nLangs); 
+        hr = m_pDirectVobSub->get_LanguageCount(&nLangs); 
+        CHECK_N_LOG(hr, "Failed to get option");
         AllocLangs(nLangs);
-        for(int i = 0; i < m_nLangs; i++) m_pDirectVobSub->get_LanguageName(i, &m_ppLangs[i]);
-        m_pDirectVobSub->get_SelectedLanguage(&m_iSelectedLanguage);
-        m_pDirectVobSub->get_Placement(&m_fOverridePlacement, &m_PlacementXperc, &m_PlacementYperc);
-        m_pDirectVobSub->get_VobSubSettings(NULL, &m_fOnlyShowForcedVobSubs, NULL);
-        m_pDirectVobSub->get_TextSettings(&m_defStyle);
-        m_pDirectVobSub->get_AspectRatioSettings(&m_ePARCompensationType);
-        m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_HIDE_TRAY_ICON, &m_fHideTrayIcon);
+        for(int i = 0; i < m_nLangs; i++) {
+            hr = m_pDirectVobSub->get_LanguageName(i, &m_ppLangs[i]);
+            CHECK_N_LOG(hr, "Failed to get option");
+        }
+        hr = m_pDirectVobSub->get_SelectedLanguage(&m_iSelectedLanguage);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_Placement(&m_fOverridePlacement, &m_PlacementXperc, &m_PlacementYperc);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_VobSubSettings(NULL, &m_fOnlyShowForcedVobSubs, NULL);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_TextSettings(&m_defStyle);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_AspectRatioSettings(&m_ePARCompensationType);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_HIDE_TRAY_ICON, &m_fHideTrayIcon);
+        CHECK_N_LOG(hr, "Failed to get option");
     }
 }
 
@@ -522,15 +547,20 @@ bool CDVSGeneralPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void CDVSGeneralPPage::UpdateObjectData(bool fSave)
 {
+    HRESULT hr = NOERROR;
     if(fSave)
     {
-        m_pDirectVobSub->put_ExtendPicture(m_HorExt, m_VerExt, m_ResX2, m_ResX2minw, m_ResX2minh);
-        m_pDirectVobSub->put_LoadSettings(m_LoadLevel, m_fExternalLoad, m_fWebLoad, m_fEmbeddedLoad);
+        hr = m_pDirectVobSub->put_ExtendPicture(m_HorExt, m_VerExt, m_ResX2, m_ResX2minw, m_ResX2minh);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_LoadSettings(m_LoadLevel, m_fExternalLoad, m_fWebLoad, m_fEmbeddedLoad);
+        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
-        m_pDirectVobSub->get_ExtendPicture(&m_HorExt, &m_VerExt, &m_ResX2, &m_ResX2minw, &m_ResX2minh);
-        m_pDirectVobSub->get_LoadSettings(&m_LoadLevel, &m_fExternalLoad, &m_fWebLoad, &m_fEmbeddedLoad);
+        hr = m_pDirectVobSub->get_ExtendPicture(&m_HorExt, &m_VerExt, &m_ResX2, &m_ResX2minw, &m_ResX2minh);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_LoadSettings(&m_LoadLevel, &m_fExternalLoad, &m_fWebLoad, &m_fEmbeddedLoad);
+        CHECK_N_LOG(hr, "Failed to get option");
     }
 }
 
@@ -630,27 +660,44 @@ bool CDVSMiscPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void CDVSMiscPPage::UpdateObjectData(bool fSave)
 {
+    HRESULT hr = NOERROR;
     if(fSave)
     {
-        m_pDirectVobSub->put_Flip(m_fFlipPicture, m_fFlipSubtitles);
-        m_pDirectVobSub->put_HideSubtitles(m_fHideSubtitles);
-        m_pDirectVobSub->put_OSD(m_fOSD);
-        m_pDirectVobSub->put_PreBuffering(m_fDoPreBuffering);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_COLOR_SPACE, m_colorSpace);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_YUV_RANGE, m_yuvRange);
-        m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
-        m_pDirectVobSub->put_SaveFullPath(m_fSaveFullPath);
+        hr = m_pDirectVobSub->put_Flip(m_fFlipPicture, m_fFlipSubtitles);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_HideSubtitles(m_fHideSubtitles);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_OSD(m_fOSD);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_PreBuffering(m_fDoPreBuffering);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_COLOR_SPACE, m_colorSpace);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_YUV_RANGE, m_yuvRange);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_SaveFullPath(m_fSaveFullPath);
+        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
-        m_pDirectVobSub->get_Flip(&m_fFlipPicture, &m_fFlipSubtitles);
-        m_pDirectVobSub->get_HideSubtitles(&m_fHideSubtitles);
-        m_pDirectVobSub->get_OSD(&m_fOSD);
-        m_pDirectVobSub->get_PreBuffering(&m_fDoPreBuffering);        
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_COLOR_SPACE, &m_colorSpace);
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_YUV_RANGE, &m_yuvRange);
-        m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
-        m_pDirectVobSub->get_SaveFullPath(&m_fSaveFullPath);
+        hr = m_pDirectVobSub->get_Flip(&m_fFlipPicture, &m_fFlipSubtitles);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_HideSubtitles(&m_fHideSubtitles);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_OSD(&m_fOSD);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_PreBuffering(&m_fDoPreBuffering);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_COLOR_SPACE, &m_colorSpace);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_YUV_RANGE, &m_yuvRange);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_SaveFullPath(&m_fSaveFullPath);
+        CHECK_N_LOG(hr, "Failed to get option");
     }
 }
 
@@ -773,15 +820,20 @@ bool CDVSTimingPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void CDVSTimingPPage::UpdateObjectData(bool fSave)
 {
+    HRESULT hr = NOERROR;
     if(fSave)
     {
-        m_pDirectVobSub->put_SubtitleTiming(m_SubtitleDelay, m_SubtitleSpeedMul, m_SubtitleSpeedDiv);
-        m_pDirectVobSub->put_MediaFPS(m_fMediaFPSEnabled, m_MediaFPS);
+        hr = m_pDirectVobSub->put_SubtitleTiming(m_SubtitleDelay, m_SubtitleSpeedMul, m_SubtitleSpeedDiv);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_MediaFPS(m_fMediaFPSEnabled, m_MediaFPS);
+        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
-        m_pDirectVobSub->get_SubtitleTiming(&m_SubtitleDelay, &m_SubtitleSpeedMul, &m_SubtitleSpeedDiv);
-        m_pDirectVobSub->get_MediaFPS(&m_fMediaFPSEnabled, &m_MediaFPS);
+        hr = m_pDirectVobSub->get_SubtitleTiming(&m_SubtitleDelay, &m_SubtitleSpeedMul, &m_SubtitleSpeedDiv);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_MediaFPS(&m_fMediaFPSEnabled, &m_MediaFPS);
+        CHECK_N_LOG(hr, "Failed to get option");
     }
 }
 
@@ -843,6 +895,7 @@ CDVSBasePPage(NAME("DirectVobSub More Property Page"), pUnk, IDD_DVSMOREPAGE, ID
 
 bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    HRESULT hr = NOERROR;
     switch(uMsg)
     {
     case WM_COMMAND:
@@ -858,8 +911,10 @@ bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                         DirectVobSubXyOptions::CachesInfo *caches_info = NULL;
                         DirectVobSubXyOptions::XyFlyWeightInfo *xy_fw_info = NULL;
                         int tmp;
-                        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_CACHES_INFO, reinterpret_cast<LPVOID*>(&caches_info), &tmp);
-                        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_XY_FLY_WEIGHT_INFO, reinterpret_cast<LPVOID*>(&xy_fw_info), &tmp);
+                        hr = m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_CACHES_INFO, reinterpret_cast<LPVOID*>(&caches_info), &tmp);
+                        CHECK_N_LOG(hr, "Failed to get option");
+                        hr = m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_XY_FLY_WEIGHT_INFO, reinterpret_cast<LPVOID*>(&xy_fw_info), &tmp);
+                        CHECK_N_LOG(hr, "Failed to get option");
                         ASSERT(caches_info);
                         ASSERT(xy_fw_info);
                         CString msg;
@@ -918,27 +973,41 @@ bool CDVSMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void CDVSMorePPage::UpdateObjectData(bool fSave)
 {
+    HRESULT hr = NOERROR;
     if(fSave)
     {
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, m_overlay_cache_max_item_num);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, m_overlay_no_blur_cache_max_item_num);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, m_scan_line_data_cache_max_item_num);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, m_path_cache_max_item_num);
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL, m_subpixel_pos_level);
-
-        m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT, m_layout_size_opt);
-        m_pDirectVobSubXy->XySetSize(DirectVobSubXyOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, m_layout_size);
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, m_overlay_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, m_overlay_no_blur_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, m_scan_line_data_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, m_path_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL, m_subpixel_pos_level);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT, m_layout_size_opt);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetSize(DirectVobSubXyOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, m_layout_size);
+        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, &m_overlay_cache_max_item_num);
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, &m_overlay_no_blur_cache_max_item_num);
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, &m_scan_line_data_cache_max_item_num);
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, &m_path_cache_max_item_num);
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL, &m_subpixel_pos_level);
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, &m_overlay_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, &m_overlay_no_blur_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, &m_scan_line_data_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, &m_path_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL, &m_subpixel_pos_level);
+        CHECK_N_LOG(hr, "Failed to get option");
 
-        m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT, &m_layout_size_opt);
-        m_pDirectVobSubXy->XyGetSize(DirectVobSubXyOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, &m_layout_size);
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT, &m_layout_size_opt);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetSize(DirectVobSubXyOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, &m_layout_size);
+        CHECK_N_LOG(hr, "Failed to get option");
     }
 }
 
@@ -1113,13 +1182,16 @@ void CDVSZoomPPage::UpdateControlData(bool fSave)
 
 void CDVSZoomPPage::UpdateObjectData(bool fSave)
 {
+    HRESULT hr = NOERROR;
     if(fSave)
     {
-        m_pDirectVobSub->put_ZoomRect(&m_rect);
+        hr = m_pDirectVobSub->put_ZoomRect(&m_rect);
+        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
-        m_pDirectVobSub->get_ZoomRect(&m_rect);
+        hr = m_pDirectVobSub->get_ZoomRect(&m_rect);
+        CHECK_N_LOG(hr, "Failed to get option");
     }
 }
 
@@ -1221,19 +1293,26 @@ bool CDVSColorPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void CDVSColorPPage::UpdateObjectData(bool fSave)
 {
+    HRESULT hr = NOERROR;
     if(fSave)
     {
-        m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER, m_fFollowUpstream);
-        m_pDirectVobSubXy->XySetBin(DirectVobSubXyOptions::BIN_OUTPUT_COLOR_FORMAT, m_outputColorSpace, m_outputColorSpaceCount);
-        m_pDirectVobSubXy->XySetBin(DirectVobSubXyOptions::BIN_INPUT_COLOR_FORMAT, m_inputColorSpace, m_inputColorSpaceCount);
+        hr = m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER, m_fFollowUpstream);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetBin(DirectVobSubXyOptions::BIN_OUTPUT_COLOR_FORMAT, m_outputColorSpace, m_outputColorSpaceCount);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetBin(DirectVobSubXyOptions::BIN_INPUT_COLOR_FORMAT, m_inputColorSpace, m_inputColorSpaceCount);
+        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
         delete []m_outputColorSpace; m_outputColorSpace=NULL;
         delete []m_inputColorSpace;  m_inputColorSpace=NULL;
-        m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER, &m_fFollowUpstream);
-        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_OUTPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&m_outputColorSpace), &m_outputColorSpaceCount);
-        m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_INPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&m_inputColorSpace), &m_inputColorSpaceCount);
+        hr = m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER, &m_fFollowUpstream);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_OUTPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&m_outputColorSpace), &m_outputColorSpaceCount);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_INPUT_COLOR_FORMAT, reinterpret_cast<LPVOID*>(&m_inputColorSpace), &m_inputColorSpaceCount);
+        CHECK_N_LOG(hr, "Failed to get option");
     }
 }
 
