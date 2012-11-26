@@ -184,6 +184,7 @@ public:
 
     bool Render(SubPicDesc& dst, REFERENCE_TIME rt, float fps)
     {
+        HRESULT hr = NOERROR;
         if(!m_pSubPicProvider)
             return(false);
 
@@ -197,13 +198,13 @@ public:
 
         if(!m_simple_provider)
         {
-            HRESULT hr;
             if(!(m_simple_provider = new SimpleSubPicProvider2(dst.type, size, size, CRect(CPoint(0,0), size), this, &hr)) || FAILED(hr))
             {
                 m_simple_provider = NULL;
                 return(false);
             }
-            XySetSize(SIZE_ORIGINAL_VIDEO, size);
+            hr = XySetSize(SIZE_ORIGINAL_VIDEO, size);
+            CHECK_N_LOG(hr, "Failed to set option");
         }
 
         if(m_SubPicProviderId != (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider)
@@ -217,7 +218,8 @@ public:
                 CRenderedTextSubtitle* pRTS = dynamic_cast<CRenderedTextSubtitle*>((ISubPicProvider*)m_pSubPicProvider);
                 playres = pRTS->m_dstScreenSize;
             }
-            XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
+            hr = XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
+            CHECK_N_LOG(hr, "Failed to set option");
 
             m_simple_provider->SetSubPicProvider(m_pSubPicProvider);
             m_SubPicProviderId = (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider;

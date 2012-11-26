@@ -647,11 +647,13 @@ STDMETHODIMP XySubFilter::Count(DWORD* pcStreams)
 STDMETHODIMP XySubFilter::Enable(long lIndex, DWORD dwFlags)
 {
     XY_LOG_INFO(XY_LOG_VAR_2_STR(lIndex)<<XY_LOG_VAR_2_STR(dwFlags));
+    HRESULT hr = NOERROR;
     if(!(dwFlags & AMSTREAMSELECTENABLE_ENABLE))
         return E_NOTIMPL;
 
     int nLangs = 0;
-    get_LanguageCount(&nLangs);
+    hr = get_LanguageCount(&nLangs);
+    CHECK_N_LOG(hr, "Failed to get option");
 
     if(!(lIndex >= 0 && lIndex < nLangs+2 /* +2 fix me: support subtitle flipping */))
         return E_INVALIDARG;
@@ -662,22 +664,25 @@ STDMETHODIMP XySubFilter::Enable(long lIndex, DWORD dwFlags)
     {
         if (!m_fLoading)
         {
-            put_HideSubtitles(false);
+            hr = put_HideSubtitles(false);
         }
         else
         {
             //fix me: support even when loading
             XY_LOG_ERROR("Do NOT do this when we are loading");
-            return S_FALSE;
+            return E_FAIL;
         }
     }
     else if(i >= 0 && i < nLangs)
     {
-        put_HideSubtitles(false);
-        put_SelectedLanguage(i);
+        hr = put_HideSubtitles(false);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = put_SelectedLanguage(i);
+        CHECK_N_LOG(hr, "Failed to set option");
 
         WCHAR* pName = NULL;
-        if(SUCCEEDED(get_LanguageName(i, &pName)))
+        hr = get_LanguageName(i, &pName);
+        if(SUCCEEDED(hr))
         {
             UpdatePreferedLanguages(CString(pName));
             if(pName) CoTaskMemFree(pName);
@@ -687,28 +692,28 @@ STDMETHODIMP XySubFilter::Enable(long lIndex, DWORD dwFlags)
     {
         if (!m_fLoading)
         {
-            put_HideSubtitles(true);
+            hr = put_HideSubtitles(true);
         }
         else
         {
             XY_LOG_ERROR("Do NOT do this when we are loading");
-            return S_FALSE;
+            return E_FAIL;
         }
     }
     else if(i == nLangs+1 || i == nLangs+2)
     {
         if (!m_fLoading)
         {
-            put_Flip(i == nLangs+2, m_fFlipSubtitles);
+            hr = put_Flip(i == nLangs+2, m_fFlipSubtitles);
         }
         else
         {
             XY_LOG_ERROR("Do NOT do this when we are loading");
-            return S_FALSE;
+            return E_FAIL;
         }
     }
-
-    return S_OK;
+    CHECK_N_LOG(hr, "Failed "<<XY_LOG_VAR_2_STR(lIndex)<<XY_LOG_VAR_2_STR(dwFlags));
+    return hr;
 }
 
 STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlags, LCID* plcid, DWORD* pdwGroup, WCHAR** ppszName, IUnknown** ppObject, IUnknown** ppUnk)
@@ -716,6 +721,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
     XY_LOG_INFO(XY_LOG_VAR_2_STR(lIndex)<<XY_LOG_VAR_2_STR(ppmt)
         <<XY_LOG_VAR_2_STR(pdwFlags)<<XY_LOG_VAR_2_STR(plcid)<<XY_LOG_VAR_2_STR(pdwGroup)<<XY_LOG_VAR_2_STR(ppszName)
         <<XY_LOG_VAR_2_STR(ppObject)<<XY_LOG_VAR_2_STR(ppUnk));
+    HRESULT hr = NOERROR;
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
     const int FLAG_CMD = 1;
     const int FLAG_EXTERNAL_SUB = 2;
@@ -725,7 +731,8 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
     const int GROUP_NUM_BASE = 0x648E40;//random number
 
     int nLangs = 0;
-    get_LanguageCount(&nLangs);
+    hr = get_LanguageCount(&nLangs);
+    CHECK_N_LOG(hr, "Failed to get option");
 
     if(!(lIndex >= 0 && lIndex < nLangs+2 /* +2 fix me: support subtitle flipping */))
         return E_INVALIDARG;
@@ -768,17 +775,16 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
         else if(i >= 0 && i < nLangs)
         {
             bool isEmbedded = false;
-            if( SUCCEEDED(GetIsEmbeddedSubStream(i, &isEmbedded)) )
+            hr = GetIsEmbeddedSubStream(i, &isEmbedded);
+            ASSERT(SUCCEEDED(hr));
+            if(isEmbedded)
             {
-                if(isEmbedded)
-                {
-                    *pdwGroup = GROUP_NUM_BASE & ~(FLAG_CMD | FLAG_EXTERNAL_SUB);
-                }
-                else
-                {
-                    *pdwGroup = (GROUP_NUM_BASE & ~FLAG_CMD) | FLAG_EXTERNAL_SUB;
-                }
-            }            
+                *pdwGroup = GROUP_NUM_BASE & ~(FLAG_CMD | FLAG_EXTERNAL_SUB);
+            }
+            else
+            {
+                *pdwGroup = (GROUP_NUM_BASE & ~FLAG_CMD) | FLAG_EXTERNAL_SUB;
+            }
         }
         else if(i == nLangs)
         {
@@ -802,7 +808,8 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
         if(i == -1) str = ResStr(IDS_M_SHOWSUBTITLES);
         else if(i >= 0 && i < nLangs)
         {
-            get_LanguageName(i, ppszName);
+            hr = get_LanguageName(i, ppszName);
+            CHECK_N_LOG(hr, "Failed to get option");
         }
         else if(i == nLangs)
         {
@@ -829,7 +836,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
 
     if(ppUnk) *ppUnk = NULL;
 
-    return S_OK;
+    return hr;
 }
 
 void XySubFilter::DeleteSystray()
@@ -1118,9 +1125,9 @@ void XySubFilter::SetYuvMatrix()
 
 bool XySubFilter::Open()
 {
-    AMTRACE((TEXT(__FUNCTION__),0));
     XY_AUTO_TIMING(TEXT("XySubFilter::Open"));
 
+    HRESULT hr = NOERROR;
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
     CAutoLock cAutolock(&m_csQueueLock);
@@ -1200,7 +1207,9 @@ bool XySubFilter::Open()
         }
     }
 
-    if(S_FALSE == put_SelectedLanguage(FindPreferedLanguage()))
+    hr = put_SelectedLanguage(FindPreferedLanguage());
+    CHECK_N_LOG(hr, "Failed to set option");
+    if(S_FALSE == hr)
         UpdateSubtitle(false); // make sure pSubPicProvider of our queue gets updated even if the stream number hasn't changed
 
     m_frd.RefreshEvent.Set();
@@ -1241,6 +1250,7 @@ void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
 
 void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= true*/ )
 {
+    HRESULT hr = NOERROR;
     XY_LOG_INFO(XY_LOG_VAR_2_STR(pSubStream)<<XY_LOG_VAR_2_STR(fApplyDefStyle));
     CAutoLock cAutolock(&m_csQueueLock);
 
@@ -1389,7 +1399,9 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
 
     SetYuvMatrix();
 
-    XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
+    hr = XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
+    CHECK_N_LOG(hr, "Failed to set option");
+
     if (CComQIPtr<IXySubRenderProvider>(pSubStream))
     {
         m_sub_provider = CComQIPtr<IXySubRenderProvider>(pSubStream);
@@ -1484,6 +1496,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
         XY_LOG_INFO("Size original video changed from "<<m_xy_size_opt[SIZE_ORIGINAL_VIDEO]
             <<" to "<<originalVideoSize);
         hr = XySetSize(SIZE_ORIGINAL_VIDEO, originalVideoSize);
+        CHECK_N_LOG(hr, "Failed to set option");
         ASSERT(SUCCEEDED(hr));
         update_subtitle &= true;
     }
@@ -1492,6 +1505,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
         XY_LOG_INFO("Size AR adjusted video changed from "<<m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO]
             <<" to "<<arAdjustedVideoSize);
         hr = XySetSize(SIZE_AR_ADJUSTED_VIDEO, originalVideoSize);
+        CHECK_N_LOG(hr, "Failed to set option");
         ASSERT(SUCCEEDED(hr));
         update_subtitle &= true;
     }
@@ -1500,6 +1514,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
         XY_LOG_INFO("Video output rect changed from "<<m_xy_rect_opt[RECT_VIDEO_OUTPUT]
             <<" to "<<videoOutputRect);
         hr = XySetRect(RECT_VIDEO_OUTPUT, videoOutputRect);
+        CHECK_N_LOG(hr, "Failed to set option");
         ASSERT(SUCCEEDED(hr));
     }
     if (m_xy_rect_opt[RECT_SUBTITLE_TARGET]!=subtitleTargetRect)
@@ -1507,6 +1522,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
         XY_LOG_INFO("Subtitle target rect changed from "<<m_xy_rect_opt[RECT_SUBTITLE_TARGET]
             <<" to "<<subtitleTargetRect);
         hr = XySetRect(RECT_SUBTITLE_TARGET, subtitleTargetRect);
+        CHECK_N_LOG(hr, "Failed to set option");
         ASSERT(SUCCEEDED(hr));
     }
     if (m_xy_double_opt[DOUBLE_FPS]!=fps)
@@ -1514,6 +1530,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
         XY_LOG_INFO("FPS changed from "<<m_xy_double_opt[DOUBLE_FPS]
             <<" to "<<fps);
         hr = XySetDouble(DOUBLE_FPS, fps);
+        CHECK_N_LOG(hr, "Failed to set option");
         ASSERT(SUCCEEDED(hr));
     }
 
@@ -1529,10 +1546,12 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
 int XySubFilter::FindPreferedLanguage( bool fHideToo /*= true*/ )
 {
     XY_LOG_INFO(XY_LOG_VAR_2_STR(fHideToo));
+    HRESULT hr = NOERROR;
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
     int nLangs;
-    get_LanguageCount(&nLangs);
+    hr = get_LanguageCount(&nLangs);
+    CHECK_N_LOG(hr, "Failed to get option");
 
     if(nLangs <= 0) return(0);
 
@@ -1549,7 +1568,9 @@ int XySubFilter::FindPreferedLanguage( bool fHideToo /*= true*/ )
             {
                 CString l;
                 WCHAR* pName = NULL;
-                get_LanguageName(ret, &pName);
+                hr = get_LanguageName(ret, &pName);
+                CHECK_N_LOG(hr, "Failed to get option");
+
                 l = pName;
                 CoTaskMemFree(pName);
 
