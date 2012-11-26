@@ -39,12 +39,6 @@ STDMETHODIMP XySubRenderProviderWrapper::RequestFrame( IXySubRenderFrame**subRen
         return hr;
     }
 
-    POSITION pos = m_provider->GetStartPosition(now, fps);
-    if (!pos)
-    {
-        return S_FALSE;
-    }
-
     CRect output_rect, subtitle_target_rect;
     CSize original_video_size;
     ASSERT(m_consumer);
@@ -67,6 +61,13 @@ STDMETHODIMP XySubRenderProviderWrapper::RequestFrame( IXySubRenderFrame**subRen
             return E_FAIL;
         }
     }
+
+    POSITION pos = m_provider->GetStartPosition(now, fps);
+    if (!pos)
+    {
+        return S_FALSE;
+    }
+
     hr = Render( now, pos, fps );
     if (FAILED(hr))
     {
@@ -201,12 +202,6 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     }
     m_fps = fps;//fix me: invalidate
 
-    POSITION pos = m_provider->GetStartPosition(now, fps);
-    if (!pos)
-    {
-        return S_FALSE;
-    }
-
     CRect output_rect, subtitle_target_rect;
     CSize original_video_size;
     ASSERT(m_consumer);
@@ -225,6 +220,12 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
         m_output_rect = output_rect;
         m_original_video_size = original_video_size;
         m_subtitle_target_rect = subtitle_target_rect;
+    }
+
+    POSITION pos = m_provider->GetStartPosition(now, fps);
+    if (!pos)
+    {
+        return S_FALSE;
     }
 
     hr = Render( now, pos );
