@@ -307,7 +307,7 @@ STDMETHODIMP CMemSubPic::Lock(SubPicDesc& spd)
     return GetDesc(spd);
 }
 
-STDMETHODIMP CMemSubPic::Unlock( CAtlList<CRect>* dirtyRectList )
+STDMETHODIMP CMemSubPic::UnlockEx( CAtlList<CRect>* dirtyRectList )
 {
     int src_type = m_spd.type;
     int dst_type = m_alpha_blt_dst_type;

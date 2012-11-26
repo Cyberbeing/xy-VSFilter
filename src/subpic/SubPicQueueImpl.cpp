@@ -261,7 +261,7 @@ HRESULT CSubPicQueueImpl::RenderTo(ISubPicEx* pSubPic, REFERENCE_TIME rtStart, R
 			pSubPic->SetStart(rtStart);
 			pSubPic->SetStop(rtStop);
 
-			pSubPic->Unlock(&rectList);
+			pSubPic->UnlockEx(&rectList);
 		}
 	}
 
