@@ -237,8 +237,10 @@ STDMETHODIMP XySubFilter::XySetBool( unsigned field, bool value )
     case DirectVobSubXyOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER:
         hr = E_INVALIDARG;
         break;
-    default:
+    case DirectVobSubXyOptions::BOOL_COMBINE_BITMAPS:
         hr = E_NOTIMPL;
+        break;
+    default:
         break;
     }
     return hr;
@@ -256,6 +258,7 @@ STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
     {
     case DirectVobSubXyOptions::INT_COLOR_SPACE:
     case DirectVobSubXyOptions::INT_YUV_RANGE:
+        //fix me: are they supported?
         SetYuvMatrix();
         break;
     case DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM:
@@ -282,11 +285,16 @@ STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
     case DirectVobSubXyOptions::INT_ASS_TAG_LIST_CACHE_ITEM_NUM:
         CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
+    case DirectVobSubXyOptions::INT_SUBPIXEL_VARIANCE_CACHE_ITEM_NUM:
+        CacheManager::GetSubpixelVarianceCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
     case DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL:
         SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[field]) );
         break;
+    case DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT:
+        //fix me: is it really supported?
+        break;
     default:
-        hr = E_NOTIMPL;
         break;
     }
 

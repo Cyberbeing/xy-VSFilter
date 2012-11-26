@@ -2314,8 +2314,10 @@ STDMETHODIMP CDirectVobSubFilter::XySetBool( unsigned field, bool value )
     case DirectVobSubXyOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER:
         m_donot_follow_upstream_preferred_order = !m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER];
         break;
-    default:
+    case DirectVobSubXyOptions::BOOL_COMBINE_BITMAPS:
         hr = E_NOTIMPL;
+        break;
+    default:
         break;
     }
     return hr;
@@ -2359,14 +2361,16 @@ STDMETHODIMP CDirectVobSubFilter::XySetInt( unsigned field, int value )
     case DirectVobSubXyOptions::INT_ASS_TAG_LIST_CACHE_ITEM_NUM:
         CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
+    case DirectVobSubXyOptions::INT_SUBPIXEL_VARIANCE_CACHE_ITEM_NUM:
+        CacheManager::GetSubpixelVarianceCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
     case DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL:
         SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[field]) );
         break;
     default:
-        hr = E_NOTIMPL;
         break;
     }
-    
+
     return hr;
 }
 
