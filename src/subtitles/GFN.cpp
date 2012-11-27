@@ -85,7 +85,7 @@ public:
 
 void GetSubFileNames(CString fn, CAtlArray<CString>& paths, CString load_ext_list, CAtlArray<SubFile>& ret)
 {
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(fn)<<XY_LOG_VAR_2_STR(paths.GetCount())<<XY_LOG_VAR_2_STR(load_ext_list));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(fn.GetString())<<XY_LOG_VAR_2_STR(paths.GetCount())<<XY_LOG_VAR_2_STR(load_ext_list.GetString()));
 
     ret.RemoveAll();
 
