@@ -88,6 +88,7 @@ BEGIN
         BEGIN
             VALUE "Comments", "http://code.google.com/p/xy-vsfilter/"
             VALUE "CompanyName", "xy-VSFilter Team"
+#ifndef XY_SUB_FILTER_DLL
             VALUE "FileDescription", "VobSub & TextSub filter for DirectShow/VirtualDub/Avisynth"
             VALUE "FileVersion", XY_VSFILTER_VERSION_STR
             VALUE "InternalName", "VSFilter"
@@ -95,6 +96,15 @@ BEGIN
             VALUE "OriginalFilename", "VSFilter.dll"
             VALUE "ProductName", "VSFilter"
             VALUE "ProductVersion", XY_VSFILTER_VERSION_STR
+#else
+            VALUE "FileDescription", "XySubFilter for MadVR"
+            VALUE "FileVersion", XY_VSFILTER_VERSION_STR
+            VALUE "InternalName", "XySubFilter"
+            VALUE "LegalCopyright", "Copyright (C) 2001-2012 Yu Zhuohuang, Gabest et. al."
+            VALUE "OriginalFilename", "XySubFilter.dll"
+            VALUE "ProductName", "XySubFilter"
+            VALUE "ProductVersion", XY_VSFILTER_VERSION_STR
+#endif
         END
     END
     BLOCK "VarFileInfo"

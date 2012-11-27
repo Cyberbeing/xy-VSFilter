@@ -145,11 +145,15 @@ const AMOVIESETUP_PIN sudpPins2[] =
     {&__uuidof(XySubFilter), L"XySubFilter", MERIT_PREFERRED+2, countof(sudpPins2), sudpPins2}, 
 };
 
+// Normally nobody would like to have DirectVodSubFilter and XySubFilter working together.
+// They'll be packed into two different DLLs.
+// But we'll still make it possible to have both them register (and work together?).
+#ifndef XY_SUB_FILTER_DLL
+// DirectVodSubFilter set
 CFactoryTemplate g_Templates[] =
 {
-    //{sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<CDirectVobSubFilter>, NULL, &sudFilter[0]},
-    //{sudFilter[1].strName, sudFilter[1].clsID, CreateInstance<CDirectVobSubFilter2>, NULL, &sudFilter[1]},
-    {sudFilter[2].strName, sudFilter[2].clsID, CreateInstance<XySubFilter>, NULL, &sudFilter[2]},
+    {sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<CDirectVobSubFilter>, NULL, &sudFilter[0]},
+    {sudFilter[1].strName, sudFilter[1].clsID, CreateInstance<CDirectVobSubFilter2>, NULL, &sudFilter[1]},
     {L"DVSMainPPage", &__uuidof(CDVSMainPPage), CreateInstance<CDVSMainPPage>},
     {L"DVSGeneralPPage", &__uuidof(CDVSGeneralPPage), CreateInstance<CDVSGeneralPPage>},
     {L"DVSMiscPPage", &__uuidof(CDVSMiscPPage), CreateInstance<CDVSMiscPPage>},
@@ -160,6 +164,23 @@ CFactoryTemplate g_Templates[] =
     {L"DVSPathsPPage", &__uuidof(CDVSPathsPPage), CreateInstance<CDVSPathsPPage>},
     {L"DVSAboutPPage", &__uuidof(CDVSAboutPPage), CreateInstance<CDVSAboutPPage>},
 };
+#else
+// XySubFilter set
+CFactoryTemplate g_Templates[] =
+{
+    {sudFilter[2].strName, sudFilter[2].clsID, CreateInstance<XySubFilter>, NULL, &sudFilter[2]},
+    //fix me: may conflicts with DirectVodSubFilter set if people register both DirectVodSubFilter and XySubFilter
+    {L"DVSMainPPage", &__uuidof(CDVSMainPPage), CreateInstance<CDVSMainPPage>},
+    {L"DVSGeneralPPage", &__uuidof(CDVSGeneralPPage), CreateInstance<CDVSGeneralPPage>},
+    {L"DVSMiscPPage", &__uuidof(CDVSMiscPPage), CreateInstance<CDVSMiscPPage>},
+    {L"DVSMorePPage", &__uuidof(CDVSMorePPage), CreateInstance<CDVSMorePPage>},
+    {L"DVSTimingPPage", &__uuidof(CDVSTimingPPage), CreateInstance<CDVSTimingPPage>},
+    {L"DVSZoomPPage", &__uuidof(CDVSZoomPPage), CreateInstance<CDVSZoomPPage>},
+    {L"DVSColorPPage", &__uuidof(CDVSColorPPage), CreateInstance<CDVSColorPPage>},
+    {L"DVSPathsPPage", &__uuidof(CDVSPathsPPage), CreateInstance<CDVSPathsPPage>},
+    {L"DVSAboutPPage", &__uuidof(CDVSAboutPPage), CreateInstance<CDVSAboutPPage>},
+};
+#endif
 
 int g_cTemplates = countof(g_Templates);
 
@@ -212,12 +233,16 @@ STDAPI DllRegisterServer()
 	if(theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), -1) == -1)
 		theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0);
 
-	/*removeme*/
-	JajDeGonoszVagyok();
+#ifndef XY_SUB_FILTER_DLL
+    /*removeme*/
+    JajDeGonoszVagyok();
+#endif
 
+#ifdef XY_SUB_FILTER_DLL
     RegisterXySubFilterAsAutoLoad();
+#endif
 
-	return AMovieDllRegisterServer2(TRUE);
+    return AMovieDllRegisterServer2(TRUE);
 }
 
 STDAPI DllUnregisterServer()
@@ -237,6 +262,21 @@ void CALLBACK DirectVobSub(HWND hwnd, HINSTANCE hinst, LPSTR lpszCmdLine, int nC
     CComQIPtr<ISpecifyPropertyPages> pSpecify;
 
     if(SUCCEEDED(pFilter.CoCreateInstance(__uuidof(CDirectVobSubFilter))) && (pSpecify = pFilter))
+    {
+        ShowPPage(pFilter, hwnd);
+    }
+
+    ::CoUninitialize();
+}
+
+void CALLBACK XySubFilterConfiguration(HWND hwnd, HINSTANCE hinst, LPSTR lpszCmdLine, int nCmdShow)
+{
+    if(FAILED(::CoInitialize(0))) return;
+
+    CComPtr<IBaseFilter> pFilter;
+    CComQIPtr<ISpecifyPropertyPages> pSpecify;
+
+    if(SUCCEEDED(pFilter.CoCreateInstance(__uuidof(XySubFilter))) && (pSpecify = pFilter))
     {
         ShowPPage(pFilter, hwnd);
     }
