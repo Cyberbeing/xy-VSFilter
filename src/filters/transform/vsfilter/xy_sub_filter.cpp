@@ -1305,7 +1305,11 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
                     s.marginRect = tmp_rect;
                 }
 
-                pRTS->SetDefaultStyle(s);
+                bool succeeded = pRTS->SetDefaultStyle(s);
+                if (!succeeded)
+                {
+                    XY_LOG_ERROR("Failed to set default style");
+                }
             }
 
             pRTS->m_ePARCompensationType = m_ePARCompensationType;

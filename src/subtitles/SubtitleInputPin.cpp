@@ -49,6 +49,12 @@
 // (BYTE*)
 #define __GAB1_RAWTEXTSUBTITLE__ 4
 
+#if ENABLE_XY_LOG_EMBEDDED_SAMPLE
+# define TRACE_SAMPLE(msg) XY_LOG_TRACE(msg)
+#else
+# define TRACE_SAMPLE(msg)
+#endif
+
 CSubtitleInputPin::CSubtitleInputPin(CBaseFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr)
 	: CBaseInputPin(NAME("CSubtitleInputPin"), pFilter, pLock, phr, L"Input")
 	, m_pSubLock(pSubLock)
@@ -188,7 +194,7 @@ STDMETHODIMP CSubtitleInputPin::ReceiveConnection(IPin* pConnector, const AM_MED
 
 STDMETHODIMP CSubtitleInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
-    XY_LOG_TRACE(XY_LOG_VAR_2_STR(tStart)<<XY_LOG_VAR_2_STR(tStop)<<XY_LOG_VAR_2_STR(dRate));
+    TRACE_SAMPLE(XY_LOG_VAR_2_STR(tStart)<<XY_LOG_VAR_2_STR(tStop)<<XY_LOG_VAR_2_STR(dRate));
 	CAutoLock cAutoLock(&m_csReceive);
 
 	if(m_mt.majortype == MEDIATYPE_Text
@@ -237,7 +243,7 @@ public IUnknown {
 
 STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
 {
-    XY_LOG_TRACE(pSample);
+    TRACE_SAMPLE(pSample);
 	HRESULT hr;
 
 	hr = __super::Receive(pSample);

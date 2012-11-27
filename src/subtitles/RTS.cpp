@@ -29,6 +29,12 @@
 #include "xy_overlay_paint_machine.h"
 #include "xy_clipper_paint_machine.h"
 
+#if ENABLE_XY_LOG_TEXT_PARSER
+#  define TRACE_PARSER(msg) XY_LOG_TRACE(msg)
+#else
+#  define TRACE_PARSER(msg)
+#endif
+
 // WARNING: this isn't very thread safe, use only one RTS a time.
 static HDC g_hDC;
 static int g_hDC_refcnt = 0;
@@ -1007,7 +1013,7 @@ bool CPolygon::Get6BitFixedPoint(CStringW& str, LONG& ret)
     LPWSTR s = (LPWSTR)(LPCWSTR)str, e = s;
     ret = wcstod(str, &e) * 64;
     str.Delete(0,e-s); 
-    XY_LOG_TRACE(ret);//fix me: use a specific logger for it
+    TRACE_PARSER(ret);//fix me: use a specific logger for it
     return(e > s);
 }
 
