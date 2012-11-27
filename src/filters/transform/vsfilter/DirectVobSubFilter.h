@@ -198,9 +198,6 @@ private:
 	SystrayIconData m_tbid;
 
 	VIDEOINFOHEADER2 m_CurrentVIH2;
-
-	//xy TIMING
-	long m_time_rasterization, m_time_alphablt;
 };
 
 /* The "auto-loading" version */

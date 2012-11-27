@@ -13,6 +13,12 @@
 
 #include "moreuuids.h"
 
+#if ENABLE_XY_LOG_RENDERER_REQUEST
+#  define TRACE_RENDERER_REQUEST(msg) XY_LOG_TRACE(msg)
+#else
+#  define TRACE_RENDERER_REQUEST(msg)
+#endif
+
 using namespace DirectVobSubXyOptions;
 
 const SubRenderOptionsImpl::OptionMap options[] = 
@@ -64,6 +70,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
 
 XySubFilter::~XySubFilter()
 {
+    XY_LOG_INFO("");
     m_frd.EndThreadEvent.Set();
     CAMThread::Close();
 
@@ -844,19 +851,19 @@ void XySubFilter::DeleteSystray()
     XY_LOG_INFO("");
     if(m_hSystrayThread)
     {
-        XY_LOG_TRACE(XY_LOG_VAR_2_STR(m_tbid.hSystrayWnd));
+        XY_LOG_INFO(XY_LOG_VAR_2_STR(m_tbid.hSystrayWnd));
         if (m_tbid.hSystrayWnd)
         {
             SendMessage(m_tbid.hSystrayWnd, WM_CLOSE, 0, 0);
             if(WaitForSingleObject(m_hSystrayThread, 10000) != WAIT_OBJECT_0)
             {
-                XY_LOG_TRACE(_T("CALL THE AMBULANCE!!!"));
+                XY_LOG_WARN(_T("CALL THE AMBULANCE!!!"));
                 TerminateThread(m_hSystrayThread, (DWORD)-1);
             }
         }
         else
         {
-            XY_LOG_TRACE(_T("CALL THE AMBULANCE!!!"));
+            XY_LOG_WARN(_T("CALL THE AMBULANCE!!!"));
             TerminateThread(m_hSystrayThread, (DWORD)-1);
         }
         m_hSystrayThread = 0;
@@ -1034,7 +1041,7 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
     if(m_sub_provider)
     {
         CComPtr<ISimpleSubPic> pSubPic;
-        XY_LOG_TRACE("Look up subpic for "<<XY_LOG_VAR_2_STR(now));
+        TRACE_RENDERER_REQUEST("Look up subpic for "<<XY_LOG_VAR_2_STR(now));
 
         hr = m_sub_provider->RequestFrame(&sub_render_frame, now);
         if (FAILED(hr))
