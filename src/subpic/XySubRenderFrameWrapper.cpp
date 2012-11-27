@@ -1,6 +1,12 @@
 #include "stdafx.h"
 #include "XySubRenderFrameWrapper.h"
 
+#if ENABLE_XY_LOG_SUB_RENDER_FRAME
+#  define TRACE_SUB_RENDER_FRAME(msg) XY_LOG_TRACE(msg)
+#else
+#  define TRACE_SUB_RENDER_FRAME(msg)
+#endif
+
 XySubRenderFrameWrapper::XySubRenderFrameWrapper( CMemSubPic * inner_obj, const CRect& output_rect
     , const CRect& clip_rect, ULONGLONG id, HRESULT *phr/*=NULL*/ )
     : CUnknown(NAME("XySubRenderFrameWrapper"), NULL, phr)
@@ -25,7 +31,7 @@ STDMETHODIMP XySubRenderFrameWrapper::NonDelegatingQueryInterface( REFIID riid, 
 
 STDMETHODIMP XySubRenderFrameWrapper::GetOutputRect( RECT *outputRect )
 {
-    XY_LOG_TRACE(outputRect<<" "<<m_output_rect);
+    TRACE_SUB_RENDER_FRAME(outputRect<<" "<<m_output_rect);
     if (!outputRect)
     {
         return E_INVALIDARG;
@@ -36,7 +42,7 @@ STDMETHODIMP XySubRenderFrameWrapper::GetOutputRect( RECT *outputRect )
 
 STDMETHODIMP XySubRenderFrameWrapper::GetClipRect( RECT *clipRect )
 {
-    XY_LOG_TRACE(clipRect<<" "<<m_clip_rect);
+    TRACE_SUB_RENDER_FRAME(clipRect<<" "<<m_clip_rect);
     if (!clipRect)
     {
         return E_INVALIDARG;
@@ -47,6 +53,7 @@ STDMETHODIMP XySubRenderFrameWrapper::GetClipRect( RECT *clipRect )
 
 STDMETHODIMP XySubRenderFrameWrapper::GetXyColorSpace( int *xyColorSpace )
 {
+    TRACE_SUB_RENDER_FRAME(xyColorSpace);
     if (!xyColorSpace)
     {
         return S_FALSE;
@@ -57,7 +64,7 @@ STDMETHODIMP XySubRenderFrameWrapper::GetXyColorSpace( int *xyColorSpace )
 
 STDMETHODIMP XySubRenderFrameWrapper::GetBitmapCount( int *count )
 {
-    XY_LOG_TRACE(count<<" "<<1);
+    TRACE_SUB_RENDER_FRAME(count<<" "<<1);
     if (!count)
     {
         return S_FALSE;
@@ -105,7 +112,7 @@ STDMETHODIMP XySubRenderFrameWrapper::GetBitmap( int index, ULONGLONG *id, POINT
         *pixels = (BYTE*)(m_inner_obj->m_spd.bits) + dirty_rect.top * m_inner_obj->m_spd.pitch 
             + dirty_rect.left * (32/8);
     }
-    XY_LOG_TRACE(index<<" id: "<<m_id<<" "<<dirty_rect<<" pitch:"<<m_inner_obj->m_spd.pitch<<" pixels:"<<(pixels?*pixels:NULL)
+    TRACE_SUB_RENDER_FRAME(index<<" id: "<<m_id<<" "<<dirty_rect<<" pitch:"<<m_inner_obj->m_spd.pitch<<" pixels:"<<(pixels?*pixels:NULL)
         <<XY_LOG_VAR_2_STR(m_inner_obj->m_spd.bits) );
     return S_OK;
 }
