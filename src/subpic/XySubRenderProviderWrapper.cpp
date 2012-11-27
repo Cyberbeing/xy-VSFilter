@@ -263,13 +263,6 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
             m_allocator->SetCurSize(max_size);
             m_allocator->SetCurVidRect(CRect(CPoint(0,0),max_size));
         }
-        if(!m_subpic)
-        {
-            if(FAILED(m_allocator->AllocDynamicEx(&m_subpic))) {
-                XY_LOG_ERROR("Failed to allocate subpic");
-                return E_FAIL;
-            }
-        }
     }
 
     POSITION pos = m_provider->GetStartPosition(now, fps);
@@ -320,12 +313,26 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
         m_original_video_size, now, m_fps);
     ASSERT(SUCCEEDED(hr));
 
-    if (m_xy_sub_render_frame && m_combine_bitmap)
+    bool should_combine = false;
+    if (m_xy_sub_render_frame)
+    {
+        if (!m_combine_bitmap)
+        {
+            int count = 0;
+            hr = m_xy_sub_render_frame->GetBitmapCount(&count);
+            ASSERT(SUCCEEDED(hr));
+            should_combine = count > 8;
+        }
+        else
+        {
+            should_combine = true;
+        }
+    }
+    if (should_combine)
     {
         hr = CombineBitmap(now);
+        ASSERT(SUCCEEDED(hr));
     }
-
-    ASSERT(SUCCEEDED(hr));
 
     m_start = m_provider->GetStart(pos, m_fps);
     m_stop = m_provider->GetStop(pos, m_fps);
@@ -337,9 +344,17 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
 
 HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
 {
+    XY_LOG_TRACE(now);
     HRESULT hr = NOERROR;
     if (m_xy_sub_render_frame)
     {
+        m_subpic = NULL;
+        hr = m_allocator->AllocDynamicEx(&m_subpic);
+        if(FAILED(hr) || !m_subpic) {
+            XY_LOG_FATAL("Failed to allocate subpic");
+            return hr;
+        }
+
         int count = 0;
         hr = m_xy_sub_render_frame->GetBitmapCount(&count);
         ASSERT(SUCCEEDED(hr));
@@ -354,7 +369,7 @@ HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
             XY_LOG_ERROR("Failed to lock spd. "<<XY_LOG_VAR_2_STR(hr));
             return hr;
         }
-        DWORD color = 0xFF000000;
+        DWORD color = 0x00000000;
         hr = m_subpic->ClearDirtyRect(color);
         if(FAILED(hr))
         {
@@ -376,7 +391,7 @@ HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
             }
             ASSERT(SUCCEEDED(hr));
             dirty_rect |= CRect(pos, size);
-            XyBitmap::AlphaBltPack(spd, pos, size, pixels, pitch);
+            XyBitmap::BltPack(spd, pos, size, pixels, pitch);
         }
         hr = m_subpic->Unlock(&dirty_rect);
         if (FAILED(hr))
@@ -388,8 +403,6 @@ HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
         ASSERT(SUCCEEDED(hr));
         CMemSubPic * mem_subpic = dynamic_cast<CMemSubPic*>((ISubPicEx *)m_subpic);
         ASSERT(mem_subpic);
-        hr = mem_subpic->FlipAlphaValue(dirty_rect);//fixme: mem_subpic.type is now MSP_RGBA_F, not MSP_RGBA
-        ASSERT(SUCCEEDED(hr));
 
         m_xy_sub_render_frame = new XySubRenderFrameWrapper(mem_subpic, m_output_rect, m_subtitle_target_rect, now, &hr);
         return hr;

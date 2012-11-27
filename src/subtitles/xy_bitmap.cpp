@@ -227,6 +227,32 @@ void XyBitmap::FlipAlphaValue( LPVOID pixels, int w, int h, int pitch )
     return;
 }
 
+void XyBitmap::BltPack( SubPicDesc& spd, POINT pos, SIZE size, LPCVOID pixels, int pitch )
+{
+    ASSERT( spd.type!=MSP_AYUV_PLANAR );
+    CRect r(0, 0, spd.w, spd.h);
+
+    int x = pos.x;
+    int y = pos.y;
+    int w = size.cx;
+    int h = size.cy;
+    int x_src = 0, y_src = 0;
+
+    if(x < r.left) {x_src = r.left-x; w -= r.left-x; x = r.left;}
+    if(y < r.top) {y_src = r.top-y; h -= r.top-y; y = r.top;}
+    if(x+w > r.right) w = r.right-x;
+    if(y+h > r.bottom) h = r.bottom-y;
+
+    const BYTE* src = reinterpret_cast<const BYTE*>(pixels) + y_src*pitch + x_src*4;
+
+    BYTE* dst = reinterpret_cast<BYTE*>(spd.bits) + spd.pitch * y + ((x*spd.bpp)>>3);
+
+    for(int i=0;i<h;i++, src += pitch, dst += spd.pitch)
+    {
+        memcpy(dst, src, w*4);
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // SubRenderFrame
