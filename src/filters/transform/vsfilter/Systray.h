@@ -21,12 +21,16 @@
 
 #pragma once
 
+#include <atlsync.h>
+
 typedef struct
 {
     HWND hSystrayWnd;
     IFilterGraph* graph;
     IDirectVobSub* dvs;
     bool fRunOnce, fShowIcon;
+    ATL::CEvent WndCreatedEvent;
 } SystrayIconData;
 
 extern DWORD CALLBACK SystrayThreadProc(void* pParam);
+extern void DeleteSystray(HANDLE *pSystrayThread, SystrayIconData* data);

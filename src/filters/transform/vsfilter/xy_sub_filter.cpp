@@ -62,6 +62,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
     m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
 
+    m_tbid.WndCreatedEvent.Create(0, FALSE, FALSE, 0);
     m_tbid.hSystrayWnd = NULL;
     m_tbid.graph = NULL;
     m_tbid.fRunOnce = false;
@@ -78,7 +79,7 @@ XySubFilter::~XySubFilter()
         delete m_pTextInput[i];
 
     m_sub_provider = NULL;
-    DeleteSystray();
+    ::DeleteSystray(&m_hSystrayThread, &m_tbid);
 }
 
 STDMETHODIMP XySubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
@@ -130,18 +131,22 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
             }
         }
         EndEnumFilters;
-        if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
+        if (ShouldWeAutoload(pGraph))
         {
-            m_tbid.graph = pGraph;
-            m_tbid.dvs = static_cast<IDirectVobSub*>(this);
+            if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
+            {
+                m_tbid.graph = pGraph;
+                m_tbid.dvs = static_cast<IDirectVobSub*>(this);
 
-            DWORD tid;
-            m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
+                DWORD tid;
+                m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
+                XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
+            }
         }
     }
     else
     {
-        DeleteSystray();
+        ::DeleteSystray(&m_hSystrayThread, &m_tbid);
     }
 
     return __super::JoinFilterGraph(pGraph, pName);
@@ -846,30 +851,6 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
     return hr;
 }
 
-void XySubFilter::DeleteSystray()
-{
-    XY_LOG_INFO("");
-    if(m_hSystrayThread)
-    {
-        XY_LOG_INFO(XY_LOG_VAR_2_STR(m_tbid.hSystrayWnd));
-        if (m_tbid.hSystrayWnd)
-        {
-            SendMessage(m_tbid.hSystrayWnd, WM_CLOSE, 0, 0);
-            if(WaitForSingleObject(m_hSystrayThread, 10000) != WAIT_OBJECT_0)
-            {
-                XY_LOG_WARN(_T("CALL THE AMBULANCE!!!"));
-                TerminateThread(m_hSystrayThread, (DWORD)-1);
-            }
-        }
-        else
-        {
-            XY_LOG_WARN(_T("CALL THE AMBULANCE!!!"));
-            TerminateThread(m_hSystrayThread, (DWORD)-1);
-        }
-        m_hSystrayThread = 0;
-    }
-}
-
 //
 // FRD
 // 
@@ -1216,7 +1197,7 @@ bool XySubFilter::Open()
 
     hr = put_SelectedLanguage(FindPreferedLanguage());
     CHECK_N_LOG(hr, "Failed to set option");
-    if(S_FALSE == hr)
+    if (S_FALSE == hr)
         UpdateSubtitle(false); // make sure pSubPicProvider of our queue gets updated even if the stream number hasn't changed
 
     m_frd.RefreshEvent.Set();
@@ -1735,13 +1716,18 @@ bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
 {
     XY_LOG_INFO(pGraph);
 
+    bool fRet = false;
+    HRESULT hr = NOERROR;
     int level;
     bool m_fExternalLoad, m_fWebLoad, m_fEmbeddedLoad;
-    get_LoadSettings(&level, &m_fExternalLoad, &m_fWebLoad, &m_fEmbeddedLoad);
+    hr = get_LoadSettings(&level, &m_fExternalLoad, &m_fWebLoad, &m_fEmbeddedLoad);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get option");
+        return false;
+    }
 
     if(level < 0 || level >= 2) return(false);
-
-    bool fRet = false;
 
     if(level == 1)
         fRet = m_fExternalLoad = m_fWebLoad = m_fEmbeddedLoad = true;

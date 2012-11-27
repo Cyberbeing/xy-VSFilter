@@ -86,6 +86,7 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 
     m_fLoading = true;
 
+    m_tbid.WndCreatedEvent.Create(0, FALSE, FALSE, 0);
     m_hSystrayThread = 0;
     m_tbid.hSystrayWnd = NULL;
     m_tbid.graph = NULL;
@@ -125,6 +126,7 @@ CDirectVobSubFilter::~CDirectVobSubFilter()
     m_frd.EndThreadEvent.Set();
     CAMThread::Close();
 
+    ::DeleteSystray(&m_hSystrayThread, &m_tbid);
     XY_LOG_INFO("Deconstructed");
 }
 
@@ -381,18 +383,7 @@ HRESULT CDirectVobSubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName
 	}
 	else
 	{
-		if(m_hSystrayThread)
-		{
-			SendMessage(m_tbid.hSystrayWnd, WM_CLOSE, 0, 0);
-
-			if(WaitForSingleObject(m_hSystrayThread, 10000) != WAIT_OBJECT_0)
-			{
-                XY_LOG_WARN("CALL THE AMBULANCE!!!");
-				TerminateThread(m_hSystrayThread, (DWORD)-1);
-			}
-
-			m_hSystrayThread = 0;
-		}
+        ::DeleteSystray(&m_hSystrayThread, &m_tbid);
 	}
 
 	return __super::JoinFilterGraph(pGraph, pName);
@@ -590,6 +581,7 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
 
             DWORD tid;
             m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
+            XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
         }
         m_pInput->SetMediaType( &m_pInput->CurrentMediaType() );
     }

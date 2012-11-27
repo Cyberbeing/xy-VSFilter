@@ -345,13 +345,20 @@ LRESULT CSystrayWindow::OnNotifyIcon(WPARAM wParam, LPARAM lParam)
 DWORD CALLBACK SystrayThreadProc(void* pParam)
 {
     XY_LOG_DEBUG(pParam);
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+    AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-	CSystrayWindow wnd((SystrayIconData*)pParam);
-	if(!wnd.CreateEx(0, AfxRegisterWndClass(0), _T("DVSWND"), WS_OVERLAPPED, CRect(0, 0, 0, 0), NULL, 0, NULL))
-		return -1;
-
-	((SystrayIconData*)pParam)->hSystrayWnd = wnd.m_hWnd;
+    SystrayIconData *tbid = (SystrayIconData*)pParam;
+    ASSERT(tbid);
+    CSystrayWindow wnd(tbid);
+    if(!wnd.CreateEx(0, AfxRegisterWndClass(0), _T("DVSWND"), WS_OVERLAPPED, CRect(0, 0, 0, 0), NULL, 0, NULL))
+    {
+        tbid->WndCreatedEvent.Set();
+        XY_LOG_ERROR("Failed to create wnd.");
+        return -1;
+    }
+    tbid->hSystrayWnd = wnd.m_hWnd;
+    tbid->WndCreatedEvent.Set();
+    XY_LOG_INFO("Systray wnd created. "<<wnd.m_hWnd);
 
 	MSG msg;
 	while(GetMessage(&msg, NULL/*wnd.m_hWnd*/, 0, 0))
@@ -361,6 +368,35 @@ DWORD CALLBACK SystrayThreadProc(void* pParam)
 	}
 
 	return 0;
+}
+
+void DeleteSystray(HANDLE *pSystrayThread, SystrayIconData* data )
+{
+    ASSERT(data&&pSystrayThread);
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(*pSystrayThread)<<XY_LOG_VAR_2_STR(data->hSystrayWnd));
+    if (*pSystrayThread)
+    {
+        XY_LOG_INFO(data<<XY_LOG_VAR_2_STR(data->hSystrayWnd));
+        if (data->hSystrayWnd || WaitForSingleObject(data->WndCreatedEvent, 1000)== WAIT_OBJECT_0)
+        {
+            if (data->hSystrayWnd)
+            {
+                SendMessage(data->hSystrayWnd, WM_CLOSE, 0, 0);
+                if(WaitForSingleObject(*pSystrayThread, 10000) != WAIT_OBJECT_0)
+                {
+                    XY_LOG_WARN(_T("CALL THE AMBULANCE!!!"));
+                    TerminateThread(*pSystrayThread, (DWORD)-1);
+                }
+            }
+        }
+    }
+    else
+    {
+        XY_LOG_WARN(_T("CALL THE AMBULANCE!!!"));
+        TerminateThread(*pSystrayThread, (DWORD)-1);
+    }
+    data->hSystrayWnd = NULL;
+    *pSystrayThread = NULL;
 }
 
 // TODO: replace this function
