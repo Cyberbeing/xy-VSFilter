@@ -115,7 +115,6 @@ private:
         CAtlArray<CTime> mtime;
     } m_frd;
 
-    void DeleteSystray();
     void SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles);
     DWORD ThreadProc();
 private:
