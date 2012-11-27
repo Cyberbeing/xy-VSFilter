@@ -3,12 +3,12 @@
 function Usage()
 {
   echo "Usage:"
-  echo -e "\t$1 [-conf "'"Release"|"Debug"'"]  [-plat platform "'"Win32"|"x64"'"] [-action build|clean|rebuild] [-proj project] [-voff|--versioning-off] [-solution sln_file]"
+  echo -e "\t$1 [-conf "'"Release"|"Debug"'"]  [-plat platform "'"Win32"|"x64"'"] [-action build|clean|rebuild] [-proj projects] [-voff|--versioning-off] [-solution sln_file]"
   echo "Default:"
   echo -e '-conf\t\t"Release"'
   echo -e '-plat\t\t"Win32"'
   echo -e '-action\t\tbuild'
-  echo -e '-project\tvsfilter_2010'
+  echo -e '-projects\tvsfilter_2010 xy_sub_filter'
   echo -e '-solution\tsrc/filters/transform/vsfilter/VSFilter_vs2010.sln'
 }
 
@@ -19,7 +19,7 @@ solution="src/filters/transform/vsfilter/VSFilter_vs2010.sln"
 action="build"
 configuration="Release"
 platform="Win32"
-project="vsfilter_2010"
+projects="vsfilter_2010 xy_sub_filter"
 update_version=1
 
 while [ "$1"x != ""x ]
@@ -32,7 +32,7 @@ do
     elif [ "$1"x == "-action"x ]; then
       flag="action"
     elif [ "$1"x == "-proj"x ]; then
-      flag="project"
+      flag="projects"
     elif [ "$1"x == "-solution"x ]; then
       flag="solution"
     elif [ "$1"x == "--versioning-off"x ] || [ "$1"x == "-voff"x ]; then
@@ -90,8 +90,11 @@ fi
 configuration=$configuration"|"$platform
 
 #build
+for project in $projects
+do
 echo '
 CALL "%VS100COMNTOOLS%../../VC/vcvarsall.bat" '$platform_type'
 devenv "'$solution'" /'$action' "'$configuration'" /project "'$project'"
 exit
 ' | cmd
+done
