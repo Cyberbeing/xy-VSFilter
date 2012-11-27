@@ -4,6 +4,12 @@
 #include "../SubPic/ISubPic.h"
 #include "../subpic/color_conv_table.h"
 
+#if ENABLE_XY_LOG_SUB_RENDER_FRAME
+#  define TRACE_SUB_RENDER_FRAME(msg) XY_LOG_TRACE(msg)
+#else
+#  define TRACE_SUB_RENDER_FRAME(msg)
+#endif
+
 static inline void FlipAlphaValueSSE(BYTE *data, int w)
 {
     int w00 = w&~3;
@@ -245,6 +251,7 @@ STDMETHODIMP XySubRenderFrame::NonDelegatingQueryInterface( REFIID riid, void** 
 
 STDMETHODIMP XySubRenderFrame::GetOutputRect( RECT *outputRect )
 {
+    TRACE_SUB_RENDER_FRAME(outputRect<<" "<<m_output_rect);
     if (!outputRect)
     {
         return E_POINTER;
@@ -255,6 +262,7 @@ STDMETHODIMP XySubRenderFrame::GetOutputRect( RECT *outputRect )
 
 STDMETHODIMP XySubRenderFrame::GetClipRect( RECT *clipRect )
 {
+    TRACE_SUB_RENDER_FRAME(clipRect<<" "<<m_clip_rect);
     if (!clipRect)
     {
         return E_POINTER;
@@ -265,6 +273,7 @@ STDMETHODIMP XySubRenderFrame::GetClipRect( RECT *clipRect )
 
 STDMETHODIMP XySubRenderFrame::GetXyColorSpace( int *xyColorSpace )
 {
+    TRACE_SUB_RENDER_FRAME(xyColorSpace<<" "<<m_xy_color_space);
     if (!xyColorSpace)
     {
         return E_POINTER;
@@ -275,6 +284,7 @@ STDMETHODIMP XySubRenderFrame::GetXyColorSpace( int *xyColorSpace )
 
 STDMETHODIMP XySubRenderFrame::GetBitmapCount( int *count )
 {
+    TRACE_SUB_RENDER_FRAME(count<<" "<<m_bitmaps.GetCount());
     if (!count)
     {
         return E_POINTER;
@@ -312,6 +322,10 @@ STDMETHODIMP XySubRenderFrame::GetBitmap( int index, ULONGLONG *id, POINT *posit
     {
         *pitch = bitmap.pitch;
     }
+    TRACE_SUB_RENDER_FRAME(index<<" id: "<<m_bitmap_ids.GetAt(index)
+        <<" dirty_rect: x "<<bitmap.x+m_output_rect.left<<", y "<<bitmap.y + m_output_rect.top
+        <<", w "<<bitmap.w<<", h "<<bitmap.h
+        <<" pitch:"<<bitmap.pitch<<" pixels:"<<(void*)bitmap.plans[0]);
     return S_OK;
 }
 
@@ -330,6 +344,11 @@ STDMETHODIMP XySubRenderFrame::GetBitmapExtra( int index, LPVOID extra_info )
         output->plans[1] = bitmap.plans[1];
         output->plans[2] = bitmap.plans[2];
         output->plans[3] = bitmap.plans[3];
+
+        TRACE_SUB_RENDER_FRAME(index<<" "<<(void*)bitmap.plans[0]<<" "
+            <<(void*)bitmap.plans[1]<<" "
+            <<(void*)bitmap.plans[2]<<" "
+            <<(void*)bitmap.plans[3]);
     }
     return S_OK;
 }
