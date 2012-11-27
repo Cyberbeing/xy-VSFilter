@@ -392,6 +392,7 @@ HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
         ASSERT(SUCCEEDED(hr));
 
         m_xy_sub_render_frame = new XySubRenderFrameWrapper(mem_subpic, m_output_rect, m_subtitle_target_rect, now, &hr);
-        return S_OK;
+        return hr;
     }
+    return hr;
 }
