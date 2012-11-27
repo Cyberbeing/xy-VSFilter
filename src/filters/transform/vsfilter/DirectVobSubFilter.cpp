@@ -1807,8 +1807,7 @@ void CDirectVobSubFilter::UpdateSubtitle(bool fApplyDefStyle)
 void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyle)
 {
     HRESULT hr = NOERROR;
-	DbgLog((LOG_TRACE, 3, "%s(%d): %s", __FILE__, __LINE__, __FUNCTION__));
-	DbgLog((LOG_TRACE, 3, "\tpSubStream:%x fApplyDefStyle:%d", pSubStream, (int)fApplyDefStyle));
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(pSubStream)<<XY_LOG_VAR_2_STR(fApplyDefStyle));
     CAutoLock cAutolock(&m_csQueueLock);
 
     CSize playres(0,0);
@@ -1862,7 +1861,11 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
                     s.marginRect = tmp_rect;
 				}
 
-				pRTS->SetDefaultStyle(s);
+                bool succeeded = pRTS->SetDefaultStyle(s);
+                if (!succeeded)
+                {
+                    XY_LOG_ERROR("Failed to set default style");
+                }
 			}
 
 			pRTS->m_ePARCompensationType = m_ePARCompensationType;
