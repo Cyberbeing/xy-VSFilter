@@ -38,7 +38,7 @@ const SubRenderOptionsImpl::OptionMap options[] =
 XySubFilter::XySubFilter( LPUNKNOWN punk, 
     HRESULT* phr, const GUID& clsid /*= __uuidof(XySubFilter)*/ )
     : CBaseFilter(NAME("XySubFilter"), punk, &m_csFilter, clsid)
-    , CDirectVobSub(DirectVobFilterOptions)
+    , CDirectVobSub(XyVobFilterOptions)
     , SubRenderOptionsImpl(::options, this)
     , m_nSubtitleId(-1)
     , m_not_first_pause(false)
@@ -259,25 +259,6 @@ STDMETHODIMP XySubFilter::XyGetString( unsigned field, LPWSTR *value, int *chars
         break;
     }
     return CDirectVobSub::XyGetString(field, value,chars);
-}
-
-STDMETHODIMP XySubFilter::XySetBool( unsigned field, bool value )
-{
-    CAutoLock cAutolock(&m_csQueueLock);
-    HRESULT hr = CDirectVobSub::XySetBool(field, value);
-    if(hr != NOERROR)
-    {
-        return hr;
-    }
-    switch(field)
-    {
-    case DirectVobSubXyOptions::BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER:
-        hr = E_INVALIDARG;
-        break;
-    default:
-        break;
-    }
-    return hr;
 }
 
 STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
@@ -1515,35 +1496,27 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
     {
         XY_LOG_INFO("Size original video changed from "<<m_xy_size_opt[SIZE_ORIGINAL_VIDEO]
             <<" to "<<originalVideoSize);
-        hr = XySetSize(SIZE_ORIGINAL_VIDEO, originalVideoSize);
-        CHECK_N_LOG(hr, "Failed to set option");
-        ASSERT(SUCCEEDED(hr));
+        m_xy_size_opt[SIZE_ORIGINAL_VIDEO] = originalVideoSize;
         update_subtitle &= true;
     }
     if (m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO]!=arAdjustedVideoSize)
     {
         XY_LOG_INFO("Size AR adjusted video changed from "<<m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO]
             <<" to "<<arAdjustedVideoSize);
-        hr = XySetSize(SIZE_AR_ADJUSTED_VIDEO, originalVideoSize);
-        CHECK_N_LOG(hr, "Failed to set option");
-        ASSERT(SUCCEEDED(hr));
+        m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO] = arAdjustedVideoSize;
         update_subtitle &= true;
     }
     if (m_xy_rect_opt[RECT_VIDEO_OUTPUT]!=videoOutputRect)
     {
         XY_LOG_INFO("Video output rect changed from "<<m_xy_rect_opt[RECT_VIDEO_OUTPUT]
             <<" to "<<videoOutputRect);
-        hr = XySetRect(RECT_VIDEO_OUTPUT, videoOutputRect);
-        CHECK_N_LOG(hr, "Failed to set option");
-        ASSERT(SUCCEEDED(hr));
+        m_xy_rect_opt[RECT_VIDEO_OUTPUT] =videoOutputRect;
     }
     if (m_xy_rect_opt[RECT_SUBTITLE_TARGET]!=subtitleTargetRect)
     {
         XY_LOG_INFO("Subtitle target rect changed from "<<m_xy_rect_opt[RECT_SUBTITLE_TARGET]
             <<" to "<<subtitleTargetRect);
-        hr = XySetRect(RECT_SUBTITLE_TARGET, subtitleTargetRect);
-        CHECK_N_LOG(hr, "Failed to set option");
-        ASSERT(SUCCEEDED(hr));
+        m_xy_rect_opt[RECT_SUBTITLE_TARGET] =subtitleTargetRect;
     }
     if (m_xy_double_opt[DOUBLE_FPS]!=fps)
     {

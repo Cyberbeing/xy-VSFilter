@@ -40,7 +40,6 @@ public:
     // IXyOptions
     STDMETHODIMP XyGetInt      (unsigned field, int      *value);
     STDMETHODIMP XyGetString   (unsigned field, LPWSTR *value, int *chars);
-    STDMETHODIMP XySetBool     (unsigned field, bool      value);
     STDMETHODIMP XySetInt      (unsigned field, int       value);
 
     // IDirectVobSub
