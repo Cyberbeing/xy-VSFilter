@@ -8,19 +8,9 @@
 #  define TRACE_ALLOCATOR(msg)
 #endif
 
-STDMETHODIMP_(void) CPooledSubPicAllocator::ReleaseItem( void* Item )
-{
-    TRACE_ALLOCATOR(Item);
-    CAutoLock lock(&_poolLock);
-    POSITION pos = _using.Find((CPooledSubPic*)Item);
-    if(pos!=NULL)
-    {
-        _using.RemoveAt(pos);
-        _free.AddTail((CPooledSubPic*)Item);
-    }
-}
+using namespace std;
 
-STDMETHODIMP_(void) CPooledSubPicAllocator::OnItemDestruct( void* Item )
+void CPooledSubPicAllocator::OnItemDestruct( void* Item )
 {
     TRACE_ALLOCATOR(Item);
     CAutoLock lock(&_poolLock);
@@ -121,6 +111,7 @@ bool CPooledSubPicAllocator::AllocEx( bool fStatic, ISubPicEx** ppSubPic )
     {
         CAutoLock lock(&_poolLock);
         CollectUnUsedItem();
+
         if(!_free.IsEmpty())
         {
             CPooledSubPic *item = _free.RemoveHead();
@@ -132,6 +123,23 @@ bool CPooledSubPicAllocator::AllocEx( bool fStatic, ISubPicEx** ppSubPic )
                 item->AddRef();
             }
             _using.AddTail(item);
+            *ppSubPic = item;
+            item->AddRef();
+        }
+        else
+        {
+            TRACE_ALLOCATOR("Queue fulfilled. Auto grow.");
+            CPooledSubPic *item = DoAlloc();
+            if (!item)
+            {
+                ASSERT(0);
+                XY_LOG_FATAL("Failed to allocate item");
+                return(false);
+            }
+            _using.AddTail(item);
+            item->AddRef();
+            _capacity++;
+
             *ppSubPic = item;
             item->AddRef();
         }
@@ -250,6 +258,26 @@ void CPooledSubPicAllocator::CollectUnUsedItem()
         {
             _using.AddTail(item);
         }
+        item = _using.RemoveHead();
+        if (item->m_cRef==1)
+        {
+            _free.AddTail(item);
+        }
+        else
+        {
+            _using.AddTail(item);
+        }
+    }
+    if (_free.GetCount()>MAX_FREE_ITEM)
+    {
+        TRACE_ALLOCATOR("Free items count exceeded "<<MAX_FREE_ITEM<<". Auto shrink.");
+        CPooledSubPic* item = _free.RemoveHead();
+        if(item!=NULL)
+        {
+            item->_pool = NULL;
+            item->Release();
+        }
+        _capacity--;
     }
 }
 
