@@ -221,6 +221,31 @@ STDMETHODIMP XySubFilter::Pause()
 //
 // IXyOptions
 //
+
+STDMETHODIMP XySubFilter::XyGetInt( unsigned field, int *value )
+{
+    CAutoLock cAutoLock(&m_propsLock);
+    HRESULT hr = CDirectVobSub::XyGetInt(field, value);
+    if(hr != NOERROR)
+    {
+        return hr;
+    }
+    switch(field)
+    {
+    case DirectVobSubXyOptions::INT_MAX_BITMAP_COUNT2:
+        if (m_xy_bool_opt[BOOL_COMBINE_BITMAPS])
+        {
+            *value = 1;
+        }
+        else
+        {
+            *value = m_xy_int_opt[DirectVobSubXyOptions::INT_MAX_BITMAP_COUNT];
+        }
+        break;
+    }
+    return hr;
+}
+
 STDMETHODIMP XySubFilter::XyGetString( unsigned field, LPWSTR *value, int *chars )
 {
     CAutoLock cAutolock(&m_csQueueLock);
@@ -302,6 +327,9 @@ STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
         break;
     case DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT:
         //fix me: is it really supported?
+        break;
+    case DirectVobSubXyOptions::INT_MAX_BITMAP_COUNT2:
+        hr = E_INVALIDARG;
         break;
     default:
         break;
