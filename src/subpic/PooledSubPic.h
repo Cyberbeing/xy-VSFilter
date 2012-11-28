@@ -2,20 +2,14 @@
 
 #include "MemSubPic.h"
 
-using namespace std;
-
 class CPooledSubPic;
-interface IPooledAllocator
-{
-    STDMETHOD_(void, ReleaseItem)(void* Item) PURE;
-    STDMETHOD_(void, OnItemDestruct)(void* Item) PURE;
-};
 
-class CPooledSubPicAllocator : public CSubPicExAllocatorImpl//, public IPooledAllocator
+class CPooledSubPicAllocator : public CSubPicExAllocatorImpl
 {
 public:
-    STDMETHODIMP_(void) ReleaseItem(void* Item);
-    STDMETHODIMP_(void) OnItemDestruct(void* Item);
+    static const int MAX_FREE_ITEM = 2;
+public:
+    void OnItemDestruct(void* Item);
 
     bool STDMETHODCALLTYPE InitPool(int capacity);
 
