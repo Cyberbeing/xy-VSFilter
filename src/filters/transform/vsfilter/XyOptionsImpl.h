@@ -5,25 +5,28 @@
 class XyOptionsImpl : public IXyOptions
 {
 public:
-    static const int MAX_OPTION_ID = 63;
+    static const int MAX_OPTION_ID = 127;
 
-    enum OptionType
-    {
-        OPTION_TYPE_END_FLAG = 0,
-        OPTION_TYPE_BOOL,
-        OPTION_TYPE_INT,
-        OPTION_TYPE_SIZE,
-        OPTION_TYPE_RECT,
-        OPTION_TYPE_ULONGLONG,
-        OPTION_TYPE_DOUBLE,
-        OPTION_TYPE_STRING,
-        OPTION_TYPE_BIN,
-        OPTION_TYPE_COUNT
-    };
+    typedef int OptionType;
+    static const int OPTION_TYPE_END_FLAG = 0;
+    static const int OPTION_TYPE_BOOL     = 0x1;
+    static const int OPTION_TYPE_INT      = 0x2;
+    static const int OPTION_TYPE_SIZE     = 0x4;
+    static const int OPTION_TYPE_RECT     = 0x8;
+    static const int OPTION_TYPE_ULONGLONG= 0x10;
+    static const int OPTION_TYPE_DOUBLE   = 0x20;
+    static const int OPTION_TYPE_STRING   = 0x40;
+    static const int OPTION_TYPE_BIN      = 0x800;
+
+    typedef int OptionMode;
+    static const int OPTION_MODE_READ   = 0x100;
+    static const int OPTION_MODE_WRITE  = 0x200;
+    static const int OPTION_MODE_RW     = 0x300;
 
     struct Option
     {
         OptionType type;
+        OptionMode rw_mode;//read/write
         unsigned option_id;
     };
 public:
@@ -47,9 +50,23 @@ public:
     STDMETHODIMP XySetDouble   (unsigned field, double    value);
     STDMETHODIMP XySetString   (unsigned field, LPWSTR    value, int chars);
     STDMETHODIMP XySetBin      (unsigned field, LPVOID    value, int size );
+
+    inline bool TestOption(unsigned field)
+    {
+        return (field < MAX_OPTION_ID && m_option_type[field] != OPTION_TYPE_END_FLAG);
+    }
+    inline bool TestOption(unsigned field, OptionType type, OptionMode rw_mode=OPTION_MODE_RW)
+    {
+        type |= rw_mode;
+        return (field < MAX_OPTION_ID && (m_option_type[field] & type)== type);
+    }
 protected:
-    OptionType m_option_type[MAX_OPTION_ID+1];
-    
+    virtual HRESULT OnOptionReading(unsigned field);
+    virtual HRESULT OnOptionChanged(unsigned field);
+
+protected:
+    int m_option_type[MAX_OPTION_ID+1];
+
     int m_xy_int_opt[MAX_OPTION_ID+1];
     bool m_xy_bool_opt[MAX_OPTION_ID+1];
     double m_xy_double_opt[MAX_OPTION_ID+1];

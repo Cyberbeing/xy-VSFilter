@@ -260,6 +260,10 @@ CDirectVobSub::~CDirectVobSub()
 
 STDMETHODIMP CDirectVobSub::get_FileName(WCHAR* fn)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_FileName))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(!fn) return E_POINTER;
@@ -275,6 +279,10 @@ STDMETHODIMP CDirectVobSub::get_FileName(WCHAR* fn)
 
 STDMETHODIMP CDirectVobSub::put_FileName(WCHAR* fn)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_FileName))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(!fn) return E_POINTER;
@@ -297,6 +305,10 @@ STDMETHODIMP CDirectVobSub::put_FileName(WCHAR* fn)
 
 STDMETHODIMP CDirectVobSub::get_LanguageCount(int* nLangs)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_LanguageCount))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	return nLangs ? *nLangs = 0, S_OK : E_POINTER;
@@ -304,11 +316,19 @@ STDMETHODIMP CDirectVobSub::get_LanguageCount(int* nLangs)
 
 STDMETHODIMP CDirectVobSub::get_LanguageName(int iLanguage, WCHAR** ppName)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_LanguageName))
+    {
+        return E_NOTIMPL;
+    }
 	return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::get_SelectedLanguage(int* iSelected)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_SelectedLanguage))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	return iSelected ? *iSelected = m_iSelectedLanguage, S_OK : E_POINTER;
@@ -316,6 +336,10 @@ STDMETHODIMP CDirectVobSub::get_SelectedLanguage(int* iSelected)
 
 STDMETHODIMP CDirectVobSub::put_SelectedLanguage(int iSelected)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_SelectedLanguage))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(m_iSelectedLanguage == iSelected) return S_FALSE;
@@ -333,6 +357,10 @@ STDMETHODIMP CDirectVobSub::put_SelectedLanguage(int iSelected)
 
 STDMETHODIMP CDirectVobSub::get_HideSubtitles(bool* fHideSubtitles)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_HideSubtitles))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	return fHideSubtitles ? *fHideSubtitles = m_fHideSubtitles, S_OK : E_POINTER;
@@ -340,6 +368,10 @@ STDMETHODIMP CDirectVobSub::get_HideSubtitles(bool* fHideSubtitles)
 
 STDMETHODIMP CDirectVobSub::put_HideSubtitles(bool fHideSubtitles)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_HideSubtitles))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(m_fHideSubtitles == fHideSubtitles) return S_FALSE;
@@ -351,6 +383,10 @@ STDMETHODIMP CDirectVobSub::put_HideSubtitles(bool fHideSubtitles)
 
 STDMETHODIMP CDirectVobSub::get_PreBuffering(bool* fDoPreBuffering)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_PreBuffering))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	//return fDoPreBuffering ? *fDoPreBuffering = m_fDoPreBuffering, S_OK : E_POINTER;
@@ -359,6 +395,10 @@ STDMETHODIMP CDirectVobSub::get_PreBuffering(bool* fDoPreBuffering)
 
 STDMETHODIMP CDirectVobSub::put_PreBuffering(bool fDoPreBuffering)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_PreBuffering))
+    {
+        return E_NOTIMPL;
+    }
     return E_NOTIMPL;
 	//CAutoLock cAutoLock(&m_propsLock);
 
@@ -372,6 +412,10 @@ STDMETHODIMP CDirectVobSub::put_PreBuffering(bool fDoPreBuffering)
 
 STDMETHODIMP CDirectVobSub::get_Placement(bool* fOverridePlacement, int* xperc, int* yperc)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_Placement))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(fOverridePlacement) *fOverridePlacement = m_fOverridePlacement;
@@ -383,7 +427,10 @@ STDMETHODIMP CDirectVobSub::get_Placement(bool* fOverridePlacement, int* xperc, 
 
 STDMETHODIMP CDirectVobSub::put_Placement(bool fOverridePlacement, int xperc, int yperc)
 {
-	DbgLog((LOG_TRACE, 3, "%s(%d): %s", __FILE__, __LINE__, __FUNCTION__));	
+    if (!TestOption(DirectVobSubXyOptions::void_Placement))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	DbgLog((LOG_TRACE, 3, "\tfOverridePlacement:%d xperc:%d yperc:%d", (int)fOverridePlacement, xperc, yperc));
@@ -399,6 +446,10 @@ STDMETHODIMP CDirectVobSub::put_Placement(bool fOverridePlacement, int xperc, in
 
 STDMETHODIMP CDirectVobSub::get_VobSubSettings(bool* fBuffer, bool* fOnlyShowForcedSubs, bool* fPolygonize)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_VobSubSettings))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(fBuffer) *fBuffer = m_fBufferVobSub;
@@ -410,6 +461,10 @@ STDMETHODIMP CDirectVobSub::get_VobSubSettings(bool* fBuffer, bool* fOnlyShowFor
 
 STDMETHODIMP CDirectVobSub::put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fPolygonize)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_VobSubSettings))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(m_fBufferVobSub == fBuffer && m_fOnlyShowForcedVobSubs == fOnlyShowForcedSubs && m_fPolygonize == fPolygonize) return S_FALSE;
@@ -423,6 +478,10 @@ STDMETHODIMP CDirectVobSub::put_VobSubSettings(bool fBuffer, bool fOnlyShowForce
 
 STDMETHODIMP CDirectVobSub::get_TextSettings(void* lf, int lflen, COLORREF* color, bool* fShadow, bool* fOutline, bool* fAdvancedRenderer)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_TextSettings))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(lf)
@@ -452,6 +511,10 @@ STDMETHODIMP CDirectVobSub::get_TextSettings(void* lf, int lflen, COLORREF* colo
 
 STDMETHODIMP CDirectVobSub::put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_TextSettings))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
     STSStyle tmp = m_defStyle;
 	if(lf)
@@ -497,6 +560,10 @@ STDMETHODIMP CDirectVobSub::put_TextSettings(void* lf, int lflen, COLORREF color
 
 STDMETHODIMP CDirectVobSub::get_Flip(bool* fPicture, bool* fSubtitles)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_Flip))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(fPicture) *fPicture = m_fFlipPicture;
@@ -507,6 +574,10 @@ STDMETHODIMP CDirectVobSub::get_Flip(bool* fPicture, bool* fSubtitles)
 
 STDMETHODIMP CDirectVobSub::put_Flip(bool fPicture, bool fSubtitles)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_Flip))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(m_fFlipPicture == fPicture && m_fFlipSubtitles == fSubtitles) return S_FALSE;
@@ -519,6 +590,10 @@ STDMETHODIMP CDirectVobSub::put_Flip(bool fPicture, bool fSubtitles)
 
 STDMETHODIMP CDirectVobSub::get_OSD(bool* fOSD)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_OSD))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	return fOSD ? *fOSD = m_fOSD, S_OK : E_POINTER;
@@ -526,6 +601,10 @@ STDMETHODIMP CDirectVobSub::get_OSD(bool* fOSD)
 
 STDMETHODIMP CDirectVobSub::put_OSD(bool fOSD)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_OSD))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(m_fOSD == fOSD) return S_FALSE;
@@ -537,6 +616,10 @@ STDMETHODIMP CDirectVobSub::put_OSD(bool fOSD)
 
 STDMETHODIMP CDirectVobSub::get_SaveFullPath(bool* fSaveFullPath)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_SaveFullPath))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	return fSaveFullPath ? *fSaveFullPath = m_fSaveFullPath, S_OK : E_POINTER;
@@ -544,6 +627,10 @@ STDMETHODIMP CDirectVobSub::get_SaveFullPath(bool* fSaveFullPath)
 
 STDMETHODIMP CDirectVobSub::put_SaveFullPath(bool fSaveFullPath)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_SaveFullPath))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(m_fSaveFullPath == fSaveFullPath) return S_FALSE;
@@ -555,6 +642,10 @@ STDMETHODIMP CDirectVobSub::put_SaveFullPath(bool fSaveFullPath)
 
 STDMETHODIMP CDirectVobSub::get_SubtitleTiming(int* delay, int* speedmul, int* speeddiv)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_SubtitleTiming))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(delay) *delay = m_SubtitleDelay;
@@ -566,6 +657,10 @@ STDMETHODIMP CDirectVobSub::get_SubtitleTiming(int* delay, int* speedmul, int* s
 
 STDMETHODIMP CDirectVobSub::put_SubtitleTiming(int delay, int speedmul, int speeddiv)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_SubtitleTiming))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(m_SubtitleDelay == delay && m_SubtitleSpeedMul == speedmul && m_SubtitleSpeedDiv == speeddiv) return S_FALSE;
@@ -579,6 +674,10 @@ STDMETHODIMP CDirectVobSub::put_SubtitleTiming(int delay, int speedmul, int spee
 
 STDMETHODIMP CDirectVobSub::get_MediaFPS(bool* fEnabled, double* fps)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_MediaFPS))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(fEnabled) *fEnabled = m_fMediaFPSEnabled;
@@ -589,6 +688,10 @@ STDMETHODIMP CDirectVobSub::get_MediaFPS(bool* fEnabled, double* fps)
 
 STDMETHODIMP CDirectVobSub::put_MediaFPS(bool fEnabled, double fps)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_MediaFPS))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(m_fMediaFPSEnabled == fEnabled && m_MediaFPS == fps) return S_FALSE;
@@ -601,6 +704,10 @@ STDMETHODIMP CDirectVobSub::put_MediaFPS(bool fEnabled, double fps)
 
 STDMETHODIMP CDirectVobSub::get_ZoomRect(NORMALIZEDRECT* rect)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_ZoomRect))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(!rect) return E_POINTER;
@@ -612,6 +719,10 @@ STDMETHODIMP CDirectVobSub::get_ZoomRect(NORMALIZEDRECT* rect)
 
 STDMETHODIMP CDirectVobSub::put_ZoomRect(NORMALIZEDRECT* rect)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_ZoomRect))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(!rect) return E_POINTER;
@@ -767,16 +878,28 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 
 STDMETHODIMP CDirectVobSub::HasConfigDialog(int iSelected)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_HasConfigDialog))
+    {
+        return E_NOTIMPL;
+    }
 	return E_NOTIMPL;
 }
 
 STDMETHODIMP CDirectVobSub::ShowConfigDialog(int iSelected, HWND hWndParent)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_ShowConfigDialog))
+    {
+        return E_NOTIMPL;
+    }
 	return E_NOTIMPL;
 }
 
 STDMETHODIMP CDirectVobSub::IsSubtitleReloaderLocked(bool* fLocked)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_IsSubtitleReloaderLocked))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(!fLocked) return E_POINTER; 
@@ -791,6 +914,10 @@ STDMETHODIMP CDirectVobSub::IsSubtitleReloaderLocked(bool* fLocked)
 
 STDMETHODIMP CDirectVobSub::LockSubtitleReloader(bool fLock)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_LockSubtitleReloader))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if(fLock) m_nReloaderDisableCount++;
@@ -804,6 +931,10 @@ STDMETHODIMP CDirectVobSub::LockSubtitleReloader(bool fLock)
 
 STDMETHODIMP CDirectVobSub::get_SubtitleReloader(bool* fDisabled)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_SubtitleReloader))
+    {
+        return E_NOTIMPL;
+    }
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	CAutoLock cAutoLock(&m_propsLock);
@@ -815,6 +946,10 @@ STDMETHODIMP CDirectVobSub::get_SubtitleReloader(bool* fDisabled)
 
 STDMETHODIMP CDirectVobSub::put_SubtitleReloader(bool fDisable)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_SubtitleReloader))
+    {
+        return E_NOTIMPL;
+    }
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	CAutoLock cAutoLock(&m_propsLock);
@@ -830,6 +965,10 @@ STDMETHODIMP CDirectVobSub::put_SubtitleReloader(bool fDisable)
 
 STDMETHODIMP CDirectVobSub::get_ExtendPicture(int* horizontal, int* vertical, int* resx2, int* resx2minw, int* resx2minh)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_ExtendPicture))
+    {
+        return E_NOTIMPL;
+    }
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	CAutoLock cAutoLock(&m_propsLock);
@@ -846,6 +985,10 @@ STDMETHODIMP CDirectVobSub::get_ExtendPicture(int* horizontal, int* vertical, in
 
 STDMETHODIMP CDirectVobSub::put_ExtendPicture(int horizontal, int vertical, int resx2, int resx2minw, int resx2minh)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_ExtendPicture))
+    {
+        return E_NOTIMPL;
+    }
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	CAutoLock cAutoLock(&m_propsLock);
@@ -871,6 +1014,10 @@ STDMETHODIMP CDirectVobSub::put_ExtendPicture(int horizontal, int vertical, int 
 
 STDMETHODIMP CDirectVobSub::get_LoadSettings(int* level, bool* fExternalLoad, bool* fWebLoad, bool* fEmbeddedLoad)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_LoadSettings))
+    {
+        return E_NOTIMPL;
+    }
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	CAutoLock cAutoLock(&m_propsLock);
@@ -885,6 +1032,10 @@ STDMETHODIMP CDirectVobSub::get_LoadSettings(int* level, bool* fExternalLoad, bo
 
 STDMETHODIMP CDirectVobSub::put_LoadSettings(int level, bool fExternalLoad, bool fWebLoad, bool fEmbeddedLoad)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_LoadSettings))
+    {
+        return E_NOTIMPL;
+    }
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	CAutoLock cAutoLock(&m_propsLock);
@@ -906,17 +1057,29 @@ STDMETHODIMP CDirectVobSub::put_LoadSettings(int level, bool fExternalLoad, bool
 
 STDMETHODIMP CDirectVobSub::AdviseSubClock(ISubClock* pSubClock)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_AdviseSubClock))
+    {
+        return E_NOTIMPL;
+    }
 	m_pSubClock = pSubClock;
 	return S_OK;
 }
 
 STDMETHODIMP_(bool) CDirectVobSub::get_Forced()
 {
+    if (!TestOption(DirectVobSubXyOptions::void_Forced))
+    {
+        return E_NOTIMPL;
+    }
 	return m_fForced;
 }
 
 STDMETHODIMP CDirectVobSub::put_Forced(bool fForced)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_Forced))
+    {
+        return E_NOTIMPL;
+    }
     if(m_fForced==fForced)
         return S_FALSE;
 
@@ -926,6 +1089,10 @@ STDMETHODIMP CDirectVobSub::put_Forced(bool fForced)
 
 STDMETHODIMP CDirectVobSub::get_TextSettings(STSStyle* pDefStyle)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_TextSettings))
+    {
+        return E_NOTIMPL;
+    }
 	CheckPointer(pDefStyle, E_POINTER);
 
 	CAutoLock cAutoLock(&m_propsLock);
@@ -937,22 +1104,30 @@ STDMETHODIMP CDirectVobSub::get_TextSettings(STSStyle* pDefStyle)
 
 STDMETHODIMP CDirectVobSub::put_TextSettings(STSStyle* pDefStyle)
 {
-	CheckPointer(pDefStyle, E_POINTER);
+    if (!TestOption(DirectVobSubXyOptions::void_TextSettings))
+    {
+        return E_NOTIMPL;
+    }
+    CheckPointer(pDefStyle, E_POINTER);
 
-	CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(&m_propsLock);
 
     if(m_defStyle==*pDefStyle)
         return S_FALSE;
-	if(!memcmp(&m_defStyle, pDefStyle, sizeof(m_defStyle)))
-		return S_FALSE;
+    if(!memcmp(&m_defStyle, pDefStyle, sizeof(m_defStyle)))
+        return S_FALSE;
 
-	m_defStyle = *pDefStyle;
+    m_defStyle = *pDefStyle;
 
-	return S_OK;
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::get_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_AspectRatioSettings))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 
 	*ePARCompensationType = m_ePARCompensationType;
@@ -962,6 +1137,10 @@ STDMETHODIMP CDirectVobSub::get_AspectRatioSettings(CSimpleTextSubtitle::EPARCom
 
 STDMETHODIMP CDirectVobSub::put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType)
 {
+    if (!TestOption(DirectVobSubXyOptions::void_AspectRatioSettings))
+    {
+        return E_NOTIMPL;
+    }
 	CAutoLock cAutoLock(&m_propsLock);
 	
 	if(m_ePARCompensationType==*ePARCompensationType)
@@ -1075,6 +1254,10 @@ STDMETHODIMP CDirectVobSub::XyGetString( unsigned field, LPWSTR *value, int *cha
 
 STDMETHODIMP CDirectVobSub::XyGetBin( unsigned field, LPVOID *value, int *size )
 {
+    if (!TestOption(field, XyOptionsImpl::OPTION_TYPE_BIN, XyOptionsImpl::OPTION_MODE_READ))
+    {
+        return E_NOTIMPL;
+    }
     CAutoLock cAutoLock(&m_propsLock);
     if (!size)
     {
@@ -1212,6 +1395,10 @@ STDMETHODIMP CDirectVobSub::XySetString( unsigned field, LPWSTR value, int chars
 
 STDMETHODIMP CDirectVobSub::XySetBin( unsigned field, LPVOID value, int size )
 {
+    if (!TestOption(field, XyOptionsImpl::OPTION_TYPE_BIN, XyOptionsImpl::OPTION_MODE_WRITE))
+    {
+        return E_NOTIMPL;
+    }
     CAutoLock cAutoLock(&m_propsLock);
     switch(field)
     {

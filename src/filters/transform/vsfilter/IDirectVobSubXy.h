@@ -66,6 +66,36 @@ namespace DirectVobSubXyOptions
         //size = 1
         BIN_XY_FLY_WEIGHT_INFO,
 
+        //The following is not really supported yet
+        void_FileName,
+        void_LanguageCount,
+        void_LanguageName,
+        void_SelectedLanguage,
+        void_HideSubtitles,
+        void_PreBuffering,
+        void_SubPictToBuffer,
+        void_AnimWhenBuffering,
+        void_Placement,
+        void_VobSubSettings,
+        void_TextSettings,
+        void_Flip,
+        void_OSD,
+        void_SaveFullPath,
+        void_SubtitleTiming,
+        void_MediaFPS,
+        void_ZoomRect,
+        void_ColorFormat,
+        void_SubtitleReloader,
+        void_ExtendPicture,
+        void_LoadSettings,
+        void_Forced,
+        void_AspectRatioSettings,
+        void_HasConfigDialog,
+        void_ShowConfigDialog,
+        void_IsSubtitleReloaderLocked,
+        void_LockSubtitleReloader,
+        void_AdviseSubClock,
+
         OPTION_COUNT
     };
     struct ColorSpaceOpt
@@ -107,58 +137,88 @@ namespace DirectVobSubXyOptions
     };
 
     const XyOptionsImpl::Option DirectVobFilterOptions[] = {
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_COLOR_SPACE},
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_YUV_RANGE},
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_OVERLAY_CACHE_MAX_ITEM_NUM},
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM},
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_PATH_DATA_CACHE_MAX_ITEM_NUM},
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_COLOR_SPACE},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_YUV_RANGE},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_OVERLAY_CACHE_MAX_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_PATH_DATA_CACHE_MAX_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM},
 
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_BITMAP_MRU_CACHE_ITEM_NUM},
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_CLIPPER_MRU_CACHE_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_BITMAP_MRU_CACHE_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_CLIPPER_MRU_CACHE_ITEM_NUM},
 
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_TEXT_INFO_CACHE_ITEM_NUM},
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_ASS_TAG_LIST_CACHE_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_TEXT_INFO_CACHE_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_ASS_TAG_LIST_CACHE_ITEM_NUM},
 
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_SUBPIXEL_VARIANCE_CACHE_ITEM_NUM},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_SUBPIXEL_VARIANCE_CACHE_ITEM_NUM},
 
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_SUBPIXEL_POS_LEVEL},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_SUBPIXEL_POS_LEVEL},
 
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_LAYOUT_SIZE_OPT},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_LAYOUT_SIZE_OPT},
 
-        {XyOptionsImpl::OPTION_TYPE_BOOL  , BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER},
-        {XyOptionsImpl::OPTION_TYPE_BOOL  , BOOL_HIDE_TRAY_ICON},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_HIDE_TRAY_ICON},
 
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_MAX_BITMAP_COUNT},
-        {XyOptionsImpl::OPTION_TYPE_BOOL  , BOOL_COMBINE_BITMAPS},
-        {XyOptionsImpl::OPTION_TYPE_INT   , INT_MAX_BITMAP_COUNT2},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_MAX_BITMAP_COUNT},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_COMBINE_BITMAPS},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_MAX_BITMAP_COUNT2},
 
-        {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_ORIGINAL_VIDEO},
-        {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_ASS_PLAY_RESOLUTION},
-        {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_USER_SPECIFIED_LAYOUT_SIZE},
-        {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_LAYOUT_WITH},
-        {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_AR_ADJUSTED_VIDEO},
+        {XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_RW, SIZE_ORIGINAL_VIDEO},
+        {XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_RW, SIZE_ASS_PLAY_RESOLUTION},
+        {XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_RW, SIZE_USER_SPECIFIED_LAYOUT_SIZE},
+        {XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_RW, SIZE_LAYOUT_WITH},
+        {XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_RW, SIZE_AR_ADJUSTED_VIDEO},
 
-        {XyOptionsImpl::OPTION_TYPE_RECT  , RECT_VIDEO_OUTPUT},
-        {XyOptionsImpl::OPTION_TYPE_RECT  , RECT_SUBTITLE_TARGET},
+        {XyOptionsImpl::OPTION_TYPE_RECT  , XyOptionsImpl::OPTION_MODE_RW, RECT_VIDEO_OUTPUT},
+        {XyOptionsImpl::OPTION_TYPE_RECT  , XyOptionsImpl::OPTION_MODE_RW, RECT_SUBTITLE_TARGET},
 
-        {XyOptionsImpl::OPTION_TYPE_DOUBLE, DOUBLE_FPS},
+        {XyOptionsImpl::OPTION_TYPE_DOUBLE, XyOptionsImpl::OPTION_MODE_RW, DOUBLE_FPS},
 
-        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_LOAD_EXT_LIST},
-        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_PGS_YUV_RANGE},
-        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_PGS_YUV_MATRIX},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_LOAD_EXT_LIST},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_PGS_YUV_RANGE},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_PGS_YUV_MATRIX},
 
-        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_NAME},
-        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_VERSION},
-        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_YUV_MATRIX},
-        {XyOptionsImpl::OPTION_TYPE_STRING, STRING_CONNECTED_CONSUMER},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_NAME},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_VERSION},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_YUV_MATRIX},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_CONNECTED_CONSUMER},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , BIN_OUTPUT_COLOR_FORMAT},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , BIN_INPUT_COLOR_FORMAT},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, BIN_OUTPUT_COLOR_FORMAT},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, BIN_INPUT_COLOR_FORMAT},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , BIN_CACHES_INFO},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, BIN_CACHES_INFO},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , BIN_XY_FLY_WEIGHT_INFO},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, BIN_XY_FLY_WEIGHT_INFO},
+
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_FileName},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageCount},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageName},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SelectedLanguage},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_HideSubtitles},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_PreBuffering},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubPictToBuffer},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AnimWhenBuffering},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_Placement},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_VobSubSettings},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_TextSettings},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_Flip},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_OSD},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SaveFullPath},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleTiming},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_MediaFPS},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ZoomRect},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ColorFormat},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleReloader},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ExtendPicture},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LoadSettings},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_Forced},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AspectRatioSettings},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_HasConfigDialog},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ShowConfigDialog},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_IsSubtitleReloaderLocked},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LockSubtitleReloader},
+        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AdviseSubClock},
+
         {XyOptionsImpl::OPTION_TYPE_END_FLAG}
     };
 };
