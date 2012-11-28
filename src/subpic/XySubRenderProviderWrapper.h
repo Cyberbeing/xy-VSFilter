@@ -60,7 +60,7 @@ private:
 
     double m_fps;
 
-    bool m_combine_bitmap;
+    int m_max_bitmap_count2;
     CComPtr<ISubPicExAllocator> m_allocator;
     CComPtr<ISubPicEx> m_subpic;
 };

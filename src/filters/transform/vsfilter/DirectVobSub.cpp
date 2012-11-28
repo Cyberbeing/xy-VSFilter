@@ -244,6 +244,13 @@ CDirectVobSub::CDirectVobSub(const Option *options)
         m_xy_str_opt[STRING_VERSION] += version[i];
     }
     m_xy_str_opt[STRING_YUV_MATRIX] = "None";
+
+    m_xy_int_opt[INT_MAX_BITMAP_COUNT] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_MAX_BITMAP_COUNT)
+        , 8);
+    if (m_xy_int_opt[INT_MAX_BITMAP_COUNT]<= 1)
+    {
+        m_xy_int_opt[INT_MAX_BITMAP_COUNT] = 1;
+    }
 }
 
 CDirectVobSub::~CDirectVobSub()

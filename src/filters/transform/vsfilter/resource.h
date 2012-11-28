@@ -100,6 +100,7 @@
 #define IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y 194
 #define IDS_RG_LOAD_EXT_LIST                195
 #define IDS_RG_PGS_COLOR_TYPE               196
+#define IDS_RP_MAX_BITMAP_COUNT             197
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202

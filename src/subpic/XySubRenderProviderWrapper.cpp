@@ -172,7 +172,8 @@ XySubRenderProviderWrapper2::XySubRenderProviderWrapper2( ISubPicProviderEx2 *pr
     , m_provider(provider)
     , m_consumer(consumer)
     , m_start(0), m_stop(0)
-    , m_fps(0), m_combine_bitmap(false)
+    , m_fps(0)
+    , m_max_bitmap_count2(0)
 {
     HRESULT hr = NOERROR;
     if (!provider || !consumer)
@@ -218,7 +219,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     ASSERT(output_rect==subtitle_target_rect);
     hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, &original_video_size);
     ASSERT(SUCCEEDED(hr));
-    hr = m_consumer->XyGetBool(DirectVobSubXyOptions::BOOL_COMBINE_BITMAPS, &combine_bitmap);
+    hr = m_consumer->XyGetInt(DirectVobSubXyOptions::INT_MAX_BITMAP_COUNT2, &m_max_bitmap_count2);
     ASSERT(SUCCEEDED(hr));
 
     bool should_invalidate = false;
@@ -235,34 +236,26 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
         m_subtitle_target_rect = subtitle_target_rect;
     }
 
-    if (combine_bitmap && !m_combine_bitmap && m_xy_sub_render_frame)
+    if (m_xy_sub_render_frame)
     {
         int count = 0;
         hr = m_xy_sub_render_frame->GetBitmapCount(&count);
-        should_invalidate = (count>1);
-        m_combine_bitmap = combine_bitmap;
+        should_invalidate = (count>m_max_bitmap_count2);
     }
     if (should_invalidate)
     {
-        XY_LOG_INFO("Output rects changed.");
+        XY_LOG_INFO("Output rects or max_bitmap_count changed.");
         Invalidate();
     }
     if (should_invalidate_allocator)
     {
-        m_subpic = NULL;
-        m_allocator = NULL;
-    }
-    if (combine_bitmap)
-    {
-        if (!m_allocator)
-        {
-            CSize max_size(m_output_rect.right, m_output_rect.bottom);
-            m_allocator = new CPooledSubPicAllocator(MSP_RGB32, max_size,2);
-            ASSERT(m_allocator);
+        CSize max_size(m_subtitle_target_rect.right, m_subtitle_target_rect.bottom);
 
-            m_allocator->SetCurSize(max_size);
-            m_allocator->SetCurVidRect(CRect(CPoint(0,0),max_size));
-        }
+        m_allocator = new CPooledSubPicAllocator(MSP_RGB32, max_size,2);
+        ASSERT(m_allocator);
+
+        m_allocator->SetCurSize(max_size);
+        m_allocator->SetCurVidRect(CRect(CPoint(0,0),max_size));
     }
 
     POSITION pos = m_provider->GetStartPosition(now, fps);
@@ -316,17 +309,10 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
     bool should_combine = false;
     if (m_xy_sub_render_frame)
     {
-        if (!m_combine_bitmap)
-        {
-            int count = 0;
-            hr = m_xy_sub_render_frame->GetBitmapCount(&count);
-            ASSERT(SUCCEEDED(hr));
-            should_combine = count > 8;
-        }
-        else
-        {
-            should_combine = true;
-        }
+        int count = 0;
+        hr = m_xy_sub_render_frame->GetBitmapCount(&count);
+        ASSERT(SUCCEEDED(hr));
+        should_combine = count > m_max_bitmap_count2;
     }
     if (should_combine)
     {

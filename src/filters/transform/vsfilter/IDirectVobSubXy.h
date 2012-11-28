@@ -28,7 +28,10 @@ namespace DirectVobSubXyOptions
 
         BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER,
         BOOL_HIDE_TRAY_ICON,
+
+        INT_MAX_BITMAP_COUNT,
         BOOL_COMBINE_BITMAPS,
+        INT_MAX_BITMAP_COUNT2,
 
         SIZE_ORIGINAL_VIDEO,
         SIZE_ASS_PLAY_RESOLUTION,
@@ -125,7 +128,10 @@ namespace DirectVobSubXyOptions
 
         {XyOptionsImpl::OPTION_TYPE_BOOL  , BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , BOOL_HIDE_TRAY_ICON},
+
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_MAX_BITMAP_COUNT},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , BOOL_COMBINE_BITMAPS},
+        {XyOptionsImpl::OPTION_TYPE_INT   , INT_MAX_BITMAP_COUNT2},
 
         {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_ORIGINAL_VIDEO},
         {XyOptionsImpl::OPTION_TYPE_SIZE  , SIZE_ASS_PLAY_RESOLUTION},
