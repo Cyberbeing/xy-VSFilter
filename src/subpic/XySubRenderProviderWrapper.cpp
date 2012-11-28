@@ -350,7 +350,7 @@ HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
         m_subpic = NULL;
         hr = m_allocator->AllocDynamicEx(&m_subpic);
         if(FAILED(hr) || !m_subpic) {
-            XY_LOG_FATAL("Failed to allocate subpic");
+            XY_LOG_FATAL("Failed to allocate subpic. "<<XY_LOG_VAR_2_STR(hr));
             return hr;
         }
 
