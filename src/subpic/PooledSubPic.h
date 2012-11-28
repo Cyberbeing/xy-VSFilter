@@ -1,8 +1,6 @@
 #pragma once
 
-#include "StdAfx.h"
 #include "MemSubPic.h"
-//#include <atlcoll.h>
 
 using namespace std;
 

@@ -1,10 +1,16 @@
+#include "StdAfx.h"
 #include "PooledSubPic.h"
 #include "../subtitles/xy_malloc.h"
 
+#if ENABLE_XY_LOG_ALLOCATOR
+#  define TRACE_ALLOCATOR(msg) XY_LOG_TRACE(msg)
+#else
+#  define TRACE_ALLOCATOR(msg)
+#endif
 
 STDMETHODIMP_(void) CPooledSubPicAllocator::ReleaseItem( void* Item )
 {
-    //DbgLog((LOG_TRACE, 3, "ReleaseItem::free:%d", _free.GetCount()));
+    TRACE_ALLOCATOR(Item);
     CAutoLock lock(&_poolLock);
     POSITION pos = _using.Find((CPooledSubPic*)Item);
     if(pos!=NULL)
@@ -16,9 +22,8 @@ STDMETHODIMP_(void) CPooledSubPicAllocator::ReleaseItem( void* Item )
 
 STDMETHODIMP_(void) CPooledSubPicAllocator::OnItemDestruct( void* Item )
 {
-    //DbgLog((LOG_TRACE, 3, "OnItemDestruct::free:%d", _free.GetCount()));
+    TRACE_ALLOCATOR(Item);
     CAutoLock lock(&_poolLock);
-    //CPooledSubPic* typedItem = (CPooledSubPic*)Item;
     POSITION pos = _using.Find((CPooledSubPic*)Item);
     if(pos!=NULL)
     {
@@ -30,7 +35,7 @@ STDMETHODIMP_(void) CPooledSubPicAllocator::OnItemDestruct( void* Item )
 
 bool STDMETHODCALLTYPE CPooledSubPicAllocator::InitPool( int capacity )
 {
-    DbgLog((LOG_TRACE, 3, "%s(%d), %s", __FILE__, __LINE__, __FUNCTION__));
+    TRACE_ALLOCATOR(capacity);
     CAutoLock lock(&_poolLock);
     CPooledSubPic* temp;
 
@@ -61,6 +66,7 @@ bool STDMETHODCALLTYPE CPooledSubPicAllocator::InitPool( int capacity )
         if(!(temp = DoAlloc()))
         {
             ASSERT(0);
+            XY_LOG_FATAL("Failed to allocate item");
             return(false);
         }
 
@@ -68,7 +74,6 @@ bool STDMETHODCALLTYPE CPooledSubPicAllocator::InitPool( int capacity )
         _capacity++;
         temp->AddRef();
     }
-    //DbgLog((LOG_TRACE, 3, "InitPool::free:%d", _free.GetCount()));
     return true;
 }
 
@@ -78,6 +83,7 @@ CPooledSubPicAllocator::CPooledSubPicAllocator( int alpha_blt_dst_type, SIZE max
     , _maxsize(maxsize)
     , _type(type)
 {
+    TRACE_ALLOCATOR("");
     if(_type==-1)
     {
         switch(alpha_blt_dst_type)
@@ -142,6 +148,7 @@ bool CPooledSubPicAllocator::AllocEx( bool fStatic, ISubPicEx** ppSubPic )
 
 CPooledSubPicAllocator::~CPooledSubPicAllocator()
 {
+    TRACE_ALLOCATOR("");
     CPooledSubPic* item = NULL;
     CAutoLock lock(&_poolLock);
     for(POSITION pos = _free.GetHeadPosition(); pos!=NULL; )
@@ -200,11 +207,11 @@ CPooledSubPic* CPooledSubPicAllocator::DoAlloc()
     spd.type = _type;
     spd.w = _maxsize.cx;
     spd.h = _maxsize.cy;
-    //		spd.bpp = 32;
+    //spd.bpp = 32;
     spd.bpp = (_type == MSP_AYUV_PLANAR) ? 8 : 32;
     spd.pitch = (spd.w*spd.bpp)>>3;
 
-    //		if(!(spd.bits = new BYTE[spd.pitch*spd.h]))
+    //if(!(spd.bits = new BYTE[spd.pitch*spd.h]))
     if(_type == MSP_AYUV_PLANAR)
     {
         spd.bits = xy_malloc(spd.pitch*spd.h*4);
@@ -223,6 +230,7 @@ CPooledSubPic* CPooledSubPicAllocator::DoAlloc()
     {
         xy_free(spd.bits);
         ASSERT(0);
+        TRACE_ALLOCATOR("Failed to allocate memory.");
         return(NULL);
     }
     return temp;
@@ -247,6 +255,7 @@ void CPooledSubPicAllocator::CollectUnUsedItem()
 
 CPooledSubPic::~CPooledSubPic()
 {
+    TRACE_ALLOCATOR("");
     if(_pool!=NULL)
         _pool->OnItemDestruct(this);
     xy_free(m_spd.bits);
