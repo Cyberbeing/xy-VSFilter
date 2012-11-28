@@ -68,6 +68,12 @@ STDMETHODIMP XySubRenderProviderWrapper::RequestFrame( IXySubRenderFrame**subRen
     {
         return S_FALSE;
     }
+    REFERENCE_TIME start = m_provider->GetStart(pos, fps);
+    REFERENCE_TIME stop = m_provider->GetStop(pos, fps); //fixme: have to get start stop twice
+    if (!(start <= now && now < stop))
+    {
+        return S_FALSE;
+    }
 
     hr = Render( now, pos, fps );
     if (FAILED(hr))
@@ -263,6 +269,12 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     {
         return S_FALSE;
     }
+    REFERENCE_TIME start = m_provider->GetStart(pos, fps);
+    REFERENCE_TIME stop = m_provider->GetStop(pos, fps); //fixme: have to get start stop twice
+    if (!(start <= now && now < stop))
+    {
+        return S_FALSE;
+    }
 
     hr = Render( now, pos );
     if (FAILED(hr))
@@ -294,6 +306,7 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
     {
         return S_FALSE;
     }
+
     m_xy_sub_render_frame = NULL;
     HRESULT hr = E_FAIL;
 
