@@ -218,8 +218,7 @@ public:
                 CRenderedTextSubtitle* pRTS = dynamic_cast<CRenderedTextSubtitle*>((ISubPicProvider*)m_pSubPicProvider);
                 playres = pRTS->m_dstScreenSize;
             }
-            hr = XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
-            CHECK_N_LOG(hr, "Failed to set option");
+            m_xy_size_opt[SIZE_ASS_PLAY_RESOLUTION] = playres;
 
             m_simple_provider->SetSubPicProvider(m_pSubPicProvider);
             m_SubPicProviderId = (DWORD_PTR)(ISubPicProvider*)m_pSubPicProvider;

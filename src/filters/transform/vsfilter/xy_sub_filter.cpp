@@ -1380,8 +1380,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
 
     SetYuvMatrix();
 
-    hr = XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
-    CHECK_N_LOG(hr, "Failed to set option");
+    m_xy_size_opt[SIZE_ASS_PLAY_RESOLUTION] = playres;
 
     if (CComQIPtr<IXySubRenderProvider>(pSubStream))
     {
