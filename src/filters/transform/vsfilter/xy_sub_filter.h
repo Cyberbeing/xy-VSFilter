@@ -37,6 +37,9 @@ public:
 
     STDMETHODIMP Pause();
 
+    // XyOptionsImpl
+    virtual HRESULT OnOptionChanged(unsigned field);
+
     // IXyOptions
     STDMETHODIMP XyGetInt      (unsigned field, int      *value);
     STDMETHODIMP XyGetString   (unsigned field, LPWSTR *value, int *chars);
@@ -158,4 +161,5 @@ private:
     HANDLE m_hSystrayThread;
 
     ISubRenderConsumer *m_consumer;
+    ULONGLONG m_context_id;
 };

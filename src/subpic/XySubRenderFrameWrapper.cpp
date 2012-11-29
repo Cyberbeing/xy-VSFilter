@@ -126,3 +126,104 @@ STDMETHODIMP XySubRenderFrameWrapper::GetBitmapExtra( int index, LPVOID extra_in
     return E_NOTIMPL;
 }
 
+//
+// ContextedBitmapId
+//
+
+class ContextedBitmapId
+{
+public:
+    ContextedBitmapId(ULONGLONG context_id, ULONGLONG bitmap_id):m_context_id(context_id),m_bitmap_id(bitmap_id){}
+    bool operator==(const ContextedBitmapId& key) const
+    {
+        return key.m_context_id == m_context_id && key.m_bitmap_id == m_bitmap_id;
+    }
+
+public:
+    ULONGLONG m_context_id, m_bitmap_id;
+};
+
+class ContextedBitmapIdTraits:public CElementTraits<ContextedBitmapId>
+{
+public:
+    static inline ULONG Hash(const ContextedBitmapId& key)
+    {
+        return (key.m_context_id<<32) | key.m_bitmap_id;
+    }
+};
+
+typedef XyFlyWeight<ContextedBitmapId, 1024, ContextedBitmapIdTraits> XyFwContextedBitmapId;
+
+//
+// XySubRenderFrameWrapper2
+//
+
+XySubRenderFrameWrapper2::XySubRenderFrameWrapper2( IXySubRenderFrame *inner_obj, ULONGLONG context_id)
+    : CUnknown(NAME("XySubRenderFrameWrapper"), NULL)
+    , m_inner_obj(inner_obj)
+{
+    ASSERT(inner_obj);
+    int count = 0;
+    HRESULT hr = inner_obj->GetBitmapCount(&count);
+    ASSERT(SUCCEEDED(hr) && count>=0);
+    if (count>0)
+    {
+        m_ids.SetCount(count);
+        for (int i=0;i<count;i++)
+        {
+            ULONGLONG id;
+            hr = inner_obj->GetBitmap(i, &id, NULL, NULL, NULL, NULL);
+            ASSERT(SUCCEEDED(hr));
+            m_ids[i] = XyFwContextedBitmapId(new ContextedBitmapId(context_id, id)).GetId();
+        }
+    }
+}
+
+STDMETHODIMP XySubRenderFrameWrapper2::NonDelegatingQueryInterface( REFIID riid, void** ppv )
+{
+    return
+        QI(IXySubRenderFrame)
+        __super::NonDelegatingQueryInterface(riid, ppv);
+}
+
+STDMETHODIMP XySubRenderFrameWrapper2::GetOutputRect( RECT *outputRect )
+{
+    return m_inner_obj->GetOutputRect(outputRect);
+}
+
+STDMETHODIMP XySubRenderFrameWrapper2::GetClipRect( RECT *clipRect )
+{
+    return m_inner_obj->GetClipRect(clipRect);
+}
+
+STDMETHODIMP XySubRenderFrameWrapper2::GetXyColorSpace( int *xyColorSpace )
+{
+    return m_inner_obj->GetXyColorSpace(xyColorSpace);
+}
+
+STDMETHODIMP XySubRenderFrameWrapper2::GetBitmapCount( int *count )
+{
+    return m_inner_obj->GetBitmapCount(count);
+}
+
+STDMETHODIMP XySubRenderFrameWrapper2::GetBitmap( int index, ULONGLONG *id, POINT *position, SIZE *size
+    , LPCVOID *pixels, int *pitch )
+{
+    HRESULT hr = m_inner_obj->GetBitmap(index, id, position, size, pixels, pitch);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+    if (id)
+    {
+        ASSERT(index>=0 && index<m_ids.GetCount());
+        *id = m_ids.GetAt(index);
+        TRACE_SUB_RENDER_FRAME(index<<" contexted id:"<<*id);
+    }
+    return hr;
+}
+
+STDMETHODIMP XySubRenderFrameWrapper2::GetBitmapExtra( int index, LPVOID extra_info )
+{
+    return m_inner_obj->GetBitmapExtra(index, extra_info);
+}
