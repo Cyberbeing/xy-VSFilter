@@ -45,6 +45,13 @@ public:
         ,YuvRange_TV
         ,YuvRange_PC
     };
+    enum LoadLevel
+    {
+        LOADLEVEL_WHEN_NEEDED = 0,
+        LOADLEVEL_ALWAYS = 1,
+        LOADLEVEL_DISABLED = 2,
+        LOADLEVEL_COUNT
+    };
 
     static const int REQUIRED_CONFIG_VERSION = 209;
     static const int CUR_SUPPORTED_FILTER_VERSION = 39;
