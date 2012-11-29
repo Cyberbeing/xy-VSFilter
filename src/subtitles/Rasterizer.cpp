@@ -1345,6 +1345,137 @@ static __forceinline void pixmix_sse2(DWORD* dst, DWORD color, DWORD alpha)
     *dst = (DWORD)_mm_cvtsi128_si32(r);
 }
 
+static __forceinline __m128i packed_pix_mix_sse2(const __m128i& dst, 
+    const __m128i& c_r, const __m128i& c_g, const __m128i& c_b, const __m128i& a)
+{
+    __m128i d_a, d_r, d_g, d_b;
+
+    d_a = _mm_srli_epi32(dst, 24);
+
+    d_r = _mm_slli_epi32(dst, 8);
+    d_r = _mm_srli_epi32(d_r, 24);
+
+    d_g = _mm_slli_epi32(dst, 16);
+    d_g = _mm_srli_epi32(d_g, 24);
+
+    d_b = _mm_slli_epi32(dst, 24);
+    d_b = _mm_srli_epi32(d_b, 24);
+
+    //d_a = _mm_or_si128(d_a, c_a);
+    d_r = _mm_or_si128(d_r, c_r);
+    d_g = _mm_or_si128(d_g, c_g);
+    d_b = _mm_or_si128(d_b, c_b);
+
+    d_a = _mm_mullo_epi16(d_a, a);
+    d_r = _mm_madd_epi16(d_r, a);
+    d_g = _mm_madd_epi16(d_g, a);
+    d_b = _mm_madd_epi16(d_b, a);
+
+    d_a = _mm_srli_epi32(d_a, 8);
+    d_r = _mm_srli_epi32(d_r, 8);
+    d_g = _mm_srli_epi32(d_g, 8);
+    d_b = _mm_srli_epi32(d_b, 8);
+    
+    d_a = _mm_slli_epi32(d_a, 24);
+    d_r = _mm_slli_epi32(d_r, 16);
+    d_g = _mm_slli_epi32(d_g, 8);
+    
+    d_b = _mm_or_si128(d_b, d_g);
+    d_b = _mm_or_si128(d_b, d_r);
+    return _mm_or_si128(d_b, d_a);
+}
+
+static __forceinline void packed_pix_mix_sse2(BYTE* dst, const BYTE* alpha, int w, DWORD color)
+{
+    __m128i c_r = _mm_set1_epi32( (color & 0xFF0000) );
+    __m128i c_g = _mm_set1_epi32( (color & 0xFF00)<<8 );
+    __m128i c_b = _mm_set1_epi32( (color & 0xFF)<<16 );
+
+    __m128i zero = _mm_setzero_si128();
+
+    __m128i ones = _mm_set1_epi16(0x1);
+
+    const BYTE *alpha_end0 = alpha + (w&~15);
+    const BYTE *alpha_end = alpha + w;
+    for ( ; alpha<alpha_end0; alpha+=16, dst+=16*4 )
+    {
+        __m128i a = _mm_loadu_si128(reinterpret_cast<const __m128i*>(alpha));
+        __m128i d1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst));
+        __m128i d2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst+16));
+        __m128i d3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst+32));
+        __m128i d4 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst+48));
+
+        __m128i ra;
+#ifdef _DEBUG
+        ra = _mm_setzero_si128();
+#endif // _DEBUG
+        ra = _mm_cmpeq_epi32(ra, ra);
+        ra = _mm_xor_si128(ra, a);
+        __m128i a1 = _mm_unpacklo_epi8(ra, a);
+        __m128i a2 = _mm_unpackhi_epi8(a1, zero);
+        a1 = _mm_unpacklo_epi8(a1, zero);
+        a1 = _mm_add_epi16(a1, ones);
+        a2 = _mm_add_epi16(a2, ones);
+
+        __m128i a3 = _mm_unpackhi_epi8(ra, a);
+        __m128i a4 = _mm_unpackhi_epi8(a3,zero);
+        a3 = _mm_unpacklo_epi8(a3,zero);
+        a3 = _mm_add_epi16(a3, ones);
+        a4 = _mm_add_epi16(a4, ones);
+
+        d1 = packed_pix_mix_sse2(d1, c_r, c_g, c_b, a1);
+        d2 = packed_pix_mix_sse2(d2, c_r, c_g, c_b, a2);
+        d3 = packed_pix_mix_sse2(d3, c_r, c_g, c_b, a3);
+        d4 = packed_pix_mix_sse2(d4, c_r, c_g, c_b, a4);
+
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst), d1);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst+16), d2);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst+32), d3);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst+48), d4);
+    }
+    DWORD * dst_w = reinterpret_cast<DWORD*>(dst);
+    for ( ; alpha<alpha_end; alpha++, dst_w++ )
+    {
+        pixmix_sse2(dst_w, color, *alpha);
+    }
+}
+
+static __forceinline void packed_pix_mix_sse2(BYTE* dst, BYTE alpha, int w, DWORD color)
+{
+    __m128i c_r = _mm_set1_epi32( (color & 0xFF0000) );
+    __m128i c_g = _mm_set1_epi32( (color & 0xFF00)<<8 );
+    __m128i c_b = _mm_set1_epi32( (color & 0xFF)<<16 );
+    __m128i a = _mm_set1_epi32(((alpha+1) << 16) | (0x100 - alpha));
+
+    __m128i zero = _mm_setzero_si128();
+
+    __m128i ones = _mm_set1_epi16(0x1);
+
+    const BYTE *dst_end0 = dst + ((4*w)&~15);
+    const BYTE *dst_end = dst + 4*w;
+    for ( ; dst<dst_end0; dst+=16*4 )
+    {
+        __m128i d1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst));
+        __m128i d2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst+16));
+        __m128i d3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst+32));
+        __m128i d4 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst+48));
+
+        d1 = packed_pix_mix_sse2(d1, c_r, c_g, c_b, a);
+        d2 = packed_pix_mix_sse2(d2, c_r, c_g, c_b, a);
+        d3 = packed_pix_mix_sse2(d3, c_r, c_g, c_b, a);
+        d4 = packed_pix_mix_sse2(d4, c_r, c_g, c_b, a);
+
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst), d1);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst+16), d2);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst+32), d3);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst+48), d4);
+    }
+    for ( ; dst<dst_end; dst+=4 )
+    {
+        pixmix_sse2(reinterpret_cast<DWORD*>(dst), color, alpha);
+    }
+}
+
 static __forceinline void pixmix2_sse2(DWORD* dst, DWORD color, DWORD shapealpha, DWORD clipalpha)
 {
     int alpha = (((shapealpha)*(clipalpha)*(color>>24))>>12)&0xff;
@@ -1795,11 +1926,7 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     {
         while(h--)
         {
-            for(int wt=0; wt<w; ++wt)
-                // The <<6 is due to pixmix expecting the alpha parameter to be
-                // the multiplication of two 6-bit unsigned numbers but we
-                // only have one here. (No alpha mask.)
-                pixmix_sse2(&dst[wt], color, s[wt]);
+            packed_pix_mix_sse2((BYTE*)dst, s, w, color );
             s += overlayPitch;
             dst = (unsigned long *)((char *)dst + bitmap->pitch);
         }
@@ -1974,11 +2101,10 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
     {
     case   DM::SSE2 | 0*DM::AYUV_PLANAR :
     {
+        BYTE *dst = ((BYTE*)spd.bits + spd.pitch * y) + x*4;
         for (int wy=y; wy<y+nHeight; wy++) {
-            DWORD* dst = (DWORD*)((BYTE*)spd.bits + spd.pitch * wy) + x;
-            for(int wt=0; wt<nWidth; ++wt) {
-                pixmix_sse2(&dst[wt], argb, argb>>24);
-            }
+            packed_pix_mix_sse2(dst, argb>>24, nWidth, argb);
+            dst += spd.pitch;
         }
     }
     break;
