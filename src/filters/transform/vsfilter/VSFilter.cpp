@@ -170,13 +170,10 @@ CFactoryTemplate g_Templates[] =
 {
     {sudFilter[2].strName, sudFilter[2].clsID, CreateInstance<XySubFilter>, NULL, &sudFilter[2]},
     //fix me: may conflicts with DirectVodSubFilter set if people register both DirectVodSubFilter and XySubFilter
-    {L"DVSMainPPage", &__uuidof(CDVSMainPPage), CreateInstance<CDVSMainPPage>},
-    {L"DVSGeneralPPage", &__uuidof(CDVSGeneralPPage), CreateInstance<CDVSGeneralPPage>},
+    {L"XySubFilterMainPPage", &__uuidof(CXySubFilterMainPPage), CreateInstance<CXySubFilterMainPPage>},
     {L"DVSMiscPPage", &__uuidof(CDVSMiscPPage), CreateInstance<CDVSMiscPPage>},
     {L"DVSMorePPage", &__uuidof(CDVSMorePPage), CreateInstance<CDVSMorePPage>},
     {L"DVSTimingPPage", &__uuidof(CDVSTimingPPage), CreateInstance<CDVSTimingPPage>},
-    {L"DVSZoomPPage", &__uuidof(CDVSZoomPPage), CreateInstance<CDVSZoomPPage>},
-    {L"DVSColorPPage", &__uuidof(CDVSColorPPage), CreateInstance<CDVSColorPPage>},
     {L"DVSPathsPPage", &__uuidof(CDVSPathsPPage), CreateInstance<CDVSPathsPPage>},
     {L"DVSAboutPPage", &__uuidof(CDVSAboutPPage), CreateInstance<CDVSAboutPPage>},
 };

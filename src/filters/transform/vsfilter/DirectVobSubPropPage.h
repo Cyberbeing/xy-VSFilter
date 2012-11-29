@@ -245,3 +245,43 @@ protected:
 public:
     CDVSPathsPPage(LPUNKNOWN lpunk, HRESULT* phr);
 };
+
+//
+// XySubFilter
+//
+[uuid("4514EFD4-E09B-4995-9668-143F12994FE7")]
+class CXySubFilterMainPPage : public CDVSBasePPage
+{
+    void FreeLangs(), AllocLangs(int nLangs);
+
+    WCHAR m_fn[MAX_PATH];
+    int m_iSelectedLanguage, m_nLangs;
+    WCHAR** m_ppLangs;
+    bool m_fOverridePlacement;
+    bool m_fHideTrayIcon;
+    int m_PlacementXperc, m_PlacementYperc;
+    STSStyle m_defStyle;
+    bool m_fOnlyShowForcedVobSubs;
+    CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;
+    int m_LoadLevel;
+    bool m_fExternalLoad, m_fWebLoad, m_fEmbeddedLoad;
+
+    CEdit m_fnedit;
+    CComboBox m_langs;
+    CButton m_oplacement;
+    CSpinButtonCtrl m_subposx, m_subposy;
+    CButton m_font, m_forcedsubs;
+    CButton m_AutoPARCompensation;
+    CComboBox m_PARCombo;
+    CButton m_hide_tray_icon;
+    CComboBox m_load;
+    CButton m_extload, m_webload, m_embload;
+protected:
+    virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    virtual void UpdateControlData(bool fSave);
+    virtual void UpdateObjectData(bool fSave);
+
+public:
+    CXySubFilterMainPPage(LPUNKNOWN lpunk, HRESULT* phr);
+    virtual ~CXySubFilterMainPPage();
+};

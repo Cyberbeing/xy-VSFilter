@@ -1558,3 +1558,259 @@ void CDVSPathsPPage::UpdateControlData(bool fSave)
     }
 }
 
+//
+// CXySubFilterMainPPage
+//
+CXySubFilterMainPPage::CXySubFilterMainPPage(LPUNKNOWN pUnk, HRESULT* phr) 
+    : CDVSBasePPage(NAME("XySubFilter Property Page (main)"), pUnk, IDD_DVSMAINPAGE, IDD_DVSMAINPAGE)
+    , m_nLangs(0)
+    , m_ppLangs(NULL)
+{
+    BindControl(IDC_FILENAME, m_fnedit);
+    BindControl(IDC_LANGCOMBO, m_langs);
+    BindControl(IDC_OVERRIDEPLACEMENT, m_oplacement);
+    BindControl(IDC_SPIN1, m_subposx);
+    BindControl(IDC_SPIN2, m_subposy);
+    BindControl(IDC_FONT, m_font);
+    BindControl(IDC_ONLYSHOWFORCEDSUBS, m_forcedsubs);
+    BindControl(IDC_PARCOMBO, m_PARCombo);
+    BindControl(IDC_CHECKBOX_HideTrayIcon, m_hide_tray_icon);
+
+    BindControl(IDC_LOADCOMBO2, m_load);
+    BindControl(IDC_EXTLOAD2, m_extload);
+    BindControl(IDC_WEBLOAD2, m_webload);
+    BindControl(IDC_EMBLOAD2, m_embload);
+}
+
+CXySubFilterMainPPage::~CXySubFilterMainPPage()
+{
+    FreeLangs();
+}
+
+void CXySubFilterMainPPage::FreeLangs()
+{
+    if(m_nLangs > 0 && m_ppLangs) 
+    {
+        for(int i = 0; i < m_nLangs; i++) CoTaskMemFree(m_ppLangs[i]);
+        CoTaskMemFree(m_ppLangs);
+        m_nLangs = 0;
+        m_ppLangs = NULL;
+    }
+}
+
+void CXySubFilterMainPPage::AllocLangs(int nLangs)
+{
+    m_ppLangs = (WCHAR**)CoTaskMemRealloc(m_ppLangs, sizeof(WCHAR*)*nLangs);
+    m_nLangs = nLangs;
+}
+
+bool CXySubFilterMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch(uMsg)
+    {
+    case WM_COMMAND:
+        {
+            switch(HIWORD(wParam))
+            {
+            case BN_CLICKED:
+                {
+                    if(LOWORD(wParam) == IDC_OPEN)
+                    {
+                        AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+                        CFileDialog fd(TRUE, NULL, NULL, 
+                            OFN_EXPLORER|OFN_ENABLESIZING|OFN_HIDEREADONLY|OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST,
+                            _T(".idx .smi .sub .srt .psb .ssa .ass .usf .ssf|*.idx;*.smi;*.sub;*.srt;*.psb;*.ssa;*.ass;*.usf;*.ssf|")
+                            _T("All files (*.*)|*.*||"),
+                            CDialog::FromHandle(m_Dlg), 0);
+
+                        if(fd.DoModal() == IDOK)
+                        {
+                            m_fnedit.SetWindowText(fd.GetPathName());
+                        }
+
+                        return(true);
+                    }
+                    else if(LOWORD(wParam) == IDC_FONT)
+                    {
+                        AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+                        CStyleEditorDialog dlg(_T("Default"), &m_defStyle, CWnd::FromHandle(m_hwnd));
+
+                        if(dlg.DoModal() == IDOK)
+                        {
+                            m_defStyle = dlg.m_stss;
+                            CString str = m_defStyle.fontName;
+                            if(str.GetLength() > 18) str = str.Left(16).TrimRight() + _T("...");
+                            m_font.SetWindowText(str);
+                        }
+
+                        return(true);
+                    }
+                }
+                break;
+            case CBN_SELCHANGE:
+                {
+                    AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+                    if(LOWORD(wParam) == IDC_LOADCOMBO2)
+                    {
+                        m_extload.EnableWindow(m_load.GetCurSel() == 1);
+                        m_webload.EnableWindow(m_load.GetCurSel() == 1);
+                        m_embload.EnableWindow(m_load.GetCurSel() == 1);
+                        return(true);
+                    }
+                }
+                break;
+            }
+        }
+        break;
+    }
+    return(false);
+}
+
+void CXySubFilterMainPPage::UpdateObjectData(bool fSave)
+{
+    HRESULT hr = NOERROR;
+    if(fSave)
+    {
+        hr = m_pDirectVobSub->put_FileName(m_fn);
+        CHECK_N_LOG(hr, "Failed to set option");
+        if(hr == S_OK)
+        {
+            int nLangs;
+            hr = m_pDirectVobSub->get_LanguageCount(&nLangs);
+            CHECK_N_LOG(hr, "Failed to get option");
+            AllocLangs(nLangs);
+            for(int i = 0; i < m_nLangs; i++) {
+                hr = m_pDirectVobSub->get_LanguageName(i, &m_ppLangs[i]);
+                CHECK_N_LOG(hr, "Failed to get option");
+            }
+            hr = m_pDirectVobSub->get_SelectedLanguage(&m_iSelectedLanguage);
+            CHECK_N_LOG(hr, "Failed to get option");
+        }
+
+        hr = m_pDirectVobSub->put_SelectedLanguage(m_iSelectedLanguage);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_Placement(m_fOverridePlacement, m_PlacementXperc, m_PlacementYperc);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_VobSubSettings(true, m_fOnlyShowForcedVobSubs, false);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_TextSettings(&m_defStyle);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_AspectRatioSettings(&m_ePARCompensationType);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_HIDE_TRAY_ICON, m_fHideTrayIcon);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_LoadSettings(m_LoadLevel, m_fExternalLoad, m_fWebLoad, m_fEmbeddedLoad);
+        CHECK_N_LOG(hr, "Failed to set option");
+    }
+    else
+    {
+        hr = m_pDirectVobSub->get_FileName(m_fn);
+        CHECK_N_LOG(hr, "Failed to get option");
+        int nLangs;
+        hr = m_pDirectVobSub->get_LanguageCount(&nLangs); 
+        CHECK_N_LOG(hr, "Failed to get option");
+        AllocLangs(nLangs);
+        for(int i = 0; i < m_nLangs; i++) {
+            hr = m_pDirectVobSub->get_LanguageName(i, &m_ppLangs[i]);
+            CHECK_N_LOG(hr, "Failed to get option");
+        }
+        hr = m_pDirectVobSub->get_SelectedLanguage(&m_iSelectedLanguage);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_Placement(&m_fOverridePlacement, &m_PlacementXperc, &m_PlacementYperc);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_VobSubSettings(NULL, &m_fOnlyShowForcedVobSubs, NULL);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_TextSettings(&m_defStyle);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_AspectRatioSettings(&m_ePARCompensationType);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_HIDE_TRAY_ICON, &m_fHideTrayIcon);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_LoadSettings(&m_LoadLevel, &m_fExternalLoad, &m_fWebLoad, &m_fEmbeddedLoad);
+        CHECK_N_LOG(hr, "Failed to get option");
+    }
+}
+
+void CXySubFilterMainPPage::UpdateControlData(bool fSave)
+{
+    if(fSave)
+    {
+        CString fn;
+        m_fnedit.GetWindowText(fn);
+#ifdef UNICODE
+        wcscpy(m_fn, fn);
+#else
+        mbstowcs(m_fn, fn, fn.GetLength()+1);
+#endif
+        m_iSelectedLanguage = m_langs.GetCurSel();
+        m_fOverridePlacement = !!m_oplacement.GetCheck();
+        m_PlacementXperc = m_subposx.GetPos();
+        m_PlacementYperc = m_subposy.GetPos();
+        m_fOnlyShowForcedVobSubs = !!m_forcedsubs.GetCheck();
+        if (m_PARCombo.GetCurSel() != CB_ERR)
+            m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(m_PARCombo.GetItemData(m_PARCombo.GetCurSel()));
+        else
+            m_ePARCompensationType = CSimpleTextSubtitle::EPCTDisabled;
+        m_fHideTrayIcon = !!m_hide_tray_icon.GetCheck();
+
+        if(m_load.GetCurSel() >= 0) m_LoadLevel = m_load.GetItemData(m_load.GetCurSel());
+        m_fExternalLoad = !!m_extload.GetCheck();
+        m_fWebLoad = !!m_webload.GetCheck();
+        m_fEmbeddedLoad = !!m_embload.GetCheck();
+    }
+    else
+    {
+        m_fnedit.SetWindowText(CString(m_fn));
+        m_oplacement.SetCheck(m_fOverridePlacement);
+        m_subposx.SetRange(-20, 120);
+        m_subposx.SetPos(m_PlacementXperc);
+        m_subposx.EnableWindow(m_fOverridePlacement);
+        m_subposy.SetRange(-20, 120);
+        m_subposy.SetPos(m_PlacementYperc);
+        m_subposy.EnableWindow(m_fOverridePlacement);
+        m_font.SetWindowText(m_defStyle.fontName);
+        m_forcedsubs.SetCheck(m_fOnlyShowForcedVobSubs);
+        m_langs.ResetContent();
+        m_langs.EnableWindow(m_nLangs > 0);
+        for(int i = 0; i < m_nLangs; i++) m_langs.AddString(CString(m_ppLangs[i]));
+        m_langs.SetCurSel(m_iSelectedLanguage);
+
+        m_PARCombo.ResetContent();
+        m_PARCombo.InsertString(0, ResStr(IDS_RT_PAR_DISABLED));
+        m_PARCombo.SetItemData(0, CSimpleTextSubtitle::EPCTDisabled);
+        if (m_ePARCompensationType == CSimpleTextSubtitle::EPCTDisabled)
+            m_PARCombo.SetCurSel(0);
+
+        m_PARCombo.InsertString(1, ResStr(IDS_RT_PAR_DOWNSCALE));
+        m_PARCombo.SetItemData(1, CSimpleTextSubtitle::EPCTDownscale);
+        if (m_ePARCompensationType == CSimpleTextSubtitle::EPCTDownscale)
+            m_PARCombo.SetCurSel(1);
+
+        m_PARCombo.InsertString(2, ResStr(IDS_RT_PAR_UPSCALE));
+        m_PARCombo.SetItemData(2, CSimpleTextSubtitle::EPCTUpscale);
+        if (m_ePARCompensationType == CSimpleTextSubtitle::EPCTUpscale)
+            m_PARCombo.SetCurSel(2);
+
+        m_PARCombo.InsertString(3, ResStr(IDS_RT_PAR_ACCURATE_SIZE));
+        m_PARCombo.SetItemData(3, CSimpleTextSubtitle::EPCTAccurateSize);
+        if (m_ePARCompensationType == CSimpleTextSubtitle::EPCTAccurateSize)
+            m_PARCombo.SetCurSel(3);
+        m_hide_tray_icon.SetCheck(m_fHideTrayIcon);
+
+        m_load.ResetContent();
+        m_load.AddString(ResStr(IDS_DONOTLOAD)); m_load.SetItemData(0, 2);
+        m_load.AddString(ResStr(IDS_LOADWHENNEEDED)); m_load.SetItemData(1, 0);
+        m_load.AddString(ResStr(IDS_ALWAYSLOAD)); m_load.SetItemData(2, 1);
+        m_load.SetCurSel(!m_LoadLevel?1:m_LoadLevel==1?2:0);
+        m_extload.SetCheck(m_fExternalLoad);
+        m_webload.SetCheck(m_fWebLoad);
+        m_embload.SetCheck(m_fEmbeddedLoad);
+        m_extload.EnableWindow(m_load.GetCurSel() == 1);
+        m_webload.EnableWindow(m_load.GetCurSel() == 1);
+        m_embload.EnableWindow(m_load.GetCurSel() == 1);
+    }
+}
+

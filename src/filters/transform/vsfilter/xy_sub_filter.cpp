@@ -601,18 +601,16 @@ STDMETHODIMP XySubFilter::GetPages(CAUUID* pPages)
     XY_LOG_INFO(pPages);
     CheckPointer(pPages, E_POINTER);
 
-    pPages->cElems = 8;
+    pPages->cElems = 6;
     pPages->pElems = (GUID*)CoTaskMemAlloc(sizeof(GUID)*pPages->cElems);
 
     if(pPages->pElems == NULL) return E_OUTOFMEMORY;
 
     int i = 0;
-    pPages->pElems[i++] = __uuidof(CDVSMainPPage);
-    pPages->pElems[i++] = __uuidof(CDVSGeneralPPage);
+    pPages->pElems[i++] = __uuidof(CXySubFilterMainPPage);
     pPages->pElems[i++] = __uuidof(CDVSMiscPPage);
     pPages->pElems[i++] = __uuidof(CDVSMorePPage);
     pPages->pElems[i++] = __uuidof(CDVSTimingPPage);
-    pPages->pElems[i++] = __uuidof(CDVSColorPPage);
     pPages->pElems[i++] = __uuidof(CDVSPathsPPage);
     pPages->pElems[i++] = __uuidof(CDVSAboutPPage);
 
