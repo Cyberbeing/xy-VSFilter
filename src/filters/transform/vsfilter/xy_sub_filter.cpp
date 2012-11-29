@@ -1707,9 +1707,9 @@ bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
         return false;
     }
 
-    if(level < 0 || level >= 2) return(false);
+    if(level < 0 || level >= LOADLEVEL_WHEN_NEEDED || level==LOADLEVEL_DISABLED) return(false);
 
-    if(level == 1)
+    if(level == LOADLEVEL_ALWAYS)
         fRet = m_fExternalLoad = m_fWebLoad = m_fEmbeddedLoad = true;
 
     // find text stream on known splitters

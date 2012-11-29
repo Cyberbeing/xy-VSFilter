@@ -1575,11 +1575,11 @@ bool CDirectVobSubFilter2::ShouldWeAutoload(IFilterGraph* pGraph)
 	bool m_fExternalLoad, m_fWebLoad, m_fEmbeddedLoad;
 	get_LoadSettings(&level, &m_fExternalLoad, &m_fWebLoad, &m_fEmbeddedLoad);
 
-	if(level < 0 || level >= 2) return(false);
+    if(level < 0 || level >= LOADLEVEL_COUNT || level==LOADLEVEL_DISABLED) return(false);
 
 	bool fRet = false;
 
-	if(level == 1)
+    if(level == LOADLEVEL_ALWAYS)
 		fRet = m_fExternalLoad = m_fWebLoad = m_fEmbeddedLoad = true;
 
 	// find text stream on known splitters
