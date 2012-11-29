@@ -51,7 +51,6 @@ public:
     STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
     STDMETHODIMP put_SelectedLanguage(int iSelected);
     STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
-    STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
 
     STDMETHODIMP put_Placement(bool fOverridePlacement, int xperc, int yperc);
     STDMETHODIMP put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fPolygonize);
@@ -60,13 +59,6 @@ public:
 
     STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
     STDMETHODIMP get_XyFlyWeightInfo(XyFlyWeightInfo* xy_fw_info);
-
-    STDMETHODIMP get_MediaFPS(bool* fEnabled, double* fps);
-    STDMETHODIMP put_MediaFPS(bool fEnabled, double fps);
-    STDMETHODIMP get_ZoomRect(NORMALIZEDRECT* rect);
-    STDMETHODIMP put_ZoomRect(NORMALIZEDRECT* rect);
-    STDMETHODIMP HasConfigDialog(int iSelected);
-    STDMETHODIMP ShowConfigDialog(int iSelected, HWND hWndParent);
 
     // IDirectVobSub2
     STDMETHODIMP put_TextSettings(STSStyle* pDefStyle);
