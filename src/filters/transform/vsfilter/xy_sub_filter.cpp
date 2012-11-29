@@ -45,6 +45,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     , m_consumer(NULL)
     , m_hSystrayThread(0)
     , m_consumer_options_read(false)
+    , m_context_id(0)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
@@ -213,6 +214,35 @@ STDMETHODIMP XySubFilter::Pause()
         if (SUCCEEDED(hr)) {
             hr = CBaseFilter::Pause();
         }
+    }
+
+    return hr;
+}
+
+//
+// XyOptionsImpl
+//
+
+HRESULT XySubFilter::OnOptionChanged( unsigned field )
+{
+    HRESULT hr = CDirectVobSub::OnOptionChanged(field);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+    switch(field)
+    {
+    case INT_SUBPIXEL_POS_LEVEL:
+    case SIZE_ASS_PLAY_RESOLUTION:
+    case SIZE_USER_SPECIFIED_LAYOUT_SIZE:
+    case DOUBLE_FPS:
+    case void_SelectedLanguage:
+    case void_FileName:
+    case void_Placement:
+    case void_VobSubSettings:
+    case void_TextSettings:
+    case void_AspectRatioSettings:
+        m_context_id++;
     }
 
     return hr;
@@ -1037,6 +1067,10 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
         if (FAILED(hr))
         {
             return hr;
+        }
+        if (sub_render_frame)
+        {
+            sub_render_frame = new XySubRenderFrameWrapper2(sub_render_frame, m_context_id);
         }
         if(m_fFlipSubtitles)
         {
