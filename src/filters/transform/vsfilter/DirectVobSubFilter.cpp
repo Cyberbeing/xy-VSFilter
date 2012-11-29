@@ -725,8 +725,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 
 	if(FAILED(hr)) m_simple_provider = NULL;
 
-    hr = XySetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, CSize(m_w, m_h));
-    CHECK_N_LOG(hr, "Failed to set option");
+    m_xy_size_opt[SIZE_ORIGINAL_VIDEO] = CSize(m_w, m_h);
 	UpdateSubtitle(false);
 
 	InitObj4OSD();
@@ -1965,8 +1964,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 
     SetYuvMatrix();
 
-    hr = XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
-    CHECK_N_LOG(hr, "Failed to set option");
+    m_xy_size_opt[SIZE_ASS_PLAY_RESOLUTION] = playres;
     if(m_simple_provider)
         m_simple_provider->SetSubPicProvider(CComQIPtr<ISubPicProviderEx>(pSubStream));
 }

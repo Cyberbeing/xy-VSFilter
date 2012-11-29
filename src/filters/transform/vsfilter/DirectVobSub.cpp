@@ -1345,12 +1345,6 @@ STDMETHODIMP CDirectVobSub::XySetInt( unsigned field, int value )
 
 STDMETHODIMP CDirectVobSub::XySetSize( unsigned field, SIZE value )
 {
-    switch (field)
-    {
-    case DirectVobSubXyOptions::SIZE_LAYOUT_WITH:
-        return E_INVALIDARG;
-    }
-
     CAutoLock cAutoLock(&m_propsLock);
     HRESULT hr = XyOptionsImpl::XySetSize(field, value);
 
