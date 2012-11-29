@@ -441,19 +441,6 @@ STDMETHODIMP XySubFilter::put_HideSubtitles(bool fHideSubtitles)
     return hr;
 }
 
-STDMETHODIMP XySubFilter::put_PreBuffering(bool fDoPreBuffering)
-{
-    XY_LOG_INFO(fDoPreBuffering);
-    HRESULT hr = CDirectVobSub::put_PreBuffering(fDoPreBuffering);
-
-    if(hr == NOERROR)
-    {
-        InitSubPicQueue();
-    }
-
-    return hr;
-}
-
 STDMETHODIMP XySubFilter::put_Placement(bool fOverridePlacement, int xperc, int yperc)
 {
     XY_LOG_INFO(fOverridePlacement<<XY_LOG_VAR_2_STR(xperc)<<XY_LOG_VAR_2_STR(yperc));
@@ -573,47 +560,6 @@ STDMETHODIMP XySubFilter::get_XyFlyWeightInfo( XyFlyWeightInfo* xy_fw_info )
     xy_fw_info->xy_fw_grouped_draw_items_hash_key.query_count = XyFwGroupedDrawItemsHashKey::GetCacher()->GetQueryCount();
 
     return hr;
-}
-
-STDMETHODIMP XySubFilter::get_MediaFPS( bool* fEnabled, double* fps )
-{
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP XySubFilter::put_MediaFPS( bool fEnabled, double fps )
-{
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP XySubFilter::get_ZoomRect(NORMALIZEDRECT* rect)
-{
-    XY_LOG_INFO(rect);
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP XySubFilter::put_ZoomRect(NORMALIZEDRECT* rect)
-{
-    XY_LOG_INFO(rect);
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP XySubFilter::HasConfigDialog(int iSelected)
-{
-    XY_LOG_INFO(iSelected);
-    int nLangs;
-    if(FAILED(get_LanguageCount(&nLangs))) return E_FAIL;
-    return E_FAIL;
-    // TODO: temporally disabled since we don't have a new textsub/vobsub editor dlg for dvs yet
-    // return(nLangs >= 0 && iSelected < nLangs ? S_OK : E_FAIL);
-}
-
-STDMETHODIMP XySubFilter::ShowConfigDialog(int iSelected, HWND hWndParent)
-{
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(iSelected)<<XY_LOG_VAR_2_STR(hWndParent));
-    // TODO: temporally disabled since we don't have a new textsub/vobsub editor dlg for dvs yet
-    return(E_FAIL);
 }
 
 //
