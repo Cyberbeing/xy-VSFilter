@@ -258,7 +258,11 @@ void CPooledSubPicAllocator::CollectUnUsedItem()
         {
             _using.AddTail(item);
         }
-        item = _using.RemoveHead();
+    }
+    pos = _using.GetHeadPosition();
+    if(pos)
+    {
+        CPooledSubPic* item = _using.RemoveHead();
         if (item->m_cRef==1)
         {
             _free.AddTail(item);
