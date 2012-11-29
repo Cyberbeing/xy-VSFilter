@@ -299,8 +299,7 @@ STDMETHODIMP CDirectVobSub::put_FileName(WCHAR* fn)
 	int len = WideCharToMultiByte(cs.ciACP/*CP_OEMCP*/, NULL, fn, -1, buff, MAX_PATH*2, NULL, NULL);
 	m_FileName.ReleaseBuffer(len+1);
 #endif
-
-	return S_OK;
+    return OnOptionChanged(void_FileName);
 }
 
 STDMETHODIMP CDirectVobSub::get_LanguageCount(int* nLangs)
@@ -352,7 +351,7 @@ STDMETHODIMP CDirectVobSub::put_SelectedLanguage(int iSelected)
 
 	m_iSelectedLanguage = iSelected;
 
-	return S_OK;
+    return OnOptionChanged(void_SelectedLanguage);
 }
 
 STDMETHODIMP CDirectVobSub::get_HideSubtitles(bool* fHideSubtitles)
@@ -378,7 +377,7 @@ STDMETHODIMP CDirectVobSub::put_HideSubtitles(bool fHideSubtitles)
 
 	m_fHideSubtitles = fHideSubtitles;
 
-	return S_OK;
+    return OnOptionChanged(void_HideSubtitles);
 }
 
 STDMETHODIMP CDirectVobSub::get_PreBuffering(bool* fDoPreBuffering)
@@ -440,8 +439,7 @@ STDMETHODIMP CDirectVobSub::put_Placement(bool fOverridePlacement, int xperc, in
 	m_fOverridePlacement = fOverridePlacement;
 	m_PlacementXperc = xperc;
 	m_PlacementYperc = yperc;
-
-	return S_OK;
+    return OnOptionChanged(void_Placement);
 }
 
 STDMETHODIMP CDirectVobSub::get_VobSubSettings(bool* fBuffer, bool* fOnlyShowForcedSubs, bool* fPolygonize)
@@ -472,8 +470,7 @@ STDMETHODIMP CDirectVobSub::put_VobSubSettings(bool fBuffer, bool fOnlyShowForce
 	m_fBufferVobSub = fBuffer;
 	m_fOnlyShowForcedVobSubs = fOnlyShowForcedSubs;
 	m_fPolygonize = fPolygonize;
-
-	return S_OK;
+    return OnOptionChanged(void_VobSubSettings);
 }
 
 STDMETHODIMP CDirectVobSub::get_TextSettings(void* lf, int lflen, COLORREF* color, bool* fShadow, bool* fOutline, bool* fAdvancedRenderer)
@@ -553,7 +550,7 @@ STDMETHODIMP CDirectVobSub::put_TextSettings(void* lf, int lflen, COLORREF color
     else 
     {
         m_defStyle = tmp;
-        return S_OK;
+        return OnOptionChanged(void_TextSettings);
     }
 
 }
@@ -585,7 +582,7 @@ STDMETHODIMP CDirectVobSub::put_Flip(bool fPicture, bool fSubtitles)
 	m_fFlipPicture = fPicture;
 	m_fFlipSubtitles = fSubtitles;
 
-	return S_OK;
+	return OnOptionChanged(void_TextSettings);
 }
 
 STDMETHODIMP CDirectVobSub::get_OSD(bool* fOSD)
@@ -611,7 +608,7 @@ STDMETHODIMP CDirectVobSub::put_OSD(bool fOSD)
 
 	m_fOSD = fOSD;
 
-	return S_OK;
+    return OnOptionChanged(void_OSD);
 }
 
 STDMETHODIMP CDirectVobSub::get_SaveFullPath(bool* fSaveFullPath)
@@ -637,7 +634,7 @@ STDMETHODIMP CDirectVobSub::put_SaveFullPath(bool fSaveFullPath)
 
 	m_fSaveFullPath = fSaveFullPath;
 
-	return S_OK;
+    return OnOptionChanged(void_SaveFullPath);
 }
 
 STDMETHODIMP CDirectVobSub::get_SubtitleTiming(int* delay, int* speedmul, int* speeddiv)
@@ -669,7 +666,7 @@ STDMETHODIMP CDirectVobSub::put_SubtitleTiming(int delay, int speedmul, int spee
 	m_SubtitleSpeedMul = speedmul;
 	if(speeddiv > 0) m_SubtitleSpeedDiv = speeddiv;
 
-	return S_OK;
+    return OnOptionChanged(void_SubtitleTiming);
 }
 
 STDMETHODIMP CDirectVobSub::get_MediaFPS(bool* fEnabled, double* fps)
@@ -699,7 +696,7 @@ STDMETHODIMP CDirectVobSub::put_MediaFPS(bool fEnabled, double fps)
 	m_fMediaFPSEnabled = fEnabled;
 	if(fps > 0) m_MediaFPS = fps;
 
-	return S_OK;
+    return OnOptionChanged(void_MediaFPS);
 }
 
 STDMETHODIMP CDirectVobSub::get_ZoomRect(NORMALIZEDRECT* rect)
@@ -731,7 +728,7 @@ STDMETHODIMP CDirectVobSub::put_ZoomRect(NORMALIZEDRECT* rect)
 
 	m_ZoomRect = *rect;
 
-	return S_OK;
+    return OnOptionChanged(void_ZoomRect);
 }
 
 STDMETHODIMP CDirectVobSub::get_CachesInfo(CachesInfo* caches_info)
@@ -960,7 +957,7 @@ STDMETHODIMP CDirectVobSub::put_SubtitleReloader(bool fDisable)
 
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), fDisable);
 
-	return S_OK;
+    return OnOptionChanged(void_SubtitleReloader);
 }
 
 STDMETHODIMP CDirectVobSub::get_ExtendPicture(int* horizontal, int* vertical, int* resx2, int* resx2minw, int* resx2minh)
@@ -1004,7 +1001,7 @@ STDMETHODIMP CDirectVobSub::put_ExtendPicture(int horizontal, int vertical, int 
 	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINW), resx2minw);
 	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINH), resx2minh);
 
-	    return S_OK;
+        return OnOptionChanged(void_ExtendPicture);
     }
     else
     {
@@ -1050,7 +1047,7 @@ STDMETHODIMP CDirectVobSub::put_LoadSettings(int level, bool fExternalLoad, bool
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD), fWebLoad);
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), fEmbeddedLoad);
 
-	return S_OK;
+	return OnOptionChanged(void_LoadSettings);
 }
 
 // IDirectVobSub2
@@ -1084,7 +1081,7 @@ STDMETHODIMP CDirectVobSub::put_Forced(bool fForced)
         return S_FALSE;
 
 	m_fForced = fForced;
-	return S_OK;
+    return OnOptionChanged(void_Forced);
 }
 
 STDMETHODIMP CDirectVobSub::get_TextSettings(STSStyle* pDefStyle)
@@ -1119,7 +1116,7 @@ STDMETHODIMP CDirectVobSub::put_TextSettings(STSStyle* pDefStyle)
 
     m_defStyle = *pDefStyle;
 
-    return S_OK;
+    return OnOptionChanged(void_TextSettings);
 }
 
 STDMETHODIMP CDirectVobSub::get_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType)
@@ -1148,7 +1145,7 @@ STDMETHODIMP CDirectVobSub::put_AspectRatioSettings(CSimpleTextSubtitle::EPARCom
 
 	m_ePARCompensationType = *ePARCompensationType;
 
-	return S_OK;
+    return OnOptionChanged(void_AspectRatioSettings);
 }
 
 // IFilterVersion
