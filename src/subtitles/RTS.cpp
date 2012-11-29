@@ -1983,7 +1983,7 @@ void CRenderedTextSubtitle::OnChanged()
 bool CRenderedTextSubtitle::Init( const CRectCoor2& video_rect, const CRectCoor2& subtitle_target_rect,
     const SIZE& size1, const CRect& wtf_vidrect_of_spd )
 {
-    XY_AUTO_TIMING("");
+    XY_AUTO_TIMING(_T(""));
     Deinit();
     m_video_rect = CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8);
     m_subtitle_target_rect = CRect(subtitle_target_rect.left*8, subtitle_target_rect.top*8, 
