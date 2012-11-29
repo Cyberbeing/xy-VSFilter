@@ -343,6 +343,8 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
 
 HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
 {
+    static int s_combined_bitmap_id = 0x10000000;//fixme: important! Uncombined bitmap id MUST < 0x10000000.
+
     XY_LOG_TRACE(now);
     HRESULT hr = NOERROR;
     if (m_xy_sub_render_frame)
@@ -403,7 +405,8 @@ HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
         CMemSubPic * mem_subpic = dynamic_cast<CMemSubPic*>((ISubPicEx *)m_subpic);
         ASSERT(mem_subpic);
 
-        m_xy_sub_render_frame = new XySubRenderFrameWrapper(mem_subpic, m_output_rect, m_subtitle_target_rect, now, &hr);
+        m_xy_sub_render_frame = new XySubRenderFrameWrapper(mem_subpic, m_output_rect, m_subtitle_target_rect
+            , s_combined_bitmap_id++, &hr);
         return hr;
     }
     return hr;
