@@ -1562,7 +1562,7 @@ void CDVSPathsPPage::UpdateControlData(bool fSave)
 // CXySubFilterMainPPage
 //
 CXySubFilterMainPPage::CXySubFilterMainPPage(LPUNKNOWN pUnk, HRESULT* phr) 
-    : CDVSBasePPage(NAME("XySubFilter Property Page (main)"), pUnk, IDD_DVSMAINPAGE, IDD_DVSMAINPAGE)
+    : CDVSBasePPage(NAME("XySubFilter Property Page (main)"), pUnk, IDD_XY_SUB_FILTER_MAINPAGE, IDD_XY_SUB_FILTER_MAINPAGE)
     , m_nLangs(0)
     , m_ppLangs(NULL)
 {
@@ -1576,10 +1576,10 @@ CXySubFilterMainPPage::CXySubFilterMainPPage(LPUNKNOWN pUnk, HRESULT* phr)
     BindControl(IDC_PARCOMBO, m_PARCombo);
     BindControl(IDC_CHECKBOX_HideTrayIcon, m_hide_tray_icon);
 
-    BindControl(IDC_LOADCOMBO2, m_load);
-    BindControl(IDC_EXTLOAD2, m_extload);
-    BindControl(IDC_WEBLOAD2, m_webload);
-    BindControl(IDC_EMBLOAD2, m_embload);
+    BindControl(IDC_LOADCOMBO, m_load);
+    BindControl(IDC_EXTLOAD, m_extload);
+    BindControl(IDC_WEBLOAD, m_webload);
+    BindControl(IDC_EMBLOAD, m_embload);
 }
 
 CXySubFilterMainPPage::~CXySubFilterMainPPage()
@@ -1653,7 +1653,7 @@ bool CXySubFilterMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                 {
                     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-                    if(LOWORD(wParam) == IDC_LOADCOMBO2)
+                    if(LOWORD(wParam) == IDC_LOADCOMBO)
                     {
                         m_extload.EnableWindow(m_load.GetCurSel() == 1);
                         m_webload.EnableWindow(m_load.GetCurSel() == 1);

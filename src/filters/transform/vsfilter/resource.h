@@ -203,10 +203,6 @@
 #define IDC_SPIN_LAYOUT_SIZE_X          334
 #define IDC_EDIT_LAYOUT_SIZE_Y          335
 #define IDC_SPIN_LAYOUT_SIZE_Y          336
-#define IDC_LOADCOMBO2                  337
-#define IDC_EXTLOAD2                    338
-#define IDC_WEBLOAD2                    339
-#define IDC_EMBLOAD2                    340
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
 #define IDC_LABLE_OVERLAY_CACHE         403
