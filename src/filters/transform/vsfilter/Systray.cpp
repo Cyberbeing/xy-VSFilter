@@ -389,11 +389,11 @@ void DeleteSystray(HANDLE *pSystrayThread, SystrayIconData* data )
                 }
             }
         }
-    }
-    else
-    {
-        XY_LOG_WARN(_T("CALL THE AMBULANCE!!!"));
-        TerminateThread(*pSystrayThread, (DWORD)-1);
+        else
+        {
+            XY_LOG_WARN(_T("CALL THE AMBULANCE!!!"));
+            TerminateThread(*pSystrayThread, (DWORD)-1);
+        }
     }
     data->hSystrayWnd = NULL;
     *pSystrayThread = NULL;
