@@ -153,7 +153,7 @@ protected:
 	virtual void UpdateObjectData(bool fSave);
 
 public:
-    CDVSTimingPPage(LPUNKNOWN lpunk, HRESULT* phr);
+    CDVSTimingPPage(LPUNKNOWN lpunk, HRESULT* phr, TCHAR *pName = NAME("DirectVobSub Timing Property Page"));
 };
 
 [uuid("69CE757B-E8C0-4B0A-9EA0-CEA284096F98")]
@@ -181,7 +181,7 @@ public:
 class CDVSAboutPPage : public CDVSBasePPage
 {
 public:
-    CDVSAboutPPage(LPUNKNOWN lpunk, HRESULT* phr);
+    CDVSAboutPPage(LPUNKNOWN lpunk, HRESULT* phr, TCHAR* pName=NAME("About Property Page"));
     
     bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
@@ -243,7 +243,7 @@ protected:
 	virtual void UpdateObjectData(bool fSave);
 
 public:
-    CDVSPathsPPage(LPUNKNOWN lpunk, HRESULT* phr);
+    CDVSPathsPPage(LPUNKNOWN lpunk, HRESULT* phr, TCHAR* pName = NAME("DirectVobSub Paths Property Page"));
 };
 
 //
@@ -309,4 +309,30 @@ protected:
 
 public:
     CXySubFilterMorePPage(LPUNKNOWN lpunk, HRESULT* phr);
+};
+
+[uuid("1438A8B4-E8AF-4A81-BCA8-970751A9EE82")]
+class CXySubFilterTimingPPage : public CDVSTimingPPage
+{
+public:
+    CXySubFilterTimingPPage(LPUNKNOWN lpunk, HRESULT* phr
+        , TCHAR *pName = NAME("XySubFilter Property Page (timing)"))
+        : CDVSTimingPPage(lpunk, phr, pName) {}
+};
+
+[uuid("26DD9A01-7F95-40DE-B53D-4B4CE4023280")]
+class CXySubFilterPathsPPage : public CDVSPathsPPage
+{
+public:
+    CXySubFilterPathsPPage(LPUNKNOWN lpunk, HRESULT* phr
+        , TCHAR* pName = NAME("XySubFilter Property Page (path)"))
+        : CDVSPathsPPage(lpunk, phr, pName) {}
+};
+
+[uuid("D0DE7ADC-7DC6-43EC-912D-ABD44D7453FB")]
+class CXySubFilterAboutPPage : public CDVSAboutPPage
+{
+public:
+    CXySubFilterAboutPPage(LPUNKNOWN lpunk, HRESULT* phr, TCHAR* pName=NAME("XySubFilter Property Page (about)"))
+        : CDVSAboutPPage(lpunk, phr, pName) {}
 };
