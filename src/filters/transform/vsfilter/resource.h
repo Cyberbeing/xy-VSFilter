@@ -153,6 +153,7 @@
 #define IDC_EDIT5                       242
 #define IDD_XY_SUB_FILTER_MAINPAGE      242
 #define IDC_SPIN5                       243
+#define IDD_XY_SUB_FILTER_MOREPAGE      243
 #define IDC_EDIT6                       244
 #define IDC_SPIN6                       245
 #define IDC_EDIT9                       246

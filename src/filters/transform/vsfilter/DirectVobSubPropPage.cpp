@@ -1814,3 +1814,245 @@ void CXySubFilterMainPPage::UpdateControlData(bool fSave)
     }
 }
 
+
+//
+// CXySubFilterMorePPage
+//
+CXySubFilterMorePPage::CXySubFilterMorePPage(LPUNKNOWN pUnk, HRESULT* phr) 
+    :CDVSBasePPage(NAME("XySubFilter Property Page (more)"), pUnk
+    , IDD_XY_SUB_FILTER_MOREPAGE, IDD_XY_SUB_FILTER_MOREPAGE)
+{
+    BindControl(IDC_SPINPathCache, m_path_cache);
+    BindControl(IDC_SPINScanlineCache, m_scanline_cache);
+    BindControl(IDC_SPINOverlayNoBlurCache, m_overlay_no_blur_cache);
+    BindControl(IDC_SPINOverlayCache, m_overlay_cache);
+    BindControl(IDC_COMBO_SUBPIXEL_POS, m_combo_subpixel_pos);
+
+    BindControl(IDC_COMBO_LAYOUT_SIZE_OPT, m_combo_layout_size_opt);
+    BindControl(IDC_SPIN_LAYOUT_SIZE_X, m_layout_size_x);
+    BindControl(IDC_SPIN_LAYOUT_SIZE_Y, m_layout_size_y);
+
+    BindControl(IDC_HIDE, m_hidesub);
+    BindControl(IDC_AUTORELOAD, m_autoreload);
+    BindControl(IDC_INSTANTUPDATE, m_instupd);
+}
+
+bool CXySubFilterMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HRESULT hr = NOERROR;
+    switch(uMsg)
+    {
+    case WM_COMMAND:
+        {
+            switch(HIWORD(wParam))
+            {
+            case BN_CLICKED:
+                {
+                    if(LOWORD(wParam) == IDC_CACHES_INFO_BTN)
+                    {
+                        AFX_MANAGE_STATE(AfxGetStaticModuleState());
+
+                        DirectVobSubXyOptions::CachesInfo *caches_info = NULL;
+                        DirectVobSubXyOptions::XyFlyWeightInfo *xy_fw_info = NULL;
+                        int tmp;
+                        hr = m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_CACHES_INFO, reinterpret_cast<LPVOID*>(&caches_info), &tmp);
+                        CHECK_N_LOG(hr, "Failed to get option");
+                        hr = m_pDirectVobSubXy->XyGetBin(DirectVobSubXyOptions::BIN_XY_FLY_WEIGHT_INFO, reinterpret_cast<LPVOID*>(&xy_fw_info), &tmp);
+                        CHECK_N_LOG(hr, "Failed to get option");
+                        ASSERT(caches_info);
+                        ASSERT(xy_fw_info);
+                        CString msg;
+                        msg.Format(
+                            _T("Cache :stored_num/hit_count/query_count\n")\
+                            _T("  Parser cache 1:%ld/%ld/%ld\n")\
+                            _T("  Parser cache 2:%ld/%ld/%ld\n")\
+                            _T("\n")\
+                            _T("  LV 4:%ld/%ld/%ld\t\t")\
+                            _T("  LV 3:%ld/%ld/%ld\n")\
+                            _T("  LV 2:%ld/%ld/%ld\t\t")\
+                            _T("  LV 1:%ld/%ld/%ld\n")\
+                            _T("  LV 0:%ld/%ld/%ld\n")\
+                            _T("\n")\
+                            _T("  bitmap   :%ld/%ld/%ld\t\t")\
+                            _T("  scan line:%ld/%ld/%ld\n")\
+                            _T("  relay key:%ld/%ld/%ld\t\t")\
+                            _T("  clipper  :%ld/%ld/%ld\n")\
+                            _T("\n")\
+                            _T("  FW string pool    :%ld/%ld/%ld\t\t")\
+                            _T("  FW bitmap key pool:%ld/%ld/%ld\n")\
+                            ,
+                            caches_info->text_info_cache_cur_item_num, caches_info->text_info_cache_hit_count, caches_info->text_info_cache_query_count,
+                            caches_info->word_info_cache_cur_item_num, caches_info->word_info_cache_hit_count, caches_info->word_info_cache_query_count,
+                            caches_info->path_cache_cur_item_num,     caches_info->path_cache_hit_count,     caches_info->path_cache_query_count,
+                            caches_info->scanline_cache2_cur_item_num, caches_info->scanline_cache2_hit_count, caches_info->scanline_cache2_query_count,
+                            caches_info->non_blur_cache_cur_item_num, caches_info->non_blur_cache_hit_count, caches_info->non_blur_cache_query_count,
+                            caches_info->overlay_cache_cur_item_num,  caches_info->overlay_cache_hit_count,  caches_info->overlay_cache_query_count,
+                            caches_info->interpolate_cache_cur_item_num, caches_info->interpolate_cache_hit_count, caches_info->interpolate_cache_query_count,
+                            caches_info->bitmap_cache_cur_item_num, caches_info->bitmap_cache_hit_count, caches_info->bitmap_cache_query_count,
+                            caches_info->scanline_cache_cur_item_num, caches_info->scanline_cache_hit_count, caches_info->scanline_cache_query_count,
+                            caches_info->overlay_key_cache_cur_item_num, caches_info->overlay_key_cache_hit_count, caches_info->overlay_key_cache_query_count,
+                            caches_info->clipper_cache_cur_item_num, caches_info->clipper_cache_hit_count, caches_info->clipper_cache_query_count,
+
+                            xy_fw_info->xy_fw_string_w.cur_item_num, xy_fw_info->xy_fw_string_w.hit_count, xy_fw_info->xy_fw_string_w.query_count,
+                            xy_fw_info->xy_fw_grouped_draw_items_hash_key.cur_item_num, xy_fw_info->xy_fw_grouped_draw_items_hash_key.hit_count, xy_fw_info->xy_fw_grouped_draw_items_hash_key.query_count
+                            );
+                        MessageBox(
+                            m_hwnd,
+                            msg,
+                            _T("Caches Info"),
+                            MB_OK | MB_ICONINFORMATION | MB_APPLMODAL
+                            );
+                        delete []caches_info;
+                        delete []xy_fw_info;
+                        return(true);
+                    }
+                    else if(LOWORD(wParam) == IDC_INSTANTUPDATE)
+                    {
+                        AFX_MANAGE_STATE(AfxGetStaticModuleState());
+                        theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), !!m_instupd.GetCheck());
+                        return(true);
+                    }
+                }
+                break;
+            }
+        }
+        break;
+    }
+    return(false);
+}
+
+void CXySubFilterMorePPage::UpdateObjectData(bool fSave)
+{
+    HRESULT hr = NOERROR;
+    if(fSave)
+    {
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, m_overlay_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, m_overlay_no_blur_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, m_scan_line_data_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, m_path_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL, m_subpixel_pos_level);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT, m_layout_size_opt);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetSize(DirectVobSubXyOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, m_layout_size);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_HideSubtitles(m_fHideSubtitles);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
+        CHECK_N_LOG(hr, "Failed to set option");
+    }
+    else
+    {
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM, &m_overlay_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, &m_overlay_no_blur_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, &m_scan_line_data_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM, &m_path_cache_max_item_num);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL, &m_subpixel_pos_level);
+        CHECK_N_LOG(hr, "Failed to get option");
+
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT, &m_layout_size_opt);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetSize(DirectVobSubXyOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, &m_layout_size);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_HideSubtitles(&m_fHideSubtitles);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
+        CHECK_N_LOG(hr, "Failed to get option");
+    }
+}
+
+void CXySubFilterMorePPage::UpdateControlData(bool fSave)
+{
+    if(fSave)
+    {
+        m_overlay_cache_max_item_num = m_overlay_cache.GetPos32();
+        m_overlay_no_blur_cache_max_item_num = m_overlay_no_blur_cache.GetPos32();
+        m_scan_line_data_cache_max_item_num = m_scanline_cache.GetPos32();
+        m_path_cache_max_item_num = m_path_cache.GetPos32();
+
+        if (m_combo_subpixel_pos.GetCurSel() != CB_ERR)
+        {
+            m_subpixel_pos_level = m_combo_subpixel_pos.GetCurSel();
+        }
+        else
+        {
+            m_subpixel_pos_level = 0;
+        }
+
+        if (m_combo_layout_size_opt.GetCurSel() != CB_ERR)
+        {
+            m_layout_size_opt = m_combo_layout_size_opt.GetItemData(m_combo_layout_size_opt.GetCurSel());
+        }
+        else
+        {
+            m_layout_size_opt = DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE;
+        }
+        m_layout_size.cx = m_layout_size_x.GetPos32();
+        m_layout_size.cy = m_layout_size_y.GetPos32();
+
+        m_fHideSubtitles = !!m_hidesub.GetCheck();
+        m_fReloaderDisabled = !m_autoreload.GetCheck();
+    }
+    else
+    {
+        m_overlay_cache.SetRange32(0, 2048);
+        m_overlay_no_blur_cache.SetRange32(0, 2048);
+        m_scanline_cache.SetRange32(0, 16384);
+        m_path_cache.SetRange32(0, 16384);
+
+        m_overlay_cache.SetPos32(m_overlay_cache_max_item_num);
+        m_overlay_no_blur_cache.SetPos32(m_overlay_no_blur_cache_max_item_num);
+        m_scanline_cache.SetPos32(m_scan_line_data_cache_max_item_num);
+        m_path_cache.SetPos32(m_path_cache_max_item_num);
+
+        int temp = m_subpixel_pos_level;
+        if(m_subpixel_pos_level < 0)
+            temp = 0;
+        else if ( m_subpixel_pos_level >= 5 )
+            temp = 4;
+
+        m_combo_subpixel_pos.ResetContent();
+        m_combo_subpixel_pos.AddString( CString(_T("NONE(fastest)")) );m_combo_subpixel_pos.SetItemData(0, 0);
+        m_combo_subpixel_pos.AddString( CString(_T("2x2")) );m_combo_subpixel_pos.SetItemData(1, 1);
+        m_combo_subpixel_pos.AddString( CString(_T("4x4")) );m_combo_subpixel_pos.SetItemData(2, 2);
+        m_combo_subpixel_pos.AddString( CString(_T("8x8(vsfilter2.39 default)")) );m_combo_subpixel_pos.SetItemData(3, 3);
+        m_combo_subpixel_pos.AddString( CString(_T("8x8(bilinear)")) );m_combo_subpixel_pos.SetItemData(4, 4);
+
+        m_combo_subpixel_pos.SetCurSel( temp );
+
+        switch(m_layout_size_opt)
+        {
+        default:
+        case DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
+            temp = 0;
+            break;
+        case DirectVobSubXyOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED:
+            temp = 1;
+            break;
+        }
+
+        m_combo_layout_size_opt.ResetContent();
+        m_combo_layout_size_opt.AddString( CString(_T("Use Original Video Size")) );
+        m_combo_layout_size_opt.SetItemData(0, DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE);
+        m_combo_layout_size_opt.AddString( CString(_T("Customize ...")) );
+        m_combo_layout_size_opt.SetItemData(1, DirectVobSubXyOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED);
+        m_combo_layout_size_opt.SetCurSel( temp );
+
+        m_layout_size_x.SetRange32(1, 12800);
+        m_layout_size_x.SetPos32(m_layout_size.cx);
+        m_layout_size_y.SetRange32(1, 12800);
+        m_layout_size_y.SetPos32(m_layout_size.cy);
+
+        m_hidesub.SetCheck(m_fHideSubtitles);
+        m_autoreload.SetCheck(!m_fReloaderDisabled);
+        m_instupd.SetCheck(!!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), 1));
+    }
+}
