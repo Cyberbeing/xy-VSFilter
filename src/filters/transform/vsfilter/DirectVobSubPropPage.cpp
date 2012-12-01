@@ -782,8 +782,9 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
 
 /* CDVSTimingPPage */
 
-CDVSTimingPPage::CDVSTimingPPage(LPUNKNOWN pUnk, HRESULT* phr) :
-    CDVSBasePPage(NAME("DirectVobSub Timing Property Page"), pUnk, IDD_DVSTIMINGPAGE, IDD_DVSTIMINGPAGE)
+CDVSTimingPPage::CDVSTimingPPage( LPUNKNOWN lpunk, HRESULT* phr
+    , TCHAR *pName /*= NAME("DirectVobSub Timing Property Page")*/ )
+    : CDVSBasePPage(pName, lpunk, IDD_DVSTIMINGPAGE, IDD_DVSTIMINGPAGE)
 {
     BindControl(IDC_MODFPS, m_modfps);
     BindControl(IDC_FPS, m_fps);
@@ -1094,8 +1095,8 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
 
 /* CDVSAboutPPage */
 
-CDVSAboutPPage::CDVSAboutPPage(LPUNKNOWN lpunk, HRESULT* phr) 
-    : CDVSBasePPage(NAME("About Property Page"), lpunk, IDD_DVSABOUTPAGE, IDD_DVSABOUTPAGE)
+CDVSAboutPPage::CDVSAboutPPage( LPUNKNOWN lpunk, HRESULT* phr, TCHAR* pName/*=NAME("About Property Page")*/ )
+    : CDVSBasePPage(pName, lpunk, IDD_DVSABOUTPAGE, IDD_DVSABOUTPAGE)
 {
 
 }
@@ -1390,8 +1391,9 @@ CDVSColorPPage::~CDVSColorPPage()
 
 /* CDVSPathsPPage */
 
-CDVSPathsPPage::CDVSPathsPPage(LPUNKNOWN pUnk, HRESULT* phr)
-    : CDVSBasePPage(NAME("DirectVobSub Paths Property Page"), pUnk, IDD_DVSPATHSPAGE, IDD_DVSPATHSPAGE)
+CDVSPathsPPage::CDVSPathsPPage( LPUNKNOWN lpunk, HRESULT* phr
+    , TCHAR* pName /*= NAME("DirectVobSub Paths Property Page")*/ )
+    : CDVSBasePPage(pName, lpunk, IDD_DVSPATHSPAGE, IDD_DVSPATHSPAGE)
 {
     BindControl(IDC_PATHLIST, m_pathlist);
     BindControl(IDC_PATHEDIT, m_path);
