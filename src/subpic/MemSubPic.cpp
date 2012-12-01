@@ -390,8 +390,6 @@ HRESULT CMemSubPic::UnlockOther(CAtlList<CRect>* dirtyRectList)
         }
         else if(m_alpha_blt_dst_type == MSP_YUY2)
         {
-            XY_DO_ONCE( xy_logger::write_file("G:\\b1_ul", top, m_spd.pitch*(h-1)) );
-
             for(BYTE* tempTop=top; tempTop < bottom ; tempTop += m_spd.pitch)
             {
                 BYTE* s = tempTop;
@@ -407,8 +405,6 @@ HRESULT CMemSubPic::UnlockOther(CAtlList<CRect>* dirtyRectList)
                     last_u = s[6];
                 }
             }
-
-            XY_DO_ONCE( xy_logger::write_file("G:\\a1_ul", top, m_spd.pitch*(h-1)) );
         }
         else if(m_alpha_blt_dst_type == MSP_YV12 || m_alpha_blt_dst_type == MSP_IYUV 
             || m_alpha_blt_dst_type == MSP_AYUV)
