@@ -609,7 +609,7 @@ STDMETHODIMP XySubFilter::GetPages(CAUUID* pPages)
     int i = 0;
     pPages->pElems[i++] = __uuidof(CXySubFilterMainPPage);
     pPages->pElems[i++] = __uuidof(CDVSMiscPPage);
-    pPages->pElems[i++] = __uuidof(CDVSMorePPage);
+    pPages->pElems[i++] = __uuidof(CXySubFilterMorePPage);
     pPages->pElems[i++] = __uuidof(CDVSTimingPPage);
     pPages->pElems[i++] = __uuidof(CDVSPathsPPage);
     pPages->pElems[i++] = __uuidof(CDVSAboutPPage);
