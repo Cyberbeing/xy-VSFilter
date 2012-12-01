@@ -426,7 +426,6 @@ HRESULT SimpleSubpic::ConvertColorSpace()
         else if(m_alpha_blt_dst_type == MSP_YUY2)
         {
             ASSERT(xy_color_space==XY_CS_AUYV);
-            XY_DO_ONCE( xy_logger::write_file("G:\\b1_ul", top, bitmap.pitch*(h-1)) );
 
             BYTE* dst = reinterpret_cast<BYTE*>(xy_malloc(bitmap.pitch*h, (bitmap.pos.x*4)&15));
             m_buffers.GetAt(i) = dst;            
@@ -446,8 +445,7 @@ HRESULT SimpleSubpic::ConvertColorSpace()
                     s[0] = (last_u + 2*s[2] + s[6] + 2)>>2;                    
                     last_u = s[6];
                 }
-            }            
-            XY_DO_ONCE( xy_logger::write_file("G:\\a1_ul", dst, bitmap.pitch*(h-1)) );
+            }
         }
         else if(m_alpha_blt_dst_type == MSP_YV12 || m_alpha_blt_dst_type == MSP_IYUV )
         {
