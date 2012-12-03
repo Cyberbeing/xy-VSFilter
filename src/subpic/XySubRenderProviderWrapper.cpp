@@ -159,7 +159,7 @@ HRESULT XySubRenderProviderWrapper::ResetAllocator()
 
 STDMETHODIMP XySubRenderProviderWrapper::Invalidate( REFERENCE_TIME rtInvalidate /*= -1*/ )
 {
-    if (m_pSubPic && m_pSubPic->GetStart()>=rtInvalidate)
+    if (m_pSubPic->GetStart()>=rtInvalidate)
     {
         m_pSubPic = NULL;
         m_xy_sub_render_frame = NULL;
