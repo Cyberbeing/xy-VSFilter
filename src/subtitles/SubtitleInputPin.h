@@ -24,22 +24,52 @@
 #include "..\subpic\ISubPic.h"
 
 //
-// CSubtitleInputPin
+// CSubtitleInputPinHelper
+//
+class CSubtitleInputPinHelper
+{
+public:
+    virtual ~CSubtitleInputPinHelper(){}
+    STDMETHOD (NewSegment)(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate) = 0;
+    STDMETHOD (Receive)(IMediaSample* pSample) = 0;
+
+    STDMETHOD_(ISubStream*, GetSubStream) () = 0;
+};
+
+//
+// CSubtitleInputPinHelperImpl
 //
 
+class CSubtitleInputPinHelperImpl: public CSubtitleInputPinHelper
+{
+public:
+    CSubtitleInputPinHelperImpl(CComPtr<ISubStream> pSubStream) : m_pSubStream(pSubStream){}
+
+    STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
+    STDMETHODIMP_(ISubStream*) GetSubStream() { return m_pSubStream; }
+protected:
+    CComPtr<ISubStream> m_pSubStream;
+    REFERENCE_TIME m_tStart, m_tStop;
+    double m_dRate;
+};
+
+//
+// CSubtitleInputPin
+//
 class CSubtitleInputPin : public CBaseInputPin
 {
+protected:
 	CCritSec m_csReceive;
 
 	CCritSec* m_pSubLock;
-	CComPtr<ISubStream> m_pSubStream;
-
+    CSubtitleInputPinHelper *m_helper;
 protected:
 	virtual void AddSubStream(ISubStream* pSubStream) = 0;
 	virtual void RemoveSubStream(ISubStream* pSubStream) = 0;
 	virtual void InvalidateSubtitle(REFERENCE_TIME rtStart, ISubStream* pSubStream) = 0;
-	bool		 IsHdmvSub(const CMediaType* pmt);
 
+    STDMETHOD_(CSubtitleInputPinHelper*, CreateHelper) ( const CMediaType& mt, IPin* pReceivePin );
+    bool IsHdmvSub(const CMediaType* pmt);
 public:
 	CSubtitleInputPin(CBaseFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr);
 
@@ -50,5 +80,5 @@ public:
 	STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 	STDMETHODIMP Receive(IMediaSample* pSample);
 
-	ISubStream* GetSubStream() {return m_pSubStream;}
+	ISubStream* GetSubStream() { return m_helper ? m_helper->GetSubStream() : NULL; }
 };
