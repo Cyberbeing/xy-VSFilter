@@ -16,6 +16,16 @@
 
 #endif
 
+std::ostream& operator<<(std::ostream& os, const POINT& obj)
+{
+    return os<<"("<<obj.x<<","<<obj.y<<")";
+}
+
+std::wostream& operator<<(std::wostream& os, const POINT& obj)
+{
+    return os<<L"("<<obj.x<<L","<<obj.y<<L")";
+}
+
 std::ostream& operator<<(std::ostream& os, const SIZE& obj)
 {
     return os<<"("<<obj.cx<<","<<obj.cy<<")";
