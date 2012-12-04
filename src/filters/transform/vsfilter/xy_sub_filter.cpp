@@ -3,7 +3,7 @@
 #include "DirectVobSubFilter.h"
 #include "VSFilter.h"
 #include "DirectVobSubPropPage.h"
-#include "TextInputPin.h"
+#include "SubtitleInputPin2.h"
 #include "../../../SubPic/SimpleSubPicProviderImpl.h"
 #include "../../../subpic/SimpleSubPicWrapper.h"
 #include "../../../subpic/color_conv_table.h"
@@ -55,7 +55,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     m_video_yuv_matrix_decided_by_sub = ColorConvTable::NONE;
     m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_NONE;
 
-    m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, phr));
+    m_pSubtitleInputPin.Add(new SubtitleInputPin2(this, m_pLock, &m_csSubLock, phr));
     ASSERT(SUCCEEDED(*phr));
     if(phr && FAILED(*phr)) return;
 
@@ -76,8 +76,8 @@ XySubFilter::~XySubFilter()
     m_frd.EndThreadEvent.Set();
     CAMThread::Close();
 
-    for(unsigned i = 0; i < m_pTextInput.GetCount(); i++)
-        delete m_pTextInput[i];
+    for(unsigned i = 0; i < m_pSubtitleInputPin.GetCount(); i++)
+        delete m_pSubtitleInputPin[i];
 
     m_sub_provider = NULL;
     ::DeleteSystray(&m_hSystrayThread, &m_tbid);
@@ -103,15 +103,15 @@ STDMETHODIMP XySubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 //
 CBasePin* XySubFilter::GetPin(int n)
 {
-    if(n >= 0 && n < (int)m_pTextInput.GetCount())
-        return m_pTextInput[n];
+    if(n >= 0 && n < (int)m_pSubtitleInputPin.GetCount())
+        return m_pSubtitleInputPin[n];
 
     return NULL;
 }
 
 int XySubFilter::GetPinCount()
 {
-    return m_pTextInput.GetCount();
+    return m_pSubtitleInputPin.GetCount();
 }
 
 STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
@@ -200,7 +200,7 @@ STDMETHODIMP XySubFilter::Pause()
 
     // If we have no input pin or it isn't yet connected
 
-    else if (m_pTextInput.IsEmpty()) {
+    else if (m_pSubtitleInputPin.IsEmpty()) {
         m_State = State_Paused;
     }
 
@@ -739,7 +739,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
         *ppmt = NULL;
         //if(i >= 0 && i < nLangs)
         //{
-        //    *ppmt = CreateMediaType(&m_pTextInput[i]->m_mt);
+        //    *ppmt = CreateMediaType(&m_pSubtitleInputPin[i]->m_mt);
         //}
     }
 
@@ -1172,11 +1172,11 @@ bool XySubFilter::Open()
         }
     }
 
-    for(unsigned i = 0; i < m_pTextInput.GetCount(); i++)
+    for(unsigned i = 0; i < m_pSubtitleInputPin.GetCount(); i++)
     {
-        if(m_pTextInput[i]->IsConnected())
+        if(m_pSubtitleInputPin[i]->IsConnected())
         {
-            m_pSubStreams.AddTail(m_pTextInput[i]->GetSubStream());
+            m_pSubStreams.AddTail(m_pSubtitleInputPin[i]->GetSubStream());
             m_fIsSubStreamEmbeded.AddTail(true);
         }
     }
@@ -1624,14 +1624,14 @@ void XySubFilter::AddSubStream(ISubStream* pSubStream)
         m_fIsSubStreamEmbeded.AddTail(true);//todo: fix me
     }
 
-    int len = m_pTextInput.GetCount();
-    for(unsigned i = 0; i < m_pTextInput.GetCount(); i++)
-        if(m_pTextInput[i]->IsConnected()) len--;
+    int len = m_pSubtitleInputPin.GetCount();
+    for(unsigned i = 0; i < m_pSubtitleInputPin.GetCount(); i++)
+        if(m_pSubtitleInputPin[i]->IsConnected()) len--;
 
     if(len == 0)
     {
         HRESULT hr = S_OK;
-        m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, &hr));
+        m_pSubtitleInputPin.Add(new SubtitleInputPin2(this, m_pLock, &m_csSubLock, &hr));
     }
 }
 
