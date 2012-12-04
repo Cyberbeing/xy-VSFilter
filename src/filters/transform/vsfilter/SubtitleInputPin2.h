@@ -14,6 +14,7 @@ protected:
     virtual void RemoveSubStream(ISubStream* pSubStream);
     virtual void InvalidateSubtitle(REFERENCE_TIME rtStart, ISubStream* pSubStream);
 
+    STDMETHODIMP_(CSubtitleInputPinHelper*) CreateHelper( const CMediaType& mt, IPin* pReceivePin );
 protected:
     XySubFilter * xy_sub_filter;
 };
