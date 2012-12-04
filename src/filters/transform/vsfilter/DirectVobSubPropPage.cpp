@@ -1116,7 +1116,7 @@ bool CDVSAboutPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
             hr = m_pDirectVobSubXy->XyGetString(DirectVobSubXyOptions::STRING_NAME, &name, &chars);
             CHECK_N_LOG(hr, "Failed to get option");
             CStringW str_name(name, chars);
-            CoTaskMemFree(name);
+            LocalFree(name);
 
             version.Format("%ls %s (git %s)\nxy-VSFilter\nCopyright 2001-2012 Yu Zhuohuang, Gabest et. al.", 
                 str_name.GetString(), XY_ABOUT_VERSION_STR, version_sha1_short);
