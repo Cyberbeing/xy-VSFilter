@@ -10,14 +10,14 @@ interface ISubPicProviderEx2;
 class XySubRenderProviderWrapper: public CUnknown, public IXySubRenderProvider
 {
 public:
-    XySubRenderProviderWrapper( ISubPicProviderEx *provider, IXyOptions *consumer
-        , HRESULT* phr/*=NULL*/ );
+    XySubRenderProviderWrapper( ISubPicProviderEx *provider, HRESULT* phr/*=NULL*/ );
     virtual ~XySubRenderProviderWrapper() {}
 
     DECLARE_IUNKNOWN;
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
     // IXySubRenderProvider
+    STDMETHODIMP Connect( IXyOptions *consumer );
     STDMETHODIMP RequestFrame(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now);
     STDMETHODIMP Invalidate(REFERENCE_TIME rtInvalidate = -1);
 
@@ -36,14 +36,14 @@ private:
 class XySubRenderProviderWrapper2: public CUnknown, public IXySubRenderProvider
 {
 public:
-    XySubRenderProviderWrapper2( ISubPicProviderEx2 *provider, IXyOptions *consumer
-        , HRESULT* phr/*=NULL*/ );
+    XySubRenderProviderWrapper2( ISubPicProviderEx2 *provider, HRESULT* phr/*=NULL*/ );
     virtual ~XySubRenderProviderWrapper2() {}
 
     DECLARE_IUNKNOWN;
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
     // IXySubRenderProvider
+    STDMETHODIMP Connect(IXyOptions *consumer);
     STDMETHODIMP RequestFrame(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now);
     STDMETHODIMP Invalidate(REFERENCE_TIME rtInvalidate = -1);
 

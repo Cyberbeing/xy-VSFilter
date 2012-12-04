@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SubRenderIntf.h"
+#include "XyOptions.h"
 
 enum XyColorSpace
 {
@@ -28,6 +29,7 @@ interface IXySubRenderFrame : public ISubRenderFrame
 [uuid("68f052bf-dcf2-476e-baab-494b6288c58e")]
 interface IXySubRenderProvider: public IUnknown
 {
+    STDMETHOD(Connect)(IXyOptions *consumer) = 0;
     STDMETHOD(RequestFrame)(IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now) = 0;
     STDMETHOD (Invalidate) (REFERENCE_TIME rtInvalidate = -1) = 0;
 };

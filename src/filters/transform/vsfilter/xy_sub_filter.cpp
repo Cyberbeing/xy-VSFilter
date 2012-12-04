@@ -1385,15 +1385,19 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
     }
     else if (CComQIPtr<ISubPicProviderEx2>(pSubStream))
     {
-        m_sub_provider = new XySubRenderProviderWrapper2(CComQIPtr<ISubPicProviderEx2>(pSubStream), this, NULL);
+        m_sub_provider = new XySubRenderProviderWrapper2(CComQIPtr<ISubPicProviderEx2>(pSubStream), NULL);
     }
     else if (CComQIPtr<ISubPicProviderEx>(pSubStream))
     {
-        m_sub_provider = new XySubRenderProviderWrapper(CComQIPtr<ISubPicProviderEx>(pSubStream), this, NULL);
+        m_sub_provider = new XySubRenderProviderWrapper(CComQIPtr<ISubPicProviderEx>(pSubStream), NULL);
     }
     else
     {
         m_sub_provider = NULL;
+    }
+    if (m_sub_provider)
+    {
+        m_sub_provider->Connect(this);
     }
 }
 
