@@ -41,7 +41,7 @@ public:
 
     virtual HRESULT         ParseSample(IMediaSample* pSample) = NULL;
     virtual void            Reset() = NULL;
-    virtual POSITION        GetStartPosition(REFERENCE_TIME rt, double fps) = NULL;
+    virtual POSITION        GetStartPosition(REFERENCE_TIME rt, double fps = 0) = NULL;
     virtual POSITION        GetNext(POSITION pos) = NULL;
     virtual REFERENCE_TIME  GetStart(POSITION nPos) = NULL;
     virtual REFERENCE_TIME  GetStop(POSITION nPos) = NULL;

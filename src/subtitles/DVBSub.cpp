@@ -365,7 +365,7 @@ HRESULT CDVBSub::GetTextureSize(POSITION pos, SIZE& MaxTextureSize, SIZE& VideoS
     return S_OK;
 }
 
-POSITION CDVBSub::GetStartPosition(REFERENCE_TIME rt, double fps)
+POSITION CDVBSub::GetStartPosition(REFERENCE_TIME rt, double fps /* = 0 */)
 {
     DVB_PAGE* pPage;
 

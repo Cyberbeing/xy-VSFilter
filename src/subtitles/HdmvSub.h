@@ -99,7 +99,7 @@ public:
     HRESULT   ParseSample(IMediaSample* pSample);
 
 
-    POSITION  GetStartPosition(REFERENCE_TIME rt, double fps);
+    POSITION  GetStartPosition(REFERENCE_TIME rt, double fps = 0);
     POSITION  GetNext(POSITION pos) {
         m_pPresentationSegments.GetNext(pos);
         return pos;
