@@ -18,7 +18,7 @@ class XySubFilter
     , public ISubRenderProvider
 {
 public:
-    friend class CTextInputPin;
+    friend class SubtitleInputPin2;
 
     XySubFilter(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid = __uuidof(XySubFilter));
     virtual ~XySubFilter();
@@ -142,7 +142,7 @@ private:
 
     CComPtr<IXySubRenderProvider> m_sub_provider;
 
-    CAtlArray<CTextInputPin*> m_pTextInput;
+    CAtlArray<SubtitleInputPin2*> m_pSubtitleInputPin;
 
     // don't set the "hide subtitles" stream until we are finished with loading
     bool m_fLoading;

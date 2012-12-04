@@ -20,16 +20,10 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Copy.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\csriapi.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\DirectVobSub.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DirectVobSubFilter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\DirectVobSubPropPage.cpp">
@@ -45,9 +39,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\Systray.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TextInputPin.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\vfr.cpp">
@@ -80,15 +71,15 @@
     <ClCompile Include="..\XyOptionsImpl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\SubtitleInputPin2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\csri.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\DirectVobSub.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DirectVobSubFilter.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\DirectVobSubPropPage.h">
@@ -107,9 +98,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\Systray.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TextInputPin.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\vfr.h">
@@ -146,6 +134,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\XyOptionsImpl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SubtitleInputPin2.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
