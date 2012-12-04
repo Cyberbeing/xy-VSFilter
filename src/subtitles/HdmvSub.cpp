@@ -60,7 +60,7 @@ void CHdmvSub::AllocSegment(int nSize)
     m_nSegSize = nSize;
 }
 
-POSITION CHdmvSub::GetStartPosition(REFERENCE_TIME rt, double fps)
+POSITION CHdmvSub::GetStartPosition(REFERENCE_TIME rt, double fps /* = 0*/)
 {
     HDMV_PRESENTATION_SEGMENT* pPresentationSegment;
 
