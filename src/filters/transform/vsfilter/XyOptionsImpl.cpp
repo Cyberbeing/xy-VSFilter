@@ -65,7 +65,7 @@ STDMETHODIMP XyOptionsImpl::XyGetString(unsigned field, LPWSTR *value, int *char
     {
         if (value)
         {
-            *value = static_cast<LPWSTR>(CoTaskMemAlloc(sizeof(WCHAR)*(m_xy_str_opt[field].GetLength()+1)));
+            *value = static_cast<LPWSTR>(LocalAlloc(LPTR, sizeof(WCHAR)*(m_xy_str_opt[field].GetLength()+1)));
             ASSERT(*value);
             memcpy(*value, m_xy_str_opt[field].GetString(), (m_xy_str_opt[field].GetLength()+1)*sizeof(WCHAR));
         }

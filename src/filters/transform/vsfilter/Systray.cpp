@@ -188,7 +188,7 @@ LRESULT CSystrayWindow::OnTaskBarRestart(WPARAM, LPARAM)
         int chars = 0;
         dvs_xy->XyGetString(DirectVobSubXyOptions::STRING_NAME, &name, &chars);
         CStringW str_name(name, chars);
-        CoTaskMemFree(name);
+        LocalFree(name);
         lstrcpyn(tnid.szTip, str_name.GetString(), sizeof(tnid.szTip));
 
 		BOOL res = Shell_NotifyIcon(NIM_ADD, &tnid); 

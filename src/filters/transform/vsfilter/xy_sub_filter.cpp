@@ -166,12 +166,12 @@ STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
         hr = m_consumer->GetString("name", &name, &name_len);
         if (FAILED(hr))
         {
-            CoTaskMemFree(name);
+            LocalFree(name);
             return hr;
         }
         CStringW new_name;
         new_name.Format(L"XySubFilter (Connected with %s)", name);
-        CoTaskMemFree(name);
+        LocalFree(name);
         wcscpy_s(pInfo->achName, countof(pInfo->achName)-1, new_name.GetString());
     }
     return hr;
@@ -1545,7 +1545,7 @@ int XySubFilter::FindPreferedLanguage( bool fHideToo /*= true*/ )
                 CHECK_N_LOG(hr, "Failed to get option");
 
                 l = pName;
-                CoTaskMemFree(pName);
+                LocalFree(pName);
 
                 if(!l.CompareNoCase(lang)) return(ret);
             }
