@@ -73,6 +73,8 @@
 
 #endif
 
+std::ostream& operator<<(std::ostream& os, const POINT& obj);
+std::wostream& operator<<(std::wostream& os, const POINT& obj);
 
 std::ostream& operator<<(std::ostream& os, const SIZE& obj);
 std::wostream& operator<<(std::wostream& os, const SIZE& obj);
