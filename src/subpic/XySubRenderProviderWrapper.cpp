@@ -1,14 +1,14 @@
 #include "stdafx.h"
 #include "XySubRenderProviderWrapper.h"
 
-XySubRenderProviderWrapper::XySubRenderProviderWrapper( ISubPicProviderEx *provider, IXyOptions *consumer
+XySubRenderProviderWrapper::XySubRenderProviderWrapper( ISubPicProviderEx *provider
     , HRESULT* phr/*=NULL*/ )
     : CUnknown(NAME("XySubRenderProviderWrapper"), NULL, phr)
     , m_provider(provider)
-    , m_consumer(consumer)
+    , m_consumer(NULL)
 {
     HRESULT hr = NOERROR;
-    if (!provider || !consumer)
+    if (!provider)
     {
         hr = E_INVALIDARG;
     }
@@ -26,8 +26,24 @@ STDMETHODIMP XySubRenderProviderWrapper::NonDelegatingQueryInterface( REFIID rii
         __super::NonDelegatingQueryInterface(riid, ppv);
 }
 
+STDMETHODIMP XySubRenderProviderWrapper::Connect( IXyOptions *consumer )
+{
+    HRESULT hr = NOERROR;
+    if (consumer)
+    {
+        hr = m_consumer != consumer ? S_OK : S_FALSE;
+        m_consumer = consumer;
+    }
+    else
+    {
+        hr = E_INVALIDARG;
+    }
+    return hr;
+}
+
 STDMETHODIMP XySubRenderProviderWrapper::RequestFrame( IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now  )
 {
+    ASSERT(m_consumer);
     double fps;
     CheckPointer(subRenderFrame, E_POINTER);
     *subRenderFrame = NULL;
@@ -172,17 +188,17 @@ STDMETHODIMP XySubRenderProviderWrapper::Invalidate( REFERENCE_TIME rtInvalidate
 //
 // XySubRenderProviderWrapper2
 //
-XySubRenderProviderWrapper2::XySubRenderProviderWrapper2( ISubPicProviderEx2 *provider, IXyOptions *consumer 
+XySubRenderProviderWrapper2::XySubRenderProviderWrapper2( ISubPicProviderEx2 *provider
     , HRESULT* phr/*=NULL*/ )
     : CUnknown(NAME("XySubRenderProviderWrapper"), NULL, phr)
     , m_provider(provider)
-    , m_consumer(consumer)
+    , m_consumer(NULL)
     , m_start(0), m_stop(0)
     , m_fps(0)
     , m_max_bitmap_count2(0)
 {
     HRESULT hr = NOERROR;
-    if (!provider || !consumer)
+    if (!provider)
     {
         hr = E_INVALIDARG;
     }
@@ -200,8 +216,24 @@ STDMETHODIMP XySubRenderProviderWrapper2::NonDelegatingQueryInterface( REFIID ri
         __super::NonDelegatingQueryInterface(riid, ppv);
 }
 
+STDMETHODIMP XySubRenderProviderWrapper2::Connect( IXyOptions *consumer )
+{
+    HRESULT hr = NOERROR;
+    if (consumer)
+    {
+        hr = m_consumer != consumer ? S_OK : S_FALSE;
+        m_consumer = consumer;
+    }
+    else
+    {
+        hr = E_INVALIDARG;
+    }
+    return hr;
+}
+
 STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now )
 {
+    ASSERT(m_consumer);
     double fps;
     CheckPointer(subRenderFrame, E_POINTER);
     *subRenderFrame = NULL;
