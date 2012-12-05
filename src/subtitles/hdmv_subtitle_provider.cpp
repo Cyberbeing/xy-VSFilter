@@ -5,7 +5,7 @@
 #include "../subpic/XySubRenderFrameWrapper.h"
 
 #if ENABLE_XY_LOG_HDMVSUB
-#define TRACE_SUB_PROVIDER(msg)		XY_LOG_TRACE
+#define TRACE_SUB_PROVIDER(msg)		XY_LOG_TRACE(msg)
 #else
 #define TRACE_SUB_PROVIDER(msg)
 #endif
