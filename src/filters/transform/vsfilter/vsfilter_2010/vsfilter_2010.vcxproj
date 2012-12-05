@@ -185,7 +185,6 @@
     <ClCompile Include="..\VSFilter.cpp" />
     <ClCompile Include="..\XyOptionsImpl.cpp" />
     <ClCompile Include="..\xy_logger.cpp" />
-    <ClCompile Include="..\xy_sub_filter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\CAutoTiming.h" />
@@ -209,7 +208,6 @@
     <ClInclude Include="..\XyOptionsImpl.h" />
     <ClInclude Include="..\XySubRenderIntf.h" />
     <ClInclude Include="..\xy_logger.h" />
-    <ClInclude Include="..\xy_sub_filter.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\res\Icon_147.ico" />
