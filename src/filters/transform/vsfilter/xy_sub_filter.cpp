@@ -39,7 +39,6 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     HRESULT* phr, const GUID& clsid /*= __uuidof(XySubFilter)*/ )
     : CBaseFilter(NAME("XySubFilter"), punk, &m_csFilter, clsid)
     , CDirectVobSub(XyVobFilterOptions)
-    , SubRenderOptionsImpl(::options, this)
     , m_nSubtitleId(-1)
     , m_not_first_pause(false)
     , m_consumer(NULL)
@@ -49,6 +48,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     m_xy_str_opt[STRING_NAME] = L"xy_sub_filter";
     m_fLoading = true;
 
@@ -72,7 +72,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
 
 XySubFilter::~XySubFilter()
 {
-    XY_LOG_INFO("");
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     m_frd.EndThreadEvent.Set();
     CAMThread::Close();
 
@@ -95,6 +95,7 @@ STDMETHODIMP XySubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
         QI(ISpecifyPropertyPages)
         QI(IAMStreamSelect)
         QI(ISubRenderProvider)
+        QI(ISubRenderOptions)
         __super::NonDelegatingQueryInterface(riid, ppv);
 }
 
@@ -116,6 +117,7 @@ int XySubFilter::GetPinCount()
 
 STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
 {
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     XY_LOG_INFO("JoinFilterGraph. pGraph:"<<(void*)pGraph);
     if(pGraph)
     {
@@ -155,6 +157,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
 
 STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
 {
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     CheckPointer(pInfo, E_POINTER);
     ValidateReadWritePtr(pInfo, sizeof(FILTER_INFO));
 
@@ -169,8 +172,17 @@ STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
             LocalFree(name);
             return hr;
         }
+
+        ISubRenderProvider *provider=NULL;
+        this->QueryInterface(__uuidof(ISubRenderProvider), (void**)&provider );
+        LPWSTR test = NULL;
+        int chars = 0;
+        HRESULT test_hr = provider->GetString("yuvMatrix", &test, &chars);
+        ASSERT(SUCCEEDED(test_hr));
+
         CStringW new_name;
-        new_name.Format(L"XySubFilter (Connected with %s)", name);
+        new_name.Format(L"XySubFilter (Connected with %s, %s)", name,test);
+        LocalFree(test);
         LocalFree(name);
         wcscpy_s(pInfo->achName, countof(pInfo->achName)-1, new_name.GetString());
     }
@@ -179,6 +191,7 @@ STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
 
 STDMETHODIMP XySubFilter::Pause()
 {
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     CAutoLock lck(&m_csFilter);
     HRESULT hr = NOERROR;
 
@@ -885,7 +898,7 @@ void XySubFilter::SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles)
 
 DWORD XySubFilter::ThreadProc()
 {
-    XY_LOG_INFO("");
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     SetThreadPriority(m_hThread, THREAD_PRIORITY_LOWEST/*THREAD_PRIORITY_BELOW_NORMAL*/);
 
     CStringArray paths;
@@ -983,6 +996,7 @@ DWORD XySubFilter::ThreadProc()
 
 STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME stop, LPVOID context )
 {
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     CAutoLock cAutoLock(&m_csQueueLock);
 
     ASSERT(m_consumer);
@@ -1028,6 +1042,7 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
 
 STDMETHODIMP XySubFilter::Disconnect( void )
 {
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     CAutoLock cAutoLock(&m_csQueueLock);
     ASSERT(m_consumer);
     m_consumer = NULL;
@@ -1868,4 +1883,63 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
         hr = E_INVALIDARG;
     }
     return hr;
+}
+
+STDMETHODIMP XySubFilter::GetString   (LPCSTR field, LPWSTR    *value, int *chars)
+{
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
+    if (_stricmp(field,"yuvMatrix")==0)
+    {
+        if (value)
+        {
+            *value = (LPWSTR)LocalAlloc(LPTR, 100*sizeof(WCHAR));
+            lstrcpyW(*value, L"TV.601");
+        }
+        if (chars)
+        {
+            *chars = 6;
+        }
+        XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
+        return S_OK;
+    }
+    else if (_stricmp(field, "name")==0)
+    {
+        if (value)
+        {
+            *value = (LPWSTR)LocalAlloc(LPTR, 100*sizeof(WCHAR));
+            memcpy(*value, L"XySubFilter", 11*2);
+        }
+        if (chars)
+        {
+            *chars = 11;
+        }
+        return S_OK;
+    }
+    else if (_stricmp(field, "version")==0)
+    {
+        if (value)
+        {
+            *value = (LPWSTR)LocalAlloc(LPTR, 100*sizeof(WCHAR));
+            memcpy(*value, L"0", 1*2);
+        }
+        if (chars)
+        {
+            *chars = 1;
+        }
+        return S_OK;
+    }
+    return E_INVALIDARG;
+}
+
+STDMETHODIMP XySubFilter::GetBool     (LPCSTR field, bool      *value)
+{
+    if (_stricmp(field, "combineBitmaps")==0)
+    {
+        if (value)
+        {
+            *value = false;
+        }
+        return S_OK;
+    }
+    return E_FAIL;
 }
