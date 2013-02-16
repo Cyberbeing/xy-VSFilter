@@ -267,14 +267,12 @@ void CHdmvSub::ParsePalette(CGolombBuffer* pGBuffer, unsigned short nSize)  // #
     CLUT.size = (nSize - 2) / sizeof(HDMV_PALETTE);
 
     for (int i = 0; i < CLUT.size; i++) {
-        BYTE entry_id = pGBuffer->ReadByte();
+        CLUT.palette[i].entry_id = pGBuffer->ReadByte();
 
-        CLUT.palette[entry_id].entry_id = entry_id;
-
-        CLUT.palette[entry_id].Y  = pGBuffer->ReadByte();
-        CLUT.palette[entry_id].Cr = pGBuffer->ReadByte();
-        CLUT.palette[entry_id].Cb = pGBuffer->ReadByte();
-        CLUT.palette[entry_id].T  = pGBuffer->ReadByte();
+        CLUT.palette[i].Y  = pGBuffer->ReadByte();
+        CLUT.palette[i].Cr = pGBuffer->ReadByte();
+        CLUT.palette[i].Cb = pGBuffer->ReadByte();
+        CLUT.palette[i].T  = pGBuffer->ReadByte();
     }
 }
 
@@ -377,7 +375,8 @@ void CHdmvSub::Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox)
                 bbox.bottom = bbox.bottom < spd.h ? bbox.bottom : spd.h;
 
                 pObject->InitColor(spd);
-                TRACE_HDMVSUB( (_T(" --> Object %d (Res=%dx%d, SPDRes=%dx%d)\n"), pObject->m_object_id_ref, pObject->m_width, pObject->m_height, spd.w, spd.h) );
+                TRACE_HDMVSUB(_T(" --> Object %d (Pos=%dx%d, Res=%dx%d, SPDRes=%dx%d)\n"),
+                              pObject->m_object_id_ref, pObject->m_horizontal_position, pObject->m_vertical_position, pObject->m_width, pObject->m_height, spd.w, spd.h);
                 pObject->RenderHdmv(spd);
             } else {
                 TRACE_HDMVSUB( (_T(" --> Invalid object %d\n"), pObject->m_object_id_ref) );
