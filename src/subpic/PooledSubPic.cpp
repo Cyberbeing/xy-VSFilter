@@ -222,11 +222,11 @@ CPooledSubPic* CPooledSubPicAllocator::DoAlloc()
     //if(!(spd.bits = new BYTE[spd.pitch*spd.h]))
     if(_type == MSP_AYUV_PLANAR)
     {
-        spd.bits = xy_malloc(spd.pitch*spd.h*4);
+        spd.bits = reinterpret_cast<BYTE*>(xy_malloc(spd.pitch*spd.h*4));
     }
     else
     {
-        spd.bits = xy_malloc(spd.pitch*spd.h);
+        spd.bits = reinterpret_cast<BYTE*>(xy_malloc(spd.pitch*spd.h));
     }
     if(!spd.bits)
     {

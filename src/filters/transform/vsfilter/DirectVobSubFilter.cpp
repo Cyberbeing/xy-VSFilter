@@ -710,7 +710,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
         m_pTempPicBuff.Allocate(m_spd.pitch*m_spd.h+m_spd.pitch*m_spd.h/2);
     else
         m_pTempPicBuff.Allocate(m_spd.pitch*m_spd.h);
-	m_spd.bits = (void*)m_pTempPicBuff;
+	m_spd.bits = (BYTE*)m_pTempPicBuff;
 
 	CSize video(bihIn.biWidth, bihIn.biHeight), window = video;
 	if(AdjustFrameSize(window)) video += video;

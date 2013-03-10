@@ -48,7 +48,7 @@ enum ColorType {
 struct SubPicDesc {
 	int type;
 	int w, h, bpp, pitch, pitchUV;
-	void* bits;
+	BYTE* bits;
 	BYTE* bitsU;
 	BYTE* bitsV;
 	RECT vidrect; // video rectangle
