@@ -1,5 +1,5 @@
 /*
- * (C) 2006-2012 see Authors.txt
+ * (C) 2008-2012 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -24,6 +24,7 @@ class CGolombBuffer
 {
 public:
     CGolombBuffer(BYTE* pBuffer, int nSize);
+    ~CGolombBuffer();
 
     UINT64 BitRead(int nBits, bool fPeek = false);
     UINT64 UExpGolombRead();
