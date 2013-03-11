@@ -1161,9 +1161,21 @@ bool CPolygon::CreatePath(PathData* path_data)
     if(len == 0) return(false);
     if(path_data->mPathPoints != len)
     {
-        path_data->mpPathTypes = (BYTE*)realloc(path_data->mpPathTypes, len*sizeof(BYTE));
-        path_data->mpPathPoints = (POINT*)realloc(path_data->mpPathPoints, len*sizeof(POINT));
-        if(!path_data->mpPathTypes || !path_data->mpPathPoints) return(false);
+        BYTE* pNewPathTypes = (BYTE*)realloc(path_data->mpPathTypes, len * sizeof(BYTE));
+        if (!pNewPathTypes)
+        {
+            TRACE_PARSER("Overflow!");
+            return false;
+        }
+        path_data->mpPathTypes = pNewPathTypes;
+
+        POINT* pNewPathPoints = (POINT*)realloc(path_data->mpPathPoints, len*sizeof(POINT));
+        if (!pNewPathPoints)
+        {
+            TRACE_PARSER("Overflow!");
+            return false;
+        }
+        path_data->mpPathPoints = pNewPathPoints;
         path_data->mPathPoints = len;
     }
     memcpy(path_data->mpPathTypes, m_pathTypesOrg.GetData(), len*sizeof(BYTE));
