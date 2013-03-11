@@ -22,14 +22,14 @@
 #include "HdmvClipInfo.h"
 #include "DSUtil.h"
 
-extern LCID    ISO6392ToLcid(LPCSTR code);
+extern LCID ISO6392ToLcid(LPCSTR code);
 
-CHdmvClipInfo::CHdmvClipInfo(void) :
-    SequenceInfo_start_address(0),
-    ProgramInfo_start_address(0)
+CHdmvClipInfo::CHdmvClipInfo()
+    : SequenceInfo_start_address(0)
+    , ProgramInfo_start_address(0)
+    , m_hFile(INVALID_HANDLE_VALUE)
+    , m_bIsHdmv(false)
 {
-    m_hFile   = INVALID_HANDLE_VALUE;
-    m_bIsHdmv = false;
 }
 
 CHdmvClipInfo::~CHdmvClipInfo()
@@ -133,6 +133,7 @@ HRESULT CHdmvClipInfo::ReadProgramInfo()
                     BDVM_SampleRate SampleRate = (BDVM_SampleRate)(Temp & 0xF);
 
                     ReadBuffer((BYTE*)m_Streams[iStream].m_LanguageCode, 3);
+                    m_Streams[iStream].m_LanguageCode[3] = '\0';
                     m_Streams[iStream].m_LCID = ISO6392ToLcid(m_Streams[iStream].m_LanguageCode);
                     m_Streams[iStream].m_ChannelLayout = ChannelLayout;
                     m_Streams[iStream].m_SampleRate = SampleRate;
@@ -141,12 +142,14 @@ HRESULT CHdmvClipInfo::ReadProgramInfo()
                 case PRESENTATION_GRAPHICS_STREAM:
                 case INTERACTIVE_GRAPHICS_STREAM: {
                     ReadBuffer((BYTE*)m_Streams[iStream].m_LanguageCode, 3);
+                    m_Streams[iStream].m_LanguageCode[3] = '\0';
                     m_Streams[iStream].m_LCID = ISO6392ToLcid(m_Streams[iStream].m_LanguageCode);
                 }
                 break;
                 case SUBTITLE_STREAM: {
                     ReadByte(); // Should this really be here?
                     ReadBuffer((BYTE*)m_Streams[iStream].m_LanguageCode, 3);
+                    m_Streams[iStream].m_LanguageCode[3] = '\0';
                     m_Streams[iStream].m_LCID = ISO6392ToLcid(m_Streams[iStream].m_LanguageCode);
                 }
                 break;
@@ -314,7 +317,7 @@ HRESULT CHdmvClipInfo::ReadPlaylist(CString strPlaylistFile, REFERENCE_TIME& rtD
             }
             Playlist.AddTail(Item);
 
-            //TRACE(_T("File : %S, Duration : %S, Total duration  : %S\n"), strTemp, ReftimeToString (rtOut - rtIn), ReftimeToString (rtDuration));
+            //TRACE(_T("File : %s, Duration : %s, Total duration  : %s\n"), strTemp, ReftimeToString (rtOut - rtIn), ReftimeToString (rtDuration));
         }
 
         CloseFile(S_OK);
@@ -385,7 +388,7 @@ HRESULT CHdmvClipInfo::ReadChapters(CString strPlaylistFile, CAtlList<CHdmvClipI
 
             Chapters.AddTail(Chapter);
 
-            //TRACE(_T("Chapter %d : %S\n"), i, ReftimeToString(Chapter.m_rtTimestamp));
+            //TRACE(_T("Chapter %d : %s\n"), i, ReftimeToString(Chapter.m_rtTimestamp));
         }
 
         CloseFile(S_OK);
