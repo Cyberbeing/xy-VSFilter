@@ -250,7 +250,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 			m_pInput->CurrentRate());
 		msg += tmp;
 
-		CAutoLock cAutoLock(&m_csQueueLock);
+		CAutoLock cAutoLock(&m_csSubLock);
 
 		if(m_simple_provider)
 		{

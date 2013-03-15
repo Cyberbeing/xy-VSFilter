@@ -111,7 +111,7 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 
 CDirectVobSubFilter::~CDirectVobSubFilter()
 {
-    CAutoLock cAutoLock(&m_csQueueLock);
+    CAutoLock cAutoLock(&m_csSubLock);
     if(m_simple_provider)
     {
         m_simple_provider->Invalidate();
@@ -249,7 +249,7 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	//
 
 	{
-		CAutoLock cAutoLock(&m_csQueueLock);
+		CAutoLock cAutoLock(&m_csSubLock);
 
 		if(m_simple_provider)
 		{
@@ -304,7 +304,7 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	//
 
     {
-        CAutoLock cAutoLock(&m_csQueueLock);
+        CAutoLock cAutoLock(&m_csSubLock);
 
         if(m_simple_provider)
         {
@@ -606,7 +606,7 @@ HRESULT CDirectVobSubFilter::BreakConnect(PIN_DIRECTION dir)
 	else if(dir == PINDIR_OUTPUT)
 	{
 		// not really needed, but may free up a little memory
-		CAutoLock cAutoLock(&m_csQueueLock);
+		CAutoLock cAutoLock(&m_csSubLock);
 		m_simple_provider = NULL;
 	}
 
@@ -659,7 +659,7 @@ REFERENCE_TIME CDirectVobSubFilter::CalcCurrentTime()
 void CDirectVobSubFilter::InitSubPicQueue()
 {
     XY_LOG_INFO("");
-    CAutoLock cAutoLock(&m_csQueueLock);
+    CAutoLock cAutoLock(&m_csSubLock);
 
     CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
     CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]);
@@ -1095,7 +1095,7 @@ STDMETHODIMP CDirectVobSubFilter::get_LanguageCount(int* nLangs)
 
 	if(hr == NOERROR && nLangs)
 	{
-        CAutoLock cAutolock(&m_csQueueLock);
+        CAutoLock cAutolock(&m_csSubLock);
 
 		*nLangs = 0;
 		POSITION pos = m_pSubStreams.GetHeadPosition();
@@ -1114,7 +1114,7 @@ STDMETHODIMP CDirectVobSubFilter::get_LanguageName(int iLanguage, WCHAR** ppName
 
 	if(hr == NOERROR)
 	{
-        CAutoLock cAutolock(&m_csQueueLock);
+        CAutoLock cAutolock(&m_csSubLock);
 
 		hr = E_INVALIDARG;
 
@@ -1238,7 +1238,7 @@ STDMETHODIMP CDirectVobSubFilter::put_SubtitleTiming(int delay, int speedmul, in
 STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
 {
     XY_LOG_INFO(caches_info);
-    CAutoLock cAutoLock(&m_csQueueLock);
+    CAutoLock cAutoLock(&m_csSubLock);
     HRESULT hr = CDirectVobSub::get_CachesInfo(caches_info);
 
     caches_info->path_cache_cur_item_num    = CacheManager::GetPathDataMruCache()->GetCurItemNum();
@@ -1287,7 +1287,7 @@ STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
 STDMETHODIMP CDirectVobSubFilter::get_XyFlyWeightInfo( XyFlyWeightInfo* xy_fw_info )
 {
     XY_LOG_INFO(xy_fw_info);
-    CAutoLock cAutoLock(&m_csQueueLock);
+    CAutoLock cAutoLock(&m_csSubLock);
     HRESULT hr = CDirectVobSub::get_XyFlyWeightInfo(xy_fw_info);
     
     xy_fw_info->xy_fw_string_w.cur_item_num = XyFwStringW::GetCacher()->GetCurItemNum();
@@ -1690,7 +1690,7 @@ bool CDirectVobSubFilter::Open()
 
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-	CAutoLock cAutolock(&m_csQueueLock);
+	CAutoLock cAutolock(&m_csSubLock);
 
 	m_pSubStreams.RemoveAll();
     m_fIsSubStreamEmbeded.RemoveAll();
@@ -1780,7 +1780,7 @@ bool CDirectVobSubFilter::Open()
 void CDirectVobSubFilter::UpdateSubtitle(bool fApplyDefStyle)
 {
     XY_LOG_INFO(fApplyDefStyle);
-	CAutoLock cAutolock(&m_csQueueLock);
+	CAutoLock cAutolock(&m_csSubLock);
 
 	if(!m_simple_provider) return;
 
@@ -1814,7 +1814,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 {
     XY_LOG_INFO(XY_LOG_VAR_2_STR(pSubStream)<<XY_LOG_VAR_2_STR(fApplyDefStyle));
     HRESULT hr = NOERROR;
-    CAutoLock cAutolock(&m_csQueueLock);
+    CAutoLock cAutolock(&m_csSubLock);
 
     CSize playres(0,0);
     m_video_yuv_matrix_decided_by_sub = ColorConvTable::NONE;
@@ -1972,7 +1972,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 void CDirectVobSubFilter::InvalidateSubtitle(REFERENCE_TIME rtInvalidate, DWORD_PTR nSubtitleId)
 {
     TRACE_RENDERER_REQUEST(XY_LOG_VAR_2_STR(rtInvalidate)<<XY_LOG_VAR_2_STR(nSubtitleId));
-    CAutoLock cAutolock(&m_csQueueLock);
+    CAutoLock cAutolock(&m_csSubLock);
 
 	if(m_simple_provider)
 	{
@@ -1989,7 +1989,7 @@ void CDirectVobSubFilter::InvalidateSubtitle(REFERENCE_TIME rtInvalidate, DWORD_
 void CDirectVobSubFilter::AddSubStream(ISubStream* pSubStream)
 {
     XY_LOG_INFO(pSubStream);
-	CAutoLock cAutoLock(&m_csQueueLock);
+	CAutoLock cAutoLock(&m_csSubLock);
 
 	POSITION pos = m_pSubStreams.Find(pSubStream);
 	if(!pos)
@@ -2012,7 +2012,7 @@ void CDirectVobSubFilter::AddSubStream(ISubStream* pSubStream)
 void CDirectVobSubFilter::RemoveSubStream(ISubStream* pSubStream)
 {
     XY_LOG_INFO(pSubStream);
-	CAutoLock cAutoLock(&m_csQueueLock);
+	CAutoLock cAutoLock(&m_csSubLock);
 
     POSITION pos = m_pSubStreams.GetHeadPosition();
     POSITION pos2 = m_fIsSubStreamEmbeded.GetHeadPosition();
@@ -2249,7 +2249,7 @@ void CDirectVobSubFilter::GetOutputColorspaces( ColorSpaceId *preferredOrder, UI
 HRESULT CDirectVobSubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
 {
     XY_LOG_INFO(iSelected);
-    CAutoLock cAutolock(&m_csQueueLock);
+    CAutoLock cAutolock(&m_csSubLock);
 
     HRESULT hr = E_INVALIDARG;
     if (!fIsEmbedded)
@@ -2342,7 +2342,7 @@ void CDirectVobSubFilter::SetYuvMatrix()
 
 STDMETHODIMP CDirectVobSubFilter::XySetBool( unsigned field, bool value )
 {
-    CAutoLock cAutolock(&m_csQueueLock);
+    CAutoLock cAutolock(&m_csSubLock);
     HRESULT hr = CDirectVobSub::XySetBool(field, value);
     if(hr != NOERROR)
     {
@@ -2364,7 +2364,7 @@ STDMETHODIMP CDirectVobSubFilter::XySetBool( unsigned field, bool value )
 
 STDMETHODIMP CDirectVobSubFilter::XySetInt( unsigned field, int value )
 {
-    CAutoLock cAutolock(&m_csQueueLock);
+    CAutoLock cAutolock(&m_csSubLock);
     HRESULT hr = CDirectVobSub::XySetInt(field, value);
     if(hr != NOERROR)
     {

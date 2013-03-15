@@ -129,8 +129,6 @@ private:
     void SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles);
     DWORD ThreadProc();
 private:
-    CCritSec m_csQueueLock;
-
     ColorConvTable::YuvMatrixType m_video_yuv_matrix_decided_by_sub;
     ColorConvTable::YuvRangeType m_video_yuv_range_decided_by_sub;
 

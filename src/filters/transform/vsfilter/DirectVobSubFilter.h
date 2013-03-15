@@ -42,7 +42,6 @@ class CDirectVobSubFilter
 {
     friend class CTextInputPin;
 
-	CCritSec m_csQueueLock;
 	CComPtr<ISimpleSubPicProvider> m_simple_provider;
 
 	void InitSubPicQueue();
