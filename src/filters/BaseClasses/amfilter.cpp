@@ -2501,7 +2501,7 @@ CBaseOutputPin::DecideAllocator(IMemInputPin *pPin, IMemAllocator **ppAlloc)
     // we assume that he will consistently modify it the same way,
     // so we only get it once
     ALLOCATOR_PROPERTIES prop;
-    ZeroMemory(&prop, sizeof(prop));
+    SecureZeroMemory(&prop, sizeof(prop));
 
     // whatever he returns, we assume prop is either all zeros
     // or he has filled it out.
@@ -2728,7 +2728,7 @@ CBaseInputPin::CBaseInputPin(TCHAR *pObjectName,
     m_bReadOnly(FALSE),
     m_bFlushing(FALSE)
 {
-    ZeroMemory(&m_SampleProps, sizeof(m_SampleProps));
+    SecureZeroMemory(&m_SampleProps, sizeof(m_SampleProps));
 }
 
 #ifdef UNICODE
@@ -2742,7 +2742,7 @@ CBaseInputPin::CBaseInputPin(CHAR *pObjectName,
     m_bReadOnly(FALSE),
     m_bFlushing(FALSE)
 {
-    ZeroMemory(&m_SampleProps, sizeof(m_SampleProps));
+    SecureZeroMemory(&m_SampleProps, sizeof(m_SampleProps));
 }
 #endif
 
@@ -4549,7 +4549,7 @@ CBaseAllocator::SetProperties(
     ValidateReadWritePtr(pActual, sizeof(ALLOCATOR_PROPERTIES));
     CAutoLock cObjectLock(this);
 
-    ZeroMemory(pActual, sizeof(ALLOCATOR_PROPERTIES));
+    SecureZeroMemory(pActual, sizeof(ALLOCATOR_PROPERTIES));
 
     ASSERT(pRequest->cbBuffer > 0);
 
@@ -4922,7 +4922,7 @@ CMemAllocator::SetProperties(
     ValidateReadWritePtr(pActual,sizeof(ALLOCATOR_PROPERTIES));
     CAutoLock cObjectLock(this);
 
-    ZeroMemory(pActual, sizeof(ALLOCATOR_PROPERTIES));
+    SecureZeroMemory(pActual, sizeof(ALLOCATOR_PROPERTIES));
 
     ASSERT(pRequest->cbBuffer > 0);
 
