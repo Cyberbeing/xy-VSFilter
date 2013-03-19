@@ -121,6 +121,7 @@ public:
 
     STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
     STDMETHODIMP Receive(IMediaSample* pSample);
+    STDMETHODIMP EndOfStream(void);
 private:
     CRenderedHdmvSubtitle* m_pHdmvSubtitle;
     const CMediaType& m_mt;
@@ -405,6 +406,12 @@ STDMETHODIMP CHdmvInputPinHepler::Receive( IMediaSample* pSample )
     return m_pHdmvSubtitle->ParseSample (pSample);
 }
 
+STDMETHODIMP CHdmvInputPinHepler::EndOfStream( void )
+{
+    m_pHdmvSubtitle->EndOfStream();
+    return S_OK;
+}
+
 CSubtitleInputPin::CSubtitleInputPin(CBaseFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr)
 	: CBaseInputPin(NAME("CSubtitleInputPin"), pFilter, pLock, phr, L"Input")
 	, m_pSubLock(pSubLock)
@@ -608,6 +615,25 @@ STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
     }
 
     hr = S_OK;
+
+    return hr;
+}
+
+STDMETHODIMP CSubtitleInputPin::EndOfStream(void)
+{
+    HRESULT hr = __super::EndOfStream();
+
+    if (SUCCEEDED(hr)) {
+        CAutoLock cAutoLock(m_pSubLock);
+        if (m_helper)
+        {
+            m_helper->EndOfStream();
+        }
+        else
+        {
+            ASSERT(0);
+        }
+    }
 
     return hr;
 }

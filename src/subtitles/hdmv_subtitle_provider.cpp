@@ -206,6 +206,14 @@ HRESULT HdmvSubtitleProvider::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME t
     return S_OK;
 }
 
+HRESULT HdmvSubtitleProvider::EndOfStream( void )
+{
+    CAutoLock cAutoLock(&m_csCritSec);
+
+    m_pSub->EndOfStream();
+    return S_OK;
+}
+
 HRESULT HdmvSubtitleProvider::SetYuvType( CBaseSub::ColorType colorType, CBaseSub::YuvRangeType yuvRangeType )
 {
     CAutoLock cAutoLock(&m_csCritSec);

@@ -32,6 +32,7 @@ public:
     virtual ~CSubtitleInputPinHelper(){}
     STDMETHOD (NewSegment)(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate) = 0;
     STDMETHOD (Receive)(IMediaSample* pSample) = 0;
+    STDMETHOD (EndOfStream)(void) = 0;
 
     STDMETHOD_(ISubStream*, GetSubStream) () = 0;
 };
@@ -47,6 +48,7 @@ public:
 
     STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
     STDMETHODIMP_(ISubStream*) GetSubStream() { return m_pSubStream; }
+    STDMETHODIMP EndOfStream(void) { return S_FALSE; }
 protected:
     CComPtr<ISubStream> m_pSubStream;
     REFERENCE_TIME m_tStart, m_tStop;
@@ -79,6 +81,7 @@ public:
 	STDMETHODIMP ReceiveConnection(IPin* pConnector, const AM_MEDIA_TYPE* pmt);
 	STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 	STDMETHODIMP Receive(IMediaSample* pSample);
+    STDMETHODIMP EndOfStream(void);
 
 	ISubStream* GetSubStream() { return m_helper ? m_helper->GetSubStream() : NULL; }
 };

@@ -63,6 +63,7 @@ public:
 
 	HRESULT ParseSample (IMediaSample* pSample);
     HRESULT NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
+    void EndOfStream();
 
     HRESULT SetYuvType(CBaseSub::ColorType colorType, CBaseSub::YuvRangeType yuvRangeType);
 private :
