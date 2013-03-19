@@ -535,16 +535,27 @@ static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
 
         WCHAR sep;
         int hh1, mm1, ss1, ms1, hh2, mm2, ss2, ms2;
-        int c = swscanf(buff, L"%d%c%d%c%d%c%d --> %d%c%d%c%d%c%d\n",
-            &hh1, &sep, &mm1, &sep, &ss1, &sep, &ms1,
-            &hh2, &sep, &mm2, &sep, &ss2, &sep, &ms2);
+        WCHAR msStr1[5] = {0}, msStr2[5] = {0};
+        int c = swscanf_s(buff, L"%d%c%d%c%d%4[^-] --> %d%c%d%c%d%4s\n",
+            &hh1, &sep, sizeof(WCHAR), &mm1, &sep, sizeof(WCHAR),
+            &ss1, msStr1, _countof(msStr1),
+            &hh2, &sep, sizeof(WCHAR), &mm2, &sep, sizeof(WCHAR),
+            &ss2, msStr2, _countof(msStr2));
 
         if(c == 1) // numbering
         {
             num = hh1;
         }
-        else if(c == 14) // time info
+        else if (c >= 11) // time info
         {
+            // Parse ms if present
+            if (2 != swscanf_s(msStr1, L"%c%d", &sep, sizeof(WCHAR), &ms1)) {
+                ms1 = 0;
+            }
+            if (2 != swscanf_s(msStr2, L"%c%d", &sep, sizeof(WCHAR), &ms2)) {
+                ms2 = 0;
+            }
+
             CStringW str, tmp;
 
             bool fFoundEmpty = false;
