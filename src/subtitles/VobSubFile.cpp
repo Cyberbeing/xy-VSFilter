@@ -524,7 +524,7 @@ bool CVobSubFile::ReadIdx(CString fn, int& ver)
 
 			TCHAR c;
 			int hh, mm, ss, ms;
-			int n = _stscanf(str, _T("%d%c%d%c%d%c%d"), &hh, &c, &mm, &c, &ss, &c, &ms);
+			int n = _stscanf_s(str, _T("%d%c%d%c%d%c%d"), &hh, &c, 1, &mm, &c, 1, &ss, &c, 1, &ms);
 			
 			m_toff = n == 1 
 					? hh * (fNegative ? -1 : 1)
@@ -608,7 +608,9 @@ bool CVobSubFile::ReadIdx(CString fn, int& ver)
 
 			TCHAR c;
 			int hh, mm, ss, ms;
-			if(_stscanf(str, _T("%d%c%d%c%d%c%d"), &hh, &c, &mm, &c, &ss, &c, &ms) != 4+3)  {fError = true; continue;}
+            if (_stscanf_s(str, _T("%d%c%d%c%d%c%d"), &hh, &c, 1, &mm, &c, 1, &ss, &c, 1, &ms) != 4 + 3) {
+                fError = true; continue;
+            }
 
 			delay += (hh*60*60*1000 + mm*60*1000 + ss*1000 + ms) * (fNegative ? -1 : 1);
 		}
@@ -627,7 +629,9 @@ bool CVobSubFile::ReadIdx(CString fn, int& ver)
 
 			TCHAR c;
 			int hh, mm, ss, ms;
-			if(_stscanf(str, _T("%d%c%d%c%d%c%d"), &hh, &c, &mm, &c, &ss, &c, &ms) != 4+3)  {fError = true; continue;}
+            if (_stscanf_s(str, _T("%d%c%d%c%d%c%d"), &hh, &c, 1, &mm, &c, 1, &ss, &c, 1, &ms) != 4 + 3) {
+                fError = true; continue;
+            }
 
 			sb.start = (hh*60*60*1000 + mm*60*1000 + ss*1000 + ms) * (fNegative ? -1 : 1) + delay;
 
@@ -2205,7 +2209,7 @@ void CVobSubStream::Open(CString name, BYTE* pData, int len)
 				if(tridx.RemoveHead() == _T("tridx"))
 				{
 					TCHAR tr[4];
-					_stscanf(tridx.RemoveHead(), _T("%c%c%c%c"), &tr[0], &tr[1], &tr[2], &tr[3]);
+                    _stscanf_s(tridx.RemoveHead(), _T("%c%c%c%c"), &tr[0], 1, &tr[1], 1, &tr[2], 1, &tr[3], 1);
 					for(int i = 0; i < 4; i++)
 						m_tridx |= ((tr[i]=='1')?1:0)<<i;
 				}
