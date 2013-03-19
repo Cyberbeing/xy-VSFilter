@@ -1436,6 +1436,10 @@ HRESULT CDirectVobSubFilter2::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pNam
     HRESULT hr = NOERROR;
 	if(pGraph)
 	{
+        if (IsAppBlackListed()) {
+            return E_FAIL;
+        }
+
 		BeginEnumFilters(pGraph, pEF, pBF)
 		{
 			if(pBF != (IBaseFilter*)this && CComQIPtr<IDirectVobSub>(pBF))
@@ -1545,32 +1549,47 @@ HRESULT CDirectVobSubFilter2::CheckInputType(const CMediaType* mtIn)
 
 	if(FAILED(hr) || m_pInput->IsConnected()) return hr;
 
-	if(!ShouldWeAutoload(m_pGraph)) return VFW_E_TYPE_NOT_ACCEPTED;
+    if (IsAppBlackListed() || !ShouldWeAutoload(m_pGraph)) {
+        return VFW_E_TYPE_NOT_ACCEPTED;
+    }
 
 	GetRidOfInternalScriptRenderer();
 
 	return NOERROR;
 }
 
+bool CDirectVobSubFilter2::IsAppBlackListed()
+{
+    // all entries must be lowercase!
+    TCHAR* blacklistedapps[] = {
+        _T("wm8eutil."), // wmp8 encoder's dummy renderer releases the outputted media sample after calling Receive on its input pin (yes, even when dvobsub isn't registered at all)
+        _T("explorer."), // as some users reported thumbnail preview loads dvobsub, I've never experienced this yet...
+        _T("producer."), // this is real's producer
+        _T("googledesktopindex."), // Google Desktop
+        _T("googledesktopdisplay."), // Google Desktop
+        _T("googledesktopcrawl."), // Google Desktop
+        _T("subtitleworkshop."), // Subtitle Workshop
+        _T("subtitleworkshop4."),
+        _T("darksouls."), // Dark Souls (Game)
+        _T("rometw."), // Rome Total War (Game)
+        _T("everquest2."), // EverQuest II (Game)
+        _T("yso_win."), // Ys Origin (Game)
+        _T("launcher_main."), // Logitech WebCam Software
+        _T("webcamdell2."), // Dell WebCam Software
+    };
+
+    for (size_t i = 0; i < _countof(blacklistedapps); i++) {
+        if (theApp.m_AppName.Find(blacklistedapps[i]) >= 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool CDirectVobSubFilter2::ShouldWeAutoload(IFilterGraph* pGraph)
 {
     XY_LOG_INFO(pGraph);
-	TCHAR blacklistedapps[][32] =
-	{
-		_T("WM8EUTIL."), // wmp8 encoder's dummy renderer releases the outputted media sample after calling Receive on its input pin (yes, even when dvobsub isn't registered at all)
-		_T("explorer."), // as some users reported thumbnail preview loads dvobsub, I've never experienced this yet...
-		_T("producer."), // this is real's producer
-		_T("GoogleDesktopIndex."), // Google Desktop
-		_T("GoogleDesktopDisplay."), // Google Desktop
-		_T("GoogleDesktopCrawl."), // Google Desktop
-	};
-
-	for(int i = 0; i < countof(blacklistedapps); i++)
-	{
-		if(theApp.m_AppName.Find(blacklistedapps[i]) >= 0)
-			return(false);
-	}
-
 	int level;
 	bool m_fExternalLoad, m_fWebLoad, m_fEmbeddedLoad;
 	get_LoadSettings(&level, &m_fExternalLoad, &m_fWebLoad, &m_fEmbeddedLoad);
