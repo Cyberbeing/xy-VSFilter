@@ -34,6 +34,7 @@ public:
     //fix me: add to an interface
     HRESULT ParseSample (IMediaSample* pSample);
     HRESULT NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
+    HRESULT EndOfStream(void);
 
     HRESULT SetYuvType(CBaseSub::ColorType colorType, CBaseSub::YuvRangeType yuvRangeType);
 private:

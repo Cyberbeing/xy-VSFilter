@@ -178,6 +178,12 @@ HRESULT CRenderedHdmvSubtitle::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME 
 	return S_OK;
 }
 
+void CRenderedHdmvSubtitle::EndOfStream()
+{
+    CAutoLock cAutoLock(&m_csCritSec);
+    m_pSub->EndOfStream();
+}
+
 STDMETHODIMP_(bool) CRenderedHdmvSubtitle::IsColorTypeSupported( int type )
 {
     return type==MSP_AYUV_PLANAR ||

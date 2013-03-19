@@ -13,6 +13,7 @@ public:
 
     STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
     STDMETHODIMP Receive(IMediaSample* pSample);
+    STDMETHODIMP EndOfStream(void);
 private:
     HdmvSubtitleProvider* m_pHdmvSubtitle;
     const CMediaType& m_mt;
@@ -33,6 +34,11 @@ STDMETHODIMP CHdmvInputPinHepler2::NewSegment( REFERENCE_TIME tStart, REFERENCE_
 STDMETHODIMP CHdmvInputPinHepler2::Receive( IMediaSample* pSample )
 {
     return m_pHdmvSubtitle->ParseSample (pSample);
+}
+
+STDMETHODIMP CHdmvInputPinHepler2::EndOfStream( void )
+{
+    return m_pHdmvSubtitle->EndOfStream();
 }
 
 //
