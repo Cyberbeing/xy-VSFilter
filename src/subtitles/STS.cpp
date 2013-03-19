@@ -1,5 +1,6 @@
 /*
- *  Copyright (C) 2003-2006 Gabest
+ *  (C) 2003-2006 Gabest
+ *  (C) 2006-2013 see Authors.txt 
  *  http://www.gabest.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -537,10 +538,8 @@ static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
         int hh1, mm1, ss1, ms1, hh2, mm2, ss2, ms2;
         WCHAR msStr1[5] = {0}, msStr2[5] = {0};
         int c = swscanf_s(buff, L"%d%c%d%c%d%4[^-] --> %d%c%d%c%d%4s\n",
-            &hh1, &sep, sizeof(WCHAR), &mm1, &sep, sizeof(WCHAR),
-            &ss1, msStr1, _countof(msStr1),
-            &hh2, &sep, sizeof(WCHAR), &mm2, &sep, sizeof(WCHAR),
-            &ss2, msStr2, _countof(msStr2));
+            &hh1, &sep, 1, &mm1, &sep, 1, &ss1, msStr1, _countof(msStr1),
+            &hh2, &sep, 1, &mm2, &sep, 1, &ss2, msStr2, _countof(msStr2));
 
         if(c == 1) // numbering
         {
@@ -549,10 +548,10 @@ static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
         else if (c >= 11) // time info
         {
             // Parse ms if present
-            if (2 != swscanf_s(msStr1, L"%c%d", &sep, sizeof(WCHAR), &ms1)) {
+            if (2 != swscanf_s(msStr1, L"%c%d", &sep, 1, &ms1)) {
                 ms1 = 0;
             }
-            if (2 != swscanf_s(msStr2, L"%c%d", &sep, sizeof(WCHAR), &ms2)) {
+            if (2 != swscanf_s(msStr2, L"%c%d", &sep, 1, &ms2)) {
                 ms2 = 0;
             }
 
@@ -566,9 +565,8 @@ static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
                 if(tmp.IsEmpty()) fFoundEmpty = true;
 
                 int num2;
-                WCHAR c;
-                if(swscanf(tmp, L"%d%c", &num2, &c) == 1 && fFoundEmpty)
-                {
+                WCHAR wc;
+                if (swscanf_s(tmp, L"%d%c", &num2, &wc, 1) == 1 && fFoundEmpty) {
                     num = num2;
                     break;
                 }
@@ -862,7 +860,7 @@ static CStringW MicroDVD2SSA(CStringW str, bool fUnicode, int CharSet)
 
                     int x, y;
                     TCHAR c;
-                    swscanf(code, L"{o:%d%c%d", &x, &c, &y);
+                    swscanf_s(code, L"{o:%d%c%d", &x, &c, 1, &y); 
                     code.Format(L"{\\move(%d,%d,0,0,0,0)}", x, y);
                     ret += code;
                 }
