@@ -84,6 +84,26 @@ public:
         return !m_Palette.IsEmpty();
     };
 
+    CompositionObject* Copy() {
+        CompositionObject* pCompositionObject = DEBUG_NEW CompositionObject();
+
+        pCompositionObject->m_Palette.SetCount(m_Palette.GetCount());
+        for (int i=0,n=m_Palette.GetCount();i<n;i++)
+        {
+            pCompositionObject->m_Palette[i] = m_Palette[i];
+        }
+        pCompositionObject->m_OriginalColorType = m_OriginalColorType;
+        pCompositionObject->m_OriginalYuvRangeType = m_OriginalYuvRangeType;
+
+        memcpy(pCompositionObject->m_Colors, m_Colors, sizeof(m_Colors));
+        pCompositionObject->m_colorType = m_colorType;
+
+        pCompositionObject->m_pRLEData = NULL;
+        pCompositionObject->SetRLEData(m_pRLEData, m_nRLEDataSize, m_nRLEDataSize);
+
+        return pCompositionObject;
+    }
+
 private:
     BYTE* m_pRLEData;
     int   m_nRLEDataSize;
