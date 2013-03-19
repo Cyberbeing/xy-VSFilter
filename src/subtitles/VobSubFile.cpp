@@ -408,7 +408,7 @@ bool CVobSubFile::ReadIdx(CString fn, int& ver)
 			if(i < 0 || _stscanf(&s[i+_tcslen(buff)], _T("%d"), &ver) != 1
 			|| ver > VOBSUBIDXVER)
 			{
-				AfxMessageBox(_T("Wrong file version!"));
+				TRACE(_T("[CVobSubFile::ReadIdx] Wrong file version!\n")); 
 				fError = true;
 				continue;
 			}
