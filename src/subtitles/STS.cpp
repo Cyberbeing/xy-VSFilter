@@ -253,13 +253,13 @@ int CharSetLen = countof(CharSetList);
 static void LogSegments(const CAtlArray<STSSegment>& segments)
 {
 #if ENABLE_XY_LOG_TEXT_SUBTITLE
-    for (int i=0;i<segments.GetCount();i++)
+    for (int i=0, n=segments.GetCount();i<n;i++)
     {
         const STSSegment& s = segments[i];
         TRACE_SUB(_T("\tsegments ")<<i<<_T(":")<<s.start<<_T(" ")
             <<s.end<<_T(" ")<<s.subs.GetCount());
         TRACE_SUB(_T("\tsubs: "));
-        for (int j=0;j<s.subs.GetCount();j++)
+        for (int j=0, m=s.subs.GetCount();j<m;j++)
         {
             TRACE_SUB(_T("\t\t ")<<s.subs[j]);
         }
@@ -2499,7 +2499,8 @@ STSSegment* CSimpleTextSubtitle::SearchSubs2(int t, double fps, /*[out]*/ int* i
 
 int CSimpleTextSubtitle::TranslateStart(int i, double fps)
 {
-    return(i < 0 || m_entries.GetCount() <= i ? -1 :
+    int n = m_entries.GetCount();
+    return(i < 0 || n <= i ? -1 :
         m_mode == TIME ? m_entries.GetAt(i).start :
         m_mode == FRAME ? (int)(m_entries.GetAt(i).start*1000/fps) :
         0);
@@ -2507,7 +2508,8 @@ int CSimpleTextSubtitle::TranslateStart(int i, double fps)
 
 int CSimpleTextSubtitle::TranslateEnd(int i, double fps)
 {
-    return(i < 0 || m_entries.GetCount() <= i ? -1 :
+    int n = m_entries.GetCount();
+    return(i < 0 || n <= i ? -1 :
         m_mode == TIME ? m_entries.GetAt(i).end :
         m_mode == FRAME ? (int)(m_entries.GetAt(i).end*1000/fps) :
         0);
@@ -2515,7 +2517,8 @@ int CSimpleTextSubtitle::TranslateEnd(int i, double fps)
 
 int CSimpleTextSubtitle::TranslateSegmentStart(int i, double fps)
 {
-    return(i < 0 || m_segments.GetCount() <= i ? -1 :
+    int n = m_segments.GetCount();
+    return(i < 0 || n <= i ? -1 :
         m_mode == TIME ? m_segments[i].start :
         m_mode == FRAME ? (int)(m_segments[i].start*1000/fps) :
         0);
@@ -2523,7 +2526,8 @@ int CSimpleTextSubtitle::TranslateSegmentStart(int i, double fps)
 
 int CSimpleTextSubtitle::TranslateSegmentEnd(int i, double fps)
 {
-    return(i < 0 || m_segments.GetCount() <= i ? -1 :
+    int n = m_segments.GetCount();
+    return(i < 0 || n <= i ? -1 :
         m_mode == TIME ? m_segments[i].end :
         m_mode == FRAME ? (int)(m_segments[i].end*1000/fps) :
         0);
@@ -2531,7 +2535,8 @@ int CSimpleTextSubtitle::TranslateSegmentEnd(int i, double fps)
 
 void CSimpleTextSubtitle::TranslateSegmentStartEnd(int i, double fps, /*out*/int& start, /*out*/int& end)
 {
-    if(i < 0 || m_segments.GetCount() <= i)
+    int n = m_segments.GetCount();
+    if(i < 0 || n <= i)
     {
         start=-1;
         end=-1;
