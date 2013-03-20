@@ -1066,7 +1066,7 @@ STDMETHODIMP_(bool) CDirectVobSub::get_Forced()
 {
     if (!TestOption(DirectVobSubXyOptions::void_Forced))
     {
-        return E_NOTIMPL;
+        ASSERT(0);
     }
 	return m_fForced;
 }
