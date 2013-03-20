@@ -546,10 +546,12 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) CSubtitleInputPin::CreateHelper( const C
 HRESULT CSubtitleInputPin::BreakConnect()
 {
     XY_LOG_DEBUG("");
-	RemoveSubStream(m_helper->GetSubStream());
-    delete m_helper; m_helper = NULL;
-
-	ASSERT(IsStopped());
+    if (m_helper)
+    {
+        RemoveSubStream(m_helper->GetSubStream());
+        delete m_helper; m_helper = NULL;
+    }
+    ASSERT(IsStopped());
 
     return __super::BreakConnect();
 }
