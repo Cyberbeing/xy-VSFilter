@@ -14,6 +14,7 @@ class XySubFilter
     , public ISpecifyPropertyPages
     , public IAMStreamSelect
     , public CAMThread
+    , public SubRenderOptionsImpl
     , public ISubRenderProvider
 {
 public:
@@ -25,24 +26,7 @@ public:
     DECLARE_IUNKNOWN;
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
-    //DECLARE_ISUBRENDEROPTIONS;
-    STDMETHODIMP GetBool     (LPCSTR field, bool      *value);
-    STDMETHODIMP GetInt      (LPCSTR field, int *value)                 { return E_FAIL; }
-    STDMETHODIMP GetSize     (LPCSTR field, SIZE *value)                { return E_FAIL; }
-    STDMETHODIMP GetRect     (LPCSTR field, RECT *value)                { return E_FAIL; }
-    STDMETHODIMP GetUlonglong(LPCSTR field, ULONGLONG *value)           { return E_FAIL; }
-    STDMETHODIMP GetDouble   (LPCSTR field, double *value)              { return E_FAIL; }
-    STDMETHODIMP GetString   (LPCSTR field, LPWSTR *value, int *chars);
-    STDMETHODIMP GetBin      (LPCSTR field, LPVOID *value, int *size )  { return E_FAIL; }
-
-    STDMETHODIMP SetBool     (LPCSTR field, bool value)                 { return E_FAIL; }
-    STDMETHODIMP SetInt      (LPCSTR field, int value)                  { return E_FAIL; }
-    STDMETHODIMP SetSize     (LPCSTR field, SIZE value)                 { return E_FAIL; }
-    STDMETHODIMP SetRect     (LPCSTR field, RECT value)                 { return E_FAIL; }
-    STDMETHODIMP SetUlonglong(LPCSTR field, ULONGLONG value)            { return E_FAIL; }
-    STDMETHODIMP SetDouble   (LPCSTR field, double value)               { return E_FAIL; }
-    STDMETHODIMP SetString   (LPCSTR field, LPWSTR    value, int chars) { return E_FAIL; }
-    STDMETHODIMP SetBin      (LPCSTR field, LPVOID    value, int size ) { return E_FAIL; }
+    DECLARE_ISUBRENDEROPTIONS;
 
     //CBaseFilter
     CBasePin* GetPin(int n);

@@ -39,6 +39,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     HRESULT* phr, const GUID& clsid /*= __uuidof(XySubFilter)*/ )
     : CBaseFilter(NAME("XySubFilter"), punk, &m_csFilter, clsid)
     , CDirectVobSub(XyVobFilterOptions)
+    , SubRenderOptionsImpl(::options, this)
     , m_nSubtitleId(-1)
     , m_not_first_pause(false)
     , m_consumer(NULL)
@@ -95,7 +96,7 @@ STDMETHODIMP XySubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
         QI(ISpecifyPropertyPages)
         QI(IAMStreamSelect)
         QI(ISubRenderProvider)
-        QI(ISubRenderOptions)
+        (riid==__uuidof(ISubRenderOptions)) ? GetInterface((ISubRenderProvider*)this, ppv) :
         __super::NonDelegatingQueryInterface(riid, ppv);
 }
 
@@ -1883,63 +1884,4 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
         hr = E_INVALIDARG;
     }
     return hr;
-}
-
-STDMETHODIMP XySubFilter::GetString   (LPCSTR field, LPWSTR    *value, int *chars)
-{
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
-    if (_stricmp(field,"yuvMatrix")==0)
-    {
-        if (value)
-        {
-            *value = (LPWSTR)LocalAlloc(LPTR, 100*sizeof(WCHAR));
-            lstrcpyW(*value, L"TV.601");
-        }
-        if (chars)
-        {
-            *chars = 6;
-        }
-        XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
-        return S_OK;
-    }
-    else if (_stricmp(field, "name")==0)
-    {
-        if (value)
-        {
-            *value = (LPWSTR)LocalAlloc(LPTR, 100*sizeof(WCHAR));
-            memcpy(*value, L"XySubFilter", 11*2);
-        }
-        if (chars)
-        {
-            *chars = 11;
-        }
-        return S_OK;
-    }
-    else if (_stricmp(field, "version")==0)
-    {
-        if (value)
-        {
-            *value = (LPWSTR)LocalAlloc(LPTR, 100*sizeof(WCHAR));
-            memcpy(*value, L"0", 1*2);
-        }
-        if (chars)
-        {
-            *chars = 1;
-        }
-        return S_OK;
-    }
-    return E_INVALIDARG;
-}
-
-STDMETHODIMP XySubFilter::GetBool     (LPCSTR field, bool      *value)
-{
-    if (_stricmp(field, "combineBitmaps")==0)
-    {
-        if (value)
-        {
-            *value = false;
-        }
-        return S_OK;
-    }
-    return E_FAIL;
 }
