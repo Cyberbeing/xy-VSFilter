@@ -46,6 +46,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     , m_hSystrayThread(0)
     , m_consumer_options_read(false)
     , m_context_id(0)
+    , m_last_requested(-1)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
@@ -477,6 +478,11 @@ STDMETHODIMP XySubFilter::put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedS
 
     if(hr == NOERROR)
     {
+        if (m_last_requested!=-1)
+        {
+            XY_LOG_WARN("Some subtitle frames are cached already!");
+            m_last_requested = -1;
+        }
         InvalidateSubtitle();
     }
 
@@ -491,6 +497,11 @@ STDMETHODIMP XySubFilter::put_TextSettings(void* lf, int lflen, COLORREF color, 
 
     if(hr == NOERROR)
     {
+        if (m_last_requested!=-1)
+        {
+            XY_LOG_WARN("Some subtitle frames are cached already!");
+            m_last_requested = -1;
+        }
         InvalidateSubtitle();
     }
 
@@ -504,6 +515,11 @@ STDMETHODIMP XySubFilter::put_SubtitleTiming(int delay, int speedmul, int speedd
 
     if(hr == NOERROR)
     {
+        if (m_last_requested!=-1)
+        {
+            XY_LOG_WARN("Some subtitle frames are cached already!");
+            m_last_requested = -1;
+        }
         InvalidateSubtitle();
     }
 
@@ -1014,6 +1030,7 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
     start = (start - 10000i64*m_SubtitleDelay) * m_SubtitleSpeedMul / m_SubtitleSpeedDiv; // no, it won't overflow if we use normal parameters (__int64 is enough for about 2000 hours if we multiply it by the max: 65536 as m_SubtitleSpeedMul)
     stop = (stop - 10000i64*m_SubtitleDelay) * m_SubtitleSpeedMul / m_SubtitleSpeedDiv;
     REFERENCE_TIME now = start; //fix me: (start + stop) / 2;
+    m_last_requested = now;
 
     CComPtr<IXySubRenderFrame> sub_render_frame;
     if(m_sub_provider)
@@ -1212,6 +1229,11 @@ void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
     XY_LOG_INFO(XY_LOG_VAR_2_STR(fApplyDefStyle));
     CAutoLock cAutolock(&m_csSubLock);
 
+    if (m_last_requested!=-1)
+    {
+        XY_LOG_WARN("Some subtitle frames are cached already!");
+        m_last_requested = -1;
+    }
     InvalidateSubtitle();
 
     CComPtr<ISubStream> pSubStream;
@@ -1425,6 +1447,11 @@ void XySubFilter::InvalidateSubtitle( REFERENCE_TIME rtInvalidate /*= -1*/, DWOR
     {
         if(nSubtitleId == -1 || nSubtitleId == m_nSubtitleId)
         {
+            if (m_last_requested>rtInvalidate)
+            {
+                ASSERT(0);
+                XY_LOG_ERROR("New subtitle samples received after a request.");
+            }
             m_sub_provider->Invalidate(rtInvalidate);
         }
     }
