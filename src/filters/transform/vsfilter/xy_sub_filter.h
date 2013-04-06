@@ -152,4 +152,6 @@ private:
 
     ISubRenderConsumer *m_consumer;
     ULONGLONG m_context_id;
+
+    REFERENCE_TIME m_last_requested;
 };
