@@ -3156,8 +3156,10 @@ STDMETHODIMP_(POSITION) CRenderedTextSubtitle::GetStartPosition(REFERENCE_TIME r
     //subIndex, 1 based, indicates which subpic the result corresponds to.
     rt /= 10000i64;
     const STSSegment *stss = SearchSubs((int)rt, fps, &iSegment, NULL);
-    if(stss==NULL)
+    if(stss==NULL) {
+        TRACE_PARSER("No subtitle at "<<XY_LOG_VAR_2_STR(rt));
         return NULL;
+    }
     else if(stss->animated)
     {
         int start = TranslateSegmentStart(iSegment, fps);

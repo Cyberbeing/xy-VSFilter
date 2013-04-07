@@ -2415,6 +2415,7 @@ const STSSegment* CSimpleTextSubtitle::SearchSubs(int t, double fps, /*[out]*/ i
     {
         if(iSegment!=NULL)
             *iSegment = 0;
+        TRACE_SUB("No subtitles at "<<XY_LOG_VAR_2_STR(t));
         return NULL;
     }
 
@@ -2446,6 +2447,7 @@ const STSSegment* CSimpleTextSubtitle::SearchSubs(int t, double fps, /*[out]*/ i
     {
         return &m_segments[j];
     }
+    TRACE_SUB("No subtitles at "<<XY_LOG_VAR_2_STR(t));
     return(NULL);
 }
 

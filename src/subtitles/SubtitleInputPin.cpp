@@ -575,9 +575,11 @@ STDMETHODIMP CSubtitleInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME
 {
     TRACE_SAMPLE(XY_LOG_VAR_2_STR(tStart)<<XY_LOG_VAR_2_STR(tStop)<<XY_LOG_VAR_2_STR(dRate));
     CAutoLock cAutoLock(&m_csReceive);
+    TRACE_SAMPLE("Lock acquired "<<XY_LOG_VAR_2_STR(&m_csReceive));
     if(m_helper)
     {
         CAutoLock cAutoLock(m_pSubLock);
+        TRACE_SAMPLE("Lock acquired "<<XY_LOG_VAR_2_STR(&m_pSubLock));
         m_helper->NewSegment(tStart, tStop, dRate);
     }
     else
@@ -607,12 +609,13 @@ STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
     if(FAILED(hr)) return hr;
 
     CAutoLock cAutoLock(&m_csReceive);
+    TRACE_SAMPLE("Lock required "<<XY_LOG_VAR_2_STR(&m_csReceive));
 
     if (m_helper)
     {
         CAutoLock cAutoLock(m_pSubLock);
         hr = m_helper->Receive(pSample);
-        TRACE(_T("InvalidateSubtitle(%I64d, ..)\n"), tStart);
+        TRACE_SAMPLE("InvalidateSubtitle :"<<tStart);
         InvalidateSubtitle(tStart, m_helper->GetSubStream());
     }
 
