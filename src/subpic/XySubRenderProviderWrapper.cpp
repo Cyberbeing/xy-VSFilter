@@ -299,12 +299,14 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     POSITION pos = m_provider->GetStartPosition(now, fps);
     if (!pos)
     {
+        XY_LOG_TRACE("No subtitles at "<<XY_LOG_VAR_2_STR(now));
         return S_FALSE;
     }
     REFERENCE_TIME start = m_provider->GetStart(pos, fps);
     REFERENCE_TIME stop = m_provider->GetStop(pos, fps); //fixme: have to get start stop twice
     if (!(start <= now && now < stop))
     {
+        XY_LOG_TRACE("No subtitles at "<<XY_LOG_VAR_2_STR(now));
         return S_FALSE;
     }
 

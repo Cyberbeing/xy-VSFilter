@@ -1039,6 +1039,7 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
         TRACE_RENDERER_REQUEST("Look up subpic for "<<XY_LOG_VAR_2_STR(now));
 
         hr = m_sub_provider->RequestFrame(&sub_render_frame, now);
+        TRACE_RENDERER_REQUEST("Returned "<<XY_LOG_VAR_2_STR(hr)<<XY_LOG_VAR_2_STR(sub_render_frame));
         if (FAILED(hr))
         {
             return hr;
