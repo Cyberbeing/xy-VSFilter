@@ -413,11 +413,18 @@ STDMETHODIMP CHdmvInputPinHepler::EndOfStream( void )
 }
 
 CSubtitleInputPin::CSubtitleInputPin(CBaseFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr)
-	: CBaseInputPin(NAME("CSubtitleInputPin"), pFilter, pLock, phr, L"Input")
-	, m_pSubLock(pSubLock)
+    : CBaseInputPin(NAME("CSubtitleInputPin"), pFilter, pLock, phr, L"Input")
+    , m_ceNotReceive(TRUE)
+    , m_pSubLock(pSubLock)
     , m_helper(NULL)
 {
-	m_bCanReconnectWhenActive = TRUE;
+    m_bCanReconnectWhenActive = TRUE;
+    m_ceNotReceive.Set();
+}
+
+BOOL CSubtitleInputPin::WaitTillNotReceiving(DWORD dwTimeout /*= INFINITE*/)
+{
+    return m_ceNotReceive.Wait(dwTimeout);
 }
 
 HRESULT CSubtitleInputPin::CheckMediaType(const CMediaType* pmt)
@@ -574,8 +581,10 @@ STDMETHODIMP CSubtitleInputPin::ReceiveConnection(IPin* pConnector, const AM_MED
 STDMETHODIMP CSubtitleInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
     TRACE_SAMPLE(XY_LOG_VAR_2_STR(tStart)<<XY_LOG_VAR_2_STR(tStop)<<XY_LOG_VAR_2_STR(dRate));
-    CAutoLock cAutoLock(&m_csReceive);
-    TRACE_SAMPLE("Lock acquired "<<XY_LOG_VAR_2_STR(&m_csReceive));
+    if (!m_ceNotReceive.Check()) {
+        XY_LOG_ERROR("A previous call to NewSegment does NOT followed with a call to Receive");
+    }
+    m_ceNotReceive.Reset();
     if(m_helper)
     {
         CAutoLock cAutoLock(m_pSubLock);
@@ -606,10 +615,12 @@ STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
     tStart += m_tStart; 
 
     hr = __super::Receive(pSample);
-    if(FAILED(hr)) return hr;
-
-    CAutoLock cAutoLock(&m_csReceive);
-    TRACE_SAMPLE("Lock required "<<XY_LOG_VAR_2_STR(&m_csReceive));
+    if(FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to receive sample"<<XY_LOG_VAR_2_STR(hr));
+        m_ceNotReceive.Set();
+        return hr;
+    }
 
     if (m_helper)
     {
@@ -620,7 +631,7 @@ STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
     }
 
     hr = S_OK;
-
+    m_ceNotReceive.Set();
     return hr;
 }
 
