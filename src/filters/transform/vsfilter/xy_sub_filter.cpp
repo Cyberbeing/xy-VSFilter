@@ -852,7 +852,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
         {
             *ppszName = (WCHAR*)CoTaskMemAlloc((str.GetLength()+1)*sizeof(WCHAR));
             if(*ppszName == NULL) return S_FALSE;
-            wcscpy(*ppszName, str);
+            wcscpy_s(*ppszName, str.GetLength()+1, str);
         }
     }
 
@@ -956,7 +956,8 @@ DWORD XySubFilter::ThreadProc()
                 {
                     for(j = 0; j < 10; j++)
                     {
-                        if(FILE* f = _tfopen(fn, _T("rb+")))
+                        FILE* f = NULL;
+                        if(!_tfopen_s(&f, fn, _T("rb+")))
                         {
                             fclose(f);
                             j = 0;

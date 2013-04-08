@@ -27,7 +27,7 @@ bool STDMETHODCALLTYPE CPooledSubPicAllocator::InitPool( int capacity )
 {
     TRACE_ALLOCATOR(capacity);
     CAutoLock lock(&_poolLock);
-    CPooledSubPic* temp;
+    CPooledSubPic* temp = NULL;
 
     if(capacity<0)
         capacity = 0;
@@ -53,7 +53,8 @@ bool STDMETHODCALLTYPE CPooledSubPicAllocator::InitPool( int capacity )
 
     while(_capacity<capacity)
     {
-        if(!(temp = DoAlloc()))
+        temp = DoAlloc();
+        if (!temp)
         {
             ASSERT(0);
             XY_LOG_FATAL("Failed to allocate item");
@@ -234,7 +235,8 @@ CPooledSubPic* CPooledSubPicAllocator::DoAlloc()
         return(NULL);
     }
     CPooledSubPic* temp = NULL;
-    if(!(temp = DEBUG_NEW CPooledSubPic(spd, _alpha_blt_dst_type, this)))
+    temp = DEBUG_NEW CPooledSubPic(spd, _alpha_blt_dst_type, this);
+    if(!temp)
     {
         xy_free(spd.bits);
         ASSERT(0);

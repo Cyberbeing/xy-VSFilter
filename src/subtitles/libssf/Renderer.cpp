@@ -176,12 +176,12 @@ namespace ssf
 			lf.lfPitchAndFamily = DEFAULT_PITCH|FF_DONTCARE;
 
 			FontWrapper* font;
-
-			if(!(font = m_fc.Create(m_hDC, lf)))
+			font = m_fc.Create(m_hDC, lf);
+			if (!font)
 			{
 				_tcscpy_s(lf.lfFaceName, _T("Arial"));
-
-				if(!(font = m_fc.Create(m_hDC, lf)))
+				font = m_fc.Create(m_hDC, lf);
+				if (!font)
 				{
 					ASSERT(0);
 					continue;
@@ -763,8 +763,8 @@ namespace ssf
 		}
 
 		HFONT hFont;
-
-		if(!(hFont = CreateFontIndirect(&lf)))
+		hFont = CreateFontIndirect(&lf);
+		if (hFont)
 		{
 			ASSERT(0);
 			return NULL;
