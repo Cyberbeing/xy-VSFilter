@@ -61,27 +61,29 @@ protected:
 class CSubtitleInputPin : public CBaseInputPin
 {
 protected:
-	CCritSec m_csReceive;
+    CAMEvent m_ceNotReceive;
 
-	CCritSec* m_pSubLock;
+    CCritSec* m_pSubLock;
     CSubtitleInputPinHelper *m_helper;
 protected:
-	virtual void AddSubStream(ISubStream* pSubStream) = 0;
-	virtual void RemoveSubStream(ISubStream* pSubStream) = 0;
-	virtual void InvalidateSubtitle(REFERENCE_TIME rtStart, ISubStream* pSubStream) = 0;
+    virtual void AddSubStream(ISubStream* pSubStream) = 0;
+    virtual void RemoveSubStream(ISubStream* pSubStream) = 0;
+    virtual void InvalidateSubtitle(REFERENCE_TIME rtStart, ISubStream* pSubStream) = 0;
 
     STDMETHOD_(CSubtitleInputPinHelper*, CreateHelper) ( const CMediaType& mt, IPin* pReceivePin );
     bool IsHdmvSub(const CMediaType* pmt);
 public:
-	CSubtitleInputPin(CBaseFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr);
+    CSubtitleInputPin(CBaseFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr);
 
-	HRESULT CheckMediaType(const CMediaType* pmt);
-	HRESULT CompleteConnect(IPin* pReceivePin);
-	HRESULT BreakConnect();
-	STDMETHODIMP ReceiveConnection(IPin* pConnector, const AM_MEDIA_TYPE* pmt);
-	STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
-	STDMETHODIMP Receive(IMediaSample* pSample);
+    BOOL WaitTillNotReceiving(DWORD dwTimeout = INFINITE);
+
+    HRESULT CheckMediaType(const CMediaType* pmt);
+    HRESULT CompleteConnect(IPin* pReceivePin);
+    HRESULT BreakConnect();
+    STDMETHODIMP ReceiveConnection(IPin* pConnector, const AM_MEDIA_TYPE* pmt);
+    STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
+    STDMETHODIMP Receive(IMediaSample* pSample);
     STDMETHODIMP EndOfStream(void);
 
-	ISubStream* GetSubStream() { return m_helper ? m_helper->GetSubStream() : NULL; }
+    ISubStream* GetSubStream() { return m_helper ? m_helper->GetSubStream() : NULL; }
 };
