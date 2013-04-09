@@ -197,11 +197,6 @@ STDMETHODIMP XySubFilter::Pause()
     CAutoLock lck(&m_csFilter);
     HRESULT hr = NOERROR;
 
-    if (m_State == State_Paused) {
-        ASSERT(m_not_first_pause);
-        // (This space left deliberately blank)
-    }
-
     if (!m_not_first_pause)
     {
         hr = FindAndConnectConsumer(m_pGraph);
@@ -213,21 +208,41 @@ STDMETHODIMP XySubFilter::Pause()
         m_not_first_pause = true;
     }
 
-    // If we have no input pin or it isn't yet connected
+    if (m_State == State_Paused) {
+        ASSERT(m_not_first_pause);
+        // (This space left deliberately blank)
+    }
+    // If we have no input pins
 
-    else if (m_pSubtitleInputPin.IsEmpty()) {
+    else if (m_pSubtitleInputPin.GetCount()<=1) {
         m_State = State_Paused;
     }
-
     // if we have an input pin
 
     else {
-        if (m_State == State_Stopped) {
-            CAutoLock lck2(&m_csReceive);
-            hr = StartStreaming();
+        //input pins not all connected
+        bool input_pin_connected = true;
+        for (int i=0,n=m_pSubtitleInputPin.GetCount()-1;i<n;i++)
+        {
+            if (m_pSubtitleInputPin.GetAt(i)->IsConnected()==FALSE)
+            {
+                TRACE_RENDERER_REQUEST("Pin "<<XY_LOG_VAR_2_STR(i)<<" not connected");
+                input_pin_connected = false;
+                break;
+            }
         }
-        if (SUCCEEDED(hr)) {
-            hr = CBaseFilter::Pause();
+        if (!input_pin_connected)
+        {
+            m_State = State_Paused;
+        }
+        else {
+            if (m_State == State_Stopped) {
+                CAutoLock lck2(&m_csReceive);
+                hr = StartStreaming();
+            }
+            if (SUCCEEDED(hr)) {
+                hr = CBaseFilter::Pause();
+            }
         }
     }
 
