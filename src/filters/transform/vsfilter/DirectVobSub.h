@@ -91,8 +91,6 @@ protected:
 	bool m_fOSD;
 	int m_nReloaderDisableCount;
 	int m_SubtitleDelay, m_SubtitleSpeedMul, m_SubtitleSpeedDiv;
-	bool m_fMediaFPSEnabled;
-	double m_MediaFPS;
 	bool m_fSaveFullPath;
 	NORMALIZEDRECT m_ZoomRect;
 

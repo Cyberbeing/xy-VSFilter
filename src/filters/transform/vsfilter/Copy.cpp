@@ -244,7 +244,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 		msg += tmp;
 
 		tmp.Format(_T("real fps: %.3f, current fps: %.3f\nmedia time: %d, subtitle time: %d [ms]\nframe number: %d (calculated)\nrate: %.4f\n"), 
-			m_fps, m_fMediaFPSEnabled?m_MediaFPS:fabs(m_fps),
+			m_fps, m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED]?m_xy_double_opt[DOUBLE_MEDIA_FPS]:fabs(m_fps),
 			(int)m_tPrev.Millisecs(), (int)(CalcCurrentTime()/10000),
 			(int)(m_tPrev.m_time * m_fps / 10000000),
 			m_pInput->CurrentRate());
