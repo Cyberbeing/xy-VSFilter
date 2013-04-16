@@ -628,7 +628,7 @@ HRESULT CDirectVobSubFilter::StartStreaming()
 
     m_tbid.fRunOnce = true;
 
-    hr = put_MediaFPS(m_fMediaFPSEnabled, m_MediaFPS);
+    hr = put_MediaFPS(m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED], m_xy_double_opt[DOUBLE_MEDIA_FPS]);
     CHECK_N_LOG(hr, "Failed to set option");
 
     return __super::StartStreaming();
@@ -1304,38 +1304,38 @@ STDMETHODIMP CDirectVobSubFilter::get_XyFlyWeightInfo( XyFlyWeightInfo* xy_fw_in
 STDMETHODIMP CDirectVobSubFilter::get_MediaFPS(bool* fEnabled, double* fps)
 {
     XY_LOG_INFO(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
-	HRESULT hr = CDirectVobSub::get_MediaFPS(fEnabled, fps);
+    HRESULT hr = CDirectVobSub::get_MediaFPS(fEnabled, fps);
 
-	CComQIPtr<IMediaSeeking> pMS = m_pGraph;
-	double rate;
-	if(pMS && SUCCEEDED(pMS->GetRate(&rate)))
-	{
-		m_MediaFPS = rate * m_fps;
-		if(fps) *fps = m_MediaFPS;
-	}
+    CComQIPtr<IMediaSeeking> pMS = m_pGraph;
+    double rate;
+    if(pMS && SUCCEEDED(pMS->GetRate(&rate)))
+    {
+        m_xy_double_opt[DOUBLE_MEDIA_FPS] = rate * m_fps;
+        if(fps) *fps = m_xy_double_opt[DOUBLE_MEDIA_FPS];
+    }
 
-	return hr;
+    return hr;
 }
 
 STDMETHODIMP CDirectVobSubFilter::put_MediaFPS(bool fEnabled, double fps)
 {
     XY_LOG_INFO(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
-	HRESULT hr = CDirectVobSub::put_MediaFPS(fEnabled, fps);
+    HRESULT hr = CDirectVobSub::put_MediaFPS(fEnabled, fps);
 
-	CComQIPtr<IMediaSeeking> pMS = m_pGraph;
-	if(pMS)
-	{
-		if(hr == NOERROR)
-		{
-			hr = pMS->SetRate(m_fMediaFPSEnabled ? m_MediaFPS / m_fps : 1.0);
-		}
+    CComQIPtr<IMediaSeeking> pMS = m_pGraph;
+    if(pMS)
+    {
+        if(hr == NOERROR)
+        {
+            hr = pMS->SetRate(m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED] ? m_xy_double_opt[DOUBLE_MEDIA_FPS] / m_fps : 1.0);
+        }
 
-		double dRate;
-		if(SUCCEEDED(pMS->GetRate(&dRate)))
-			m_MediaFPS = dRate * m_fps;
-	}
+        double dRate;
+        if(SUCCEEDED(pMS->GetRate(&dRate)))
+            m_xy_double_opt[DOUBLE_MEDIA_FPS] = dRate * m_fps;
+    }
 
-	return hr;
+    return hr;
 }
 
 STDMETHODIMP CDirectVobSubFilter::get_ZoomRect(NORMALIZEDRECT* rect)
