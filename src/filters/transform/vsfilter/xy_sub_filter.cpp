@@ -1616,6 +1616,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
     {
         UpdateSubtitle(false);
     }
+    m_consumer_options_read = true;
     return hr;
 }
 
