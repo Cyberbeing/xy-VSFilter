@@ -1081,7 +1081,7 @@ STDMETHODIMP CDirectVobSubFilter::put_FileName(WCHAR* fn)
 
     if(hr == S_OK && !Open())
     {
-        m_FileName.Empty();
+        m_xy_str_opt[STRING_FILE_NAME].Empty();
         hr = E_FAIL;
     }
 
@@ -1727,7 +1727,7 @@ bool CDirectVobSubFilter::Open()
 	}
 
 	CAtlArray<SubFile> ret;
-	GetSubFileNames(m_FileName, paths, m_xy_str_opt[DirectVobSubXyOptions::STRING_LOAD_EXT_LIST], ret);
+	GetSubFileNames(m_xy_str_opt[STRING_FILE_NAME], paths, m_xy_str_opt[DirectVobSubXyOptions::STRING_LOAD_EXT_LIST], ret);
 
 	for(size_t i = 0; i < ret.GetCount(); i++)
 	{
