@@ -68,7 +68,6 @@ protected:
 protected:
     CCritSec m_propsLock;
 
-	CString m_FileName;
 	int m_iSelectedLanguage;
 	bool m_fHideSubtitles;
 	bool m_fDoPreBuffering;

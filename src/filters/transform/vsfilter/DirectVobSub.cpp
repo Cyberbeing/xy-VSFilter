@@ -260,46 +260,38 @@ CDirectVobSub::~CDirectVobSub()
 
 STDMETHODIMP CDirectVobSub::get_FileName(WCHAR* fn)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_FileName))
+    if (!TestOption(DirectVobSubXyOptions::STRING_FILE_NAME))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(&m_propsLock);
 
-	if(!fn) return E_POINTER;
+    if(!fn) return E_POINTER;
 
-#ifdef UNICODE
-	wcscpy(fn, m_FileName);
-#else
-	mbstowcs(fn, m_FileName, m_FileName.GetLength()+1);
-#endif
+    wcscpy(fn, m_xy_str_opt[STRING_FILE_NAME]);
 
     return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::put_FileName(WCHAR* fn)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_FileName))
+    if (!TestOption(DirectVobSubXyOptions::STRING_FILE_NAME))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(&m_propsLock);
 
-	if(!fn) return E_POINTER;
+    if(!fn) return E_POINTER;
 
-	CString tmp = fn;
-	if(!m_FileName.Left(m_FileName.ReverseFind('.')+1).CompareNoCase(tmp.Left(tmp.ReverseFind('.')+1))) return S_FALSE;
+    CStringW tmp = fn;
+    tmp = tmp.Left(tmp.ReverseFind(L'.')+1);
+    CStringW file_name = m_xy_str_opt[STRING_FILE_NAME].Left(m_xy_str_opt[STRING_FILE_NAME].ReverseFind(L'.')+1);
+    if(!file_name.CompareNoCase(tmp))
+        return S_FALSE;
 
-#ifdef UNICODE
-	m_FileName = fn;
-#else
-	CHARSETINFO cs={0};
-	::TranslateCharsetInfo((DWORD *)DEFAULT_CHARSET, &cs, TCI_SRCCHARSET);
-	CHAR* buff = m_FileName.GetBuffer(MAX_PATH*2);
-	int len = WideCharToMultiByte(cs.ciACP/*CP_OEMCP*/, NULL, fn, -1, buff, MAX_PATH*2, NULL, NULL);
-	m_FileName.ReleaseBuffer(len+1);
-#endif
-    return OnOptionChanged(void_FileName);
+    m_xy_str_opt[STRING_FILE_NAME] = fn;
+
+    return OnOptionChanged(STRING_FILE_NAME);
 }
 
 STDMETHODIMP CDirectVobSub::get_LanguageCount(int* nLangs)
@@ -308,9 +300,9 @@ STDMETHODIMP CDirectVobSub::get_LanguageCount(int* nLangs)
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(&m_propsLock);
 
-	return nLangs ? *nLangs = 0, S_OK : E_POINTER;
+    return nLangs ? *nLangs = 0, S_OK : E_POINTER;
 }
 
 STDMETHODIMP CDirectVobSub::get_LanguageName(int iLanguage, WCHAR** ppName)

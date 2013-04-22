@@ -50,6 +50,7 @@ namespace DirectVobSubXyOptions
         STRING_LOAD_EXT_LIST,
         STRING_PGS_YUV_RANGE,//TV,PC,GUESS(default)
         STRING_PGS_YUV_MATRIX,//BT601,BT709,GUESS(default)
+        STRING_FILE_NAME,
 
         STRING_NAME,
         STRING_VERSION,
@@ -70,7 +71,6 @@ namespace DirectVobSubXyOptions
         BIN_XY_FLY_WEIGHT_INFO,
 
         //The following is not really supported yet
-        void_FileName,
         void_LanguageCount,
         void_LanguageName,
         void_SelectedLanguage,
@@ -173,6 +173,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_LOAD_EXT_LIST},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_PGS_YUV_RANGE},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_PGS_YUV_MATRIX},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_FILE_NAME},
 
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_NAME},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_VERSION},
@@ -184,7 +185,6 @@ namespace DirectVobSubXyOptions
 
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_READ, BIN_XY_FLY_WEIGHT_INFO},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_FileName},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageCount},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageName},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SelectedLanguage},
@@ -258,6 +258,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_LOAD_EXT_LIST},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_PGS_YUV_RANGE},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_PGS_YUV_MATRIX},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_RW, STRING_FILE_NAME},
 
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_NAME},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_VERSION},
@@ -268,7 +269,6 @@ namespace DirectVobSubXyOptions
 
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_READ, BIN_XY_FLY_WEIGHT_INFO},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_FileName},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageCount},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageName},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SelectedLanguage},
