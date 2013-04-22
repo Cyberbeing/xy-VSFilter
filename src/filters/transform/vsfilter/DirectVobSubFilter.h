@@ -89,12 +89,14 @@ public:
     void GetInputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
     void GetOutputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
 
+    // XyOptionsImpl
+    virtual HRESULT OnOptionChanged(unsigned field);
+
     // IXyOptions
     STDMETHODIMP XySetBool     (unsigned field, bool      value);
     STDMETHODIMP XySetInt      (unsigned field, int       value);
 
     // IDirectVobSub
-    STDMETHODIMP put_FileName(WCHAR* fn);
 	STDMETHODIMP get_LanguageCount(int* nLangs);
 	STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
 	STDMETHODIMP put_SelectedLanguage(int iSelected);

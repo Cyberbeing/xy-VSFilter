@@ -1079,20 +1079,6 @@ STDMETHODIMP CDirectVobSubFilter::GetPages(CAUUID* pPages)
 
 // IDirectVobSub
 
-STDMETHODIMP CDirectVobSubFilter::put_FileName(WCHAR* fn)
-{
-    XY_LOG_INFO(fn);
-    HRESULT hr = CDirectVobSub::put_FileName(fn);
-
-    if(hr == S_OK && !Open())
-    {
-        m_xy_str_opt[STRING_FILE_NAME].Empty();
-        hr = E_FAIL;
-    }
-
-    return hr;
-}
-
 STDMETHODIMP CDirectVobSubFilter::get_LanguageCount(int* nLangs)
 {
     XY_LOG_INFO(nLangs);
@@ -2362,7 +2348,35 @@ void CDirectVobSubFilter::SetYuvMatrix()
     ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
 }
 
+//
+// XyOptionsImpl
+//
+
+HRESULT CDirectVobSubFilter::OnOptionChanged( unsigned field )
+{
+    HRESULT hr = CDirectVobSub::OnOptionChanged(field);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+    switch(field)
+    {
+    case STRING_FILE_NAME:
+        if (!Open())
+        {
+            m_xy_str_opt[STRING_FILE_NAME].Empty();
+            hr = E_FAIL;
+            break;
+        }
+        break;
+    }
+
+    return hr;
+}
+
+//
 // IXyOptions
+//
 
 STDMETHODIMP CDirectVobSubFilter::XySetBool( unsigned field, bool value )
 {

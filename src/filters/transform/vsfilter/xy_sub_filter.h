@@ -42,11 +42,10 @@ public:
 
     // IXyOptions
     STDMETHODIMP XyGetInt      (unsigned field, int      *value);
-    STDMETHODIMP XyGetString   (unsigned field, LPWSTR *value, int *chars);
+    STDMETHODIMP XyGetString   (unsigned field, LPWSTR   *value, int *chars);
     STDMETHODIMP XySetInt      (unsigned field, int       value);
 
     // IDirectVobSub
-    STDMETHODIMP put_FileName(WCHAR* fn);
     STDMETHODIMP get_LanguageCount(int* nLangs);
     STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
     STDMETHODIMP put_SelectedLanguage(int iSelected);
