@@ -260,38 +260,19 @@ CDirectVobSub::~CDirectVobSub()
 
 STDMETHODIMP CDirectVobSub::get_FileName(WCHAR* fn)
 {
-    if (!TestOption(DirectVobSubXyOptions::STRING_FILE_NAME))
+    WCHAR *tmp = NULL;
+    HRESULT hr = XyGetString(STRING_FILE_NAME, &tmp, NULL);
+    if (SUCCEEDED(hr))
     {
-        return E_NOTIMPL;
+        wcscpy_s(fn, wcslen(tmp)+1, tmp);
+        LocalFree(tmp);
     }
-    CAutoLock cAutoLock(&m_propsLock);
-
-    if(!fn) return E_POINTER;
-
-    wcscpy(fn, m_xy_str_opt[STRING_FILE_NAME]);
-
-    return S_OK;
+    return hr;
 }
 
 STDMETHODIMP CDirectVobSub::put_FileName(WCHAR* fn)
 {
-    if (!TestOption(DirectVobSubXyOptions::STRING_FILE_NAME))
-    {
-        return E_NOTIMPL;
-    }
-    CAutoLock cAutoLock(&m_propsLock);
-
-    if(!fn) return E_POINTER;
-
-    CStringW tmp = fn;
-    tmp = tmp.Left(tmp.ReverseFind(L'.')+1);
-    CStringW file_name = m_xy_str_opt[STRING_FILE_NAME].Left(m_xy_str_opt[STRING_FILE_NAME].ReverseFind(L'.')+1);
-    if(!file_name.CompareNoCase(tmp))
-        return S_FALSE;
-
-    m_xy_str_opt[STRING_FILE_NAME] = fn;
-
-    return OnOptionChanged(STRING_FILE_NAME);
+    return XySetString(STRING_FILE_NAME, fn, wcslen(fn));
 }
 
 STDMETHODIMP CDirectVobSub::get_LanguageCount(int* nLangs)
@@ -1375,6 +1356,19 @@ STDMETHODIMP CDirectVobSub::XySetDouble( unsigned field, double value )
 STDMETHODIMP CDirectVobSub::XySetString( unsigned field, LPWSTR value, int chars )
 {
     CAutoLock cAutoLock(&m_propsLock);
+
+    switch (field)
+    {
+    case DirectVobSubXyOptions::STRING_FILE_NAME:
+        if(!value) return E_POINTER;
+
+        CStringW tmp = CStringW(value, chars);
+        tmp = tmp.Left(tmp.ReverseFind(L'.')+1);
+        CStringW file_name = m_xy_str_opt[STRING_FILE_NAME].Left(m_xy_str_opt[STRING_FILE_NAME].ReverseFind(L'.')+1);
+        if(!file_name.CompareNoCase(tmp))
+            return S_FALSE;
+        break;
+    }
 
     HRESULT hr = XyOptionsImpl::XySetString(field, value, chars);
 

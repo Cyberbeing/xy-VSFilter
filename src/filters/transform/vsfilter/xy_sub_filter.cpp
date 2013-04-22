@@ -278,12 +278,21 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case SIZE_USER_SPECIFIED_LAYOUT_SIZE:
     case DOUBLE_FPS:
     case void_SelectedLanguage:
-    case STRING_FILE_NAME:
     case void_Placement:
     case void_VobSubSettings:
     case void_TextSettings:
     case void_AspectRatioSettings:
         m_context_id++;
+        break;
+    case STRING_FILE_NAME:
+        if (!Open())
+        {
+            m_xy_str_opt[STRING_FILE_NAME].Empty();
+            hr = E_FAIL;
+            break;
+        }
+        m_context_id++;
+        break;
     }
 
     return hr;
@@ -393,20 +402,6 @@ STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
 //
 // IDirectVobSub
 //
-STDMETHODIMP XySubFilter::put_FileName(WCHAR* fn)
-{
-    XY_LOG_INFO(fn);
-    HRESULT hr = CDirectVobSub::put_FileName(fn);
-
-    if(hr == S_OK && !Open())
-    {
-        m_xy_str_opt[STRING_FILE_NAME].Empty();
-        hr = E_FAIL;
-    }
-
-    return hr;
-}
-
 STDMETHODIMP XySubFilter::get_LanguageCount(int* nLangs)
 {
     HRESULT hr = CDirectVobSub::get_LanguageCount(nLangs);
