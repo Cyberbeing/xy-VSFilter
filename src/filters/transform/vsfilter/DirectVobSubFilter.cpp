@@ -80,9 +80,14 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
     ZeroObj4OSD();
 
     theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Hint"), _T("The first three are fixed, but you can add more up to ten entries."));
-    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Path0"), _T("."));
-    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Path1"), _T("c:\\subtitles"));
-    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Path2"), _T(".\\subtitles"));
+
+    CString tmp;
+    tmp.Format(ResStr(IDS_RP_PATH), 0);
+    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T("."));
+    tmp.Format(ResStr(IDS_RP_PATH), 1);
+    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T("c:\\subtitles"));
+    tmp.Format(ResStr(IDS_RP_PATH), 2);
+    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T(".\\subtitles"));
 
     m_fLoading = true;
 
