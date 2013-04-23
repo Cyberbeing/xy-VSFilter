@@ -59,7 +59,8 @@ STDMETHODIMP CDVSBasePPage::GetPageInfo(LPPROPPAGEINFO pPageInfo)
 
     WCHAR wszTitle[STR_MAX_LENGTH];
 #ifdef UNICODE
-    wcscpy(wszTitle, str);
+    wcscpy_s(wszTitle, STR_MAX_LENGTH, str);
+    wszTitle[STR_MAX_LENGTH-1]=0;
 #else
     mbstowcs(wszTitle, str, str.GetLength()+1);
 #endif
@@ -438,7 +439,8 @@ void CDVSMainPPage::UpdateControlData(bool fSave)
         CString fn;
         m_fnedit.GetWindowText(fn);
 #ifdef UNICODE
-        wcscpy(m_fn, fn);
+        wcscpy_s(m_fn, MAX_PATH, fn);
+        m_fn[MAX_PATH-1]=0;
 #else
         mbstowcs(m_fn, fn, fn.GetLength()+1);
 #endif
@@ -846,7 +848,7 @@ void CDVSTimingPPage::UpdateControlData(bool fSave)
         CString fpsstr;
         m_fps.GetWindowText(fpsstr);
         float fps;
-        if(_stscanf(fpsstr, _T("%f"), &fps) == 1) m_MediaFPS = fps;
+        if(_stscanf_s(fpsstr, _T("%f"), &fps) == 1) m_MediaFPS = fps;
 #if _MFC_VER >= 0x0700
         m_SubtitleDelay = m_subdelay.GetPos32();
         m_SubtitleSpeedMul = m_subspeedmul.GetPos32();
@@ -1743,7 +1745,8 @@ void CXySubFilterMainPPage::UpdateControlData(bool fSave)
         CString fn;
         m_fnedit.GetWindowText(fn);
 #ifdef UNICODE
-        wcscpy(m_fn, fn);
+        wcscpy_s(m_fn, MAX_PATH, fn);
+        m_fn[MAX_PATH-1]=0;
 #else
         mbstowcs(m_fn, fn, fn.GetLength()+1);
 #endif

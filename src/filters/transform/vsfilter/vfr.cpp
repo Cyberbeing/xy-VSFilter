@@ -82,7 +82,7 @@ public:
 			// Comment?
 			if (buf[0] == '#') continue;
 
-			if (strnicmp(buf, "Assume ", 7) == 0 && default_spf < 0) {
+			if (_strnicmp(buf, "Assume ", 7) == 0 && default_spf < 0) {
 				char *num = buf+7;
 				default_spf = atof(num);
 				if (default_spf > 0)
@@ -95,7 +95,7 @@ public:
 
 			int start_frame, end_frame;
 			float fps;
-			if (sscanf(buf, "%d,%d,%f", &start_frame, &end_frame, &fps) == 3) {
+			if (sscanf_s(buf, "%d,%d,%f", &start_frame, &end_frame, &fps) == 3) {
 				// Finish the current temp section
 				temp_section.end_frame = start_frame - 1;
 				if (temp_section.end_frame >= temp_section.start_frame) {
@@ -168,7 +168,9 @@ VFRTranslator *GetVFRTranslator(const char *vfrfile)
 {
 	char buf[32];
 	buf[19] = 0; // In "# timecode format v1" the version number is character index 19
-	FILE *f = fopen(vfrfile, "r");
+	FILE *f = NULL;
+    int rv = fopen_s(&f, vfrfile, "r");
+    ASSERT(rv==0 && f);
 	VFRTranslator *res = 0;
 	if (fgets(buf, 32, f) && buf[0] == '#') {
 		// So do some really shoddy parsing here, assume the file is good
