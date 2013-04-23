@@ -1581,21 +1581,21 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
     //fix me: is it right?
     //fix me: use REFERENCE_TIME instead?
     double fps = 10000000.0/rt_fps;
-    bool update_subtitle = m_consumer_options_read;/* have we read the options */
+    bool update_subtitle = false;
 
     if (m_xy_size_opt[SIZE_ORIGINAL_VIDEO]!=originalVideoSize)
     {
         XY_LOG_INFO("Size original video changed from "<<m_xy_size_opt[SIZE_ORIGINAL_VIDEO]
             <<" to "<<originalVideoSize);
         m_xy_size_opt[SIZE_ORIGINAL_VIDEO] = originalVideoSize;
-        update_subtitle &= true;
+        update_subtitle = true;
     }
     if (m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO]!=arAdjustedVideoSize)
     {
         XY_LOG_INFO("Size AR adjusted video changed from "<<m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO]
             <<" to "<<arAdjustedVideoSize);
         m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO] = arAdjustedVideoSize;
-        update_subtitle &= true;
+        update_subtitle = true;
     }
     if (m_xy_rect_opt[RECT_VIDEO_OUTPUT]!=videoOutputRect)
     {
@@ -1617,7 +1617,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
         CHECK_N_LOG(hr, "Failed to set option");
         ASSERT(SUCCEEDED(hr));
     }
-
+    update_subtitle &= m_consumer_options_read;
     if (update_subtitle)
     {
         UpdateSubtitle(false);
