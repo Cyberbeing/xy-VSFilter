@@ -76,10 +76,12 @@ bool doConfigure( log4cplus::tistream& property_stream )
 
 void write_file(const char * filename, const void * buff, int size)
 {
-    FILE* out_file = fopen(filename,"ab");
-    if (!out_file)
+    FILE* out_file = NULL;
+    int rv = fopen_s(&out_file, filename,"ab");
+    if (rv!=0 || !out_file)
     {
         XY_LOG_ERROR("Failed to open file: "<<filename);
+        return;
     }
     fwrite(buff, size, 1, out_file);
     fclose(out_file);

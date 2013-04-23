@@ -440,7 +440,7 @@ static TCHAR* CallPPage(IFilterGraph* pGraph, int idx, HWND hWnd)
 		else
 		{
 			if(ret = new TCHAR[wcslen(wstr)+1])
-				_tcscpy(ret, CString(wstr));
+				_tcscpy_s(ret, wcslen(wstr)+1, CString(wstr));
 		}
 	}
 
