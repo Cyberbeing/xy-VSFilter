@@ -1500,6 +1500,10 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
     else
     {
         m_sub_provider = NULL;
+        if (pSubStream!=NULL) 
+        {
+            XY_LOG_WARN("This subtitle stream is NOT supported");
+        }
     }
     if (m_sub_provider)
     {
