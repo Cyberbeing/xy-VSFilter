@@ -48,3 +48,7 @@ private:
     CComPtr<IXySubRenderFrame> m_inner_obj;
     CAtlArray<ULONGLONG> m_ids;
 };
+
+#ifdef SUBTITLE_FRAME_DUMP_FILE
+HRESULT DumpSubRenderFrame( IXySubRenderFrame *sub, const char * filename );
+#endif

@@ -227,3 +227,89 @@ STDMETHODIMP XySubRenderFrameWrapper2::GetBitmapExtra( int index, LPVOID extra_i
 {
     return m_inner_obj->GetBitmapExtra(index, extra_info);
 }
+
+#ifdef SUBTITLE_FRAME_DUMP_FILE
+#include <fstream>
+#include <iomanip>
+
+HRESULT DumpSubRenderFrame( IXySubRenderFrame *sub, const char * filename )
+{
+    using namespace std;
+
+    ASSERT(sub);
+    ofstream output(filename, ios::out);
+    if (!output)
+    {
+        XY_LOG_ERROR("Failed to open file '"<<filename<<"'");
+        return E_FAIL;
+    }
+    HRESULT hr = E_FAIL;
+    RECT rect;
+    hr = sub->GetOutputRect(&rect);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get bitmap count. "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+    output<<"output rect:"<<rect<<endl;
+
+    hr = sub->GetClipRect(&rect);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get bitmap count. "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+    output<<"clip rect:"<<rect<<endl;
+
+    int xyColorSpace = 0;
+    hr = sub->GetXyColorSpace(&xyColorSpace);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get bitmap count. "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+    output<<"xyColorSpace:"<<xyColorSpace<<endl;
+    int count = 0;
+    hr = sub->GetBitmapCount(&count);
+    if (FAILED(hr)) {
+        XY_LOG_ERROR("Failed to get bitmap count. "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+    output<<"count:"<<count<<endl;
+
+    if (xyColorSpace!=XY_CS_ARGB_F) {
+        output<<"Colorspace NOT Supported! "<<endl;
+        return S_FALSE;
+    }
+    for (int i=0;i<count;i++)
+    {
+        ULONGLONG id;
+        POINT position;
+        SIZE size;
+        LPCVOID pixels;
+        int pitch;
+        hr = sub->GetBitmap(i, &id, &position, &size, &pixels, &pitch );
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to get bitmap count. "<<XY_LOG_VAR_2_STR(hr));
+            return hr;
+        }
+        const DWORD* pixels2 = (const DWORD*)pixels;
+        output<<"\tbitmap "<<i<<" id: "<<id<<" position: "<<position<<" size: "<<size<<" pitch: "<<pitch
+            <<" pixels: "<<pixels2<<endl;
+        output<<hex;
+        for (int m=0;m<size.cy;m++)
+        {
+            output<<"\timg:";
+            for (int n=0;n<size.cx;n++)
+            {
+                output<<" "<<setfill('0')<<setw(8)<<(int)pixels2[n];
+            }
+            output<<endl;
+            pixels2 += pitch;
+        }
+        output<<dec;
+    }
+    return S_OK;
+}
+#endif

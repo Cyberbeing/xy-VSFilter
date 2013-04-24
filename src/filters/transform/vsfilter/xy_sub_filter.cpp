@@ -1114,6 +1114,15 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
         if (sub_render_frame)
         {
             sub_render_frame = new XySubRenderFrameWrapper2(sub_render_frame, m_context_id);
+#ifdef SUBTITLE_FRAME_DUMP_FILE
+            static int s_count=0;
+            if (s_count<10 && s_count%2==0) {
+                CStringA dump_file;
+                dump_file.Format("%s%lld",SUBTITLE_FRAME_DUMP_FILE,start);
+                DumpSubRenderFrame(sub_render_frame, dump_file.GetString());
+            }
+            s_count++;
+#endif
         }
         if(m_fFlipSubtitles)
         {
