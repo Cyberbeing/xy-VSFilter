@@ -136,6 +136,11 @@ HRESULT XySubRenderProviderWrapper::Render( REFERENCE_TIME now, POSITION pos, do
             m_pSubPic->SetStart(start);
             m_pSubPic->SetStop(stop);
         }
+        else
+        {
+            rectList.AddHead(CRect(CPoint(0,0),m_original_video_size));
+            XY_LOG_ERROR("Failed to clear subpic!");
+        }
         m_pSubPic->UnlockEx(&rectList);
         CRect dirty_rect;
         hr = m_pSubPic->GetDirtyRect(&dirty_rect);
