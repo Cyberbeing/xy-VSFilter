@@ -47,7 +47,7 @@ STDMETHODIMP HdmvSubtitleProvider::NonDelegatingQueryInterface( REFIID riid, voi
     return
         QI(IPersist)
         QI(ISubStream)
-        QI(ISubPicProvider)
+        QI(IXySubRenderProvider)
         __super::NonDelegatingQueryInterface(riid, ppv);
 }
 
