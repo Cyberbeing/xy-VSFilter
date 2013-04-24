@@ -175,15 +175,17 @@ STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
     ValidateReadWritePtr(pInfo, sizeof(FILTER_INFO));
 
     HRESULT hr = __super::QueryFilterInfo(pInfo);
-    if (SUCCEEDED(hr) && m_consumer)
+    if (SUCCEEDED(hr))
     {
-        LPWSTR name = NULL;
-        int name_len = 0;
-        hr = m_consumer->GetString("name", &name, &name_len);
-        if (FAILED(hr))
-        {
-            LocalFree(name);
-            return hr;
+        LPWSTR consumer_name = NULL;
+        if (m_consumer) {
+            int name_len = 0;
+            hr = m_consumer->GetString("name", &consumer_name, &name_len);
+            if (FAILED(hr))
+            {
+                LocalFree(consumer_name);
+                return hr;
+            }
         }
 
         ISubRenderProvider *provider=NULL;
@@ -192,11 +194,15 @@ STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
         int chars = 0;
         HRESULT test_hr = provider->GetString("yuvMatrix", &test, &chars);
         ASSERT(SUCCEEDED(test_hr));
-
         CStringW new_name;
-        new_name.Format(L"XySubFilter (Connected with %s, %s)", name,test);
+        if (consumer_name) {
+            new_name.Format(L"XySubFilter (Connected with %s, %s)", consumer_name, test);
+        }
+        else {
+            new_name.Format(L"XySubFilter (%s)", test);
+        }
         LocalFree(test);
-        LocalFree(name);
+        LocalFree(consumer_name);
         wcscpy_s(pInfo->achName, countof(pInfo->achName)-1, new_name.GetString());
     }
     return hr;
