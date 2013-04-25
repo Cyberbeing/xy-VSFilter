@@ -1763,12 +1763,14 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
         XY_LOG_INFO("Video output rect changed from "<<m_xy_rect_opt[RECT_VIDEO_OUTPUT]
             <<" to "<<videoOutputRect);
         m_xy_rect_opt[RECT_VIDEO_OUTPUT] =videoOutputRect;
+        update_subtitle = true;
     }
     if (m_xy_rect_opt[RECT_SUBTITLE_TARGET]!=subtitleTargetRect)
     {
         XY_LOG_INFO("Subtitle target rect changed from "<<m_xy_rect_opt[RECT_SUBTITLE_TARGET]
             <<" to "<<subtitleTargetRect);
         m_xy_rect_opt[RECT_SUBTITLE_TARGET] =subtitleTargetRect;
+        update_subtitle = true;
     }
     if (m_xy_double_opt[DOUBLE_FPS]!=fps)
     {
