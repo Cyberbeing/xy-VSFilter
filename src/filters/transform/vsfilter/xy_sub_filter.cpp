@@ -1988,7 +1988,10 @@ bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
         return false;
     }
 
-    if(level < 0 || level >= LOADLEVEL_WHEN_NEEDED || level==LOADLEVEL_DISABLED) return(false);
+    if(level < 0 || level >= LOADLEVEL_COUNT || level==LOADLEVEL_DISABLED) {
+        XY_LOG_DEBUG("Disabled by load setting: "<<XY_LOG_VAR_2_STR(level));
+        return(false);
+    }
 
     if(level == LOADLEVEL_ALWAYS)
         fRet = m_fExternalLoad = m_fWebLoad = m_fEmbeddedLoad = true;
@@ -2054,8 +2057,8 @@ bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
             break;
         }
     }
-    EndEnumFilters
-
+    EndEnumFilters;
+    XY_LOG_INFO(L"fn:"<<fn.GetString());
     if((m_fExternalLoad || m_fWebLoad) && (m_fWebLoad || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
     {
         bool fTemp = m_fHideSubtitles;
