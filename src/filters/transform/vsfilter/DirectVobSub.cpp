@@ -124,7 +124,19 @@ CDirectVobSub::CDirectVobSub(const Option *options)
         m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE;
         break;
     }
-    
+
+    m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION] = DirectVobSubXyOptions::RGB_CORRECTION_AUTO;
+    CString str_rgb_correction_setting = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_CORRECTION), _T("auto"));
+    str_rgb_correction_setting.MakeLower();
+    if (str_rgb_correction_setting.Compare(_T("never"))==0)
+    {
+        m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION] = DirectVobSubXyOptions::RGB_CORRECTION_NEVER;
+    }
+    else if (str_rgb_correction_setting.Compare(_T("always"))==0)
+    {
+        m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION] = DirectVobSubXyOptions::RGB_CORRECTION_ALWAYS;
+    }
+
     m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X), 0);
     m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y), 0);
     if (m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx<=0 || m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy<=0)
@@ -812,6 +824,21 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy);
 
+    CString str_rgb_correction_setting;
+    switch(m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION])
+    {
+    case DirectVobSubXyOptions::RGB_CORRECTION_AUTO:
+        str_rgb_correction_setting = _T("auto");
+        break;
+    case DirectVobSubXyOptions::RGB_CORRECTION_NEVER:
+        str_rgb_correction_setting = _T("never");
+        break;
+    case DirectVobSubXyOptions::RGB_CORRECTION_ALWAYS:
+        str_rgb_correction_setting = _T("always");
+        break;
+    }
+    theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_CORRECTION), str_rgb_correction_setting);
+
     theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), m_xy_str_opt[STRING_LOAD_EXT_LIST]);//fix me:m_xy_str_opt[] is wide char string
 
     CString str_pgs_yuv_type = m_xy_str_opt[STRING_PGS_YUV_RANGE] + m_xy_str_opt[STRING_PGS_YUV_MATRIX];
@@ -1306,6 +1333,12 @@ STDMETHODIMP CDirectVobSub::XySetInt( unsigned field, int value )
     {
     case DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT:
         if (value<0 || value>=DirectVobSubXyOptions::LAYOUT_SIZE_OPT_COUNT)
+        {
+            return E_INVALIDARG;
+        }
+        break;
+    case DirectVobSubXyOptions::INT_VSFILTER_COMPACT_RGB_CORRECTION:
+        if (value<0 || value>=DirectVobSubXyOptions::RGB_CORRECTION_COUNT)
         {
             return E_INVALIDARG;
         }

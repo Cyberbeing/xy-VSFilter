@@ -101,6 +101,7 @@
 #define IDS_RG_LOAD_EXT_LIST                195
 #define IDS_RG_PGS_COLOR_TYPE               196
 #define IDS_RP_MAX_BITMAP_COUNT             197
+#define IDS_RG_RGB_CORRECTION               198
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
@@ -236,7 +237,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        334
+#define _APS_NEXT_RESOURCE_VALUE        337
 #define _APS_NEXT_COMMAND_VALUE         32770
 #define _APS_NEXT_CONTROL_VALUE         341
 #define _APS_NEXT_SYMED_VALUE           195

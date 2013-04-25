@@ -26,6 +26,8 @@ namespace DirectVobSubXyOptions
 
         INT_LAYOUT_SIZE_OPT,//see @LayoutSizeOpt
 
+        INT_VSFILTER_COMPACT_RGB_CORRECTION,//see @VsfilterCompactRgbCorrection
+
         BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER,
         BOOL_HIDE_TRAY_ICON,
 
@@ -55,6 +57,7 @@ namespace DirectVobSubXyOptions
         STRING_NAME,
         STRING_VERSION,
         STRING_YUV_MATRIX,
+        STRING_CONSUMER_YUV_MATRIX,
         STRING_CONNECTED_CONSUMER,
 
         //[ColorSpaceOpt1...ColorSpaceOptN]
@@ -137,7 +140,13 @@ namespace DirectVobSubXyOptions
         LAYOUT_SIZE_OPT_USER_SPECIFIED,
         LAYOUT_SIZE_OPT_COUNT
     };
-
+    enum VsfilterCompactRgbCorrection
+    {
+        RGB_CORRECTION_AUTO = 0,
+        RGB_CORRECTION_NEVER,
+        RGB_CORRECTION_ALWAYS,
+        RGB_CORRECTION_COUNT
+    };
     const XyOptionsImpl::Option DirectVobFilterOptions[] = {
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_COLOR_SPACE},
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_YUV_RANGE},
@@ -235,6 +244,8 @@ namespace DirectVobSubXyOptions
 
         //{XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_LAYOUT_SIZE_OPT},
 
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_VSFILTER_COMPACT_RGB_CORRECTION},
+
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_HIDE_TRAY_ICON},
 
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_MAX_BITMAP_COUNT},
@@ -263,6 +274,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_NAME},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_VERSION},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_YUV_MATRIX},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_CONSUMER_YUV_MATRIX},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_CONNECTED_CONSUMER},
 
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_READ, BIN_CACHES_INFO},

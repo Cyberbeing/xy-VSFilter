@@ -73,6 +73,7 @@ public:
     HRESULT SetOutputRect(const RECT& output_rect);
     HRESULT SetClipRect(const RECT& clip_rect);
     HRESULT SetColorSpace(XyColorSpace color_space);
+    HRESULT SetVsfilterCompactRgbCorrection(bool value);
 
     HRESULT GetOutputRect(RECT *output_rect);
     HRESULT GetClipRect(RECT *clip_rect);
@@ -82,11 +83,13 @@ public:
     XyBitmap* CreateBitmap(const RECT& target_rect);
     DWORD TransColor(DWORD argb);
 
-    XySubRenderFrameCreater():m_xy_color_space(XY_CS_ARGB), m_bitmap_layout(XyBitmap::PACK){}
+    XySubRenderFrameCreater():m_xy_color_space(XY_CS_ARGB), m_bitmap_layout(XyBitmap::PACK)
+        , m_vsfilter_compact_rgb_correction(false){}
 private:
     CRect m_output_rect;
     CRect m_clip_rect;
     XyColorSpace m_xy_color_space;
+    bool m_vsfilter_compact_rgb_correction;
     XyBitmap::MemLayout m_bitmap_layout;
 };
 

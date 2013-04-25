@@ -760,6 +760,7 @@ BEGIN
     IDS_RG_LOAD_EXT_LIST                "LOAD_EXT_LIST"
     IDS_RG_PGS_COLOR_TYPE               "PGS_COLOR_TYPE"
     IDS_RP_MAX_BITMAP_COUNT             "MAX_BITMAP_COUNT"
+    IDS_RG_RGB_CORRECTION               "RGB_CORRECTION"
 END
 
 #endif    // English (United States) resources

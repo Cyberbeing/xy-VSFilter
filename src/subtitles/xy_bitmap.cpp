@@ -417,6 +417,15 @@ HRESULT XySubRenderFrameCreater::SetColorSpace( XyColorSpace color_space )
     return S_OK;
 }
 
+HRESULT XySubRenderFrameCreater::SetVsfilterCompactRgbCorrection( bool value )
+{
+    if (m_vsfilter_compact_rgb_correction != value) {
+        m_vsfilter_compact_rgb_correction = value;
+        return S_OK;
+    }
+    return S_FALSE;
+}
+
 HRESULT XySubRenderFrameCreater::GetOutputRect( RECT *output_rect )
 {
     if (!output_rect)
@@ -477,6 +486,9 @@ DWORD XySubRenderFrameCreater::TransColor( DWORD argb )
         break;
     case XY_CS_ARGB:
     case XY_CS_ARGB_F:
+        if (m_vsfilter_compact_rgb_correction) {
+            return ColorConvTable::Ayuv2Argb_TV_BT709(ColorConvTable::Argb2Ayuv(argb));
+        }
         return argb;
         break;
     }
