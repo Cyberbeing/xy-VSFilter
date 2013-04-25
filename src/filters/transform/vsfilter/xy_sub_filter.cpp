@@ -4,6 +4,7 @@
 #include "VSFilter.h"
 #include "DirectVobSubPropPage.h"
 #include "SubtitleInputPin2.h"
+#include "../../../subtitles/xy_bitmap.h"
 #include "../../../SubPic/SimpleSubPicProviderImpl.h"
 #include "../../../subpic/SimpleSubPicWrapper.h"
 #include "../../../subpic/color_conv_table.h"
@@ -1155,62 +1156,165 @@ STDMETHODIMP XySubFilter::Disconnect( void )
 // 
 void XySubFilter::SetYuvMatrix()
 {
-    ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
-    ColorConvTable::YuvRangeType yuv_range = ColorConvTable::RANGE_TV;
-
-    if ( m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::YuvMatrix_AUTO )
-    {
-        if (m_video_yuv_matrix_decided_by_sub!=ColorConvTable::NONE)
+    m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
+    if (dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream)!=NULL) {
+        ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
+        ColorConvTable::YuvRangeType  yuv_range  = ColorConvTable::RANGE_TV;
+        if ( m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::YuvMatrix_AUTO )
         {
-            yuv_matrix = m_video_yuv_matrix_decided_by_sub;
+            if (m_video_yuv_matrix_decided_by_sub!=ColorConvTable::NONE)
+            {
+                yuv_matrix = m_video_yuv_matrix_decided_by_sub;
+            }
+            else
+            {
+                yuv_matrix = ColorConvTable::BT601;
+            }
         }
         else
         {
-            yuv_matrix = ColorConvTable::BT601;
+            switch(m_xy_int_opt[INT_COLOR_SPACE])
+            {
+            case CDirectVobSub::BT_601:
+                yuv_matrix = ColorConvTable::BT601;
+                break;
+            case CDirectVobSub::BT_709:
+                yuv_matrix = ColorConvTable::BT709;
+                break;
+            case CDirectVobSub::GUESS:
+            default:
+                if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Right(3).CompareNoCase(L"601")==0)
+                {
+                    yuv_matrix = ColorConvTable::BT601;
+                }
+                else if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Right(3).CompareNoCase(L"709")==0)
+                {
+                    yuv_matrix = ColorConvTable::BT709;
+                }
+                else
+                {
+                    XY_LOG_WARN(L"Can NOT get useful YUV range from consumer:"<<m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].GetString());
+                    yuv_matrix = (m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cx > m_bt601Width || 
+                        m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cy > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
+                }
+                break;
+            }
+        }
+
+        if( m_xy_int_opt[INT_YUV_RANGE]==CDirectVobSub::YuvRange_Auto )
+        {
+            if (m_video_yuv_range_decided_by_sub!=ColorConvTable::RANGE_NONE)
+                yuv_range = m_video_yuv_range_decided_by_sub;
+            else
+                yuv_range = ColorConvTable::RANGE_TV;
+        }
+        else
+        {
+            switch(m_xy_int_opt[INT_YUV_RANGE])
+            {
+            case CDirectVobSub::YuvRange_TV:
+                yuv_range = ColorConvTable::RANGE_TV;
+                break;
+            case CDirectVobSub::YuvRange_PC:
+                yuv_range = ColorConvTable::RANGE_PC;
+                break;
+            case CDirectVobSub::YuvRange_Auto:
+                yuv_range = ColorConvTable::RANGE_TV;
+                break;
+            }
+        }
+
+        ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
+
+        if ( m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION]==RGB_CORRECTION_ALWAYS ||
+            (m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION]==RGB_CORRECTION_AUTO &&
+            m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].CompareNoCase(L"TV.709")==0 &&
+            yuv_matrix==ColorConvTable::BT601 && yuv_range==ColorConvTable::RANGE_TV ))
+        {
+            XySubRenderFrameCreater::GetDefaultCreater()->SetVsfilterCompactRgbCorrection(true);
+            m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
+            return;
+        }
+
+        if (yuv_range==ColorConvTable::RANGE_TV) {
+            m_xy_str_opt[STRING_YUV_MATRIX] = L"TV";
+        }
+        else if (yuv_range==ColorConvTable::RANGE_PC) {
+            m_xy_str_opt[STRING_YUV_MATRIX] = L"PC";
+        }
+        else {
+            XY_LOG_WARN("This is unexpected."<<XY_LOG_VAR_2_STR(yuv_range));
+            m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
+            return;
+        }
+        if (yuv_matrix==ColorConvTable::BT601) {
+            m_xy_str_opt[STRING_YUV_MATRIX] += L".601";
+        }
+        else if (yuv_matrix==ColorConvTable::BT709) {
+            m_xy_str_opt[STRING_YUV_MATRIX] += L".709";
+        }
+        else {
+            XY_LOG_WARN("This is unexpected."<<XY_LOG_VAR_2_STR(yuv_matrix));
+            m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
+            return;
+        }
+    }
+    else if (dynamic_cast<CRenderedHdmvSubtitle*>(m_curSubStream)!=NULL)
+    {
+        if ( m_xy_str_opt[STRING_PGS_YUV_RANGE].CompareNoCase(_T("PC"))==0 )
+        {
+            m_xy_str_opt[STRING_YUV_MATRIX] = L"PC";
+        }
+        else if ( m_xy_str_opt[STRING_PGS_YUV_RANGE].CompareNoCase(_T("TV"))==0 )
+        {
+            m_xy_str_opt[STRING_YUV_MATRIX] = L"TV";
+        }
+        else
+        {
+            if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Left(2).CompareNoCase(L"TV")==0)
+            {
+                m_xy_str_opt[STRING_YUV_MATRIX] = L"TV";
+            }
+            else if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Left(2).CompareNoCase(L"PC")==0)
+            {
+                m_xy_str_opt[STRING_YUV_MATRIX] = L"PC";
+            }
+            else
+            {
+                XY_LOG_WARN(L"Can NOT get useful YUV range from consumer:"<<m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].GetString());
+                m_xy_str_opt[STRING_YUV_MATRIX] = L"TV";
+            }
+        }
+        if ( m_xy_str_opt[STRING_PGS_YUV_MATRIX].CompareNoCase(_T("BT601"))==0 )
+        {
+            m_xy_str_opt[STRING_YUV_MATRIX] += L"601";
+        }
+        else if ( m_xy_str_opt[STRING_PGS_YUV_MATRIX].CompareNoCase(_T("BT709"))==0 )
+        {
+            m_xy_str_opt[STRING_YUV_MATRIX] += L"709";
+        }
+        else
+        {
+            if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Right(3).CompareNoCase(L"601")==0)
+            {
+                m_xy_str_opt[STRING_YUV_MATRIX] += L"601";
+            }
+            else if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Right(3).CompareNoCase(L"709")==0)
+            {
+                m_xy_str_opt[STRING_YUV_MATRIX] += L"709";
+            }
+            else
+            {
+                XY_LOG_WARN(L"Can NOT get useful YUV range from consumer:"<<m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].GetString()
+                    <<"A guess based on subtitle width would be done. We do NOT know the result before reveiving a sample.");
+                m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
+            }
         }
     }
     else
     {
-        switch(m_xy_int_opt[INT_COLOR_SPACE])
-        {
-        case CDirectVobSub::BT_601:
-            yuv_matrix = ColorConvTable::BT601;
-            break;
-        case CDirectVobSub::BT_709:
-            yuv_matrix = ColorConvTable::BT709;
-            break;
-        case CDirectVobSub::GUESS:
-        default:
-            yuv_matrix = (m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cx > m_bt601Width || 
-                m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cy > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
-            break;
-        }
+        XY_LOG_WARN("I do NOT know how to make VSFilter compact and right.");
     }
-
-    if( m_xy_int_opt[INT_YUV_RANGE]==CDirectVobSub::YuvRange_Auto )
-    {
-        if (m_video_yuv_range_decided_by_sub!=ColorConvTable::RANGE_NONE)
-            yuv_range = m_video_yuv_range_decided_by_sub;
-        else
-            yuv_range = ColorConvTable::RANGE_TV;
-    }
-    else
-    {
-        switch(m_xy_int_opt[INT_YUV_RANGE])
-        {
-        case CDirectVobSub::YuvRange_TV:
-            yuv_range = ColorConvTable::RANGE_TV;
-            break;
-        case CDirectVobSub::YuvRange_PC:
-            yuv_range = ColorConvTable::RANGE_PC;
-            break;
-        case CDirectVobSub::YuvRange_Auto:
-            yuv_range = ColorConvTable::RANGE_TV;
-            break;
-        }
-    }
-
-    ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
 }
 
 bool XySubFilter::Open()
@@ -1459,6 +1563,22 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             {
                 range_type = CompositionObject::RANGE_TV;
             }
+            else
+            {
+                if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Left(2).CompareNoCase(L"TV")==0)
+                {
+                    range_type = CompositionObject::RANGE_TV;
+                }
+                else if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Left(2).CompareNoCase(L"PC")==0)
+                {
+                    range_type = CompositionObject::RANGE_PC;
+                }
+                else
+                {
+                    XY_LOG_WARN(L"Can NOT get useful YUV range from consumer:"<<m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].GetString());
+                    range_type = CompositionObject::RANGE_TV;
+                }
+            }
             if ( m_xy_str_opt[STRING_PGS_YUV_MATRIX].CompareNoCase(_T("BT601"))==0 )
             {
                 color_type = CompositionObject::YUV_Rec601;
@@ -1467,10 +1587,21 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             {
                 color_type = CompositionObject::YUV_Rec709;
             }
-
-            m_video_yuv_matrix_decided_by_sub = (m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cx > m_bt601Width 
-                || m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cy > m_bt601Height) ? ColorConvTable::BT709 : 
-                ColorConvTable::BT601;
+            else
+            {
+                if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Right(3).CompareNoCase(L"601")==0)
+                {
+                    color_type = CompositionObject::YUV_Rec601;
+                }
+                else if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Right(3).CompareNoCase(L"709")==0)
+                {
+                    color_type = CompositionObject::YUV_Rec709;
+                }
+                else
+                {
+                    XY_LOG_WARN(L"Can NOT get useful YUV matrix from consumer:"<<m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].GetString());
+                }
+            }
             sub->SetYuvType(color_type, range_type);
         }
     }
@@ -1590,6 +1721,16 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
     RECT subtitleTargetRect;
     GET_PARAM_FROM_CONSUMER(m_consumer->GetRect, "subtitleTargetRect", &subtitleTargetRect);
 
+    LPWSTR str;
+    int len;
+    hr = m_consumer->GetString("yuvMatrix", &str, &len);
+    if (FAILED(hr)) {
+        XY_LOG_ERROR("Failed to get yuvMatrix from consumer.");
+        return E_UNEXPECTED;
+    }
+    CStringW consumer_yuv_matrix(str, len);
+    LocalFree(str);
+
     ULONGLONG rt_fps;
     hr = m_consumer->GetUlonglong("frameRate", &rt_fps);
     if (FAILED(hr))
@@ -1635,6 +1776,11 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
         hr = XySetDouble(DOUBLE_FPS, fps);
         CHECK_N_LOG(hr, "Failed to set option");
         ASSERT(SUCCEEDED(hr));
+    }
+    if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX]!=consumer_yuv_matrix) {
+        XY_LOG_INFO(L"Consumer yuv matrix changed from "<<m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].GetString()
+        <<L" to "<<consumer_yuv_matrix.GetString());
+        m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX] = consumer_yuv_matrix;
     }
     update_subtitle &= m_consumer_options_read;
     if (update_subtitle)
