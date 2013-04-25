@@ -5,6 +5,7 @@
 #include "DirectVobSubPropPage.h"
 #include "SubtitleInputPin2.h"
 #include "../../../subtitles/xy_bitmap.h"
+#include "../../../subtitles/hdmv_subtitle_provider.h"
 #include "../../../SubPic/SimpleSubPicProviderImpl.h"
 #include "../../../subpic/SimpleSubPicWrapper.h"
 #include "../../../subpic/color_conv_table.h"
@@ -1259,7 +1260,7 @@ void XySubFilter::SetYuvMatrix()
             return;
         }
     }
-    else if (dynamic_cast<CRenderedHdmvSubtitle*>(m_curSubStream)!=NULL)
+    else if (dynamic_cast<HdmvSubtitleProvider*>(m_curSubStream)!=NULL)
     {
         if ( m_xy_str_opt[STRING_PGS_YUV_RANGE].CompareNoCase(_T("PC"))==0 )
         {
@@ -1550,9 +1551,9 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             pRTS->Deinit();
             playres = pRTS->m_dstScreenSize;
         }
-        else if(clsid == __uuidof(CRenderedHdmvSubtitle))
+        else if(clsid == __uuidof(HdmvSubtitleProvider))
         {
-            CRenderedHdmvSubtitle *sub = dynamic_cast<CRenderedHdmvSubtitle*>(pSubStream);
+            HdmvSubtitleProvider *sub = dynamic_cast<HdmvSubtitleProvider*>(pSubStream);
             CompositionObject::ColorType color_type = CompositionObject::NONE;
             CompositionObject::YuvRangeType range_type = CompositionObject::RANGE_NONE;
             if ( m_xy_str_opt[STRING_PGS_YUV_RANGE].CompareNoCase(_T("PC"))==0 )
