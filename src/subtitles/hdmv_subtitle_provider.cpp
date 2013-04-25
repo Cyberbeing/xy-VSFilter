@@ -82,6 +82,10 @@ STDMETHODIMP HdmvSubtitleProvider::RequestFrame( IXySubRenderFrame**subRenderFra
     CPoint VideoTopLeft;
     pos = m_pSub->GetStartPosition(now - m_rtStart);
 
+    if (!pos)
+    {
+        return S_FALSE;
+    }
     hr = m_pSub->GetTextureSize(pos, MaxTextureSize, VideoSize, VideoTopLeft);
     if (SUCCEEDED(hr))
     {
