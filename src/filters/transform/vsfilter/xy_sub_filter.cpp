@@ -40,7 +40,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     : CBaseFilter(NAME("XySubFilter"), punk, &m_csFilter, clsid)
     , CDirectVobSub(XyVobFilterOptions)
     , SubRenderOptionsImpl(::options, this)
-    , m_nSubtitleId(-1)
+    , m_curSubStream(NULL)
     , m_not_first_pause(false)
     , m_consumer(NULL)
     , m_hSystrayThread(0)
@@ -1494,7 +1494,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
         }
     }
 
-    m_nSubtitleId = reinterpret_cast<DWORD_PTR>(pSubStream);
+    m_curSubStream = pSubStream;
 
     SetYuvMatrix();
 
@@ -1532,7 +1532,7 @@ void XySubFilter::InvalidateSubtitle( REFERENCE_TIME rtInvalidate /*= -1*/, DWOR
 
     if(m_sub_provider)
     {
-        if(nSubtitleId == -1 || nSubtitleId == m_nSubtitleId)
+        if (nSubtitleId == -1 || nSubtitleId == reinterpret_cast<DWORD_PTR>(m_curSubStream))
         {
             if (m_last_requested>rtInvalidate)
             {

@@ -118,7 +118,7 @@ private:
     ColorConvTable::YuvMatrixType m_video_yuv_matrix_decided_by_sub;
     ColorConvTable::YuvRangeType m_video_yuv_range_decided_by_sub;
 
-    DWORD_PTR m_nSubtitleId;
+    ISubStream *m_curSubStream;
     CInterfaceList<ISubStream> m_pSubStreams;
     CAtlList<bool> m_fIsSubStreamEmbeded;
 
