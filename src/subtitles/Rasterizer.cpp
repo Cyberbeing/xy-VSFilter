@@ -1451,7 +1451,7 @@ static __forceinline void packed_pix_mix_sse2(BYTE* dst, BYTE alpha, int w, DWOR
 
     __m128i ones = _mm_set1_epi16(0x1);
 
-    const BYTE *dst_end0 = dst + ((4*w)&~15);
+    const BYTE *dst_end0 = dst + ((4*w)&~63);
     const BYTE *dst_end = dst + 4*w;
     for ( ; dst<dst_end0; dst+=16*4 )
     {
