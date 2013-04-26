@@ -1022,7 +1022,7 @@ BYTE* CVobSubFile::GetPacket(int idx, int& packetsize, int& datasize, int iLang)
 
     do
     {
-        if(idx < 0 || idx >= sp.GetCount())
+        if(idx < 0 || (size_t)idx >= sp.GetCount())
             break;
 
         if(m_sub.Seek(sp[idx].filepos, CFile::begin) != sp[idx].filepos) 
@@ -1081,7 +1081,7 @@ bool CVobSubFile::GetFrame(int idx, int iLang)
     if(iLang < 0 || iLang >= 32) iLang = m_iLang;
     CAtlArray<SubPos>& sp = m_langs[iLang].subpos;
 
-    if(idx < 0 || idx >= sp.GetCount())
+    if(idx < 0 || (size_t)idx >= sp.GetCount())
         return(false);
 
     if(m_img.iLang != iLang || m_img.iIdx != idx) 
@@ -1092,13 +1092,13 @@ bool CVobSubFile::GetFrame(int idx, int iLang)
         if(!buff || packetsize <= 0 || datasize <= 0) return(false);
 
         m_img.start = sp[idx].start;
-        m_img.delay = idx < (sp.GetCount()-1)
+        m_img.delay = (size_t)idx < (sp.GetCount()-1)
             ? sp[idx+1].start - sp[idx].start
             : 3000;
 
         bool ret = m_img.Decode(buff, packetsize, datasize, m_fCustomPal, m_tridx, m_orgpal, m_cuspal, true);
 
-        if(idx < (sp.GetCount()-1))
+        if((size_t)idx < (sp.GetCount()-1))
             m_img.delay = min(m_img.delay, sp[idx+1].start - m_img.start);
 
         if(!ret) return(false);
@@ -2018,8 +2018,8 @@ bool CVobSubFile::SaveMaestro(CString fn)
 
     int pc[4] = {1,1,1,1}, pa[4] = {15,15,15,0};
 
-    CAtlArray<SubPos>& sp = m_langs[m_iLang].subpos;
-    for(int i = 0, k = 0; i < sp.GetCount(); i++)
+    const CAtlArray<SubPos>& sp = m_langs[m_iLang].subpos;
+    for(int i = 0, k = 0, n=sp.GetCount(); i < n; i++)
     {
         if(!GetFrame(i)) continue;
 
@@ -2090,7 +2090,7 @@ bool CVobSubFile::SaveMaestro(CString fn)
             if(f2 == (m_size.cy==480?30:25)) {f2 = 0; s2++; if(s2 == 60) {s2 = 0; m2++; if(m2 == 60) {m2 = 0; h2++;}}}
         }
 
-        if(i < sp.GetCount()-1)
+        if(i < n-1)
         {
             int t3 = sp[i+1].start;
             int h3 = t3/1000/60/60, m3 = (t3/1000/60)%60, s3 = (t3/1000)%60;
