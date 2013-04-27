@@ -1922,6 +1922,7 @@ void XySubFilter::AddSubStream(ISubStream* pSubStream)
         HRESULT hr = S_OK;
         m_pSubtitleInputPin.Add(new SubtitleInputPin2(this, m_pLock, &m_csSubLock, &hr));
     }
+    UpdateSubtitle(false);
 }
 
 void XySubFilter::RemoveSubStream(ISubStream* pSubStream)
@@ -1945,6 +1946,7 @@ void XySubFilter::RemoveSubStream(ISubStream* pSubStream)
             m_fIsSubStreamEmbeded.GetNext(pos2);
         }
     }
+    UpdateSubtitle(false);
 }
 
 HRESULT XySubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
