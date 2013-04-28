@@ -48,7 +48,6 @@ public:
 
     // IDirectVobSub
     STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
-    STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
 
     STDMETHODIMP put_Placement(bool fOverridePlacement, int xperc, int yperc);
     STDMETHODIMP put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fPolygonize);
