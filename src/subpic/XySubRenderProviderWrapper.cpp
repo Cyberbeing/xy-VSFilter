@@ -180,11 +180,19 @@ HRESULT XySubRenderProviderWrapper::ResetAllocator()
 
 STDMETHODIMP XySubRenderProviderWrapper::Invalidate( REFERENCE_TIME rtInvalidate /*= -1*/ )
 {
-    if (m_pSubPic && m_pSubPic->GetStart()>=rtInvalidate)
+    if (m_pSubPic )
     {
-        m_pSubPic = NULL;
-        m_xy_sub_render_frame = NULL;
-        m_allocator = NULL;
+        if (m_pSubPic->GetStart()>=rtInvalidate) {
+            m_pSubPic = NULL;
+
+            //fix me: important!
+            m_xy_sub_render_frame = NULL;
+            m_allocator = NULL;
+        }
+        else if (m_pSubPic->GetStop()>rtInvalidate)
+        {
+            m_pSubPic->SetStop(rtInvalidate);
+        }
     }
 
     return S_OK;
@@ -335,6 +343,11 @@ STDMETHODIMP XySubRenderProviderWrapper2::Invalidate( REFERENCE_TIME rtInvalidat
         m_xy_sub_render_frame = NULL;
         m_start = m_stop = 0;
     }
+    else if (m_stop>rtInvalidate)
+    {
+        m_stop = rtInvalidate;
+    }
+
 
     return S_OK;
 }
