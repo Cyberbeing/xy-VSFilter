@@ -12,27 +12,11 @@
 
 static inline void FlipAlphaValueSSE(BYTE *data, int w)
 {
-    int w00 = w&~3;
-    __m128i mask = _mm_set1_epi32(0xff000000);
-    DWORD *data_w = reinterpret_cast<DWORD*>(data);
-    for (int i=0;i<w00;i+=4)
-    {
-        __m128i argb = _mm_loadu_si128(reinterpret_cast<const __m128i*>(data_w+i));
-        argb = _mm_xor_si128(argb, mask);
-        _mm_storeu_si128(reinterpret_cast<__m128i*>(data_w+i), argb);
-    }
-    for (int i=w00;i<w;i++)
-    {
-        *(data_w+i) = *(data_w+i) ^ 0xFF000000;
-    }
+    return;
 }
 static inline void FlipAlphaValueC(BYTE *data, int w)
 {
-    DWORD *data_w = reinterpret_cast<DWORD*>(data);
-    for (int i=0;i<w;i++)
-    {
-        *(data_w+i) = *(data_w+i) ^ 0xFF000000;
-    }
+    return;
 }
 
 XyBitmap::~XyBitmap()
@@ -198,32 +182,6 @@ void XyBitmap::AlphaBltPlannar( SubPicDesc& spd, POINT pos, SIZE size, const XyP
 
 void XyBitmap::FlipAlphaValue( LPVOID pixels, int w, int h, int pitch )
 {
-    ASSERT(pixels);
-
-    if (w<=0 || h<=0)
-    {
-        return;
-    }
-
-    BYTE* top = static_cast<BYTE*>(pixels);
-    BYTE* bottom = top + pitch*h;
-
-    bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
-    if ( fSSE2 )
-    {
-        for(; top < bottom ; top += pitch)
-        {
-            FlipAlphaValueSSE(top, w);
-        }
-    }
-    else
-    {
-        for(; top < bottom ; top += pitch)
-        {
-            FlipAlphaValueC(top, w);
-        }
-    }
-
     return;
 }
 
