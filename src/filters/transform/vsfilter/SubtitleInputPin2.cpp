@@ -71,6 +71,7 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) SubtitleInputPin2::CreateHelper( const C
 {
     if (IsHdmvSub(&mt)) 
     {
+        XY_LOG_INFO("Create CHdmvInputPinHepler2");
         SUBTITLEINFO* psi = (SUBTITLEINFO*)mt.pbFormat;
         DWORD			dwOffset	= 0;
         CString			name;

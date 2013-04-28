@@ -461,6 +461,7 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) CSubtitleInputPin::CreateHelper( const C
     CSubtitleInputPinHelper *ret = NULL;
     if(mt.majortype == MEDIATYPE_Text)
     {
+        XY_LOG_INFO("Create CTextSubtitleInputPinHepler");
         CRenderedTextSubtitle* pRTS = DEBUG_NEW CRenderedTextSubtitle(m_pSubLock);
         pRTS->m_name = CString(GetPinName(pReceivePin)) + _T(" (embeded)");
         pRTS->m_dstScreenSize = CSize(384, 288);
@@ -505,6 +506,7 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) CSubtitleInputPin::CreateHelper( const C
             || mt.subtype == MEDIASUBTYPE_ASS 
             || mt.subtype == MEDIASUBTYPE_ASS2)
         {
+            XY_LOG_INFO("Create CTextSubtitleInputPinHepler");
             CRenderedTextSubtitle* pRTS = DEBUG_NEW CRenderedTextSubtitle(m_pSubLock);
             pRTS->m_name = name;
             pRTS->m_lcid = lcid;
@@ -530,18 +532,21 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) CSubtitleInputPin::CreateHelper( const C
         }
         else if(mt.subtype == MEDIASUBTYPE_SSF)
         {
+            XY_LOG_INFO("Create CSSFInputPinHepler");
             ssf::CRenderer* pSSF = DEBUG_NEW ssf::CRenderer(m_pSubLock);
             pSSF->Open(ssf::MemoryInputStream(mt.pbFormat + dwOffset, mt.cbFormat - dwOffset, false, false), name);
             ret = new CSSFInputPinHepler(pSSF, m_mt);
         }
         else if(mt.subtype == MEDIASUBTYPE_VOBSUB)
         {
+            XY_LOG_INFO("Create CVobsubInputPinHepler");
             CVobSubStream* pVSS = DEBUG_NEW CVobSubStream(m_pSubLock);
             pVSS->Open(name, mt.pbFormat + dwOffset, mt.cbFormat - dwOffset);
             ret = new CVobsubInputPinHepler(pVSS, m_mt);
         }
         else if (IsHdmvSub(&mt)) 
         {
+            XY_LOG_INFO("Create CHdmvInputPinHepler");
             CRenderedHdmvSubtitle *hdmv_sub = DEBUG_NEW CRenderedHdmvSubtitle(m_pSubLock,
                 (mt.subtype == MEDIASUBTYPE_DVB_SUBTITLES) ? ST_DVB : ST_HDMV, name, lcid);
             ret = new CHdmvInputPinHepler(hdmv_sub, m_mt);

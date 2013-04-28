@@ -2811,8 +2811,7 @@ bool CSimpleTextSubtitle::Open(CTextFile* f, int CharSet, CString name)
              TEXT("OpenUSF"),
              TEXT("OpenMPL2"),
              TEXT("OpenRealText")};
-         CAutoTiming t(func_name[i],0);
-
+        XY_LOG_INFO("Open '"<<f->GetFilePath().GetString()<<"' with "<<func_name[i]<<" begin" );
         if(!OpenFuncts[i].open(f, *this, CharSet) /*|| !GetCount()*/)
         {
             if(m_entries.GetCount() > 0)
@@ -2829,6 +2828,7 @@ bool CSimpleTextSubtitle::Open(CTextFile* f, int CharSet, CString name)
             Empty();
             continue;
         }
+        XY_LOG_INFO("Open '"<<f->GetFilePath().GetString()<<"' with "<<func_name[i]<<" succeeded" );
 
         m_name = name;
         m_mode = OpenFuncts[i].mode;
