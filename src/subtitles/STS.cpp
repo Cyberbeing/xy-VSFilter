@@ -39,6 +39,10 @@
 #  define TRACE_SUB(msg) __noop
 #endif
 
+#ifndef ReftimeToCString
+#  define  ReftimeToCString(rt) ReftimeToString(rt).GetString()
+#endif
+
 // gathered from http://www.netwave.or.jp/~shikai/shikai/shcolor.htm
 
 struct htmlcolor {TCHAR* name; DWORD color;} hmtlcolors[] =
@@ -2024,12 +2028,12 @@ void CSimpleTextSubtitle::Empty()
 void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, 
     CString style, const CString& actor, const CString& effect, const CRect& marginRect, int layer, int readorder)
 {
-    TRACE_SUB(start<<_T(" ")<<end<<_T(" ")<<str.GetString()<<_T(" style:")<<style.GetString()
-        <<_T(" Unicode:")<<fUnicode
-        <<_T(" actor:")<<actor.GetString()<<_T(" effect:")<<effect.GetString()
-        <<_T(" (l:")<<marginRect.left<<_T(",t:")<<marginRect.top<<_T(",r:")<<marginRect.right<<_T(",b:")<<marginRect.bottom
-        <<_T(" layer:")<<layer<<_T(" readorder:")<<readorder
-        <<_T(" entries:")<<m_entries.GetCount()<<_T(" seg:")<<m_segments.GetCount());
+    TRACE_SUB(ReftimeToCString(start)<<" "<<ReftimeToCString(end)<<" "<<str.GetString()<<" style:"<<style.GetString()
+        <<" Unicode:"<<fUnicode
+        <<" actor:"<<actor.GetString()<<" effect:"<<effect.GetString()
+        <<" (l:"<<marginRect.left<<",t:"<<marginRect.top<<",r:"<<marginRect.right<<",b:"<<marginRect.bottom
+        <<" layer:"<<layer<<" readorder:"<<readorder
+        <<" entries:"<<m_entries.GetCount()<<" seg:"<<m_segments.GetCount());
 
     if(start > end || str.Trim().IsEmpty() ) return;
 
