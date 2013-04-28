@@ -59,6 +59,8 @@ protected:
 	void GetOutputSize(int& w, int& h, int& arx, int& ary);
 	HRESULT Transform(IMediaSample* pIn);    
     HRESULT GetIsEmbeddedSubStream(int iSelected, bool *fIsEmbedded);
+
+    void UpdateLanguageCount();
 public:
     CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid = __uuidof(CDirectVobSubFilter));
 	virtual ~CDirectVobSubFilter();
@@ -91,13 +93,13 @@ public:
 
     // XyOptionsImpl
     virtual HRESULT OnOptionChanged(unsigned field);
+    virtual HRESULT OnOptionReading(unsigned field);
 
     // IXyOptions
     STDMETHODIMP XySetBool     (unsigned field, bool      value);
     STDMETHODIMP XySetInt      (unsigned field, int       value);
 
     // IDirectVobSub
-	STDMETHODIMP get_LanguageCount(int* nLangs);
 	STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
 	STDMETHODIMP put_SelectedLanguage(int iSelected);
     STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);

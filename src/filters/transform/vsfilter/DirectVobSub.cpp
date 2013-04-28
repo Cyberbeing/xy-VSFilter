@@ -289,13 +289,7 @@ STDMETHODIMP CDirectVobSub::put_FileName(WCHAR* fn)
 
 STDMETHODIMP CDirectVobSub::get_LanguageCount(int* nLangs)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_LanguageCount))
-    {
-        return E_NOTIMPL;
-    }
-    CAutoLock cAutoLock(&m_propsLock);
-
-    return nLangs ? *nLangs = 0, S_OK : E_POINTER;
+    return XyGetInt(DirectVobSubXyOptions::INT_LANGUAGE_COUNT, nLangs);
 }
 
 STDMETHODIMP CDirectVobSub::get_LanguageName(int iLanguage, WCHAR** ppName)

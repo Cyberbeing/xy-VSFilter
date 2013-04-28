@@ -1078,24 +1078,6 @@ STDMETHODIMP CDirectVobSubFilter::GetPages(CAUUID* pPages)
 }
 
 // IDirectVobSub
-
-STDMETHODIMP CDirectVobSubFilter::get_LanguageCount(int* nLangs)
-{
-    XY_LOG_INFO(nLangs);
-	HRESULT hr = CDirectVobSub::get_LanguageCount(nLangs);
-
-	if(hr == NOERROR && nLangs)
-	{
-        CAutoLock cAutolock(&m_csSubLock);
-
-		*nLangs = 0;
-		POSITION pos = m_pSubStreams.GetHeadPosition();
-		while(pos) (*nLangs) += m_pSubStreams.GetNext(pos)->GetStreamCount();
-	}
-
-	return hr;
-}
-
 STDMETHODIMP CDirectVobSubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 {
     XY_LOG_INFO(iLanguage);
@@ -2288,6 +2270,18 @@ HRESULT CDirectVobSubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmb
     return hr;
 }
 
+void CDirectVobSubFilter::UpdateLanguageCount()
+{
+    CAutoLock cAutolock(&m_csSubLock);
+
+    int tmp = 0;
+    POSITION pos = m_pSubStreams.GetHeadPosition();
+    while(pos) {
+        tmp += m_pSubStreams.GetNext(pos)->GetStreamCount();
+    }
+    m_xy_int_opt[INT_LANGUAGE_COUNT] = tmp;
+}
+
 void CDirectVobSubFilter::SetYuvMatrix()
 {
     XY_LOG_INFO("");
@@ -2371,6 +2365,22 @@ HRESULT CDirectVobSubFilter::OnOptionChanged( unsigned field )
         break;
     }
 
+    return hr;
+}
+
+HRESULT CDirectVobSubFilter::OnOptionReading( unsigned field )
+{
+    HRESULT hr = CDirectVobSub::OnOptionReading(field);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+    switch(field)
+    {
+    case INT_LANGUAGE_COUNT:
+        UpdateLanguageCount();
+        break;
+    }
     return hr;
 }
 

@@ -28,6 +28,8 @@ namespace DirectVobSubXyOptions
 
         INT_VSFILTER_COMPACT_RGB_CORRECTION,//see @VsfilterCompactRgbCorrection
 
+        INT_LANGUAGE_COUNT,
+
         BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER,
         BOOL_HIDE_TRAY_ICON,
 
@@ -74,7 +76,6 @@ namespace DirectVobSubXyOptions
         BIN_XY_FLY_WEIGHT_INFO,
 
         //The following is not really supported yet
-        void_LanguageCount,
         void_LanguageName,
         void_SelectedLanguage,
         void_HideSubtitles,
@@ -167,6 +168,8 @@ namespace DirectVobSubXyOptions
 
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_LAYOUT_SIZE_OPT},
 
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_READ, INT_LANGUAGE_COUNT},
+
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_HIDE_TRAY_ICON},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_MEDIA_FPS_ENABLED},
@@ -194,7 +197,6 @@ namespace DirectVobSubXyOptions
 
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_READ, BIN_XY_FLY_WEIGHT_INFO},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageCount},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageName},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SelectedLanguage},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_HideSubtitles},
@@ -246,6 +248,8 @@ namespace DirectVobSubXyOptions
 
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_VSFILTER_COMPACT_RGB_CORRECTION},
 
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_READ, INT_LANGUAGE_COUNT},
+
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_HIDE_TRAY_ICON},
 
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_MAX_BITMAP_COUNT},
@@ -281,7 +285,6 @@ namespace DirectVobSubXyOptions
 
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_READ, BIN_XY_FLY_WEIGHT_INFO},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageCount},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageName},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SelectedLanguage},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_HideSubtitles},
