@@ -311,6 +311,22 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     return hr;
 }
 
+HRESULT XySubFilter::OnOptionReading( unsigned field )
+{
+    HRESULT hr = CDirectVobSub::OnOptionReading(field);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+    switch(field)
+    {
+    case INT_LANGUAGE_COUNT:
+        UpdateLanguageCount();
+        break;
+    }
+    return hr;
+}
+
 //
 // IXyOptions
 //
@@ -415,22 +431,6 @@ STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
 //
 // IDirectVobSub
 //
-STDMETHODIMP XySubFilter::get_LanguageCount(int* nLangs)
-{
-    HRESULT hr = CDirectVobSub::get_LanguageCount(nLangs);
-
-    if(hr == NOERROR && nLangs)
-    {
-        CAutoLock cAutolock(&m_csSubLock);
-
-        *nLangs = 0;
-        POSITION pos = m_pSubStreams.GetHeadPosition();
-        while(pos) (*nLangs) += m_pSubStreams.GetNext(pos)->GetStreamCount();
-    }
-
-    return hr;
-}
-
 STDMETHODIMP XySubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 {
     HRESULT hr = CDirectVobSub::get_LanguageName(iLanguage, ppName);
@@ -2161,4 +2161,16 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
         hr = E_INVALIDARG;
     }
     return hr;
+}
+
+void XySubFilter::UpdateLanguageCount()
+{
+    CAutoLock cAutolock(&m_csSubLock);
+
+    int tmp = 0;
+    POSITION pos = m_pSubStreams.GetHeadPosition();
+    while(pos) {
+        tmp += m_pSubStreams.GetNext(pos)->GetStreamCount();
+    }
+    m_xy_int_opt[INT_LANGUAGE_COUNT] = tmp;
 }

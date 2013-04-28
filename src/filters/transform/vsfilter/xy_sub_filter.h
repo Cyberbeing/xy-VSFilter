@@ -39,6 +39,7 @@ public:
 
     // XyOptionsImpl
     virtual HRESULT OnOptionChanged(unsigned field);
+    virtual HRESULT OnOptionReading(unsigned field);
 
     // IXyOptions
     STDMETHODIMP XyGetInt      (unsigned field, int      *value);
@@ -46,7 +47,6 @@ public:
     STDMETHODIMP XySetInt      (unsigned field, int       value);
 
     // IDirectVobSub
-    STDMETHODIMP get_LanguageCount(int* nLangs);
     STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
     STDMETHODIMP put_SelectedLanguage(int iSelected);
     STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
@@ -103,6 +103,8 @@ private:
     HRESULT StartStreaming();
 
     HRESULT FindAndConnectConsumer(IFilterGraph* pGraph);
+
+    void UpdateLanguageCount();
 private:
     class CFileReloaderData
     {
