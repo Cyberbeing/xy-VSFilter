@@ -68,7 +68,6 @@ protected:
 protected:
     CCritSec m_propsLock;
 
-	bool m_fHideSubtitles;
 	bool m_fDoPreBuffering;
 
     int m_bt601Width, m_bt601Height;//for AUTO_GUESS

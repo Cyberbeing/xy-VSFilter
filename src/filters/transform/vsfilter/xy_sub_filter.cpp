@@ -306,6 +306,9 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
         }
         m_context_id++;
         break;
+    case BOOL_HIDE_SUBTITLES:
+        UpdateSubtitle(false);
+        break;
     }
 
     return hr;
@@ -462,19 +465,6 @@ STDMETHODIMP XySubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 
             i -= pSubStream->GetStreamCount();
         }
-    }
-
-    return hr;
-}
-
-STDMETHODIMP XySubFilter::put_HideSubtitles(bool fHideSubtitles)
-{
-    XY_LOG_INFO(fHideSubtitles);
-    HRESULT hr = CDirectVobSub::put_HideSubtitles(fHideSubtitles);
-
-    if(hr == NOERROR)
-    {
-        UpdateSubtitle(false);
     }
 
     return hr;
@@ -838,9 +828,9 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
     {
         *pdwFlags = 0;
 
-        if(i == -1 && !m_fHideSubtitles
+        if(i == -1 && !m_xy_bool_opt[BOOL_HIDE_SUBTITLES]
             || i >= 0 && i < nLangs && i == m_xy_int_opt[INT_SELECTED_LANGUAGE]
-            || i == nLangs && m_fHideSubtitles
+            || i == nLangs && m_xy_bool_opt[BOOL_HIDE_SUBTITLES]
             || i == nLangs+1 && !m_fFlipPicture
             || i == nLangs+2 && m_fFlipPicture)
         {
@@ -1421,7 +1411,7 @@ void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
 
     CComPtr<ISubStream> pSubStream;
 
-    if(!m_fHideSubtitles)
+    if(!m_xy_bool_opt[BOOL_HIDE_SUBTITLES])
     {
         int i = m_xy_int_opt[INT_SELECTED_LANGUAGE];
 
@@ -2058,11 +2048,11 @@ bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
     XY_LOG_INFO(L"fn:"<<fn.GetString());
     if((m_fExternalLoad || m_fWebLoad) && (m_fWebLoad || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
     {
-        bool fTemp = m_fHideSubtitles;
+        bool fTemp = m_xy_bool_opt[BOOL_HIDE_SUBTITLES];
         fRet = !fn.IsEmpty() && SUCCEEDED(put_FileName((LPWSTR)(LPCWSTR)fn))
             || SUCCEEDED(put_FileName(L"c:\\tmp.srt"))
             || fRet;
-        if(fTemp) m_fHideSubtitles = true;
+        if(fTemp) m_xy_bool_opt[BOOL_HIDE_SUBTITLES] = true;
     }
 
     return(fRet);
