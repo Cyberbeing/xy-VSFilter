@@ -631,7 +631,7 @@ STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
     {
         CAutoLock cAutoLock(m_pSubLock);
         hr = m_helper->Receive(pSample);
-        TRACE_SAMPLE("InvalidateSubtitle :"<<tStart);
+        TRACE_SAMPLE("InvalidateSubtitle :"<<ReftimeToCString(tStart));
         InvalidateSubtitle(tStart, m_helper->GetSubStream());
     }
 
