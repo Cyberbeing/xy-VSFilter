@@ -36,7 +36,7 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     m_supported_filter_verion = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), 0);
     m_config_info_version = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), 0);
 
-    m_iSelectedLanguage = 0;
+    m_xy_int_opt[INT_SELECTED_LANGUAGE] = 0;
     m_fHideSubtitles = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), 0);
     m_fDoPreBuffering = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), 1);
     
@@ -303,34 +303,12 @@ STDMETHODIMP CDirectVobSub::get_LanguageName(int iLanguage, WCHAR** ppName)
 
 STDMETHODIMP CDirectVobSub::get_SelectedLanguage(int* iSelected)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_SelectedLanguage))
-    {
-        return E_NOTIMPL;
-    }
-	CAutoLock cAutoLock(&m_propsLock);
-
-	return iSelected ? *iSelected = m_iSelectedLanguage, S_OK : E_POINTER;
+    return XyGetInt(DirectVobSubXyOptions::INT_SELECTED_LANGUAGE, iSelected);
 }
 
 STDMETHODIMP CDirectVobSub::put_SelectedLanguage(int iSelected)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_SelectedLanguage))
-    {
-        return E_NOTIMPL;
-    }
-	CAutoLock cAutoLock(&m_propsLock);
-
-	if(m_iSelectedLanguage == iSelected) return S_FALSE;
-
-	int nCount;
-	if(FAILED(get_LanguageCount(&nCount))
-	|| iSelected < 0 
-	|| iSelected >= nCount) 
-		return E_FAIL;
-
-	m_iSelectedLanguage = iSelected;
-
-    return OnOptionChanged(void_SelectedLanguage);
+    return XySetInt(DirectVobSubXyOptions::INT_SELECTED_LANGUAGE, iSelected);
 }
 
 STDMETHODIMP CDirectVobSub::get_HideSubtitles(bool* fHideSubtitles)
@@ -1336,6 +1314,13 @@ STDMETHODIMP CDirectVobSub::XySetInt( unsigned field, int value )
         {
             return E_INVALIDARG;
         }
+        break;
+    case DirectVobSubXyOptions::INT_SELECTED_LANGUAGE:
+        int nCount;
+        if(FAILED(get_LanguageCount(&nCount))
+            || value < 0 
+            || value >= nCount) 
+            return E_FAIL;
         break;
     }
 

@@ -963,7 +963,7 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 		*pdwFlags = 0;
 
 		if(i == -1 && !m_fHideSubtitles
-		|| i >= 0 && i < nLangs && i == m_iSelectedLanguage
+		|| i >= 0 && i < nLangs && i == m_xy_int_opt[INT_SELECTED_LANGUAGE]
 		|| i == nLangs && m_fHideSubtitles
 		|| i == nLangs+1 && !m_fFlipPicture
 		|| i == nLangs+2 && m_fFlipPicture)
@@ -1107,19 +1107,6 @@ STDMETHODIMP CDirectVobSubFilter::get_LanguageName(int iLanguage, WCHAR** ppName
 
 			i -= pSubStream->GetStreamCount();
 		}
-	}
-
-	return hr;
-}
-
-STDMETHODIMP CDirectVobSubFilter::put_SelectedLanguage(int iSelected)
-{
-    XY_LOG_INFO(iSelected);
-	HRESULT hr = CDirectVobSub::put_SelectedLanguage(iSelected);
-
-	if(hr == NOERROR)
-	{
-		UpdateSubtitle(false);
 	}
 
 	return hr;
@@ -1782,7 +1769,7 @@ void CDirectVobSubFilter::UpdateSubtitle(bool fApplyDefStyle)
 
 	if(!m_fHideSubtitles)
 	{
-		int i = m_iSelectedLanguage;
+		int i = m_xy_int_opt[INT_SELECTED_LANGUAGE];
 
 		for(POSITION pos = m_pSubStreams.GetHeadPosition(); i >= 0 && pos; pSubStream = NULL)
 		{
@@ -1944,7 +1931,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 
 			if(pSubStream == pSubStream2)
 			{
-				m_iSelectedLanguage = i + pSubStream2->GetStream();
+				m_xy_int_opt[INT_SELECTED_LANGUAGE] = i + pSubStream2->GetStream();
 				break;
 			}
 
@@ -2453,6 +2440,9 @@ STDMETHODIMP CDirectVobSubFilter::XySetInt( unsigned field, int value )
         break;
     case DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL:
         SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[field]) );
+        break;
+    case DirectVobSubXyOptions::INT_SELECTED_LANGUAGE:
+        UpdateSubtitle(false);
         break;
     default:
         break;

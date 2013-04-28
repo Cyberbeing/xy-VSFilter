@@ -290,7 +290,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case SIZE_ASS_PLAY_RESOLUTION:
     case SIZE_USER_SPECIFIED_LAYOUT_SIZE:
     case DOUBLE_FPS:
-    case void_SelectedLanguage:
+    case INT_SELECTED_LANGUAGE:
     case void_Placement:
     case void_VobSubSettings:
     case void_TextSettings:
@@ -421,6 +421,9 @@ STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
     case DirectVobSubXyOptions::INT_MAX_BITMAP_COUNT2:
         hr = E_INVALIDARG;
         break;
+    case DirectVobSubXyOptions::INT_SELECTED_LANGUAGE:
+        UpdateSubtitle(false);
+        break;
     default:
         break;
     }
@@ -459,19 +462,6 @@ STDMETHODIMP XySubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 
             i -= pSubStream->GetStreamCount();
         }
-    }
-
-    return hr;
-}
-
-STDMETHODIMP XySubFilter::put_SelectedLanguage(int iSelected)
-{
-    XY_LOG_INFO(iSelected);
-    HRESULT hr = CDirectVobSub::put_SelectedLanguage(iSelected);
-
-    if(hr == NOERROR)
-    {
-        UpdateSubtitle(false);
     }
 
     return hr;
@@ -849,7 +839,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
         *pdwFlags = 0;
 
         if(i == -1 && !m_fHideSubtitles
-            || i >= 0 && i < nLangs && i == m_iSelectedLanguage
+            || i >= 0 && i < nLangs && i == m_xy_int_opt[INT_SELECTED_LANGUAGE]
             || i == nLangs && m_fHideSubtitles
             || i == nLangs+1 && !m_fFlipPicture
             || i == nLangs+2 && m_fFlipPicture)
@@ -1433,7 +1423,7 @@ void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
 
     if(!m_fHideSubtitles)
     {
-        int i = m_iSelectedLanguage;
+        int i = m_xy_int_opt[INT_SELECTED_LANGUAGE];
 
         for(POSITION pos = m_pSubStreams.GetHeadPosition(); i >= 0 && pos; pSubStream = NULL)
         {
@@ -1623,7 +1613,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
 
             if(pSubStream == pSubStream2)
             {
-                m_iSelectedLanguage = i + pSubStream2->GetStream();
+                m_xy_int_opt[INT_SELECTED_LANGUAGE] = i + pSubStream2->GetStream();
                 break;
             }
 

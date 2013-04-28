@@ -101,7 +101,6 @@ public:
 
     // IDirectVobSub
 	STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
-	STDMETHODIMP put_SelectedLanguage(int iSelected);
     STDMETHODIMP put_HideSubtitles(bool fHideSubtitles);
 	STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
 
