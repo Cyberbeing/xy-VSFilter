@@ -446,16 +446,15 @@ BOOL CTextFile::ReadString(CStringW& str)
         while (Read(&buffer[0], sizeof(buffer[0])) == sizeof(buffer[0])) {
             nBytesRead++;
             fEOF = false;
-            WCHAR c = L'?';
+            unsigned int c = L'?';
 
             if (Utf8::isSingleByte(buffer[0])) { // 0xxxxxxx
                 bValid = true;
                 c = buffer[0] & 0x7f;
             } else if (Utf8::isFirstOfMultibyte(buffer[0])) {
                 int nContinuationBytes = Utf8::continuationBytes(buffer[0]);
-                bValid = (nContinuationBytes <= 2);
+                bValid = (nContinuationBytes <= 3);
 
-                // We don't support characters wider than 16 bits
                 if (bValid) {
                     UINT nRead = Read(&buffer[1], nContinuationBytes * sizeof(buffer[1]));
                     nBytesRead += nContinuationBytes;
@@ -478,6 +477,9 @@ BOOL CTextFile::ReadString(CStringW& str)
                             case 2: // 1110xxxx 10xxxxxx 10xxxxxx
                                 c = (buffer[0] & 0x0f) << 12 | (buffer[1] & 0x3f) << 6 | (buffer[2] & 0x3f);
                                 break;
+                            case 3: // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+                                c = (buffer[0] & 0x07) << 18 | (buffer[1] & 0x3f) << 12 | (buffer[2] & 0x3f) << 6 | (buffer[3] & 0x3f);
+                                break;
                         }
                     }
                 }
@@ -492,7 +494,20 @@ BOOL CTextFile::ReadString(CStringW& str)
                 if (c == '\n') {
                     break;
                 }
-                str += c;
+                if (c<0x10000) {
+                    str += (WCHAR)c;
+                }
+                else if (c<=0x10FFFF) {
+                    c -= 0x10000;
+                    WCHAR c1 = 0xD800 | (c>>10);
+                    str += c1;
+                    WCHAR c2 = 0xDC00 | (c&0x3FF);
+                    str += c2;
+                }
+                else
+                {
+                    XY_LOG_ERROR("This character code '"<<c<<"'is out of UTF-16 accessible range");
+                }
             } else if (!m_offset) {
                 // Switch to text and read again
                 m_encoding = ASCII;
