@@ -1694,7 +1694,8 @@ void XySubFilter::InitSubPicQueue()
     UpdateSubtitle(false);
 }
 
-HRESULT XySubFilter::UpdateParamFromConsumer()
+
+HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
 {
 
 #define GET_PARAM_FROM_CONSUMER(func, param, ret_addr) \
@@ -1707,6 +1708,29 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
 
     HRESULT hr = NOERROR;
 
+    if (getNameAndVersion)
+    {
+        LPWSTR str;
+        int len;
+        hr = m_consumer->GetString("name", &str, &len);
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to get name from consumer");
+        }
+        else
+        {
+            m_xy_str_opt[STRING_CONNECTED_CONSUMER] = CStringW(str, len);
+        }
+        hr = m_consumer->GetString("version", &str, &len);
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to get version from consumer");
+        }
+        else
+        {
+            m_xy_str_opt[STRING_CONSUMER_VERSION] = CStringW(str, len);
+        }
+    }
     SIZE originalVideoSize;
     GET_PARAM_FROM_CONSUMER(m_consumer->GetSize, "originalVideoSize", &originalVideoSize);
 
@@ -2137,7 +2161,7 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
             }
             m_consumer = consumer;
             m_consumer_options_read = false;
-            hr = UpdateParamFromConsumer();
+            hr = UpdateParamFromConsumer(true);
             if (FAILED(hr))
             {
                 XY_LOG_WARN("Failed to read consumer field.");
@@ -2148,7 +2172,8 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
                 m_consumer = NULL;
                 return hr;
             }
-            XY_LOG_INFO("Connected with "<<XY_LOG_VAR_2_STR(consumer));
+            XY_LOG_INFO("Connected with "<<XY_LOG_VAR_2_STR(consumer)<<" "
+                <<DumpConsumerInfo().GetString()<<" as "<<DumpProviderInfo().GetString());
         }
         else
         {
@@ -2174,4 +2199,22 @@ void XySubFilter::UpdateLanguageCount()
         tmp += m_pSubStreams.GetNext(pos)->GetStreamCount();
     }
     m_xy_int_opt[INT_LANGUAGE_COUNT] = tmp;
+}
+
+CStringW XySubFilter::DumpProviderInfo()
+{
+    CStringW strTemp;
+    strTemp.Format(L"name:'%ls' version:'%ls' yuvMatrix:'%ls' combineBitmaps:%ls",
+        m_xy_str_opt[STRING_NAME]      , m_xy_str_opt[STRING_VERSION],
+        m_xy_str_opt[STRING_YUV_MATRIX], m_xy_str_opt[BOOL_COMBINE_BITMAPS]?L"True":L"False");
+    return strTemp;
+}
+
+CStringW XySubFilter::DumpConsumerInfo()
+{
+    CStringW strTemp;
+    strTemp.Format(L"name:'%ls' version:'%ls' yuvMatrix:'%ls'",
+        m_xy_str_opt[STRING_CONNECTED_CONSUMER], m_xy_str_opt[STRING_CONSUMER_VERSION],
+        m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX]);
+    return strTemp;
 }
