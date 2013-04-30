@@ -1309,7 +1309,7 @@ void XySubFilter::SetYuvMatrix()
             }
         }
     }
-    else
+    else if (m_curSubStream)
     {
         XY_LOG_WARN("I do NOT know how to make VSFilter compact and right.");
     }
