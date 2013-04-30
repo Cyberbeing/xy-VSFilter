@@ -64,6 +64,7 @@ namespace DirectVobSubXyOptions
         STRING_YUV_MATRIX,
         STRING_CONSUMER_YUV_MATRIX,
         STRING_CONNECTED_CONSUMER,
+        STRING_CONSUMER_VERSION,
 
         //[ColorSpaceOpt1...ColorSpaceOptN]
         //size=N
@@ -285,6 +286,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_YUV_MATRIX},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_CONSUMER_YUV_MATRIX},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_CONNECTED_CONSUMER},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_CONSUMER_VERSION},
 
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_READ, BIN_CACHES_INFO},
 
