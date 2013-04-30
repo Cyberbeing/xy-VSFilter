@@ -1443,6 +1443,9 @@ void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
     }
 
     SetSubtitle(pSubStream, fApplyDefStyle);
+    XY_LOG_INFO("SelectedSubtitle:"<<m_xy_int_opt[INT_SELECTED_LANGUAGE]
+    <<" YuvMatrix:"<<m_xy_str_opt[STRING_YUV_MATRIX].GetString()
+    <<" TextSubRendererVSFilterCompactRGBCorrection:"<<XySubRenderFrameCreater::GetDefaultCreater()->GetVsfilterCompactRgbCorrection());
 }
 
 void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= true*/ )
