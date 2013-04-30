@@ -85,7 +85,7 @@ private:
 
     void InitSubPicQueue();
 
-    HRESULT UpdateParamFromConsumer();
+    HRESULT UpdateParamFromConsumer(bool getNameAndVersion=false);
 
     int FindPreferedLanguage(bool fHideToo = true);
     void UpdatePreferedLanguages(CString l);
@@ -103,6 +103,9 @@ private:
     HRESULT FindAndConnectConsumer(IFilterGraph* pGraph);
 
     void UpdateLanguageCount();
+
+    CStringW DumpProviderInfo();
+    CStringW DumpConsumerInfo();
 private:
     class CFileReloaderData
     {
