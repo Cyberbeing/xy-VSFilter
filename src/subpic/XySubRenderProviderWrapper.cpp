@@ -203,7 +203,7 @@ STDMETHODIMP XySubRenderProviderWrapper::Invalidate( REFERENCE_TIME rtInvalidate
 //
 XySubRenderProviderWrapper2::XySubRenderProviderWrapper2( ISubPicProviderEx2 *provider
     , HRESULT* phr/*=NULL*/ )
-    : CUnknown(NAME("XySubRenderProviderWrapper"), NULL, phr)
+    : CUnknown(NAME("XySubRenderProviderWrapper2"), NULL, phr)
     , m_provider(provider)
     , m_consumer(NULL)
     , m_start(0), m_stop(0)
