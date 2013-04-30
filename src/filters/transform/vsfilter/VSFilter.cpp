@@ -44,6 +44,7 @@ END_MESSAGE_MAP()
 
 CVSFilterApp::CVSFilterApp()
 {
+    _CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
 #if ENABLE_XY_LOG
     LPTSTR  strDLLPath = new TCHAR[_MAX_PATH];
     ::GetModuleFileName( reinterpret_cast<HINSTANCE>(&__ImageBase), strDLLPath, _MAX_PATH);
