@@ -375,6 +375,12 @@ STDMETHODIMP XySubFilter::XyGetString( unsigned field, LPWSTR *value, int *chars
             return m_consumer->GetString("name", value, chars);
         }
         break;
+    case STRING_CONSUMER_VERSION:
+        if (m_consumer)
+        {
+            return m_consumer->GetString("version", value, chars);
+        }
+        break;
     }
     return CDirectVobSub::XyGetString(field, value,chars);
 }
