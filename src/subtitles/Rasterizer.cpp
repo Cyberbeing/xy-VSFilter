@@ -187,24 +187,6 @@ struct GaussianFilterKey
     }
 };
 
-struct ass_tmp_buf
-{
-public:
-    ass_tmp_buf(size_t size);
-    ass_tmp_buf(const ass_tmp_buf& buf);
-    ~ass_tmp_buf();
-    size_t size;
-    unsigned *tmp;
-};
-
-struct ass_tmp_buf_get_size
-{
-    const size_t& operator()(const ass_tmp_buf& buf)const
-    {                                              
-        return buf.size;
-    }
-};
-
 static const unsigned int maxcolor = 255;
 static const unsigned base = 256;
 
@@ -381,23 +363,6 @@ int ass_synth_priv::generate_tables(double sigma)
         }        
     }
     return 0;
-}
-
-ass_tmp_buf::ass_tmp_buf(size_t size)
-{
-    tmp = (unsigned *)malloc(size * sizeof(unsigned));
-    this->size = size;
-}
-
-ass_tmp_buf::ass_tmp_buf(const ass_tmp_buf& buf)
-    :size(buf.size)
-{
-    tmp = (unsigned *)malloc(size * sizeof(unsigned));
-}
-
-ass_tmp_buf::~ass_tmp_buf()
-{
-    free(tmp);
 }
 
 /*
@@ -1030,7 +995,7 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, float be_streng
         }
     }
 
-    ass_tmp_buf tmp_buf( max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0) );        
+    ::boost::shared_array<unsigned> tmp_buf( new unsigned[max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0)] );
     //flyweight<key_value<int, ass_tmp_buf, ass_tmp_buf_get_size>, no_locking> tmp_buf((overlay->mOverlayWidth+1)*(overlay->mOverlayPitch+1));
     // Do some gaussian blur magic    
     if ( gaussian_blur_strength > GAUSSIAN_BLUR_THREHOLD )
@@ -1046,7 +1011,7 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, float be_streng
         const ass_synth_priv& priv_blur_y = fw_priv_blur_y.get();
         if (output_overlay->mOverlayWidth>=priv_blur_x.g_w && output_overlay->mOverlayHeight>=priv_blur_y.g_w)
         {   
-            ass_gauss_blur(plan_selected, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, output_overlay->mOverlayPitch, 
+            ass_gauss_blur(plan_selected, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, output_overlay->mOverlayPitch, 
                 priv_blur_x.gt2, priv_blur_x.g_r, priv_blur_x.g_w,
                 priv_blur_y.gt2, priv_blur_y.g_r, priv_blur_y.g_w);
         }
@@ -1063,11 +1028,11 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, float be_streng
         {
             if (g_cpuid.m_flags & CCpuID::sse2)
             {
-                be_blur(blur_plan, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+                be_blur(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
             }
             else
             {
-                be_blur_c(blur_plan, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+                be_blur_c(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
             }
         }
     }
@@ -1279,18 +1244,18 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
     int pass_num = static_cast<int>(scaled_be_strength);
     int pitch = output_overlay->mOverlayPitch;
     byte* blur_plan = output_overlay->mfWideOutlineEmpty ? body : border;
-    ass_tmp_buf tmp_buf( max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0) );
+    ::boost::shared_array<unsigned> tmp_buf( new unsigned[max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0)] );
     for (int pass = 0; pass < pass_num; pass++)
     {
         if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
         {
             if (g_cpuid.m_flags & CCpuID::sse2)
             {
-                be_blur(blur_plan, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+                be_blur(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
             }
             else
             {
-                be_blur_c(blur_plan, tmp_buf.tmp, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
+                be_blur_c(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
             }
         }
     }
