@@ -170,6 +170,13 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
     }
     else
     {
+        if (m_consumer)
+        {
+            if (FAILED(m_consumer->Disconnect())) {
+                XY_LOG_ERROR("Failed to disconnect consumer");
+            }
+            m_consumer = NULL;
+        }
         ::DeleteSystray(&m_hSystrayThread, &m_tbid);
     }
 
@@ -2125,7 +2132,17 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
             }
             m_consumer = consumer;
             m_consumer_options_read = false;
-            UpdateParamFromConsumer();
+            hr = UpdateParamFromConsumer();
+            if (FAILED(hr))
+            {
+                XY_LOG_WARN("Failed to read consumer field.");
+                if (FAILED(consumer->Disconnect()))
+                {
+                    XY_LOG_ERROR("Failed to disconnect consumer");
+                }
+                m_consumer = NULL;
+                return hr;
+            }
             XY_LOG_INFO("Connected with "<<XY_LOG_VAR_2_STR(consumer));
         }
         else
