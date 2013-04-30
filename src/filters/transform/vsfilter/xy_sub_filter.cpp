@@ -1718,7 +1718,6 @@ HRESULT XySubFilter::UpdateParamFromConsumer()
     hr = m_consumer->GetString("yuvMatrix", &str, &len);
     if (FAILED(hr)) {
         XY_LOG_ERROR("Failed to get yuvMatrix from consumer.");
-        return E_UNEXPECTED;
     }
     CStringW consumer_yuv_matrix(str, len);
     LocalFree(str);
