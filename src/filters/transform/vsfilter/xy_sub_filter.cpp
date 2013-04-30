@@ -2186,7 +2186,7 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
     }
     else
     {
-        XY_LOG_ERROR("Unexpected parameter. "<<XY_LOG_VAR_2_STR(pGraph));
+        XY_LOG_ERROR("Unexpected parameter. "<<"pGraph:"<<(void*)pGraph);
         hr = E_INVALIDARG;
     }
     return hr;

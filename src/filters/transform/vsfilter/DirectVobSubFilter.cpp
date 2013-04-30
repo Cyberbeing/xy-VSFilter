@@ -357,7 +357,7 @@ int CDirectVobSubFilter::GetPinCount()
 
 HRESULT CDirectVobSubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
 {
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(pGraph)<<XY_LOG_VAR_2_STR(pName));
+    XY_LOG_INFO("pGraph:"<<(void*)pGraph<<" pName:"<<(pName?pName:L"NULL"));
 	if(pGraph)
 	{
 		AFX_MANAGE_STATE(AfxGetStaticModuleState());
