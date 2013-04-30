@@ -96,6 +96,7 @@ XySubFilter::~XySubFilter()
 
     m_sub_provider = NULL;
     ::DeleteSystray(&m_hSystrayThread, &m_tbid);
+    _ASSERTE(_CrtCheckMemory());
 }
 
 STDMETHODIMP XySubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
@@ -195,11 +196,9 @@ STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
             }
         }
 
-        ISubRenderProvider *provider=NULL;
-        this->QueryInterface(__uuidof(ISubRenderProvider), (void**)&provider );
         LPWSTR test = NULL;
         int chars = 0;
-        HRESULT test_hr = provider->GetString("yuvMatrix", &test, &chars);
+        HRESULT test_hr = this->GetString("yuvMatrix", &test, &chars);
         ASSERT(SUCCEEDED(test_hr));
         CStringW new_name;
         if (consumer_name) {
