@@ -21,6 +21,8 @@
 
 #define ENABLE_XY_LOG_ALLOCATOR 0
 
+#define ENABLE_XY_LOG_REG_CONFIG 0
+
 //#define SUBTITLE_FRAME_DUMP_FILE "C:/sub_"
 
 //#define SPD_DUMP_FILE "C:/spd"

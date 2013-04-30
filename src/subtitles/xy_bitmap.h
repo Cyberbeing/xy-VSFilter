@@ -78,6 +78,7 @@ public:
     HRESULT GetOutputRect(RECT *output_rect);
     HRESULT GetClipRect(RECT *clip_rect);
     HRESULT GetColorSpace(XyColorSpace *color_space);
+    bool GetVsfilterCompactRgbCorrection();
 
     XySubRenderFrame* NewXySubRenderFrame(UINT bitmap_count);
     XyBitmap* CreateBitmap(const RECT& target_rect);

@@ -29,6 +29,13 @@
 #include "..\..\..\..\include\moreuuids.h"
 #include "xy_sub_filter.h"
 
+
+#if ENABLE_XY_LOG_REG_CONFIG
+#  define TRACE_REG_CONFIG(msg) XY_LOG_TRACE(msg)
+#else
+#  define TRACE_REG_CONFIG(msg)
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 // CVSFilterApp 
 
@@ -82,6 +89,20 @@ HINSTANCE CVSFilterApp::LoadAppLangResourceDLL()
     fn = fn.Left(fn.ReverseFind('.')+1);
     fn = fn + _T("lang");
     return ::LoadLibrary(fn);
+}
+
+UINT CVSFilterApp::GetProfileInt( LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault )
+{
+    UINT rv = __super::GetProfileInt(lpszSection, lpszEntry, nDefault);
+    TRACE_REG_CONFIG(lpszSection<<" "<<lpszEntry<<" "<<rv);
+    return rv;
+}
+
+CString CVSFilterApp::GetProfileString( LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault /*= NULL*/ )
+{
+    CString rv = __super::GetProfileString(lpszSection, lpszEntry, lpszDefault);
+    TRACE_REG_CONFIG(lpszSection<<" "<<lpszEntry<<" '"<<rv.GetString()<<"'");
+    return rv;
 }
 
 CVSFilterApp theApp;

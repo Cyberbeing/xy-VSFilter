@@ -495,3 +495,8 @@ DWORD XySubRenderFrameCreater::TransColor( DWORD argb )
     return argb;
 }
 
+bool XySubRenderFrameCreater::GetVsfilterCompactRgbCorrection()
+{
+    return m_vsfilter_compact_rgb_correction;
+}
+
