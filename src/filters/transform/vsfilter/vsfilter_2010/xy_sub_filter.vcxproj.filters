@@ -74,6 +74,9 @@
     <ClCompile Include="..\SubtitleInputPin2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\xy_sub_filter_dll.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\csri.h">

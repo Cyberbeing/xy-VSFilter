@@ -167,6 +167,7 @@
     <ClCompile Include="..\csriapi.cpp" />
     <ClCompile Include="..\DirectVobSub.cpp" />
     <ClCompile Include="..\DirectVobSubFilter.cpp" />
+    <ClCompile Include="..\DirectVobSubFilterDll.cpp" />
     <ClCompile Include="..\DirectVobSubPropPage.cpp" />
     <ClCompile Include="..\once_logger.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
