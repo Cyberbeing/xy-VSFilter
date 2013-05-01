@@ -46,11 +46,12 @@ CVSFilterApp::CVSFilterApp()
 {
     _CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
 #if ENABLE_XY_LOG
-    LPTSTR  strDLLPath = new TCHAR[_MAX_PATH];
+    LPTSTR  strDLLPath = DEBUG_NEW TCHAR[_MAX_PATH];
     ::GetModuleFileName( reinterpret_cast<HINSTANCE>(&__ImageBase), strDLLPath, _MAX_PATH);
     CString dllPath = strDLLPath;
     dllPath += ".properties";
     xy_logger::doConfigure( dllPath.GetString() );
+    delete [] strDLLPath;
 #endif
 }
 
