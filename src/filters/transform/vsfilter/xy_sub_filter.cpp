@@ -44,7 +44,6 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     , SubRenderOptionsImpl(::options, this)
     , m_curSubStream(NULL)
     , m_not_first_pause(false)
-    , m_consumer(NULL)
     , m_hSystrayThread(0)
     , m_consumer_options_read(false)
     , m_context_id(0)
@@ -1143,10 +1142,33 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
 STDMETHODIMP XySubFilter::Disconnect( void )
 {
     XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
-    CAutoLock cAutoLock(&m_csSubLock);
-    ASSERT(m_consumer);
-    m_consumer = NULL;
-    return S_OK;
+    static bool entered = false;
+    //If the consumer also calls provider->Disconnect inside its Disconnect implementation, 
+    //we won't fall into a dead loop.
+    if (!entered)
+    {
+        entered = true;
+        this->AddRef();//so that outself won't be destroy because m_consumer->Disconnect
+        CAutoLock cAutoLock(&m_csSubLock);
+        ASSERT(m_consumer);
+        if (m_consumer)
+        {
+            HRESULT hr = m_consumer->Disconnect();
+            if (FAILED(hr))
+            {
+                XY_LOG_WARN("Failed to disconnect with consumer!");
+            }
+            m_consumer = NULL;
+        }
+        else
+        {
+            XY_LOG_ERROR("No consumer connected. It is expected to be called by a consumer!");
+        }
+        this->Release();
+        entered = false;
+        return S_OK;
+    }
+    return S_FALSE;
 }
 
 //
