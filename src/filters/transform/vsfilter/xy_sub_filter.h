@@ -155,7 +155,7 @@ private:
     SystrayIconData m_tbid;
     HANDLE m_hSystrayThread;
 
-    ISubRenderConsumer *m_consumer;
+    CComPtr<ISubRenderConsumer> m_consumer;
     ULONGLONG m_context_id;
 
     REFERENCE_TIME m_last_requested;
