@@ -723,7 +723,7 @@ static bool OpenSubViewer(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
 
 static STSStyle* GetMicroDVDStyle(CString str, int CharSet)
 {
-    STSStyle* ret = new STSStyle();
+    STSStyle* ret = DEBUG_NEW STSStyle();
     if(!ret) return(NULL);
 
     for(int i = 0, len = str.GetLength(); i < len; i++)
@@ -1548,7 +1548,7 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
         }
         else if(entry == L"style")
         {
-            STSStyle* style = new STSStyle;
+            STSStyle* style = DEBUG_NEW STSStyle;
             if(!style) return(false);
 
             try
@@ -1703,7 +1703,7 @@ static bool OpenXombieSub(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
         }
         else if(entry == L"style")
         {
-            STSStyle* style = new STSStyle;
+            STSStyle* style = DEBUG_NEW STSStyle;
             if(!style) return(false);
 
             try
@@ -2006,7 +2006,7 @@ bool CSimpleTextSubtitle::CopyStyles(const CSTSStyleMap& styles, bool fAppend)
         STSStyle* val;
         styles.GetNextAssoc(pos, key, val);
 
-        STSStyle* s = new STSStyle;
+        STSStyle* s = DEBUG_NEW STSStyle;
         if(!s) return(false);
 
         *s = *val;
@@ -2221,7 +2221,7 @@ STSStyle* CSimpleTextSubtitle::CreateDefaultStyle(int CharSet)
 
     if(!m_styles.Lookup(g_default_style, ret))
     {
-        STSStyle* style = new STSStyle();
+        STSStyle* style = DEBUG_NEW STSStyle();
         style->charSet = CharSet;
         AddStyle(g_default_style, style);
         m_styles.Lookup(g_default_style, ret);

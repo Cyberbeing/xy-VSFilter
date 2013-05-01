@@ -69,7 +69,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     m_video_yuv_matrix_decided_by_sub = ColorConvTable::NONE;
     m_video_yuv_range_decided_by_sub = ColorConvTable::RANGE_NONE;
 
-    m_pSubtitleInputPin.Add(new SubtitleInputPin2(this, m_pLock, &m_csSubLock, phr));
+    m_pSubtitleInputPin.Add(DEBUG_NEW SubtitleInputPin2(this, m_pLock, &m_csSubLock, phr));
     ASSERT(SUCCEEDED(*phr));
     if(phr && FAILED(*phr)) return;
 
@@ -1117,7 +1117,7 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
         }
         if (sub_render_frame)
         {
-            sub_render_frame = new XySubRenderFrameWrapper2(sub_render_frame, m_context_id);
+            sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper2(sub_render_frame, m_context_id);
 #ifdef SUBTITLE_FRAME_DUMP_FILE
             static int s_count=0;
             if (s_count<10 && s_count%2==0) {
@@ -1373,7 +1373,7 @@ bool XySubFilter::Open()
         {
             //            CAutoTiming t(TEXT("CRenderedTextSubtitle::Open"), 0);
             XY_AUTO_TIMING(TEXT("CRenderedTextSubtitle::Open"));
-            CAutoPtr<CRenderedTextSubtitle> pRTS(new CRenderedTextSubtitle(&m_csSubLock));
+            CAutoPtr<CRenderedTextSubtitle> pRTS(DEBUG_NEW CRenderedTextSubtitle(&m_csSubLock));
             if(pRTS && pRTS->Open(ret[i].full_file_name, DEFAULT_CHARSET) && pRTS->GetStreamCount() > 0)
             {
                 pSubStream = pRTS.Detach();
@@ -1384,7 +1384,7 @@ bool XySubFilter::Open()
         if(!pSubStream)
         {
             CAutoTiming t(TEXT("CVobSubFile::Open"), 0);
-            CAutoPtr<CVobSubFile> pVSF(new CVobSubFile(&m_csSubLock));
+            CAutoPtr<CVobSubFile> pVSF(DEBUG_NEW CVobSubFile(&m_csSubLock));
             if(pVSF && pVSF->Open(ret[i].full_file_name) && pVSF->GetStreamCount() > 0)
             {
                 pSubStream = pVSF.Detach();
@@ -1395,7 +1395,7 @@ bool XySubFilter::Open()
         if(!pSubStream)
         {
             CAutoTiming t(TEXT("ssf::CRenderer::Open"), 0);
-            CAutoPtr<ssf::CRenderer> pSSF(new ssf::CRenderer(&m_csSubLock));
+            CAutoPtr<ssf::CRenderer> pSSF(DEBUG_NEW ssf::CRenderer(&m_csSubLock));
             if(pSSF && pSSF->Open(ret[i].full_file_name) && pSSF->GetStreamCount() > 0)
             {
                 pSubStream = pSSF.Detach();
@@ -1658,11 +1658,11 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
     }
     else if (CComQIPtr<ISubPicProviderEx2>(pSubStream))
     {
-        m_sub_provider = new XySubRenderProviderWrapper2(CComQIPtr<ISubPicProviderEx2>(pSubStream), NULL);
+        m_sub_provider = DEBUG_NEW XySubRenderProviderWrapper2(CComQIPtr<ISubPicProviderEx2>(pSubStream), NULL);
     }
     else if (CComQIPtr<ISubPicProviderEx>(pSubStream))
     {
-        m_sub_provider = new XySubRenderProviderWrapper(CComQIPtr<ISubPicProviderEx>(pSubStream), NULL);
+        m_sub_provider = DEBUG_NEW XySubRenderProviderWrapper(CComQIPtr<ISubPicProviderEx>(pSubStream), NULL);
     }
     else
     {
@@ -1958,7 +1958,7 @@ void XySubFilter::AddSubStream(ISubStream* pSubStream)
     if(len == 0)
     {
         HRESULT hr = S_OK;
-        m_pSubtitleInputPin.Add(new SubtitleInputPin2(this, m_pLock, &m_csSubLock, &hr));
+        m_pSubtitleInputPin.Add(DEBUG_NEW SubtitleInputPin2(this, m_pLock, &m_csSubLock, &hr));
     }
     UpdateSubtitle(false);
 }

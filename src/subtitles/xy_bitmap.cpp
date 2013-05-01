@@ -42,7 +42,7 @@ XyBitmap::~XyBitmap()
 
 XyBitmap * XyBitmap::CreateBitmap( const CRect& target_rect, MemLayout layout )
 {
-    XyBitmap *result = new XyBitmap();
+    XyBitmap *result = DEBUG_NEW XyBitmap();
     if (result==NULL)
     {
         ASSERT(0);
@@ -458,7 +458,7 @@ HRESULT XySubRenderFrameCreater::GetColorSpace( XyColorSpace *color_space )
 
 XySubRenderFrame* XySubRenderFrameCreater::NewXySubRenderFrame( UINT bitmap_count )
 {
-    XySubRenderFrame *result = new XySubRenderFrame();
+    XySubRenderFrame *result = DEBUG_NEW XySubRenderFrame();
     ASSERT(result);
     result->m_output_rect = m_output_rect;
     result->m_clip_rect = m_clip_rect;

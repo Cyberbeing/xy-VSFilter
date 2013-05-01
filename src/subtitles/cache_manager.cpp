@@ -473,7 +473,7 @@ OverlayMruCache* CacheManager::GetOverlayMruCache()
 {
     if(s_caches.s_overlay_mru_cache==NULL)
     {
-        s_caches.s_overlay_mru_cache = new OverlayMruCache(OVERLAY_CACHE_ITEM_NUM);
+        s_caches.s_overlay_mru_cache = DEBUG_NEW OverlayMruCache(OVERLAY_CACHE_ITEM_NUM);
     }
     return s_caches.s_overlay_mru_cache;
 }
@@ -482,7 +482,7 @@ PathDataMruCache* CacheManager::GetPathDataMruCache()
 {
     if (s_caches.s_path_data_mru_cache==NULL)
     {
-        s_caches.s_path_data_mru_cache = new PathDataMruCache(PATH_CACHE_ITEM_NUM);
+        s_caches.s_path_data_mru_cache = DEBUG_NEW PathDataMruCache(PATH_CACHE_ITEM_NUM);
     }
     return s_caches.s_path_data_mru_cache;
 }
@@ -491,7 +491,7 @@ OverlayNoBlurMruCache* CacheManager::GetOverlayNoBlurMruCache()
 {
     if(s_caches.s_overlay_no_blur_mru_cache==NULL)
     {
-        s_caches.s_overlay_no_blur_mru_cache = new OverlayNoBlurMruCache(OVERLAY_NO_BLUR_CACHE_ITEM_NUM);
+        s_caches.s_overlay_no_blur_mru_cache = DEBUG_NEW OverlayNoBlurMruCache(OVERLAY_NO_BLUR_CACHE_ITEM_NUM);
     }
     return s_caches.s_overlay_no_blur_mru_cache;
 }
@@ -500,7 +500,7 @@ ScanLineData2MruCache* CacheManager::GetScanLineData2MruCache()
 {
     if(s_caches.s_scan_line_data_2_mru_cache==NULL)
     {
-        s_caches.s_scan_line_data_2_mru_cache = new ScanLineData2MruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
+        s_caches.s_scan_line_data_2_mru_cache = DEBUG_NEW ScanLineData2MruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
     }
     return s_caches.s_scan_line_data_2_mru_cache;
 }
@@ -509,7 +509,7 @@ OverlayMruCache* CacheManager::GetSubpixelVarianceCache()
 {
     if(s_caches.s_subpixel_variance_cache==NULL)
     {
-        s_caches.s_subpixel_variance_cache = new OverlayMruCache(SUBPIXEL_VARIANCE_CACHE_ITEM_NUM);
+        s_caches.s_subpixel_variance_cache = DEBUG_NEW OverlayMruCache(SUBPIXEL_VARIANCE_CACHE_ITEM_NUM);
     }
     return s_caches.s_subpixel_variance_cache;    
 }
@@ -518,7 +518,7 @@ ScanLineDataMruCache* CacheManager::GetScanLineDataMruCache()
 {
     if(s_caches.s_scan_line_data_mru_cache==NULL)
     {
-        s_caches.s_scan_line_data_mru_cache = new ScanLineDataMruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
+        s_caches.s_scan_line_data_mru_cache = DEBUG_NEW ScanLineDataMruCache(SCAN_LINE_DATA_CACHE_ITEM_NUM);
     }
     return s_caches.s_scan_line_data_mru_cache;
 }
@@ -527,7 +527,7 @@ OverlayNoOffsetMruCache* CacheManager::GetOverlayNoOffsetMruCache()
 {
     if(s_caches.s_overlay_no_offset_mru_cache==NULL)
     {
-        s_caches.s_overlay_no_offset_mru_cache = new OverlayNoOffsetMruCache(OVERLAY_NO_BLUR_CACHE_ITEM_NUM);
+        s_caches.s_overlay_no_offset_mru_cache = DEBUG_NEW OverlayNoOffsetMruCache(OVERLAY_NO_BLUR_CACHE_ITEM_NUM);
     }
     return s_caches.s_overlay_no_offset_mru_cache;    
 }
@@ -536,7 +536,7 @@ AssTagListMruCache* CacheManager::GetAssTagListMruCache()
 {
     if(s_caches.s_ass_tag_list_cache==NULL)
     {
-        s_caches.s_ass_tag_list_cache = new AssTagListMruCache(ASS_TAG_LIST_CACHE_ITEM_NUM);
+        s_caches.s_ass_tag_list_cache = DEBUG_NEW AssTagListMruCache(ASS_TAG_LIST_CACHE_ITEM_NUM);
     }
     return s_caches.s_ass_tag_list_cache;  
 }
@@ -545,7 +545,7 @@ TextInfoMruCache* CacheManager::GetTextInfoCache()
 {
     if(s_caches.s_text_info_cache==NULL)
     {
-        s_caches.s_text_info_cache = new TextInfoMruCache(TEXT_INFO_CACHE_ITEM_NUM);
+        s_caches.s_text_info_cache = DEBUG_NEW TextInfoMruCache(TEXT_INFO_CACHE_ITEM_NUM);
     }
     return s_caches.s_text_info_cache;
 }
@@ -554,7 +554,7 @@ ClipperAlphaMaskMruCache* CacheManager::GetClipperAlphaMaskMruCache()
 {
     if(s_caches.s_clipper_alpha_mask_cache==NULL)
     {
-        s_caches.s_clipper_alpha_mask_cache = new ClipperAlphaMaskMruCache(CLIPPER_MRU_CACHE_ITEM_NUM);
+        s_caches.s_clipper_alpha_mask_cache = DEBUG_NEW ClipperAlphaMaskMruCache(CLIPPER_MRU_CACHE_ITEM_NUM);
     }
     return s_caches.s_clipper_alpha_mask_cache;
 }
@@ -563,7 +563,7 @@ BitmapMruCache* CacheManager::GetBitmapMruCache()
 {
     if (s_caches.s_bitmap_cache==NULL)
     {
-        s_caches.s_bitmap_cache = new BitmapMruCache(BITMAP_MRU_CACHE_ITEM_NUM);
+        s_caches.s_bitmap_cache = DEBUG_NEW BitmapMruCache(BITMAP_MRU_CACHE_ITEM_NUM);
     }
     return s_caches.s_bitmap_cache;
 }

@@ -62,7 +62,7 @@ CRectCoor2 DrawItem::Draw( XyBitmap* bitmap, DrawItem& draw_item, const CRectCoo
 DrawItem* DrawItem::CreateDrawItem( const SharedPtrOverlayPaintMachine& overlay_paint_machine, const CRect& clipRect,
     const SharedPtrCClipperPaintMachine &clipper, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
 {
-    DrawItem* result = new DrawItem();
+    DrawItem* result = DEBUG_NEW DrawItem();
     result->overlay_paint_machine = overlay_paint_machine;
     result->clip_rect = clipRect;
     result->clipper = clipper;
@@ -73,7 +73,7 @@ DrawItem* DrawItem::CreateDrawItem( const SharedPtrOverlayPaintMachine& overlay_
     result->fBody = fBody;
     result->fBorder = fBorder;
 
-    result->m_key.reset( new DrawItemHashKey(*result) );
+    result->m_key.reset( DEBUG_NEW DrawItemHashKey(*result) );
     result->m_key->UpdateHashValue();
 
     return result;
@@ -261,7 +261,7 @@ void CreateDrawItemExTree( CompositeDrawItemListList& input,
             comp_draw_item_ex.rect_id_list.AddHead(-1);//dummy head
 
             XyRectEx &rect_ex = out_rect_ex_list->GetAt(out_rect_ex_list->AddTail());
-            rect_ex.item_ex_list.reset(new PCompositeDrawItemExList());
+            rect_ex.item_ex_list.reset(DEBUG_NEW PCompositeDrawItemExList());
             rect_ex.item_ex_list->AddTail( &comp_draw_item_ex);
             rect_ex.SetRect( CompositeDrawItem::GetDirtyRect(comp_draw_item) );
         }
@@ -314,7 +314,7 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
             Segment& seg = tempSegments[count];
             seg.AddTail();
             seg.GetTail().SetRect(INT_MIN, prev, INT_MIN, vertical_breakpoints[ptr]);
-            seg.GetTail().item_ex_list.reset(new PCompositeDrawItemExList());
+            seg.GetTail().item_ex_list.reset(DEBUG_NEW PCompositeDrawItemExList());
 
             prev = vertical_breakpoints[ptr];
             count++;
@@ -352,7 +352,7 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
                 cur_line.AddTail();
                 XyRectEx & new_item = cur_line.GetTail();
                 new_item.SetRect( rect.left, item.top, rect.right, item.bottom );
-                new_item.item_ex_list.reset(new PCompositeDrawItemExList());
+                new_item.item_ex_list.reset(DEBUG_NEW PCompositeDrawItemExList());
                 new_item.item_ex_list->AddTailList( rect.item_ex_list.get() );
             }
             else
@@ -426,7 +426,7 @@ void GroupedDrawItems::Draw( SharedPtrXyBitmap *bitmap, int *bitmap_identity_num
 {
     ASSERT(bitmap && bitmap_identity_num);
     BitmapMruCache *bitmap_cache = CacheManager::GetBitmapMruCache();
-    GroupedDrawItemsHashKey *key = new GroupedDrawItemsHashKey();
+    GroupedDrawItemsHashKey *key = DEBUG_NEW GroupedDrawItemsHashKey();
     CreateHashKey(key);
     XyFwGroupedDrawItemsHashKey::IdType key_id = XyFwGroupedDrawItemsHashKey(key).GetId();
     POSITION pos = bitmap_cache->Lookup( key_id );
@@ -460,7 +460,7 @@ void GroupedDrawItems::CreateHashKey(GroupedDrawItemsHashKey *key)
 {
     ASSERT(key);
     key->m_clip_rect = clip_rect;
-    GroupedDrawItemsHashKey::Keys *inner_key = new GroupedDrawItemsHashKey::Keys();
+    GroupedDrawItemsHashKey::Keys *inner_key = DEBUG_NEW GroupedDrawItemsHashKey::Keys();
     ASSERT(inner_key);
     key->m_key.reset(inner_key);
     inner_key->SetCount(draw_item_list.GetCount());
