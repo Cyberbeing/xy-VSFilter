@@ -88,7 +88,7 @@ STDMETHODIMP_(VOID) CSubPicProviderExWrapper::GetStartStop( POSITION pos, double
 
 STDMETHODIMP CSubPicProviderExWrapper::RenderEx( SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList )
 {
-    CRect cRect = DEBUG_NEW CRect(0,0,0,0);
+    CRect cRect;
     HRESULT hr = Render(spd, rt, fps, cRect);
     if(SUCCEEDED(hr))
         rectList.AddTail(cRect);
