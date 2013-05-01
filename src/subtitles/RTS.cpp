@@ -129,7 +129,7 @@ CMyFont::CMyFont(const STSStyleBase& style)
 CWord::CWord( const FwSTSStyle& style, const CStringW& str, int ktype, int kstart, int kend
     , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/
     , bool round_to_whole_pixel_after_scale_to_target/*=false*/)
-    : m_style(style), m_str(new CStringW(str))
+    : m_style(style), m_str(DEBUG_NEW CStringW(str))
     , m_width(0), m_ascent(0), m_descent(0)
     , m_ktype(ktype), m_kstart(kstart), m_kend(kend)
     , m_fLineBreak(false), m_fWhiteSpaceChar(false)
@@ -172,7 +172,7 @@ bool CWord::Append(const SharedPtrCWord& w)
             || m_fLineBreak || w->m_fLineBreak
             || w->m_kstart != w->m_kend || m_ktype != w->m_ktype) return(false);
     m_fWhiteSpaceChar = m_fWhiteSpaceChar && w->m_fWhiteSpaceChar;
-    CStringW *str = new CStringW();//Fix me: anyway to avoid this flyweight update?
+    CStringW *str = DEBUG_NEW CStringW();//Fix me: anyway to avoid this flyweight update?
     ASSERT(str);
     *str = m_str.Get();
     *str += w->m_str.Get();
@@ -201,7 +201,7 @@ void CWord::PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const O
 {
     if( Rasterizer::IsItReallyBlur(m_style.get().fBlur, m_style.get().fGaussianBlur) )
     {
-        overlay->reset(new Overlay());
+        overlay->reset(DEBUG_NEW Overlay());
         if(!Rasterizer::Blur(*raterize_result, m_style.get().fBlur, m_style.get().fGaussianBlur, 
             m_target_scale_x, m_target_scale_y, *overlay))
         {
@@ -218,7 +218,7 @@ void CWord::PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const O
 
 bool CWord::PaintFromScanLineData2(const CPointCoor2& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay)
 {
-    SharedPtrOverlay raterize_result(new Overlay());
+    SharedPtrOverlay raterize_result(DEBUG_NEW Overlay());
     if(!Rasterizer::Rasterize(scan_line_data2, psub.x, psub.y, raterize_result)) 
     {     
         return false;
@@ -233,7 +233,7 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
 {
     bool result = false;
 
-    PathData *path_data2 = new PathData(path_data);//fix me: this copy operation can be saved if no transform is needed
+    PathData *path_data2 = DEBUG_NEW PathData(path_data);//fix me: this copy operation can be saved if no transform is needed
     SharedPtrConstPathData shared_ptr_path_data2(path_data2);
     bool need_transform = NeedTransform();
     if(need_transform)
@@ -265,7 +265,7 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
     }
     if (pos)
     {
-        SharedPtrOverlay raterize_result( new Overlay() );
+        SharedPtrOverlay raterize_result( DEBUG_NEW Overlay() );
         *raterize_result = *overlay_cache->GetAt(pos);
         raterize_result->mOffsetX = left_top.x - psub.x - ((wide_border+7)&~7);
         raterize_result->mOffsetY = left_top.y - psub.y - ((wide_border+7)&~7);
@@ -285,7 +285,7 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
         }
         else
         {
-            ScanLineData *tmp = new ScanLineData();
+            ScanLineData *tmp = DEBUG_NEW ScanLineData();
             scan_line_data.reset(tmp);
             if(!tmp->ScanConvert(*path_data2, size))
             {
@@ -293,7 +293,7 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
             }
             scan_line_data_cache->UpdateCache(overlay_no_offset_key, scan_line_data);
         }
-        ScanLineData2 *tmp = new ScanLineData2(left_top, scan_line_data);
+        ScanLineData2 *tmp = DEBUG_NEW ScanLineData2(left_top, scan_line_data);
         SharedPtrScanLineData2 scan_line_data2( tmp );
         if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))
         {
@@ -324,7 +324,7 @@ bool CWord::PaintFromRawData( const CPointCoor2& psub, const CPointCoor2& trans_
 {
     PathDataMruCache* path_data_cache = CacheManager::GetPathDataMruCache();
 
-    PathData *tmp=new PathData();
+    PathData *tmp=DEBUG_NEW PathData();
     SharedPtrPathData path_data(tmp);
     if(!CreatePath(tmp))
     {
@@ -815,7 +815,7 @@ bool CWord::CreateOpaqueBox()
                m_width+w, -h,
                m_width+w, m_ascent+m_descent+h,
                -w, m_ascent+m_descent+h);
-    m_pOpaqueBox.reset( new CPolygon(FwSTSStyle(style), str, 0, 0, 0, 1.0/8, 1.0/8, 0, m_target_scale_x, m_target_scale_y) );
+    m_pOpaqueBox.reset( DEBUG_NEW CPolygon(FwSTSStyle(style), str, 0, 0, 0, 1.0/8, 1.0/8, 0, m_target_scale_x, m_target_scale_y) );
     return(!!m_pOpaqueBox);
 }
 
@@ -857,7 +857,7 @@ CText::CText( const FwSTSStyle& style, const CStringW& str, int ktype, int kstar
     POSITION pos = text_info_cache->Lookup(text_info_key);
     if(pos==NULL)
     {
-        TextInfo* tmp=new TextInfo();
+        TextInfo* tmp=DEBUG_NEW TextInfo();
         GetTextInfo(tmp, m_style, m_str.Get());
         text_info.reset(tmp);
         text_info_cache->UpdateCache(text_info_key, text_info);
@@ -879,7 +879,7 @@ CText::CText( const CText& src ):CWord(src)
 
 SharedPtrCWord CText::Copy()
 {
-    SharedPtrCWord result(new CText(*this));
+    SharedPtrCWord result(DEBUG_NEW CText(*this));
 	return result;
 }
 
@@ -1187,7 +1187,7 @@ bool CPolygon::CreatePath(PathData* path_data)
 
 CClipper::CClipper(CStringW str, CSizeCoor2 size, double scalex, double scaley, bool inverse
     , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/)
-    : m_polygon( new CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0, target_scale_x, target_scale_y, true) )
+    : m_polygon( DEBUG_NEW CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0, target_scale_x, target_scale_y, true) )
     , m_size(size), m_inverse(inverse)
     , m_effectType(-1), m_painted(false)
 {    
@@ -1208,7 +1208,7 @@ GrayImage2* CClipper::PaintSimpleClipper()
     CWordPaintMachine::PaintBody( m_polygon, CPoint(0, 0), CPoint(0, 0), &overlay );
     int w = overlay->mOverlayWidth, h = overlay->mOverlayHeight;
     int x = (overlay->mOffsetX+4)>>3, y = (overlay->mOffsetY+4)>>3;
-    result = new GrayImage2();
+    result = DEBUG_NEW GrayImage2();
     if( !result )
         return result;
     result->data = overlay->mBody;
@@ -1236,7 +1236,7 @@ GrayImage2* CClipper::PaintBaseClipper()
     if(y+h > m_size.cy) h = m_size.cy-y;
     if(w <= 0 || h <= 0) return result;
 
-    result = new GrayImage2();
+    result = DEBUG_NEW GrayImage2();
     if( !result )
         return result;
     result->data.reset( reinterpret_cast<BYTE*>(xy_malloc(m_size.cx*m_size.cy)), xy_free );
@@ -1674,7 +1674,7 @@ int CSubtitle::GetWrapWidth(POSITION pos, int maxwidth)
 CLine* CSubtitle::GetNextLine(POSITION& pos, int maxwidth)
 {
     if(pos == NULL) return(NULL);
-    CLine* ret = new CLine();
+    CLine* ret = DEBUG_NEW CLine();
     if(!ret) return(NULL);
     ret->m_width = ret->m_ascent = ret->m_descent = ret->m_borderX = ret->m_borderY = 0;
     maxwidth = GetWrapWidth(pos, maxwidth);
@@ -1735,7 +1735,7 @@ void CSubtitle::CreateClippers( CSize size1, const CSizeCoor2& size_scale_to )
         {
             CStringW str;
             str.Format(L"m %d %d l %d %d %d %d %d %d", 0, 0, w, 0, w, h, 0, h);
-            m_pClipper.reset( new CClipper(str, size_scale_to, 1, 1, false, m_target_scale_x, m_target_scale_y) );
+            m_pClipper.reset( DEBUG_NEW CClipper(str, size_scale_to, 1, 1, false, m_target_scale_x, m_target_scale_y) );
             if(!m_pClipper) return;
         }
         m_pClipper->SetEffect( *m_effects[EF_BANNER], EF_BANNER );
@@ -1748,7 +1748,7 @@ void CSubtitle::CreateClippers( CSize size1, const CSizeCoor2& size_scale_to )
         {
             CStringW str;
             str.Format(L"m %d %d l %d %d %d %d %d %d", 0, 0, w, 0, w, h, 0, h);
-            m_pClipper.reset( new CClipper(str, size_scale_to, 1, 1, false, m_target_scale_x, m_target_scale_y) ); 
+            m_pClipper.reset( DEBUG_NEW CClipper(str, size_scale_to, 1, 1, false, m_target_scale_x, m_target_scale_y) ); 
             if(!m_pClipper) return;
         }
         m_pClipper->SetEffect(*m_effects[EF_SCROLL], EF_SCROLL);
@@ -2071,7 +2071,7 @@ void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
     {
         int delay, lefttoright = 0, fadeawaywidth = 0;
         if(swscanf(s, L"%d;%d;%d", &delay, &lefttoright, &fadeawaywidth) < 1) return;
-        Effect* e = new Effect;
+        Effect* e = DEBUG_NEW Effect;
         if(!e) return;
         sub->m_effects[e->type = EF_BANNER] = e;
         e->param[0] = (int)(max(1.0*delay/sub->m_scalex, 1));
@@ -2084,7 +2084,7 @@ void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
         int top, bottom, delay, fadeawayheight = 0;
         if(swscanf(s, L"%d;%d;%d;%d", &top, &bottom, &delay, &fadeawayheight) < 3) return;
         if(top > bottom) {int tmp = top; top = bottom; bottom = tmp;}
-        Effect* e = new Effect;
+        Effect* e = DEBUG_NEW Effect;
         if(!e) return;
         sub->m_effects[e->type = EF_SCROLL] = e;
         e->param[0] = (int)(sub->m_scaley*top*8);
@@ -2108,7 +2108,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
             continue;
         if(ite < j)
         {
-            if(PCWord tmp_ptr = new CText(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend
+            if(PCWord tmp_ptr = DEBUG_NEW CText(style, str.Mid(ite, j-ite), m_ktype, m_kstart, m_kend
                 , m_target_scale_x, m_target_scale_y))
             {
                 SharedPtrCWord w(tmp_ptr);
@@ -2122,7 +2122,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
         }
         if(c == L'\n')
         {
-            if(PCWord tmp_ptr = new CText(style, CStringW(), m_ktype, m_kstart, m_kend
+            if(PCWord tmp_ptr = DEBUG_NEW CText(style, CStringW(), m_ktype, m_kstart, m_kend
                 , m_target_scale_x, m_target_scale_y))
             {
                 SharedPtrCWord w(tmp_ptr);
@@ -2136,7 +2136,7 @@ void CRenderedTextSubtitle::ParseString(CSubtitle* sub, CStringW str, const FwST
         }
         else if(c == L' ')
         {
-            if(PCWord tmp_ptr = new CText(style, CStringW(c), m_ktype, m_kstart, m_kend
+            if(PCWord tmp_ptr = DEBUG_NEW CText(style, CStringW(c), m_ktype, m_kstart, m_kend
                 , m_target_scale_x, m_target_scale_y))
             {
                 SharedPtrCWord w(tmp_ptr);
@@ -2157,7 +2157,7 @@ void CRenderedTextSubtitle::ParsePolygon(CSubtitle* sub, const CStringW& str, co
 {
     if(!sub || !str.GetLength() || !m_nPolygon) return;
 
-    if(PCWord tmp_ptr = new CPolygon(style, str, m_ktype, m_kstart, m_kend, sub->m_scalex/(1<<(m_nPolygon-1))
+    if(PCWord tmp_ptr = DEBUG_NEW CPolygon(style, str, m_ktype, m_kstart, m_kend, sub->m_scalex/(1<<(m_nPolygon-1))
         , sub->m_scaley/(1<<(m_nPolygon-1)), m_polygonBaselineOffset
         , m_target_scale_x, m_target_scale_y))
     {
@@ -2457,14 +2457,14 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 bool invert = (cmd_type == CMD_iclip);
                 if(params.GetCount() == 1 && !sub->m_pClipper)
                 {
-                    sub->m_pClipper.reset( new CClipper(params[0],
+                    sub->m_pClipper.reset( DEBUG_NEW CClipper(params[0],
                         CSize(m_video_rect.Width()>>3, m_video_rect.Height()>>3),
                         sub->m_scalex, sub->m_scaley, invert, m_target_scale_x, m_target_scale_y) );
                 }
                 else if(params.GetCount() == 2 && !sub->m_pClipper)
                 {
                     int scale = max(wcstol(p, NULL, 10), 1);
-                    sub->m_pClipper.reset( new CClipper(params[1],
+                    sub->m_pClipper.reset( DEBUG_NEW CClipper(params[1],
                         CSize(m_video_rect.Width()>>3, m_video_rect.Height()>>3),
                         sub->m_scalex/(1<<(scale-1)), sub->m_scaley/(1<<(scale-1)), invert, m_target_scale_x, m_target_scale_y) );
                 }
@@ -2501,7 +2501,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 sub->m_fAnimated2 = true;
                 if(params.GetCount() == 7 && !sub->m_effects[EF_FADE])// {\fade(a1=param[0], a2=param[1], a3=param[2], t1=t[0], t2=t[1], t3=t[2], t4=t[3])
                 {
-                    if(Effect* e = new Effect)
+                    if(Effect* e = DEBUG_NEW Effect)
                     {
                         for(int i = 0; i < 3; i++)
                             e->param[i] = wcstol(params[i], NULL, 10);
@@ -2512,7 +2512,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 }
                 else if(params.GetCount() == 2 && !sub->m_effects[EF_FADE]) // {\fad(t1=t[1], t2=t[2])
                 {
-                    if(Effect* e = new Effect)
+                    if(Effect* e = DEBUG_NEW Effect)
                     {
                         e->param[0] = e->param[2] = 0xff;
                         e->param[1] = 0x00;
@@ -2678,7 +2678,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
             {
                 if((params.GetCount() == 4 || params.GetCount() == 6) && !sub->m_effects[EF_MOVE])
                 {
-                    if(Effect* e = new Effect)
+                    if(Effect* e = DEBUG_NEW Effect)
                     {
                         e->param[0] = (int)(sub->m_scalex*wcstod(params[0], NULL)*8);
                         e->param[1] = (int)(sub->m_scaley*wcstod(params[1], NULL)*8);
@@ -2700,7 +2700,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
             {
                 if(params.GetCount() == 2 && !sub->m_effects[EF_ORG])
                 {
-                    if(Effect* e = new Effect)
+                    if(Effect* e = DEBUG_NEW Effect)
                     {
                         e->param[0] = (int)(sub->m_scalex*wcstod(params[0], NULL)*8);
                         e->param[1] = (int)(sub->m_scaley*wcstod(params[1], NULL)*8);
@@ -2718,7 +2718,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
             {
                 if(params.GetCount() == 2 && !sub->m_effects[EF_MOVE])
                 {
-                    if(Effect* e = new Effect)
+                    if(Effect* e = DEBUG_NEW Effect)
                     {
                         e->param[0] = e->param[2] = (int)(sub->m_scalex*wcstod(params[0], NULL)*8);
                         e->param[1] = e->param[3] = (int)(sub->m_scaley*wcstod(params[1], NULL)*8);
@@ -2861,7 +2861,7 @@ bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STS
     POSITION pos = ass_tag_cache->Lookup(str);
     if (pos==NULL)
     {
-        AssTagList *tmp = new AssTagList();
+        AssTagList *tmp = DEBUG_NEW AssTagList();
         ParseSSATag(tmp, str);
         assTags.reset(tmp);
         ass_tag_cache->UpdateCache(str, assTags);
@@ -3003,7 +3003,7 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
         if(sub->m_fAnimated) {delete sub; sub = NULL;}
         else return(sub);
     }
-    sub = new CSubtitle();
+    sub = DEBUG_NEW CSubtitle();
     if(!sub) return(NULL);
     CStringW str = GetStrW(entry, true);
     STSStyle stss, orgstss;
@@ -3605,7 +3605,7 @@ void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size, con
     int time = sub2.time;
     if(!s) return;
 
-    SharedPtrCClipperPaintMachine clipper( new CClipperPaintMachine(s->m_pClipper) );
+    SharedPtrCClipperPaintMachine clipper( DEBUG_NEW CClipperPaintMachine(s->m_pClipper) );
 
     CRect iclipRect[4];
     iclipRect[0] = CRect(0, 0, output_size.cx, clipRect.top);

@@ -9,7 +9,7 @@
 
 CSubPicProviderExWrapper* CSubPicProviderExWrapper::GetSubPicProviderExWrapper(ISubPicProvider* const inner_provider)
 {
-    return new CSubPicProviderExWrapper(inner_provider);
+    return DEBUG_NEW CSubPicProviderExWrapper(inner_provider);
 }
 
 CSubPicProviderExWrapper::CSubPicProviderExWrapper(ISubPicProvider* const inner_provider)
@@ -88,7 +88,7 @@ STDMETHODIMP_(VOID) CSubPicProviderExWrapper::GetStartStop( POSITION pos, double
 
 STDMETHODIMP CSubPicProviderExWrapper::RenderEx( SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRect>& rectList )
 {
-    CRect cRect = new CRect(0,0,0,0);
+    CRect cRect = DEBUG_NEW CRect(0,0,0,0);
     HRESULT hr = Render(spd, rt, fps, cRect);
     if(SUCCEEDED(hr))
         rectList.AddTail(cRect);

@@ -174,7 +174,7 @@ XySubRenderFrameWrapper2::XySubRenderFrameWrapper2( IXySubRenderFrame *inner_obj
             ULONGLONG id;
             hr = inner_obj->GetBitmap(i, &id, NULL, NULL, NULL, NULL);
             ASSERT(SUCCEEDED(hr));
-            m_ids[i] = XyFwContextedBitmapId(new ContextedBitmapId(context_id, id)).GetId();
+            m_ids[i] = XyFwContextedBitmapId(DEBUG_NEW ContextedBitmapId(context_id, id)).GetId();
         }
     }
 }

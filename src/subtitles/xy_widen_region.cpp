@@ -154,7 +154,7 @@ void WidenRegionCreaterImpl::xy_overlap_region(SpanBuffer* dst, const SpanBuffer
     }
     if (m_ellipse==NULL)
     {
-        m_ellipse = new XyEllipse();
+        m_ellipse = DEBUG_NEW XyEllipse();
         if (m_ellipse==NULL)
         {
             ASSERT(0);
@@ -547,7 +547,7 @@ int XyEllipse::init( int rx, int ry )
     {
         return -1;
     }
-    m_left_arc_base = new int[2*ry+2];
+    m_left_arc_base = DEBUG_NEW int[2*ry+2];
     if (!m_left_arc_base)
     {
         return -1;
@@ -586,7 +586,7 @@ int XyEllipse::init_cross_point()
     {
         return 0;
     }
-    m_cross_matrix_base = new int[ (2*m_ry+1)*(2*m_rx+1) ];
+    m_cross_matrix_base = DEBUG_NEW int[ (2*m_ry+1)*(2*m_rx+1) ];
     if (!m_cross_matrix_base)
     {
         return -1;

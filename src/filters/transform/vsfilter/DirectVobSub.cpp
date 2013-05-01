@@ -803,7 +803,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     //save output color config
     {
         int count = GetOutputColorSpaceNumber();
-        BYTE* pData = new BYTE[2*count];
+        BYTE* pData = DEBUG_NEW BYTE[2*count];
         for(int i = 0; i < count; i++)
         {
             pData[2*i] = static_cast<BYTE>(m_outputColorSpace[i].color_space);
@@ -817,7 +817,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     //save input color config
     {
         int count = GetInputColorSpaceNumber();
-        BYTE* pData = new BYTE[2*count];
+        BYTE* pData = DEBUG_NEW BYTE[2*count];
         for(int i = 0; i < count; i++)
         {
             pData[2*i] = static_cast<BYTE>(m_inputColorSpace[i].color_space);
@@ -1235,7 +1235,7 @@ STDMETHODIMP CDirectVobSub::XyGetBin( unsigned field, LPVOID *value, int *size )
         }
         if(value && size)
         {
-            *value = new ColorSpaceOpt[*size];
+            *value = DEBUG_NEW ColorSpaceOpt[*size];
             ASSERT(*value);
             memcpy(*value, m_outputColorSpace, GetOutputColorSpaceNumber()*sizeof(m_outputColorSpace[0]));
         }
@@ -1247,7 +1247,7 @@ STDMETHODIMP CDirectVobSub::XyGetBin( unsigned field, LPVOID *value, int *size )
         }
         if(value && size)
         {
-            *value = new ColorSpaceOpt[*size];
+            *value = DEBUG_NEW ColorSpaceOpt[*size];
             ASSERT(*value);
             memcpy(*value, m_inputColorSpace, GetInputColorSpaceNumber()*sizeof(m_inputColorSpace[0]));
         }
@@ -1259,7 +1259,7 @@ STDMETHODIMP CDirectVobSub::XyGetBin( unsigned field, LPVOID *value, int *size )
         }
         if (value)
         {
-            *value = new CachesInfo[1];
+            *value = DEBUG_NEW CachesInfo[1];
         }
         return get_CachesInfo(reinterpret_cast<CachesInfo*>(*value));
     case BIN_XY_FLY_WEIGHT_INFO:
@@ -1269,7 +1269,7 @@ STDMETHODIMP CDirectVobSub::XyGetBin( unsigned field, LPVOID *value, int *size )
         }
         if (value)
         {
-            *value = new XyFlyWeightInfo[1];
+            *value = DEBUG_NEW XyFlyWeightInfo[1];
         }
         return get_XyFlyWeightInfo(reinterpret_cast<XyFlyWeightInfo*>(*value));
 

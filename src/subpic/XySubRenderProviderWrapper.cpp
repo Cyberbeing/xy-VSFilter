@@ -162,7 +162,7 @@ HRESULT XySubRenderProviderWrapper::Render( REFERENCE_TIME now, POSITION pos, do
         return hr;
     }
     CRect video_rect(CPoint(0,0), m_original_video_size);
-    m_xy_sub_render_frame = new XySubRenderFrameWrapper(mem_subpic, video_rect, video_rect, now, &hr);
+    m_xy_sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper(mem_subpic, video_rect, video_rect, now, &hr);
     return hr;
 }
 
@@ -170,7 +170,7 @@ HRESULT XySubRenderProviderWrapper::ResetAllocator()
 {
     const int MAX_SUBPIC_QUEUE_LENGTH = 1;
 
-    m_allocator = new CPooledSubPicAllocator(MSP_RGB32, m_original_video_size, MAX_SUBPIC_QUEUE_LENGTH + 1);
+    m_allocator = DEBUG_NEW CPooledSubPicAllocator(MSP_RGB32, m_original_video_size, MAX_SUBPIC_QUEUE_LENGTH + 1);
     ASSERT(m_allocator);
 
     m_allocator->SetCurSize(m_original_video_size);
@@ -302,7 +302,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     {
         CSize max_size(m_subtitle_target_rect.right, m_subtitle_target_rect.bottom);
 
-        m_allocator = new CPooledSubPicAllocator(MSP_RGB32, max_size,2);
+        m_allocator = DEBUG_NEW CPooledSubPicAllocator(MSP_RGB32, max_size,2);
         ASSERT(m_allocator);
 
         m_allocator->SetCurSize(max_size);
@@ -457,7 +457,7 @@ HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
         CMemSubPic * mem_subpic = dynamic_cast<CMemSubPic*>((ISubPicEx *)m_subpic);
         ASSERT(mem_subpic);
 
-        m_xy_sub_render_frame = new XySubRenderFrameWrapper(mem_subpic, m_output_rect, m_subtitle_target_rect
+        m_xy_sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper(mem_subpic, m_output_rect, m_subtitle_target_rect
             , s_combined_bitmap_id++, &hr);
         return hr;
     }

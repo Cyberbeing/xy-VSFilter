@@ -466,7 +466,7 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) CSubtitleInputPin::CreateHelper( const C
         pRTS->m_name = CString(GetPinName(pReceivePin)) + _T(" (embeded)");
         pRTS->m_dstScreenSize = CSize(384, 288);
         pRTS->CreateDefaultStyle(DEFAULT_CHARSET);
-        ret = new CTextSubtitleInputPinHepler(pRTS, m_mt);
+        ret = DEBUG_NEW CTextSubtitleInputPinHepler(pRTS, m_mt);
     }
     else if(mt.majortype == MEDIATYPE_Subtitle)
     {
@@ -528,28 +528,28 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) CSubtitleInputPin::CreateHelper( const C
 
                 pRTS->Open(mt1.pbFormat + dwOffset, mt1.cbFormat - dwOffset, DEFAULT_CHARSET, pRTS->m_name);
             }
-            ret = new CTextSubtitleInputPinHepler(pRTS, m_mt);
+            ret = DEBUG_NEW CTextSubtitleInputPinHepler(pRTS, m_mt);
         }
         else if(mt.subtype == MEDIASUBTYPE_SSF)
         {
             XY_LOG_INFO("Create CSSFInputPinHepler");
             ssf::CRenderer* pSSF = DEBUG_NEW ssf::CRenderer(m_pSubLock);
             pSSF->Open(ssf::MemoryInputStream(mt.pbFormat + dwOffset, mt.cbFormat - dwOffset, false, false), name);
-            ret = new CSSFInputPinHepler(pSSF, m_mt);
+            ret = DEBUG_NEW CSSFInputPinHepler(pSSF, m_mt);
         }
         else if(mt.subtype == MEDIASUBTYPE_VOBSUB)
         {
             XY_LOG_INFO("Create CVobsubInputPinHepler");
             CVobSubStream* pVSS = DEBUG_NEW CVobSubStream(m_pSubLock);
             pVSS->Open(name, mt.pbFormat + dwOffset, mt.cbFormat - dwOffset);
-            ret = new CVobsubInputPinHepler(pVSS, m_mt);
+            ret = DEBUG_NEW CVobsubInputPinHepler(pVSS, m_mt);
         }
         else if (IsHdmvSub(&mt)) 
         {
             XY_LOG_INFO("Create CHdmvInputPinHepler");
             CRenderedHdmvSubtitle *hdmv_sub = DEBUG_NEW CRenderedHdmvSubtitle(m_pSubLock,
                 (mt.subtype == MEDIASUBTYPE_DVB_SUBTITLES) ? ST_DVB : ST_HDMV, name, lcid);
-            ret = new CHdmvInputPinHepler(hdmv_sub, m_mt);
+            ret = DEBUG_NEW CHdmvInputPinHepler(hdmv_sub, m_mt);
         }
     }
     return ret;

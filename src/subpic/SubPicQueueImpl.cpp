@@ -690,7 +690,7 @@ STDMETHODIMP_(bool) CSubPicQueueNoThread::LookupSubPic( REFERENCE_TIME now /*[in
     {
         CComPtr<ISubPicEx> temp;
         bool result = LookupSubPicEx(now, &temp);
-        (*output_subpic = new SimpleSubPicWrapper(temp))->AddRef();
+        (*output_subpic = DEBUG_NEW SimpleSubPicWrapper(temp))->AddRef();
         return result;
     }
     else

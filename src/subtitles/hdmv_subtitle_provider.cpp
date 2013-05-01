@@ -230,7 +230,7 @@ HRESULT HdmvSubtitleProvider::ResetAllocator()
 {
     const int MAX_SUBPIC_QUEUE_LENGTH = 1;
 
-    m_allocator = new CPooledSubPicAllocator(MSP_RGB32, m_cur_output_size, MAX_SUBPIC_QUEUE_LENGTH + 1);
+    m_allocator = DEBUG_NEW CPooledSubPicAllocator(MSP_RGB32, m_cur_output_size, MAX_SUBPIC_QUEUE_LENGTH + 1);
     ASSERT(m_allocator);
 
     m_allocator->SetCurSize(m_cur_output_size);
@@ -288,6 +288,6 @@ HRESULT HdmvSubtitleProvider::Render( REFERENCE_TIME now, POSITION pos )
         }
     }
     CRect video_rect(CPoint(0,0), m_cur_output_size);
-    m_xy_sub_render_frame = new XySubRenderFrameWrapper(mem_subpic, video_rect, video_rect, now, &hr);
+    m_xy_sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper(mem_subpic, video_rect, video_rect, now, &hr);
     return hr;
 }
