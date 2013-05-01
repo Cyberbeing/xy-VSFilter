@@ -180,6 +180,7 @@
     <ClCompile Include="..\XyOptionsImpl.cpp" />
     <ClCompile Include="..\xy_logger.cpp" />
     <ClCompile Include="..\xy_sub_filter.cpp" />
+    <ClCompile Include="..\xy_sub_filter_dll.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\CAutoTiming.h" />

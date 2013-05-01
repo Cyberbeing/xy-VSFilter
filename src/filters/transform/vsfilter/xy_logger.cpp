@@ -46,6 +46,16 @@ std::wostream& operator<<( std::wostream& os, const RECT& obj )
     return os<<L"("<<obj.left<<L","<<obj.top<<L","<<obj.right<<L","<<obj.bottom<<L")";
 }
 
+CString XyUuidToString(const UUID& in_uuid)
+{
+    CString ret;
+    ret.Format(_T("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}"),
+        in_uuid.Data1, in_uuid.Data2, in_uuid.Data3, in_uuid.Data4[0], in_uuid.Data4[1], 
+        in_uuid.Data4[2], in_uuid.Data4[3], in_uuid.Data4[4], 
+        in_uuid.Data4[5], in_uuid.Data4[6], in_uuid.Data4[7]);
+    return ret;
+}
+
 namespace xy_logger
 {
 
