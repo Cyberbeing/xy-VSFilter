@@ -20,16 +20,10 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\csriapi.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\DirectVobSub.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\DirectVobSubPropPage.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\plugins.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\StdAfx.cpp">
@@ -39,9 +33,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\Systray.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\vfr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\VSFilter.cpp">
@@ -79,9 +70,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\csri.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\DirectVobSub.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -101,9 +89,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\Systray.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\vfr.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\VSFilter.h">
