@@ -161,13 +161,11 @@
     <ClCompile Include="..\..\..\..\thirdparty\mfc\winmdi.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\csriapi.cpp" />
     <ClCompile Include="..\DirectVobSub.cpp" />
     <ClCompile Include="..\DirectVobSubPropPage.cpp" />
     <ClCompile Include="..\once_logger.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\plugins.cpp" />
     <ClCompile Include="..\StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -175,7 +173,6 @@
     <ClCompile Include="..\SubRenderOptionsImpl.cpp" />
     <ClCompile Include="..\SubtitleInputPin2.cpp" />
     <ClCompile Include="..\Systray.cpp" />
-    <ClCompile Include="..\vfr.cpp" />
     <ClCompile Include="..\VSFilter.cpp" />
     <ClCompile Include="..\XyOptionsImpl.cpp" />
     <ClCompile Include="..\xy_logger.cpp" />
@@ -184,7 +181,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\CAutoTiming.h" />
-    <ClInclude Include="..\csri.h" />
     <ClInclude Include="..\DirectVobSub.h" />
     <ClInclude Include="..\DirectVobSubPropPage.h" />
     <ClInclude Include="..\IDirectVobSub.h" />
@@ -198,7 +194,6 @@
     <ClInclude Include="..\Systray.h" />
     <ClInclude Include="..\Timing_Logger.h" />
     <ClInclude Include="..\version.h" />
-    <ClInclude Include="..\vfr.h" />
     <ClInclude Include="..\VSFilter.h" />
     <ClInclude Include="..\XyOptionsImpl.h" />
     <ClInclude Include="..\XySubRenderIntf.h" />
