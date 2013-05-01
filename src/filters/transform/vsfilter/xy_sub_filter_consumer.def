@@ -1,0 +1,10 @@
+; xy_sub_filter_consumer.def : Declares the module parameters.
+
+LIBRARY      "xy_sub_filter_consumer.dll"
+
+EXPORTS
+	DllCanUnloadNow			PRIVATE
+	DllGetClassObject		PRIVATE
+	DllRegisterServer		PRIVATE
+	DllUnregisterServer		PRIVATE
+	XySubFilterConsumerConfiguration

@@ -88,21 +88,29 @@ BEGIN
         BEGIN
             VALUE "Comments", "http://code.google.com/p/xy-vsfilter/"
             VALUE "CompanyName", "xy-VSFilter Team"
-#ifndef XY_SUB_FILTER_DLL
-            VALUE "FileDescription", "VobSub & TextSub filter for DirectShow/VirtualDub/Avisynth"
-            VALUE "FileVersion", XY_VSFILTER_VERSION_STR
-            VALUE "InternalName", "VSFilter"
-            VALUE "LegalCopyright", "Copyright (C) 2001-2012 Yu Zhuohuang, Gabest et. al."
-            VALUE "OriginalFilename", "VSFilter.dll"
-            VALUE "ProductName", "VSFilter"
-            VALUE "ProductVersion", XY_VSFILTER_VERSION_STR
-#else
+#if defined XY_SUB_FILTER_DLL
             VALUE "FileDescription", "XySubFilter for MadVR"
             VALUE "FileVersion", XY_VSFILTER_VERSION_STR
             VALUE "InternalName", "XySubFilter"
             VALUE "LegalCopyright", "Copyright (C) 2001-2012 Yu Zhuohuang, Gabest et. al."
             VALUE "OriginalFilename", "XySubFilter.dll"
             VALUE "ProductName", "XySubFilter"
+            VALUE "ProductVersion", XY_VSFILTER_VERSION_STR
+#elif defined XY_SUB_FILTER_CONSUMER_DLL
+            VALUE "FileDescription", "XySubFilter Consumer"
+            VALUE "FileVersion", XY_VSFILTER_VERSION_STR
+            VALUE "InternalName", "XySubFilterConsumer"
+            VALUE "LegalCopyright", "Copyright (C) 2001-2012 Yu Zhuohuang, Gabest et. al."
+            VALUE "OriginalFilename", "XySubFilteConsumer.dll"
+            VALUE "ProductName", "XySubFilteConsumer"
+            VALUE "ProductVersion", XY_VSFILTER_VERSION_STR
+#else
+            VALUE "FileDescription", "VobSub & TextSub filter for DirectShow/VirtualDub/Avisynth"
+            VALUE "FileVersion", XY_VSFILTER_VERSION_STR
+            VALUE "InternalName", "VSFilter"
+            VALUE "LegalCopyright", "Copyright (C) 2001-2012 Yu Zhuohuang, Gabest et. al."
+            VALUE "OriginalFilename", "VSFilter.dll"
+            VALUE "ProductName", "VSFilter"
             VALUE "ProductVersion", XY_VSFILTER_VERSION_STR
 #endif
         END

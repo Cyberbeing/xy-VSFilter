@@ -23,6 +23,8 @@
 
 #define ENABLE_XY_LOG_REG_CONFIG 0
 
+//#define CONSUMRE_MERIT 0x00080000
+
 //#define SUBTITLE_FRAME_DUMP_FILE "C:/sub_"
 
 //#define SPD_DUMP_FILE "C:/spd"
