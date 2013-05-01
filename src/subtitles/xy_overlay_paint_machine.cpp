@@ -109,7 +109,7 @@ void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPointCoor2
     } while(false);
     if(error)
     {
-        overlay->reset( new Overlay() );
+        overlay->reset( DEBUG_NEW Overlay() );
     }
 }
 
@@ -138,7 +138,7 @@ void CWordPaintMachine::CreatePaintMachines( const SharedPtrCWord& word
     , const CPointCoor2& org
     , SharedPtrOverlayPaintMachine *shadow, SharedPtrOverlayPaintMachine *outline, SharedPtrOverlayPaintMachine *body)
 {
-    SharedCWordPaintMachine machine(new CWordPaintMachine());
+    SharedCWordPaintMachine machine(DEBUG_NEW CWordPaintMachine());
     machine->m_word = word;
     if (shadow!=NULL)
     {
@@ -162,15 +162,15 @@ void CWordPaintMachine::CreatePaintMachines( const SharedPtrCWord& word
 
     if (shadow)
     {
-        shadow->reset( new OverlayPaintMachine(machine, SHADOW) );
+        shadow->reset( DEBUG_NEW OverlayPaintMachine(machine, SHADOW) );
     }
     if (outline)
     {
-        outline->reset( new OverlayPaintMachine(machine, OUTLINE) );
+        outline->reset( DEBUG_NEW OverlayPaintMachine(machine, OUTLINE) );
     }
     if (body)
     {
-        body->reset( new OverlayPaintMachine(machine, BODY) );
+        body->reset( DEBUG_NEW OverlayPaintMachine(machine, BODY) );
     }
 }
 
@@ -213,7 +213,7 @@ OverlayKey* CWordPaintMachine::CreateBodyOverlayHashKey( const SharedPtrCWord& w
         trans_org2.y=0;
     }
     CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
-    OverlayKey *body_overlay_key=new OverlayKey(*word, psub_true, trans_org2);
+    OverlayKey *body_overlay_key=DEBUG_NEW OverlayKey(*word, psub_true, trans_org2);
     body_overlay_key->UpdateHashValue();
     return body_overlay_key;
 }

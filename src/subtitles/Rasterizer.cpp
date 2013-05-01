@@ -995,7 +995,7 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, float be_streng
         }
     }
 
-    ::boost::shared_array<unsigned> tmp_buf( new unsigned[max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0)] );
+    ::boost::shared_array<unsigned> tmp_buf( DEBUG_NEW unsigned[max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0)] );
     //flyweight<key_value<int, ass_tmp_buf, ass_tmp_buf_get_size>, no_locking> tmp_buf((overlay->mOverlayWidth+1)*(overlay->mOverlayPitch+1));
     // Do some gaussian blur magic    
     if ( gaussian_blur_strength > GAUSSIAN_BLUR_THREHOLD )
@@ -1075,7 +1075,7 @@ bool Rasterizer::Blur(const Overlay& input_overlay, float be_strength,
     {
         if (be_strength)//this insane thing should NEVER happen
         {
-            SharedPtrOverlay tmp(new Overlay());
+            SharedPtrOverlay tmp(DEBUG_NEW Overlay());
 
             bool rv = GaussianBlur(input_overlay, gaussian_blur_strength, target_scale_x, target_scale_y, tmp);
             ASSERT(rv);
@@ -1244,7 +1244,7 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
     int pass_num = static_cast<int>(scaled_be_strength);
     int pitch = output_overlay->mOverlayPitch;
     byte* blur_plan = output_overlay->mfWideOutlineEmpty ? body : border;
-    ::boost::shared_array<unsigned> tmp_buf( new unsigned[max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0)] );
+    ::boost::shared_array<unsigned> tmp_buf( DEBUG_NEW unsigned[max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0)] );
     for (int pass = 0; pass < pass_num; pass++)
     {
         if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
@@ -2547,7 +2547,7 @@ void Overlay::FillAlphaMash( byte* outputAlphaMask, bool fBody, bool fBorder, in
 
 Overlay* Overlay::GetSubpixelVariance(unsigned int xshift, unsigned int yshift)
 {
-    Overlay* overlay = new Overlay();
+    Overlay* overlay = DEBUG_NEW Overlay();
     if(!overlay)
     {
         return NULL;
@@ -2769,8 +2769,8 @@ bool PathData::PartialEndPath(HDC hdc, long dx, long dy)
             mpPathTypes = pNewTypes;
         if(pNewPoints)
             mpPathPoints = pNewPoints;
-        BYTE* pTypes = new BYTE[nPoints];
-        POINT* pPoints = new POINT[nPoints];
+        BYTE* pTypes = DEBUG_NEW BYTE[nPoints];
+        POINT* pPoints = DEBUG_NEW POINT[nPoints];
         if(pNewTypes && pNewPoints && nPoints == GetPath(hdc, pPoints, pTypes, nPoints))
         {
             for(int i = 0; i < nPoints; ++i)
@@ -3012,7 +3012,7 @@ bool ScanLineData::ScanConvert(const PathData& path_data, const CSize& size)
     mEdgeHeapSize = 2048;
     mpEdgeBuffer = (Edge*)malloc(sizeof(Edge)*mEdgeHeapSize);
     // Initialize scanline list.
-    mpScanBuffer = new unsigned int[mHeight];
+    mpScanBuffer = DEBUG_NEW unsigned int[mHeight];
     memset(mpScanBuffer, 0, mHeight*sizeof(unsigned int));
     // Scan convert the outline.  Yuck, Bezier curves....
     // Unfortunately, Windows 95/98 GDI has a bad habit of giving us text

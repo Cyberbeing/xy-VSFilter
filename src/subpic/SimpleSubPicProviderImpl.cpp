@@ -129,7 +129,7 @@ STDMETHODIMP_(bool) SimpleSubPicProvider::LookupSubPic( REFERENCE_TIME now /*[in
         bool result = LookupSubPicEx(now, &temp);
         if (result && temp)
         {
-            (*output_subpic = new SimpleSubpic(temp, m_alpha_blt_dst_type))->AddRef();
+            (*output_subpic = DEBUG_NEW SimpleSubpic(temp, m_alpha_blt_dst_type))->AddRef();
         }
         return result;
     }
@@ -341,7 +341,7 @@ STDMETHODIMP SimpleSubPicProvider2::SetSubPicProvider( IUnknown* subpic_provider
             m_old_provider = NULL;
             if (!m_ex_provider)
             {
-                m_ex_provider = new SimpleSubPicProvider(m_alpha_blt_dst_type, m_cur_size, m_video_rect, m_consumer, &hr);
+                m_ex_provider = DEBUG_NEW SimpleSubPicProvider(m_alpha_blt_dst_type, m_cur_size, m_video_rect, m_consumer, &hr);
                 m_ex_provider->SetFPS(m_fps);
                 m_ex_provider->SetTime(m_now);
             }
@@ -359,12 +359,12 @@ STDMETHODIMP SimpleSubPicProvider2::SetSubPicProvider( IUnknown* subpic_provider
             m_ex_provider = NULL;
             if (!m_old_provider)
             {
-                CComPtr<ISubPicExAllocator> pSubPicAllocator = new CPooledSubPicAllocator(m_alpha_blt_dst_type, 
+                CComPtr<ISubPicExAllocator> pSubPicAllocator = DEBUG_NEW CPooledSubPicAllocator(m_alpha_blt_dst_type, 
                     m_max_size, MAX_SUBPIC_QUEUE_LENGTH + 1);
                 ASSERT(pSubPicAllocator);
                 pSubPicAllocator->SetCurSize(m_cur_size);
                 pSubPicAllocator->SetCurVidRect(m_video_rect);
-                m_old_provider = new CSubPicQueueNoThread(pSubPicAllocator, &hr);
+                m_old_provider = DEBUG_NEW CSubPicQueueNoThread(pSubPicAllocator, &hr);
                 m_old_provider->SetFPS(m_fps);
                 m_old_provider->SetTime(m_now);
                 if (FAILED(hr) || m_old_provider==NULL)
