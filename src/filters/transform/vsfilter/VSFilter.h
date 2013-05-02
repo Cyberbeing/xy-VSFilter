@@ -30,8 +30,41 @@ public:
 
 	CString m_AppName;
 
-    virtual UINT GetProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault);
-    virtual CString GetProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault = NULL);
+    virtual
+    UINT GetProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault);
+    UINT GetProfileInt(UINT    idSection  , LPCTSTR lpszEntry, int nDefault);
+    UINT GetProfileInt(LPCTSTR lpszSection, UINT    idEntry,   int nDefault);
+    UINT GetProfileInt(UINT    idSection  , UINT    idEntry,   int nDefault);
+
+    virtual
+    BOOL WriteProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nValue);
+    BOOL WriteProfileInt(UINT    idSection  , LPCTSTR lpszEntry, int nValue);
+    BOOL WriteProfileInt(LPCTSTR lpszSection, UINT    idEntry,   int nValue);
+    BOOL WriteProfileInt(UINT    idSection  , UINT    idEntry,   int nValue);
+
+    virtual
+    CString GetProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault = NULL);
+    CString GetProfileString(UINT    idSection  , LPCTSTR lpszEntry, LPCTSTR lpszDefault = NULL);
+    CString GetProfileString(LPCTSTR lpszSection, UINT    idEntry,   LPCTSTR lpszDefault = NULL);
+    CString GetProfileString(UINT    idSection  , UINT    idEntry,   LPCTSTR lpszDefault = NULL);
+
+    virtual
+    BOOL WriteProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszValue);
+    BOOL WriteProfileString(UINT    idSection  , LPCTSTR lpszEntry, LPCTSTR lpszValue);
+    BOOL WriteProfileString(LPCTSTR lpszSection, UINT    idEntry,   LPCTSTR lpszValue);
+    BOOL WriteProfileString(UINT    idSection  , UINT    idEntry,   LPCTSTR lpszValue);
+
+    virtual
+    BOOL GetProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPBYTE* ppData, UINT* pBytes);
+    BOOL GetProfileBinary(UINT    idSection  , LPCTSTR lpszEntry, LPBYTE* ppData, UINT* pBytes);
+    BOOL GetProfileBinary(LPCTSTR lpszSection, UINT    idEntry,   LPBYTE* ppData, UINT* pBytes);
+    BOOL GetProfileBinary(UINT    idSection  , UINT    idEntry,   LPBYTE* ppData, UINT* pBytes);
+
+    virtual
+    BOOL WriteProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPBYTE pData, UINT nBytes);
+    BOOL WriteProfileBinary(UINT    idSection  , LPCTSTR lpszEntry, LPBYTE pData, UINT nBytes);
+    BOOL WriteProfileBinary(LPCTSTR lpszSection, UINT    idEntry,   LPBYTE pData, UINT nBytes);
+    BOOL WriteProfileBinary(UINT    idSection  , UINT    idEntry,   LPBYTE pData, UINT nBytes);
 protected:
 	HINSTANCE LoadAppLangResourceDLL();
 

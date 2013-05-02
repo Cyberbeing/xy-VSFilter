@@ -54,15 +54,15 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     m_xy_str_opt[STRING_NAME] = L"xy_sub_filter";
 
-    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Hint"), _T("The first three are fixed, but you can add more up to ten entries."));
+    theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, _T("Hint"), _T("The first three are fixed, but you can add more up to ten entries."));
 
     CString tmp;
-    tmp.Format(ResStr(IDS_RP_PATH), 0);
-    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T("."));
-    tmp.Format(ResStr(IDS_RP_PATH), 1);
-    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T("c:\\subtitles"));
-    tmp.Format(ResStr(IDS_RP_PATH), 2);
-    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T(".\\subtitles"));
+    tmp.Format(IDS_RP_PATH, 0);
+    theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, tmp, _T("."));
+    tmp.Format(IDS_RP_PATH, 1);
+    theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, tmp, _T("c:\\subtitles"));
+    tmp.Format(IDS_RP_PATH, 2);
+    theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, tmp, _T(".\\subtitles"));
 
     m_fLoading = true;
 
@@ -81,7 +81,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     m_tbid.hSystrayWnd = NULL;
     m_tbid.graph = NULL;
     m_tbid.fRunOnce = false;
-    m_tbid.fShowIcon = (theApp.m_AppName.Find(_T("zplayer"), 0) < 0 || !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0));
+    m_tbid.fShowIcon = (theApp.m_AppName.Find(_T("zplayer"), 0) < 0 || !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_ENABLEZPICON, 0));
 }
 
 XySubFilter::~XySubFilter()
@@ -891,7 +891,7 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
         *ppszName = NULL;
 
         CStringW str;
-        if(i == -1) str = ResStr(IDS_M_SHOWSUBTITLES);
+        if(i == -1) str.LoadString(IDS_M_SHOWSUBTITLES);
         else if(i >= 0 && i < nLangs)
         {
             hr = get_LanguageName(i, ppszName);
@@ -899,15 +899,15 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
         }
         else if(i == nLangs)
         {
-            str = ResStr(IDS_M_HIDESUBTITLES);
+            str.LoadString(IDS_M_HIDESUBTITLES);
         }
         else if(i == nLangs+1)
         {
-            str = ResStr(IDS_M_ORIGINALPICTURE);
+            str.LoadString(IDS_M_ORIGINALPICTURE);
         }
         else if(i == nLangs+2)
         {
-            str = ResStr(IDS_M_FLIPPEDPICTURE);
+            str.LoadString(IDS_M_FLIPPEDPICTURE);
         }
 
         if(!str.IsEmpty())
@@ -1357,7 +1357,7 @@ bool XySubFilter::Open()
     {
         CString tmp;
         tmp.Format(IDS_RP_PATH, i);
-        CString path = theApp.GetProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp);
+        CString path = theApp.GetProfileString(IDS_R_DEFTEXTPATHES, tmp);
         if(!path.IsEmpty()) paths.Add(path);
     }
 
@@ -1858,7 +1858,7 @@ int XySubFilter::FindPreferedLanguage( bool fHideToo /*= true*/ )
         CString tmp;
         tmp.Format(IDS_RL_LANG, i);
 
-        CString lang = theApp.GetProfileString(ResStr(IDS_R_PREFLANGS), tmp);
+        CString lang = theApp.GetProfileString(IDS_R_PREFLANGS, tmp);
 
         if(!lang.IsEmpty())
         {
@@ -1893,7 +1893,7 @@ void XySubFilter::UpdatePreferedLanguages(CString l)
         CString tmp;
         tmp.Format(IDS_RL_LANG, i);
 
-        langs[j] = theApp.GetProfileString(ResStr(IDS_R_PREFLANGS), tmp);
+        langs[j] = theApp.GetProfileString(IDS_R_PREFLANGS, tmp);
 
         if(!langs[j].IsEmpty())
         {
@@ -1937,7 +1937,7 @@ void XySubFilter::UpdatePreferedLanguages(CString l)
         CString tmp;
         tmp.Format(IDS_RL_LANG, i);
 
-        theApp.WriteProfileString(ResStr(IDS_R_PREFLANGS), tmp, langs[i]);
+        theApp.WriteProfileString(IDS_R_PREFLANGS, tmp, langs[i]);
     }
 }
 

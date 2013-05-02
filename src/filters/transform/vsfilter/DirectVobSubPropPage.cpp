@@ -139,7 +139,7 @@ INT_PTR CDVSBasePPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 
                         if(!m_fDisableInstantUpdate 
                             && !(HIWORD(wParam) == BN_CLICKED && LOWORD(wParam) == IDC_INSTANTUPDATE)
-                            && !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), 1)) 
+                            && !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, 1) )
                             OnApplyChanges();
                     }
                 }
@@ -647,7 +647,7 @@ bool CDVSMiscPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if(LOWORD(wParam) == IDC_INSTANTUPDATE)
                     {
                         AFX_MANAGE_STATE(AfxGetStaticModuleState());
-                        theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), !!m_instupd.GetCheck());
+                        theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, !!m_instupd.GetCheck());
                         return(true);
                     }
                 }
@@ -778,7 +778,7 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
 
         m_showosd.SetCheck(m_fOSD);
         m_autoreload.SetCheck(!m_fReloaderDisabled);
-        m_instupd.SetCheck(!!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), 1));
+        m_instupd.SetCheck(!!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, 1));
     }
 }
 
@@ -1513,16 +1513,16 @@ void CDVSPathsPPage::UpdateObjectData(bool fSave)
         int i = 0;
         do
         {
-            tmp.Format(ResStr(IDS_RP_PATH), i++);
-            path = theApp.GetProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, chk);
-            if(path != chk) theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T(""));
+            tmp.Format(IDS_RP_PATH, i++);
+            path = theApp.GetProfileString(IDS_R_DEFTEXTPATHES, tmp, chk);
+            if(path != chk) theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, tmp, _T(""));
         }
         while(path != chk);
 
         for(i = 0; i < m_paths.GetSize(); i++)
         {
-            tmp.Format(ResStr(IDS_RP_PATH), i);
-            theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, m_paths[i]);
+            tmp.Format(IDS_RP_PATH, i);
+            theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, tmp, m_paths[i]);
         }
     }
     else
@@ -1532,8 +1532,8 @@ void CDVSPathsPPage::UpdateObjectData(bool fSave)
         do
         {
             if(!path.IsEmpty()) m_paths.Add(path);
-            tmp.Format(ResStr(IDS_RP_PATH), i++);
-            path = theApp.GetProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, chk);
+            tmp.Format(IDS_RP_PATH, i++);
+            path = theApp.GetProfileString(IDS_R_DEFTEXTPATHES, tmp, chk);
         }
         while(path != chk);
     }
@@ -1914,7 +1914,7 @@ bool CXySubFilterMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                     else if(LOWORD(wParam) == IDC_INSTANTUPDATE)
                     {
                         AFX_MANAGE_STATE(AfxGetStaticModuleState());
-                        theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), !!m_instupd.GetCheck());
+                        theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, !!m_instupd.GetCheck());
                         return(true);
                     }
                 }
@@ -2058,6 +2058,6 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
 
         m_hidesub.SetCheck(m_fHideSubtitles);
         m_autoreload.SetCheck(!m_fReloaderDisabled);
-        m_instupd.SetCheck(!!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), 1));
+        m_instupd.SetCheck(!!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, 1));
     }
 }

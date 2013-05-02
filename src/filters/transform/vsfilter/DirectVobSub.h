@@ -64,7 +64,7 @@ protected:
     virtual ~CDirectVobSub();
 
     bool is_compatible();
-    UINT GetCompatibleProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault);
+    UINT GetCompatibleProfileInt(UINT idSection, UINT idEntry, int nDefault);
 protected:
     CCritSec m_propsLock;
 

@@ -33,14 +33,14 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     BYTE* pData = NULL;
     UINT nSize = 0;
 
-    m_supported_filter_verion = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), 0);
-    m_config_info_version = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), 0);
+    m_supported_filter_verion = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_SUPPORTED_VERSION, 0);
+    m_config_info_version = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_VERSION, 0);
 
     m_xy_int_opt[INT_SELECTED_LANGUAGE] = 0;
-    m_xy_bool_opt[BOOL_HIDE_SUBTITLES] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), 0);
-    m_fDoPreBuffering = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), 1);
-    
-    m_xy_int_opt[INT_COLOR_SPACE] = GetCompatibleProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOR_SPACE), CDirectVobSub::YuvMatrix_AUTO);
+    m_xy_bool_opt[BOOL_HIDE_SUBTITLES] = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_HIDE, 0);
+    m_fDoPreBuffering = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_DOPREBUFFERING, 1);
+
+    m_xy_int_opt[INT_COLOR_SPACE] = GetCompatibleProfileInt(IDS_R_GENERAL, IDS_RG_COLOR_SPACE, CDirectVobSub::YuvMatrix_AUTO);
     if( m_xy_int_opt[INT_COLOR_SPACE]!=CDirectVobSub::YuvMatrix_AUTO && 
         m_xy_int_opt[INT_COLOR_SPACE]!=CDirectVobSub::BT_601 && 
         m_xy_int_opt[INT_COLOR_SPACE]!=CDirectVobSub::BT_709 &&
@@ -48,7 +48,7 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     {
         m_xy_int_opt[INT_COLOR_SPACE] = CDirectVobSub::YuvMatrix_AUTO;
     }
-    m_xy_int_opt[INT_YUV_RANGE] = GetCompatibleProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), CDirectVobSub::YuvRange_Auto);
+    m_xy_int_opt[INT_YUV_RANGE] = GetCompatibleProfileInt(IDS_R_GENERAL, IDS_RG_YUV_RANGE, CDirectVobSub::YuvRange_Auto);
     if( m_xy_int_opt[INT_YUV_RANGE]!=CDirectVobSub::YuvRange_Auto && 
         m_xy_int_opt[INT_YUV_RANGE]!=CDirectVobSub::YuvRange_PC && 
         m_xy_int_opt[INT_YUV_RANGE]!=CDirectVobSub::YuvRange_TV )
@@ -56,65 +56,65 @@ CDirectVobSub::CDirectVobSub(const Option *options)
         m_xy_int_opt[INT_YUV_RANGE] = CDirectVobSub::YuvRange_Auto;
     }
 
-    m_bt601Width = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
-    m_bt601Height = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_HEIGHT), 600);
+    m_bt601Width = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_BT601_WIDTH, 1024);
+    m_bt601Height = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_BT601_HEIGHT, 600);
 
-    m_fOverridePlacement = !!theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), 0);
-    m_PlacementXperc = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), 50);
-    m_PlacementYperc = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), 90);
-    m_fBufferVobSub = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_BUFFER), 1);
-    m_fOnlyShowForcedVobSubs = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), 0);
-    m_fPolygonize = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), 0);
-    m_defStyle <<= theApp.GetProfileString(ResStr(IDS_R_TEXT), ResStr(IDS_RT_STYLE), _T(""));
-    m_fFlipPicture = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), 0);
-    m_fFlipSubtitles = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), 0);
-    m_fOSD = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SHOWOSDSTATS), 0);
-    m_fSaveFullPath = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SAVEFULLPATH), 0);
-    m_nReloaderDisableCount = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0) ? 1 : 0;
-    m_SubtitleDelay = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), 0);
-    m_SubtitleSpeedMul = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), 1000);
-    m_SubtitleSpeedDiv = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), 1000);
-    m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED] = !!theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), 0);
-    m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), 0));
-    m_xy_bool_opt[BOOL_HIDE_TRAY_ICON] =  !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), 0);
+    m_fOverridePlacement = !!theApp.GetProfileInt(IDS_R_TEXT, IDS_RT_OVERRIDEPLACEMENT, 0);
+    m_PlacementXperc = theApp.GetProfileInt(IDS_R_TEXT, IDS_RT_XPERC, 50);
+    m_PlacementYperc = theApp.GetProfileInt(IDS_R_TEXT, IDS_RT_YPERC, 90);
+    m_fBufferVobSub = !!theApp.GetProfileInt(IDS_R_VOBSUB, IDS_RV_BUFFER, 1);
+    m_fOnlyShowForcedVobSubs = !!theApp.GetProfileInt(IDS_R_VOBSUB, IDS_RV_ONLYSHOWFORCEDSUBS, 0);
+    m_fPolygonize = !!theApp.GetProfileInt(IDS_R_VOBSUB, IDS_RV_POLYGONIZE, 0);
+    m_defStyle <<= theApp.GetProfileString(IDS_R_TEXT, IDS_RT_STYLE, _T(""));
+    m_fFlipPicture = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_FLIPPICTURE, 0);
+    m_fFlipSubtitles = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_FLIPSUBTITLES, 0);
+    m_fOSD = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_SHOWOSDSTATS, 0);
+    m_fSaveFullPath = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_SAVEFULLPATH, 0);
+    m_nReloaderDisableCount = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_DISABLERELOADER, 0 ? 1 : 0);
+    m_SubtitleDelay = theApp.GetProfileInt(IDS_R_TIMING, IDS_RTM_SUBTITLEDELAY, 0);
+    m_SubtitleSpeedMul = theApp.GetProfileInt(IDS_R_TIMING, IDS_RTM_SUBTITLESPEEDMUL, 1000);
+    m_SubtitleSpeedDiv = theApp.GetProfileInt(IDS_R_TIMING, IDS_RTM_SUBTITLESPEEDDIV, 1000);
+    m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED] = !!theApp.GetProfileInt(IDS_R_TIMING, IDS_RTM_MEDIAFPSENABLED, 0);
+    m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(theApp.GetProfileInt(IDS_R_TEXT, IDS_RT_AUTOPARCOMPENSATION, 0));
+    m_xy_bool_opt[BOOL_HIDE_TRAY_ICON] =  !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_HIDE_TRAY_ICON, 0);
 
-    m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(IDS_R_PERFORMANCE, IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM
         , CacheManager::OVERLAY_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(IDS_R_PERFORMANCE, IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM
         , CacheManager::OVERLAY_NO_BLUR_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(IDS_R_PERFORMANCE, IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM
         , CacheManager::SCAN_LINE_DATA_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(IDS_R_PERFORMANCE, IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM
         , CacheManager::PATH_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM)
+    m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM] = theApp.GetProfileInt(IDS_R_PERFORMANCE, IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM
         , CacheManager::BITMAP_MRU_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM]<0) m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM] = 0;
     
-    m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM)
+    m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM] = theApp.GetProfileInt(IDS_R_PERFORMANCE, IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM
         , CacheManager::CLIPPER_MRU_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM]<0) m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_TEXT_INFO_CACHE_ITEM_NUM)
+    m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM] = theApp.GetProfileInt(IDS_R_PERFORMANCE, IDS_RP_TEXT_INFO_CACHE_ITEM_NUM
         , CacheManager::TEXT_INFO_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM]<0) m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_ASS_TAG_LIST_CACHE_ITEM_NUM)
+    m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM] = GetCompatibleProfileInt(IDS_R_PERFORMANCE, IDS_RP_ASS_TAG_LIST_CACHE_ITEM_NUM
         , CacheManager::ASS_TAG_LIST_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM]<0) m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), SubpixelPositionControler::EIGHT_X_EIGHT);
+    m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL] = theApp.GetProfileInt(IDS_R_PERFORMANCE, IDS_RP_SUBPIXEL_POS_LEVEL, SubpixelPositionControler::EIGHT_X_EIGHT);
     if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]<0) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=0;
     else if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]>=SubpixelPositionControler::MAX_COUNT) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=SubpixelPositionControler::EIGHT_X_EIGHT;
 
-    m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE);
+    m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_LAYOUT_SIZE_OPT, LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE);
     switch(m_xy_int_opt[INT_LAYOUT_SIZE_OPT])
     {
     case LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
@@ -126,7 +126,7 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     }
 
     m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION] = DirectVobSubXyOptions::RGB_CORRECTION_AUTO;
-    CString str_rgb_correction_setting = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_CORRECTION), _T("auto"));
+    CString str_rgb_correction_setting = theApp.GetProfileString(IDS_R_GENERAL, IDS_RG_RGB_CORRECTION, _T("auto"));
     str_rgb_correction_setting.MakeLower();
     if (str_rgb_correction_setting.Compare(_T("never"))==0)
     {
@@ -137,8 +137,8 @@ CDirectVobSub::CDirectVobSub(const Option *options)
         m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION] = DirectVobSubXyOptions::RGB_CORRECTION_ALWAYS;
     }
 
-    m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X), 0);
-    m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y), 0);
+    m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X, 0);
+    m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y, 0);
     if (m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx<=0 || m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy<=0)
     {
         m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx = 1280;
@@ -148,14 +148,14 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     m_xy_size_opt[SIZE_ASS_PLAY_RESOLUTION] = CSize(0,0);
     m_xy_size_opt[SIZE_ORIGINAL_VIDEO] = CSize(0,0);
 
-    m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USE_UPSTREAM_PREFERRED_ORDER), true);
+    m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER] = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_USE_UPSTREAM_PREFERRED_ORDER, true);
     // get output colorspace config
     if(pData)
     {
         delete [] pData;
         pData = NULL;
     }
-    if(theApp.GetProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_OUTPUT_COLORFORMATS), &pData, &nSize)
+    if(theApp.GetProfileBinary(IDS_R_GENERAL, IDS_RG_OUTPUT_COLORFORMATS, &pData, &nSize)
         && pData && nSize == 2*GetOutputColorSpaceNumber())
     {
         for (unsigned i=0;i<nSize/2;i++)
@@ -179,7 +179,7 @@ CDirectVobSub::CDirectVobSub(const Option *options)
         delete [] pData;
         pData = NULL;
     }
-    if(theApp.GetProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INPUT_COLORFORMATS), &pData, &nSize)
+    if(theApp.GetProfileBinary(IDS_R_GENERAL, IDS_RG_INPUT_COLORFORMATS, &pData, &nSize)
         && pData && nSize == 2*GetInputColorSpaceNumber())
     {
         for (unsigned i=0;i<nSize/2;i++)
@@ -203,7 +203,7 @@ CDirectVobSub::CDirectVobSub(const Option *options)
         delete [] pData;
         pData = NULL;
     }
-    if(theApp.GetProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), &pData, &nSize) && pData)
+    if (theApp.GetProfileBinary(IDS_R_TIMING, IDS_RTM_MEDIAFPS, &pData, &nSize) && pData)
     {
         if(nSize != sizeof(m_xy_double_opt[DOUBLE_MEDIA_FPS])) m_xy_double_opt[DOUBLE_MEDIA_FPS] = 25.0;
         else memcpy(&m_xy_double_opt[DOUBLE_MEDIA_FPS], pData, sizeof(m_xy_double_opt[DOUBLE_MEDIA_FPS]));
@@ -220,9 +220,9 @@ CDirectVobSub::CDirectVobSub(const Option *options)
 
     //fix me: CStringw = CString
     m_xy_str_opt[STRING_LOAD_EXT_LIST] = 
-        theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), _T("ass;ssa;srt;sub;idx;sup;txt;usf;xss;ssf;smi;psb;rt"));
+        theApp.GetProfileString(IDS_R_GENERAL, IDS_RG_LOAD_EXT_LIST, _T("ass;ssa;srt;sub;idx;sup;txt;usf;xss;ssf;smi;psb;rt"));
 
-    CString str_pgs_yuv_setting = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_PGS_COLOR_TYPE), _T("GUESS.GUESS"));
+    CString str_pgs_yuv_setting = theApp.GetProfileString(IDS_R_GENERAL, IDS_RG_PGS_COLOR_TYPE, _T("GUESS.GUESS"));
     if (str_pgs_yuv_setting.Left(2).CompareNoCase(_T("TV"))==0)
     {
         m_xy_str_opt[STRING_PGS_YUV_RANGE] = _T("TV");
@@ -257,7 +257,7 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     }
     m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
 
-    m_xy_int_opt[INT_MAX_BITMAP_COUNT] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_MAX_BITMAP_COUNT)
+    m_xy_int_opt[INT_MAX_BITMAP_COUNT] = theApp.GetProfileInt(IDS_R_PERFORMANCE, IDS_RP_MAX_BITMAP_COUNT
         , 8);
     if (m_xy_int_opt[INT_MAX_BITMAP_COUNT]<= 1)
     {
@@ -735,50 +735,50 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 
 	CAutoLock cAutoLock(&m_propsLock);
 
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), m_xy_bool_opt[BOOL_HIDE_SUBTITLES]);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), m_fDoPreBuffering);
+	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_HIDE, m_xy_bool_opt[BOOL_HIDE_SUBTITLES]);
+	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_DOPREBUFFERING, m_fDoPreBuffering);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), m_xy_int_opt[INT_YUV_RANGE]);
+    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_YUV_RANGE, m_xy_int_opt[INT_YUV_RANGE]);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOR_SPACE), m_xy_int_opt[INT_COLOR_SPACE]);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_HEIGHT), 600);
+    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_COLOR_SPACE, m_xy_int_opt[INT_COLOR_SPACE]);
+    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_BT601_WIDTH, 1024);
+    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_BT601_HEIGHT, 600);
 
-	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), m_fOverridePlacement);
-	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), m_PlacementXperc);
-	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), m_PlacementYperc);
-	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_BUFFER), m_fBufferVobSub);
-	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), m_fOnlyShowForcedVobSubs);
-	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), m_fPolygonize);
+	theApp.WriteProfileInt(IDS_R_TEXT, IDS_RT_OVERRIDEPLACEMENT, m_fOverridePlacement);
+	theApp.WriteProfileInt(IDS_R_TEXT, IDS_RT_XPERC, m_PlacementXperc);
+	theApp.WriteProfileInt(IDS_R_TEXT, IDS_RT_YPERC, m_PlacementYperc);
+	theApp.WriteProfileInt(IDS_R_VOBSUB, IDS_RV_BUFFER, m_fBufferVobSub);
+	theApp.WriteProfileInt(IDS_R_VOBSUB, IDS_RV_ONLYSHOWFORCEDSUBS, m_fOnlyShowForcedVobSubs);
+	theApp.WriteProfileInt(IDS_R_VOBSUB, IDS_RV_POLYGONIZE, m_fPolygonize);
 	CString style;
-	theApp.WriteProfileString(ResStr(IDS_R_TEXT), ResStr(IDS_RT_STYLE), style <<= m_defStyle);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), m_fFlipPicture);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), m_fFlipSubtitles);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SHOWOSDSTATS), m_fOSD);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SAVEFULLPATH), m_fSaveFullPath);
-	theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), m_SubtitleDelay);
-	theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), m_SubtitleSpeedMul);
-	theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), m_SubtitleSpeedDiv);
-	theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED]);
-	theApp.WriteProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), (BYTE*)&m_xy_double_opt[DOUBLE_MEDIA_FPS], sizeof(m_xy_double_opt[DOUBLE_MEDIA_FPS]));
-	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), m_ePARCompensationType);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), m_xy_bool_opt[BOOL_HIDE_TRAY_ICON]);
+	theApp.WriteProfileString(IDS_R_TEXT, IDS_RT_STYLE, style <<= m_defStyle);
+	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_FLIPPICTURE, m_fFlipPicture);
+	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_FLIPSUBTITLES, m_fFlipSubtitles);
+	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_SHOWOSDSTATS, m_fOSD);
+	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_SAVEFULLPATH, m_fSaveFullPath);
+	theApp.WriteProfileInt(IDS_R_TIMING, IDS_RTM_SUBTITLEDELAY, m_SubtitleDelay);
+	theApp.WriteProfileInt(IDS_R_TIMING, IDS_RTM_SUBTITLESPEEDMUL, m_SubtitleSpeedMul);
+	theApp.WriteProfileInt(IDS_R_TIMING, IDS_RTM_SUBTITLESPEEDDIV, m_SubtitleSpeedDiv);
+	theApp.WriteProfileInt(IDS_R_TIMING, IDS_RTM_MEDIAFPSENABLED, m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED]);
+	theApp.WriteProfileBinary(IDS_R_TIMING, IDS_RTM_MEDIAFPS, (BYTE*)&m_xy_double_opt[DOUBLE_MEDIA_FPS], sizeof(m_xy_double_opt[DOUBLE_MEDIA_FPS]));
+	theApp.WriteProfileInt(IDS_R_TEXT, IDS_RT_AUTOPARCOMPENSATION, m_ePARCompensationType);
+    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_HIDE_TRAY_ICON, m_xy_bool_opt[BOOL_HIDE_TRAY_ICON]);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM), m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM]);
-    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM), m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM]);
-    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_TEXT_INFO_CACHE_ITEM_NUM), m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM]);
-    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_ASS_TAG_LIST_CACHE_ITEM_NUM), m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM]);
+    theApp.WriteProfileInt(IDS_R_PERFORMANCE, IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM, m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM]);
+    theApp.WriteProfileInt(IDS_R_PERFORMANCE, IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM, m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM]);
+    theApp.WriteProfileInt(IDS_R_PERFORMANCE, IDS_RP_TEXT_INFO_CACHE_ITEM_NUM, m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM]);
+    theApp.WriteProfileInt(IDS_R_PERFORMANCE, IDS_RP_ASS_TAG_LIST_CACHE_ITEM_NUM, m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM]);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM), m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM]);
-    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM), m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM]);
-    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM), m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]);
-    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
-    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USE_UPSTREAM_PREFERRED_ORDER), m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER]);
+    theApp.WriteProfileInt(IDS_R_PERFORMANCE, IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM, m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM]);
+    theApp.WriteProfileInt(IDS_R_PERFORMANCE, IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM, m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM]);
+    theApp.WriteProfileInt(IDS_R_PERFORMANCE, IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM, m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]);
+    theApp.WriteProfileInt(IDS_R_PERFORMANCE, IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM, m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
+    theApp.WriteProfileInt(IDS_R_PERFORMANCE, IDS_RP_SUBPIXEL_POS_LEVEL, m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]);
+    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_USE_UPSTREAM_PREFERRED_ORDER, m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER]);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), m_xy_int_opt[INT_LAYOUT_SIZE_OPT]);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy);
+    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_LAYOUT_SIZE_OPT, m_xy_int_opt[INT_LAYOUT_SIZE_OPT]);
+    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X, m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx);
+    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y, m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy);
 
     CString str_rgb_correction_setting;
     switch(m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION])
@@ -793,12 +793,12 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
         str_rgb_correction_setting = _T("always");
         break;
     }
-    theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_CORRECTION), str_rgb_correction_setting);
+    theApp.WriteProfileString(IDS_R_GENERAL, IDS_RG_RGB_CORRECTION, str_rgb_correction_setting);
 
-    theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), m_xy_str_opt[STRING_LOAD_EXT_LIST]);//fix me:m_xy_str_opt[] is wide char string
+    theApp.WriteProfileString(IDS_R_GENERAL, IDS_RG_LOAD_EXT_LIST, m_xy_str_opt[STRING_LOAD_EXT_LIST]);//fix me:m_xy_str_opt[] is wide char string
 
     CString str_pgs_yuv_type = m_xy_str_opt[STRING_PGS_YUV_RANGE] + m_xy_str_opt[STRING_PGS_YUV_MATRIX];
-    theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_PGS_COLOR_TYPE), str_pgs_yuv_type);
+    theApp.WriteProfileString(IDS_R_GENERAL, IDS_RG_PGS_COLOR_TYPE, str_pgs_yuv_type);
 
     //save output color config
     {
@@ -809,7 +809,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
             pData[2*i] = static_cast<BYTE>(m_outputColorSpace[i].color_space);
             pData[2*i+1] = static_cast<BYTE>(m_outputColorSpace[i].selected);
         }
-        theApp.WriteProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_OUTPUT_COLORFORMATS), pData, 2*count);
+        theApp.WriteProfileBinary(IDS_R_GENERAL, IDS_RG_OUTPUT_COLORFORMATS, pData, 2*count);
 
         delete [] pData;
     }
@@ -823,13 +823,13 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
             pData[2*i] = static_cast<BYTE>(m_inputColorSpace[i].color_space);
             pData[2*i+1] = static_cast<BYTE>(m_inputColorSpace[i].selected);
         }
-        theApp.WriteProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INPUT_COLORFORMATS), pData, 2*count);
+        theApp.WriteProfileBinary(IDS_R_GENERAL, IDS_RG_INPUT_COLORFORMATS, pData, 2*count);
 
         delete [] pData;
     }
 
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), CUR_SUPPORTED_FILTER_VERSION);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), XY_VSFILTER_VERSION_COMMIT);
+    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_SUPPORTED_VERSION, CUR_SUPPORTED_FILTER_VERSION);
+    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_VERSION, XY_VSFILTER_VERSION_COMMIT);
     //
 	return S_OK;
 }
@@ -897,7 +897,7 @@ STDMETHODIMP CDirectVobSub::get_SubtitleReloader(bool* fDisabled)
 
 	CAutoLock cAutoLock(&m_propsLock);
 
-	if(fDisabled) *fDisabled = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0);
+	if(fDisabled) *fDisabled = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_DISABLERELOADER, 0);
 
 	return S_OK;
 }
@@ -916,7 +916,7 @@ STDMETHODIMP CDirectVobSub::put_SubtitleReloader(bool fDisable)
 	get_SubtitleReloader(&b);
 	if(b == fDisable) return S_FALSE;
 
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), fDisable);
+	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_DISABLERELOADER, fDisable);
 
     return OnOptionChanged(void_SubtitleReloader);
 }
@@ -931,12 +931,12 @@ STDMETHODIMP CDirectVobSub::get_ExtendPicture(int* horizontal, int* vertical, in
 
 	CAutoLock cAutoLock(&m_propsLock);
 
-	if(horizontal) *horizontal = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_MOD32FIX), 0) & 1;
-	if(vertical) *vertical = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTPIC), 0);
-	//if(resx2) *resx2 = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2), 2) & 3;
+	if(horizontal) *horizontal = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_MOD32FIX, 0) & 1;
+	if(vertical) *vertical = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_EXTPIC, 0);
+	//if(resx2) *resx2 = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_RESX2, 2) & 3;
     if(resx2) *resx2 = 0;
-	if(resx2minw) *resx2minw = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINW), 384);
-	if(resx2minh) *resx2minh = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINH), 288);
+	if(resx2minw) *resx2minw = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_RESX2MINW, 384);
+	if(resx2minh) *resx2minh = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_RESX2MINH, 288);
 
 	return S_OK;
 }
@@ -956,11 +956,11 @@ STDMETHODIMP CDirectVobSub::put_ExtendPicture(int horizontal, int vertical, int 
 	    get_ExtendPicture(i, i+1, i+2, i+3, i+4);
 	    if(i[0] == horizontal && i[1] == vertical && i[2] == resx2 && i[3] == resx2minw && i[4] == resx2minh) return S_FALSE;
 
-	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_MOD32FIX), horizontal & 1);
-	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTPIC), vertical);
-	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2), resx2 & 3);
-	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINW), resx2minw);
-	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINH), resx2minh);
+	    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_MOD32FIX, horizontal & 1);
+	    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_EXTPIC, vertical);
+	    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_RESX2, resx2 & 3);
+	    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_RESX2MINW, resx2minw);
+	    theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_RESX2MINH, resx2minh);
 
         return OnOptionChanged(void_ExtendPicture);
     }
@@ -980,10 +980,10 @@ STDMETHODIMP CDirectVobSub::get_LoadSettings(int* level, bool* fExternalLoad, bo
 
 	CAutoLock cAutoLock(&m_propsLock);
 
-	if(level) *level = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL), 0) & 3;
-	if(fExternalLoad) *fExternalLoad = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD), 1);
-	if(fWebLoad) *fWebLoad = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD), 0);
-	if(fEmbeddedLoad) *fEmbeddedLoad = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), 1);
+	if(level) *level = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_LOADLEVEL, 0) & 3;
+	if(fExternalLoad) *fExternalLoad = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_EXTERNALLOAD, 1);
+	if(fWebLoad) *fWebLoad = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_WEBLOAD, 0);
+	if(fEmbeddedLoad) *fEmbeddedLoad = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_EMBEDDEDLOAD, 1);
 
 	return S_OK;
 }
@@ -1003,10 +1003,10 @@ STDMETHODIMP CDirectVobSub::put_LoadSettings(int level, bool fExternalLoad, bool
 	get_LoadSettings(&i, b, b+1, b+2);
 	if(i == level && b[0] == fExternalLoad && b[1] == fWebLoad && b[2] == fEmbeddedLoad) return S_FALSE;
 
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL), level & 3);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD), fExternalLoad);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD), fWebLoad);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), fEmbeddedLoad);
+	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_LOADLEVEL, level & 3);
+	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_EXTERNALLOAD, fExternalLoad);
+	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_WEBLOAD, fWebLoad);
+	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_EMBEDDEDLOAD, fEmbeddedLoad);
 
 	return OnOptionChanged(void_LoadSettings);
 }
@@ -1130,12 +1130,12 @@ bool CDirectVobSub::is_compatible()
     return compatible;
 }
 
-UINT CDirectVobSub::GetCompatibleProfileInt( LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault )
+UINT CDirectVobSub::GetCompatibleProfileInt( UINT idSection, UINT idEntry, int nDefault )
 {
     UINT result = nDefault;
     if (is_compatible())
     {
-        result = theApp.GetProfileInt(lpszSection, lpszEntry, nDefault);
+        result = theApp.GetProfileInt(idSection, idEntry, nDefault);
     }
     return result;
 }

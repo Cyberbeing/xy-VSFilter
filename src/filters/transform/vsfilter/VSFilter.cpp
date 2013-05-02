@@ -97,11 +97,129 @@ UINT CVSFilterApp::GetProfileInt( LPCTSTR lpszSection, LPCTSTR lpszEntry, int nD
     return rv;
 }
 
+UINT CVSFilterApp::GetProfileInt( UINT idSection, LPCTSTR lpszEntry, int nDefault )
+{
+    return GetProfileInt(ResStr(idSection), lpszEntry, nDefault);
+}
+
+UINT CVSFilterApp::GetProfileInt( LPCTSTR lpszSection, UINT idEntry, int nDefault )
+{
+    return GetProfileInt(lpszSection, ResStr(idEntry), nDefault);
+}
+
+UINT CVSFilterApp::GetProfileInt( UINT idSection, UINT idEntry, int nDefault )
+{
+    return GetProfileInt(ResStr(idSection), idEntry, nDefault);
+}
+
+BOOL CVSFilterApp::WriteProfileInt( LPCTSTR lpszSection, LPCTSTR lpszEntry, int nValue )
+{
+    BOOL rv = __super::WriteProfileInt(lpszSection, lpszEntry, nValue);
+    TRACE_REG_CONFIG(lpszSection<<" "<<lpszEntry<<" "<<nValue);
+    return rv;
+}
+
+BOOL CVSFilterApp::WriteProfileInt( UINT idSection, LPCTSTR lpszEntry, int nValue )
+{
+    return WriteProfileInt(ResStr(idSection), lpszEntry, nValue);
+}
+
+BOOL CVSFilterApp::WriteProfileInt( LPCTSTR lpszSection, UINT idEntry, int nValue )
+{
+    return WriteProfileInt(lpszSection, ResStr(idEntry), nValue);
+}
+
+BOOL CVSFilterApp::WriteProfileInt( UINT idSection, UINT idEntry, int nValue )
+{
+    return WriteProfileInt(ResStr(idSection), idEntry, nValue);
+}
+
 CString CVSFilterApp::GetProfileString( LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault /*= NULL*/ )
 {
     CString rv = __super::GetProfileString(lpszSection, lpszEntry, lpszDefault);
     TRACE_REG_CONFIG(lpszSection<<" "<<lpszEntry<<" '"<<rv.GetString()<<"'");
     return rv;
+}
+
+CString CVSFilterApp::GetProfileString( UINT idSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault /*= NULL*/ )
+{
+    return GetProfileString(ResStr(idSection), lpszEntry, lpszDefault);
+}
+
+CString CVSFilterApp::GetProfileString( LPCTSTR lpszSection, UINT idEntry, LPCTSTR lpszDefault /*= NULL*/ )
+{
+    return GetProfileString(lpszSection, ResStr(idEntry), lpszSection);
+}
+
+CString CVSFilterApp::GetProfileString( UINT idSection, UINT idEntry, LPCTSTR lpszDefault /*= NULL*/ )
+{
+    return GetProfileString(ResStr(idSection), ResStr(idEntry), lpszDefault);
+}
+
+BOOL CVSFilterApp::WriteProfileString( LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault /*= NULL*/ )
+{
+    BOOL rv = __super::WriteProfileString(lpszSection, lpszEntry, lpszDefault);
+    TRACE_REG_CONFIG(lpszSection<<" "<<lpszEntry<<" '"<<lpszDefault.GetString()<<"'");
+    return rv;
+}
+
+BOOL CVSFilterApp::WriteProfileString( UINT idSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault /*= NULL*/ )
+{
+    return WriteProfileString(ResStr(idSection), lpszEntry, lpszDefault);
+}
+
+BOOL CVSFilterApp::WriteProfileString( LPCTSTR lpszSection, UINT idEntry, LPCTSTR lpszDefault /*= NULL*/ )
+{
+    return WriteProfileString(lpszSection, ResStr(idEntry), lpszSection);
+}
+
+BOOL CVSFilterApp::WriteProfileString( UINT idSection, UINT idEntry, LPCTSTR lpszDefault /*= NULL*/ )
+{
+    return WriteProfileString(ResStr(idSection), ResStr(idEntry), lpszDefault);
+}
+
+BOOL CVSFilterApp::GetProfileBinary( LPCTSTR lpszSection, LPCTSTR lpszEntry, LPBYTE* ppData, UINT* pBytes )
+{
+    BOOL rv = __super::GetProfileBinary(lpszSection, lpszEntry, ppData, pBytes);
+    TRACE_REG_CONFIG(lpszSection<<" "<<lpszEntry);
+    return rv;
+}
+
+BOOL CVSFilterApp::GetProfileBinary( UINT idSection , LPCTSTR lpszEntry, LPBYTE* ppData, UINT* pBytes )
+{
+    return GetProfileBinary(ResStr(idSection), lpszEntry, ppData, pBytes);
+}
+
+BOOL CVSFilterApp::GetProfileBinary( LPCTSTR lpszSection, UINT idEntry, LPBYTE* ppData, UINT* pBytes )
+{
+    return GetProfileBinary(lpszSection, ResStr(idEntry), ppData, pBytes);
+}
+
+BOOL CVSFilterApp::GetProfileBinary( UINT idSection , UINT idEntry, LPBYTE* ppData, UINT* pBytes )
+{
+    return GetProfileBinary(ResStr(idSection), ResStr(idEntry), ppData, pBytes);
+}
+
+BOOL CVSFilterApp::WriteProfileBinary( LPCTSTR lpszSection, LPCTSTR lpszEntry, LPBYTE pData, UINT nBytes )
+{
+    BOOL rv = __super::WriteProfileBinary(lpszSection, lpszEntry, pData, nBytes);
+    TRACE_REG_CONFIG(lpszSection<<" "<<lpszEntry);
+    return rv;
+}
+
+BOOL CVSFilterApp::WriteProfileBinary( UINT idSection , LPCTSTR lpszEntry, LPBYTE pData, UINT nBytes )
+{
+    return WriteProfileBinary(ResStr(idSection), lpszEntry, pData, nBytes);
+}
+
+BOOL CVSFilterApp::WriteProfileBinary( LPCTSTR lpszSection, UINT idEntry, LPBYTE pData, UINT nBytes )
+{
+    return WriteProfileBinary(lpszSection, ResStr(idEntry), pData, nBytes);
+}
+
+BOOL CVSFilterApp::WriteProfileBinary( UINT idSection , UINT idEntry, LPBYTE pData, UINT nBytes )
+{
+    return WriteProfileBinary(ResStr(idSection), ResStr(idEntry), pData, nBytes);
 }
 
 CVSFilterApp theApp;

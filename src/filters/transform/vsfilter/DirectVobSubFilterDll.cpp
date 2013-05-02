@@ -104,14 +104,14 @@ STDAPI DllRegisterServer()
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-    if(theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SEENDIVXWARNING), 0) != 1)
-        theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SEENDIVXWARNING), 0);
+    if(theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_SEENDIVXWARNING), 0) != 1)
+        theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_SEENDIVXWARNING, 0);
 
-    if(theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VMRZOOMENABLED), -1) == -1)
-        theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VMRZOOMENABLED), 0);
+    if(theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_VMRZOOMENABLED), -1) == -1)
+        theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_VMRZOOMENABLED, 0);
 
-    if(theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), -1) == -1)
-        theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0);
+    if(theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_ENABLEZPICON, -1) == -1)
+        theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_ENABLEZPICON, 0);
 
     /*removeme*/
     JajDeGonoszVagyok();
