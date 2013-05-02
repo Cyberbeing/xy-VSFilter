@@ -250,12 +250,12 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     }
 
     CStringA version = XY_ABOUT_VERSION_STR;
-    m_xy_str_opt[STRING_VERSION] = "";
+    m_xy_str_opt[STRING_VERSION] = L"";
     for (int i=0;i<version.GetLength();i++)
     {
         m_xy_str_opt[STRING_VERSION] += version[i];
     }
-    m_xy_str_opt[STRING_YUV_MATRIX] = "None";
+    m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
 
     m_xy_int_opt[INT_MAX_BITMAP_COUNT] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_MAX_BITMAP_COUNT)
         , 8);
