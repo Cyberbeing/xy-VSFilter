@@ -33,6 +33,48 @@
 #define RTS_POS_SEGMENT_INDEX_BITS  16
 #define RTS_POS_SUB_INDEX_MASK      ((1<<RTS_POS_SEGMENT_INDEX_BITS)-1)
 
+////////////////////////////////////////////////
+class CMyFont;
+class CWord;
+class CText;
+class CPolygon;
+class Effect;
+class CClipper;
+class CLine;
+class CSubtitle;
+struct CSubtitle2;
+class CScreenLayoutAllocator;
+class CRenderedTextSubtitle;
+
+#pragma warning(push)
+#pragma warning (disable: 4231)
+//extern template class ::boost::flyweights::flyweight<::boost::flyweights::key_value<STSStyleBase, CMyFont>, ::boost::flyweights::no_locking>;
+typedef ::boost::flyweights::flyweight<::boost::flyweights::key_value<STSStyleBase, CMyFont>, ::boost::flyweights::no_locking> FwCMyFont;
+
+extern template class boost::shared_ptr<CClipper>;
+typedef ::boost::shared_ptr<CClipper> SharedPtrCClipper;
+
+struct CompositeDrawItem;
+typedef CAtlList<CompositeDrawItem> CompositeDrawItemList;
+typedef CAtlList<CompositeDrawItemList> CompositeDrawItemListList;
+
+typedef CWord* PCWord;
+extern template class ::boost::shared_ptr<CWord>;
+typedef ::boost::shared_ptr<CWord> SharedPtrCWord;
+extern template class ::boost::shared_ptr<CPolygon>;
+typedef ::boost::shared_ptr<CPolygon> SharedPtrCPolygon;
+
+class CClipperPaintMachine;
+extern template class ::boost::shared_ptr<CClipperPaintMachine>;
+typedef ::boost::shared_ptr<CClipperPaintMachine> SharedPtrCClipperPaintMachine;
+
+class OverlayKey;
+interface IXySubRenderFrame;
+
+typedef CAtlList<CSubtitle2> CSubtitle2List;
+#pragma warning(pop)
+////////////////////////////////////////////////
+
 class CMyFont : public CFont
 {
 public:
@@ -41,27 +83,10 @@ public:
     CMyFont(const STSStyleBase& style);
 };
 
-typedef ::boost::flyweights::flyweight<::boost::flyweights::key_value<STSStyleBase, CMyFont>, ::boost::flyweights::no_locking> FwCMyFont;
-
-class CPolygon;
-
-class CClipper;
-typedef ::boost::shared_ptr<CClipper> SharedPtrCClipper;
-
-struct CompositeDrawItem;
-typedef CAtlList<CompositeDrawItem> CompositeDrawItemList;
-typedef CAtlList<CompositeDrawItemList> CompositeDrawItemListList;
-
-class CWord;
-typedef CWord* PCWord;
-typedef ::boost::shared_ptr<CWord> SharedPtrCWord;
-typedef ::boost::shared_ptr<CPolygon> SharedPtrCPolygon;
-
-class CClipperPaintMachine;
-typedef ::boost::shared_ptr<CClipperPaintMachine> SharedPtrCClipperPaintMachine;
-
-class OverlayKey;
-interface IXySubRenderFrame;
+#pragma warning(push)
+#pragma warning (disable: 4231)
+extern template class ::boost::flyweights::flyweight<::boost::flyweights::key_value<STSStyleBase, CMyFont>, ::boost::flyweights::no_locking>;
+#pragma warning(pop)
 
 class CWord
 {
@@ -312,8 +337,6 @@ struct CSubtitle2
     int alpha; 
     int time;
 };
-
-typedef CAtlList<CSubtitle2> CSubtitle2List;
 
 class CScreenLayoutAllocator
 {

@@ -18,7 +18,11 @@ struct std::equal_to<CRect>
     }
 };
 
+#pragma warning(push)
+#pragma warning (disable: 4231)
+extern template class ::boost::flyweights::flyweight<CRect, ::boost::flyweights::no_locking>;
 typedef ::boost::flyweights::flyweight<CRect, ::boost::flyweights::no_locking> FwRect;
+#pragma  warning(pop)
 
 template<
     typename V,
@@ -52,7 +56,7 @@ public:
         }
     };
 
-    typedef EnhancedXyMru<SharedConstV, IdType, SharedVElementTraits> Cacher;    
+    typedef EnhancedXyMru<SharedConstV, IdType, SharedVElementTraits> Cacher;
 public:
     static const int INVALID_ID = 0;
 public:

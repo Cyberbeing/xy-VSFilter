@@ -114,12 +114,18 @@ struct CompositeDrawItemEx
     CAtlList<int> rect_id_list;
 };
 
+#pragma warning(push)
+#pragma warning (disable: 4231)
 
 typedef CAtlList<CompositeDrawItemEx*> PCompositeDrawItemExList;
+
 typedef CAtlArray<CompositeDrawItemEx> CompositeDrawItemExVec;
+
 typedef CAtlArray<CompositeDrawItemExVec> CompositeDrawItemExTree;
 
+extern template class ::boost::shared_ptr<PCompositeDrawItemExList>;
 typedef ::boost::shared_ptr<PCompositeDrawItemExList> SharedPCompositeDrawItemExList;
+#pragma warning(pop)
 
 class XyRectEx: public CRect
 {

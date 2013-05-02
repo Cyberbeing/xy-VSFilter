@@ -9,9 +9,28 @@
 #include "mru_cache.h"
 #include "flyweight_base_types.h"
 
+////////////////////////////////////////////////
+class TextInfoCacheKey;
+class PathDataCacheKey;
+class ScanLineData2CacheKey;
+class OverlayNoBlurKey;
+class OverlayKey;
+class ScanLineDataCacheKey;
+class OverlayNoOffsetKey;
+class ClipperAlphaMaskCacheKey;
+class DrawItemHashKey;
+class GroupedDrawItemsHashKey;
+
+class PathDataTraits;
+class ClipperTraits;
+
+class CacheManager;
+
+////////////////////////////////////////////////
+
 template<class CahcheKey>
 class XyCacheKeyTraits:public CElementTraits<CahcheKey>
-{    
+{
 public:
     static inline ULONG Hash(const CahcheKey& key)
     {
@@ -219,6 +238,7 @@ public:
     ULONG m_hash_value;
 private:
     typedef ::boost::shared_ptr<OverlayKey> SharedOverlayKey;
+
     SharedOverlayKey m_overlay_key;
     ClipperAlphaMaskCacheKey m_clipper_key;
     CRect m_clip_rect;
@@ -264,35 +284,59 @@ public:
     static ULONG Hash(const CClipper& key);
 };
 
+#pragma warning(push) 
+#pragma warning (disable: 4231)
+
+extern template class EnhancedXyMru<
+    TextInfoCacheKey, 
+    CText::SharedPtrTextInfo, 
+    XyCacheKeyTraits<TextInfoCacheKey>
+>;
 typedef EnhancedXyMru<
     TextInfoCacheKey, 
     CText::SharedPtrTextInfo, 
     XyCacheKeyTraits<TextInfoCacheKey>
 > TextInfoMruCache;
 
+extern template class EnhancedXyMru<
+    CStringW, 
+    CRenderedTextSubtitle::SharedPtrConstAssTagList, 
+    CStringElementTraits<CStringW>
+>;
 typedef EnhancedXyMru<
     CStringW, 
     CRenderedTextSubtitle::SharedPtrConstAssTagList, 
     CStringElementTraits<CStringW>
 > AssTagListMruCache;
 
+extern  template class EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, XyCacheKeyTraits<PathDataCacheKey>>;
 typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, XyCacheKeyTraits<PathDataCacheKey>> PathDataMruCache;
 
+extern  template class EnhancedXyMru<ScanLineData2CacheKey, SharedPtrConstScanLineData2, XyCacheKeyTraits<ScanLineData2CacheKey>>;
 typedef EnhancedXyMru<ScanLineData2CacheKey, SharedPtrConstScanLineData2, XyCacheKeyTraits<ScanLineData2CacheKey>> ScanLineData2MruCache;
 
+extern  template class EnhancedXyMru<OverlayNoBlurKey, SharedPtrOverlay, XyCacheKeyTraits<OverlayNoBlurKey>>;
 typedef EnhancedXyMru<OverlayNoBlurKey, SharedPtrOverlay, XyCacheKeyTraits<OverlayNoBlurKey>> OverlayNoBlurMruCache;
 
+extern  template class EnhancedXyMru<OverlayKey, SharedPtrOverlay, XyCacheKeyTraits<OverlayKey>>;
 typedef EnhancedXyMru<OverlayKey, SharedPtrOverlay, XyCacheKeyTraits<OverlayKey>> OverlayMruCache;
 
+extern  template class EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, XyCacheKeyTraits<ScanLineDataCacheKey>>;
 typedef EnhancedXyMru<ScanLineDataCacheKey, SharedPtrConstScanLineData, XyCacheKeyTraits<ScanLineDataCacheKey>> ScanLineDataMruCache;
 
+extern  template class EnhancedXyMru<OverlayNoOffsetKey, OverlayNoBlurKey, XyCacheKeyTraits<OverlayNoOffsetKey>>;
 typedef EnhancedXyMru<OverlayNoOffsetKey, OverlayNoBlurKey, XyCacheKeyTraits<OverlayNoOffsetKey>> OverlayNoOffsetMruCache;
 
+extern  template class EnhancedXyMru<ClipperAlphaMaskCacheKey, SharedPtrGrayImage2, XyCacheKeyTraits<ClipperAlphaMaskCacheKey>>;
 typedef EnhancedXyMru<ClipperAlphaMaskCacheKey, SharedPtrGrayImage2, XyCacheKeyTraits<ClipperAlphaMaskCacheKey>> ClipperAlphaMaskMruCache;
 
 class XyBitmap;
+extern  template class ::boost::shared_ptr<XyBitmap>;
 typedef ::boost::shared_ptr<XyBitmap> SharedPtrXyBitmap;
+extern  template class EnhancedXyMru<std::size_t, SharedPtrXyBitmap>;
 typedef EnhancedXyMru<std::size_t, SharedPtrXyBitmap> BitmapMruCache;
+
+#pragma warning(pop)
 
 class CacheManager
 {
@@ -325,7 +369,6 @@ public:
     static ScanLineData2MruCache* GetScanLineData2MruCache();
     static PathDataMruCache* GetPathDataMruCache();
 };
-
 
 typedef XyFlyWeight<GroupedDrawItemsHashKey, CacheManager::BITMAP_MRU_CACHE_ITEM_NUM, XyCacheKeyTraits<GroupedDrawItemsHashKey>> XyFwGroupedDrawItemsHashKey;
 

@@ -4,6 +4,21 @@
 #include <atltypes.h>
 #include <boost/shared_ptr.hpp>
 #include "XySubRenderIntf.h"
+#include "flyweight_base_types.h"
+
+////////////////////////////////////////////////
+class XyBitmap;
+class XySubRenderFrame;
+class XySubRenderFrameCreater;
+
+#pragma warning(push)
+#pragma warning (disable: 4231)
+extern template class ::boost::shared_ptr<XyBitmap>;
+
+extern template class ::boost::shared_ptr<XySubRenderFrame>;
+typedef ::boost::shared_ptr<XySubRenderFrame> SharedPtrXySubRenderFrame;
+#pragma warning(pop)
+////////////////////////////////////////////////
 
 class XyBitmap
 {
@@ -62,8 +77,6 @@ public:
     CRect m_clip_rect;
     XyColorSpace m_xy_color_space;
 };
-
-typedef ::boost::shared_ptr<XySubRenderFrame> SharedPtrXySubRenderFrame;
 
 class XySubRenderFrameCreater
 {

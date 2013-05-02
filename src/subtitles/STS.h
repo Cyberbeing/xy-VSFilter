@@ -90,7 +90,11 @@ public:
 	friend STSStyle& operator <<= (STSStyle& s, const CString& style);
 };
 
+#pragma warning(push)
+#pragma warning (disable: 4231)
+extern template class ::boost::flyweights::flyweight<STSStyle, ::boost::flyweights::no_locking>;
 typedef ::boost::flyweights::flyweight<STSStyle, ::boost::flyweights::no_locking> FwSTSStyle;
+#pragma warning(pop)
 
 //for FwSTSStyle
 static inline std::size_t hash_value(const STSStyleBase& s)
@@ -297,6 +301,3 @@ extern int CharSetLen;
 
 class CHtmlColorMap : public CAtlMap<CString, DWORD, CStringElementTraits<CString> > {public: CHtmlColorMap();};
 extern CHtmlColorMap g_colors;
-
-
-

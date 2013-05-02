@@ -34,11 +34,41 @@
 #define PT_BSPLINETO 0xfc
 #define PT_BSPLINEPATCHTO 0xfa
 
-typedef struct {
-    int left, top;
-    int w, h;                   // width, height
-    unsigned char *buffer;      // w x h buffer
-} Bitmap;
+////////////////////////////////////////////////
+struct Bitmap;
+struct PathData;
+class ScanLineData;
+class ScanLineData2;
+struct Overlay;
+struct GrayImage2;
+class XyBitmap;
+class Rasterizer;
+
+#pragma warning(push)
+#pragma warning (disable: 4231)
+extern template class ::boost::shared_ptr<const PathData>;
+typedef boost::shared_ptr<const PathData> SharedPtrConstPathData;
+
+extern template class ::boost::shared_ptr<PathData>;
+typedef ::boost::shared_ptr<PathData> SharedPtrPathData;
+
+extern template struct std::pair<unsigned __int64, unsigned __int64>;
+typedef std::pair<unsigned __int64, unsigned __int64> tSpan;
+
+extern template class std::vector<tSpan>;
+typedef std::vector<tSpan> tSpanBuffer;
+
+extern template class ::boost::shared_ptr<const ScanLineData>;
+typedef ::boost::shared_ptr<const ScanLineData> SharedPtrConstScanLineData;
+
+extern template class ::boost::shared_ptr<ScanLineData>;
+typedef ::boost::shared_ptr<ScanLineData> SharedPtrScanLineData;
+
+extern template class ::boost::shared_ptr<GrayImage2>;
+typedef ::boost::shared_ptr<GrayImage2> SharedPtrGrayImage2;
+
+#pragma warning(pop)
+////////////////////////////////////////////////
 
 struct PathData
 {
@@ -62,13 +92,6 @@ public:
     POINT* mpPathPoints;
     int mPathPoints;
 };
-
-typedef ::boost::shared_ptr<const PathData> SharedPtrConstPathData;
-typedef ::boost::shared_ptr<PathData> SharedPtrPathData;
-
-
-typedef std::pair<unsigned __int64, unsigned __int64> tSpan;
-typedef std::vector<tSpan> tSpanBuffer;
 
 class ScanLineData
 {
@@ -107,9 +130,6 @@ public:
     friend class Rasterizer;
     friend class ScanLineData2;
 };
-
-typedef ::boost::shared_ptr<const ScanLineData> SharedPtrConstScanLineData;
-typedef ::boost::shared_ptr<ScanLineData> SharedPtrScanLineData;
 
 class ScanLineData2
 {
@@ -196,9 +216,6 @@ public:
     SharedPtrByte data;
 };
 
-typedef ::boost::shared_ptr<GrayImage2> SharedPtrGrayImage2;
-
-class XyBitmap;
 class Rasterizer
 {
 private:
@@ -250,4 +267,3 @@ public:
     static void FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nHeight, DWORD lColor);
 
 };
-

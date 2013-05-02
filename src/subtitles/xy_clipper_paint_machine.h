@@ -3,11 +3,16 @@
 
 #include <boost/shared_ptr.hpp>
 
+#pragma warning(push)
+#pragma warning (disable: 4231)
 class CClipper;
+extern template class ::boost::shared_ptr<CClipper>;
 typedef ::boost::shared_ptr<CClipper> SharedPtrCClipper;
 
 struct GrayImage2;
+extern template class ::boost::shared_ptr<GrayImage2>;
 typedef ::boost::shared_ptr<GrayImage2> SharedPtrGrayImage2;
+#pragma warning(pop)
 
 class ClipperAlphaMaskCacheKey;
 
