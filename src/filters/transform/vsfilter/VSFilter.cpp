@@ -20,14 +20,11 @@
  */
 
 #include "stdafx.h"
-#include "DirectVobSubFilter.h"
-#include "DirectVobSubPropPage.h"
 #include "VSFilter.h"
 #include "..\..\..\DSUtil\MediaTypes.h"
 
 #include <initguid.h>
 #include "..\..\..\..\include\moreuuids.h"
-#include "xy_sub_filter.h"
 
 
 #if ENABLE_XY_LOG_REG_CONFIG
