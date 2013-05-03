@@ -76,7 +76,14 @@ public:
 
 CStringW AToW(const CStringA& str);
 CStringA WToA(const CStringW& str);
-CString  AToT(const CStringA& str);
-CString  WToT(const CStringW& str);
-CStringA TToA(const CString&  str);
-CStringW TToW(const CString&  str);
+#ifdef UNICODE
+#  define WToT(str) (str)
+#  define TToW(str) (str)
+#  define AToT(str) AToW(str)
+#  define TToA(str) WToA(str)
+#else 
+#  define WToT(str) WToA(str)
+#  define TToW(str) AToW(str)
+#  define AToT(str) (str)
+#  define TToA(str) (str)
+#endif
