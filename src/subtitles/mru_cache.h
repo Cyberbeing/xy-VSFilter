@@ -10,10 +10,73 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// XyAtlMap: a moded CAtlMap
+// XyAtlMap: a modified CAtlMap
+
+class XyAtlMapHelper
+{
+protected:
+    typedef void* PNode;
+
+    XyAtlMapHelper(
+        _In_ UINT nBins = 17,
+        _In_ float fOptimalLoad = 0.75f,
+        _In_ float fLoThreshold = 0.25f,
+        _In_ float fHiThreshold = 2.25f,
+        _In_ UINT nBlockSize = 10) throw();
+public:
+
+    size_t GetCount() const throw();
+    bool IsEmpty() const throw();
+    
+    UINT GetHashTableSize() const throw();
+
+    POSITION GetStartPosition() const throw();
+
+    bool InitHashTable(
+        _In_ UINT nBins,
+        _In_ bool bAllocNow = true);
+    void EnableAutoRehash() throw();
+    void DisableAutoRehash() throw();
+
+#ifdef _DEBUG
+    void AssertValid() const;
+#endif  // _DEBUG
+
+    // Implementation
+protected:
+    PNode* m_ppBins;
+    size_t m_nElements;
+    UINT m_nBins;
+    float m_fOptimalLoad;
+    float m_fLoThreshold;
+    float m_fHiThreshold;
+    size_t m_nHiRehashThreshold;
+    size_t m_nLoRehashThreshold;
+    ULONG m_nLockCount;
+    UINT m_nBlockSize;
+    CAtlPlex* m_pBlocks;
+    PNode m_pFree;
+
+protected:
+    bool IsLocked() const throw();
+    UINT PickSize(_In_ size_t nElements) const throw();
+
+    void FreePlexes() throw();
+
+    void UpdateRehashThresholds() throw();
+
+public:
+    ~XyAtlMapHelper() throw(){}
+
+private:
+    // Private to prevent use
+    XyAtlMapHelper(_In_ const XyAtlMapHelper&) throw();
+    XyAtlMapHelper& operator=(_In_ const XyAtlMapHelper&) throw();
+};
+
 
 template< typename K, typename V, class KTraits = CElementTraits< K >, class VTraits = CElementTraits< V > >
-class XyAtlMap
+class XyAtlMap:public XyAtlMapHelper
 {
 public:
     typedef typename KTraits::INARGTYPE KINARGTYPE;
@@ -67,8 +130,6 @@ public:
         _In_ float fHiThreshold = 2.25f,
         _In_ UINT nBlockSize = 10) throw();
 
-    size_t GetCount() const throw();
-    bool IsEmpty() const throw();
 
     bool Lookup(
         /* _In_ */ KINARGTYPE key,
@@ -93,7 +154,6 @@ public:
     void RemoveAll();
     void RemoveAtPos(_In_ POSITION pos) throw();
 
-    POSITION GetStartPosition() const throw();
     void GetNextAssoc(
         _Inout_ POSITION& pos,
         _Out_ KOUTARGTYPE key,
@@ -113,12 +173,6 @@ public:
     const V& GetValueAt(_In_ POSITION pos) const;
     V& GetValueAt(_In_ POSITION pos);
 
-    UINT GetHashTableSize() const throw();
-    bool InitHashTable(
-        _In_ UINT nBins,
-        _In_ bool bAllocNow = true);
-    void EnableAutoRehash() throw();
-    void DisableAutoRehash() throw();
     void Rehash(_In_ UINT nBins = 0);
     void SetOptimalLoad(
         _In_ float fOptimalLoad,
@@ -127,33 +181,14 @@ public:
         _In_ bool bRehashNow = false);
 
 #ifdef _DEBUG
-    void AssertValid() const;
 #endif  // _DEBUG
 
-    // Implementation
 private:
-    CNode** m_ppBins;
-    size_t m_nElements;
-    UINT m_nBins;
-    float m_fOptimalLoad;
-    float m_fLoThreshold;
-    float m_fHiThreshold;
-    size_t m_nHiRehashThreshold;
-    size_t m_nLoRehashThreshold;
-    ULONG m_nLockCount;
-    UINT m_nBlockSize;
-    CAtlPlex* m_pBlocks;
-    CNode* m_pFree;
-
-private:
-    bool IsLocked() const throw();
-    UINT PickSize(_In_ size_t nElements) const throw();
     CNode* NewNode(
         /* _In_ */ KINARGTYPE key,
         _In_ UINT iBin,
         _In_ UINT nHash);
     void FreeNode(_Inout_ CNode* pNode);
-    void FreePlexes() throw();
     CNode* GetNode(
         /* _In_ */ KINARGTYPE key,
         _Out_ UINT& iBin,
@@ -167,7 +202,6 @@ private:
         _In_ CNode* pNode,
         _In_opt_ CNode* pPrev) throw();
     CNode* FindNextNode(_In_ CNode* pNode) const throw();
-    void UpdateRehashThresholds() throw();
 
 public:
     ~XyAtlMap() throw();
@@ -179,14 +213,12 @@ private:
 };
 
 
-template< typename K, typename V, class KTraits, class VTraits >
-inline size_t XyAtlMap< K, V, KTraits, VTraits >::GetCount() const throw()
+inline size_t XyAtlMapHelper::GetCount() const throw()
 {
     return( m_nElements );
 }
 
-template< typename K, typename V, class KTraits, class VTraits >
-inline bool XyAtlMap< K, V, KTraits, VTraits >::IsEmpty() const throw()
+inline bool XyAtlMapHelper::IsEmpty() const throw()
 {
     return( m_nElements == 0 );
 }
@@ -208,8 +240,7 @@ inline V& XyAtlMap< K, V, KTraits, VTraits >::operator[](/* _In_ */ KINARGTYPE k
     return( pNode->m_value );
 }
 
-template< typename K, typename V, class KTraits, class VTraits >
-inline UINT XyAtlMap< K, V, KTraits, VTraits >::GetHashTableSize() const throw()
+inline UINT XyAtlMapHelper::GetHashTableSize() const throw()
 {
     return( m_nBins );
 }
@@ -251,7 +282,7 @@ inline const K& XyAtlMap< K, V, KTraits, VTraits >::GetKeyAt(_In_ POSITION pos) 
 {
     ATLENSURE( pos != NULL );
 
-    CNode* pNode = (CNode*)pos;
+    CNode* pNode = static_cast<CNode*>(pos);
 
     return( pNode->m_key );
 }
@@ -261,7 +292,7 @@ inline const V& XyAtlMap< K, V, KTraits, VTraits >::GetValueAt(_In_ POSITION pos
 {
     ATLENSURE( pos != NULL );
 
-    CNode* pNode = (CNode*)pos;
+    CNode* pNode = static_cast<CNode*>(pos);
 
     return( pNode->m_value );
 }
@@ -271,62 +302,25 @@ inline V& XyAtlMap< K, V, KTraits, VTraits >::GetValueAt(_In_ POSITION pos)
 {
     ATLENSURE( pos != NULL );
 
-    CNode* pNode = (CNode*)pos;
+    CNode* pNode = static_cast<CNode*>(pos);
 
     return( pNode->m_value );
 }
 
-template< typename K, typename V, class KTraits, class VTraits >
-inline void XyAtlMap< K, V, KTraits, VTraits >::DisableAutoRehash() throw()
+inline void XyAtlMapHelper::DisableAutoRehash() throw()
 {
     m_nLockCount++;
 }
 
-template< typename K, typename V, class KTraits, class VTraits >
-inline void XyAtlMap< K, V, KTraits, VTraits >::EnableAutoRehash() throw()
+inline void XyAtlMapHelper::EnableAutoRehash() throw()
 {
     ATLASSUME( m_nLockCount > 0 );
     m_nLockCount--;
 }
 
-template< typename K, typename V, class KTraits, class VTraits >
-inline bool XyAtlMap< K, V, KTraits, VTraits >::IsLocked() const throw()
+inline bool XyAtlMapHelper::IsLocked() const throw()
 {
     return( m_nLockCount != 0 );
-}
-
-template< typename K, typename V, class KTraits, class VTraits >
-UINT XyAtlMap< K, V, KTraits, VTraits >::PickSize(_In_ size_t nElements) const throw()
-{
-    // List of primes such that s_anPrimes[i] is the smallest prime greater than 2^(5+i/3)
-    static const UINT s_anPrimes[] =
-    {
-        17, 23, 29, 37, 41, 53, 67, 83, 103, 131, 163, 211, 257, 331, 409, 521, 647, 821,
-        1031, 1291, 1627, 2053, 2591, 3251, 4099, 5167, 6521, 8209, 10331,
-        13007, 16411, 20663, 26017, 32771, 41299, 52021, 65537, 82571, 104033,
-        131101, 165161, 208067, 262147, 330287, 416147, 524309, 660563,
-        832291, 1048583, 1321139, 1664543, 2097169, 2642257, 3329023, 4194319,
-        5284493, 6658049, 8388617, 10568993, 13316089, UINT_MAX
-    };
-
-    size_t nBins = (size_t)(nElements/m_fOptimalLoad);
-    UINT nBinsEstimate = UINT(  UINT_MAX < nBins ? UINT_MAX : nBins );
-
-    // Find the smallest prime greater than our estimate
-    int iPrime = 0;
-    while( nBinsEstimate > s_anPrimes[iPrime] )
-    {
-        iPrime++;
-    }
-
-    if( s_anPrimes[iPrime] == UINT_MAX )
-    {
-        return( nBinsEstimate );
-    }
-    else
-    {
-        return( s_anPrimes[iPrime] );
-    }
 }
 
 template< typename K, typename V, class KTraits, class VTraits >
@@ -351,26 +345,6 @@ typename XyAtlMap< K, V, KTraits, VTraits >::CNode* XyAtlMap< K, V, KTraits, VTr
     pNode = NewNode( key, iBin, nHash );
 
     return( pNode );
-}
-
-template< typename K, typename V, class KTraits, class VTraits >
-POSITION XyAtlMap< K, V, KTraits, VTraits >::GetStartPosition() const throw()
-{
-    if( IsEmpty() )
-    {
-        return( NULL );
-    }
-
-    for( UINT iBin = 0; iBin < m_nBins; iBin++ )
-    {
-        if( m_ppBins[iBin] != NULL )
-        {
-            return( POSITION( m_ppBins[iBin] ) );
-        }
-    }
-    ATLASSERT( false );
-
-    return( NULL );
 }
 
 template< typename K, typename V, class KTraits, class VTraits >
@@ -459,19 +433,8 @@ XyAtlMap< K, V, KTraits, VTraits >::XyAtlMap(
     _In_ float fOptimalLoad,
     _In_ float fLoThreshold,
     _In_ float fHiThreshold,
-    _In_ UINT nBlockSize) throw() :
-m_ppBins( NULL ),
-    m_nBins( nBins ),
-    m_nElements( 0 ),
-    m_nLockCount( 0 ),  // Start unlocked
-    m_fOptimalLoad( fOptimalLoad ),
-    m_fLoThreshold( fLoThreshold ),
-    m_fHiThreshold( fHiThreshold ),
-    m_nHiRehashThreshold( UINT_MAX ),
-    m_nLoRehashThreshold( 0 ),
-    m_pBlocks( NULL ),
-    m_pFree( NULL ),
-    m_nBlockSize( nBlockSize )
+    _In_ UINT nBlockSize) throw() 
+    : XyAtlMapHelper(nBins, fOptimalLoad, fLoThreshold, fHiThreshold, nBlockSize)
 {
     ATLASSERT( nBins > 0 );
     ATLASSERT( nBlockSize > 0 );
@@ -504,47 +467,6 @@ void XyAtlMap< K, V, KTraits, VTraits >::SetOptimalLoad(
 }
 
 template< typename K, typename V, class KTraits, class VTraits >
-void XyAtlMap< K, V, KTraits, VTraits >::UpdateRehashThresholds() throw()
-{
-    m_nHiRehashThreshold = size_t( m_fHiThreshold*m_nBins );
-    m_nLoRehashThreshold = size_t( m_fLoThreshold*m_nBins );
-    if( m_nLoRehashThreshold < 17 )
-    {
-        m_nLoRehashThreshold = 0;
-    }
-}
-
-template< typename K, typename V, class KTraits, class VTraits >
-bool XyAtlMap< K, V, KTraits, VTraits >::InitHashTable(_In_ UINT nBins, _In_ bool bAllocNow)
-{
-    ATLASSUME( m_nElements == 0 );
-    ATLASSERT( nBins > 0 );
-
-    if( m_ppBins != NULL )
-    {
-        delete[] m_ppBins;
-        m_ppBins = NULL;
-    }
-
-    if( bAllocNow )
-    {
-        ATLTRY( m_ppBins = new CNode*[nBins] );
-        if( m_ppBins == NULL )
-        {
-            return false;
-        }
-
-        ATLENSURE( UINT_MAX / sizeof( CNode* ) >= nBins );
-        memset( m_ppBins, 0, sizeof( CNode* )*nBins );
-    }
-    m_nBins = nBins;
-
-    UpdateRehashThresholds();
-
-    return true;
-}
-
-template< typename K, typename V, class KTraits, class VTraits >
 void XyAtlMap< K, V, KTraits, VTraits >::RemoveAll()
 {
     DisableAutoRehash();
@@ -554,7 +476,7 @@ void XyAtlMap< K, V, KTraits, VTraits >::RemoveAll()
         {
             CNode* pNext;
 
-            pNext = m_ppBins[iBin];
+            pNext = static_cast<CNode*>(m_ppBins[iBin]);
             while( pNext != NULL )
             {
                 CNode* pKill;
@@ -613,17 +535,17 @@ typename XyAtlMap< K, V, KTraits, VTraits >::CNode* XyAtlMap< K, V, KTraits, VTr
         {
             AtlThrow( E_OUTOFMEMORY );
         }
-        pNode = (CNode*)pPlex->data();
+        pNode = static_cast<CNode*>(pPlex->data());
         pNode += m_nBlockSize-1;
         for( int iBlock = m_nBlockSize-1; iBlock >= 0; iBlock-- )
         {
-            pNode->m_pNext = m_pFree;
+            pNode->m_pNext = static_cast<CNode*>(m_pFree);
             m_pFree = pNode;
             pNode--;
         }
     }
     ATLENSURE(m_pFree != NULL );
-    pNewNode = m_pFree;
+    pNewNode = static_cast<CNode*>(m_pFree);
     m_pFree = pNewNode->m_pNext;
 
     _ATLTRY
@@ -632,14 +554,14 @@ typename XyAtlMap< K, V, KTraits, VTraits >::CNode* XyAtlMap< K, V, KTraits, VTr
     }
     _ATLCATCHALL()
     {
-        pNewNode->m_pNext = m_pFree;
+        pNewNode->m_pNext = static_cast<CNode*>(m_pFree);
         m_pFree = pNewNode;
 
         _ATLRETHROW;
     }
     m_nElements++;
 
-    pNewNode->m_pNext = m_ppBins[iBin];
+    pNewNode->m_pNext = static_cast<CNode*>(m_ppBins[iBin]);
     m_ppBins[iBin] = pNewNode;
 
     if( (m_nElements > m_nHiRehashThreshold) && !IsLocked() )
@@ -658,7 +580,7 @@ void XyAtlMap< K, V, KTraits, VTraits >::FreeNode(_Inout_ CNode* pNode)
     ATLENSURE( pNode != NULL );
 
     pNode->~CNode();
-    pNode->m_pNext = m_pFree;
+    pNode->m_pNext = static_cast<CNode*>(m_pFree);
     m_pFree = pNode;
 
     ATLASSUME( m_nElements > 0 );
@@ -672,17 +594,6 @@ void XyAtlMap< K, V, KTraits, VTraits >::FreeNode(_Inout_ CNode* pNode)
     if( m_nElements == 0 )
     {
         FreePlexes();
-    }
-}
-
-template< typename K, typename V, class KTraits, class VTraits >
-void XyAtlMap< K, V, KTraits, VTraits >::FreePlexes() throw()
-{
-    m_pFree = NULL;
-    if( m_pBlocks != NULL )
-    {
-        m_pBlocks->FreeDataChain();
-        m_pBlocks = NULL;
     }
 }
 
@@ -705,7 +616,7 @@ typename XyAtlMap< K, V, KTraits, VTraits >::CNode* XyAtlMap< K, V, KTraits, VTr
 
     pFollow = NULL;
     pPrev = NULL;
-    for( CNode* pNode = m_ppBins[iBin]; pNode != NULL; pNode = pNode->m_pNext )
+    for( CNode* pNode = static_cast<CNode*>(m_ppBins[iBin]); pNode != NULL; pNode = pNode->m_pNext )
     {
         if( (pNode->GetHash() == nHash) && KTraits::CompareElements( pNode->m_key, key ) )
         {
@@ -819,13 +730,13 @@ void XyAtlMap< K, V, KTraits, VTraits >::RemoveAtPos(_In_ POSITION pos)
     UINT iBin = pNode->GetHash() % m_nBins;
 
     ATLASSUME( m_ppBins[iBin] != NULL );
-    if( pNode == m_ppBins[iBin] )
+    if( pNode == static_cast<CNode*>(m_ppBins[iBin]) )
     {
         pPrev = NULL;
     }
     else
     {
-        pPrev = m_ppBins[iBin];
+        pPrev = static_cast<CNode*>(m_ppBins[iBin]);
         while( pPrev->m_pNext != pNode )
         {
             pPrev = pPrev->m_pNext;
@@ -874,7 +785,7 @@ void XyAtlMap< K, V, KTraits, VTraits >::Rehash(_In_ UINT nBins)
     {
         CNode* pNode;
 
-        pNode = m_ppBins[iSrcBin];
+        pNode = static_cast<CNode*>(m_ppBins[iSrcBin]);
         while( pNode != NULL )
         {
             CNode* pNext;
@@ -890,7 +801,7 @@ void XyAtlMap< K, V, KTraits, VTraits >::Rehash(_In_ UINT nBins)
     }
 
     delete[] m_ppBins;
-    m_ppBins = ppBins;
+    m_ppBins = (PNode*)ppBins;
     m_nBins = nBins;
 
     UpdateRehashThresholds();
@@ -908,7 +819,7 @@ void XyAtlMap< K, V, KTraits, VTraits >::GetNextAssoc(
     ATLASSUME( m_ppBins != NULL );
     ATLENSURE( pos != NULL );
 
-    pNode = (CNode*)pos;
+    pNode = static_cast<CNode*>(pos);
     pNext = FindNextNode( pNode );
 
     pos = POSITION( pNext );
@@ -926,7 +837,7 @@ const typename XyAtlMap< K, V, KTraits, VTraits >::CPair* XyAtlMap< K, V, KTrait
     ATLASSUME( m_ppBins != NULL );
     ATLASSERT( pos != NULL );
 
-    pNode = (CNode*)pos;
+    pNode = static_cast<CNode*>(pos);
     pNext = FindNextNode( pNode );
 
     pos = POSITION( pNext );
@@ -959,7 +870,7 @@ const K& XyAtlMap< K, V, KTraits, VTraits >::GetNextKey(
     ATLASSUME( m_ppBins != NULL );
     ATLENSURE( pos != NULL );
 
-    pNode = (CNode*)pos;
+    pNode = static_cast<CNode*>(pos);
     pNext = FindNextNode( pNode );
 
     pos = POSITION( pNext );
@@ -977,7 +888,7 @@ const V& XyAtlMap< K, V, KTraits, VTraits >::GetNextValue(
     ATLASSUME( m_ppBins != NULL );
     ATLENSURE( pos != NULL );
 
-    pNode = (CNode*)pos;
+    pNode = static_cast<CNode*>(pos);
     pNext = FindNextNode( pNode );
 
     pos = POSITION( pNext );
@@ -995,7 +906,7 @@ V& XyAtlMap< K, V, KTraits, VTraits >::GetNextValue(
     ATLASSUME( m_ppBins != NULL );
     ATLENSURE( pos != NULL );
 
-    pNode = (CNode*)pos;
+    pNode = static_cast<CNode*>(pos);
     pNext = FindNextNode( pNode );
 
     pos = POSITION( pNext );
@@ -1029,7 +940,7 @@ typename XyAtlMap< K, V, KTraits, VTraits >::CNode* XyAtlMap< K, V, KTraits, VTr
         {
             if( m_ppBins[iBin] != NULL )
             {
-                pNext = m_ppBins[iBin];
+                pNext = static_cast<CNode*>(m_ppBins[iBin]);
             }
 
             iBin++;
@@ -1039,18 +950,6 @@ typename XyAtlMap< K, V, KTraits, VTraits >::CNode* XyAtlMap< K, V, KTraits, VTr
     return( pNext );
 }
 
-#ifdef _DEBUG
-template< typename K, typename V, class KTraits, class VTraits >
-void XyAtlMap< K, V, KTraits, VTraits >::AssertValid() const
-{
-    ATLASSUME( m_nBins > 0 );
-    // non-empty map should have hash table
-    ATLASSERT( IsEmpty() || (m_ppBins != NULL) );
-}
-#endif
-
-#pragma push_macro("new")
-#undef new
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1205,7 +1104,7 @@ public:
             _cache_hit=0; 
             _query_count=0; 
         } 
-        __super::RemoveAll();         
+        __super::RemoveAll();
     }
 
     inline POSITION Lookup(const K& key)
