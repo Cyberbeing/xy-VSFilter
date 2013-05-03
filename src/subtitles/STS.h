@@ -223,12 +223,12 @@ public:
 
 	void Append(CSimpleTextSubtitle& sts, int timeoff = -1);
 
-	bool Open(CString fn, int CharSet, CString name = _T(""));
-	bool Open(CTextFile* f, int CharSet, CString name);
-	bool Open(BYTE* data, int len, int CharSet, CString name);
-	bool SaveAs(CString fn, exttype et, double fps = -1, CTextFile::enc = CTextFile::ASCII);
+	bool Open(const CString& fn, int CharSet, const CString& name = _T(""));
+	bool Open(CTextFile* f, int CharSet, const CString& name);
+	bool Open(BYTE* data, int len, int CharSet, const CString& name);
+	bool SaveAs(const CString& fn, exttype et, double fps = -1, CTextFile::enc = CTextFile::ASCII);
    
-	void Add(CStringW str, bool fUnicode, int start, int end, CString style = CString(_T("Default")), 
+	void Add(const CStringW& str, bool fUnicode, int start, int end, const CString& style = CString(_T("Default")), 
         const CString& actor = CString(_T("")), 
         const CString& effect = CString(_T("")), 
         const CRect& marginRect = CRect(0,0,0,0), int layer = 0, int readorder = -1);
@@ -238,11 +238,11 @@ public:
     //add an STSEntry obj to the array
     //NO addition segments added
     //remember to call sort when all STSEntrys are ready
-	void AddSTSEntryOnly(CStringW str, bool fUnicode, int start, int end, CString style = _T("Default"), const CString& actor = _T(""), const CString& effect = _T(""), const CRect& marginRect = CRect(0,0,0,0), int layer = 0, int readorder = -1);
+	void AddSTSEntryOnly(const CStringW& str, bool fUnicode, int start, int end, const CString& style = _T("Default"), const CString& actor = _T(""), const CString& effect = _T(""), const CRect& marginRect = CRect(0,0,0,0), int layer = 0, int readorder = -1);
 
 	STSStyle* CreateDefaultStyle(int CharSet);
 	void ChangeUnknownStylesToDefault();
-	void AddStyle(CString name, STSStyle* style); // style will be stored and freed in Empty() later
+	void AddStyle(const CString& name, STSStyle* style); // style will be stored and freed in Empty() later
 	bool CopyStyles(const CSTSStyleMap& styles, bool fAppend = false);
 
 	bool SetDefaultStyle(STSStyle& s);
@@ -289,8 +289,8 @@ public:
 #define GetStr GetStrA
 #endif
 
-	void SetStr(int i, CStringA str, bool fUnicode /* ignored */);
-	void SetStr(int i, CStringW str, bool fUnicode);
+	void SetStr(int i, const CStringA& str, bool fUnicode /* ignored */);
+	void SetStr(int i, const CStringW& str, bool fUnicode);
 
     friend bool OpenMicroDVD(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet);
 };

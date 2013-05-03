@@ -292,7 +292,7 @@ static DWORD CharSetToCodePage(DWORD dwCharSet)
     return cs.ciACP;
 }
 
-int FindChar(CStringW str, WCHAR c, int pos, bool fUnicode, int CharSet)
+int FindChar(const CStringW& str, WCHAR c, int pos, bool fUnicode, int CharSet)
 {
     if(fUnicode) return(str.Find(c, pos));
 
@@ -336,7 +336,7 @@ int FindChar(CStringA str, char c, int pos, bool fUnicode, int CharSet)
     return(FindChar(AToW(str), c, pos, false, CharSet));
 }
 */
-static CStringW ToMBCS(CStringW str, DWORD CharSet)
+static CStringW ToMBCS(const CStringW& str, DWORD CharSet)
 {
     CStringW ret;
 
@@ -362,47 +362,48 @@ static CStringW ToMBCS(CStringW str, DWORD CharSet)
     return(ret);
 }
 
-static CStringW UnicodeSSAToMBCS(CStringW str, DWORD CharSet)
+static CStringW UnicodeSSAToMBCS(const CStringW& str, DWORD CharSet)
 {
+    CStringW str_tmp = str;
     CStringW ret;
 
     int OrgCharSet = CharSet;
 
-    for(int j = 0; j < str.GetLength(); )
+    for(int j = 0; j < str_tmp.GetLength(); )
     {
-        j = str.Find('{', j);
+        j = str_tmp.Find('{', j);
         if(j >= 0)
         {
-            ret += ToMBCS(str.Left(j), CharSet);
-            str = str.Mid(j);
+            ret += ToMBCS(str_tmp.Left(j), CharSet);
+            str_tmp = str_tmp.Mid(j);
 
-            j = str.Find('}');
+            j = str_tmp.Find('}');
             if(j < 0)
             {
-                ret += ToMBCS(str, CharSet);
+                ret += ToMBCS(str_tmp, CharSet);
                 break;
             }
             else
             {
-                int k = str.Find(L"\\fe");
+                int k = str_tmp.Find(L"\\fe");
                 if(k >= 0 && k < j)
                 {
                     CharSet = 0;
                     int l = k+3;
-                    for(; _istdigit(str[l]); l++) CharSet = CharSet*10 + (str[l] - '0');
+                    for(; _istdigit(str_tmp[l]); l++) CharSet = CharSet*10 + (str_tmp[l] - '0');
                     if(l == k+3) CharSet = OrgCharSet;
                 }
 
                 j++;
 
-                ret += ToMBCS(str.Left(j), OrgCharSet);
-                str = str.Mid(j);
+                ret += ToMBCS(str_tmp.Left(j), OrgCharSet);
+                str_tmp = str_tmp.Mid(j);
                 j = 0;
             }
         }
         else
         {
-            ret += ToMBCS(str, CharSet);
+            ret += ToMBCS(str_tmp, CharSet);
             break;
         }
     }
@@ -410,7 +411,7 @@ static CStringW UnicodeSSAToMBCS(CStringW str, DWORD CharSet)
     return(ret);
 }
 
-static CStringW ToUnicode(CStringW str, DWORD CharSet)
+static CStringW ToUnicode(const CStringW& str, DWORD CharSet)
 {
     CStringW ret;
 
@@ -445,49 +446,50 @@ static CStringW ToUnicode(CStringW str, DWORD CharSet)
     return(ret);
 }
 
-static CStringW MBCSSSAToUnicode(CStringW str, int CharSet)
+static CStringW MBCSSSAToUnicode(const CStringW& str, int CharSet)
 {
+    CStringW str_tmp = str;
     CStringW ret;
 
     int OrgCharSet = CharSet;
 
-    for(int j = 0; j < str.GetLength(); )
+    for(int j = 0; j < str_tmp.GetLength(); )
     {
-        j = FindChar(str, '{', 0, false, CharSet);
+        j = FindChar(str_tmp, '{', 0, false, CharSet);
 
         if(j >= 0)
         {
-            ret += ToUnicode(str.Left(j), CharSet);
-            str = str.Mid(j);
+            ret += ToUnicode(str_tmp.Left(j), CharSet);
+            str_tmp = str_tmp.Mid(j);
 
-            j = FindChar(str, '}', 0, false, CharSet);
+            j = FindChar(str_tmp, '}', 0, false, CharSet);
 
             if(j < 0)
             {
-                ret += ToUnicode(str, CharSet);
+                ret += ToUnicode(str_tmp, CharSet);
                 break;
             }
             else
             {
-                int k = str.Find(L"\\fe");
+                int k = str_tmp.Find(L"\\fe");
                 if(k >= 0 && k < j)
                 {
                     CharSet = 0;
                     int l = k+3;
-                    for(; _istdigit(str[l]); l++) CharSet = CharSet*10 + (str[l] - '0');
+                    for(; _istdigit(str_tmp[l]); l++) CharSet = CharSet*10 + (str_tmp[l] - '0');
                     if(l == k+3) CharSet = OrgCharSet;
                 }
 
                 j++;
 
-                ret += ToUnicode(str.Left(j), OrgCharSet);
-                str = str.Mid(j);
+                ret += ToUnicode(str_tmp.Left(j), OrgCharSet);
+                str_tmp = str_tmp.Mid(j);
                 j = 0;
             }
         }
         else
         {
-            ret += ToUnicode(str, CharSet);
+            ret += ToUnicode(str_tmp, CharSet);
             break;
         }
     }
@@ -495,37 +497,39 @@ static CStringW MBCSSSAToUnicode(CStringW str, int CharSet)
     return(ret);
 }
 
-CStringW RemoveSSATags(CStringW str, bool fUnicode, int CharSet)
+CStringW RemoveSSATags(const CStringW& str, bool fUnicode, int CharSet)
 {
-    str.Replace (L"{\\i1}", L"<i>");
-    str.Replace (L"{\\i}", L"</i>");
+    CStringW ret = str;
+    ret.Replace (L"{\\i1}", L"<i>");
+    ret.Replace (L"{\\i}", L"</i>");
 
-    for(int i = 0, j; i < str.GetLength(); )
+    for(int i = 0, j; i < ret.GetLength(); )
     {
-        if((i = FindChar(str, '{', i, fUnicode, CharSet)) < 0) break;
-        if((j = FindChar(str, '}', i, fUnicode, CharSet)) < 0) break;
-        str.Delete(i, j-i+1);
+        if((i = FindChar(ret, '{', i, fUnicode, CharSet)) < 0) break;
+        if((j = FindChar(ret, '}', i, fUnicode, CharSet)) < 0) break;
+        ret.Delete(i, j-i+1);
     }
 
-    str.Replace(L"\\N", L"\n");
-    str.Replace(L"\\n", L"\n");
-    str.Replace(L"\\h", L" ");
+    ret.Replace(L"\\N", L"\n");
+    ret.Replace(L"\\n", L"\n");
+    ret.Replace(L"\\h", L" ");
 
-    return(str);
+    return(ret);
 }
 
 //
 
-static CStringW SubRipper2SSA(CStringW str, int CharSet)
+static CStringW SubRipper2SSA(const CStringW& str, int CharSet)
 {
-    str.Replace(L"<i>", L"{\\i1}");
-    str.Replace(L"</i>", L"{\\i}");
-    str.Replace(L"<b>", L"{\\b1}");
-    str.Replace(L"</b>", L"{\\b}");
-    str.Replace(L"<u>", L"{\\u1}");
-    str.Replace(L"</u>", L"{\\u}");
+    CStringW ret = str;
+    ret.Replace(L"<i>", L"{\\i1}");
+    ret.Replace(L"</i>", L"{\\i}");
+    ret.Replace(L"<b>", L"{\\b1}");
+    ret.Replace(L"</b>", L"{\\b}");
+    ret.Replace(L"<u>", L"{\\u1}");
+    ret.Replace(L"</u>", L"{\\u}");
 
-    return(str);
+    return(ret);
 }
 
 static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
@@ -721,7 +725,7 @@ static bool OpenSubViewer(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
     return(!ret.IsEmpty());
 }
 
-static STSStyle* GetMicroDVDStyle(CString str, int CharSet)
+static STSStyle* GetMicroDVDStyle(const CString& str, int CharSet)
 {
     STSStyle* ret = DEBUG_NEW STSStyle();
     if(!ret) return(NULL);
@@ -778,7 +782,7 @@ static STSStyle* GetMicroDVDStyle(CString str, int CharSet)
     return(ret);
 }
 
-static CStringW MicroDVD2SSA(CStringW str, bool fUnicode, int CharSet)
+static CStringW MicroDVD2SSA(const CStringW& str, bool fUnicode, int CharSet)
 {
     CStringW ret;
 
@@ -967,7 +971,7 @@ static bool OpenMicroDVD(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
     return(!ret.IsEmpty());
 }
 
-static void ReplaceNoCase(CStringW& str, CStringW from, CStringW to)
+static void ReplaceNoCase(CStringW& str, const CStringW& from, const CStringW& to)
 {
     CStringW lstr = str;
     lstr.MakeLower();
@@ -987,22 +991,23 @@ static void ReplaceNoCase(CStringW& str, CStringW from, CStringW to)
     }
 }
 
-static CStringW SMI2SSA(CStringW str, int CharSet)
+static CStringW SMI2SSA(const CStringW& str, int CharSet)
 {
-    ReplaceNoCase(str, L"&nbsp;", L" ");
-    ReplaceNoCase(str, L"&quot;", L"\"");
-    ReplaceNoCase(str, L"<br>", L"\\N");
-    ReplaceNoCase(str, L"<i>", L"{\\i1}");
-    ReplaceNoCase(str, L"</i>", L"{\\i}");
-    ReplaceNoCase(str, L"<b>", L"{\\b1}");
-    ReplaceNoCase(str, L"</b>", L"{\\b}");
+    CStringW ret = str;
+    ReplaceNoCase(ret, L"&nbsp;", L" ");
+    ReplaceNoCase(ret, L"&quot;", L"\"");
+    ReplaceNoCase(ret, L"<br>", L"\\N");
+    ReplaceNoCase(ret, L"<i>", L"{\\i1}");
+    ReplaceNoCase(ret, L"</i>", L"{\\i}");
+    ReplaceNoCase(ret, L"<b>", L"{\\b1}");
+    ReplaceNoCase(ret, L"</b>", L"{\\b}");
 
-    CStringW lstr = str;
+    CStringW lstr = ret;
     lstr.MakeLower();
 
     // maven@maven.de
     // now parse line
-    for(int i = 0, j = str.GetLength(); i < j; )
+    for(int i = 0, j = ret.GetLength(); i < j; )
     {
         int k;
         if((k = lstr.Find('<', i)) < 0) break;
@@ -1046,7 +1051,7 @@ static CStringW SMI2SSA(CStringW str, int CharSet)
 
                     arg.Format(L"%02x%02x%02x", color&0xff, (color>>8)&0xff, (color>>16)&0xff);
                     lstr.Insert(k + l + chars_inserted, CStringW(L"{\\c&H") + arg + L"&}");
-                    str.Insert(k + l + chars_inserted, CStringW(L"{\\c&H") + arg + L"&}");
+                    ret.Insert(k + l + chars_inserted, CStringW(L"{\\c&H") + arg + L"&}");
                     chars_inserted += 5 + arg.GetLength() + 2;
                 }
 /*
@@ -1099,16 +1104,16 @@ static CStringW SMI2SSA(CStringW str, int CharSet)
         else if (lstr.Find(L"</font>", k) == k)
         {
             lstr.Insert(k + l + chars_inserted, L"{\\c}");
-            str.Insert(k + l + chars_inserted, L"{\\c}");
+            ret.Insert(k + l + chars_inserted, L"{\\c}");
             chars_inserted += 4;
         }
 
-        str.Delete(k, l); lstr.Delete(k, l);
+        ret.Delete(k, l); lstr.Delete(k, l);
         i = k + chars_inserted;
-        j = str.GetLength();
+        j = ret.GetLength();
     }
 
-    return(str);
+    return(ret);
 }
 
 static bool OpenSami(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
@@ -1842,15 +1847,16 @@ static bool OpenUSF(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
     return(false);
 }
 
-static CStringW MPL22SSA(CStringW str, bool fUnicode, int CharSet) 
+static CStringW MPL22SSA(const CStringW& str, bool fUnicode, int CharSet) 
 {
+    CStringW ret = str;
     // Convert MPL2 italic tags to MicroDVD italic tags
-    if (str[0] == L'/') {
-        str = L"{y:i}" + str.Mid(1);
+    if (ret[0] == L'/') {
+        ret = L"{y:i}" + ret.Mid(1);
     }
-    str.Replace(L"|/", L"|{y:i}");
+    ret.Replace(L"|/", L"|{y:i}");
 
-    return MicroDVD2SSA(str, fUnicode, CharSet);
+    return MicroDVD2SSA(ret, fUnicode, CharSet);
 }
 
 static bool OpenMPL2(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
@@ -2040,9 +2046,10 @@ void CSimpleTextSubtitle::Empty()
     m_entries.RemoveAll();
 }
 
-void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, 
-    CString style, const CString& actor, const CString& effect, const CRect& marginRect, int layer, int readorder)
+void CSimpleTextSubtitle::Add(const CStringW& str_in, bool fUnicode, int start, int end, 
+    const CString& style, const CString& actor, const CString& effect, const CRect& marginRect, int layer, int readorder)
 {
+    CStringW str = str_in;
     TRACE_SUB(ReftimeToCString(start)<<" "<<ReftimeToCString(end)<<" "<<str.GetString()<<" style:"<<style.GetString()
         <<" Unicode:"<<fUnicode
         <<" actor:"<<actor.GetString()<<" effect:"<<effect.GetString()
@@ -2054,16 +2061,18 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end,
 
     str.Remove('\r');
     str.Replace(L"\n", L"\\N");
-    if(style.IsEmpty()) style = g_default_style;
-    else if(style!=g_default_style)
-    {
-        style.TrimLeft('*');
-    }
 
     STSEntry sub;
     sub.str = str;
     sub.fUnicode = fUnicode;
+
     sub.style = style;
+    if(sub.style.IsEmpty()) sub.style = g_default_style;
+    else if(sub.style!=g_default_style)
+    {
+        sub.style.TrimLeft('*');
+    }
+
     sub.actor = actor;
     sub.effect = effect;
     sub.marginRect = marginRect;
@@ -2206,19 +2215,22 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end,
 */
 }
 
-void CSimpleTextSubtitle::AddSTSEntryOnly( CStringW str, bool fUnicode, int start, int end, CString style /*= _T("Default")*/, const CString& actor /*= _T("")*/, const CString& effect /*= _T("")*/, const CRect& marginRect /*= CRect(0,0,0,0)*/, int layer /*= 0*/, int readorder /*= -1*/ )
+void CSimpleTextSubtitle::AddSTSEntryOnly( const CStringW& str_in, bool fUnicode, int start, int end, const CString& style /*= _T("Default")*/, const CString& actor /*= _T("")*/, const CString& effect /*= _T("")*/, const CRect& marginRect /*= CRect(0,0,0,0)*/, int layer /*= 0*/, int readorder /*= -1*/ )
 {
+    CStringW str = str_in;
     if(str.Trim().IsEmpty() || start > end) return;
 
     str.Remove('\r');
     str.Replace(L"\n", L"\\N");
-    if(style.IsEmpty()) style = _T("Default");
-    style.TrimLeft('*');
 
     STSEntry sub;
     sub.str = str;
     sub.fUnicode = fUnicode;
+
     sub.style = style;
+    if(sub.style.IsEmpty()) sub.style = _T("Default");
+    sub.style.TrimLeft('*');
+
     sub.actor = actor;
     sub.effect = effect;
     sub.marginRect = marginRect;
@@ -2280,21 +2292,21 @@ void CSimpleTextSubtitle::ChangeUnknownStylesToDefault()
     }
 }
 
-void CSimpleTextSubtitle::AddStyle(CString name, STSStyle* style)
+void CSimpleTextSubtitle::AddStyle(const CString& name, STSStyle* style)
 {
     int i, j;
 
-    if(name.IsEmpty()) name = g_default_style;
+    CString name_tmp = name.IsEmpty() ? name : g_default_style;
 
     STSStyle* val;
-    if(m_styles.Lookup(name, val))
+    if(m_styles.Lookup(name_tmp, val))
     {
         if(*val == *style)
         {
             delete style;
             return;
         }
-        const CString& name_str = name;
+        const CString& name_str = name_tmp;
 
         int len = name_str.GetLength();
 
@@ -2321,17 +2333,17 @@ void CSimpleTextSubtitle::AddStyle(CString name, STSStyle* style)
         }
         while(m_styles.Lookup(name3));
 
-        m_styles.RemoveKey(name);
+        m_styles.RemoveKey(name_tmp);
         m_styles[name3] = val;
 
         for(i = 0, j = m_entries.GetCount(); i < j; i++)
         {
             STSEntry& stse = m_entries.GetAt(i);
-            if(stse.style == name) stse.style = name3;
+            if(stse.style == name_tmp) stse.style = name3;
         }
     }
 
-    m_styles[name] = style;
+    m_styles[name_tmp] = style;
 }
 
 bool CSimpleTextSubtitle::SetDefaultStyle(STSStyle& s)
@@ -2684,20 +2696,21 @@ CStringW CSimpleTextSubtitle::GetStrWA(int i, bool fSSA)
     return(str);
 }
 
-void CSimpleTextSubtitle::SetStr(int i, CStringA str, bool fUnicode)
+void CSimpleTextSubtitle::SetStr(int i, const CStringA& str, bool fUnicode)
 {
     SetStr(i, AToW(str), false);
 }
 
-void CSimpleTextSubtitle::SetStr(int i, CStringW str, bool fUnicode)
+void CSimpleTextSubtitle::SetStr(int i, const CStringW& str, bool fUnicode)
 {
+    CStringW str_tmp = str;
     STSEntry& stse = m_entries.GetAt(i);
 
-    str.Replace(L"\n", L"\\N");
+    str_tmp.Replace(L"\n", L"\\N");
 
-    if(stse.fUnicode && !fUnicode) stse.str = MBCSSSAToUnicode(str, GetCharSet(i));
-    else if(!stse.fUnicode && fUnicode) stse.str = UnicodeSSAToMBCS(str, GetCharSet(i));
-    else stse.str = str;
+    if(stse.fUnicode && !fUnicode) stse.str = MBCSSSAToUnicode(str_tmp, GetCharSet(i));
+    else if(!stse.fUnicode && fUnicode) stse.str = UnicodeSSAToMBCS(str_tmp, GetCharSet(i));
+    else stse.str = str_tmp;
 }
 
 static int comp1(const void* a, const void* b)
@@ -2783,22 +2796,28 @@ void CSimpleTextSubtitle::CreateSegments()
     LogSegments(m_segments);
 }
 
-bool CSimpleTextSubtitle::Open(CString fn, int CharSet, CString name)
+bool CSimpleTextSubtitle::Open(const CString& fn, int CharSet, const CString& name)
 {
     Empty();
 
     CWebTextFile f(CTextFile::UTF8);
     if(!f.Open(fn)) return(false);
 
-    fn.Replace('\\', '/');
+    CString fn_new = fn;
+    fn_new.Replace('\\', '/');
+    CString new_name;
     if(name.IsEmpty())
     {
-        name = fn.Left(fn.ReverseFind('.'));
-        name = name.Mid(name.ReverseFind('/')+1);
-        name = name.Mid(name.ReverseFind('.')+1);
+        new_name = fn_new.Left(fn_new.ReverseFind('.'));
+        new_name = new_name.Mid(new_name.ReverseFind('/')+1);
+        new_name = new_name.Mid(new_name.ReverseFind('.')+1);
+    }
+    else
+    {
+        new_name = name;
     }
 
-    return(Open(&f, CharSet, name));
+    return(Open(&f, CharSet, new_name));
 }
 
 static int CountLines(CTextFile* f, ULONGLONG from, ULONGLONG to)
@@ -2810,7 +2829,7 @@ static int CountLines(CTextFile* f, ULONGLONG from, ULONGLONG to)
     return(n);
 }
 
-bool CSimpleTextSubtitle::Open(CTextFile* f, int CharSet, CString name)
+bool CSimpleTextSubtitle::Open(CTextFile* f, int CharSet, const CString& name)
 {
     Empty();
 
@@ -2873,7 +2892,7 @@ bool CSimpleTextSubtitle::Open(CTextFile* f, int CharSet, CString name)
     return(false);
 }
 
-bool CSimpleTextSubtitle::Open(BYTE* data, int len, int CharSet, CString name)
+bool CSimpleTextSubtitle::Open(BYTE* data, int len, int CharSet, const CString& name)
 {
     TCHAR path[MAX_PATH];
     if(!GetTempPath(MAX_PATH, path)) return(false);
@@ -2897,16 +2916,17 @@ bool CSimpleTextSubtitle::Open(BYTE* data, int len, int CharSet, CString name)
     return(fRet);
 }
 
-bool CSimpleTextSubtitle::SaveAs(CString fn, exttype et, double fps, CTextFile::enc e)
+bool CSimpleTextSubtitle::SaveAs(const CString& fn, exttype et, double fps, CTextFile::enc e)
 {
-    if(fn.Mid(fn.ReverseFind('.')+1).CompareNoCase(G_EXTTYPESTR[et]))
+    CString fn_out = fn;
+    if(fn_out.Mid(fn_out.ReverseFind('.')+1).CompareNoCase(G_EXTTYPESTR[et]))
     {
-        if(fn[fn.GetLength()-1] != '.') fn += _T(".");
-        fn += G_EXTTYPESTR[et];
+        if(fn_out[fn_out.GetLength()-1] != '.') fn_out += _T(".");
+        fn_out += G_EXTTYPESTR[et];
     }
 
     CTextFile f;
-    if(!f.Save(fn, e))
+    if(!f.Save(fn_out, e))
         return(false);
 
     if(et == EXTSMI)
@@ -3114,7 +3134,7 @@ bool CSimpleTextSubtitle::SaveAs(CString fn, exttype et, double fps, CTextFile::
     if(!m_fUsingAutoGeneratedDefaultStyle && m_styles.Lookup(g_default_style, s) && et != EXTSSA && et != EXTASS)
     {
         CTextFile f;
-        if(!f.Save(fn + _T(".style"), e))
+        if(!f.Save(fn_out + _T(".style"), e))
             return(false);
 
         CString str, str2;
