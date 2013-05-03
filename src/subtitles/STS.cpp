@@ -1623,27 +1623,27 @@ if(sver <= 4)   style->scrAlignment = (style->scrAlignment&4) ? ((style->scrAlig
         {
             buff = GetStr(buff);
             buff.MakeLower();
-            if (buff=="none")
+            if (buff==L"none")
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_AUTO;
             }
-            else if (buff=="tv.601")
+            else if (buff==L"tv.601")
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT601;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_TV;
             }
-            else if (buff=="tv.709")
+            else if (buff==L"tv.709")
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT709;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_TV;
             }
-            else if (buff=="pc.601")
+            else if (buff==L"pc.601")
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT601;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_PC;
             }
-            else if (buff=="pc.709")
+            else if (buff==L"pc.709")
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT709;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_PC;
