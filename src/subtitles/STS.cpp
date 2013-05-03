@@ -1269,10 +1269,10 @@ inline double GetFloat(CStringW& buff, char sep = ',') //throw(...)
     return((double)ret);
 }
 
-inline CStringW::PCXSTR TryNextStr(CStringW::PXSTR * buff, WCHAR sep = WCHAR(','))
+inline LPWSTR TryNextStr(LPWSTR * buff, WCHAR sep = WCHAR(','))
 {
-    CStringW::PXSTR start = NULL;
-    CStringW::PXSTR ret = NULL;
+    LPWSTR start = NULL;
+    LPWSTR ret = NULL;
     for(start=*buff; *start!=0 && *start==WCHAR(' '); start++) ;
     
     *buff=start;
@@ -1288,15 +1288,17 @@ inline CStringW::PCXSTR TryNextStr(CStringW::PXSTR * buff, WCHAR sep = WCHAR(','
     return(ret);
 }
 
-inline int NextInt(CStringW::PXSTR * buff, WCHAR sep = WCHAR(',')) //throw(...)
+inline int NextInt(LPWSTR * buff, WCHAR sep = WCHAR(',')) //throw(...)
 {
-    CStringW str;
+    LPCWSTR str;
 
     str = TryNextStr(buff, sep);
-    str.MakeLower();
+    //str.MakeLower();
 
-    CStringW fmtstr = str.GetLength() > 2 && (str.Left(2) == L"&h" || str.Left(2) == L"0x")
-        ? str = str.Mid(2), L"%x"
+    LPCWSTR fmtstr = wcslen(str) > 2 && 
+        ((str[0] == L'&' && (str[1]== L'h' || str[1]== L'H')/* &hXXXX */) || 
+         (str[0] == L'0' && (str[1]== L'x' || str[1]== L'X')/* 0xXXXX */))
+        ? str += 2, L"%x"
         : L"%d";
 
     int ret;
@@ -1305,12 +1307,13 @@ inline int NextInt(CStringW::PXSTR * buff, WCHAR sep = WCHAR(',')) //throw(...)
     return(ret);
 }
 
-inline double NextFloat(CStringW::PXSTR * buff, WCHAR sep = WCHAR(',')) //throw(...)
+inline double NextFloat(LPWSTR * buff, WCHAR sep = WCHAR(',')) //throw(...)
 {
-    CStringW str;
-
-    str = TryNextStr(buff, sep);
-    str.MakeLower();
+    LPWSTR str = TryNextStr(buff, sep);
+#pragma warning (push)
+#pragma warning(disable : 4996)
+    _wcslwr( str );
+#pragma warning (pop)
 
     float ret;
     if(swscanf(str, L"%f", &ret) != 1) throw 1;
@@ -1422,20 +1425,21 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
         buff.Trim();
         if(buff.IsEmpty() || buff.GetAt(0) == ';') continue;
 
-        CStringW entry;
+        LPWSTR __buff = buff.GetBuffer();//must call ReleaseBuffer before use any methods of buff
+        LPWSTR entry  = TryNextStr(&__buff, ':');
 
-//      try {
-            entry = GetStr(buff, ':');
-//  }
-//      catch(...) {continue;}
-
-        entry.MakeLower();
-
-        if(entry == L"dialogue")
+        if (entry==NULL)
+        {
+            continue;//This can NEVER happen actually
+        }
+#pragma warning (push)
+#pragma warning(disable : 4996)
+        _wcslwr( entry );
+#pragma warning (pop)
+        if(!wcscmp(entry, L"dialogue"))
         {
             try
             {
-                CStringW::PXSTR __buff = buff.GetBuffer();
                 int hh1, mm1, ss1, ms1_div10, hh2, mm2, ss2, ms2_div10, layer = 0;
                 CString Style, Actor, Effect;
                 CRect marginRect;
@@ -1472,23 +1476,21 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
                     Style, Actor, Effect,
                     marginRect,
                     layer);
-                buff.ReleaseBuffer();
             }
             catch(...)
             {
-                buff.ReleaseBuffer();
                 //                ASSERT(0);
                 //                throw;
                 return(false);
             }
         }
-        else if(entry == L"[script info]")
+        else if(!wcscmp(entry, L"[script info]"))
         {
             fRet = true;
         }
-        else if(entry == L"playresx")
+        else if(!wcscmp(entry, L"playresx"))
         {
-            try {ret.m_dstScreenSize.cx = GetInt(buff);}
+            try {ret.m_dstScreenSize.cx = NextInt(&__buff);}
             catch(...) {ret.m_dstScreenSize = CSize(0, 0); return(false);}
 
             if(ret.m_dstScreenSize.cy <= 0)
@@ -1498,9 +1500,9 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
                     : ret.m_dstScreenSize.cx * 3 / 4;
             }
         }
-        else if(entry == L"playresy")
+        else if(!wcscmp(entry, L"playresy"))
         {
-            try {ret.m_dstScreenSize.cy = GetInt(buff);}
+            try {ret.m_dstScreenSize.cy = NextInt(&__buff);}
             catch(...) {ret.m_dstScreenSize = CSize(0, 0); return(false);}
 
             if(ret.m_dstScreenSize.cx <= 0)
@@ -1510,45 +1512,52 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
                     : ret.m_dstScreenSize.cy * 4 / 3;
             }
         }
-        else if(entry == L"wrapstyle")
+        else if(!wcscmp(entry, L"wrapstyle"))
         {
-            try {ret.m_defaultWrapStyle = GetInt(buff);}
+            try {ret.m_defaultWrapStyle = NextInt(&__buff);}
             catch(...) {ret.m_defaultWrapStyle = 1; return(false);}
         }
-        else if(entry == L"scripttype")
+        else if(!wcscmp(entry, L"scripttype"))
         {
-            if(buff.GetLength() >= 4 && !buff.Right(4).CompareNoCase(L"4.00")) version = sver = 4;
-            else if(buff.GetLength() >= 5 && !buff.Right(5).CompareNoCase(L"4.00+")) version = sver = 5;
-            else if(buff.GetLength() >= 6 && !buff.Right(6).CompareNoCase(L"4.00++")) version = sver = 6;
+            int len = wcslen(__buff);
+            if(len >= 4 && !wcscmp(__buff+len-4, L"4.00")) version = sver = 4;
+            else if(len >= 5 && !wcscmp(__buff+len+5, L"4.00+")) version = sver = 5;
+            else if(len >= 6 && !wcscmp(__buff+len+6, L"4.00++")) version = sver = 6;
         }
-        else if(entry == L"collisions")
+        else if(!wcscmp(entry, L"collisions"))
         {
-            buff = GetStr(buff);
-            buff.MakeLower();
-            ret.m_collisions = buff.Find(L"reverse") >= 0 ? 1 : 0;
+            __buff = TryNextStr(&__buff);
+#pragma warning (push)
+#pragma warning(disable : 4996)
+            _wcslwr( __buff );
+#pragma warning (pop)
+            ret.m_collisions = wcsstr(__buff, L"reverse") != NULL ? 1 : 0;
         }
-        else if(entry == L"scaledborderandshadow")
+        else if(!wcscmp(entry, L"scaledborderandshadow"))
         {
-            buff = GetStr(buff);
-            buff.MakeLower();
-            ret.m_fScaledBAS = buff.Find(L"yes") >= 0;
+            __buff = TryNextStr(&__buff);
+#pragma warning (push)
+#pragma warning(disable : 4996)
+            _wcslwr( __buff );
+#pragma warning (pop)
+            ret.m_fScaledBAS = wcsstr(__buff, L"yes") != NULL ? 1 : 0;
         }
-        else if(entry == L"[v4 styles]")
+        else if(!wcscmp(entry, L"[v4 styles]"))
         {
             fRet = true;
             sver = 4;
         }
-        else if(entry == L"[v4+ styles]")
+        else if(!wcscmp(entry, L"[v4+ styles]"))
         {
             fRet = true;
             sver = 5;
         }
-        else if(entry == L"[v4++ styles]")
+        else if(!wcscmp(entry, L"[v4++ styles]"))
         {
             fRet = true;
             sver = 6;
         }
-        else if(entry == L"style")
+        else if(!wcscmp(entry, L"style"))
         {
             STSStyle* style = DEBUG_NEW STSStyle;
             if(!style) return(false);
@@ -1559,30 +1568,30 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
                 int alpha;
                 CRect tmp_rect;
 
-                StyleName = WToT(GetStr(buff));
-                style->fontName = WToT(GetStr(buff));
-                style->fontSize = GetFloat(buff);
-                for(int i = 0; i < 4; i++) style->colors[i] = (COLORREF)GetInt(buff);
-                style->fontWeight = !!GetInt(buff) ? FW_BOLD : FW_NORMAL;
-                style->fItalic = !!GetInt(buff);
-if(sver >= 5)   style->fUnderline = !!GetInt(buff);
-if(sver >= 5)   style->fStrikeOut = !!GetInt(buff);
-if(sver >= 5)   style->fontScaleX = GetFloat(buff);
-if(sver >= 5)   style->fontScaleY = GetFloat(buff);
-if(sver >= 5)   style->fontSpacing = GetFloat(buff);
-if(sver >= 5)   style->fontAngleZ = GetFloat(buff);
-if(sver >= 4)   style->borderStyle = GetInt(buff);
-                style->outlineWidthX = style->outlineWidthY = GetFloat(buff);
-                style->shadowDepthX = style->shadowDepthY = GetFloat(buff);
-                style->scrAlignment = GetInt(buff);
-                tmp_rect.left =  GetInt(buff);
-                tmp_rect.right = GetInt(buff);
-                tmp_rect.top = tmp_rect.bottom = GetInt(buff);
-if(sver >= 6)   tmp_rect.bottom = GetInt(buff);
+                StyleName = WToT(TryNextStr(&__buff));
+                style->fontName = WToT(TryNextStr(&__buff));
+                style->fontSize = NextFloat(&__buff);
+                for(int i = 0; i < 4; i++) style->colors[i] = (COLORREF)NextInt(&__buff);
+                style->fontWeight = !!NextInt(&__buff) ? FW_BOLD : FW_NORMAL;
+                style->fItalic = !!NextInt(&__buff);
+if(sver >= 5)   style->fUnderline = !!NextInt(&__buff);
+if(sver >= 5)   style->fStrikeOut = !!NextInt(&__buff);
+if(sver >= 5)   style->fontScaleX = NextFloat(&__buff);
+if(sver >= 5)   style->fontScaleY = NextFloat(&__buff);
+if(sver >= 5)   style->fontSpacing = NextFloat(&__buff);
+if(sver >= 5)   style->fontAngleZ = NextFloat(&__buff);
+if(sver >= 4)   style->borderStyle = NextInt(&__buff);
+                style->outlineWidthX = style->outlineWidthY = NextFloat(&__buff);
+                style->shadowDepthX = style->shadowDepthY = NextFloat(&__buff);
+                style->scrAlignment = NextInt(&__buff);
+                tmp_rect.left =  NextInt(&__buff);
+                tmp_rect.right = NextInt(&__buff);
+                tmp_rect.top = tmp_rect.bottom = NextInt(&__buff);
+if(sver >= 6)   tmp_rect.bottom = NextInt(&__buff);
                 style->marginRect = tmp_rect;
-if(sver <= 4)   alpha = GetInt(buff);
-                style->charSet = GetInt(buff);
-if(sver >= 6)   style->relativeTo = GetInt(buff);
+if(sver <= 4)   alpha = NextInt(&__buff);
+                style->charSet = NextInt(&__buff);
+if(sver >= 6)   style->relativeTo = NextInt(&__buff);
 
 if(sver <= 4)   style->colors[2] = style->colors[3]; // style->colors[2] is used for drawing the outline
 if(sver <= 4)   alpha = max(min(alpha, 0xff), 0);
@@ -1611,44 +1620,48 @@ if(sver <= 4)   style->scrAlignment = (style->scrAlignment&4) ? ((style->scrAlig
                 return(false);
             }
         }
-        else if(entry == L"[events]")
+        else if(!wcscmp(entry, L"[events]"))
         {
             fRet = true;
         }
-        else if(entry == L"fontname")
+        else if(!wcscmp(entry, L"fontname"))
         {
             LoadUUEFont(file);
         }
-        else if(entry == L"ycbcr matrix")
+        else if(!wcscmp(entry, L"ycbcr matrix"))
         {
-            buff = GetStr(buff);
-            buff.MakeLower();
-            if (buff==L"none")
+            __buff = TryNextStr(&__buff);
+#pragma warning (push)
+#pragma warning(disable : 4996)
+            _wcslwr( __buff );
+#pragma warning (pop)
+            if (!wcscmp(__buff, L"none"))
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_AUTO;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_AUTO;
             }
-            else if (buff==L"tv.601")
+            else if (!wcscmp(__buff, L"tv.601"))
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT601;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_TV;
             }
-            else if (buff==L"tv.709")
+            else if (!wcscmp(__buff, L"tv.709"))
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT709;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_TV;
             }
-            else if (buff==L"pc.601")
+            else if (!wcscmp(__buff, L"pc.601"))
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT601;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_PC;
             }
-            else if (buff==L"pc.709")
+            else if (!wcscmp(__buff, L"pc.709"))
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT709;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_PC;
             }
         }
+        buff.ReleaseBuffer();
     }
 //    ret.Sort();
     return(fRet);
