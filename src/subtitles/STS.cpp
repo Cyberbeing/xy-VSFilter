@@ -1472,9 +1472,11 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
                     Style, Actor, Effect,
                     marginRect,
                     layer);
+                buff.ReleaseBuffer();
             }
             catch(...)
             {
+                buff.ReleaseBuffer();
                 //                ASSERT(0);
                 //                throw;
                 return(false);
