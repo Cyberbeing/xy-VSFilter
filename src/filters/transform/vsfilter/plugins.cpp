@@ -444,7 +444,7 @@ public:
             bool FssProc(FilterActivation* fa, const FilterFunctions* ff, char* buf, int buflen) {
                 CStringA fn(GetFileName());
                 fn.Replace("\\", "\\\\");
-                _snprintf_s(buf, buflen, buflen, "Config(\"%s\")", fn);
+                _snprintf_s(buf, buflen, _TRUNCATE, "Config(\"%s\")", fn);
                 return true;
             }
         };
@@ -486,7 +486,7 @@ public:
             bool FssProc(FilterActivation* fa, const FilterFunctions* ff, char* buf, int buflen) {
                 CStringA fn(GetFileName());
                 fn.Replace("\\", "\\\\");
-                _snprintf_s(buf, buflen, buflen, "Config(\"%s\", %d)", fn, GetCharSet());
+                _snprintf_s(buf, buflen, _TRUNCATE, "Config(\"%s\", %d)", fn, GetCharSet());
                 return true;
             }
         };
@@ -711,7 +711,7 @@ public:
             bool FssProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* buf, int buflen) {
                 CStringA fn(GetFileName());
                 fn.Replace("\\", "\\\\");
-                _snprintf_s(buf, buflen, buflen, "Config(\"%s\")", fn);
+                _snprintf_s(buf, buflen, _TRUNCATE, "Config(\"%s\")", fn);
                 return true;
             }
         };
@@ -759,7 +759,7 @@ public:
             bool FssProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* buf, int buflen) {
                 CStringA fn(GetFileName());
                 fn.Replace("\\", "\\\\");
-                _snprintf_s(buf, buflen, buflen, "Config(\"%s\", %d)", fn, GetCharSet());
+                _snprintf_s(buf, buflen, _TRUNCATE, "Config(\"%s\", %d)", fn, GetCharSet());
                 return true;
             }
         };
