@@ -40,16 +40,16 @@ typedef struct {int start, stop; CStringW effect, style, str; posattriblist_t pa
 
 class CUSFSubtitles
 {
-	bool ParseUSFSubtitles(CComPtr<IXMLDOMNode> pNode);
-	 void ParseMetadata(CComPtr<IXMLDOMNode> pNode, metadata_t& m);
-	 void ParseStyle(CComPtr<IXMLDOMNode> pNode, style_t* s);
-	  void ParseFontstyle(CComPtr<IXMLDOMNode> pNode, fontstyle_t& fs);
-	  void ParsePal(CComPtr<IXMLDOMNode> pNode, posattriblist_t& pal);
-	 void ParseEffect(CComPtr<IXMLDOMNode> pNode, effect_t* e);
-	  void ParseKeyframe(CComPtr<IXMLDOMNode> pNode, keyframe_t* k);
-	 void ParseSubtitle(CComPtr<IXMLDOMNode> pNode, int start, int stop);
-	  void ParseText(CComPtr<IXMLDOMNode> pNode, CStringW& assstr);
-	  void ParseShape(CComPtr<IXMLDOMNode> pNode);
+	bool ParseUSFSubtitles(const CComPtr<IXMLDOMNode>& pNode);
+	 void ParseMetadata(const CComPtr<IXMLDOMNode>& pNode, metadata_t& m);
+	 void ParseStyle(const CComPtr<IXMLDOMNode>& pNode, style_t* s);
+	  void ParseFontstyle(const CComPtr<IXMLDOMNode>& pNode, fontstyle_t& fs);
+	  void ParsePal(const CComPtr<IXMLDOMNode>& pNode, posattriblist_t& pal);
+	 void ParseEffect(const CComPtr<IXMLDOMNode>& pNode, effect_t* e);
+	  void ParseKeyframe(const CComPtr<IXMLDOMNode>& pNode, keyframe_t* k);
+	 void ParseSubtitle(const CComPtr<IXMLDOMNode>& pNode, int start, int stop);
+	  void ParseText(const CComPtr<IXMLDOMNode>& pNode, CStringW& assstr);
+	  void ParseShape(const CComPtr<IXMLDOMNode>& pNode);
 
 public:
 	CUSFSubtitles();

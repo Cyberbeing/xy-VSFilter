@@ -47,7 +47,7 @@
 
 #define EndEnumChildren }}
 
-static CStringW GetText(CComPtr<IXMLDOMNode> pNode)
+static CStringW GetText(const CComPtr<IXMLDOMNode>& pNode)
 {
 	CComBSTR bstr;
 	pNode->get_text(&bstr);
@@ -55,7 +55,7 @@ static CStringW GetText(CComPtr<IXMLDOMNode> pNode)
 	return(CStringW(bstr));
 }
 
-static CStringW GetXML(CComPtr<IXMLDOMNode> pNode)
+static CStringW GetXML(const CComPtr<IXMLDOMNode>& pNode)
 {
 	CComBSTR bstr;
 	pNode->get_xml(&bstr);
@@ -70,7 +70,7 @@ static CStringW GetXML(CComPtr<IXMLDOMNode> pNode)
 	return(str);
 }
 
-static CStringW GetAttrib(CStringW attrib, CComPtr<IXMLDOMNode> pNode)
+static CStringW GetAttrib(LPCWSTR attrib, const CComPtr<IXMLDOMNode>& pNode)
 {
 	CStringW ret;
 
@@ -89,7 +89,7 @@ static CStringW GetAttrib(CStringW attrib, CComPtr<IXMLDOMNode> pNode)
 	return(ret);
 }
 
-static int TimeToInt(CStringW str)
+static int TimeToInt(const CStringW& str)
 {
 	CAtlList<CStringW> sl;
 	int i = 0;
@@ -115,26 +115,27 @@ static int TimeToInt(CStringW str)
 	return(time);
 }
 
-static DWORD StringToDWORD(CStringW str)
+static DWORD StringToDWORD(const CStringW& str)
 {
 	if(str.IsEmpty()) return(0);
 	if(str[0] == '#') return((DWORD)wcstol(str, NULL, 16));
 	else return((DWORD)wcstol(str, NULL, 10));	
 }
 
-static DWORD ColorToDWORD(CStringW str)
+static DWORD ColorToDWORD(const CStringW& str)
 {
-	if(str.IsEmpty()) return(0);
+    CStringW str_tmp = str;
+	if(str_tmp.IsEmpty()) return(0);
 
 	DWORD ret = 0;
 
-	if(str[0] == '#')
+	if(str_tmp[0] == '#')
 	{
-		ret = (DWORD)wcstol(str.TrimLeft('#'), NULL, 16);
+		ret = (DWORD)wcstol(str_tmp.TrimLeft('#'), NULL, 16);
 	}
 	else
 	{
-		g_colors.Lookup(CString(str), ret);
+		g_colors.Lookup(CString(str_tmp), ret);
 	}
 
 	ret = ((ret&0xff)<<16)|(ret&0xff00ff00)|((ret>>16)&0xff);
@@ -142,7 +143,7 @@ static DWORD ColorToDWORD(CStringW str)
 	return(ret);
 }
 
-static int TranslateAlignment(CStringW alignment)
+static int TranslateAlignment(const CStringW& alignment)
 {
 	return
 		!alignment.CompareNoCase(L"BottomLeft") ? 1 :
@@ -157,7 +158,7 @@ static int TranslateAlignment(CStringW alignment)
 		2;
 }
 
-static int TranslateMargin(CStringW margin, int wndsize)
+static int TranslateMargin(const CStringW& margin, int wndsize)
 {
 	int ret = 0;
 
@@ -387,7 +388,7 @@ bool CUSFSubtitles::ConvertToSTS(CSimpleTextSubtitle& sts)
 	return(true);
 }
 
-bool CUSFSubtitles::ParseUSFSubtitles(CComPtr<IXMLDOMNode> pNode)
+bool CUSFSubtitles::ParseUSFSubtitles(const CComPtr<IXMLDOMNode>& pNode)
 {
 	DeclareNameAndValue(pNode, name, val);
 
@@ -506,7 +507,7 @@ bool CUSFSubtitles::ParseUSFSubtitles(CComPtr<IXMLDOMNode> pNode)
 	return(false);
 }
 
-void CUSFSubtitles::ParseMetadata(CComPtr<IXMLDOMNode> pNode, metadata_t& m)
+void CUSFSubtitles::ParseMetadata(const CComPtr<IXMLDOMNode>& pNode, metadata_t& m)
 {
 	DeclareNameAndValue(pNode, name, val);
 
@@ -557,7 +558,7 @@ void CUSFSubtitles::ParseMetadata(CComPtr<IXMLDOMNode> pNode, metadata_t& m)
 	EndEnumChildren
 }
 
-void CUSFSubtitles::ParseStyle(CComPtr<IXMLDOMNode> pNode, style_t* s)
+void CUSFSubtitles::ParseStyle(const CComPtr<IXMLDOMNode>& pNode, style_t* s)
 {
 	DeclareNameAndValue(pNode, name, val);
 
@@ -583,7 +584,7 @@ void CUSFSubtitles::ParseStyle(CComPtr<IXMLDOMNode> pNode, style_t* s)
 	EndEnumChildren
 }
 
-void CUSFSubtitles::ParseFontstyle(CComPtr<IXMLDOMNode> pNode, fontstyle_t& fs)
+void CUSFSubtitles::ParseFontstyle(const CComPtr<IXMLDOMNode>& pNode, fontstyle_t& fs)
 {
 	fs.face = GetAttrib(L"face", pNode);
 	fs.size = GetAttrib(L"size", pNode);
@@ -600,7 +601,7 @@ void CUSFSubtitles::ParseFontstyle(CComPtr<IXMLDOMNode> pNode, fontstyle_t& fs)
 	fs.wrap = GetAttrib(L"wrap", pNode);
 }
 
-void CUSFSubtitles::ParsePal(CComPtr<IXMLDOMNode> pNode, posattriblist_t& pal)
+void CUSFSubtitles::ParsePal(const CComPtr<IXMLDOMNode>& pNode, posattriblist_t& pal)
 {
 	pal.alignment = GetAttrib(L"alignment", pNode);
 	pal.relativeto = GetAttrib(L"relative-to", pNode);
@@ -611,7 +612,7 @@ void CUSFSubtitles::ParsePal(CComPtr<IXMLDOMNode> pNode, posattriblist_t& pal)
 	pal.rotate[2] = GetAttrib(L"rotate-y", pNode);
 }
 
-void CUSFSubtitles::ParseEffect(CComPtr<IXMLDOMNode> pNode, effect_t* e)
+void CUSFSubtitles::ParseEffect(const CComPtr<IXMLDOMNode>& pNode, effect_t* e)
 {
 	DeclareNameAndValue(pNode, name, val);
 
@@ -647,7 +648,7 @@ void CUSFSubtitles::ParseEffect(CComPtr<IXMLDOMNode> pNode, effect_t* e)
 	EndEnumChildren
 }
 
-void CUSFSubtitles::ParseKeyframe(CComPtr<IXMLDOMNode> pNode, keyframe_t* k)
+void CUSFSubtitles::ParseKeyframe(const CComPtr<IXMLDOMNode>& pNode, keyframe_t* k)
 {
 	DeclareNameAndValue(pNode, name, val);
 
@@ -667,7 +668,7 @@ void CUSFSubtitles::ParseKeyframe(CComPtr<IXMLDOMNode> pNode, keyframe_t* k)
 	}
 }
 
-void CUSFSubtitles::ParseSubtitle(CComPtr<IXMLDOMNode> pNode, int start, int stop)
+void CUSFSubtitles::ParseSubtitle(const CComPtr<IXMLDOMNode>& pNode, int start, int stop)
 {
 	DeclareNameAndValue(pNode, name, val);
 
@@ -696,7 +697,7 @@ void CUSFSubtitles::ParseSubtitle(CComPtr<IXMLDOMNode> pNode, int start, int sto
 	EndEnumChildren
 }
 
-void CUSFSubtitles::ParseText(CComPtr<IXMLDOMNode> pNode, CStringW& str)
+void CUSFSubtitles::ParseText(const CComPtr<IXMLDOMNode>& pNode, CStringW& str)
 {
 	DeclareNameAndValue(pNode, name, val);
 
@@ -769,7 +770,7 @@ void CUSFSubtitles::ParseText(CComPtr<IXMLDOMNode> pNode, CStringW& str)
 	str = prefix + str + postfix;
 }
 
-void CUSFSubtitles::ParseShape(CComPtr<IXMLDOMNode> pNode)
+void CUSFSubtitles::ParseShape(const CComPtr<IXMLDOMNode>& pNode)
 {
 	// no specs on this yet
 }
