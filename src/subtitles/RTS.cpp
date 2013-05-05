@@ -2073,7 +2073,7 @@ void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
     if(!effect.CompareNoCase( L"Banner;" ) )
     {
         int delay, lefttoright = 0, fadeawaywidth = 0;
-        if(swscanf(s, L"%d;%d;%d", &delay, &lefttoright, &fadeawaywidth) < 1) return;
+        if(swscanf_s(s, L"%d;%d;%d", &delay, &lefttoright, &fadeawaywidth) < 1) return;
         Effect* e = DEBUG_NEW Effect;
         if(!e) return;
         sub->m_effects[e->type = EF_BANNER] = e;
@@ -2085,7 +2085,7 @@ void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
     else if(!effect.CompareNoCase(L"Scroll up;") || !effect.CompareNoCase(L"Scroll down;"))
     {
         int top, bottom, delay, fadeawayheight = 0;
-        if(swscanf(s, L"%d;%d;%d;%d", &top, &bottom, &delay, &fadeawayheight) < 3) return;
+        if(swscanf_s(s, L"%d;%d;%d;%d", &top, &bottom, &delay, &fadeawayheight) < 3) return;
         if(top > bottom) {int tmp = top; top = bottom; bottom = tmp;}
         Effect* e = DEBUG_NEW Effect;
         if(!e) return;

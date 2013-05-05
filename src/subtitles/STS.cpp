@@ -612,7 +612,7 @@ static bool OpenOldSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int Char
         }
 
         int hh1, mm1, ss1, hh2, mm2, ss2;
-        int c = swscanf(buff, L"{%d:%d:%d}{%d:%d:%d}", &hh1, &mm1, &ss1, &hh2, &mm2, &ss2);
+        int c = swscanf_s(buff, L"{%d:%d:%d}{%d:%d:%d}", &hh1, &mm1, &ss1, &hh2, &mm2, &ss2);
 
         if(c == 6)
         {
@@ -691,8 +691,8 @@ static bool OpenSubViewer(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
 
         WCHAR sep;
         int hh1, mm1, ss1, hs1, hh2, mm2, ss2, hs2;
-        int c = swscanf(buff, L"%d:%d:%d%c%d,%d:%d:%d%c%d\n",
-            &hh1, &mm1, &ss1, &sep, &hs1, &hh2, &mm2, &ss2, &sep, &hs2);
+        int c = swscanf_s(buff, L"%d:%d:%d%c%d,%d:%d:%d%c%d\n",
+            &hh1, &mm1, &ss1, &sep, sizeof(sep), &hs1, &hh2, &mm2, &ss2, &sep, sizeof(sep), &hs2);
 
         if(c == 10)
         {
@@ -745,7 +745,7 @@ static STSStyle* GetMicroDVDStyle(const CString& str, int CharSet)
 
         if(!_tcsnicmp(code, _T("{c:$"), 4))
         {
-            _stscanf(code, _T("{c:$%x"), &ret->colors[0]);
+            _stscanf_s(code, _T("{c:$%x"), &ret->colors[0]);
         }
         else if(!_tcsnicmp(code, _T("{f:"), 3))
         {
@@ -754,12 +754,12 @@ static STSStyle* GetMicroDVDStyle(const CString& str, int CharSet)
         else if(!_tcsnicmp(code, _T("{s:"), 3))
         {
             float f;
-            if(1 == _stscanf(code, _T("{s:%f"), &f))
+            if(1 == _stscanf_s(code, _T("{s:%f"), &f))
                 ret->fontSize = f;
         }
         else if(!_tcsnicmp(code, _T("{h:"), 3))
         {
-            _stscanf(code, _T("{h:%d"), &ret->charSet);
+            _stscanf_s(code, _T("{h:%d"), &ret->charSet);
         }
         else if(!_tcsnicmp(code, _T("{y:"), 3))
         {
@@ -772,7 +772,7 @@ static STSStyle* GetMicroDVDStyle(const CString& str, int CharSet)
         else if(!_tcsnicmp(code, _T("{p:"), 3))
         {
             int p;
-            _stscanf(code, _T("{p:%d"), &p);
+            _stscanf_s(code, _T("{p:%d"), &p);
             ret->scrAlignment = (p == 0) ? 8 : 2;
         }
 
@@ -818,7 +818,7 @@ static CStringW MicroDVD2SSA(const CStringW& str, bool fUnicode, int CharSet)
                     code.MakeLower();
 
                     int color;
-                    swscanf(code, L"{c:$%x", &color);
+                    swscanf_s(code, L"{c:$%x", &color);
                     code.Format(L"{\\c&H%x&}", color);
                     ret += code;
                 }
@@ -835,7 +835,7 @@ static CStringW MicroDVD2SSA(const CStringW& str, bool fUnicode, int CharSet)
                     code.MakeLower();
 
                     float size;
-                    swscanf(code, L"{s:%f", &size);
+                    swscanf_s(code, L"{s:%f", &size);
                     code.Format(L"{\\fs%f}", size);
                     ret += code;
                 }
@@ -845,7 +845,7 @@ static CStringW MicroDVD2SSA(const CStringW& str, bool fUnicode, int CharSet)
                     code.MakeLower();
 
                     int CharSet;
-                    swscanf(code, L"{h:%d", &CharSet);
+                    swscanf_s(code, L"{h:%d", &CharSet);
                     code.Format(L"{\\fe%d}", CharSet);
                     ret += code;
                 }
@@ -920,9 +920,9 @@ static bool OpenMicroDVD(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
         if(buff.IsEmpty()) continue;
 
         int start, end;
-        int c = swscanf(buff, L"{%d}{%d}", &start, &end);
+        int c = swscanf_s(buff, L"{%d}{%d}", &start, &end);
 
-        if(c != 2) {c = swscanf(buff, L"{%d}{}", &start)+1; end = start + 60; fCheck = true;}
+        if(c != 2) {c = swscanf_s(buff, L"{%d}{}", &start)+1; end = start + 60; fCheck = true;}
 
         if(c != 2)
         {
@@ -1208,7 +1208,7 @@ static bool OpenVPlayer(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
         }
 
         int hh, mm, ss;
-        int c = swscanf(buff, L"%d:%d:%d:", &hh, &mm, &ss);
+        int c = swscanf_s(buff, L"%d:%d:%d:", &hh, &mm, &ss);
 
         if(c == 3)
         {
@@ -1256,7 +1256,7 @@ inline int GetInt(CStringW& buff, char sep = ',') //throw(...)
         : L"%d";
 
     int ret;
-    if(swscanf(str, fmtstr, &ret) != 1) throw 1;
+    if(swscanf_s(str, fmtstr, &ret) != 1) throw 1;
 
     return(ret);
 }
@@ -1269,7 +1269,7 @@ inline double GetFloat(CStringW& buff, char sep = ',') //throw(...)
     str.MakeLower();
 
     float ret;
-    if(swscanf(str, L"%f", &ret) != 1) throw 1;
+    if(swscanf_s(str, L"%f", &ret) != 1) throw 1;
 
     return((double)ret);
 }
@@ -1307,7 +1307,7 @@ inline int NextInt(LPWSTR * buff, WCHAR sep = WCHAR(',')) //throw(...)
         : L"%d";
 
     int ret;
-    if(swscanf(str, fmtstr, &ret) != 1) throw 1;
+    if(swscanf_s(str, fmtstr, &ret) != 1) throw 1;
 
     return(ret);
 }
@@ -1321,7 +1321,7 @@ inline double NextFloat(LPWSTR * buff, WCHAR sep = WCHAR(',')) //throw(...)
 #pragma warning (pop)
 
     float ret;
-    if(swscanf(str, L"%f", &ret) != 1) throw 1;
+    if(swscanf_s(str, L"%f", &ret) != 1) throw 1;
 
     return((double)ret);
 }
@@ -1868,7 +1868,7 @@ static bool OpenMPL2(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
         if(buff.IsEmpty()) continue;
 
         int start, end;
-        int c = swscanf(buff, L"[%d][%d]", &start, &end);
+        int c = swscanf_s(buff, L"[%d][%d]", &start, &end);
 
         if(c == 2)
         {
@@ -2316,7 +2316,7 @@ void CSimpleTextSubtitle::AddStyle(const CString& name, STSStyle* style)
 
         CString name2 = name_str;
 
-        if(i < len && _stscanf(name_str.Right(len-i), _T("%d"), &idx) == 1)
+        if(i < len && _stscanf_s(name_str.Right(len-i), _T("%d"), &idx) == 1)
         {
             name2 = name_str.Left(i);
         }

@@ -406,7 +406,7 @@ bool CVobSubFile::ReadIdx(const CString& fn, int& ver)
             const TCHAR* s = str;
 
             int i = str.Find(buff);
-            if(i < 0 || _stscanf(&s[i+_tcslen(buff)], _T("%d"), &ver) != 1
+            if(i < 0 || _stscanf_s(&s[i+_tcslen(buff)], _T("%d"), &ver) != 1
                 || ver > VOBSUBIDXVER)
             {
                 TRACE(_T("[CVobSubFile::ReadIdx] Wrong file version!\n")); 
@@ -427,7 +427,7 @@ bool CVobSubFile::ReadIdx(const CString& fn, int& ver)
             int i = str.Find(buff);
             if(i >= 0)
             {
-                _stscanf(&s[i+_tcslen(buff)], _T("%d, %d (PTS: %d)"), &vobid, &cellid, &celltimestamp);
+                _stscanf_s(&s[i+_tcslen(buff)], _T("%d, %d (PTS: %d)"), &vobid, &cellid, &celltimestamp);
             }
 
             continue;
@@ -445,13 +445,13 @@ bool CVobSubFile::ReadIdx(const CString& fn, int& ver)
         if(entry == _T("size"))
         {
             int x, y;
-            if(_stscanf(str, _T("%dx%d"), &x, &y) != 2) fError = true;
+            if(_stscanf_s(str, _T("%dx%d"), &x, &y) != 2) fError = true;
             m_size.cx = x;
             m_size.cy = y;
         }
         else if(entry == _T("org"))
         {
-            if(_stscanf(str, _T("%d,%d"), &m_x, &m_y) != 2) fError = true;
+            if(_stscanf_s(str, _T("%d,%d"), &m_x, &m_y) != 2) fError = true;
             else m_org = CPoint(m_x, m_y);
         }
         else if(entry == _T("scale"))
@@ -459,17 +459,17 @@ bool CVobSubFile::ReadIdx(const CString& fn, int& ver)
             if(ver < 5) 
             {
                 int scale = 100;
-                if(_stscanf(str, _T("%d%%"), &scale) != 1) fError = true;
+                if(_stscanf_s(str, _T("%d%%"), &scale) != 1) fError = true;
                 m_scale_x = m_scale_y = scale;
             }
             else 
             {
-                if(_stscanf(str, _T("%d%%,%d%%"), &m_scale_x, &m_scale_y) != 2) fError = true;
+                if(_stscanf_s(str, _T("%d%%,%d%%"), &m_scale_x, &m_scale_y) != 2) fError = true;
             }
         }
         else if(entry == _T("alpha"))
         {
-            if(_stscanf(str, _T("%d"), &m_alpha) != 1) fError = true;
+            if(_stscanf_s(str, _T("%d"), &m_alpha) != 1) fError = true;
         }
         else if(entry == _T("smooth"))
         {
@@ -482,7 +482,7 @@ bool CVobSubFile::ReadIdx(const CString& fn, int& ver)
         }
         else if(entry == _T("fadein/out"))
         {
-            if(_stscanf(str, _T("%d,%d"), &m_fadein, &m_fadeout) != 2) fError = true;
+            if(_stscanf_s(str, _T("%d,%d"), &m_fadein, &m_fadeout) != 2) fError = true;
         }
         else if(entry == _T("align"))
         {
@@ -543,11 +543,11 @@ bool CVobSubFile::ReadIdx(const CString& fn, int& ver)
         }
         else if(entry == _T("langidx"))
         {
-            if(_stscanf(str, _T("%d"), &m_iLang) != 1) fError = true;
+            if(_stscanf_s(str, _T("%d"), &m_iLang) != 1) fError = true;
         }
         else if(entry == _T("palette"))
         {
-            if(_stscanf(str, _T("%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x"), 
+            if(_stscanf_s(str, _T("%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x"), 
                 &m_orgpal[0], &m_orgpal[1], &m_orgpal[2], &m_orgpal[3],
                 &m_orgpal[4], &m_orgpal[5], &m_orgpal[6], &m_orgpal[7],
                 &m_orgpal[8], &m_orgpal[9], &m_orgpal[10], &m_orgpal[11],
@@ -567,7 +567,7 @@ bool CVobSubFile::ReadIdx(const CString& fn, int& ver)
             str = str.Mid(i + (int)_tcslen(_T("tridx:")));
 
             int tridx;
-            if(_stscanf(str, _T("%x"), &tridx) != 1) {fError = true; continue;}
+            if(_stscanf_s(str, _T("%x"), &tridx) != 1) {fError = true; continue;}
             tridx = ((tridx&0x1000)>>12) | ((tridx&0x100)>>7) | ((tridx&0x10)>>2) | ((tridx&1)<<3);
 
             i = str.Find(_T("colors:"));
@@ -575,7 +575,7 @@ bool CVobSubFile::ReadIdx(const CString& fn, int& ver)
             str = str.Mid(i + (int)_tcslen(_T("colors:")));
 
             RGBQUAD pal[4];
-            if(_stscanf(str, _T("%x,%x,%x,%x"), &pal[0], &pal[1], &pal[2], &pal[3]) != 4) {fError = true; continue;}
+            if(_stscanf_s(str, _T("%x,%x,%x,%x"), &pal[0], &pal[1], &pal[2], &pal[3]) != 4) {fError = true; continue;}
 
             SetCustomPal(pal, tridx);
         }
@@ -589,7 +589,7 @@ bool CVobSubFile::ReadIdx(const CString& fn, int& ver)
             if(i < 0) {fError = true; continue;}
             str = str.Mid(i + (int)_tcslen(_T("index:")));
 
-            if(_stscanf(str, _T("%d"), &id) != 1 || id < 0 || id >= 32) {fError = true; continue;}
+            if(_stscanf_s(str, _T("%d"), &id) != 1 || id < 0 || id >= 32) {fError = true; continue;}
 
             m_langs[id].id = langid;
             m_langs[id].name = lang_tbl[find_lang(langid)].lang_long;
@@ -640,7 +640,7 @@ bool CVobSubFile::ReadIdx(const CString& fn, int& ver)
             if(i < 0) {fError = true; continue;}
             str = str.Mid(i + (int)_tcslen(_T("filepos:")));
 
-            if(_stscanf(str, _T("%I64x"), &sb.filepos) != 1) {fError = true; continue;}
+            if(_stscanf_s(str, _T("%I64x"), &sb.filepos) != 1) {fError = true; continue;}
 
             if(delay < 0 && m_langs[id].subpos.GetCount() > 0)
             {
@@ -2162,13 +2162,13 @@ void CVobSubStream::Open(const CString& name, BYTE* pData, int len)
         CString key = sl.GetHead();
         CString value = sl.GetTail();
         if(key == _T("size"))
-            _stscanf(value, _T("%dx %d"), &m_size.cx, &m_size.cy);
+            _stscanf_s(value, _T("%dx %d"), &m_size.cx, &m_size.cy);
         else if(key == _T("org"))
-            _stscanf(value, _T("%d, %d"), &m_org.x, &m_org.y);
+            _stscanf_s(value, _T("%d, %d"), &m_org.x, &m_org.y);
         else if(key == _T("scale"))
-            _stscanf(value, _T("%d%%, %d%%"), &m_scale_x, &m_scale_y);
+            _stscanf_s(value, _T("%d%%, %d%%"), &m_scale_x, &m_scale_y);
         else if(key == _T("alpha"))
-            _stscanf(value, _T("%d%%"), &m_alpha);
+            _stscanf_s(value, _T("%d%%"), &m_alpha);
         else if(key == _T("smooth"))
             m_fSmooth = 
             value == _T("0") || value == _T("OFF") ? 0 : 
@@ -2188,7 +2188,7 @@ void CVobSubStream::Open(const CString& name, BYTE* pData, int len)
             }
         }
         else if(key == _T("fade in/out"))
-            _stscanf(value, _T("%d%, %d%"), &m_fadein, &m_fadeout);
+            _stscanf_s(value, _T("%d%, %d%"), &m_fadein, &m_fadeout);
         else if(key == _T("time offset"))
             m_toff = _tcstol(value, NULL, 10);
         else if(key == _T("forced subs"))

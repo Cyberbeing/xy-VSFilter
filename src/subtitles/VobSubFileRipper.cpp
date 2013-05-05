@@ -1095,14 +1095,14 @@ STDMETHODIMP CVobSubFileRipper::LoadParamFile(const CString& fn)
 
 					if(_istdigit(lang[0])) 
 					{
-						n = _stscanf(lang, _T("%d"), &langnum);
+						n = _stscanf_s(lang, _T("%d"), &langnum);
 						if(n != 1) break;
 
 						m_rd.selids[langnum] = true;
 					}
 					else if(_istalpha(lang[0])) 
 					{
-						n = _stscanf(lang, _T("%s"), langid);
+						n = _stscanf_s(lang, _T("%s"), sizeof(langid));
 						if(n != 1) break;
 
 						int id = (langid[0] << 8) + langid[1];
