@@ -42,7 +42,7 @@
 
 #define BeginEnumChildren(pNode, pChild) \
 	{CComPtr<IXMLDOMNode> pChild, pNext; \
-	for(pNode->get_firstChild(&pChild); pChild; pNext = NULL, pChild->get_nextSibling(&pNext), pChild = pNext) \
+	for(pNode->get_firstChild(&pChild); pChild; pNext.Attach(pChild.Detach()), pNext->get_nextSibling(&pChild)) \
     { \
 
 #define EndEnumChildren }}
