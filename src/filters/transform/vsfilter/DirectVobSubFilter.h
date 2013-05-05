@@ -165,7 +165,7 @@ protected:
 	bool Open();
 
 	int FindPreferedLanguage(bool fHideToo = true);
-	void UpdatePreferedLanguages(CString lang);
+	void UpdatePreferedLanguages(const CString& lang);
 
 	CCritSec m_csSubLock;
 

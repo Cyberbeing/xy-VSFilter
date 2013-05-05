@@ -276,7 +276,7 @@ bool CVobSubFile::Copy(CVobSubFile& vsf)
 
 //
 
-void CVobSubFile::TrimExtension(CString& fn)
+CString CVobSubFile::TrimExtension(const CString& fn)
 {
     int i = fn.ReverseFind('.');
     if(i > 0)
@@ -284,29 +284,30 @@ void CVobSubFile::TrimExtension(CString& fn)
         CString ext = fn.Mid(i).MakeLower();
         if(ext == _T(".ifo") || ext == _T(".idx") || ext == _T(".sub")
             || ext == _T(".sst") || ext == _T(".son") || ext == _T(".rar"))
-            fn = fn.Left(i);
+            return fn.Left(i);
     }
+    return fn;
 }
 
-bool CVobSubFile::Open(CString fn)
+bool CVobSubFile::Open(const CString& fn)
 {
-    TrimExtension(fn);
+    CString fn_new = TrimExtension(fn);
 
     do
     {
         Close();
 
         int ver;
-        if(!ReadIdx(fn + _T(".idx"), ver))
+        if(!ReadIdx(fn_new + _T(".idx"), ver))
             break;
 
-        if(ver < 6 && !ReadIfo(fn + _T(".ifo")))
+        if(ver < 6 && !ReadIfo(fn_new + _T(".ifo")))
             break;
 
-        if(!ReadSub(fn + _T(".sub")) && !ReadRar(fn + _T(".rar")))
+        if(!ReadSub(fn_new + _T(".sub")) && !ReadRar(fn_new + _T(".rar")))
             break;
 
-        m_title = fn;
+        m_title = fn_new;
 
         for(int i = 0; i < 32; i++)
         {
@@ -344,9 +345,9 @@ bool CVobSubFile::Open(CString fn)
     return(false);
 }
 
-bool CVobSubFile::Save(CString fn, SubFormat sf)
+bool CVobSubFile::Save(const CString& fn, SubFormat sf)
 {
-    TrimExtension(fn);
+    CString fn_new = TrimExtension(fn);
 
     CVobSubFile vsf(NULL);
     if(!vsf.Copy(*this))
@@ -354,10 +355,10 @@ bool CVobSubFile::Save(CString fn, SubFormat sf)
 
     switch(sf)
     {
-    case VobSub: return vsf.SaveVobSub(fn); break;
-    case WinSubMux: return vsf.SaveWinSubMux(fn); break;
-    case Scenarist: return vsf.SaveScenarist(fn); break;
-    case Maestro: return vsf.SaveMaestro(fn); break;
+    case VobSub: return vsf.SaveVobSub(fn_new); break;
+    case WinSubMux: return vsf.SaveWinSubMux(fn_new); break;
+    case Scenarist: return vsf.SaveScenarist(fn_new); break;
+    case Maestro: return vsf.SaveMaestro(fn_new); break;
     default: break;
     }
 
@@ -382,7 +383,7 @@ void CVobSubFile::Close()
 
 //
 
-bool CVobSubFile::ReadIdx(CString fn, int& ver)
+bool CVobSubFile::ReadIdx(const CString& fn, int& ver)
 {
     CWebTextFile f;
     if(!f.Open(fn))
@@ -660,7 +661,7 @@ bool CVobSubFile::ReadIdx(CString fn, int& ver)
     return(!fError);
 }
 
-bool CVobSubFile::ReadSub(CString fn)
+bool CVobSubFile::ReadSub(const CString& fn)
 {
     CFile f;
     if(!f.Open(fn, CFile::modeRead|CFile::typeBinary|CFile::shareDenyWrite))
@@ -690,7 +691,7 @@ static int PASCAL MyProcessDataProc(unsigned char* Addr, int Size)
     return(1);
 }
 
-bool CVobSubFile::ReadRar(CString fn)
+bool CVobSubFile::ReadRar(const CString& fn)
 {
     HMODULE h = LoadLibrary(_T("unrar.dll"));
     if(!h) return(false);
@@ -789,7 +790,7 @@ bool CVobSubFile::ReadRar(CString fn)
     f.Read(&((BYTE*)&var)[1], 1); \
     f.Read(&((BYTE*)&var)[0], 1); \
 
-bool CVobSubFile::ReadIfo(CString fn)
+bool CVobSubFile::ReadIfo(const CString& fn)
 {
     CFile f;
     if(!f.Open(fn, CFile::modeRead|CFile::typeBinary|CFile::shareDenyWrite))
@@ -830,7 +831,7 @@ bool CVobSubFile::ReadIfo(CString fn)
     return(true);
 }
 
-bool CVobSubFile::WriteIdx(CString fn)
+bool CVobSubFile::WriteIdx(const CString& fn)
 {
     CTextFile f;
     if(!f.Save(fn, CTextFile::ASCII))
@@ -992,7 +993,7 @@ bool CVobSubFile::WriteIdx(CString fn)
     return(true);
 }
 
-bool CVobSubFile::WriteSub(CString fn)
+bool CVobSubFile::WriteSub(const CString& fn)
 {
     CFile f;
     if(!f.Open(fn, CFile::modeCreate|CFile::modeWrite|CFile::typeBinary|CFile::shareDenyWrite))
@@ -1514,7 +1515,7 @@ HRESULT CVobSubSettings::Render(SubPicDesc& spd, RECT& bbox)
 
 /////////////////////////////////////////////////////////
 
-static bool CompressFile(CString fn)
+static bool CompressFile(const CString& fn)
 {
     if(GetVersion() < 0)
         return(false);
@@ -1533,17 +1534,17 @@ static bool CompressFile(CString fn)
     return(!!b);
 }
 
-bool CVobSubFile::SaveVobSub(CString fn)
+bool CVobSubFile::SaveVobSub(const CString& fn)
 {
     return WriteIdx(fn + _T(".idx")) && WriteSub(fn + _T(".sub"));
 }
 
-bool CVobSubFile::SaveWinSubMux(CString fn)
+bool CVobSubFile::SaveWinSubMux(const CString& fn)
 {
-    TrimExtension(fn);
+    CString fn_new = TrimExtension(fn);
 
     CStdioFile f;
-    if(!f.Open(fn + _T(".sub"), CFile::modeCreate|CFile::modeWrite|CFile::typeText|CFile::shareDenyWrite)) 
+    if(!f.Open(fn_new + _T(".sub"), CFile::modeCreate|CFile::modeWrite|CFile::typeText|CFile::shareDenyWrite)) 
         return(false);
 
     m_img.Invalidate();
@@ -1628,7 +1629,7 @@ bool CVobSubFile::SaveWinSubMux(CString fn)
         if(t1 < 0) t1 = 0;
 
         CString bmpfn;
-        bmpfn.Format(_T("%s_%06d.bmp"), fn, i+1);
+        bmpfn.Format(_T("%s_%06d.bmp"), fn_new, i+1);
 
         CString str;
         str.Format(_T("%s\t%02d:%02d:%02d:%02d %02d:%02d:%02d:%02d\t%03d %03d %03d %03d %d %d %d %d\n"), 
@@ -1672,21 +1673,21 @@ bool CVobSubFile::SaveWinSubMux(CString fn)
     return(true);
 }
 
-bool CVobSubFile::SaveScenarist(CString fn)
+bool CVobSubFile::SaveScenarist(const CString& fn)
 {
-    TrimExtension(fn);
+    CString fn_new = TrimExtension(fn);
 
     CStdioFile f;
-    if(!f.Open(fn + _T(".sst"), CFile::modeCreate|CFile::modeWrite|CFile::typeText|CFile::shareDenyWrite)) 
+    if(!f.Open(fn_new + _T(".sst"), CFile::modeCreate|CFile::modeWrite|CFile::typeText|CFile::shareDenyWrite)) 
         return(false);
 
     m_img.Invalidate();
 
-    fn.Replace('\\', '/');
-    CString title = fn.Mid(fn.ReverseFind('/')+1);
+    fn_new.Replace('\\', '/');
+    CString title = fn_new.Mid(fn_new.ReverseFind('/')+1);
 
     TCHAR buff[MAX_PATH], * pFilePart = buff;
-    if(GetFullPathName(fn, MAX_PATH, buff, &pFilePart) == 0)
+    if(GetFullPathName(fn_new, MAX_PATH, buff, &pFilePart) == 0)
         return(false);
 
     CString fullpath = CString(buff).Left(pFilePart - buff);
@@ -1823,7 +1824,7 @@ bool CVobSubFile::SaveScenarist(CString fn)
         }
 
         CString bmpfn;
-        bmpfn.Format(_T("%s_%04d.bmp"), fn, i+1);
+        bmpfn.Format(_T("%s_%04d.bmp"), fn_new, i+1);
         title = bmpfn.Mid(bmpfn.ReverseFind('/')+1);
 
         // E1, E2, P, Bg
@@ -1907,21 +1908,21 @@ bool CVobSubFile::SaveScenarist(CString fn)
     return(true);
 }
 
-bool CVobSubFile::SaveMaestro(CString fn)
+bool CVobSubFile::SaveMaestro(const CString& fn)
 {
-    TrimExtension(fn);
+    CString fn_new = TrimExtension(fn);
 
     CStdioFile f;
-    if(!f.Open(fn + _T(".son"), CFile::modeCreate|CFile::modeWrite|CFile::typeText|CFile::shareDenyWrite)) 
+    if(!f.Open(fn_new + _T(".son"), CFile::modeCreate|CFile::modeWrite|CFile::typeText|CFile::shareDenyWrite)) 
         return(false);
 
     m_img.Invalidate();
 
-    fn.Replace('\\', '/');
-    CString title = fn.Mid(fn.ReverseFind('/')+1);
+    fn_new.Replace('\\', '/');
+    CString title = fn_new.Mid(fn_new.ReverseFind('/')+1);
 
     TCHAR buff[MAX_PATH], * pFilePart = buff;
-    if(GetFullPathName(fn, MAX_PATH, buff, &pFilePart) == 0)
+    if(GetFullPathName(fn_new, MAX_PATH, buff, &pFilePart) == 0)
         return(false);
 
     CString fullpath = CString(buff).Left(pFilePart - buff);
@@ -2005,7 +2006,7 @@ bool CVobSubFile::SaveMaestro(CString fn)
         colormap[i] = i;
 
     CFile spf;
-    if(spf.Open(fn + _T(".spf"), CFile::modeCreate|CFile::modeWrite|CFile::typeBinary))
+    if(spf.Open(fn_new + _T(".spf"), CFile::modeCreate|CFile::modeWrite|CFile::typeBinary))
     {
         for(int i = 0; i < 16; i++) 
         {
@@ -2050,7 +2051,7 @@ bool CVobSubFile::SaveMaestro(CString fn)
         }
 
         CString bmpfn;
-        bmpfn.Format(_T("%s_%04d.bmp"), fn, i+1);
+        bmpfn.Format(_T("%s_%04d.bmp"), fn_new, i+1);
         title = bmpfn.Mid(bmpfn.ReverseFind('/')+1);
 
         // E1, E2, P, Bg
@@ -2145,7 +2146,7 @@ CVobSubStream::~CVobSubStream()
 {
 }
 
-void CVobSubStream::Open(CString name, BYTE* pData, int len)
+void CVobSubStream::Open(const CString& name, BYTE* pData, int len)
 {
     CAutoLock cAutoLock(&m_csSubPics);
 

@@ -249,7 +249,7 @@ private:
     
     GrayImage2* Paint();
 public:
-    CClipper(CStringW str, CSizeCoor2 size, double scalex, double scaley, bool inverse
+    CClipper(const CStringW& str, CSizeCoor2 size, double scalex, double scaley, bool inverse
         , double target_scale_x=1.0, double target_scale_y=1.0);
     void SetEffect(const Effect& effect, int effectType);
     virtual ~CClipper();

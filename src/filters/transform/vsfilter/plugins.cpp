@@ -108,7 +108,7 @@ public:
     }
     
 	CString GetFileName() {CAutoLock cAutoLock(this); return m_fn;}
-	void SetFileName(CString fn) {CAutoLock cAutoLock(this); m_fn = fn;}
+	void SetFileName(const CString& fn) {CAutoLock cAutoLock(this); m_fn = fn;}
 
     void SetYuvMatrix(SubPicDesc& dst)
     {
@@ -311,12 +311,12 @@ public:
 class CVobSubFilter : virtual public CFilter
 {
 public:
-	CVobSubFilter(CString fn = _T(""))
+	CVobSubFilter(const CString& fn = _T(""))
 	{
 		if(!fn.IsEmpty()) Open(fn);
 	}
 
-	bool Open(CString fn)
+	bool Open(const CString& fn)
 	{
 		SetFileName(_T(""));
 		m_pSubPicProvider = NULL;
@@ -337,7 +337,7 @@ class CTextSubFilter : virtual public CFilter
 	int m_CharSet;
 
 public:
-	CTextSubFilter(CString fn = _T(""), int CharSet = DEFAULT_CHARSET, float fps = -1)
+	CTextSubFilter(const CString& fn = _T(""), int CharSet = DEFAULT_CHARSET, float fps = -1)
 		: m_CharSet(CharSet)
 	{
 		m_fps = fps;
@@ -346,7 +346,7 @@ public:
 
 	int GetCharSet() {return(m_CharSet);}
 
-	bool Open(CString fn, int CharSet = DEFAULT_CHARSET)
+	bool Open(const CString& fn, int CharSet = DEFAULT_CHARSET)
 	{
 		SetFileName(_T(""));
 		m_pSubPicProvider = NULL;
@@ -421,7 +421,7 @@ public:
         class CVobSubVirtualDubFilter : public CVobSubFilter, public CVirtualDubFilter
         {
         public:
-            CVobSubVirtualDubFilter(CString fn = _T(""))
+            CVobSubVirtualDubFilter(const CString& fn = _T(""))
                 : CVobSubFilter(fn) {}
 
             int ConfigProc(FilterActivation* fa, const FilterFunctions* ff, HWND hwnd) {
@@ -452,7 +452,7 @@ public:
         class CTextSubVirtualDubFilter : public CTextSubFilter, public CVirtualDubFilter
         {
         public:
-            CTextSubVirtualDubFilter(CString fn = _T(""), int CharSet = DEFAULT_CHARSET)
+            CTextSubVirtualDubFilter(const CString& fn = _T(""), int CharSet = DEFAULT_CHARSET)
                 : CTextSubFilter(fn, CharSet) {}
 
             int ConfigProc(FilterActivation* fa, const FilterFunctions* ff, HWND hwnd) {
@@ -688,7 +688,7 @@ public:
         class CVobSubVirtualDubFilter : public CVobSubFilter, public CVirtualDubFilter
         {
         public:
-            CVobSubVirtualDubFilter(CString fn = _T(""))
+            CVobSubVirtualDubFilter(const CString& fn = _T(""))
                 : CVobSubFilter(fn) {}
 
             int ConfigProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, VDXHWND hwnd) {
@@ -719,7 +719,7 @@ public:
         class CTextSubVirtualDubFilter : public CTextSubFilter, public CVirtualDubFilter
         {
         public:
-            CTextSubVirtualDubFilter(CString fn = _T(""), int CharSet = DEFAULT_CHARSET)
+            CTextSubVirtualDubFilter(const CString& fn = _T(""), int CharSet = DEFAULT_CHARSET)
                 : CTextSubFilter(fn, CharSet) {}
 
             int ConfigProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, VDXHWND hwnd) {

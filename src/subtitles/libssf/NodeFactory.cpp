@@ -104,13 +104,12 @@ namespace ssf
 		return pRef;
 	}
 
-	Definition* NodeFactory::CreateDef(Reference* pParentRef, CStringW type, CStringW name, NodePriority priority)
+	Definition* NodeFactory::CreateDef(Reference* pParentRef, const CStringW& type, const CStringW& name, NodePriority priority)
 	{
 		Definition* pDef = NULL;
-
 		if(name.IsEmpty())
 		{
-			name = GenName();
+			GenName();
 		}
 		else 
 		{
@@ -151,7 +150,7 @@ namespace ssf
 		return pDef;
 	}
 
-	Definition* NodeFactory::GetDefByName(CStringW name) const
+	Definition* NodeFactory::GetDefByName(const CStringW& name) const
 	{
 		Node* pNode = NULL;
 		m_nodes.Lookup(name, pNode);

@@ -22,7 +22,7 @@
 #include "StdAfx.h"
 #include "ccdecoder.h"
 
-CCDecoder::CCDecoder(CString fn, CString rawfn) : m_fn(fn), m_rawfn(rawfn)
+CCDecoder::CCDecoder(const CString& fn, const CString& rawfn) : m_fn(fn), m_rawfn(rawfn)
 {
 	m_sts.CreateDefaultStyle(ANSI_CHARSET);
 

@@ -1358,7 +1358,7 @@ STDMETHODIMP CDirectVobSub::XySetString( unsigned field, LPWSTR value, int chars
     case DirectVobSubXyOptions::STRING_FILE_NAME:
         if(!value) return E_POINTER;
 
-        CStringW tmp = CStringW(value, chars);
+        CStringW tmp(value, chars);
         tmp = tmp.Left(tmp.ReverseFind(L'.')+1);
         CStringW file_name = m_xy_str_opt[STRING_FILE_NAME].Left(m_xy_str_opt[STRING_FILE_NAME].ReverseFind(L'.')+1);
         if(!file_name.CompareNoCase(tmp))

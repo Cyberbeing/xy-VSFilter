@@ -39,25 +39,30 @@ namespace ssf
 	{
 	}
 
-	bool CRenderer::Open(CString fn, CString name)
+	bool CRenderer::Open(const CString& fn, const CString& name)
 	{
 		m_fn.Empty();
 		m_name.Empty();
 		m_file.Free();
 		m_renderer.Free();
 
+        CString new_name;
 		if(name.IsEmpty())
 		{
 			CString str = fn;
 			str.Replace('\\', '/');
-			name = str.Left(str.ReverseFind('.'));
-			name = name.Mid(name.ReverseFind('/')+1);
-			name = name.Mid(name.ReverseFind('.')+1);
+			new_name = str.Left(str.ReverseFind('.'));
+			new_name = new_name.Mid(new_name.ReverseFind('/')+1);
+			new_name = new_name.Mid(new_name.ReverseFind('.')+1);
 		}
+        else
+        {
+            new_name = name;
+        }
 
 		try
 		{
-			if(Open(FileInputStream(fn), name)) 
+			if(Open(FileInputStream(fn), new_name)) 
 			{
 				m_fn = fn;
 				return true;
@@ -71,7 +76,7 @@ namespace ssf
 		return false;	
 	}
 
-	bool CRenderer::Open(InputStream& s, CString name)
+	bool CRenderer::Open(InputStream& s, const CString& name)
 	{
 		m_fn.Empty();
 		m_name.Empty();

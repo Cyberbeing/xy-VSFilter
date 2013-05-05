@@ -88,7 +88,7 @@ private:
     HRESULT UpdateParamFromConsumer(bool getNameAndVersion=false);
 
     int FindPreferedLanguage(bool fHideToo = true);
-    void UpdatePreferedLanguages(CString l);
+    void UpdatePreferedLanguages(const CString& l);
 
     // the text input pin is using these
     void AddSubStream(ISubStream* pSubStream);

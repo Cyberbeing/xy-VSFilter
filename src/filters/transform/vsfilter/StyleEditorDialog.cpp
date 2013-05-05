@@ -36,7 +36,7 @@ END_MESSAGE_MAP()
 // CStyleEditorDialog dialog
 
 IMPLEMENT_DYNAMIC(CStyleEditorDialog, CDialog)
-CStyleEditorDialog::CStyleEditorDialog(CString title, STSStyle* pstss, CWnd* pParent /*=NULL*/)
+CStyleEditorDialog::CStyleEditorDialog(const CString& title, STSStyle* pstss, CWnd* pParent /*=NULL*/)
 	: CDialog(CStyleEditorDialog::IDD, pParent)
 	, m_title(title)
 	, m_stss(*pstss)

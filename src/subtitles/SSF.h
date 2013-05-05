@@ -40,8 +40,8 @@ namespace ssf
         CRenderer(CCritSec* pLock);
         virtual ~CRenderer();
 
-        bool Open(CString fn, CString name = _T(""));
-        bool Open(InputStream& s, CString name);
+        bool Open(const CString& fn, const CString& name = _T(""));
+        bool Open(InputStream& s, const CString& name);
 
         void Append(REFERENCE_TIME rtStart, REFERENCE_TIME rtStop, LPCWSTR str);
 

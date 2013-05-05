@@ -106,7 +106,7 @@ void CVobSubFileRipper::Finished(bool fSucceeded)
 	f.Read(&((BYTE*)&var)[1], 1); \
 	f.Read(&((BYTE*)&var)[0], 1); \
 
-bool CVobSubFileRipper::LoadIfo(CString fn)
+bool CVobSubFileRipper::LoadIfo(const CString& fn)
 {
 	CString str;
 
@@ -364,7 +364,7 @@ bool CVobSubFileRipper::LoadIfo(CString fn)
 	return(true);
 }
 
-bool CVobSubFileRipper::LoadVob(CString fn)
+bool CVobSubFileRipper::LoadVob(const CString& fn)
 {
 	Log(LOG_INFO, _T("Searching vobs..."));
 /*
@@ -537,9 +537,8 @@ bool CVobSubFileRipper::Create()
 	// initalize CVobSubFile
 	CVobSubFile::Close();
 	InitSettings();
-	m_title = m_outfn;
+	m_title = TrimExtension(m_outfn);
 	m_size = m_rd.vidsize;
-	TrimExtension(m_title);
 	memcpy(m_orgpal, pgc.pal, sizeof(m_orgpal));
 	m_sub.SetLength(0);
 
@@ -894,8 +893,7 @@ bool CVobSubFileRipper::LoadChunks(CAtlArray<vcchunk>& chunks)
 {
 	CFile f;
 
-	CString fn = m_infn;
-	TrimExtension(fn);
+	CString fn = TrimExtension(m_infn);
 	fn += _T(".chunks");
 
 	DWORD chksum = 0, chunklen, version;
@@ -939,8 +937,7 @@ bool CVobSubFileRipper::SaveChunks(CAtlArray<vcchunk>& chunks)
 {
 	CFile f;
 
-	CString fn = m_infn;
-	TrimExtension(fn);
+	CString fn = TrimExtension(m_infn);
 	fn += _T(".chunks");
 
 	DWORD chksum = 0, chunklen = chunks.GetCount();
@@ -973,7 +970,7 @@ STDMETHODIMP CVobSubFileRipper::SetCallBack(IVSFRipperCallback* pCallback)
 	return S_OK;
 }
 
-STDMETHODIMP CVobSubFileRipper::LoadParamFile(CString fn)
+STDMETHODIMP CVobSubFileRipper::LoadParamFile(const CString& fn)
 {
 	CAutoLock cAutoLock(&m_csAccessLock);
 
@@ -1146,7 +1143,7 @@ STDMETHODIMP CVobSubFileRipper::LoadParamFile(CString fn)
 	return phase == P_OPTIONS ? S_OK : E_FAIL;
 }
 
-STDMETHODIMP CVobSubFileRipper::SetInput(CString infn)
+STDMETHODIMP CVobSubFileRipper::SetInput(const CString& infn)
 {
 	CAutoLock cAutoLock(&m_csAccessLock);
 
@@ -1160,7 +1157,7 @@ STDMETHODIMP CVobSubFileRipper::SetInput(CString infn)
 	return S_OK;
 }
 
-STDMETHODIMP CVobSubFileRipper::SetOutput(CString outfn)
+STDMETHODIMP CVobSubFileRipper::SetOutput(const CString& outfn)
 {
 	CAutoLock cAutoLock(&m_csAccessLock);
 	m_outfn = outfn;

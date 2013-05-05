@@ -25,17 +25,17 @@
 
 namespace ssf
 {
-	Split::Split(LPCWSTR sep, CStringW str, size_t limit, SplitType type)
+	Split::Split(LPCWSTR sep, const CStringW& str, size_t limit, SplitType type)
 	{
 		DoSplit(sep, str, limit, type);
 	}
 
-	Split::Split(WCHAR sep, CStringW str, size_t limit, SplitType type)
+	Split::Split(WCHAR sep, const CStringW& str, size_t limit, SplitType type)
 	{
 		DoSplit(CStringW(sep), str, limit, type);
 	}
 
-	void Split::DoSplit(LPCWSTR sep, CStringW str, size_t limit, SplitType type)
+	void Split::DoSplit(LPCWSTR sep, const CStringW& str, size_t limit, SplitType type)
 	{
 		RemoveAll();
 

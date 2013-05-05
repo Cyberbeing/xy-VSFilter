@@ -49,8 +49,8 @@ namespace ssf
 		Reference* CreateRootRef();
 		Reference* GetRootRef() const;
 		Reference* CreateRef(Definition* pParentDef);
-		Definition* CreateDef(Reference* pParentRef = NULL, CStringW type = L"", CStringW name = L"", NodePriority priority = PNormal);
-		Definition* GetDefByName(CStringW name) const;
+		Definition* CreateDef(Reference* pParentRef = NULL, const CStringW& type = L"", const CStringW& name = L"", NodePriority priority = PNormal);
+		Definition* GetDefByName(const CStringW& name) const;
 		void GetNewDefs(CAtlList<Definition*>& defs);
 
 		void Dump(OutputStream& s) const;

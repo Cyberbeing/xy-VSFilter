@@ -421,7 +421,7 @@ static TCHAR* CallPPage(IFilterGraph* pGraph, int idx, HWND hWnd)
 		{ 
 			pFilter = pBF;
 			pSPS->GetPages(&caGUID);
-			wstr = _wcsdup(CStringW(GetFilterName(pBF))); // double char-wchar conversion happens in the non-unicode build, but anyway... :)
+			wstr = _wcsdup(GetFilterName(pBF)); // double char-wchar conversion happens in the non-unicode build, but anyway... :)
 			break;
 		}
 

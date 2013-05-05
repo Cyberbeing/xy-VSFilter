@@ -38,7 +38,7 @@ class CCDecoder
     void PutChar(WCHAR c);
 
 public:
-    CCDecoder(CString fn = _T(""), CString rawfn = _T(""));
+    CCDecoder(const CString& fn = _T(""), const CString& rawfn = _T(""));
     virtual ~CCDecoder();
     void DecodeCC(BYTE* buff, int len, __int64 time);
     void ExtractCC(BYTE* buff, int len, __int64 time);

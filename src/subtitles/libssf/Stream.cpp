@@ -236,7 +236,7 @@ namespace ssf
 
 	// WCharInputStream
 	
-	WCharInputStream::WCharInputStream(CStringW str)
+	WCharInputStream::WCharInputStream(const CStringW& str)
 		: m_str(str)
 		, m_pos(0)
 	{

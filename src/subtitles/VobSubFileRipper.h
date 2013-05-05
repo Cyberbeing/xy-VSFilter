@@ -131,9 +131,9 @@ public:
 interface IVSFRipper : public IUnknown
 {
 	STDMETHOD (SetCallBack) (IVSFRipperCallback* pCallback) PURE;
-	STDMETHOD (LoadParamFile) (CString fn) PURE;
-	STDMETHOD (SetInput) (CString infn) PURE;
-	STDMETHOD (SetOutput) (CString outfn) PURE;
+	STDMETHOD (LoadParamFile) (const CString& fn) PURE;
+	STDMETHOD (SetInput) (const CString& infn) PURE;
+	STDMETHOD (SetOutput) (const CString& outfn) PURE;
 	STDMETHOD (GetRipperData) (VSFRipperData& rd) PURE;
 	STDMETHOD (UpdateRipperData) (VSFRipperData& rd) PURE;
 	STDMETHOD (Index) () PURE;
@@ -163,8 +163,8 @@ private:
 	CVobFile m_vob;
 	VSFRipperData m_rd;
 
-	bool LoadIfo(CString fn);
-	bool LoadVob(CString fn);
+	bool LoadIfo(const CString& fn);
+	bool LoadVob(const CString& fn);
 	bool LoadChunks(CAtlArray<vcchunk>& chunks);
 	bool SaveChunks(CAtlArray<vcchunk>& chunks);
 
@@ -182,9 +182,9 @@ public:
 
 	// IVSFRipper
 	STDMETHODIMP SetCallBack(IVSFRipperCallback* pCallback);
-	STDMETHODIMP LoadParamFile(CString fn);
-	STDMETHODIMP SetInput(CString infn);
-	STDMETHODIMP SetOutput(CString outfn);
+	STDMETHODIMP LoadParamFile(const CString& fn);
+	STDMETHODIMP SetInput(const CString& infn);
+	STDMETHODIMP SetOutput(const CString& outfn);
 	STDMETHODIMP GetRipperData(VSFRipperData& rd);
 	STDMETHODIMP UpdateRipperData(VSFRipperData& rd);
 	STDMETHODIMP Index();

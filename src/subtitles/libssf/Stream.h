@@ -98,7 +98,7 @@ namespace ssf
 		int NextByte();
 
 	public:
-		WCharInputStream(CStringW str);
+		WCharInputStream(const CStringW& str);
 	};
 
 	class OutputStream : public Stream

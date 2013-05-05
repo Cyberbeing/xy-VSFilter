@@ -1744,7 +1744,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
         }
         else
         {
-            m_xy_str_opt[STRING_CONNECTED_CONSUMER] = CStringW(str, len);
+            m_xy_str_opt[STRING_CONNECTED_CONSUMER].SetString(str, len);
         }
         hr = m_consumer->GetString("version", &str, &len);
         if (FAILED(hr))
@@ -1753,7 +1753,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
         }
         else
         {
-            m_xy_str_opt[STRING_CONSUMER_VERSION] = CStringW(str, len);
+            m_xy_str_opt[STRING_CONSUMER_VERSION].SetString(str, len);
         }
     }
     SIZE originalVideoSize;
@@ -1880,7 +1880,7 @@ int XySubFilter::FindPreferedLanguage( bool fHideToo /*= true*/ )
     return(0);
 }
 
-void XySubFilter::UpdatePreferedLanguages(CString l)
+void XySubFilter::UpdatePreferedLanguages(const CString& l)
 {
     XY_LOG_INFO(l);
     AFX_MANAGE_STATE(AfxGetStaticModuleState());

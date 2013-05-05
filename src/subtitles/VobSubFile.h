@@ -70,9 +70,9 @@ class CVobSubFile : public CVobSubSettings, public ISubStream, public CSubPicPro
 protected:
 	CString m_title;
 
-	void TrimExtension(CString& fn);
-	bool ReadIdx(CString fn, int& ver), ReadSub(CString fn), ReadRar(CString fn), ReadIfo(CString fn);
-	bool WriteIdx(CString fn), WriteSub(CString fn);
+	CString TrimExtension(const CString& fn);
+	bool ReadIdx(const CString& fn, int& ver), ReadSub(const CString& fn), ReadRar(const CString& fn), ReadIfo(const CString& fn);
+	bool WriteIdx(const CString& fn), WriteSub(const CString& fn);
 
 	CMemFile m_sub;
 
@@ -81,10 +81,10 @@ protected:
 	bool GetFrameByTimeStamp(__int64 time);
 	int GetFrameIdxByTimeStamp(__int64 time);
 
-	bool SaveVobSub(CString fn);
-	bool SaveWinSubMux(CString fn);
-	bool SaveScenarist(CString fn);
-	bool SaveMaestro(CString fn);
+	bool SaveVobSub(const CString& fn);
+	bool SaveWinSubMux(const CString& fn);
+	bool SaveScenarist(const CString& fn);
+	bool SaveMaestro(const CString& fn);
 
 public:
 	typedef struct
@@ -115,8 +115,8 @@ public:
 
 	typedef enum {None,VobSub,WinSubMux,Scenarist,Maestro} SubFormat;
 
-	bool Open(CString fn);
-	bool Save(CString fn, SubFormat sf = VobSub);
+	bool Open(const CString& fn);
+	bool Save(const CString& fn, SubFormat sf = VobSub);
 	void Close();
 
 	CString GetTitle() {return(m_title);}
@@ -156,7 +156,7 @@ public:
 	CVobSubStream(CCritSec* pLock);
 	virtual ~CVobSubStream();
 
-	void Open(CString name, BYTE* pData, int len);
+	void Open(const CString& name, BYTE* pData, int len);
 
     void Add(REFERENCE_TIME tStart, REFERENCE_TIME tStop, BYTE* pData, int len);
 	void RemoveAll();

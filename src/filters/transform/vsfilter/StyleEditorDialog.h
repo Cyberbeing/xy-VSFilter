@@ -63,7 +63,7 @@ class CStyleEditorDialog : public CDialog
 	void AskColor(int i);
 
 public:
-	CStyleEditorDialog(CString title, STSStyle* pstss, CWnd* pParent = NULL);   // standard constructor
+	CStyleEditorDialog(const CString& title, STSStyle* pstss, CWnd* pParent = NULL);   // standard constructor
 	virtual ~CStyleEditorDialog();
 
 // Dialog Data

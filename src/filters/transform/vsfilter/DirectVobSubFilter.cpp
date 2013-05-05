@@ -832,7 +832,7 @@ int CDirectVobSubFilter::FindPreferedLanguage(bool fHideToo)
 	return(0);
 }
 
-void CDirectVobSubFilter::UpdatePreferedLanguages(CString l)
+void CDirectVobSubFilter::UpdatePreferedLanguages(const CString& l)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 

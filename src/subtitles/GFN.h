@@ -34,4 +34,4 @@ typedef struct
     /*exttype ext;*/
 } SubFile;
 
-extern void GetSubFileNames(CString fn, CAtlArray<CString>& paths, CString load_ext_list, CAtlArray<SubFile>& ret);
+extern void GetSubFileNames(CString fn, CAtlArray<CString>& paths, const CString& load_ext_list, CAtlArray<SubFile>& ret);

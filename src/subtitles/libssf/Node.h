@@ -44,12 +44,12 @@ namespace ssf
 		NodePriority m_priority;
 		bool m_predefined;
 
-		Node(NodeFactory* pnf, CStringW name);
+		Node(NodeFactory* pnf, const CStringW& name);
 		virtual ~Node() {}
 
 		bool IsNameUnknown();
 		bool IsTypeUnknown();
-		bool IsType(CStringW type);
+		bool IsType(const CStringW& type);
 
 		virtual void AddTail(Node* pNode);
 		virtual void GetChildDefs(CAtlList<Definition*>& l, LPCWSTR type = NULL, bool fFirst = true);
@@ -59,7 +59,7 @@ namespace ssf
 	class Reference : public Node
 	{
 	public:
-		Reference(NodeFactory* pnf, CStringW name);
+		Reference(NodeFactory* pnf, const CStringW& name);
 		virtual ~Reference();
 
 		void GetChildDefs(CAtlList<Definition*>& l, LPCWSTR type = NULL, bool fFirst = true);
@@ -88,7 +88,7 @@ namespace ssf
 		void GetAsNumber(Number<T>& n, StringMapW<T>* n2n = NULL);
 
 	public:
-		Definition(NodeFactory* pnf, CStringW name);
+		Definition(NodeFactory* pnf, const CStringW& name);
 		virtual ~Definition();
 
 		bool IsVisible(Definition* pDef);
@@ -100,8 +100,8 @@ namespace ssf
 
 		bool IsValue(status_t s = (status_t)0);
 
-		void SetAsValue(status_t s, CStringW v, CStringW u = L"");
-		void SetAsNumber(CStringW v, CStringW u = L"");
+		void SetAsValue(status_t s, const CStringW& v, const CStringW& u = L"");
+		void SetAsNumber(const CStringW& v, const CStringW& u = L"");
 
 		void GetAsString(CStringW& str);
 		void GetAsNumber(Number<int>& n, StringMapW<int>* n2n = NULL);
@@ -116,7 +116,7 @@ namespace ssf
 		operator float();
 		operator bool();
 
-		Definition* SetChildAsValue(CStringW path, status_t s, CStringW v, CStringW u = L"");
-		Definition* SetChildAsNumber(CStringW path, CStringW v, CStringW u = L"");
+		Definition* SetChildAsValue(const CStringW& path, status_t s, const CStringW& v, const CStringW& u = L"");
+		Definition* SetChildAsNumber(const CStringW& path, const CStringW& v, const CStringW& u = L"");
 	};
 }

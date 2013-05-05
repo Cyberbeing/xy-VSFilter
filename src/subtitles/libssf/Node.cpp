@@ -29,7 +29,7 @@
 
 namespace ssf
 {
-	Node::Node(NodeFactory* pnf, CStringW name)
+	Node::Node(NodeFactory* pnf, const CStringW& name)
 		: m_pnf(pnf)
 		, m_type('?')
 		, m_name(name)
@@ -62,7 +62,7 @@ namespace ssf
 		return m_type.IsEmpty() || m_type == '?';
 	}
 
-	bool Node::IsType(CStringW type)
+	bool Node::IsType(const CStringW& type)
 	{
 		return m_type == type;
 	}
@@ -96,7 +96,7 @@ namespace ssf
 
 	// Reference
 
-	Reference::Reference(NodeFactory* pnf, CStringW name)
+	Reference::Reference(NodeFactory* pnf, const CStringW& name)
 		: Node(pnf, name)
 	{
 	}
@@ -152,7 +152,7 @@ namespace ssf
 
 	// Definition
 
-	Definition::Definition(NodeFactory* pnf, CStringW name)
+	Definition::Definition(NodeFactory* pnf, const CStringW& name)
 		: Node(pnf, name)
 		, m_status(node)
 		, m_autotype(false)
@@ -255,7 +255,7 @@ namespace ssf
 		return s ? m_status == s : m_status != node;
 	}
 
-	void Definition::SetAsValue(status_t s, CStringW v, CStringW u)
+	void Definition::SetAsValue(status_t s, const CStringW& v, const CStringW& u)
 	{
 		ASSERT(s != node);
 
@@ -268,7 +268,7 @@ namespace ssf
 		m_unit = u;
 	}
 
-	void Definition::SetAsNumber(CStringW v, CStringW u)
+	void Definition::SetAsNumber(const CStringW& v, const CStringW& u)
 	{
 		SetAsValue(number, v, u);
 
@@ -429,7 +429,7 @@ namespace ssf
 		return b;
 	}
 
-	Definition* Definition::SetChildAsValue(CStringW path, status_t s, CStringW v, CStringW u)
+	Definition* Definition::SetChildAsValue(const CStringW& path, status_t s, const CStringW& v, const CStringW& u)
 	{
 		Definition* pDef = this;
 
@@ -476,7 +476,7 @@ namespace ssf
 		return NULL;
 	}
 
-	Definition* Definition::SetChildAsNumber(CStringW path, CStringW v, CStringW u)
+	Definition* Definition::SetChildAsNumber(const CStringW& path, const CStringW& v, const CStringW& u)
 	{
 		Definition* pDef = SetChildAsValue(path, number, v, u);
 

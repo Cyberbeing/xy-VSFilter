@@ -435,7 +435,7 @@ BOOL CTextFile::ReadString(CStringW& str)
 			if(c == '\n') break;
 			stra += c;
 		}
-		str = CStringW(CString(stra)); // TODO: codepage
+		str = stra; // TODO: codepage
 	}
 	else if(m_encoding == UTF8)
     {

@@ -377,7 +377,7 @@ IBaseFilter* GetFilterFromPin(IPin* pPin)
 	return(pBF);
 }
 
-IPin* AppendFilter(IPin* pPin, CString DisplayName, IGraphBuilder* pGB)
+IPin* AppendFilter(IPin* pPin, const CString& DisplayName, IGraphBuilder* pGB)
 {
 	IPin* pRet = pPin;
 
@@ -459,7 +459,7 @@ IPin* AppendFilter(IPin* pPin, CString DisplayName, IGraphBuilder* pGB)
 	return(pRet);
 }
 
-IPin* InsertFilter(IPin* pPin, CString DisplayName, IGraphBuilder* pGB)
+IPin* InsertFilter(IPin* pPin, const CString& DisplayName, IGraphBuilder* pGB)
 {
 	do
 	{
@@ -622,7 +622,7 @@ void MyOleCreatePropertyFrame(HWND hwndOwner, UINT x, UINT y, LPCOLESTR lpszCapt
 	}
 }
 
-void ShowPPage(CString DisplayName, HWND hParentWnd)
+void ShowPPage(const CString& DisplayName, HWND hParentWnd)
 {
 	CComPtr<IBindCtx> pBindCtx;
 	CreateBindCtx(0, &pBindCtx);
@@ -759,7 +759,7 @@ CString BinToCString(BYTE* ptr, int len)
 	return(ret);
 }
 
-static void FindFiles(CString fn, CAtlList<CString>& files)
+static void FindFiles(const CString& fn, CAtlList<CString>& files)
 {
 	CString path = fn;
 	path.Replace('/', '\\');
@@ -854,7 +854,7 @@ CString GetDriveLabel(TCHAR drive)
 	return(label);
 }
 
-bool GetKeyFrames(CString fn, CUIntArray& kfs)
+bool GetKeyFrames(const CString& fn, CUIntArray& kfs)
 {
 	kfs.RemoveAll();
 
@@ -1197,7 +1197,7 @@ unsigned __int64 GetFileVersion(LPCTSTR fn)
 	return ret;
 }
 
-bool CreateFilter(CStringW DisplayName, IBaseFilter** ppBF, CStringW& FriendlyName)
+bool CreateFilter(const CStringW& DisplayName, IBaseFilter** ppBF, CStringW& FriendlyName)
 {
 	if(!ppBF) return(false);
 
@@ -1272,7 +1272,7 @@ IBaseFilter* AppendFilter(IPin* pPin, IMoniker* pMoniker, IGraphBuilder* pGB)
 	return(NULL);
 }
 
-CStringW GetFriendlyName(CStringW DisplayName)
+CStringW GetFriendlyName(const CStringW& DisplayName)
 {
 	CStringW FriendlyName;
 
@@ -1445,7 +1445,7 @@ CString GetMediaTypeName(const GUID& guid)
 	return ret;
 }
 
-GUID GUIDFromCString(CString str)
+GUID GUIDFromCString(const CString& str)
 {
 	GUID guid = GUID_NULL;
 	HRESULT hr = CLSIDFromString(CComBSTR(str), &guid);
@@ -1453,7 +1453,7 @@ GUID GUIDFromCString(CString str)
 	return guid;
 }
 
-HRESULT GUIDFromCString(CString str, GUID& guid)
+HRESULT GUIDFromCString(const CString& str, GUID& guid)
 {
 	guid = GUID_NULL;
 	return CLSIDFromString(CComBSTR(str), &guid);

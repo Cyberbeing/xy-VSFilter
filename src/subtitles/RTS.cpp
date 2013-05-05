@@ -1185,7 +1185,7 @@ bool CPolygon::CreatePath(PathData* path_data)
 
 // CClipper
 
-CClipper::CClipper(CStringW str, CSizeCoor2 size, double scalex, double scaley, bool inverse
+CClipper::CClipper(const CStringW& str, CSizeCoor2 size, double scalex, double scaley, bool inverse
     , double target_scale_x/*=1.0*/, double target_scale_y/*=1.0*/)
     : m_polygon( DEBUG_NEW CPolygon(FwSTSStyle(), str, 0, 0, 0, scalex, scaley, 0, target_scale_x, target_scale_y, true) )
     , m_size(size), m_inverse(inverse)
