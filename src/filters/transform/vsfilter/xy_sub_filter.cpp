@@ -297,7 +297,6 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case DOUBLE_FPS:
     case INT_SELECTED_LANGUAGE:
     case void_TextSettings:
-    case void_AspectRatioSettings:
         m_context_id++;
         break;
     case STRING_FILE_NAME:
@@ -311,6 +310,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
         break;
     case BOOL_OVERRIDE_PLACEMENT:
     case SIZE_PLACEMENT_PERC:
+    case INT_ASPECT_RATIO_SETTINGS:
         m_context_id++;
         UpdateSubtitle(false);
         break;
@@ -1513,7 +1513,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
                 }
             }
 
-            pRTS->m_ePARCompensationType = m_ePARCompensationType;
+            pRTS->m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS]);
             if (m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO] != CSize(0,0) && m_xy_size_opt[SIZE_ORIGINAL_VIDEO] != CSize(0,0))
             {
                 pRTS->m_dPARCompensation = abs(m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cx * m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO].cy) /

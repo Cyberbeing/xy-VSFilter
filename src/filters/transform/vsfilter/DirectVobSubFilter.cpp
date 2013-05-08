@@ -1285,20 +1285,6 @@ STDMETHODIMP CDirectVobSubFilter::put_TextSettings(STSStyle* pDefStyle)
 	return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType)
-{
-	HRESULT hr = CDirectVobSub::put_AspectRatioSettings(ePARCompensationType);
-
-	if(hr == NOERROR)
-	{
-		//DbgLog((LOG_TRACE, 3, "%d %s:UpdateSubtitle(true)", __LINE__, __FUNCTION__));
-		//UpdateSubtitle(true);
-		UpdateSubtitle(false);
-	}
-
-	return hr;
-}
-
 // IDirectVobSubFilterColor
 
 STDMETHODIMP CDirectVobSubFilter::HasConfigDialog(int iSelected)
@@ -1812,7 +1798,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
                 }
 			}
 
-			pRTS->m_ePARCompensationType = m_ePARCompensationType;
+			pRTS->m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS]);
 			if (m_CurrentVIH2.dwPictAspectRatioX != 0 && m_CurrentVIH2.dwPictAspectRatioY != 0&& m_CurrentVIH2.bmiHeader.biWidth != 0 && m_CurrentVIH2.bmiHeader.biHeight != 0)
 			{
 				pRTS->m_dPARCompensation = ((double)abs(m_CurrentVIH2.bmiHeader.biWidth) / (double)abs(m_CurrentVIH2.bmiHeader.biHeight)) /
@@ -2311,6 +2297,7 @@ HRESULT CDirectVobSubFilter::OnOptionChanged( unsigned field )
         break;
     case BOOL_OVERRIDE_PLACEMENT:
     case SIZE_PLACEMENT_PERC:
+    case INT_ASPECT_RATIO_SETTINGS:
         UpdateSubtitle(false);
         break;
     case BOOL_VOBSUBSETTINGS_BUFFER:

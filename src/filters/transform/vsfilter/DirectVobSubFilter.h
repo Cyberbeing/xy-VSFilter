@@ -118,7 +118,6 @@ public:
 
 	// IDirectVobSub2
 	STDMETHODIMP put_TextSettings(STSStyle* pDefStyle);
-	STDMETHODIMP put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType);
 
     // ISpecifyPropertyPages
     STDMETHODIMP GetPages(CAUUID* pPages);
