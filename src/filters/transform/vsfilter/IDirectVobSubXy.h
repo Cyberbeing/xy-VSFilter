@@ -99,6 +99,11 @@ namespace DirectVobSubXyOptions
         BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS,
         BOOL_VOBSUBSETTINGS_POLYGONIZE,
 
+        INT_EXTEND_PICTURE_HORIZONTAL,
+        INT_EXTEND_PICTURE_VERTICAL,
+        INT_EXTEND_PICTURE_RESX2,
+        SIZE_EXTEND_PICTURE_RESX2MIN,
+
         //The following is not really supported yet
         void_LanguageName,
         void_TextSettings,
@@ -106,7 +111,6 @@ namespace DirectVobSubXyOptions
         void_ZoomRect,
         void_ColorFormat,
         void_SubtitleReloader,
-        void_ExtendPicture,
         void_LoadSettings,
         void_AspectRatioSettings,
         void_HasConfigDialog,
@@ -228,7 +232,10 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ZoomRect},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ColorFormat},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleReloader},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ExtendPicture},
+        //{XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_EXTEND_PICTURE_HORIZONTAL},
+        //{XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_EXTEND_PICTURE_VERTICAL},
+        //{XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_EXTEND_PICTURE_RESX2},
+        //{XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_RW, SIZE_EXTEND_PICTURE_RESX2MIN},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LoadSettings},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FORCED_LOAD},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AspectRatioSettings},
@@ -346,7 +353,10 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, BIN_OUTPUT_COLOR_FORMAT},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, BIN_INPUT_COLOR_FORMAT},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ExtendPicture},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_EXTEND_PICTURE_HORIZONTAL},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_EXTEND_PICTURE_VERTICAL},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_EXTEND_PICTURE_RESX2},
+        {XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_RW, SIZE_EXTEND_PICTURE_RESX2MIN},
 
         {XyOptionsImpl::OPTION_TYPE_END_FLAG}
     };

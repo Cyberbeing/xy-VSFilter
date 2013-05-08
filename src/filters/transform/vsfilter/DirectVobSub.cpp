@@ -262,6 +262,12 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     {
         m_xy_int_opt[INT_MAX_BITMAP_COUNT] = 1;
     }
+
+    m_xy_int_opt[INT_EXTEND_PICTURE_HORIZONTAL]    = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_MOD32FIX ), 0) & 1;
+    m_xy_int_opt[INT_EXTEND_PICTURE_VERTICAL  ]    = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTPIC   ), 0);
+    m_xy_int_opt[INT_EXTEND_PICTURE_RESX2     ]    = 0;// theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2), 2) & 3;
+    m_xy_size_opt[SIZE_EXTEND_PICTURE_RESX2MIN].cx = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINW), 384);
+    m_xy_size_opt[SIZE_EXTEND_PICTURE_RESX2MIN].cy = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINH), 288);
 }
 
 CDirectVobSub::~CDirectVobSub()
@@ -819,6 +825,12 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
         delete [] pData;
     }
 
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_MOD32FIX ), m_xy_int_opt[INT_EXTEND_PICTURE_HORIZONTAL] & 1);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTPIC   ), m_xy_int_opt[INT_EXTEND_PICTURE_VERTICAL]);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2    ), m_xy_int_opt[INT_EXTEND_PICTURE_RESX2] & 3);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINW), m_xy_size_opt[SIZE_EXTEND_PICTURE_RESX2MIN].cx);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINH), m_xy_size_opt[SIZE_EXTEND_PICTURE_RESX2MIN].cy);
+
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), CUR_SUPPORTED_FILTER_VERSION);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), XY_VSFILTER_VERSION_COMMIT);
     //
@@ -914,51 +926,73 @@ STDMETHODIMP CDirectVobSub::put_SubtitleReloader(bool fDisable)
 
 STDMETHODIMP CDirectVobSub::get_ExtendPicture(int* horizontal, int* vertical, int* resx2, int* resx2minw, int* resx2minh)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_ExtendPicture))
+    HRESULT hr = XyGetInt(DirectVobSubXyOptions::INT_EXTEND_PICTURE_HORIZONTAL, horizontal);
+    if (FAILED(hr))
     {
-        return E_NOTIMPL;
+        XY_LOG_ERROR("Failed to get option INT_EXTEND_PICTURE_HORIZONTAL"<<XY_LOG_VAR_2_STR(horizontal));
+        return hr;
     }
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+    hr = XyGetInt(DirectVobSubXyOptions::INT_EXTEND_PICTURE_VERTICAL, vertical);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get option INT_EXTEND_PICTURE_VERTICAL"<<XY_LOG_VAR_2_STR(vertical));
+        return hr;
+    }
+    hr = XyGetInt(DirectVobSubXyOptions::INT_EXTEND_PICTURE_RESX2, resx2);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get option INT_EXTEND_PICTURE_RESX2."<<XY_LOG_VAR_2_STR(resx2));
+        return hr;
+    }
+    SIZE cs;
+    hr = XyGetSize(DirectVobSubXyOptions::SIZE_EXTEND_PICTURE_RESX2MIN, &cs);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get option SIZE_EXTEND_PICTURE_RESX2MIN.");
+        return hr;
+    }
+    if(resx2minw) *resx2minw = cs.cx;
+    if(resx2minh) *resx2minh = cs.cy;
 
-	CAutoLock cAutoLock(&m_propsLock);
-
-	if(horizontal) *horizontal = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_MOD32FIX), 0) & 1;
-	if(vertical) *vertical = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTPIC), 0);
-	//if(resx2) *resx2 = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2), 2) & 3;
-    if(resx2) *resx2 = 0;
-	if(resx2minw) *resx2minw = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINW), 384);
-	if(resx2minh) *resx2minh = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINH), 288);
-
-	return S_OK;
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::put_ExtendPicture(int horizontal, int vertical, int resx2, int resx2minw, int resx2minh)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_ExtendPicture))
+    if (!TestOption(DirectVobSubXyOptions::INT_EXTEND_PICTURE_HORIZONTAL, OPTION_TYPE_INT , OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::INT_EXTEND_PICTURE_VERTICAL  , OPTION_TYPE_INT , OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::INT_EXTEND_PICTURE_RESX2     , OPTION_TYPE_INT , OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::SIZE_EXTEND_PICTURE_RESX2MIN , OPTION_TYPE_SIZE, OPTION_MODE_WRITE))
     {
         return E_NOTIMPL;
     }
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-	CAutoLock cAutoLock(&m_propsLock);
-    if(resx2==0)
+    HRESULT hr1 = XySetInt(DirectVobSubXyOptions::INT_EXTEND_PICTURE_HORIZONTAL, horizontal);
+    if (FAILED(hr1))
     {
-	    int i[5];
-	    get_ExtendPicture(i, i+1, i+2, i+3, i+4);
-	    if(i[0] == horizontal && i[1] == vertical && i[2] == resx2 && i[3] == resx2minw && i[4] == resx2minh) return S_FALSE;
-
-	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_MOD32FIX), horizontal & 1);
-	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTPIC), vertical);
-	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2), resx2 & 3);
-	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINW), resx2minw);
-	    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINH), resx2minh);
-
-        return OnOptionChanged(void_ExtendPicture);
+        XY_LOG_ERROR("Failed to set option INT_EXTEND_PICTURE_HORIZONTAL"<<XY_LOG_VAR_2_STR(horizontal));
+        return hr1;
     }
-    else
+    HRESULT hr2 = XySetInt(DirectVobSubXyOptions::INT_EXTEND_PICTURE_VERTICAL, vertical);
+    if (FAILED(hr2))
     {
-        return S_FALSE;
+        XY_LOG_ERROR("Failed to set option INT_EXTEND_PICTURE_VERTICAL"<<XY_LOG_VAR_2_STR(vertical));
+        return hr2;
     }
+    HRESULT hr3 = XySetInt(DirectVobSubXyOptions::INT_EXTEND_PICTURE_RESX2, resx2);
+    if (FAILED(hr3))
+    {
+        XY_LOG_ERROR("Failed to set option INT_EXTEND_PICTURE_RESX2."<<XY_LOG_VAR_2_STR(resx2));
+        return hr3;
+    }
+    CSize cs(resx2minw, resx2minh);
+    HRESULT hr4 = XySetSize(DirectVobSubXyOptions::SIZE_EXTEND_PICTURE_RESX2MIN, cs);
+    if (FAILED(hr4))
+    {
+        XY_LOG_ERROR("Failed to set option SIZE_EXTEND_PICTURE_RESX2MIN."<<XY_LOG_VAR_2_STR(resx2minw)<<XY_LOG_VAR_2_STR(resx2minh));
+        return hr4;
+    }
+
+    return (hr1==hr2&&hr2==hr3&&hr3==hr4&&hr4==S_FALSE)? S_FALSE : S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::get_LoadSettings(int* level, bool* fExternalLoad, bool* fWebLoad, bool* fEmbeddedLoad)
