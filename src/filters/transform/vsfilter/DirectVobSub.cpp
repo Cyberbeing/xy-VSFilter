@@ -211,7 +211,6 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     m_ZoomRect.left = m_ZoomRect.top = 0;
     m_ZoomRect.right = m_ZoomRect.bottom = 1;
 
-    m_fForced = false;
     if(pData)
     {
         delete [] pData;
@@ -1019,25 +1018,18 @@ STDMETHODIMP CDirectVobSub::AdviseSubClock(ISubClock* pSubClock)
 
 STDMETHODIMP_(bool) CDirectVobSub::get_Forced()
 {
-    if (!TestOption(DirectVobSubXyOptions::void_Forced))
+    bool forced = false;
+    if (FAILED(XyGetBool(DirectVobSubXyOptions::BOOL_FORCED_LOAD, &forced)))
     {
-        ASSERT(0);
+        XY_LOG_ERROR("Forced loading is NOT supported!");
         return false;
     }
-	return m_fForced;
+    return forced;
 }
 
 STDMETHODIMP CDirectVobSub::put_Forced(bool fForced)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_Forced))
-    {
-        return E_NOTIMPL;
-    }
-    if(m_fForced==fForced)
-        return S_FALSE;
-
-	m_fForced = fForced;
-    return OnOptionChanged(void_Forced);
+    return XySetBool(DirectVobSubXyOptions::BOOL_FORCED_LOAD, fForced);
 }
 
 STDMETHODIMP CDirectVobSub::get_TextSettings(STSStyle* pDefStyle)
