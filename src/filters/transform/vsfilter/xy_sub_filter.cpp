@@ -296,7 +296,6 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case SIZE_USER_SPECIFIED_LAYOUT_SIZE:
     case DOUBLE_FPS:
     case INT_SELECTED_LANGUAGE:
-    case void_Placement:
     case void_VobSubSettings:
     case void_TextSettings:
     case void_AspectRatioSettings:
@@ -310,6 +309,11 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
             break;
         }
         m_context_id++;
+        break;
+    case BOOL_OVERRIDE_PLACEMENT:
+    case SIZE_PLACEMENT_PERC:
+        m_context_id++;
+        UpdateSubtitle(false);
         break;
     case BOOL_HIDE_SUBTITLES:
         UpdateSubtitle(false);
@@ -476,21 +480,6 @@ STDMETHODIMP XySubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 
             i -= pSubStream->GetStreamCount();
         }
-    }
-
-    return hr;
-}
-
-STDMETHODIMP XySubFilter::put_Placement(bool fOverridePlacement, int xperc, int yperc)
-{
-    XY_LOG_INFO(fOverridePlacement<<XY_LOG_VAR_2_STR(xperc)<<XY_LOG_VAR_2_STR(yperc));
-    HRESULT hr = CDirectVobSub::put_Placement(fOverridePlacement, xperc, yperc);
-
-    if(hr == NOERROR)
-    {
-        //DbgLog((LOG_TRACE, 3, "%d %s:UpdateSubtitle(true)", __LINE__, __FUNCTION__));
-        //UpdateSubtitle(true);
-        UpdateSubtitle(false);
     }
 
     return hr;
@@ -1490,7 +1479,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
 
             if(fApplyDefStyle)
             {
-                pVSS->SetAlignment(m_fOverridePlacement, m_PlacementXperc, m_PlacementYperc, 1, 1);
+                pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
                 pVSS->m_fOnlyShowForcedSubs = m_fOnlyShowForcedVobSubs;
             }
         }
@@ -1500,7 +1489,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
 
             if(fApplyDefStyle)
             {
-                pVSS->SetAlignment(m_fOverridePlacement, m_PlacementXperc, m_PlacementYperc, 1, 1);
+                pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
                 pVSS->m_fOnlyShowForcedSubs = m_fOnlyShowForcedVobSubs;
             }
         }
@@ -1512,15 +1501,15 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             {
                 STSStyle s = m_defStyle;
 
-                if(m_fOverridePlacement)
+                if(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT])
                 {
                     s.scrAlignment = 2;
                     int w = pRTS->m_dstScreenSize.cx;
                     int h = pRTS->m_dstScreenSize.cy;
                     CRect tmp_rect = s.marginRect.get();
                     int mw = w - tmp_rect.left - tmp_rect.right;
-                    tmp_rect.bottom = h - MulDiv(h, m_PlacementYperc, 100);
-                    tmp_rect.left = MulDiv(w, m_PlacementXperc, 100) - mw/2;
+                    tmp_rect.bottom = h - MulDiv(h, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 100);
+                    tmp_rect.left = MulDiv(w, m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, 100) - mw/2;
                     tmp_rect.right = w - (tmp_rect.left + mw);
                     s.marginRect = tmp_rect;
                 }

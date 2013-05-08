@@ -70,8 +70,6 @@ protected:
 
     int m_bt601Width, m_bt601Height;//for AUTO_GUESS
 
-	bool m_fOverridePlacement;
-	int	m_PlacementXperc, m_PlacementYperc;
 	bool m_fBufferVobSub, m_fOnlyShowForcedVobSubs, m_fPolygonize;
 	CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;
 
