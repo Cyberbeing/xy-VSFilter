@@ -93,7 +93,6 @@ protected:
     int m_config_info_version;
 
 	CComPtr<ISubClock> m_pSubClock;
-	bool m_fForced;
 
 public:
 
