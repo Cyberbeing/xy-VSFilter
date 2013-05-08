@@ -70,12 +70,10 @@ protected:
 
     int m_bt601Width, m_bt601Height;//for AUTO_GUESS
 
-	CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;
-
     static int const MAX_COLOR_SPACE = 256;
     ColorSpaceOpt m_outputColorSpace[MAX_COLOR_SPACE];
     ColorSpaceOpt m_inputColorSpace[MAX_COLOR_SPACE];
-    
+
 	STSStyle m_defStyle;
 
 	bool m_fAdvancedRenderer;

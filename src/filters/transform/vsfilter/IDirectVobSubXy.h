@@ -104,6 +104,8 @@ namespace DirectVobSubXyOptions
         INT_EXTEND_PICTURE_RESX2,
         SIZE_EXTEND_PICTURE_RESX2MIN,
 
+        INT_ASPECT_RATIO_SETTINGS,
+
         //The following is not really supported yet
         void_LanguageName,
         void_TextSettings,
@@ -112,7 +114,6 @@ namespace DirectVobSubXyOptions
         void_ColorFormat,
         void_SubtitleReloader,
         void_LoadSettings,
-        void_AspectRatioSettings,
         void_HasConfigDialog,
         void_ShowConfigDialog,
         void_IsSubtitleReloaderLocked,
@@ -238,7 +239,7 @@ namespace DirectVobSubXyOptions
         //{XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_RW, SIZE_EXTEND_PICTURE_RESX2MIN},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LoadSettings},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FORCED_LOAD},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AspectRatioSettings},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_ASPECT_RATIO_SETTINGS},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_HasConfigDialog},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ShowConfigDialog},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_IsSubtitleReloaderLocked},
@@ -323,7 +324,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleReloader},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LoadSettings},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FORCED_LOAD},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AspectRatioSettings},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_ASPECT_RATIO_SETTINGS},
         //{XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_HasConfigDialog},
         //{XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ShowConfigDialog},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_IsSubtitleReloaderLocked},
