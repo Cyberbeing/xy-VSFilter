@@ -1126,20 +1126,6 @@ STDMETHODIMP CDirectVobSubFilter::put_PreBuffering(bool fDoPreBuffering)
 	return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fReserved)
-{
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(fBuffer)<<XY_LOG_VAR_2_STR(fOnlyShowForcedSubs)<<XY_LOG_VAR_2_STR(fReserved));
-	HRESULT hr = CDirectVobSub::put_VobSubSettings(fBuffer, fOnlyShowForcedSubs, fReserved);
-
-	if(hr == NOERROR)
-	{
-//		UpdateSubtitle(false);
-		InvalidateSubtitle();
-	}
-
-	return hr;
-}
-
 STDMETHODIMP CDirectVobSubFilter::put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer)
 {
     XY_LOG_INFO(XY_LOG_VAR_2_STR(lf)<<XY_LOG_VAR_2_STR(lflen)<<XY_LOG_VAR_2_STR(color)
@@ -1785,7 +1771,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 			if(fApplyDefStyle)
 			{
 				pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
-				pVSS->m_fOnlyShowForcedSubs = m_fOnlyShowForcedVobSubs;
+				pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
 			}
 		}
 		else if(clsid == __uuidof(CVobSubStream))
@@ -1795,7 +1781,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 			if(fApplyDefStyle)
 			{
 				pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
-				pVSS->m_fOnlyShowForcedSubs = m_fOnlyShowForcedVobSubs;
+				pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
 			}
 		}
 		else if(clsid == __uuidof(CRenderedTextSubtitle))
@@ -2326,6 +2312,11 @@ HRESULT CDirectVobSubFilter::OnOptionChanged( unsigned field )
     case BOOL_OVERRIDE_PLACEMENT:
     case SIZE_PLACEMENT_PERC:
         UpdateSubtitle(false);
+        break;
+    case BOOL_VOBSUBSETTINGS_BUFFER:
+    case BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS:
+    case BOOL_VOBSUBSETTINGS_POLYGONIZE:
+        InvalidateSubtitle();
         break;
     }
 

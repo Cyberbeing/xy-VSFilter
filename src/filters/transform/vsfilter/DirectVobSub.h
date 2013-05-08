@@ -70,7 +70,6 @@ protected:
 
     int m_bt601Width, m_bt601Height;//for AUTO_GUESS
 
-	bool m_fBufferVobSub, m_fOnlyShowForcedVobSubs, m_fPolygonize;
 	CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;
 
     static int const MAX_COLOR_SPACE = 256;

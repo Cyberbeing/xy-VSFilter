@@ -95,9 +95,12 @@ namespace DirectVobSubXyOptions
         BOOL_OVERRIDE_PLACEMENT,
         SIZE_PLACEMENT_PERC,// in 1%
 
+        BOOL_VOBSUBSETTINGS_BUFFER,
+        BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS,
+        BOOL_VOBSUBSETTINGS_POLYGONIZE,
+
         //The following is not really supported yet
         void_LanguageName,
-        void_VobSubSettings,
         void_TextSettings,
         void_SubtitleTiming,
         void_ZoomRect,
@@ -213,7 +216,9 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageName},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_OVERRIDE_PLACEMENT},
         {XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_RW, SIZE_PLACEMENT_PERC},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_VobSubSettings},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_BUFFER},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_POLYGONIZE},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_TextSettings},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FLIP_PICTURE},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FLIP_SUBTITLE},
@@ -302,7 +307,9 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageName},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_OVERRIDE_PLACEMENT},
         {XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_RW, SIZE_PLACEMENT_PERC},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_VobSubSettings},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_BUFFER},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_POLYGONIZE},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_TextSettings},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleTiming},
         //{XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ZoomRect},

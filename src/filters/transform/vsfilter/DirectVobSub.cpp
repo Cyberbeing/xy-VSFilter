@@ -62,9 +62,9 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT] = !!theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), 0);
     m_xy_size_opt[SIZE_PLACEMENT_PERC].cx = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), 50);
     m_xy_size_opt[SIZE_PLACEMENT_PERC].cy = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), 90);
-    m_fBufferVobSub = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_BUFFER), 1);
-    m_fOnlyShowForcedVobSubs = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), 0);
-    m_fPolygonize = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), 0);
+    m_xy_bool_opt[BOOL_VOBSUBSETTINGS_BUFFER] = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_BUFFER), 1);
+    m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS] = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), 0);
+    m_xy_bool_opt[BOOL_VOBSUBSETTINGS_POLYGONIZE] = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), 0);
     m_defStyle <<= theApp.GetProfileString(ResStr(IDS_R_TEXT), ResStr(IDS_RT_STYLE), _T(""));
     m_xy_bool_opt[BOOL_FLIP_PICTURE]  = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), 0);
     m_xy_bool_opt[BOOL_FLIP_SUBTITLE] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), 0);
@@ -377,33 +377,54 @@ STDMETHODIMP CDirectVobSub::put_Placement(bool fOverridePlacement, int xperc, in
 
 STDMETHODIMP CDirectVobSub::get_VobSubSettings(bool* fBuffer, bool* fOnlyShowForcedSubs, bool* fPolygonize)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_VobSubSettings))
+    HRESULT hr = XyGetBool(DirectVobSubXyOptions::BOOL_VOBSUBSETTINGS_BUFFER, fBuffer);
+    if (FAILED(hr))
     {
-        return E_NOTIMPL;
+        XY_LOG_ERROR("Failed to get option BOOL_VOBSUBSETTINGS_BUFFER"<<XY_LOG_VAR_2_STR(fBuffer));
+        return hr;
     }
-	CAutoLock cAutoLock(&m_propsLock);
-
-	if(fBuffer) *fBuffer = m_fBufferVobSub;
-	if(fOnlyShowForcedSubs) *fOnlyShowForcedSubs = m_fOnlyShowForcedVobSubs;
-	if(fPolygonize) *fPolygonize = m_fPolygonize;
-
-	return S_OK;
+    hr = XyGetBool(DirectVobSubXyOptions::BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS, fOnlyShowForcedSubs);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get option BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS"<<XY_LOG_VAR_2_STR(fOnlyShowForcedSubs));
+        return hr;
+    }
+    hr = XyGetBool(DirectVobSubXyOptions::BOOL_VOBSUBSETTINGS_POLYGONIZE, fPolygonize);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get option BOOL_VOBSUBSETTINGS_POLYGONIZE"<<XY_LOG_VAR_2_STR(fPolygonize));
+        return hr;
+    }
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fPolygonize)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_VobSubSettings))
+    if (!TestOption(DirectVobSubXyOptions::BOOL_VOBSUBSETTINGS_BUFFER, OPTION_TYPE_BOOL, OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS, OPTION_TYPE_BOOL, OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::BOOL_VOBSUBSETTINGS_POLYGONIZE, OPTION_TYPE_BOOL, OPTION_MODE_WRITE))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
-
-	if(m_fBufferVobSub == fBuffer && m_fOnlyShowForcedVobSubs == fOnlyShowForcedSubs && m_fPolygonize == fPolygonize) return S_FALSE;
-
-	m_fBufferVobSub = fBuffer;
-	m_fOnlyShowForcedVobSubs = fOnlyShowForcedSubs;
-	m_fPolygonize = fPolygonize;
-    return OnOptionChanged(void_VobSubSettings);
+    HRESULT hr1 = XySetBool(DirectVobSubXyOptions::BOOL_VOBSUBSETTINGS_BUFFER, fBuffer);
+    if (FAILED(hr1))
+    {
+        XY_LOG_ERROR("Failed to set option BOOL_VOBSUBSETTINGS_BUFFER"<<XY_LOG_VAR_2_STR(fBuffer));
+        return hr1;
+    }
+    HRESULT hr2 = XySetBool(DirectVobSubXyOptions::BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS, fOnlyShowForcedSubs);
+    if (FAILED(hr2))
+    {
+        XY_LOG_ERROR("Failed to set option BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS"<<XY_LOG_VAR_2_STR(fOnlyShowForcedSubs));
+        return hr2;
+    }
+    HRESULT hr3 = XySetBool(DirectVobSubXyOptions::BOOL_VOBSUBSETTINGS_POLYGONIZE, fPolygonize);
+    if (FAILED(hr3))
+    {
+        XY_LOG_ERROR("Failed to set option BOOL_VOBSUBSETTINGS_POLYGONIZE"<<XY_LOG_VAR_2_STR(fPolygonize));
+        return hr3;
+    }
+    return (hr1==S_FALSE&&hr2==S_FALSE&&hr3==S_FALSE) ? S_FALSE : S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::get_TextSettings(void* lf, int lflen, COLORREF* color, bool* fShadow, bool* fOutline, bool* fAdvancedRenderer)
@@ -717,9 +738,9 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT]);
 	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), m_xy_size_opt[SIZE_PLACEMENT_PERC].cx);
 	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), m_xy_size_opt[SIZE_PLACEMENT_PERC].cy);
-	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_BUFFER), m_fBufferVobSub);
-	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), m_fOnlyShowForcedVobSubs);
-	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), m_fPolygonize);
+	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_BUFFER), m_xy_bool_opt[BOOL_VOBSUBSETTINGS_BUFFER]);
+	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS]);
+	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), m_xy_bool_opt[BOOL_VOBSUBSETTINGS_POLYGONIZE]);
 	CString style;
 	theApp.WriteProfileString(ResStr(IDS_R_TEXT), ResStr(IDS_RT_STYLE), style <<= m_defStyle);
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), m_xy_bool_opt[BOOL_FLIP_PICTURE]);
