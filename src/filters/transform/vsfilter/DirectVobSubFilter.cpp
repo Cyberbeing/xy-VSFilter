@@ -607,6 +607,7 @@ HRESULT CDirectVobSubFilter::BreakConnect(PIN_DIRECTION dir)
 		//	m_pOutput->GetConnected()->Disconnect();
 		//	m_pOutput->Disconnect();
 		//}
+        m_fMSMpeg4Fix = false;
 	}
 	else if(dir == PINDIR_OUTPUT)
 	{
