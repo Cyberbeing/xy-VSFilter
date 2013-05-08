@@ -1126,21 +1126,6 @@ STDMETHODIMP CDirectVobSubFilter::put_PreBuffering(bool fDoPreBuffering)
 	return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::put_Placement(bool fOverridePlacement, int xperc, int yperc)
-{
-    XY_LOG_INFO(fOverridePlacement<<XY_LOG_VAR_2_STR(xperc)<<XY_LOG_VAR_2_STR(yperc));
-	HRESULT hr = CDirectVobSub::put_Placement(fOverridePlacement, xperc, yperc);
-
-	if(hr == NOERROR)
-	{
-		//DbgLog((LOG_TRACE, 3, "%d %s:UpdateSubtitle(true)", __LINE__, __FUNCTION__));
-		//UpdateSubtitle(true);
-		UpdateSubtitle(false);
-	}
-
-	return hr;
-}
-
 STDMETHODIMP CDirectVobSubFilter::put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fReserved)
 {
     XY_LOG_INFO(XY_LOG_VAR_2_STR(fBuffer)<<XY_LOG_VAR_2_STR(fOnlyShowForcedSubs)<<XY_LOG_VAR_2_STR(fReserved));
@@ -1799,7 +1784,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 
 			if(fApplyDefStyle)
 			{
-				pVSS->SetAlignment(m_fOverridePlacement, m_PlacementXperc, m_PlacementYperc, 1, 1);
+				pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
 				pVSS->m_fOnlyShowForcedSubs = m_fOnlyShowForcedVobSubs;
 			}
 		}
@@ -1809,7 +1794,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 
 			if(fApplyDefStyle)
 			{
-				pVSS->SetAlignment(m_fOverridePlacement, m_PlacementXperc, m_PlacementYperc, 1, 1);
+				pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
 				pVSS->m_fOnlyShowForcedSubs = m_fOnlyShowForcedVobSubs;
 			}
 		}
@@ -1821,15 +1806,15 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 			{
 				STSStyle s = m_defStyle;
 
-				if(m_fOverridePlacement)
+				if(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT])
 				{
 					s.scrAlignment = 2;
 					int w = pRTS->m_dstScreenSize.cx;
 					int h = pRTS->m_dstScreenSize.cy;
                     CRect tmp_rect = s.marginRect.get();
 					int mw = w - tmp_rect.left - tmp_rect.right;
-					tmp_rect.bottom = h - MulDiv(h, m_PlacementYperc, 100);
-					tmp_rect.left = MulDiv(w, m_PlacementXperc, 100) - mw/2;
+					tmp_rect.bottom = h - MulDiv(h, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 100);
+					tmp_rect.left = MulDiv(w, m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, 100) - mw/2;
 					tmp_rect.right = w - (tmp_rect.left + mw);
                     s.marginRect = tmp_rect;
 				}
@@ -2337,6 +2322,10 @@ HRESULT CDirectVobSubFilter::OnOptionChanged( unsigned field )
             hr = E_FAIL;
             break;
         }
+        break;
+    case BOOL_OVERRIDE_PLACEMENT:
+    case SIZE_PLACEMENT_PERC:
+        UpdateSubtitle(false);
         break;
     }
 

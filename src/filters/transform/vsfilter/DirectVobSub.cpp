@@ -59,9 +59,9 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     m_bt601Width = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
     m_bt601Height = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_HEIGHT), 600);
 
-    m_fOverridePlacement = !!theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), 0);
-    m_PlacementXperc = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), 50);
-    m_PlacementYperc = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), 90);
+    m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT] = !!theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), 0);
+    m_xy_size_opt[SIZE_PLACEMENT_PERC].cx = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), 50);
+    m_xy_size_opt[SIZE_PLACEMENT_PERC].cy = theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), 90);
     m_fBufferVobSub = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_BUFFER), 1);
     m_fOnlyShowForcedVobSubs = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), 0);
     m_fPolygonize = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), 0);
@@ -333,35 +333,46 @@ STDMETHODIMP CDirectVobSub::put_PreBuffering(bool fDoPreBuffering)
 
 STDMETHODIMP CDirectVobSub::get_Placement(bool* fOverridePlacement, int* xperc, int* yperc)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_Placement))
+    HRESULT hr = XyGetBool(DirectVobSubXyOptions::BOOL_OVERRIDE_PLACEMENT, fOverridePlacement);
+    if (FAILED(hr))
     {
-        return E_NOTIMPL;
+        XY_LOG_ERROR("Failed to get option override placement. "<<XY_LOG_VAR_2_STR(fOverridePlacement));
+        return hr;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    SIZE cs;
+    hr = XyGetSize(DirectVobSubXyOptions::SIZE_PLACEMENT_PERC, &cs);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get option placement perc. ");
+        return hr;
+    }
+    if(xperc) *xperc = cs.cx;
+    if(yperc) *yperc = cs.cy;
 
-	if(fOverridePlacement) *fOverridePlacement = m_fOverridePlacement;
-	if(xperc) *xperc = m_PlacementXperc;
-	if(yperc) *yperc = m_PlacementYperc;
-
-	return S_OK;
+    return hr;
 }
 
 STDMETHODIMP CDirectVobSub::put_Placement(bool fOverridePlacement, int xperc, int yperc)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_Placement))
+    if (!TestOption(DirectVobSubXyOptions::BOOL_OVERRIDE_PLACEMENT, OPTION_TYPE_BOOL, OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::SIZE_PLACEMENT_PERC, OPTION_TYPE_SIZE, OPTION_MODE_WRITE))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
-
-	DbgLog((LOG_TRACE, 3, "\tfOverridePlacement:%d xperc:%d yperc:%d", (int)fOverridePlacement, xperc, yperc));
-	DbgLog((LOG_TRACE, 3, "\tm_fOverridePlacement:%d m_PlacementXperc:%d m_PlacementYperc:%d", (int)m_fOverridePlacement, m_PlacementXperc, m_PlacementYperc));
-	if(m_fOverridePlacement == fOverridePlacement && m_PlacementXperc == xperc && m_PlacementYperc == yperc) return S_FALSE;
-
-	m_fOverridePlacement = fOverridePlacement;
-	m_PlacementXperc = xperc;
-	m_PlacementYperc = yperc;
-    return OnOptionChanged(void_Placement);
+    HRESULT hr = XySetBool(DirectVobSubXyOptions::BOOL_OVERRIDE_PLACEMENT, fOverridePlacement);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to set option override placement. "<<XY_LOG_VAR_2_STR(fOverridePlacement));
+        return hr;
+    }
+    CSize cs(xperc, yperc);
+    hr = XySetSize(DirectVobSubXyOptions::SIZE_PLACEMENT_PERC, cs);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to set option placement perc. "<<XY_LOG_VAR_2_STR(xperc)<<XY_LOG_VAR_2_STR(yperc));
+        return hr;
+    }
+    return hr;
 }
 
 STDMETHODIMP CDirectVobSub::get_VobSubSettings(bool* fBuffer, bool* fOnlyShowForcedSubs, bool* fPolygonize)
@@ -703,9 +714,9 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_HEIGHT), 600);
 
-	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), m_fOverridePlacement);
-	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), m_PlacementXperc);
-	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), m_PlacementYperc);
+	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_OVERRIDEPLACEMENT), m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT]);
+	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_XPERC), m_xy_size_opt[SIZE_PLACEMENT_PERC].cx);
+	theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_YPERC), m_xy_size_opt[SIZE_PLACEMENT_PERC].cy);
 	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_BUFFER), m_fBufferVobSub);
 	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), m_fOnlyShowForcedVobSubs);
 	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), m_fPolygonize);
