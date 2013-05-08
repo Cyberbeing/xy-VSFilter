@@ -268,6 +268,11 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     m_xy_int_opt[INT_EXTEND_PICTURE_RESX2     ]    = 0;// theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2), 2) & 3;
     m_xy_size_opt[SIZE_EXTEND_PICTURE_RESX2MIN].cx = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINW), 384);
     m_xy_size_opt[SIZE_EXTEND_PICTURE_RESX2MIN].cy = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINH), 288);
+
+    m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL     ] =   theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL), 0) & 3;
+    m_xy_bool_opt[BOOL_LOAD_SETTINGS_EXTENAL ] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD), 1);
+    m_xy_bool_opt[BOOL_LOAD_SETTINGS_WEB     ] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD), 0);
+    m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), 1);
 }
 
 CDirectVobSub::~CDirectVobSub()
@@ -831,6 +836,11 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINW), m_xy_size_opt[SIZE_EXTEND_PICTURE_RESX2MIN].cx);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINH), m_xy_size_opt[SIZE_EXTEND_PICTURE_RESX2MIN].cy);
 
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL   ), m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL     ] & 3);
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD), m_xy_bool_opt[BOOL_LOAD_SETTINGS_EXTENAL ] );
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD     ), m_xy_bool_opt[BOOL_LOAD_SETTINGS_WEB     ] );
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] );
+
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), CUR_SUPPORTED_FILTER_VERSION);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), XY_VSFILTER_VERSION_COMMIT);
     //
@@ -997,43 +1007,67 @@ STDMETHODIMP CDirectVobSub::put_ExtendPicture(int horizontal, int vertical, int 
 
 STDMETHODIMP CDirectVobSub::get_LoadSettings(int* level, bool* fExternalLoad, bool* fWebLoad, bool* fEmbeddedLoad)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_LoadSettings))
+    HRESULT hr = XyGetInt(DirectVobSubXyOptions::INT_LOAD_SETTINGS_LEVEL, level);
+    if (FAILED(hr))
     {
-        return E_NOTIMPL;
+        XY_LOG_ERROR("Failed to get option INT_LOAD_SETTINGS_LEVEL."<<XY_LOG_VAR_2_STR(level));
+        return hr;
     }
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-	CAutoLock cAutoLock(&m_propsLock);
-
-	if(level) *level = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL), 0) & 3;
-	if(fExternalLoad) *fExternalLoad = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD), 1);
-	if(fWebLoad) *fWebLoad = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD), 0);
-	if(fEmbeddedLoad) *fEmbeddedLoad = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), 1);
-
-	return S_OK;
+    hr = XyGetBool(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_EXTENAL, fExternalLoad);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get option BOOL_LOAD_SETTINGS_EXTENAL."<<XY_LOG_VAR_2_STR(fExternalLoad));
+        return hr;
+    }
+    hr = XyGetBool(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_WEB, fWebLoad);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get option BOOL_LOAD_SETTINGS_WEB."<<XY_LOG_VAR_2_STR(fWebLoad));
+        return hr;
+    }
+    hr = XyGetBool(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_EMBEDDED, fEmbeddedLoad);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get option BOOL_LOAD_SETTINGS_EMBEDDED."<<XY_LOG_VAR_2_STR(fEmbeddedLoad));
+        return hr;
+    }
+    return hr;
 }
 
 STDMETHODIMP CDirectVobSub::put_LoadSettings(int level, bool fExternalLoad, bool fWebLoad, bool fEmbeddedLoad)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_LoadSettings))
+    if (!TestOption(DirectVobSubXyOptions::INT_LOAD_SETTINGS_LEVEL   , OPTION_TYPE_INT , OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_EXTENAL, OPTION_TYPE_BOOL, OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_WEB    , OPTION_TYPE_BOOL, OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::BOOL_MEDIA_FPS_ENABLED    , OPTION_TYPE_BOOL, OPTION_MODE_WRITE))
     {
         return E_NOTIMPL;
     }
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-	CAutoLock cAutoLock(&m_propsLock);
-
-	int i;
-	bool b[3];
-	get_LoadSettings(&i, b, b+1, b+2);
-	if(i == level && b[0] == fExternalLoad && b[1] == fWebLoad && b[2] == fEmbeddedLoad) return S_FALSE;
-
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL), level & 3);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD), fExternalLoad);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD), fWebLoad);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), fEmbeddedLoad);
-
-	return OnOptionChanged(void_LoadSettings);
+    HRESULT hr1 = XySetInt(DirectVobSubXyOptions::INT_LOAD_SETTINGS_LEVEL, level);
+    if (FAILED(hr1))
+    {
+        XY_LOG_ERROR("Failed to set option INT_LOAD_SETTINGS_LEVEL."<<XY_LOG_VAR_2_STR(level));
+        return hr1;
+    }
+    HRESULT hr2 = XySetBool(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_EXTENAL, fExternalLoad);
+    if (FAILED(hr2))
+    {
+        XY_LOG_ERROR("Failed to set option BOOL_LOAD_SETTINGS_EXTENAL."<<XY_LOG_VAR_2_STR(fExternalLoad));
+        return hr2;
+    }
+    HRESULT hr3 = XySetBool(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_WEB, fWebLoad);
+    if (FAILED(hr3))
+    {
+        XY_LOG_ERROR("Failed to set option BOOL_LOAD_SETTINGS_WEB."<<XY_LOG_VAR_2_STR(fWebLoad));
+        return hr3;
+    }
+    HRESULT hr4 = XySetBool(DirectVobSubXyOptions::BOOL_MEDIA_FPS_ENABLED, fEmbeddedLoad);
+    if (FAILED(hr4))
+    {
+        XY_LOG_ERROR("Failed to set option BOOL_MEDIA_FPS_ENABLED."<<XY_LOG_VAR_2_STR(fEmbeddedLoad));
+        return hr4;
+    }
+    return (hr1==hr2&&hr2==hr3&&hr3==hr4&&hr4==S_FALSE)? S_FALSE : S_OK;
 }
 
 // IDirectVobSub2
