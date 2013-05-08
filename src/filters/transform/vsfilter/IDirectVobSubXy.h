@@ -89,6 +89,7 @@ namespace DirectVobSubXyOptions
 
         BOOL_OSD,
         BOOL_FORCED_LOAD,
+        BOOL_SAVE_FULL_PATH,
 
         //The following is not really supported yet
         void_LanguageName,
@@ -98,7 +99,6 @@ namespace DirectVobSubXyOptions
         void_Placement,
         void_VobSubSettings,
         void_TextSettings,
-        void_SaveFullPath,
         void_SubtitleTiming,
         void_ZoomRect,
         void_ColorFormat,
@@ -220,7 +220,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FLIP_PICTURE},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FLIP_SUBTITLE},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_OSD},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SaveFullPath},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_SAVE_FULL_PATH},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleTiming},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ZoomRect},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ColorFormat},

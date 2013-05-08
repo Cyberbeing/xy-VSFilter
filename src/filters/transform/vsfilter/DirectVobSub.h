@@ -86,7 +86,6 @@ protected:
 	bool m_fAdvancedRenderer;
 	int m_nReloaderDisableCount;
 	int m_SubtitleDelay, m_SubtitleSpeedMul, m_SubtitleSpeedDiv;
-	bool m_fSaveFullPath;
 	NORMALIZEDRECT m_ZoomRect;
 
     int m_supported_filter_verion;

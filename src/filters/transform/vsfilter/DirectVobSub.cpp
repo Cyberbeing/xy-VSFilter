@@ -69,7 +69,7 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     m_xy_bool_opt[BOOL_FLIP_PICTURE]  = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), 0);
     m_xy_bool_opt[BOOL_FLIP_SUBTITLE] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), 0);
     m_xy_bool_opt[BOOL_OSD] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SHOWOSDSTATS), 0);
-    m_fSaveFullPath = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SAVEFULLPATH), 0);
+    m_xy_bool_opt[BOOL_SAVE_FULL_PATH] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SAVEFULLPATH), 0);
     m_nReloaderDisableCount = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0) ? 1 : 0;
     m_SubtitleDelay = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), 0);
     m_SubtitleSpeedMul = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), 1000);
@@ -547,28 +547,12 @@ STDMETHODIMP CDirectVobSub::put_OSD(bool fOSD)
 
 STDMETHODIMP CDirectVobSub::get_SaveFullPath(bool* fSaveFullPath)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_SaveFullPath))
-    {
-        return E_NOTIMPL;
-    }
-	CAutoLock cAutoLock(&m_propsLock);
-
-	return fSaveFullPath ? *fSaveFullPath = m_fSaveFullPath, S_OK : E_POINTER;
+    return XyGetBool(DirectVobSubXyOptions::BOOL_SAVE_FULL_PATH, fSaveFullPath);
 }
 
 STDMETHODIMP CDirectVobSub::put_SaveFullPath(bool fSaveFullPath)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_SaveFullPath))
-    {
-        return E_NOTIMPL;
-    }
-	CAutoLock cAutoLock(&m_propsLock);
-
-	if(m_fSaveFullPath == fSaveFullPath) return S_FALSE;
-
-	m_fSaveFullPath = fSaveFullPath;
-
-    return OnOptionChanged(void_SaveFullPath);
+    return XySetBool(DirectVobSubXyOptions::BOOL_SAVE_FULL_PATH, fSaveFullPath);
 }
 
 STDMETHODIMP CDirectVobSub::get_SubtitleTiming(int* delay, int* speedmul, int* speeddiv)
@@ -748,7 +732,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), m_xy_bool_opt[BOOL_FLIP_PICTURE]);
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), m_xy_bool_opt[BOOL_FLIP_SUBTITLE]);
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SHOWOSDSTATS), m_xy_bool_opt[BOOL_OSD]);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SAVEFULLPATH), m_fSaveFullPath);
+	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SAVEFULLPATH), m_xy_bool_opt[BOOL_SAVE_FULL_PATH]);
 	theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), m_SubtitleDelay);
 	theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), m_SubtitleSpeedMul);
 	theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), m_SubtitleSpeedDiv);
