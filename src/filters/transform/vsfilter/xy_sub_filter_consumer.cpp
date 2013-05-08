@@ -283,11 +283,11 @@ HRESULT XySubFilterConsumer::Transform(IMediaSample* pIn)
     bool fOutputFlipped = bihOut.biHeight >= 0 && bihOut.biCompression <= 3;
 
     bool fFlip = fInputFlipped != fOutputFlipped;
-    if(m_fFlipPicture) fFlip = !fFlip;
+    if(m_xy_bool_opt[BOOL_FLIP_PICTURE]) fFlip = !fFlip;
     if(m_fMSMpeg4Fix) fFlip = !fFlip;
 
     bool fFlipSub = fOutputFlipped;
-    if(m_fFlipSubtitles) fFlipSub = !fFlipSub;
+    if(m_xy_bool_opt[BOOL_FLIP_SUBTITLE]) fFlipSub = !fFlipSub;
 
     //
 

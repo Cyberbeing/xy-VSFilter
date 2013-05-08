@@ -66,8 +66,8 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     m_fOnlyShowForcedVobSubs = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), 0);
     m_fPolygonize = !!theApp.GetProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), 0);
     m_defStyle <<= theApp.GetProfileString(ResStr(IDS_R_TEXT), ResStr(IDS_RT_STYLE), _T(""));
-    m_fFlipPicture = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), 0);
-    m_fFlipSubtitles = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), 0);
+    m_xy_bool_opt[BOOL_FLIP_PICTURE]  = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), 0);
+    m_xy_bool_opt[BOOL_FLIP_SUBTITLE] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), 0);
     m_fOSD = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SHOWOSDSTATS), 0);
     m_fSaveFullPath = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SAVEFULLPATH), 0);
     m_nReloaderDisableCount = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0) ? 1 : 0;
@@ -498,32 +498,42 @@ STDMETHODIMP CDirectVobSub::put_TextSettings(void* lf, int lflen, COLORREF color
 
 STDMETHODIMP CDirectVobSub::get_Flip(bool* fPicture, bool* fSubtitles)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_Flip))
+    HRESULT hr = XyGetBool(DirectVobSubXyOptions::BOOL_FLIP_PICTURE, fPicture);
+    if (FAILED(hr))
     {
-        return E_NOTIMPL;
+        XY_LOG_ERROR("Failed to get flip picture option."<<XY_LOG_VAR_2_STR(fPicture));
+        return hr;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    hr = XyGetBool(DirectVobSubXyOptions::BOOL_FLIP_SUBTITLE, fSubtitles);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get flip subtitles option."<<XY_LOG_VAR_2_STR(fPicture));
+        return hr;
+    }
 
-	if(fPicture) *fPicture = m_fFlipPicture;
-	if(fSubtitles) *fSubtitles = m_fFlipSubtitles;
-
-	return S_OK;
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::put_Flip(bool fPicture, bool fSubtitles)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_Flip))
+    if (!TestOption(DirectVobSubXyOptions::BOOL_FLIP_PICTURE,OPTION_TYPE_BOOL,OPTION_MODE_WRITE) || 
+        !TestOption(DirectVobSubXyOptions::BOOL_FLIP_SUBTITLE,OPTION_TYPE_BOOL,OPTION_MODE_WRITE))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
-
-	if(m_fFlipPicture == fPicture && m_fFlipSubtitles == fSubtitles) return S_FALSE;
-
-	m_fFlipPicture = fPicture;
-	m_fFlipSubtitles = fSubtitles;
-
-	return OnOptionChanged(void_Flip);
+    HRESULT hr = XySetBool(DirectVobSubXyOptions::BOOL_FLIP_PICTURE, fPicture);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to set flip picture option."<<XY_LOG_VAR_2_STR(fPicture));
+        return hr;
+    }
+    hr = XySetBool(DirectVobSubXyOptions::BOOL_FLIP_SUBTITLE, fSubtitles);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to set flip subtitles option."<<XY_LOG_VAR_2_STR(fPicture));
+        return hr;
+    }
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::get_OSD(bool* fOSD)
@@ -752,8 +762,8 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 	theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), m_fPolygonize);
 	CString style;
 	theApp.WriteProfileString(ResStr(IDS_R_TEXT), ResStr(IDS_RT_STYLE), style <<= m_defStyle);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), m_fFlipPicture);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), m_fFlipSubtitles);
+	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), m_xy_bool_opt[BOOL_FLIP_PICTURE]);
+	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), m_xy_bool_opt[BOOL_FLIP_SUBTITLE]);
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SHOWOSDSTATS), m_fOSD);
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SAVEFULLPATH), m_fSaveFullPath);
 	theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), m_SubtitleDelay);
