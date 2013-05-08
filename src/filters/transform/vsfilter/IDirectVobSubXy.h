@@ -90,10 +90,10 @@ namespace DirectVobSubXyOptions
         BOOL_OSD,
         BOOL_FORCED_LOAD,
         BOOL_SAVE_FULL_PATH,
+        BOOL_PRE_BUFFERING,
 
         //The following is not really supported yet
         void_LanguageName,
-        void_PreBuffering,
         void_SubPictToBuffer,
         void_AnimWhenBuffering,
         void_Placement,
@@ -211,7 +211,6 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_READ, BIN_XY_FLY_WEIGHT_INFO},
 
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageName},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_PreBuffering},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubPictToBuffer},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AnimWhenBuffering},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_Placement},
