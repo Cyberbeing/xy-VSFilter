@@ -296,7 +296,6 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case SIZE_USER_SPECIFIED_LAYOUT_SIZE:
     case DOUBLE_FPS:
     case INT_SELECTED_LANGUAGE:
-    case void_VobSubSettings:
     case void_TextSettings:
     case void_AspectRatioSettings:
         m_context_id++;
@@ -317,6 +316,17 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
         break;
     case BOOL_HIDE_SUBTITLES:
         UpdateSubtitle(false);
+        break;
+    case BOOL_VOBSUBSETTINGS_BUFFER:
+    case BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS:
+    case BOOL_VOBSUBSETTINGS_POLYGONIZE:
+        m_context_id++;
+        if (m_last_requested!=-1)
+        {
+            XY_LOG_WARN("Some subtitle frames are cached already!");
+            m_last_requested = -1;
+        }
+        InvalidateSubtitle();
         break;
     }
 
@@ -480,24 +490,6 @@ STDMETHODIMP XySubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 
             i -= pSubStream->GetStreamCount();
         }
-    }
-
-    return hr;
-}
-
-STDMETHODIMP XySubFilter::put_VobSubSettings(bool fBuffer, bool fOnlyShowForcedSubs, bool fReserved)
-{
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(fBuffer)<<XY_LOG_VAR_2_STR(fOnlyShowForcedSubs)<<XY_LOG_VAR_2_STR(fReserved));
-    HRESULT hr = CDirectVobSub::put_VobSubSettings(fBuffer, fOnlyShowForcedSubs, fReserved);
-
-    if(hr == NOERROR)
-    {
-        if (m_last_requested!=-1)
-        {
-            XY_LOG_WARN("Some subtitle frames are cached already!");
-            m_last_requested = -1;
-        }
-        InvalidateSubtitle();
     }
 
     return hr;
@@ -1480,7 +1472,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             if(fApplyDefStyle)
             {
                 pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
-                pVSS->m_fOnlyShowForcedSubs = m_fOnlyShowForcedVobSubs;
+                pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
             }
         }
         else if(clsid == __uuidof(CVobSubStream))
@@ -1490,7 +1482,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             if(fApplyDefStyle)
             {
                 pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
-                pVSS->m_fOnlyShowForcedSubs = m_fOnlyShowForcedVobSubs;
+                pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
             }
         }
         else if(clsid == __uuidof(CRenderedTextSubtitle))
