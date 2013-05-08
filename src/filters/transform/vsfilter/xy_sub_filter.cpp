@@ -790,7 +790,7 @@ STDMETHODIMP XySubFilter::Enable(long lIndex, DWORD dwFlags)
     {
         if (!m_fLoading)
         {
-            hr = put_Flip(i == nLangs+2, m_fFlipSubtitles);
+            hr = put_Flip(i == nLangs+2, m_xy_bool_opt[BOOL_FLIP_SUBTITLE]);
         }
         else
         {
@@ -842,8 +842,8 @@ STDMETHODIMP XySubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlag
         if(i == -1 && !m_xy_bool_opt[BOOL_HIDE_SUBTITLES]
             || i >= 0 && i < nLangs && i == m_xy_int_opt[INT_SELECTED_LANGUAGE]
             || i == nLangs && m_xy_bool_opt[BOOL_HIDE_SUBTITLES]
-            || i == nLangs+1 && !m_fFlipPicture
-            || i == nLangs+2 && m_fFlipPicture)
+            || i == nLangs+1 && !m_xy_bool_opt[BOOL_FLIP_PICTURE]
+            || i == nLangs+2 && m_xy_bool_opt[BOOL_FLIP_PICTURE])
         {
             *pdwFlags |= AMSTREAMSELECTINFO_ENABLED;
         }
@@ -1128,7 +1128,7 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
             s_count++;
 #endif
         }
-        if(m_fFlipSubtitles)
+        if(m_xy_bool_opt[BOOL_FLIP_SUBTITLE])
         {
             //fix me:
             ASSERT(0);

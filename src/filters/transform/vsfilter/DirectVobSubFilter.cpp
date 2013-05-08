@@ -300,11 +300,11 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	bool fOutputFlipped = bihOut.biHeight >= 0 && bihOut.biCompression <= 3;
 
 	bool fFlip = fInputFlipped != fOutputFlipped;
-	if(m_fFlipPicture) fFlip = !fFlip;
+    if(m_xy_bool_opt[BOOL_FLIP_PICTURE]) fFlip = !fFlip;
 	if(m_fMSMpeg4Fix) fFlip = !fFlip;
 
 	bool fFlipSub = fOutputFlipped;
-	if(m_fFlipSubtitles) fFlipSub = !fFlipSub;
+    if(m_xy_bool_opt[BOOL_FLIP_SUBTITLE]) fFlipSub = !fFlipSub;
 
 	//
 
@@ -933,7 +933,7 @@ STDMETHODIMP CDirectVobSubFilter::Enable(long lIndex, DWORD dwFlags)
     }
     else if((i == nLangs+1 || i == nLangs+2) && !m_fLoading)
     {
-        hr = put_Flip(i == nLangs+2, m_fFlipSubtitles);
+        hr = put_Flip(i == nLangs+2, m_xy_bool_opt[BOOL_FLIP_SUBTITLE]);
     }
     CHECK_N_LOG(hr, "Failed "<<XY_LOG_VAR_2_STR(lIndex)<<XY_LOG_VAR_2_STR(dwFlags));
     return S_OK;
@@ -966,8 +966,8 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 		if(i == -1 && !m_xy_bool_opt[BOOL_HIDE_SUBTITLES]
 		|| i >= 0 && i < nLangs && i == m_xy_int_opt[INT_SELECTED_LANGUAGE]
 		|| i == nLangs && m_xy_bool_opt[BOOL_HIDE_SUBTITLES]
-		|| i == nLangs+1 && !m_fFlipPicture
-		|| i == nLangs+2 && m_fFlipPicture)
+		|| i == nLangs+1 && !m_xy_bool_opt[BOOL_FLIP_PICTURE]
+		|| i == nLangs+2 && m_xy_bool_opt[BOOL_FLIP_PICTURE])
 		{
 			*pdwFlags |= AMSTREAMSELECTINFO_ENABLED;
 		}
