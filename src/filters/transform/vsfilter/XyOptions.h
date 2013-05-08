@@ -20,4 +20,23 @@ interface IXyOptions : public IUnknown
     STDMETHOD(XySetDouble   )(unsigned field, double    value) = 0;
     STDMETHOD(XySetString   )(unsigned field, LPWSTR    value, int chars) = 0;
     STDMETHOD(XySetBin      )(unsigned field, LPVOID    value, int size ) = 0;
+
+    //methods for array
+    STDMETHOD(XyGetBools     )(unsigned field, int id, bool      *value) = 0;
+    STDMETHOD(XyGetInts      )(unsigned field, int id, int       *value) = 0;
+    STDMETHOD(XyGetSizes     )(unsigned field, int id, SIZE      *value) = 0;
+    STDMETHOD(XyGetRects     )(unsigned field, int id, RECT      *value) = 0;
+    STDMETHOD(XyGetUlonglongs)(unsigned field, int id, ULONGLONG *value) = 0;
+    STDMETHOD(XyGetDoubles   )(unsigned field, int id, double    *value) = 0;
+    STDMETHOD(XyGetStrings   )(unsigned field, int id, LPWSTR    *value, int *chars) = 0;
+    STDMETHOD(XyGetBins      )(unsigned field, int id, LPVOID    *value, int *size ) = 0;
+
+    STDMETHOD(XySetBools     )(unsigned field, int id, bool      value) = 0;
+    STDMETHOD(XySetInts      )(unsigned field, int id, int       value) = 0;
+    STDMETHOD(XySetSizes     )(unsigned field, int id, SIZE      value) = 0;
+    STDMETHOD(XySetRects     )(unsigned field, int id, RECT      value) = 0;
+    STDMETHOD(XySetUlonglongs)(unsigned field, int id, ULONGLONG value) = 0;
+    STDMETHOD(XySetDoubles   )(unsigned field, int id, double    value) = 0;
+    STDMETHOD(XySetStrings   )(unsigned field, int id, LPWSTR    value, int chars) = 0;
+    STDMETHOD(XySetBins      )(unsigned field, int id, LPVOID    value, int size ) = 0;
 };

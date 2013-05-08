@@ -137,6 +137,88 @@ STDMETHODIMP XyOptionsImpl::XySetBin(unsigned field, LPVOID value, int size)
     return E_NOTIMPL;
 }
 
+// methods for array not implement
+
+STDMETHODIMP XyOptionsImpl::XyGetBools(unsigned field, int id, bool *value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XyGetInts(unsigned field, int id, int *value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XyGetSizes(unsigned field, int id, SIZE *value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XyGetRects(unsigned field, int id, RECT *value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XyGetUlonglongs(unsigned field, int id, ULONGLONG *value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XyGetDoubles(unsigned field, int id, double *value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XyGetStrings(unsigned field, int id, LPWSTR *value, int *chars)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XyGetBins(unsigned field, int id, LPVOID *value, int *size)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XySetBools(unsigned field, int id, bool value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XySetInts(unsigned field, int id, int value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XySetSizes(unsigned field, int id, SIZE value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XySetRects(unsigned field, int id, RECT value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XySetUlonglongs(unsigned field, int id, ULONGLONG value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XySetDoubles(unsigned field, int id, double value)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XySetStrings(unsigned field, int id, LPWSTR value, int chars)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XySetBins(unsigned field, int id, LPVOID value, int size)
+{
+    return E_NOTIMPL;
+}
+
 HRESULT XyOptionsImpl::OnOptionReading( unsigned field )
 {
     return S_OK;

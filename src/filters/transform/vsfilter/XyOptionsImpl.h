@@ -51,6 +51,25 @@ public:
     STDMETHODIMP XySetString   (unsigned field, LPWSTR    value, int chars);
     STDMETHODIMP XySetBin      (unsigned field, LPVOID    value, int size );
 
+    //methods for array
+    STDMETHODIMP XyGetBools     (unsigned field, int id, bool      *value);
+    STDMETHODIMP XyGetInts      (unsigned field, int id, int       *value);
+    STDMETHODIMP XyGetSizes     (unsigned field, int id, SIZE      *value);
+    STDMETHODIMP XyGetRects     (unsigned field, int id, RECT      *value);
+    STDMETHODIMP XyGetUlonglongs(unsigned field, int id, ULONGLONG *value);
+    STDMETHODIMP XyGetDoubles   (unsigned field, int id, double    *value);
+    STDMETHODIMP XyGetStrings   (unsigned field, int id, LPWSTR    *value, int *chars);
+    STDMETHODIMP XyGetBins      (unsigned field, int id, LPVOID    *value, int *size );
+
+    STDMETHODIMP XySetBools     (unsigned field, int id, bool      value);
+    STDMETHODIMP XySetInts      (unsigned field, int id, int       value);
+    STDMETHODIMP XySetSizes     (unsigned field, int id, SIZE      value);
+    STDMETHODIMP XySetRects     (unsigned field, int id, RECT      value);
+    STDMETHODIMP XySetUlonglongs(unsigned field, int id, ULONGLONG value);
+    STDMETHODIMP XySetDoubles   (unsigned field, int id, double    value);
+    STDMETHODIMP XySetStrings   (unsigned field, int id, LPWSTR    value, int chars);
+    STDMETHODIMP XySetBins      (unsigned field, int id, LPVOID    value, int size );
+
     inline bool TestOption(unsigned field)
     {
         return (field < MAX_OPTION_ID && m_option_type[field] != OPTION_TYPE_END_FLAG);
@@ -93,4 +112,22 @@ protected:
     STDMETHODIMP XySetUlonglong(unsigned field, ULONGLONG value) { return XyOptionsImpl::XySetUlonglong(field, value); }                  \
     STDMETHODIMP XySetDouble   (unsigned field, double    value) { return XyOptionsImpl::XySetDouble(field, value); }                     \
     STDMETHODIMP XySetString   (unsigned field, LPWSTR    value, int chars) { return XyOptionsImpl::XySetString(field, value, chars); }   \
-    STDMETHODIMP XySetBin      (unsigned field, LPVOID    value, int size ) { return XyOptionsImpl::XySetBin(field, value, size); }
+    STDMETHODIMP XySetBin      (unsigned field, LPVOID    value, int size ) { return XyOptionsImpl::XySetBin(field, value, size); }       \
+    \
+    STDMETHODIMP XyGetBools     (unsigned field, int id, bool      *value) { return XyOptionsImpl::XyGetBools(field, id, value); }                      \
+    STDMETHODIMP XyGetInts      (unsigned field, int id, int       *value) { return XyOptionsImpl::XyGetInts(field, id, value); }                       \
+    STDMETHODIMP XyGetSizes     (unsigned field, int id, SIZE      *value) { return XyOptionsImpl::XyGetSizes(field, id, value); }                      \
+    STDMETHODIMP XyGetRects     (unsigned field, int id, RECT      *value) { return XyOptionsImpl::XyGetRects(field, id, value); }                      \
+    STDMETHODIMP XyGetUlonglongs(unsigned field, int id, ULONGLONG *value) { return XyOptionsImpl::XyGetUlonglongs(field, id, value); }                 \
+    STDMETHODIMP XyGetDoubles   (unsigned field, int id, double    *value) { return XyOptionsImpl::XyGetDoubles(field, id, value); }                    \
+    STDMETHODIMP XyGetStrings   (unsigned field, int id, LPWSTR    *value, int *chars) { return XyOptionsImpl::XyGetStrings(field, id, value, chars); } \
+    STDMETHODIMP XyGetBins      (unsigned field, int id, LPVOID    *value, int *size ) { return XyOptionsImpl::XyGetBins(field, id, value, size); }     \
+    \
+    STDMETHODIMP XySetBools     (unsigned field, int id, bool      value) { return XyOptionsImpl::XySetBools(field, id, value); }                       \
+    STDMETHODIMP XySetInts      (unsigned field, int id, int       value) { return XyOptionsImpl::XySetInts(field, id, value); }                        \
+    STDMETHODIMP XySetSizes     (unsigned field, int id, SIZE      value) { return XyOptionsImpl::XySetSizes(field, id, value); }                       \
+    STDMETHODIMP XySetRects     (unsigned field, int id, RECT      value) { return XyOptionsImpl::XySetRects(field, id, value); }                       \
+    STDMETHODIMP XySetUlonglongs(unsigned field, int id, ULONGLONG value) { return XyOptionsImpl::XySetUlonglongs(field, id, value); }                  \
+    STDMETHODIMP XySetDoubles   (unsigned field, int id, double    value) { return XyOptionsImpl::XySetDoubles(field, id, value); }                     \
+    STDMETHODIMP XySetStrings   (unsigned field, int id, LPWSTR    value, int chars) { return XyOptionsImpl::XySetStrings(field, id, value, chars); }   \
+    STDMETHODIMP XySetBins      (unsigned field, int id, LPVOID    value, int size ) { return XyOptionsImpl::XySetBins(field, id, value, size); }
