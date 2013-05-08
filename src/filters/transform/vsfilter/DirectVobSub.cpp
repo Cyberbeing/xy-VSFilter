@@ -523,7 +523,7 @@ STDMETHODIMP CDirectVobSub::put_Flip(bool fPicture, bool fSubtitles)
 	m_fFlipPicture = fPicture;
 	m_fFlipSubtitles = fSubtitles;
 
-	return OnOptionChanged(void_TextSettings);
+	return OnOptionChanged(void_Flip);
 }
 
 STDMETHODIMP CDirectVobSub::get_OSD(bool* fOSD)
