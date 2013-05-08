@@ -234,7 +234,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 
 	CString msg, tmp;
 
-	if(m_fOSD)
+	if(m_xy_bool_opt[DirectVobSubXyOptions::BOOL_OSD])
 	{
 		tmp.Format(_T("in: %dx%d %s\nout: %dx%d %s\n"), 
 			m_w, m_h, 

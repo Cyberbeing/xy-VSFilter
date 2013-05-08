@@ -84,7 +84,6 @@ protected:
 	STSStyle m_defStyle;
 
 	bool m_fAdvancedRenderer;
-	bool m_fOSD;
 	int m_nReloaderDisableCount;
 	int m_SubtitleDelay, m_SubtitleSpeedMul, m_SubtitleSpeedDiv;
 	bool m_fSaveFullPath;
