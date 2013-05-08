@@ -38,7 +38,7 @@ CDirectVobSub::CDirectVobSub(const Option *options)
 
     m_xy_int_opt[INT_SELECTED_LANGUAGE] = 0;
     m_xy_bool_opt[BOOL_HIDE_SUBTITLES] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), 0);
-    m_fDoPreBuffering = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), 1);
+    m_xy_bool_opt[BOOL_PRE_BUFFERING] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), 1);
     
     m_xy_int_opt[INT_COLOR_SPACE] = GetCompatibleProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOR_SPACE), CDirectVobSub::YuvMatrix_AUTO);
     if( m_xy_int_opt[INT_COLOR_SPACE]!=CDirectVobSub::YuvMatrix_AUTO && 
@@ -322,30 +322,12 @@ STDMETHODIMP CDirectVobSub::put_HideSubtitles(bool fHideSubtitles)
 
 STDMETHODIMP CDirectVobSub::get_PreBuffering(bool* fDoPreBuffering)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_PreBuffering))
-    {
-        return E_NOTIMPL;
-    }
-	CAutoLock cAutoLock(&m_propsLock);
-
-	//return fDoPreBuffering ? *fDoPreBuffering = m_fDoPreBuffering, S_OK : E_POINTER;
-    return fDoPreBuffering ? *fDoPreBuffering = false, S_OK : E_POINTER;
+    return XyGetBool(DirectVobSubXyOptions::BOOL_PRE_BUFFERING, fDoPreBuffering);
 }
 
 STDMETHODIMP CDirectVobSub::put_PreBuffering(bool fDoPreBuffering)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_PreBuffering))
-    {
-        return E_NOTIMPL;
-    }
-    return E_NOTIMPL;
-	//CAutoLock cAutoLock(&m_propsLock);
-
-	//if(m_fDoPreBuffering == fDoPreBuffering) return S_FALSE;
-
-	//m_fDoPreBuffering = fDoPreBuffering;
-
-	//return S_OK;
+    return XySetBool(DirectVobSubXyOptions::BOOL_PRE_BUFFERING, fDoPreBuffering);
 }
 
 
@@ -713,7 +695,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 	CAutoLock cAutoLock(&m_propsLock);
 
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), m_xy_bool_opt[BOOL_HIDE_SUBTITLES]);
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), m_fDoPreBuffering);
+	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), m_xy_bool_opt[BOOL_PRE_BUFFERING]);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), m_xy_int_opt[INT_YUV_RANGE]);
 
