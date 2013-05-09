@@ -23,6 +23,7 @@
 #include <math.h>
 #include <time.h>
 #include "xy_sub_filter_consumer.h"
+#include "DirectVobSubPropPage.h"
 #include "VSFilter.h"
 #include "../../../DSUtil/MediaTypes.h"
 #include "../../../SubPic/SimpleSubPicProviderImpl.h"
@@ -748,10 +749,18 @@ STDMETHODIMP XySubFilterConsumer::GetPages(CAUUID* pPages)
 {
     CheckPointer(pPages, E_POINTER);
 
-    pPages->cElems = 0;
-    pPages->pElems = NULL;
+    pPages->cElems = 4;
+    pPages->pElems = (GUID*)CoTaskMemAlloc(sizeof(GUID)*pPages->cElems);
 
-    return S_FALSE;
+    if(pPages->pElems == NULL) return E_OUTOFMEMORY;
+
+    int i = 0;
+    pPages->pElems[i++] = __uuidof(CXySubFilterConsumerGeneralPPage);
+    pPages->pElems[i++] = __uuidof(CXySubFilterConsumerMiscPPage);
+    pPages->pElems[i++] = __uuidof(CXySubFilterConsumerColorPPage);
+    pPages->pElems[i++] = __uuidof(CXySubFilterConsumerAboutPPage);
+
+    return S_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

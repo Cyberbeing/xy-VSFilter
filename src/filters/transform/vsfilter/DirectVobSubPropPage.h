@@ -114,7 +114,7 @@ protected:
 	virtual void UpdateObjectData(bool fSave);
 
 public:
-    CDVSGeneralPPage(LPUNKNOWN lpunk, HRESULT* phr);
+    CDVSGeneralPPage(LPUNKNOWN lpunk, HRESULT* phr, TCHAR *pName = NAME("DirectVobSub Property Page (general settings)"));
 };
 
 [uuid("A8B25C0E-0894-4531-B668-AB1599FAF7F6")]
@@ -133,7 +133,7 @@ protected:
 	virtual void UpdateObjectData(bool fSave);
 
 public:
-    CDVSMiscPPage(LPUNKNOWN lpunk, HRESULT* phr);
+    CDVSMiscPPage(LPUNKNOWN lpunk, HRESULT* phr, TCHAR *pName = NAME("DirectVobSub Property Page (misc settings)"));
 };
 
 [uuid("ACE4747B-35BD-4e97-9DD7-1D4245B0695C")]
@@ -224,7 +224,7 @@ protected:
 	virtual void UpdateObjectData(bool fSave);
 
 public:
-    CDVSColorPPage(LPUNKNOWN lpunk, HRESULT* phr);
+    CDVSColorPPage(LPUNKNOWN lpunk, HRESULT* phr, TCHAR *pName = NAME("DirectVobSub Property Page (color settings)"));
     ~CDVSColorPPage();
 };
 
@@ -335,4 +335,41 @@ class CXySubFilterAboutPPage : public CDVSAboutPPage
 public:
     CXySubFilterAboutPPage(LPUNKNOWN lpunk, HRESULT* phr, TCHAR* pName=NAME("XySubFilter Property Page (about)"))
         : CDVSAboutPPage(lpunk, phr, pName) {}
+};
+
+//
+// XySubFilterConsumer
+//
+[uuid("b7f66b77-10b9-48e4-be40-2e6e4d00292e")]
+class CXySubFilterConsumerGeneralPPage : public CDVSGeneralPPage
+{
+public:
+    CXySubFilterConsumerGeneralPPage(LPUNKNOWN lpunk, HRESULT* phr
+        , TCHAR *pName = NAME("XySubFilterConsumer Property Page (General)"))
+        : CDVSGeneralPPage(lpunk, phr, pName) {}
+};
+
+[uuid("f2609280-2d03-4251-a1e4-65b1aff9dafe")]
+class CXySubFilterConsumerMiscPPage : public CDVSMiscPPage
+{
+public:
+    CXySubFilterConsumerMiscPPage(LPUNKNOWN lpunk, HRESULT* phr
+        , TCHAR *pName = NAME("XySubFilterConsumer Property Page (Misc)"))
+        : CDVSMiscPPage(lpunk, phr, pName) {}
+};
+
+[uuid("2e714223-34bc-430d-b52a-5bd23ddbf049")]
+class CXySubFilterConsumerAboutPPage : public CDVSAboutPPage
+{
+public:
+    CXySubFilterConsumerAboutPPage(LPUNKNOWN lpunk, HRESULT* phr, TCHAR* pName=NAME("XySubFilterConsumer Property Page (about)"))
+        : CDVSAboutPPage(lpunk, phr, pName) {}
+};
+
+[uuid("c371c901-97eb-4bb4-b742-d53a0eaa7b3c")]
+class CXySubFilterConsumerColorPPage : public CDVSColorPPage
+{
+public:
+    CXySubFilterConsumerColorPPage(LPUNKNOWN lpunk, HRESULT* phr, TCHAR* pName=NAME("XySubFilterConsumer Property Page (color)"))
+        : CDVSColorPPage(lpunk, phr, pName) {}
 };

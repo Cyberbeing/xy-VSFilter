@@ -62,6 +62,9 @@
     <ClCompile Include="..\xy_sub_filter_consumer_dll.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\DirectVobSubPropPage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DirectVobSub.h">
