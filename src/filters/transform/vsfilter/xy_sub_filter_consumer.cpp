@@ -1020,7 +1020,7 @@ void XySubFilterConsumer::ZeroObj4OSD()
         lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
         lf.lfQuality = ANTIALIASED_QUALITY;
         HDC hdc = GetDC(NULL);
-        lf.lfHeight = 28;
+        lf.lfHeight = 16;
         //MulDiv(20, GetDeviceCaps(hdc, LOGPIXELSY), 54);
         ReleaseDC(NULL, hdc);
         lf.lfWeight = FW_BOLD;
@@ -1043,13 +1043,23 @@ void XySubFilterConsumer::InitObj4OSD()
     if(m_hbm) {DeleteObject(m_hbm); m_hbm = NULL;}
     if(m_hdc) {DeleteDC(m_hdc); m_hdc = NULL;}
 
-    struct {BITMAPINFOHEADER bih; DWORD mask[3];} b = {{sizeof(BITMAPINFOHEADER), m_w, -(int)m_h, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}, 0xFF0000, 0x00FF00, 0x0000FF};
+    struct {
+        BITMAPINFOHEADER bih;
+        RGBQUAD biColors[256];
+    } b = {
+        {sizeof(BITMAPINFOHEADER), m_w, -(int)m_h, 1, 8, BI_RGB, 0, 0, 0, 0, 0},
+        {0}
+    };
+    for (int i=0;i<256;i++)
+    {
+        b.biColors[i].rgbBlue = b.biColors[i].rgbGreen = b.biColors[i].rgbRed = i;
+    }
     m_hdc = CreateCompatibleDC(NULL);
     m_hbm = CreateDIBSection(m_hdc, (BITMAPINFO*)&b, DIB_RGB_COLORS, NULL, NULL, 0);
 
     BITMAP bm;
     GetObject(m_hbm, sizeof(bm), &bm);
-    memsetd(bm.bmBits, 0xFF000000, bm.bmHeight*bm.bmWidthBytes);
+    memset(bm.bmBits, 0, bm.bmHeight*bm.bmWidthBytes);
 }
 
 static void LogSubPicStartStop( const REFERENCE_TIME& rtStart, const REFERENCE_TIME& rtStop, const CString& msg)
@@ -1074,58 +1084,40 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
         BYTE* db = (BYTE*)d;
         BYTE* dbtend = db + w;
 
-        for(; db < dbtend; sub+=4, db++)
+        for(; db < dbtend; sub++, db++)
         {
-            if(sub[3] < 0xff)
-            {
-                int y = ColorConvTable::Rgb2Y(sub[2], sub[1], sub[0]);
-                *db = y; // w/o colors 
-            }
+            *db = (*db+*sub)>>1;
         }
     }
     else if(subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016)
-    {        
+    {
         //TODO: Fix ME!
         WORD* db = reinterpret_cast<WORD*>(d);
         WORD* dbtend = db + w;
 
-        for(; db < dbtend; sub+=4, db++)
+        for(; db < dbtend; sub++, db++)
         {
-            if(sub[3] < 0xff)
-            {
-                int y = ColorConvTable::Rgb2Y(sub[2], sub[1], sub[0])<<2;
-                *db = y<<8; // w/o colors 
-            }
+            *db = (*db + (*sub<<8))>>1;
         }
     }
     else if(subtype == MEDIASUBTYPE_YUY2)
     {
-        WORD* ds = (WORD*)d;
-        WORD* dstend = ds + w;
+        BYTE* ds = (BYTE*)d;
+        BYTE* dstend = ds + w*2;
 
-        for(; ds < dstend; sub+=4, ds++)
+        for(; ds < dstend; sub++, ds+=2)
         {
-            if(sub[3] < 0xff)
-            {
-                int y = ColorConvTable::Rgb2Y(sub[2], sub[1], sub[0]);
-                *ds = 0x8000|y; // w/o colors 
-            }
+            ds[0] = (ds[0]+*sub)>>1;
         }
     }
     else if (subtype == MEDIASUBTYPE_AYUV)
     {
-        //TODO: Fix ME!
         BYTE* db = (BYTE*)d;
-        db += 2;
-        BYTE* dbtend = db + w;
+        BYTE* dbtend = db + w*4;
 
-        for(; db < dbtend; sub+=4, db+=4)
+        for(; db < dbtend; sub++, db+=4)
         {
-            if(sub[3] < 0xff)
-            {
-                int y = ColorConvTable::Rgb2Y(sub[2], sub[1], sub[0]);
-                *db = y; // w/o colors
-            }
+            db[2] = (db[2]+*sub)>>1;
         }
     }
     else if(subtype == MEDIASUBTYPE_RGB555)
@@ -1133,12 +1125,13 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
         WORD* ds = (WORD*)d;
         WORD* dstend = ds + w;
 
-        for(; ds < dstend; sub+=4, ds++)
+        for(; ds < dstend; sub++, ds++)
         {
-            if(sub[3] < 0xff)
-            {
-                *ds = ((*((DWORD*)sub)>>9)&0x7c00)|((*((DWORD*)sub)>>6)&0x03e0)|((*((DWORD*)sub)>>3)&0x001f);
-            }
+            DWORD tmp = *ds;
+            WORD tmpsub = *sub;
+            *ds  = ((tmp>>10) + tmpsub)>>1<<10;
+            *ds |= (((tmp>>5)&0x001f) + tmpsub)>>1<<5;
+            *ds |= ((tmp&0x001f) + tmpsub)>>1;
         }
     }
     else if(subtype == MEDIASUBTYPE_RGB565)
@@ -1146,12 +1139,12 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
         WORD* ds = (WORD*)d;
         WORD* dstend = ds + w;
 
-        for(; ds < dstend; sub+=4, ds++)
+        for(; ds < dstend; sub++, ds++)
         {
-            if(sub[3] < 0xff)
-            {
-                *ds = ((*((DWORD*)sub)>>8)&0xf800)|((*((DWORD*)sub)>>5)&0x07e0)|((*((DWORD*)sub)>>3)&0x001f);
-            }
+            WORD tmp = *ds;
+            *ds  = ((tmp>>11) + (*sub>>3))>>1<<11;
+            *ds |= (((tmp>>5)&0x003f) + (*sub>>2))>>1<<5;
+            *ds |= ((tmp&0x001f) + (*sub>>3))>>1;
         }
     }
     else if(subtype == MEDIASUBTYPE_RGB24)
@@ -1159,23 +1152,23 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
         BYTE* dt = (BYTE*)d;
         BYTE* dstend = dt + w*3;
 
-        for(; dt < dstend; sub+=4, dt+=3)
+        for(; dt < dstend; sub++, dt+=3)
         {
-            if(sub[3] < 0xff)
-            {
-                dt[0] = sub[0];
-                dt[1] = sub[1];
-                dt[2] = sub[2];
-            }
+            dt[0] = (dt[0]+*sub)>>1;
+            dt[1] = (dt[1]+*sub)>>1;
+            dt[2] = (dt[2]+*sub)>>1;
         }
     }
     else if(subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_ARGB32)
     {
-        DWORD* dstend = d + w;
+        BYTE* dt = (BYTE*)d;
+        BYTE* dstend = dt + w*4;
 
-        for(; d < dstend; sub+=4, d++)
+        for(; dt < dstend; sub++, dt+=4)
         {
-            if(sub[3] < 0xff) *d = *((DWORD*)sub)&0xffffff;
+            dt[0] = (dt[0]+*sub)>>1;
+            dt[1] = (dt[1]+*sub)>>1;
+            dt[2] = (dt[2]+*sub)>>1;
         }
     }
 }
@@ -1365,26 +1358,27 @@ void XySubFilterConsumer::PrintMessages(BYTE* pOut)
     BITMAP bm;
     GetObject(m_hbm, sizeof(BITMAP), &bm);
 
-    CRect r(0, 0, bm.bmWidth, bm.bmHeight);
+    const int MARGIN = 8;
+    CRect r(MARGIN, MARGIN, bm.bmWidth, bm.bmHeight);
     DrawText(m_hdc, msg, _tcslen(msg), &r, DT_CALCRECT|DT_EXTERNALLEADING|DT_NOPREFIX|DT_WORDBREAK);
 
-    r += CPoint(10, 10);
     r &= CRect(0, 0, bm.bmWidth, bm.bmHeight);
 
     DrawText(m_hdc, msg, _tcslen(msg), &r, DT_LEFT|DT_TOP|DT_NOPREFIX|DT_WORDBREAK);
 
     BYTE* pIn = (BYTE*)bm.bmBits;
+
     int pitchIn = bm.bmWidthBytes;
+
     int pitchOut = bihOut.biWidth * bihOut.biBitCount >> 3;
 
     if( subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV 
-        || subtype== MEDIASUBTYPE_NV12 || subtype==MEDIASUBTYPE_NV21 )
+        || subtype== MEDIASUBTYPE_NV12 || subtype==MEDIASUBTYPE_NV21 ) {
         pitchOut = bihOut.biWidth;
-    else if (subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016)
+    }
+    else if (subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016) {
         pitchOut = bihOut.biWidth * 2;
-
-    pitchIn = (pitchIn+3)&~3;
-    pitchOut = (pitchOut+3)&~3;
+    }
 
     if(bihOut.biHeight > 0 && bihOut.biCompression <= 3) // flip if the dst bitmap is flipped rgb (m_hbm is a top-down bitmap, not like the subpictures)
     {
@@ -1392,13 +1386,10 @@ void XySubFilterConsumer::PrintMessages(BYTE* pOut)
         pitchOut = -pitchOut;
     }
 
-    pIn += pitchIn * r.top;
-    pOut += pitchOut * r.top;
-
-    for(int w = min(r.right, m_w), h = r.Height(); h--; pIn += pitchIn, pOut += pitchOut)
+    for(int w = min(r.right + MARGIN, m_w), h = min(r.bottom,abs(m_h)); h--; pIn += pitchIn, pOut += pitchOut)
     {
         BltLineRGB32((DWORD*)pOut, pIn, w, subtype);
-        memsetd(pIn, 0xff000000, r.right*4);
+        memset(pIn+r.left, 0, r.Width());
     }
 
     SelectObject(m_hdc, hOldBitmap);
