@@ -1849,7 +1849,7 @@ int XySubFilter::FindPreferedLanguage( bool fHideToo /*= true*/ )
                 CHECK_N_LOG(hr, "Failed to get option");
 
                 l = pName;
-                LocalFree(pName);
+                CoTaskMemFree(pName);
 
                 if(!l.CompareNoCase(lang)) return(ret);
             }
