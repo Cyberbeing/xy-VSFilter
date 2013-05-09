@@ -2427,7 +2427,7 @@ void CDirectVobSubFilter::ZeroObj4OSD()
         lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
         lf.lfQuality = ANTIALIASED_QUALITY;
         HDC hdc = GetDC(NULL);
-        lf.lfHeight = 28;
+        lf.lfHeight = 16;
         //MulDiv(20, GetDeviceCaps(hdc, LOGPIXELSY), 54);
         ReleaseDC(NULL, hdc);
         lf.lfWeight = FW_BOLD;
@@ -2450,11 +2450,21 @@ void CDirectVobSubFilter::InitObj4OSD()
     if(m_hbm) {DeleteObject(m_hbm); m_hbm = NULL;}
     if(m_hdc) {DeleteDC(m_hdc); m_hdc = NULL;}
 
-    struct {BITMAPINFOHEADER bih; DWORD mask[3];} b = {{sizeof(BITMAPINFOHEADER), m_w, -(int)m_h, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}, 0xFF0000, 0x00FF00, 0x0000FF};
+    struct {
+        BITMAPINFOHEADER bih;
+        RGBQUAD biColors[256];
+    } b = {
+        {sizeof(BITMAPINFOHEADER), m_w, -(int)m_h, 1, 8, BI_RGB, 0, 0, 0, 0, 0},
+        {0}
+    };
+    for (int i=0;i<256;i++)
+    {
+        b.biColors[i].rgbBlue = b.biColors[i].rgbGreen = b.biColors[i].rgbRed = i;
+    }
     m_hdc = CreateCompatibleDC(NULL);
     m_hbm = CreateDIBSection(m_hdc, (BITMAPINFO*)&b, DIB_RGB_COLORS, NULL, NULL, 0);
 
     BITMAP bm;
     GetObject(m_hbm, sizeof(bm), &bm);
-    memsetd(bm.bmBits, 0xFF000000, bm.bmHeight*bm.bmWidthBytes);
+    memset(bm.bmBits, 0, bm.bmHeight*bm.bmWidthBytes);
 }
