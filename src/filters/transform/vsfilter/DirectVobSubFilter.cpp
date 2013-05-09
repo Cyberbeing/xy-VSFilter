@@ -801,12 +801,17 @@ STDMETHODIMP CDirectVobSubFilter::Count(DWORD* pcStreams)
 
 int CDirectVobSubFilter::FindPreferedLanguage(bool fHideToo)
 {
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+    AFX_MANAGE_STATE(AfxGetStaticModuleState());
+    HRESULT hr = NOERROR;
 
-	int nLangs;
-	get_LanguageCount(&nLangs);
+    int nLangs = 0;
+    hr = get_LanguageCount(&nLangs);
+    CHECK_N_LOG(hr, "Failed to get option");
 
-	if(nLangs <= 0) return(0);
+    if(nLangs <= 0) {
+        XY_LOG_WARN("There is NO languages yet");
+        return(0);
+    }
 
 	for(int i = 0; i < MAXPREFLANGS; i++)
 	{
