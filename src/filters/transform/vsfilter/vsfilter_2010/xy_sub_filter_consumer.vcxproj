@@ -162,6 +162,7 @@
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\DirectVobSub.cpp" />
+    <ClCompile Include="..\DirectVobSubPropPage.cpp" />
     <ClCompile Include="..\once_logger.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

@@ -21,6 +21,7 @@
 
 #include "stdafx.h"
 #include "xy_sub_filter_consumer.h"
+#include "DirectVobSubPropPage.h"
 #include "VSFilter.h"
 #include "..\..\..\DSUtil\MediaTypes.h"
 
@@ -64,6 +65,10 @@ const AMOVIESETUP_PIN sudpPins[] =
 CFactoryTemplate g_Templates[] =
 {
     {sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<XySubFilterConsumer>, NULL, &sudFilter[0]},
+    {L"XySubFilterConsumerGeneralPPage", &__uuidof(CXySubFilterConsumerGeneralPPage), CreateInstance<CXySubFilterConsumerGeneralPPage>},
+    {L"XySubFilterConsumerMiscPPage", &__uuidof(CXySubFilterConsumerMiscPPage), CreateInstance<CXySubFilterConsumerMiscPPage>},
+    {L"XySubFilterConsumerColorPPage", &__uuidof(CXySubFilterConsumerColorPPage), CreateInstance<CXySubFilterConsumerColorPPage>},
+    {L"XySubFilterConsumerAboutPPage", &__uuidof(CXySubFilterConsumerAboutPPage), CreateInstance<CXySubFilterConsumerAboutPPage>},
 };
 
 int g_cTemplates = countof(g_Templates);

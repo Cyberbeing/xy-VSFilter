@@ -498,8 +498,8 @@ void CDVSMainPPage::UpdateControlData(bool fSave)
 
 /* CDVSGeneralPPage */
 
-CDVSGeneralPPage::CDVSGeneralPPage(LPUNKNOWN pUnk, HRESULT* phr)
-    : CDVSBasePPage(NAME("DirectVobSub Property Page (global settings)"), pUnk, IDD_DVSGENERALPAGE, IDD_DVSGENERALPAGE)
+CDVSGeneralPPage::CDVSGeneralPPage(LPUNKNOWN pUnk, HRESULT* phr, TCHAR *pName /* = NAME("DirectVobSub Property Page (general settings)") */)
+    : CDVSBasePPage(pName, pUnk, IDD_DVSGENERALPAGE, IDD_DVSGENERALPAGE)
 {
     BindControl(IDC_VEREXTCOMBO, m_verext);
     BindControl(IDC_MOD32FIX, m_mod32fix);
@@ -619,8 +619,9 @@ void CDVSGeneralPPage::UpdateControlData(bool fSave)
 
 /* CDVSMiscPPage */
 
-CDVSMiscPPage::CDVSMiscPPage(LPUNKNOWN pUnk, HRESULT* phr)
-    : CDVSBasePPage(NAME("DirectVobSub Property Page (misc settings)"), pUnk, IDD_DVSMISCPAGE, IDD_DVSMISCPAGE)
+CDVSMiscPPage::CDVSMiscPPage(LPUNKNOWN pUnk, HRESULT* phr
+    , TCHAR *pName /* = NAME("DirectVobSub Property Page (misc settings)") */)
+    : CDVSBasePPage(pName, pUnk, IDD_DVSMISCPAGE, IDD_DVSMISCPAGE)
 {
     BindControl(IDC_FLIP, m_flippic);
     BindControl(IDC_FLIPSUB, m_flipsub);
@@ -1211,8 +1212,9 @@ void CDVSZoomPPage::UpdateObjectData(bool fSave)
 
 /* CDVSColorPPage */
 
-CDVSColorPPage::CDVSColorPPage(LPUNKNOWN pUnk, HRESULT* phr) 
-    : CDVSBasePPage(NAME("DirectVobSub Color Property Page"), pUnk, IDD_DVSCOLORPAGE, IDD_DVSCOLORPAGE)
+CDVSColorPPage::CDVSColorPPage(LPUNKNOWN pUnk, HRESULT* phr
+    , TCHAR *pName /*= NAME("DirectVobSub Property Page (color settings)")*/) 
+    : CDVSBasePPage(pName, pUnk, IDD_DVSCOLORPAGE, IDD_DVSCOLORPAGE)
     , m_outputColorSpace(NULL)
     , m_inputColorSpace(NULL)
 {
