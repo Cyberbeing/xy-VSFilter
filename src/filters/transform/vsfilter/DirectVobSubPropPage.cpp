@@ -380,7 +380,7 @@ void CDVSMainPPage::UpdateObjectData(bool fSave)
         CHECK_N_LOG(hr, "Failed to set option");
         if(hr == S_OK)
         {
-            int nLangs;
+            int nLangs = 0;
             hr = m_pDirectVobSub->get_LanguageCount(&nLangs);
             CHECK_N_LOG(hr, "Failed to get option");
             AllocLangs(nLangs);
@@ -409,7 +409,7 @@ void CDVSMainPPage::UpdateObjectData(bool fSave)
     {
         hr = m_pDirectVobSub->get_FileName(m_fn);
         CHECK_N_LOG(hr, "Failed to get option");
-        int nLangs;
+        int nLangs = 0;
         hr = m_pDirectVobSub->get_LanguageCount(&nLangs); 
         CHECK_N_LOG(hr, "Failed to get option");
         AllocLangs(nLangs);
@@ -1684,7 +1684,7 @@ void CXySubFilterMainPPage::UpdateObjectData(bool fSave)
         CHECK_N_LOG(hr, "Failed to set option");
         if(hr == S_OK)
         {
-            int nLangs;
+            int nLangs = 0;
             hr = m_pDirectVobSub->get_LanguageCount(&nLangs);
             CHECK_N_LOG(hr, "Failed to get option");
             AllocLangs(nLangs);
@@ -1715,7 +1715,7 @@ void CXySubFilterMainPPage::UpdateObjectData(bool fSave)
     {
         hr = m_pDirectVobSub->get_FileName(m_fn);
         CHECK_N_LOG(hr, "Failed to get option");
-        int nLangs;
+        int nLangs = 0;
         hr = m_pDirectVobSub->get_LanguageCount(&nLangs); 
         CHECK_N_LOG(hr, "Failed to get option");
         AllocLangs(nLangs);
