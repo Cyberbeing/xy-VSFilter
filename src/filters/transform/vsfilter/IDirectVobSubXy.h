@@ -111,6 +111,8 @@ namespace DirectVobSubXyOptions
         BOOL_LOAD_SETTINGS_WEB,
         BOOL_LOAD_SETTINGS_EMBEDDED,
 
+        BOOL_SUB_FRAME_USE_DST_ALPHA,
+
         //The following is not really supported yet
         void_LanguageName,
         void_TextSettings,
@@ -341,6 +343,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_IsSubtitleReloaderLocked},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LockSubtitleReloader},
         //{XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AdviseSubClock},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_SUB_FRAME_USE_DST_ALPHA},
 
         {XyOptionsImpl::OPTION_TYPE_END_FLAG}
     };
