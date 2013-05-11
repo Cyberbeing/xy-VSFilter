@@ -831,18 +831,28 @@ STDMETHODIMP XySubFilterConsumer::GetMerit( ULONG *merit )
 STDMETHODIMP XySubFilterConsumer::Connect( ISubRenderProvider *subtitleRenderer )
 {
     CheckPointer(subtitleRenderer, E_POINTER);
+    HRESULT hr = S_OK;
     if (m_provider!=subtitleRenderer)
     {
         if (m_provider!=NULL)
         {
-            HRESULT hr = m_provider->Disconnect();
+            hr = m_provider->Disconnect();
             if (FAILED(hr))
             {
                 XY_LOG_WARN("Failed to Connect with previous provider.");
             }
             m_provider = NULL;
         }
+
+        hr = subtitleRenderer->SetBool("useDestAlpha", true);
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Provider does NOT support useDestAlpha. Connection Failed.");
+            return hr;
+        }
+
         m_provider = subtitleRenderer;
+
         return S_OK;
     }
     else
