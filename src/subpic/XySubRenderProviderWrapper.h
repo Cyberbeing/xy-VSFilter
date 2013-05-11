@@ -31,6 +31,7 @@ private:
     CComPtr<ISubPicEx> m_pSubPic;
     CComPtr<IXySubRenderFrame> m_xy_sub_render_frame;
     CSize m_original_video_size;
+    bool m_use_dst_alpha;
 };
 
 class XySubRenderProviderWrapper2: public CUnknown, public IXySubRenderProvider
@@ -57,6 +58,7 @@ private:
     REFERENCE_TIME m_start, m_stop;
     CRect m_output_rect, m_subtitle_target_rect;
     CSize m_original_video_size;
+    bool m_use_dst_alpha;
 
     double m_fps;
 

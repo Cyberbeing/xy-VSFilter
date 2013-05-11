@@ -25,10 +25,11 @@ using namespace DirectVobSubXyOptions;
 
 const SubRenderOptionsImpl::OptionMap options[] = 
 {
-    {"name",           SubRenderOptionsImpl::OPTION_TYPE_STRING, STRING_NAME         },
-    {"version",        SubRenderOptionsImpl::OPTION_TYPE_STRING, STRING_VERSION      },
-    {"yuvMatrix",      SubRenderOptionsImpl::OPTION_TYPE_STRING, STRING_YUV_MATRIX   },
-    {"combineBitmaps", SubRenderOptionsImpl::OPTION_TYPE_BOOL,   BOOL_COMBINE_BITMAPS},
+    {"name",           SubRenderOptionsImpl::OPTION_TYPE_STRING, STRING_NAME                 },
+    {"version",        SubRenderOptionsImpl::OPTION_TYPE_STRING, STRING_VERSION              },
+    {"yuvMatrix",      SubRenderOptionsImpl::OPTION_TYPE_STRING, STRING_YUV_MATRIX           },
+    {"combineBitmaps", SubRenderOptionsImpl::OPTION_TYPE_BOOL,   BOOL_COMBINE_BITMAPS        },
+    {"useDestAlpha",   SubRenderOptionsImpl::OPTION_TYPE_BOOL,   BOOL_SUB_FRAME_USE_DST_ALPHA},
     {0}
 };
 
@@ -297,6 +298,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case DOUBLE_FPS:
     case INT_SELECTED_LANGUAGE:
     case void_TextSettings:
+    case BOOL_SUB_FRAME_USE_DST_ALPHA:
         m_context_id++;
         break;
     case STRING_FILE_NAME:

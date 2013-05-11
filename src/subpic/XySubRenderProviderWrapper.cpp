@@ -6,6 +6,7 @@ XySubRenderProviderWrapper::XySubRenderProviderWrapper( ISubPicProviderEx *provi
     : CUnknown(NAME("XySubRenderProviderWrapper"), NULL, phr)
     , m_provider(provider)
     , m_consumer(NULL)
+    , m_use_dst_alpha(false)
 {
     HRESULT hr = NOERROR;
     if (!provider)
@@ -57,15 +58,26 @@ STDMETHODIMP XySubRenderProviderWrapper::RequestFrame( IXySubRenderFrame**subRen
 
     CRect output_rect, subtitle_target_rect;
     CSize original_video_size;
+    bool use_dst_alpha = false;
     ASSERT(m_consumer);
     hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO, &original_video_size);
     ASSERT(SUCCEEDED(hr));
+    hr = m_consumer->XyGetBool(DirectVobSubXyOptions::BOOL_SUB_FRAME_USE_DST_ALPHA, &use_dst_alpha);
 
-    if (m_original_video_size!=original_video_size)
+    if (m_original_video_size!=original_video_size
+        || m_use_dst_alpha!=use_dst_alpha)
     {
-        XY_LOG_WARN("Original video size changed from "<<m_original_video_size<<" to "<<original_video_size);
+        if (m_use_dst_alpha==use_dst_alpha)
+        {
+            XY_LOG_WARN("Original video size changed from "<<m_original_video_size<<" to "<<original_video_size);
+        }
+        else
+        {
+            XY_LOG_INFO("'Use dst alpha' option changed from "<<m_use_dst_alpha<<" to "<<use_dst_alpha);
+        }
         Invalidate();
         m_original_video_size = original_video_size;
+        m_use_dst_alpha = use_dst_alpha;
     }
     if(!m_pSubPic)
     {
@@ -145,8 +157,11 @@ HRESULT XySubRenderProviderWrapper::Render( REFERENCE_TIME now, POSITION pos, do
         CRect dirty_rect;
         hr = m_pSubPic->GetDirtyRect(&dirty_rect);
         ASSERT(SUCCEEDED(hr));
-        hr = mem_subpic->FlipAlphaValue(dirty_rect);//fixme: mem_subpic.type is now MSP_RGBA_F, not MSP_RGBA
-        ASSERT(SUCCEEDED(hr));
+        if (!m_use_dst_alpha)
+        {
+            hr = mem_subpic->FlipAlphaValue(dirty_rect);//fixme: mem_subpic.type is now MSP_RGBA_F, not MSP_RGBA
+            ASSERT(SUCCEEDED(hr));
+        }
     }
 
     m_provider->Unlock();
@@ -209,6 +224,7 @@ XySubRenderProviderWrapper2::XySubRenderProviderWrapper2( ISubPicProviderEx2 *pr
     , m_start(0), m_stop(0)
     , m_fps(0)
     , m_max_bitmap_count2(0)
+    , m_use_dst_alpha(0)
 {
     HRESULT hr = NOERROR;
     if (!provider)
@@ -261,6 +277,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
 
     CRect output_rect, subtitle_target_rect;
     CSize original_video_size;
+    bool use_dst_alpha = false;
     bool combine_bitmap = false;
     ASSERT(m_consumer);
     hr = m_consumer->XyGetRect(DirectVobSubXyOptions::RECT_VIDEO_OUTPUT, &output_rect);
@@ -272,12 +289,14 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     ASSERT(SUCCEEDED(hr));
     hr = m_consumer->XyGetInt(DirectVobSubXyOptions::INT_MAX_BITMAP_COUNT2, &m_max_bitmap_count2);
     ASSERT(SUCCEEDED(hr));
+    hr = m_consumer->XyGetBool(DirectVobSubXyOptions::BOOL_SUB_FRAME_USE_DST_ALPHA, &use_dst_alpha);
 
     bool should_invalidate = false;
     bool should_invalidate_allocator = false;
     if (m_output_rect!=output_rect 
         || m_subtitle_target_rect!=subtitle_target_rect
-        || m_original_video_size!=original_video_size)
+        || m_original_video_size!=original_video_size
+        || m_use_dst_alpha!=use_dst_alpha)
     {
         should_invalidate = true;
         should_invalidate_allocator = (m_subtitle_target_rect!=subtitle_target_rect)==TRUE;
@@ -285,6 +304,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
         m_output_rect = output_rect;
         m_original_video_size = original_video_size;
         m_subtitle_target_rect = subtitle_target_rect;
+        m_use_dst_alpha = use_dst_alpha;
     }
 
     if (m_xy_sub_render_frame)
@@ -295,7 +315,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     }
     if (should_invalidate)
     {
-        XY_LOG_INFO("Output rects or max_bitmap_count changed.");
+        XY_LOG_INFO("Output rects or max_bitmap_count or alpha type changed.");
         Invalidate();
     }
     if (should_invalidate_allocator)
@@ -366,7 +386,8 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
         return hr;
     }
 
-    hr = m_provider->RenderEx(&m_xy_sub_render_frame, MSP_RGBA_F, 
+    int spd_type = m_use_dst_alpha ? MSP_RGBA : MSP_RGBA_F;
+    hr = m_provider->RenderEx(&m_xy_sub_render_frame, spd_type, 
         m_output_rect, m_subtitle_target_rect,
         m_original_video_size, now, m_fps);
     ASSERT(SUCCEEDED(hr));

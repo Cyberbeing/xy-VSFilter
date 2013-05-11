@@ -3,6 +3,7 @@
 #include "DVBSub.h"
 #include "hdmv_subtitle_provider.h"
 #include "../subpic/XySubRenderFrameWrapper.h"
+#include "IDirectVobSubXy.h"
 
 #if ENABLE_XY_LOG_HDMVSUB
 #define TRACE_SUB_PROVIDER(msg)		XY_LOG_TRACE(msg)
@@ -17,6 +18,7 @@ HdmvSubtitleProvider::HdmvSubtitleProvider( CCritSec* pLock, SUBTITLE_TYPE nType
                                            , const CString& name, LCID lcid )
                                            : CUnknown(NAME("HdmvSubtitleProvider"), NULL)
                                            , m_name(name), m_lcid(lcid)
+                                           , m_use_dst_alpha(false)
 {
     switch (nType) {
     case ST_DVB :
@@ -88,6 +90,16 @@ STDMETHODIMP HdmvSubtitleProvider::RequestFrame( IXySubRenderFrame**subRenderFra
     {
         return S_FALSE;
     }
+
+    bool use_dst_alpha = false;
+    hr = m_consumer->XyGetBool(DirectVobSubXyOptions::BOOL_SUB_FRAME_USE_DST_ALPHA, &use_dst_alpha);
+    if (m_use_dst_alpha!=use_dst_alpha)
+    {
+        XY_LOG_INFO("Alpha type changed from "<<m_use_dst_alpha<<" to "<<use_dst_alpha);
+        Invalidate(-1);
+        m_use_dst_alpha = use_dst_alpha;
+    }
+
     hr = m_pSub->GetTextureSize(pos, MaxTextureSize, VideoSize, VideoTopLeft);
     if (SUCCEEDED(hr))
     {
@@ -140,6 +152,19 @@ STDMETHODIMP HdmvSubtitleProvider::RequestFrame( IXySubRenderFrame**subRenderFra
 
 STDMETHODIMP HdmvSubtitleProvider::Invalidate( REFERENCE_TIME rtInvalidate /*= -1*/ )
 {
+    if (m_pSubPic )
+    {
+        if (m_pSubPic->GetStart()>=rtInvalidate) {
+            m_pSubPic = NULL;
+
+            //fix me: important!
+            m_xy_sub_render_frame = NULL;
+        }
+        else if (m_pSubPic->GetStop()>rtInvalidate)
+        {
+            m_pSubPic->SetStop(rtInvalidate);
+        }
+    }
     return S_OK;
 }
 
@@ -279,12 +304,15 @@ HRESULT HdmvSubtitleProvider::Render( REFERENCE_TIME now, POSITION pos )
         }
         hr = m_pSubPic->GetDirtyRect(&dirty_rect);
         ASSERT(SUCCEEDED(hr));
-        hr = mem_subpic->FlipAlphaValue(dirty_rect);//fixme: mem_subpic.type is now MSP_RGBA_F, not MSP_RGBA
-        ASSERT(SUCCEEDED(hr));
-        if (FAILED(hr))
+        if (!m_use_dst_alpha)
         {
-            XY_LOG_ERROR("Failed. "<<XY_LOG_VAR_2_STR(hr));
-            return hr;
+            hr = mem_subpic->FlipAlphaValue(dirty_rect);//fixme: mem_subpic.type is now MSP_RGBA_F, not MSP_RGBA
+            ASSERT(SUCCEEDED(hr));
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed. "<<XY_LOG_VAR_2_STR(hr));
+                return hr;
+            }
         }
     }
     CRect video_rect(CPoint(0,0), m_cur_output_size);
