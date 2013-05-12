@@ -83,6 +83,12 @@ STDMETHODIMP XyOptionsImpl::XyGetBin(unsigned field, LPVOID *value, int *size)
     return E_NOTIMPL;
 }
 
+STDMETHODIMP XyOptionsImpl::XyGetBin2( unsigned field, void *value, int size )
+{
+    if (!TestOption(field, OPTION_TYPE_BIN, OPTION_MODE_READ)) return E_INVALIDARG;
+    return E_NOTIMPL;
+}
+
 #define XY_SET_TEMPLATE(OPTION_TYPE_x, m_xy_opt_x)                                  \
     if (!TestOption(field, OPTION_TYPE_x, OPTION_MODE_WRITE)) return E_INVALIDARG;  \
     if (m_xy_opt_x[field] == value) return S_FALSE;                                 \
@@ -175,6 +181,11 @@ STDMETHODIMP XyOptionsImpl::XyGetStrings(unsigned field, int id, LPWSTR *value, 
 }
 
 STDMETHODIMP XyOptionsImpl::XyGetBins(unsigned field, int id, LPVOID *value, int *size)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP XyOptionsImpl::XyGetBins2( unsigned field, int id, void *value, int size )
 {
     return E_NOTIMPL;
 }

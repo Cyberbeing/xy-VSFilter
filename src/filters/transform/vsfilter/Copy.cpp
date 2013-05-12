@@ -268,13 +268,10 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
         msg += tmp;
 
         //print cache info
-        CachesInfo *caches_info = NULL;
-        XyFlyWeightInfo *xy_fw_info = NULL;
-        int tmp_size;
-        XyGetBin(DirectVobSubXyOptions::BIN_CACHES_INFO, reinterpret_cast<LPVOID*>(&caches_info), &tmp_size);
-        XyGetBin(DirectVobSubXyOptions::BIN_XY_FLY_WEIGHT_INFO, reinterpret_cast<LPVOID*>(&xy_fw_info), &tmp_size);
-        ASSERT(caches_info);
-        ASSERT(xy_fw_info);
+        CachesInfo caches_info;
+        XyFlyWeightInfo xy_fw_info;
+        XyGetBin2(DirectVobSubXyOptions::BIN2_CACHES_INFO, reinterpret_cast<LPVOID>(&caches_info), sizeof(caches_info));
+        XyGetBin2(DirectVobSubXyOptions::BIN2_XY_FLY_WEIGHT_INFO, reinterpret_cast<LPVOID>(&xy_fw_info), sizeof(xy_fw_info));
         tmp.Format(
             _T("Cache :stored_num/hit_count/query_count\n")\
             _T("  Parser cache 1:%ld/%ld/%ld\n")\
@@ -294,24 +291,22 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
             _T("  FW string pool    :%ld/%ld/%ld\t\t")\
             _T("  FW bitmap key pool:%ld/%ld/%ld\n")\
             ,
-            caches_info->text_info_cache_cur_item_num, caches_info->text_info_cache_hit_count, caches_info->text_info_cache_query_count,
-            caches_info->word_info_cache_cur_item_num, caches_info->word_info_cache_hit_count, caches_info->word_info_cache_query_count,
-            caches_info->path_cache_cur_item_num,     caches_info->path_cache_hit_count,     caches_info->path_cache_query_count,
-            caches_info->scanline_cache2_cur_item_num, caches_info->scanline_cache2_hit_count, caches_info->scanline_cache2_query_count,
-            caches_info->non_blur_cache_cur_item_num, caches_info->non_blur_cache_hit_count, caches_info->non_blur_cache_query_count,
-            caches_info->overlay_cache_cur_item_num,  caches_info->overlay_cache_hit_count,  caches_info->overlay_cache_query_count,
-            caches_info->interpolate_cache_cur_item_num, caches_info->interpolate_cache_hit_count, caches_info->interpolate_cache_query_count,
-            caches_info->bitmap_cache_cur_item_num, caches_info->bitmap_cache_hit_count, caches_info->bitmap_cache_query_count,
-            caches_info->scanline_cache_cur_item_num, caches_info->scanline_cache_hit_count, caches_info->scanline_cache_query_count,
-            caches_info->overlay_key_cache_cur_item_num, caches_info->overlay_key_cache_hit_count, caches_info->overlay_key_cache_query_count,
-            caches_info->clipper_cache_cur_item_num, caches_info->clipper_cache_hit_count, caches_info->clipper_cache_query_count,
+            caches_info.text_info_cache_cur_item_num, caches_info.text_info_cache_hit_count, caches_info.text_info_cache_query_count,
+            caches_info.word_info_cache_cur_item_num, caches_info.word_info_cache_hit_count, caches_info.word_info_cache_query_count,
+            caches_info.path_cache_cur_item_num,     caches_info.path_cache_hit_count,     caches_info.path_cache_query_count,
+            caches_info.scanline_cache2_cur_item_num, caches_info.scanline_cache2_hit_count, caches_info.scanline_cache2_query_count,
+            caches_info.non_blur_cache_cur_item_num, caches_info.non_blur_cache_hit_count, caches_info.non_blur_cache_query_count,
+            caches_info.overlay_cache_cur_item_num,  caches_info.overlay_cache_hit_count,  caches_info.overlay_cache_query_count,
+            caches_info.interpolate_cache_cur_item_num, caches_info.interpolate_cache_hit_count, caches_info.interpolate_cache_query_count,
+            caches_info.bitmap_cache_cur_item_num, caches_info.bitmap_cache_hit_count, caches_info.bitmap_cache_query_count,
+            caches_info.scanline_cache_cur_item_num, caches_info.scanline_cache_hit_count, caches_info.scanline_cache_query_count,
+            caches_info.overlay_key_cache_cur_item_num, caches_info.overlay_key_cache_hit_count, caches_info.overlay_key_cache_query_count,
+            caches_info.clipper_cache_cur_item_num, caches_info.clipper_cache_hit_count, caches_info.clipper_cache_query_count,
 
-            xy_fw_info->xy_fw_string_w.cur_item_num, xy_fw_info->xy_fw_string_w.hit_count, xy_fw_info->xy_fw_string_w.query_count,
-            xy_fw_info->xy_fw_grouped_draw_items_hash_key.cur_item_num, xy_fw_info->xy_fw_grouped_draw_items_hash_key.hit_count, xy_fw_info->xy_fw_grouped_draw_items_hash_key.query_count
+            xy_fw_info.xy_fw_string_w.cur_item_num, xy_fw_info.xy_fw_string_w.hit_count, xy_fw_info.xy_fw_string_w.query_count,
+            xy_fw_info.xy_fw_grouped_draw_items_hash_key.cur_item_num, xy_fw_info.xy_fw_grouped_draw_items_hash_key.hit_count, xy_fw_info.xy_fw_grouped_draw_items_hash_key.query_count
             );
         msg += tmp;
-        delete []caches_info;
-        delete []xy_fw_info;
     }
 
     if(msg.IsEmpty()) return;

@@ -1310,8 +1310,8 @@ void XySubFilterConsumer::PrintMessages(BYTE* pOut)
         CachesInfo *caches_info = NULL;
         XyFlyWeightInfo *xy_fw_info = NULL;
         int tmp_size;
-        XyGetBin(DirectVobSubXyOptions::BIN_CACHES_INFO, reinterpret_cast<LPVOID*>(&caches_info), &tmp_size);
-        XyGetBin(DirectVobSubXyOptions::BIN_XY_FLY_WEIGHT_INFO, reinterpret_cast<LPVOID*>(&xy_fw_info), &tmp_size);
+        XyGetBin(DirectVobSubXyOptions::BIN2_CACHES_INFO, reinterpret_cast<LPVOID*>(&caches_info), &tmp_size);
+        XyGetBin(DirectVobSubXyOptions::BIN2_XY_FLY_WEIGHT_INFO, reinterpret_cast<LPVOID*>(&xy_fw_info), &tmp_size);
         ASSERT(caches_info);
         ASSERT(xy_fw_info);
         tmp.Format(

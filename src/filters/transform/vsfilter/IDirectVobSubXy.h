@@ -72,12 +72,12 @@ namespace DirectVobSubXyOptions
         BIN_INPUT_COLOR_FORMAT,
 
         //struct CachesInfo
-        //size = 1
-        BIN_CACHES_INFO,
+        //size = sizeof(CachesInfo)
+        BIN2_CACHES_INFO,
 
         //struct XyFlyWeightInfo
-        //size = 1
-        BIN_XY_FLY_WEIGHT_INFO,
+        //size = sizeof(XyFlyWeightInfo)
+        BIN2_XY_FLY_WEIGHT_INFO,
 
         // for XySubFilterConsumer
         ULONGLOG_FRAME_RATE,
@@ -220,9 +220,9 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, BIN_OUTPUT_COLOR_FORMAT},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, BIN_INPUT_COLOR_FORMAT},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_READ, BIN_CACHES_INFO},
+        {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_READ, BIN2_CACHES_INFO},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_READ, BIN_XY_FLY_WEIGHT_INFO},
+        {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_READ, BIN2_XY_FLY_WEIGHT_INFO},
 
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageName},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_OVERRIDE_PLACEMENT},
@@ -318,9 +318,9 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_CONNECTED_CONSUMER},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_CONSUMER_VERSION},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_READ, BIN_CACHES_INFO},
+        {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_READ, BIN2_CACHES_INFO},
 
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_READ, BIN_XY_FLY_WEIGHT_INFO},
+        {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_READ, BIN2_XY_FLY_WEIGHT_INFO},
 
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_LanguageName},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_OVERRIDE_PLACEMENT},

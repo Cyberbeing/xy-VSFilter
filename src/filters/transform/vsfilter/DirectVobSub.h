@@ -98,6 +98,7 @@ public:
     STDMETHODIMP XyGetDouble   (unsigned field, double    *value);
     STDMETHODIMP XyGetString   (unsigned field, LPWSTR    *value, int *chars);
     STDMETHODIMP XyGetBin      (unsigned field, LPVOID    *value, int *size );
+    STDMETHODIMP XyGetBin2     (unsigned field, void      *value, int size );
 
     STDMETHODIMP XySetBool     (unsigned field, bool      value);
     STDMETHODIMP XySetInt      (unsigned field, int       value);
