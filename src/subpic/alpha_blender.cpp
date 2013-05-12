@@ -47,7 +47,7 @@ BaseAlphaBlender* BaseAlphaBlender::CreateAlphaBlender( int src_type, int dst_ty
 void BaseAlphaBlender::AlphaBlend( const XySubPicPlan src_plans[], CRect src_rect, const XySubPicPlan dst_plans[], CPoint dst_pos )
 {
     ASSERT(src_plans&&dst_plans);
-    ClipRect(src_plans[0].w, src_plans[0].h, dst_plans[0].w, dst_plans[0].h, &src_rect, &dst_pos);
+    ClipRect(src_plans[0].w, src_plans[0].h, dst_plans[0].w, abs(dst_plans[0].h), &src_rect, &dst_pos);
     if (src_rect.Width()<=0 || src_rect.Height()<=0)
     {
         return;
@@ -67,7 +67,7 @@ void BaseAlphaBlender::AlphaBlend(const XySubPicPlan src_plans[], const XySubPic
     {
         dst_pos.y = 0;
     }
-    LimitPoint(dst_plans[0].w-dst_pos.x, dst_plans[0].h-dst_pos.y, src_rect.BottomRight());
+    LimitPoint(dst_plans[0].w-dst_pos.x, abs(dst_plans[0].h)-dst_pos.y, src_rect.BottomRight());
     if (src_rect.Width()<=0 || src_rect.Height()<=0)
     {
         return;
@@ -87,7 +87,7 @@ void BaseAlphaBlender::AlphaBlend(const XySubPicPlan src_plans[], const XySubPic
     {
         size.cx = src_plans[0].w;
     }
-    int dst_limit_h = dst_plans[0].h-dst_pos.y;
+    int dst_limit_h = abs(dst_plans[0].h)-dst_pos.y;
     if (size.cy > dst_limit_h)
     {
         size.cy = dst_limit_h;
