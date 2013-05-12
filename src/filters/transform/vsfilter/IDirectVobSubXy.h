@@ -373,6 +373,8 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_EXTEND_PICTURE_RESX2},
         {XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_RW, SIZE_EXTEND_PICTURE_RESX2MIN},
 
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FLIP_PICTURE},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FLIP_SUBTITLE},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_OSD},
 
         {XyOptionsImpl::OPTION_TYPE_END_FLAG}
