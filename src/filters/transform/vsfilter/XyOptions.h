@@ -11,6 +11,7 @@ interface IXyOptions : public IUnknown
     STDMETHOD(XyGetDouble   )(unsigned field, double    *value) = 0;
     STDMETHOD(XyGetString   )(unsigned field, LPWSTR    *value, int *chars) = 0;
     STDMETHOD(XyGetBin      )(unsigned field, LPVOID    *value, int *size ) = 0;
+    STDMETHOD(XyGetBin2     )(unsigned field, void      *value, int  size ) = 0;
 
     STDMETHOD(XySetBool     )(unsigned field, bool      value) = 0;
     STDMETHOD(XySetInt      )(unsigned field, int       value) = 0;
@@ -30,6 +31,7 @@ interface IXyOptions : public IUnknown
     STDMETHOD(XyGetDoubles   )(unsigned field, int id, double    *value) = 0;
     STDMETHOD(XyGetStrings   )(unsigned field, int id, LPWSTR    *value, int *chars) = 0;
     STDMETHOD(XyGetBins      )(unsigned field, int id, LPVOID    *value, int *size ) = 0;
+    STDMETHOD(XyGetBins2     )(unsigned field, int id, void      *value, int  size ) = 0;
 
     STDMETHOD(XySetBools     )(unsigned field, int id, bool      value) = 0;
     STDMETHOD(XySetInts      )(unsigned field, int id, int       value) = 0;

@@ -1245,7 +1245,7 @@ STDMETHODIMP CDirectVobSub::XyGetString( unsigned field, LPWSTR *value, int *cha
     return XyOptionsImpl::XyGetString(field, value, chars);
 }
 
-STDMETHODIMP CDirectVobSub::XyGetBin( unsigned field, LPVOID *value, int *size )
+STDMETHODIMP CDirectVobSub::XyGetBin      (unsigned field, LPVOID    *value, int *size )
 {
     if (!TestOption(field, XyOptionsImpl::OPTION_TYPE_BIN, XyOptionsImpl::OPTION_MODE_READ))
     {
@@ -1287,27 +1287,32 @@ STDMETHODIMP CDirectVobSub::XyGetBin( unsigned field, LPVOID *value, int *size )
             memcpy(*value, m_inputColorSpace, GetInputColorSpaceNumber()*sizeof(m_inputColorSpace[0]));
         }
         return S_OK;
-    case BIN_CACHES_INFO:
-        if (size)
-        {
-            *size=1;
-        }
-        if (value)
-        {
-            *value = DEBUG_NEW CachesInfo[1];
-        }
-        return get_CachesInfo(reinterpret_cast<CachesInfo*>(*value));
-    case BIN_XY_FLY_WEIGHT_INFO:
-        if (size)
-        {
-            *size=1;
-        }
-        if (value)
-        {
-            *value = DEBUG_NEW XyFlyWeightInfo[1];
-        }
-        return get_XyFlyWeightInfo(reinterpret_cast<XyFlyWeightInfo*>(*value));
+    }
+    return E_NOTIMPL;
+}
 
+STDMETHODIMP CDirectVobSub::XyGetBin2( unsigned field, void *value, int size )
+{
+    if (!TestOption(field, XyOptionsImpl::OPTION_TYPE_BIN2, XyOptionsImpl::OPTION_MODE_READ))
+    {
+        return E_NOTIMPL;
+    }
+    CAutoLock cAutoLock(&m_propsLock);
+    CheckPointer(value, E_POINTER);
+    switch(field)
+    {
+    case BIN2_CACHES_INFO:
+        if (size!=sizeof(CachesInfo))
+        {
+            return E_INVALIDARG;
+        }
+        return get_CachesInfo(reinterpret_cast<CachesInfo*>(value));
+    case BIN2_XY_FLY_WEIGHT_INFO:
+        if (size!=sizeof(XyFlyWeightInfo))
+        {
+            return E_INVALIDARG;
+        }
+        return get_XyFlyWeightInfo(reinterpret_cast<XyFlyWeightInfo*>(value));
     }
     return E_NOTIMPL;
 }
@@ -1408,7 +1413,8 @@ STDMETHODIMP CDirectVobSub::XySetString( unsigned field, LPWSTR value, int chars
 
 STDMETHODIMP CDirectVobSub::XySetBin( unsigned field, LPVOID value, int size )
 {
-    if (!TestOption(field, XyOptionsImpl::OPTION_TYPE_BIN, XyOptionsImpl::OPTION_MODE_WRITE))
+    if (!TestOption(field, XyOptionsImpl::OPTION_TYPE_BIN, XyOptionsImpl::OPTION_MODE_WRITE) &&
+        !TestOption(field, XyOptionsImpl::OPTION_TYPE_BIN2, XyOptionsImpl::OPTION_MODE_WRITE))
     {
         return E_NOTIMPL;
     }

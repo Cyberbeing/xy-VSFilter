@@ -16,7 +16,8 @@ public:
     static const int OPTION_TYPE_ULONGLONG= 0x10;
     static const int OPTION_TYPE_DOUBLE   = 0x20;
     static const int OPTION_TYPE_STRING   = 0x40;
-    static const int OPTION_TYPE_BIN      = 0x800;
+    static const int OPTION_TYPE_BIN      = 0x80;
+    static const int OPTION_TYPE_BIN2     = 0x800;
 
     typedef int OptionMode;
     static const int OPTION_MODE_READ   = 0x100;
@@ -41,6 +42,7 @@ public:
     STDMETHODIMP XyGetDouble   (unsigned field, double    *value);
     STDMETHODIMP XyGetString   (unsigned field, LPWSTR    *value, int *chars);
     STDMETHODIMP XyGetBin      (unsigned field, LPVOID    *value, int *size );
+    STDMETHODIMP XyGetBin2     (unsigned field, void      *value, int  size );
 
     STDMETHODIMP XySetBool     (unsigned field, bool      value);
     STDMETHODIMP XySetInt      (unsigned field, int       value);
@@ -60,6 +62,7 @@ public:
     STDMETHODIMP XyGetDoubles   (unsigned field, int id, double    *value);
     STDMETHODIMP XyGetStrings   (unsigned field, int id, LPWSTR    *value, int *chars);
     STDMETHODIMP XyGetBins      (unsigned field, int id, LPVOID    *value, int *size );
+    STDMETHODIMP XyGetBins2     (unsigned field, int id, void      *value, int  size );
 
     STDMETHODIMP XySetBools     (unsigned field, int id, bool      value);
     STDMETHODIMP XySetInts      (unsigned field, int id, int       value);
