@@ -586,34 +586,39 @@ STDMETHODIMP CDirectVobSub::put_SaveFullPath(bool fSaveFullPath)
 
 STDMETHODIMP CDirectVobSub::get_SubtitleTiming(int* delay, int* speedmul, int* speeddiv)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_SubtitleTiming))
+    if (!TestOption(DirectVobSubXyOptions::BIN2_SUBTITLE_TIMING, OPTION_TYPE_BIN2, OPTION_MODE_READ))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(&m_propsLock);
+    HRESULT hr = OnOptionReading(BIN2_SUBTITLE_TIMING);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get subtitle timing."<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+    if(delay) *delay = m_SubtitleDelay;
+    if(speedmul) *speedmul = m_SubtitleSpeedMul;
+    if(speeddiv) *speeddiv = m_SubtitleSpeedDiv;
 
-	if(delay) *delay = m_SubtitleDelay;
-	if(speedmul) *speedmul = m_SubtitleSpeedMul;
-	if(speeddiv) *speeddiv = m_SubtitleSpeedDiv;
-
-	return S_OK;
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::put_SubtitleTiming(int delay, int speedmul, int speeddiv)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_SubtitleTiming))
+    if (!TestOption(DirectVobSubXyOptions::BIN2_SUBTITLE_TIMING, OPTION_TYPE_BIN2, OPTION_MODE_WRITE))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(&m_propsLock);
 
-	if(m_SubtitleDelay == delay && m_SubtitleSpeedMul == speedmul && m_SubtitleSpeedDiv == speeddiv) return S_FALSE;
+    if(m_SubtitleDelay == delay && m_SubtitleSpeedMul == speedmul && m_SubtitleSpeedDiv == speeddiv) return S_FALSE;
 
-	m_SubtitleDelay = delay;
-	m_SubtitleSpeedMul = speedmul;
-	if(speeddiv > 0) m_SubtitleSpeedDiv = speeddiv;
+    m_SubtitleDelay = delay;
+    m_SubtitleSpeedMul = speedmul;
+    if(speeddiv > 0) m_SubtitleSpeedDiv = speeddiv;
 
-    return OnOptionChanged(void_SubtitleTiming);
+    return OnOptionChanged(BIN2_SUBTITLE_TIMING);
 }
 
 STDMETHODIMP CDirectVobSub::get_MediaFPS(bool* fEnabled, double* fps)
@@ -1326,6 +1331,15 @@ STDMETHODIMP CDirectVobSub::XyGetBin2( unsigned field, void *value, int size )
             TextSettings* tmp = reinterpret_cast<TextSettings*>(value);
             return get_TextSettings(tmp->lf, tmp->lflen, &tmp->color, &tmp->shadow, &tmp->outline, &tmp->advanced_renderer);
         }
+    case BIN2_SUBTITLE_TIMING:
+        if (size != sizeof(DirectVobSubXyOptions::SubtitleTiming))
+        {
+            return E_INVALIDARG;
+        }
+        {
+            SubtitleTiming* tmp = reinterpret_cast<SubtitleTiming*>(value);
+            return get_SubtitleTiming(&tmp->delay, &tmp->speedmul, &tmp->speeddiv);
+        }
     }
     return E_NOTIMPL;
 }
@@ -1460,6 +1474,15 @@ STDMETHODIMP CDirectVobSub::XySetBin( unsigned field, LPVOID value, int size )
         {
             TextSettings* tmp = reinterpret_cast<TextSettings*>(value);
             return put_TextSettings(tmp->lf,tmp->lflen, tmp->color, tmp->shadow, tmp->outline, tmp->advanced_renderer);
+        }
+    case BIN2_SUBTITLE_TIMING:
+        if (size != sizeof(DirectVobSubXyOptions::SubtitleTiming))
+        {
+            return E_INVALIDARG;
+        }
+        {
+            SubtitleTiming* tmp = reinterpret_cast<SubtitleTiming*>(value);
+            return put_SubtitleTiming(tmp->delay, tmp->speedmul, tmp->speeddiv);
         }
     }
     return E_NOTIMPL;

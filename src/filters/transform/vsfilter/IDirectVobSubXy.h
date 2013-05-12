@@ -114,10 +114,11 @@ namespace DirectVobSubXyOptions
         BOOL_SUB_FRAME_USE_DST_ALPHA,
 
         BIN2_TEXT_SETTINGS,//@see struct TextSettings
+        BIN2_SUBTITLE_TIMING,//@see struct SubtitleTiming
 
         //The following is not really supported yet
         void_LanguageName,
-        void_SubtitleTiming,
+
         void_ZoomRect,
         void_ColorFormat,
         void_SubtitleReloader,
@@ -180,6 +181,9 @@ namespace DirectVobSubXyOptions
         bool shadow;
         bool outline;
         bool advanced_renderer;
+    };
+    struct SubtitleTiming {
+        int delay, speedmul, speeddiv;
     };
     const XyOptionsImpl::Option DirectVobFilterOptions[] = {
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_COLOR_SPACE},
@@ -244,7 +248,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FLIP_SUBTITLE},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_OSD},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_SAVE_FULL_PATH},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleTiming},
+        {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_RW, BIN2_SUBTITLE_TIMING},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ZoomRect},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ColorFormat},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleReloader},
@@ -338,7 +342,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_POLYGONIZE},
         {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_RW, BIN2_TEXT_SETTINGS},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleTiming},
+        {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_RW, BIN2_SUBTITLE_TIMING},
         //{XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ZoomRect},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleReloader},
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_LOAD_SETTINGS_LEVEL},
