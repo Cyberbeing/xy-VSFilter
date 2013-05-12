@@ -311,6 +311,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
             );
         msg += tmp;
         delete []caches_info;
+        delete []xy_fw_info;
     }
 
     if(msg.IsEmpty()) return;
