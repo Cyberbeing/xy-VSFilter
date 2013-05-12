@@ -322,6 +322,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS:
     case BOOL_VOBSUBSETTINGS_POLYGONIZE:
     case BIN2_TEXT_SETTINGS:
+    case BIN2_SUBTITLE_TIMING:
         m_context_id++;
         if (m_last_requested!=-1)
         {
@@ -492,24 +493,6 @@ STDMETHODIMP XySubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 
             i -= pSubStream->GetStreamCount();
         }
-    }
-
-    return hr;
-}
-
-STDMETHODIMP XySubFilter::put_SubtitleTiming(int delay, int speedmul, int speeddiv)
-{
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(delay)<<XY_LOG_VAR_2_STR(speedmul)<<XY_LOG_VAR_2_STR(speeddiv));
-    HRESULT hr = CDirectVobSub::put_SubtitleTiming(delay, speedmul, speeddiv);
-
-    if(hr == NOERROR)
-    {
-        if (m_last_requested!=-1)
-        {
-            XY_LOG_WARN("Some subtitle frames are cached already!");
-            m_last_requested = -1;
-        }
-        InvalidateSubtitle();
     }
 
     return hr;

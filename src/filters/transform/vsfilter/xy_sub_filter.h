@@ -49,8 +49,6 @@ public:
     // IDirectVobSub
     STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
 
-    STDMETHODIMP put_SubtitleTiming(int delay, int speedmul, int speeddiv);
-
     STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
     STDMETHODIMP get_XyFlyWeightInfo(XyFlyWeightInfo* xy_fw_info);
 

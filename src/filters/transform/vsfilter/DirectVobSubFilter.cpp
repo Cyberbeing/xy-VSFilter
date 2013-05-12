@@ -1131,19 +1131,6 @@ STDMETHODIMP CDirectVobSubFilter::put_PreBuffering(bool fDoPreBuffering)
 	return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::put_SubtitleTiming(int delay, int speedmul, int speeddiv)
-{
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(delay)<<XY_LOG_VAR_2_STR(speedmul)<<XY_LOG_VAR_2_STR(speeddiv));
-	HRESULT hr = CDirectVobSub::put_SubtitleTiming(delay, speedmul, speeddiv);
-
-	if(hr == NOERROR)
-	{
-		InvalidateSubtitle();
-	}
-
-	return hr;
-}
-
 STDMETHODIMP CDirectVobSubFilter::get_CachesInfo(CachesInfo* caches_info)
 {
     XY_LOG_INFO(caches_info);
@@ -2294,6 +2281,7 @@ HRESULT CDirectVobSubFilter::OnOptionChanged( unsigned field )
     case BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS:
     case BOOL_VOBSUBSETTINGS_POLYGONIZE:
     case BIN2_TEXT_SETTINGS:
+    case BIN2_SUBTITLE_TIMING:
         InvalidateSubtitle();
         break;
     }
