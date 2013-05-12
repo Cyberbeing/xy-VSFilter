@@ -298,10 +298,9 @@ HRESULT XySubFilterConsumer::Transform(IMediaSample* pIn)
 
         if(m_sub_render_frame)
         {
-#if FIX_ME
             if(fFlip ^ fFlipSub)
                 spd.h = -spd.h;
-#endif
+
             TRACE_RENDERER_REQUEST("AlphaBlt");
             hr = AlphaBlt(spd);
             if (FAILED(hr))
