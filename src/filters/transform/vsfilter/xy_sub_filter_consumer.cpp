@@ -33,6 +33,7 @@
 #include <initguid.h>
 #include "..\..\..\..\include\moreuuids.h"
 #include "../../../subtitles/xy_bitmap.h"
+#include "../../../subpic/alpha_blender.h"
 
 #if ENABLE_XY_LOG_RENDERER_REQUEST
 #  define TRACE_RENDERER_REQUEST(msg) XY_LOG_TRACE(msg)
@@ -319,31 +320,30 @@ HRESULT XySubFilterConsumer::Transform(IMediaSample* pIn)
 HRESULT XySubFilterConsumer::AlphaBlt(SubPicDesc& spd)
 {
     HRESULT hr = NOERROR;
-    if (m_sub_render_frame)
+    XySubPicPlan dst = { spd.w, spd.h, spd.pitch, spd.bits };
+    ASSERT(m_sub_render_frame);
+
+    int count = 0;
+    hr = m_sub_render_frame->GetBitmapCount(&count);
+    ASSERT(SUCCEEDED(hr));
+    for (int i=0;i<count;i++)
     {
-        int count = 0;
-        hr = m_sub_render_frame->GetBitmapCount(&count);
-        ASSERT(SUCCEEDED(hr));
-        DWORD color = 0x00000000;
-        for (int i=0;i<count;i++)
-        {
-            POINT pos;
-            SIZE size;
-            LPCVOID pixels;
-            int pitch;
-            hr = m_sub_render_frame->GetBitmap(i, NULL, &pos, &size, &pixels, &pitch );
-            if (FAILED(hr))
-            {
-                XY_LOG_ERROR("Failed to get bitmap. "<<XY_LOG_VAR_2_STR(hr));
-                return hr;
-            }
-            XyBitmap::BltPack(spd, pos, size, pixels, pitch);
-        }
+        XySubPicPlan sub;
+        CPoint pos;
+        SIZE size;
+        hr = m_sub_render_frame->GetBitmap(i, NULL, &pos, &size, (LPCVOID*)&sub.bits, &sub.pitch );
         if (FAILED(hr))
         {
-            XY_LOG_ERROR("Failed to unlock. "<<XY_LOG_VAR_2_STR(hr));
+            XY_LOG_ERROR("Failed to get bitmap. "<<XY_LOG_VAR_2_STR(hr));
             return hr;
         }
+        sub.w = size.cx;
+        sub.h = size.cy;
+        BaseAlphaBlender::DefaultAlphaBlend(&sub, &dst, pos, size);
+    }
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to unlock. "<<XY_LOG_VAR_2_STR(hr));
         return hr;
     }
     return hr;
@@ -853,6 +853,7 @@ STDMETHODIMP XySubFilterConsumer::Connect( ISubRenderProvider *subtitleRenderer 
 
         m_provider = subtitleRenderer;
 
+        BaseAlphaBlender::SetupDefaultAlphaBlender(MSP_RGBA, MSP_RGB32, g_cpuid.m_flags);
         return S_OK;
     }
     else
