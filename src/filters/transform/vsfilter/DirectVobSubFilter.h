@@ -108,8 +108,6 @@ public:
 
     STDMETHODIMP get_MediaFPS(bool* fEnabled, double* fps);
     STDMETHODIMP put_MediaFPS(bool fEnabled, double fps);
-    STDMETHODIMP get_ZoomRect(NORMALIZEDRECT* rect);
-    STDMETHODIMP put_ZoomRect(NORMALIZEDRECT* rect);
 	STDMETHODIMP HasConfigDialog(int iSelected);
 	STDMETHODIMP ShowConfigDialog(int iSelected, HWND hWndParent);
 

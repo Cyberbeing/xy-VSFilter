@@ -658,34 +658,40 @@ STDMETHODIMP CDirectVobSub::put_MediaFPS(bool fEnabled, double fps)
 
 STDMETHODIMP CDirectVobSub::get_ZoomRect(NORMALIZEDRECT* rect)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_ZoomRect))
+    if (!TestOption(DirectVobSubXyOptions::BIN2_ZOOM_RECT,OPTION_TYPE_BIN2, OPTION_MODE_READ))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(&m_propsLock);
+    HRESULT hr = OnOptionReading(BIN2_ZOOM_RECT);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get zoom rect "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
 
-	if(!rect) return E_POINTER;
+    if(!rect) return E_POINTER;
 
-	*rect = m_ZoomRect;
+    *rect = m_ZoomRect;
 
-	return S_OK;
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::put_ZoomRect(NORMALIZEDRECT* rect)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_ZoomRect))
+    if (!TestOption(DirectVobSubXyOptions::BIN2_ZOOM_RECT, OPTION_TYPE_BIN2, OPTION_MODE_WRITE))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(&m_propsLock);
 
-	if(!rect) return E_POINTER;
+    if(!rect) return E_POINTER;
 
-	if(!memcmp(&m_ZoomRect, rect, sizeof(m_ZoomRect))) return S_FALSE;
+    if(!memcmp(&m_ZoomRect, rect, sizeof(m_ZoomRect))) return S_FALSE;
 
-	m_ZoomRect = *rect;
+    m_ZoomRect = *rect;
 
-    return OnOptionChanged(void_ZoomRect);
+    return OnOptionChanged(BIN2_ZOOM_RECT);
 }
 
 STDMETHODIMP CDirectVobSub::get_CachesInfo(CachesInfo* caches_info)
@@ -1340,6 +1346,15 @@ STDMETHODIMP CDirectVobSub::XyGetBin2( unsigned field, void *value, int size )
             SubtitleTiming* tmp = reinterpret_cast<SubtitleTiming*>(value);
             return get_SubtitleTiming(&tmp->delay, &tmp->speedmul, &tmp->speeddiv);
         }
+    case BIN2_ZOOM_RECT:
+        if (size != sizeof(NORMALIZEDRECT))
+        {
+            return E_INVALIDARG;
+        }
+        {
+            NORMALIZEDRECT* tmp = reinterpret_cast<NORMALIZEDRECT*>(value);
+            return get_ZoomRect(tmp);
+        }
     }
     return E_NOTIMPL;
 }
@@ -1484,6 +1499,12 @@ STDMETHODIMP CDirectVobSub::XySetBin( unsigned field, LPVOID value, int size )
             SubtitleTiming* tmp = reinterpret_cast<SubtitleTiming*>(value);
             return put_SubtitleTiming(tmp->delay, tmp->speedmul, tmp->speeddiv);
         }
+    case BIN2_ZOOM_RECT:
+        if (size != sizeof(NORMALIZEDRECT))
+        {
+            return E_INVALIDARG;
+        }
+        return put_ZoomRect(reinterpret_cast<NORMALIZEDRECT*>(value));
     }
     return E_NOTIMPL;
 }
