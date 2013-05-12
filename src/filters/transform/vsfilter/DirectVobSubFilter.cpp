@@ -1234,17 +1234,6 @@ STDMETHODIMP CDirectVobSubFilter::put_MediaFPS(bool fEnabled, double fps)
     return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::get_ZoomRect(NORMALIZEDRECT* rect)
-{
-    XY_LOG_INFO(rect);
-	return E_NOTIMPL;
-}
-
-STDMETHODIMP CDirectVobSubFilter::put_ZoomRect(NORMALIZEDRECT* rect)
-{
-    XY_LOG_INFO(rect);
-	return E_NOTIMPL;
-}
 
 // IDirectVobSub2
 

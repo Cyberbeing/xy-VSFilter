@@ -115,11 +115,11 @@ namespace DirectVobSubXyOptions
 
         BIN2_TEXT_SETTINGS,//@see struct TextSettings
         BIN2_SUBTITLE_TIMING,//@see struct SubtitleTiming
+        BIN2_ZOOM_RECT,//@see: NORMALIZEDRECT
 
         //The following is not really supported yet
         void_LanguageName,
 
-        void_ZoomRect,
         void_ColorFormat,
         void_SubtitleReloader,
         void_HasConfigDialog,
@@ -249,7 +249,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_OSD},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_SAVE_FULL_PATH},
         {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_RW, BIN2_SUBTITLE_TIMING},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ZoomRect},
+        //{XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_RW, BIN2_ZOOM_RECT},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ColorFormat},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleReloader},
         //{XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_EXTEND_PICTURE_HORIZONTAL},
