@@ -595,9 +595,6 @@ HRESULT XySubFilterConsumer::BreakConnect(PIN_DIRECTION dir)
     }
     else if(dir == PINDIR_OUTPUT)
     {
-        // not really needed, but may free up a little memory
-        CAutoLock cAutoLock(&m_csSubLock);
-        m_provider = NULL;
     }
 
     return __super::BreakConnect(dir);
