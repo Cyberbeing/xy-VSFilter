@@ -113,9 +113,10 @@ namespace DirectVobSubXyOptions
 
         BOOL_SUB_FRAME_USE_DST_ALPHA,
 
+        BIN2_TEXT_SETTINGS,//@see struct TextSettings
+
         //The following is not really supported yet
         void_LanguageName,
-        void_TextSettings,
         void_SubtitleTiming,
         void_ZoomRect,
         void_ColorFormat,
@@ -171,6 +172,14 @@ namespace DirectVobSubXyOptions
         RGB_CORRECTION_NEVER,
         RGB_CORRECTION_ALWAYS,
         RGB_CORRECTION_COUNT
+    };
+    struct TextSettings {
+        void* lf;
+        int lflen;
+        COLORREF color;
+        bool shadow;
+        bool outline;
+        bool advanced_renderer;
     };
     const XyOptionsImpl::Option DirectVobFilterOptions[] = {
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_COLOR_SPACE},
@@ -230,7 +239,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_BUFFER},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_POLYGONIZE},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_TextSettings},
+        {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_RW, BIN2_TEXT_SETTINGS},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FLIP_PICTURE},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FLIP_SUBTITLE},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_OSD},
@@ -328,7 +337,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_BUFFER},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_VOBSUBSETTINGS_POLYGONIZE},
-        {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_TextSettings},
+        {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_RW, BIN2_TEXT_SETTINGS},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleTiming},
         //{XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ZoomRect},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_SubtitleReloader},

@@ -297,7 +297,6 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case SIZE_USER_SPECIFIED_LAYOUT_SIZE:
     case DOUBLE_FPS:
     case INT_SELECTED_LANGUAGE:
-    case void_TextSettings:
     case BOOL_SUB_FRAME_USE_DST_ALPHA:
         m_context_id++;
         break;
@@ -322,6 +321,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case BOOL_VOBSUBSETTINGS_BUFFER:
     case BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS:
     case BOOL_VOBSUBSETTINGS_POLYGONIZE:
+    case BIN2_TEXT_SETTINGS:
         m_context_id++;
         if (m_last_requested!=-1)
         {
@@ -492,25 +492,6 @@ STDMETHODIMP XySubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 
             i -= pSubStream->GetStreamCount();
         }
-    }
-
-    return hr;
-}
-
-STDMETHODIMP XySubFilter::put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer)
-{
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(lf)<<XY_LOG_VAR_2_STR(lflen)<<XY_LOG_VAR_2_STR(color)
-        <<XY_LOG_VAR_2_STR(fShadow)<<XY_LOG_VAR_2_STR(fOutline)<<XY_LOG_VAR_2_STR(fAdvancedRenderer));
-    HRESULT hr = CDirectVobSub::put_TextSettings(lf, lflen, color, fShadow, fOutline, fAdvancedRenderer);
-
-    if(hr == NOERROR)
-    {
-        if (m_last_requested!=-1)
-        {
-            XY_LOG_WARN("Some subtitle frames are cached already!");
-            m_last_requested = -1;
-        }
-        InvalidateSubtitle();
     }
 
     return hr;

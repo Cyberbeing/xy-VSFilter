@@ -49,7 +49,6 @@ public:
     // IDirectVobSub
     STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
 
-    STDMETHODIMP put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer);
     STDMETHODIMP put_SubtitleTiming(int delay, int speedmul, int speeddiv);
 
     STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
