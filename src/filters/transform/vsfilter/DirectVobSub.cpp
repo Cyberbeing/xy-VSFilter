@@ -440,84 +440,88 @@ STDMETHODIMP CDirectVobSub::put_VobSubSettings(bool fBuffer, bool fOnlyShowForce
 
 STDMETHODIMP CDirectVobSub::get_TextSettings(void* lf, int lflen, COLORREF* color, bool* fShadow, bool* fOutline, bool* fAdvancedRenderer)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_TextSettings))
+    if (!TestOption(DirectVobSubXyOptions::BIN2_TEXT_SETTINGS, OPTION_TYPE_BIN2, OPTION_MODE_READ))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(&m_propsLock);
+    HRESULT hr = OnOptionReading(BIN2_TEXT_SETTINGS);
+    if (FAILED(hr))
+    {
+        XY_LOG_DEBUG("Failed to read text settings. "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+    if (lf)
+    {
+        if(lflen == sizeof(LOGFONTA))
+            strncpy_s(((LOGFONTA*)lf)->lfFaceName, LF_FACESIZE, CStringA(m_defStyle.fontName), _TRUNCATE);
+        else if(lflen == sizeof(LOGFONTW))
+            wcsncpy_s(((LOGFONTW*)lf)->lfFaceName, LF_FACESIZE, CStringW(m_defStyle.fontName), _TRUNCATE);
+        else
+            return E_INVALIDARG;
 
-	if(lf)
-	{
-		if(lflen == sizeof(LOGFONTA))
-			strncpy_s(((LOGFONTA*)lf)->lfFaceName, LF_FACESIZE, CStringA(m_defStyle.fontName), _TRUNCATE);
-		else if(lflen == sizeof(LOGFONTW))
-			wcsncpy_s(((LOGFONTW*)lf)->lfFaceName, LF_FACESIZE, CStringW(m_defStyle.fontName), _TRUNCATE);
-		else
-			return E_INVALIDARG;
+        ((LOGFONT*)lf)->lfCharSet = m_defStyle.charSet;
+        ((LOGFONT*)lf)->lfItalic = m_defStyle.fItalic;
+        ((LOGFONT*)lf)->lfHeight = m_defStyle.fontSize;
+        ((LOGFONT*)lf)->lfWeight = m_defStyle.fontWeight;
+        ((LOGFONT*)lf)->lfStrikeOut = m_defStyle.fStrikeOut;
+        ((LOGFONT*)lf)->lfUnderline = m_defStyle.fUnderline;
+    }
 
-		((LOGFONT*)lf)->lfCharSet = m_defStyle.charSet;
-		((LOGFONT*)lf)->lfItalic = m_defStyle.fItalic;
-		((LOGFONT*)lf)->lfHeight = m_defStyle.fontSize;
-		((LOGFONT*)lf)->lfWeight = m_defStyle.fontWeight;
-		((LOGFONT*)lf)->lfStrikeOut = m_defStyle.fStrikeOut;
-		((LOGFONT*)lf)->lfUnderline = m_defStyle.fUnderline;
-	}
+    if(color) *color = m_defStyle.colors[0];
+    if(fShadow) *fShadow = (m_defStyle.shadowDepthX>0) || (m_defStyle.shadowDepthY>0);
+    if(fOutline) *fOutline = (m_defStyle.outlineWidthX>0) || (m_defStyle.outlineWidthY>0);
+    if(fAdvancedRenderer) *fAdvancedRenderer = m_fAdvancedRenderer;
 
-	if(color) *color = m_defStyle.colors[0];
-	if(fShadow) *fShadow = (m_defStyle.shadowDepthX>0) || (m_defStyle.shadowDepthY>0);
-	if(fOutline) *fOutline = (m_defStyle.outlineWidthX>0) || (m_defStyle.outlineWidthY>0);
-	if(fAdvancedRenderer) *fAdvancedRenderer = m_fAdvancedRenderer;
-
-	return S_OK;
+    return S_OK;
 }
 
 STDMETHODIMP CDirectVobSub::put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_TextSettings))
+    if (!TestOption(DirectVobSubXyOptions::BIN2_TEXT_SETTINGS, OPTION_TYPE_BIN2, OPTION_MODE_WRITE))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(&m_propsLock);
     STSStyle tmp = m_defStyle;
-	if(lf)
-	{
-		if(lflen == sizeof(LOGFONTA))
-			tmp.fontName = ((LOGFONTA*)lf)->lfFaceName;
-		else if(lflen == sizeof(LOGFONTW))
-			tmp.fontName = ((LOGFONTW*)lf)->lfFaceName;
-		else
-			return E_INVALIDARG;
+    if(lf)
+    {
+        if(lflen == sizeof(LOGFONTA))
+            tmp.fontName = ((LOGFONTA*)lf)->lfFaceName;
+        else if(lflen == sizeof(LOGFONTW))
+            tmp.fontName = ((LOGFONTW*)lf)->lfFaceName;
+        else
+            return E_INVALIDARG;
 
-		tmp.charSet = ((LOGFONT*)lf)->lfCharSet;
-		tmp.fItalic = !!((LOGFONT*)lf)->lfItalic;
-		tmp.fontSize = ((LOGFONT*)lf)->lfHeight;
-		tmp.fontWeight = ((LOGFONT*)lf)->lfWeight;
-		tmp.fStrikeOut = !!((LOGFONT*)lf)->lfStrikeOut;
-		tmp.fUnderline = !!((LOGFONT*)lf)->lfUnderline;
+        tmp.charSet = ((LOGFONT*)lf)->lfCharSet;
+        tmp.fItalic = !!((LOGFONT*)lf)->lfItalic;
+        tmp.fontSize = ((LOGFONT*)lf)->lfHeight;
+        tmp.fontWeight = ((LOGFONT*)lf)->lfWeight;
+        tmp.fStrikeOut = !!((LOGFONT*)lf)->lfStrikeOut;
+        tmp.fUnderline = !!((LOGFONT*)lf)->lfUnderline;
 
-		if(tmp.fontSize < 0)
-		{
-			HDC hdc = ::GetDC(0);
-			m_defStyle.fontSize = -m_defStyle.fontSize * 72 / GetDeviceCaps(hdc, LOGPIXELSY);
-			::ReleaseDC(0, hdc);
-		}
+        if(tmp.fontSize < 0)
+        {
+            HDC hdc = ::GetDC(0);
+            m_defStyle.fontSize = -m_defStyle.fontSize * 72 / GetDeviceCaps(hdc, LOGPIXELSY);
+            ::ReleaseDC(0, hdc);
+        }
 
-	}
+    }
 
-	tmp.colors[0] = color;
-	tmp.shadowDepthX = tmp.shadowDepthY = fShadow?2:0;
-	tmp.outlineWidthX = tmp.outlineWidthY = fOutline?2:0;
+    tmp.colors[0] = color;
+    tmp.shadowDepthX = tmp.shadowDepthY = fShadow?2:0;
+    tmp.outlineWidthX = tmp.outlineWidthY = fOutline?2:0;
 
     if(tmp==m_defStyle) 
     {
         return S_FALSE;//Important! Avoid unnecessary deinit
     }
-    else 
+    else
     {
         m_defStyle = tmp;
-        return OnOptionChanged(void_TextSettings);
+        return OnOptionChanged(BIN2_TEXT_SETTINGS);
     }
-
 }
 
 STDMETHODIMP CDirectVobSub::get_Flip(bool* fPicture, bool* fSubtitles)
@@ -1100,7 +1104,7 @@ STDMETHODIMP CDirectVobSub::put_Forced(bool fForced)
 
 STDMETHODIMP CDirectVobSub::get_TextSettings(STSStyle* pDefStyle)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_TextSettings))
+    if (!TestOption(DirectVobSubXyOptions::BIN2_TEXT_SETTINGS))
     {
         return E_NOTIMPL;
     }
@@ -1115,7 +1119,7 @@ STDMETHODIMP CDirectVobSub::get_TextSettings(STSStyle* pDefStyle)
 
 STDMETHODIMP CDirectVobSub::put_TextSettings(STSStyle* pDefStyle)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_TextSettings))
+    if (!TestOption(DirectVobSubXyOptions::BIN2_TEXT_SETTINGS))
     {
         return E_NOTIMPL;
     }
@@ -1130,7 +1134,7 @@ STDMETHODIMP CDirectVobSub::put_TextSettings(STSStyle* pDefStyle)
 
     m_defStyle = *pDefStyle;
 
-    return OnOptionChanged(void_TextSettings);
+    return OnOptionChanged(BIN2_TEXT_SETTINGS);
 }
 
 STDMETHODIMP CDirectVobSub::get_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType)
@@ -1313,6 +1317,15 @@ STDMETHODIMP CDirectVobSub::XyGetBin2( unsigned field, void *value, int size )
             return E_INVALIDARG;
         }
         return get_XyFlyWeightInfo(reinterpret_cast<XyFlyWeightInfo*>(value));
+    case BIN2_TEXT_SETTINGS:
+        if (size!=sizeof(DirectVobSubXyOptions::TextSettings))
+        {
+            return E_INVALIDARG;
+        }
+        {
+            TextSettings* tmp = reinterpret_cast<TextSettings*>(value);
+            return get_TextSettings(tmp->lf, tmp->lflen, &tmp->color, &tmp->shadow, &tmp->outline, &tmp->advanced_renderer);
+        }
     }
     return E_NOTIMPL;
 }
@@ -1439,6 +1452,15 @@ STDMETHODIMP CDirectVobSub::XySetBin( unsigned field, LPVOID value, int size )
             return S_OK;
         }
         return S_FALSE;
+    case BIN2_TEXT_SETTINGS:
+        if (size!=sizeof(DirectVobSubXyOptions::TextSettings))
+        {
+            return E_INVALIDARG;
+        }
+        {
+            TextSettings* tmp = reinterpret_cast<TextSettings*>(value);
+            return put_TextSettings(tmp->lf,tmp->lflen, tmp->color, tmp->shadow, tmp->outline, tmp->advanced_renderer);
+        }
     }
     return E_NOTIMPL;
 }

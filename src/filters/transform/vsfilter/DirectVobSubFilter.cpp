@@ -1131,21 +1131,6 @@ STDMETHODIMP CDirectVobSubFilter::put_PreBuffering(bool fDoPreBuffering)
 	return hr;
 }
 
-STDMETHODIMP CDirectVobSubFilter::put_TextSettings(void* lf, int lflen, COLORREF color, bool fShadow, bool fOutline, bool fAdvancedRenderer)
-{
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(lf)<<XY_LOG_VAR_2_STR(lflen)<<XY_LOG_VAR_2_STR(color)
-        <<XY_LOG_VAR_2_STR(fShadow)<<XY_LOG_VAR_2_STR(fOutline)<<XY_LOG_VAR_2_STR(fAdvancedRenderer));
-	HRESULT hr = CDirectVobSub::put_TextSettings(lf, lflen, color, fShadow, fOutline, fAdvancedRenderer);
-
-	if(hr == NOERROR)
-	{
-//		UpdateSubtitle(true);
-		InvalidateSubtitle();
-	}
-
-	return hr;
-}
-
 STDMETHODIMP CDirectVobSubFilter::put_SubtitleTiming(int delay, int speedmul, int speeddiv)
 {
     XY_LOG_INFO(XY_LOG_VAR_2_STR(delay)<<XY_LOG_VAR_2_STR(speedmul)<<XY_LOG_VAR_2_STR(speeddiv));
@@ -2308,6 +2293,7 @@ HRESULT CDirectVobSubFilter::OnOptionChanged( unsigned field )
     case BOOL_VOBSUBSETTINGS_BUFFER:
     case BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS:
     case BOOL_VOBSUBSETTINGS_POLYGONIZE:
+    case BIN2_TEXT_SETTINGS:
         InvalidateSubtitle();
         break;
     }
