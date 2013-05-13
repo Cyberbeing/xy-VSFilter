@@ -273,6 +273,8 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     m_xy_bool_opt[BOOL_LOAD_SETTINGS_EXTENAL ] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD), 1);
     m_xy_bool_opt[BOOL_LOAD_SETTINGS_WEB     ] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD), 0);
     m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), 1);
+
+    m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0);
 }
 
 CDirectVobSub::~CDirectVobSub()
@@ -856,6 +858,8 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD     ), m_xy_bool_opt[BOOL_LOAD_SETTINGS_WEB     ] );
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] );
 
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED]);
+
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), CUR_SUPPORTED_FILTER_VERSION);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), XY_VSFILTER_VERSION_COMMIT);
     //
@@ -890,10 +894,7 @@ STDMETHODIMP CDirectVobSub::IsSubtitleReloaderLocked(bool* fLocked)
 
 	if(!fLocked) return E_POINTER; 
 
-	bool fDisabled;
-	get_SubtitleReloader(&fDisabled);
-
-	*fLocked = fDisabled || m_nReloaderDisableCount > 0;
+	*fLocked = m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED] || m_nReloaderDisableCount > 0;
 
 	return S_OK;
 }
@@ -917,36 +918,12 @@ STDMETHODIMP CDirectVobSub::LockSubtitleReloader(bool fLock)
 
 STDMETHODIMP CDirectVobSub::get_SubtitleReloader(bool* fDisabled)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_SubtitleReloader))
-    {
-        return E_NOTIMPL;
-    }
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-	CAutoLock cAutoLock(&m_propsLock);
-
-	if(fDisabled) *fDisabled = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0);
-
-	return S_OK;
+    return XyGetBool(DirectVobSubXyOptions::BOOL_SUBTITLE_RELOADER_DISABLED, fDisabled);
 }
 
 STDMETHODIMP CDirectVobSub::put_SubtitleReloader(bool fDisable)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_SubtitleReloader))
-    {
-        return E_NOTIMPL;
-    }
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-	CAutoLock cAutoLock(&m_propsLock);
-
-	bool b;
-	get_SubtitleReloader(&b);
-	if(b == fDisable) return S_FALSE;
-
-	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), fDisable);
-
-    return OnOptionChanged(void_SubtitleReloader);
+    return XySetBool(DirectVobSubXyOptions::BOOL_SUBTITLE_RELOADER_DISABLED, fDisable);
 }
 
 STDMETHODIMP CDirectVobSub::get_ExtendPicture(int* horizontal, int* vertical, int* resx2, int* resx2minw, int* resx2minh)
