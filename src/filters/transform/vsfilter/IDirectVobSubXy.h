@@ -117,13 +117,13 @@ namespace DirectVobSubXyOptions
         BIN2_SUBTITLE_TIMING,//@see struct SubtitleTiming
         BIN2_ZOOM_RECT,//@see: NORMALIZEDRECT
 
+        BOOL_SUBTITLE_RELOADER_DISABLED,
+        BOOL_SUBTITLE_RELOADER_LOCK,//NOTE: important! Set this field to true/false to lock/unlock subtitle reloader.
+
         //The following is not really supported yet
         void_LanguageName,
-
-        BOOL_SUBTITLE_RELOADER_DISABLED,
         void_HasConfigDialog,
         void_ShowConfigDialog,
-        BOOL_SUBTITLE_RELOADER_LOCK,//NOTE: important! Set this field to true/false to lock/unlock subtitle reloader.
         void_AdviseSubClock,
 
         OPTION_COUNT
