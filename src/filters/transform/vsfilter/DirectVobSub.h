@@ -87,6 +87,8 @@ protected:
 	CComPtr<ISubClock> m_pSubClock;
 
 public:
+    // XyOptionsImpl
+    HRESULT OnOptionReading(unsigned field);
 
     // IXyOptions
 

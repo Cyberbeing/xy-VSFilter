@@ -886,34 +886,27 @@ STDMETHODIMP CDirectVobSub::ShowConfigDialog(int iSelected, HWND hWndParent)
 
 STDMETHODIMP CDirectVobSub::IsSubtitleReloaderLocked(bool* fLocked)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_IsSubtitleReloaderLocked))
-    {
-        return E_NOTIMPL;
-    }
-	CAutoLock cAutoLock(&m_propsLock);
-
-	if(!fLocked) return E_POINTER; 
-
-	*fLocked = m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED] || m_nReloaderDisableCount > 0;
-
-	return S_OK;
+    return XyGetBool(DirectVobSubXyOptions::BOOL_SUBTITLE_RELOADER_LOCK, fLocked);
 }
 
 STDMETHODIMP CDirectVobSub::LockSubtitleReloader(bool fLock)
 {
-    if (!TestOption(DirectVobSubXyOptions::void_LockSubtitleReloader))
+    if (!TestOption(DirectVobSubXyOptions::BOOL_SUBTITLE_RELOADER_LOCK, OPTION_TYPE_BOOL, OPTION_MODE_WRITE))
     {
         return E_NOTIMPL;
     }
-	CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(&m_propsLock);
 
-	if(fLock) m_nReloaderDisableCount++;
-	else m_nReloaderDisableCount--;
+    if(fLock) m_nReloaderDisableCount++;
+    else m_nReloaderDisableCount--;
 
-	ASSERT(m_nReloaderDisableCount >= 0);
-	if(m_nReloaderDisableCount < 0) m_nReloaderDisableCount = 0;
+    ASSERT(m_nReloaderDisableCount >= 0);
+    if (m_nReloaderDisableCount < 0) {
+        XY_LOG_ERROR("Unexpected state. Lock & unlock calls on Subtitle reloader missed matched or the object is not initiated properly");
+        m_nReloaderDisableCount = 0;
+    }
 
-	return S_OK;
+    return OnOptionChanged(BOOL_SUBTITLE_RELOADER_LOCK);
 }
 
 STDMETHODIMP CDirectVobSub::get_SubtitleReloader(bool* fDisabled)
@@ -1167,11 +1160,22 @@ UINT CDirectVobSub::GetCompatibleProfileInt( LPCTSTR lpszSection, LPCTSTR lpszEn
     return result;
 }
 
+// XyOptionsImpl
+
+HRESULT CDirectVobSub::OnOptionReading( unsigned field )
+{
+    switch(field) {
+    case BOOL_SUBTITLE_RELOADER_LOCK:
+        m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_LOCK] = m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED] || m_nReloaderDisableCount > 0;
+        break;
+    }
+    return S_OK;
+}
+
 // IXyOptions
 
 STDMETHODIMP CDirectVobSub::XyGetBool( unsigned field, bool *value )
 {
-    CAutoLock cAutoLock(&m_propsLock);
     return XyOptionsImpl::XyGetBool(field, value);
 }
 
@@ -1338,6 +1342,11 @@ STDMETHODIMP CDirectVobSub::XyGetBin2( unsigned field, void *value, int size )
 
 STDMETHODIMP CDirectVobSub::XySetBool( unsigned field, bool value )
 {
+    switch(field)
+    {
+    case DirectVobSubXyOptions::BOOL_SUBTITLE_RELOADER_LOCK:
+        return LockSubtitleReloader(value);
+    }
     CAutoLock cAutoLock(&m_propsLock);
     return XyOptionsImpl::XySetBool(field, value);
 }
