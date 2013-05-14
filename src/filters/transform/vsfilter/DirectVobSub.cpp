@@ -275,6 +275,8 @@ CDirectVobSub::CDirectVobSub(const Option *options)
     m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), 1);
 
     m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0);
+
+    m_xy_bool_opt[BOOL_ENABLE_ZP_ICON] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0);
 }
 
 CDirectVobSub::~CDirectVobSub()
@@ -859,6 +861,8 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] );
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED]);
+
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), m_xy_bool_opt[BOOL_ENABLE_ZP_ICON]);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), CUR_SUPPORTED_FILTER_VERSION);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), XY_VSFILTER_VERSION_COMMIT);

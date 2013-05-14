@@ -120,6 +120,8 @@ namespace DirectVobSubXyOptions
         BOOL_SUBTITLE_RELOADER_DISABLED,
         BOOL_SUBTITLE_RELOADER_LOCK,//NOTE: important! Set this field to true/false to lock/unlock subtitle reloader.
 
+        BOOL_ENABLE_ZP_ICON,
+
         //The following is not really supported yet
         void_LanguageName,
         void_HasConfigDialog,
