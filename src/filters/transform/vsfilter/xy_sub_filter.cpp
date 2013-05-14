@@ -413,7 +413,6 @@ STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
     {
     case DirectVobSubXyOptions::INT_COLOR_SPACE:
     case DirectVobSubXyOptions::INT_YUV_RANGE:
-        //fix me: are they supported?
         SetYuvMatrix();
         break;
     case DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM:
