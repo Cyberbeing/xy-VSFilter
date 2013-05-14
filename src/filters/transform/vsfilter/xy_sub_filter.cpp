@@ -82,7 +82,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     m_tbid.hSystrayWnd = NULL;
     m_tbid.graph = NULL;
     m_tbid.fRunOnce = false;
-    m_tbid.fShowIcon = (theApp.m_AppName.Find(_T("zplayer"), 0) < 0 || !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0));
+    m_tbid.fShowIcon = (theApp.m_AppName.Find(_T("zplayer"), 0) < 0 || m_xy_bool_opt[BOOL_ENABLE_ZP_ICON]);
 }
 
 XySubFilter::~XySubFilter()

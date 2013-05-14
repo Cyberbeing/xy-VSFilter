@@ -120,6 +120,8 @@ namespace DirectVobSubXyOptions
         BOOL_SUBTITLE_RELOADER_DISABLED,
         BOOL_SUBTITLE_RELOADER_LOCK,//NOTE: important! Set this field to true/false to lock/unlock subtitle reloader.
 
+        BOOL_ENABLE_ZP_ICON,
+
         //The following is not really supported yet
         void_LanguageName,
         void_HasConfigDialog,
@@ -264,6 +266,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_ShowConfigDialog},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, BOOL_SUBTITLE_RELOADER_LOCK},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AdviseSubClock},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_ENABLE_ZP_ICON},
 
         {XyOptionsImpl::OPTION_TYPE_END_FLAG}
     };
