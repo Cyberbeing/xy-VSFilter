@@ -141,11 +141,11 @@ bool BitBltFromI420ToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* 
 	srcbm.pitch3	= srcpitch/2;
 
 	VDPixmap dstpxm = {
-		(char *)dst + dstpitch * (h - 1),
+		dst,
 		NULL,
 		w,
 		h,
-		-dstpitch
+		dstpitch
 	};
 
 	switch(dbpp) {
@@ -275,11 +275,11 @@ bool BitBltFromYUY2ToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* 
 	srcbm.format	= nsVDPixmap::kPixFormat_YUV422_YUYV;
 
 	VDPixmap dstpxm = {
-		(char *)dst + dstpitch * (h - 1),
+		dst,
 		NULL,
 		w,
 		h,
-		-dstpitch
+		dstpitch
 	};
 
 	switch(dbpp) {
