@@ -279,7 +279,7 @@ static void LogStyles(const CSTSStyleMap& styles)
 
     for(POSITION pos=styles.GetStartPosition(); pos!=NULL;)
     {
-        TRACE_SUB("\tm_styles[%s]"<<styles.GetNextKey(pos));
+        TRACE_SUB("\tm_styles["<<styles.GetNextKey(pos)<<"]");
     }
 #endif
 }
