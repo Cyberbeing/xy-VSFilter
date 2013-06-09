@@ -74,9 +74,12 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     ASSERT(SUCCEEDED(*phr));
     if(phr && FAILED(*phr)) return;
 
-    CAMThread::Create();
+    m_frd.ThreadStartedEvent.Create(0, FALSE, FALSE, 0);
     m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
     m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
+    CAMThread::Create();
+
+    WaitForSingleObject(m_frd.ThreadStartedEvent, INFINITE);
 
     m_tbid.WndCreatedEvent.Create(0, FALSE, FALSE, 0);
     m_tbid.hSystrayWnd = NULL;
@@ -930,7 +933,7 @@ DWORD XySubFilter::ThreadProc()
     CAtlArray<HANDLE> handles;
 
     SetupFRD(paths, handles);
-
+    m_frd.ThreadStartedEvent.Set();
     while(1)
     {
         DWORD idx = WaitForMultipleObjects(handles.GetCount(), handles.GetData(), FALSE, INFINITE);
