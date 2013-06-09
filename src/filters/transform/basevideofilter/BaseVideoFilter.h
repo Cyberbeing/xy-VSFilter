@@ -127,4 +127,8 @@ public:
 
     HRESULT CheckMediaType(const CMediaType* mtOut);
     //STDMETHODIMP EnumMediaTypes( IEnumMediaTypes **ppEnum );
+
+    HRESULT CompleteConnect(IPin *pReceivePin);
+protected:
+    CBaseVideoFilter * m_pFilter;
 };
