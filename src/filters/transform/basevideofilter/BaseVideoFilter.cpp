@@ -826,15 +826,12 @@ void CBaseVideoFilter::InitOutputColorSpaces()
     GetOutputColorspaces(preferredOrder, &count);
     if( CombineOutputPriority(preferredOrder, &count)==S_OK )
     {
-        m_outputFmtCount = count;
-        for (UINT i=0;i<count;i++)
-        {
-            m_outputFmt[i] = OutputFmts + preferredOrder[i];
-        }
+        //log
     }
-    else
+    m_outputFmtCount = count;
+    for (UINT i=0;i<count;i++)
     {
-        m_outputFmtCount = -1;
+        m_outputFmt[i] = OutputFmts + preferredOrder[i];
     }
 }
 
@@ -921,7 +918,6 @@ HRESULT CBaseVideoFilter::CombineOutputPriority( ColorSpaceId *preferredOrder, U
         
         if( GetUpstreamOutputPriority(priorities1, total_count) == VFW_E_ALREADY_CONNECTED )
         {
-            *count = 0;
             return VFW_E_ALREADY_CONNECTED;
         }
 
