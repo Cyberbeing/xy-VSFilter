@@ -102,9 +102,12 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
     m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, &hr));
     ASSERT(SUCCEEDED(hr));
 
-    CAMThread::Create();
+    m_frd.ThreadStartedEvent.Create(0, FALSE, FALSE, 0);
     m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
     m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
+    CAMThread::Create();
+
+    WaitForSingleObject(m_frd.ThreadStartedEvent, INFINITE);
 
     memset(&m_CurrentVIH2, 0, sizeof(VIDEOINFOHEADER2));
 
@@ -128,7 +131,9 @@ CDirectVobSubFilter::~CDirectVobSubFilter()
     for(size_t i = 0; i < m_pTextInput.GetCount(); i++)
         delete m_pTextInput[i];
 
+    XY_LOG_INFO("Closing ThreadProc");
     m_frd.EndThreadEvent.Set();
+    XY_LOG_INFO("EndThreadEvent set");
     CAMThread::Close();
 
     ::DeleteSystray(&m_hSystrayThread, &m_tbid);
@@ -1990,14 +1995,15 @@ void CDirectVobSubFilter::SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handl
 
 DWORD CDirectVobSubFilter::ThreadProc()
 {
-    XY_LOG_INFO("");
+    XY_LOG_INFO("ThreadProc start");
 	SetThreadPriority(m_hThread, THREAD_PRIORITY_LOWEST/*THREAD_PRIORITY_BELOW_NORMAL*/);
 
 	CStringArray paths;
 	CAtlArray<HANDLE> handles;
 
 	SetupFRD(paths, handles);
-
+    m_frd.ThreadStartedEvent.Set();
+    XY_LOG_INFO("ThreadProc Loop start");
 	while(1)
 	{
 		DWORD idx = WaitForMultipleObjects(handles.GetCount(), handles.GetData(), FALSE, INFINITE);
@@ -2073,12 +2079,12 @@ DWORD CDirectVobSubFilter::ThreadProc()
 			break;
 		}
 	}
-
+    XY_LOG_INFO("ThreadProc Loop exit");
 	for(size_t i = 2; i < handles.GetCount(); i++)
 	{
 		FindCloseChangeNotification(handles[i]);
 	}
-
+    XY_LOG_INFO("ThreadProc exit");
 	return 0;
 }
 
