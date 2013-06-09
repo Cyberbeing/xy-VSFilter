@@ -105,7 +105,7 @@ private:
     class CFileReloaderData
     {
     public:
-        ATL::CEvent EndThreadEvent, RefreshEvent;
+        ATL::CEvent ThreadStartedEvent, EndThreadEvent, RefreshEvent;
         CAtlList<CString> files;
         CAtlArray<CTime> mtime;
     } m_frd;
