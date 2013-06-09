@@ -489,9 +489,9 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
         HRESULT hr;
 
         bool can_reconnect = false;
-        bool can_transform = (DoCheckTransform(mtIn, mtOut, true)==S_OK);
+        bool can_transform = (CheckTransform(mtIn, mtOut)==S_OK);
         if( mtIn->subtype!=mtOut->subtype )
-        {   
+        {
             position = GetOutputSubtypePosition(mtOut->subtype);
             if(position>=0)
             {
@@ -502,7 +502,7 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
                 }
                 else
                 {
-                    hr = DoCheckTransform(&desiredMt, mtOut, true);
+                    hr = CheckTransform(&desiredMt, mtOut);
                     if (hr!=S_OK)
                     {
                         DbgLog((LOG_TRACE, 3, TEXT("Transform not accept:")));
@@ -530,45 +530,24 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
                 XY_LOG_ERROR("Cannot use the same subtype!");
             }
         }
-        if(!can_reconnect && !can_transform)
-        {
-            position = 0;
-            do
-            {                
-                hr = GetMediaType(position, &desiredMt);
-                ++position;
-                //if( FAILED(hr) )
-                if( hr!=S_OK )
-                    break;
-
-                DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
-                DisplayType(0, &desiredMt);
-
-                if( DoCheckTransform(&desiredMt, mtOut, true)!=S_OK ||
-                    m_pInput->GetConnected()->QueryAccept(&desiredMt)!=S_OK )
-                {
-                    continue;
-                }
-                else
-                {
-                    can_reconnect = true;
-                    break;
-                }
-            } while ( true );
-        }
         if ( can_reconnect )
         {
             if (SUCCEEDED(ReconnectPin(m_pInput, &desiredMt)))
             {
                 reconnected = true;
-                DumpGraph(m_pGraph,0);
                 //m_pInput->SetMediaType(&desiredMt);
-                DbgLog((LOG_TRACE, 3, TEXT("reconnected succeed!")));
+                XY_LOG_INFO(_T("Reconnect succeeded!")<<GuidNames[desiredMt.subtype]);
+            }
+            else
+            {
+                XY_LOG_ERROR("Failed to reconnect input pin!"<<GuidNames[desiredMt.subtype]);
+                return E_FAIL;
             }
         }
         else if(!can_transform)
         {
-            DbgLog((LOG_TRACE, 3, TEXT("Failed to agree reconnect type!")));
+            XY_LOG_ERROR("Can neither transform with the current in/out media type or reconnect with out media type!"
+                <<XY_LOG_VAR_2_STR(GuidNames[mtIn->subtype])<<XY_LOG_VAR_2_STR(GuidNames[mtOut->subtype]));
             if(m_pInput->IsConnected())
             {
                 m_pInput->GetConnected()->Disconnect();
@@ -597,7 +576,7 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
     }
 
     HRESULT hr = __super::CompleteConnect(dir, pReceivePin);
-    DbgLog((LOG_TRACE, 3, TEXT("connect fininshed!")));
+    XY_LOG_INFO(_T("Connection fininshed!")<<XY_LOG_VAR_2_STR(hr));
     DumpGraph(m_pGraph,0);
     return hr;
 }
@@ -1427,7 +1406,7 @@ HRESULT CDirectVobSubFilter2::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pNam
 
 HRESULT CDirectVobSubFilter2::CheckInputType(const CMediaType* mtIn)
 {
-    XY_LOG_INFO(mtIn);
+    XY_LOG_INFO((mtIn?GuidNames[mtIn->subtype]:"NULL"));
     HRESULT hr = __super::CheckInputType(mtIn);
 
 	if(FAILED(hr) || m_pInput->IsConnected()) return hr;

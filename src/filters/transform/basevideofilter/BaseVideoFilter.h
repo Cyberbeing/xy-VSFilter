@@ -78,7 +78,6 @@ protected:
     virtual void GetOutputColorspaces(ColorSpaceId *preferredOrder, UINT *count);
     HRESULT GetUpstreamOutputPriority(int *priorities, UINT count);
     HRESULT CombineOutputPriority( ColorSpaceId *preferredOrder, UINT *count );
-    HRESULT DoCheckTransform(const CMediaType* mtIn, const CMediaType* mtOut, bool checkReconnection);
     int GetInputSubtypePosition(const GUID& subtype);
     int GetOutputSubtypePosition( const GUID& subtype, int startPos =0 );    
 public:
@@ -91,6 +90,7 @@ public:
     HRESULT CheckInputType(const CMediaType* mtIn);
 	HRESULT CheckOutputType(const CMediaType& mtOut);
     HRESULT CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut);
+    HRESULT CheckReconnect(const CMediaType* mtIn, const CMediaType* mtOut);
     HRESULT DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_PROPERTIES* pProperties);
     HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);    
 	HRESULT SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt);
