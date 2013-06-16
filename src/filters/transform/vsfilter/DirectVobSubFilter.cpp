@@ -88,9 +88,12 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	m_pTextInput.Add(new CTextInputPin(this, m_pLock, &m_csSubLock, &hr));
 	ASSERT(SUCCEEDED(hr));
 
-	CAMThread::Create();
-	m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
-	m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
+    m_frd.ThreadStartedEvent.Create(0, FALSE, FALSE, 0);
+    m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
+    m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
+    CAMThread::Create();
+
+    WaitForSingleObject(m_frd.ThreadStartedEvent, INFINITE);
 
 	memset(&m_CurrentVIH2, 0, sizeof(VIDEOINFOHEADER2));
 
@@ -2074,6 +2077,7 @@ DWORD CDirectVobSubFilter::ThreadProc()
 	CAtlArray<HANDLE> handles;
 
 	SetupFRD(paths, handles);
+    m_frd.ThreadStartedEvent.Set();
 
 	while(1)
 	{
