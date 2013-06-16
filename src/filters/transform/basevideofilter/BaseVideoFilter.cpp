@@ -910,24 +910,24 @@ HRESULT CBaseVideoFilter::GetUpstreamOutputPriority( int *priorities, UINT count
 }
 
 HRESULT CBaseVideoFilter::CombineOutputPriority( ColorSpaceId *preferredOrder, UINT *count )
-{   
+{
+    int priorities1[MAX_COLOR_SPACE_NUM];
+    UINT total_count = GetOutputColorSpaceNumber();
+
+    if( GetUpstreamOutputPriority(priorities1, total_count) == VFW_E_ALREADY_CONNECTED )
+    {
+        return VFW_E_ALREADY_CONNECTED;
+    }
     if (!m_donot_follow_upstream_preferred_order)
     {
-        int priorities1[MAX_COLOR_SPACE_NUM];
-        UINT total_count = GetOutputColorSpaceNumber();
-        
-        if( GetUpstreamOutputPriority(priorities1, total_count) == VFW_E_ALREADY_CONNECTED )
-        {
-            return VFW_E_ALREADY_CONNECTED;
-        }
-
         for (UINT i=0;i<*count;i++)
         {
             int c = preferredOrder[i];
-            priorities1[c] = ((priorities1[c]+1)<<16) + c;
+            priorities1[c] = (priorities1[c]<<16) + c;
         }
         std::sort(priorities1, priorities1+total_count);
-        for (int i=total_count-1;i>=0;i--)
+        int i=total_count-1;
+        for (;i>=0;i--)
         {
             if( priorities1[i]>=(1<<16) )//enabled 
             {
@@ -938,6 +938,19 @@ HRESULT CBaseVideoFilter::CombineOutputPriority( ColorSpaceId *preferredOrder, U
                 break;
             }
         }
+        *count = total_count-1 - i;
+    }
+    else
+    {
+        int j = 0;
+        for (UINT i=0;i<*count;i++)
+        {
+            int c = preferredOrder[i];
+            if (priorities1[c] > 0) {
+                preferredOrder[j++] = c;
+            }
+        }
+        *count = j;
     }
     return S_OK;
 }
