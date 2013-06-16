@@ -635,9 +635,11 @@ HRESULT CBaseVideoFilter::CheckTransform(const CMediaType* mtIn, const CMediaTyp
 HRESULT CBaseVideoFilter::CheckOutputType(const CMediaType& mtOut)
 {
 	int wout = 0, hout = 0, arxout = 0, aryout = 0;
+    CMediaType &mt = m_pOutput->CurrentMediaType();
 	return ExtractDim(&mtOut, wout, hout, arxout, aryout)
 		&& m_h == abs((int)hout)
 		&& mtOut.subtype != MEDIASUBTYPE_ARGB32
+        && mtOut.subtype == mt.subtype
         && GetOutputSubtypePosition(mtOut.subtype)!=-1
 		? S_OK
 		: VFW_E_TYPE_NOT_ACCEPTED;
