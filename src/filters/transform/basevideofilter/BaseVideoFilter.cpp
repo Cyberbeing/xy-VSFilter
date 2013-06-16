@@ -486,74 +486,13 @@ HRESULT CBaseVideoFilter::CheckInputType(const CMediaType* mtIn)
 		: VFW_E_TYPE_NOT_ACCEPTED;
 }
 
-HRESULT CBaseVideoFilter::DoCheckTransform( const CMediaType* mtIn, const CMediaType* mtOut, bool checkReconnection )
+HRESULT CBaseVideoFilter::CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut)
 {
-    DbgLog((LOG_TRACE, 3, __FUNCTIONW__));
-    //DumpGraph(m_pGraph, 0);
-    if( FAILED(CheckInputType(mtIn)) || mtOut->majortype != MEDIATYPE_Video || 
-        GetOutputSubtypePosition(mtOut->subtype)==-1 )
+    if (GetInputSubtypePosition(mtIn->subtype)<0 || GetOutputSubtypePosition(mtOut->subtype)<0)
         return VFW_E_TYPE_NOT_ACCEPTED;
 
-    if( !checkReconnection && 
-        mtOut->subtype != mtIn->subtype )
-    {            
-        bool can_reconnect = false;
-        CMediaType desiredMt;
-        int position = 0;
-        HRESULT hr;
-
-        position = GetOutputSubtypePosition(mtOut->subtype);
-        if(position>=0)
-        {
-            hr = GetMediaType(position, &desiredMt);  
-            if (hr!=S_OK)
-            {
-                DbgLog((LOG_ERROR, 3, TEXT("Unexpected error when GetMediaType, position:%d"), position));
-            }
-            else
-            {
-                hr = DoCheckTransform(&desiredMt, mtOut, true);
-                if (hr!=S_OK)
-                {
-                    DbgLog((LOG_TRACE, 3, TEXT("Transform not accept:")));
-                    DisplayType(0,&desiredMt);
-                    DisplayType(0,mtOut);
-                }
-                else
-                {
-                    hr = m_pInput->GetConnected()->QueryAccept(&desiredMt);
-                    if(hr!=S_OK)
-                    {
-                        DbgLog((LOG_TRACE, 3, TEXT("Upstream not accept:")));
-                        DisplayType(0, &desiredMt);
-                    }
-                    else
-                    {
-                        can_reconnect = true;
-                    }
-                }
-            }
-        }          
-
-        if ( can_reconnect )
-        {
-            DbgLog((LOG_TRACE, 3, TEXT("agree input media type:")));
-            DisplayType(0, &desiredMt);
-            return S_OK;
-        }
-    }   
-
     bool can_transform = true;
-    if ( mtIn->subtype == MEDIASUBTYPE_P010 
-        || mtIn->subtype == MEDIASUBTYPE_P016
-        || mtIn->subtype == MEDIASUBTYPE_NV12
-        || mtIn->subtype == MEDIASUBTYPE_NV21
-        || mtIn->subtype == MEDIASUBTYPE_AYUV )
-    {
-        if( mtOut->subtype!=mtIn->subtype )
-            can_transform = false;
-    }
-    else if( mtIn->subtype == MEDIASUBTYPE_YV12 
+    if( mtIn->subtype == MEDIASUBTYPE_YV12
         || mtIn->subtype == MEDIASUBTYPE_I420 
         || mtIn->subtype == MEDIASUBTYPE_IYUV )
     {
@@ -587,49 +526,59 @@ HRESULT CBaseVideoFilter::DoCheckTransform( const CMediaType* mtIn, const CMedia
             && mtOut->subtype != MEDIASUBTYPE_RGB565)
             can_transform = false;
     }
-
-    if (!can_transform && !checkReconnection)
+    else
     {
-        bool can_reconnect = false;
-        CMediaType desiredMt;
-        int position = 0;
-        HRESULT hr;
-        do
-        {            
-            hr = GetMediaType(position, &desiredMt);
-            ++position;
-            if( hr!=S_OK )
-                break;
-            DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
-            DisplayType(0, &desiredMt);
-            if( DoCheckTransform(&desiredMt, mtOut, true)!=S_OK ||
-                m_pInput->GetConnected()->QueryAccept(&desiredMt)!=S_OK )
-            {
-                continue;
-            }
-            else
-            {
-                can_reconnect = true;
-                break;
-            }
-        } while ( true );
-        if ( can_reconnect )
-        {
-            DbgLog((LOG_TRACE, 3, TEXT("agree input media type:")));
-            DisplayType(0, &desiredMt);
-            return S_OK;
-        }
+        can_transform = ((mtOut->subtype==mtIn->subtype)==TRUE);
     }
-    else if(can_transform)
+    if (can_transform)
     {
         return S_OK;
     }
     return VFW_E_TYPE_NOT_ACCEPTED;
 }
 
-HRESULT CBaseVideoFilter::CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut)
+HRESULT CBaseVideoFilter::CheckReconnect( const CMediaType* mtIn, const CMediaType* mtOut )
 {
-    return DoCheckTransform(mtIn, mtOut, false);
+    bool can_reconnect = false;
+    CMediaType desiredMt;
+    int position = 0;
+    HRESULT hr;
+
+    position = GetOutputSubtypePosition(mtOut->subtype);
+    if (position>=0)
+    {
+        hr = GetMediaType(position, &desiredMt);
+        if (hr!=S_OK)
+        {
+            //log
+        }
+        else
+        {
+            hr = CheckTransform(&desiredMt, mtOut);
+            if (hr!=S_OK)
+            {
+                //log
+            }
+            else
+            {
+                hr = m_pInput->GetConnected()->QueryAccept(&desiredMt);
+                if(hr!=S_OK)
+                {
+                    //log
+                }
+                else
+                {
+                    can_reconnect = true;
+                }
+            }
+        }
+    }
+
+    if ( can_reconnect )
+    {
+        return S_OK;
+    }
+    return VFW_E_TYPE_NOT_ACCEPTED;
 }
 
 HRESULT CBaseVideoFilter::CheckOutputType(const CMediaType& mtOut)
@@ -1070,13 +1019,26 @@ CBaseVideoOutputPin::CBaseVideoOutputPin(TCHAR* pObjectName, CBaseVideoFilter* p
 
 HRESULT CBaseVideoOutputPin::CheckMediaType(const CMediaType* mtOut)
 {
-	if(IsConnected())
-	{
-		HRESULT hr = ((CBaseVideoFilter*)m_pFilter)->CheckOutputType(*mtOut);
-		if(FAILED(hr)) return hr;
-	}
+    HRESULT hr = S_OK;
+    if (IsConnected())
+    {
+        hr = ((CBaseVideoFilter*)m_pFilter)->CheckOutputType(*mtOut);
+        if(FAILED(hr)) return hr;
+    }
 
-	return __super::CheckMediaType(mtOut);
+    ASSERT(m_pFilter->m_pInput != NULL);
+    if ((m_pFilter->m_pInput->IsConnected() == FALSE)) {
+        return E_INVALIDARG;
+    }
+
+    hr = m_pFilter->CheckTransform(
+        &m_pFilter->m_pInput->CurrentMediaType(),
+        mtOut);
+    if (FAILED(hr))
+    {
+        hr = m_pFilter->CheckReconnect(&m_pFilter->m_pInput->CurrentMediaType(), mtOut);
+    }
+    return hr;
 }
 
 // CBaseVideoOutputPin::CompleteConnect() calls CBaseOutputPin::CompleteConnect()

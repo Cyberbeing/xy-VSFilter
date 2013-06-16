@@ -490,7 +490,7 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
         HRESULT hr;
 
         bool can_reconnect = false;
-        bool can_transform = (DoCheckTransform(mtIn, mtOut, true)==S_OK);
+        bool can_transform = (CheckTransform(mtIn, mtOut)==S_OK);
         if( mtIn->subtype!=mtOut->subtype )
         {   
             position = GetOutputSubtypePosition(mtOut->subtype);
@@ -503,7 +503,7 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
                 }
                 else
                 {
-                    hr = DoCheckTransform(&desiredMt, mtOut, true);
+                    hr = CheckTransform(&desiredMt, mtOut);
                     if (hr!=S_OK)
                     {
                         DbgLog((LOG_TRACE, 3, TEXT("Transform not accept:")));
@@ -531,40 +531,18 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
                 DbgLog((LOG_ERROR, 3, TEXT("Cannot use the same subtype!")));
             }
         }
-        if(!can_reconnect && !can_transform)
-        {
-            position = 0;
-            do
-            {                
-                hr = GetMediaType(position, &desiredMt);
-                ++position;
-                //if( FAILED(hr) )
-                if( hr!=S_OK )
-                    break;
-
-                DbgLog((LOG_TRACE, 3, TEXT("Checking reconnect with media type:")));
-                DisplayType(0, &desiredMt);
-
-                if( DoCheckTransform(&desiredMt, mtOut, true)!=S_OK ||
-                    m_pInput->GetConnected()->QueryAccept(&desiredMt)!=S_OK )
-                {
-                    continue;
-                }
-                else
-                {
-                    can_reconnect = true;
-                    break;
-                }
-            } while ( true );
-        }
         if ( can_reconnect )
         {
             if (SUCCEEDED(ReconnectPin(m_pInput, &desiredMt)))
             {
                 reconnected = true;
-                DumpGraph(m_pGraph,0);
                 //m_pInput->SetMediaType(&desiredMt);
                 DbgLog((LOG_TRACE, 3, TEXT("reconnected succeed!")));
+            }
+            else
+            {
+                //log
+                return E_FAIL;
             }
         }
         else if(!can_transform)
