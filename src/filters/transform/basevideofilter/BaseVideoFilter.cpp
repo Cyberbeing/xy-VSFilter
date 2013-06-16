@@ -1053,6 +1053,7 @@ STDMETHODIMP CBaseVideoInputPin::ReceiveConnection(IPin* pConnector, const AM_ME
 
 CBaseVideoOutputPin::CBaseVideoOutputPin(TCHAR* pObjectName, CBaseVideoFilter* pFilter, HRESULT* phr, LPCWSTR pName)
 	: CTransformOutputPin(pObjectName, pFilter, phr, pName)
+    , m_pFilter(pFilter)
 {
 }
 
@@ -1065,6 +1066,22 @@ HRESULT CBaseVideoOutputPin::CheckMediaType(const CMediaType* mtOut)
 	}
 
 	return __super::CheckMediaType(mtOut);
+}
+
+// CBaseVideoOutputPin::CompleteConnect() calls CBaseOutputPin::CompleteConnect()
+// and then calls CTransInPlaceFilter::CompleteConnect().  It does this because 
+// CBaseVideoOutputPin::CompleteConnect() can reconnect a pin and we do not want to 
+// reconnect a pin if CBaseOutputPin::CompleteConnect() fails.  
+// CBaseOutputPin::CompleteConnect() often fails when our output pin is being connected 
+// to the Video Mixing Renderer.
+HRESULT CBaseVideoOutputPin::CompleteConnect( IPin *pReceivePin )
+{
+    HRESULT hr = CBaseOutputPin::CompleteConnect(pReceivePin);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    return m_pFilter->CompleteConnect(PINDIR_OUTPUT,pReceivePin);
 }
 
 //// EnumMediaTypes
