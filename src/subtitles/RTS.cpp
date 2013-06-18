@@ -1976,6 +1976,7 @@ void CRenderedTextSubtitle::OnChanged()
 
 bool CRenderedTextSubtitle::Init( const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect )
 {
+    XY_LOG_INFO(_T(""));
     Deinit();
     m_size_scale_to = CSize(size_scale_to.cx*8, size_scale_to.cy*8);//fix me?
     m_size = CSize(size1.cx*8, size1.cy*8);
