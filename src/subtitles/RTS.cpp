@@ -3439,7 +3439,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     }
 
     CComPtr<IXySubRenderFrame> sub_render_frame;
-    HRESULT hr = RenderEx(&sub_render_frame, spd.type, video_rect, output_size, rt, fps);
+    HRESULT hr = RenderEx(&sub_render_frame, spd.type, video_rect, video_rect, output_size, rt, fps);
     if (SUCCEEDED(hr) && sub_render_frame)
     {
         int count = 0;
@@ -3485,8 +3485,8 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     return (!rectList.IsEmpty()) ? S_OK : S_FALSE;
 }
 
-STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame, int spd_type, 
-    const RECT& video_rect,
+STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame, int spd_type,
+    const RECT& video_rect, const RECT& subtitle_target_rect,
     const SIZE& original_video_size,
     REFERENCE_TIME rt, double fps )
 {
@@ -3495,7 +3495,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         return S_FALSE;
     }
 
-    if (video_rect.left!=0 || video_rect.top!=0)
+    if (video_rect.left!=0 || video_rect.top!=0 || CRect(video_rect)!=subtitle_target_rect)
     {
         XY_LOG_WARN("NOT supported yet!");
         return E_NOTIMPL;

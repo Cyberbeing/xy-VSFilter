@@ -464,7 +464,7 @@ public:
     STDMETHODIMP Lock();
     STDMETHODIMP Unlock();
     STDMETHODIMP RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, 
-        const RECT& video_rect,
+        const RECT& video_rect, const RECT& subtitle_target_rect,
         const SIZE& original_video_size,
         REFERENCE_TIME rt, double fps);
 

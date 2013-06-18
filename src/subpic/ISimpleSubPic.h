@@ -52,8 +52,8 @@ public IUnknown {
 
     STDMETHOD_(VOID, GetStartStop) (POSITION pos, double fps, /*out*/REFERENCE_TIME& start, /*out*/REFERENCE_TIME& stop) PURE;
     STDMETHOD (RenderEx) (IXySubRenderFrame**subRenderFrame, int spd_type, 
-        const RECT& video_rect,
-        const SIZE& original_video_size,
+        const RECT& video_rect, const RECT& subtitle_target_rect,
+        const SIZE& original_video_size, 
         REFERENCE_TIME rt, double fps) PURE;
 
     STDMETHOD_(bool, IsColorTypeSupported) (int type) PURE;
