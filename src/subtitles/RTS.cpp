@@ -3449,9 +3449,13 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
 {
     CSize output_size = CSize(spd.w,spd.h);
     rectList.RemoveAll();
+    if (spd.vidrect.left!=0 || spd.vidrect.top!=0 || spd.vidrect.right!=spd.w || spd.vidrect.bottom!=spd.h)
+    {
+        XY_LOG_WARN("Video rectangle is different from window. But support for relative to video rectangle has been removed.");
+    }
 
     CComPtr<IXySubRenderFrame> sub_render_frame;
-    HRESULT hr = RenderEx(&sub_render_frame, spd.type, output_size, output_size, spd.vidrect, rt, fps);
+    HRESULT hr = RenderEx(&sub_render_frame, spd.type, output_size, output_size, rt, fps);
     if (SUCCEEDED(hr) && sub_render_frame)
     {
         int count = 0;
@@ -3493,12 +3497,12 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
                 XyBitmap::AlphaBltPack(spd, pos, size, pixels, pitch);
             }
         }
-    }    
+    }
     return (!rectList.IsEmpty()) ? S_OK : S_FALSE;
 }
 
 STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame, int spd_type, 
-    const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect, 
+    const SIZECoor2& size_scale_to, const SIZE& size1,
     REFERENCE_TIME rt, double fps )
 {
     if (!subRenderFrame)
@@ -3530,10 +3534,9 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     render_frame_creater->SetColorSpace(color_space);
 
     if( m_size_scale_to != CSize(size_scale_to.cx*8, size_scale_to.cy*8) 
-        || m_size != CSize(size1.cx*8, size1.cy*8) 
-        || m_vidrect != CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8))
+        || m_size != CSize(size1.cx*8, size1.cy*8) )
     {
-        Init(size_scale_to, size1, video_rect);
+        Init(size_scale_to, size1, CRect(CPoint(), size1));
         render_frame_creater->SetOutputRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
         render_frame_creater->SetClipRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
     }

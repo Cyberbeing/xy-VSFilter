@@ -255,7 +255,7 @@ HRESULT SimpleSubPicProvider::RenderTo( IXySubRenderFrame** pSubPic, REFERENCE_T
     }
 
     hr = pSubPicProviderEx->RenderEx(pSubPic, m_spd_type, m_spd_size, 
-        size_render_with, CRect(0,0,size_render_with.cx,size_render_with.cy), 
+        size_render_with, 
         bIsAnimated ? rtStart : ((rtStart+rtStop)/2), fps);
 
     POSITION pos = pSubPicProviderEx->GetStartPosition(rtStart, fps);

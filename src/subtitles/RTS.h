@@ -408,7 +408,7 @@ public:
         AssTagList embeded;
     };
 private:
-    CAtlMap<int, CSubtitle*> m_subtitleCache;   
+    CAtlMap<int, CSubtitle*> m_subtitleCache;
 
     CScreenLayoutAllocator m_sla;
 
@@ -466,7 +466,7 @@ public:
     STDMETHODIMP Unlock();
     STDMETHODIMP RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, 
         const SIZECoor2& size_scale_to,
-        const SIZE& size1, const CRect& video_rect, 
+        const SIZE& size1,
         REFERENCE_TIME rt, double fps);
 
     // ISubPicProviderEx && ISubPicProviderEx2
