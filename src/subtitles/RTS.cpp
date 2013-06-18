@@ -3427,6 +3427,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
 STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRectCoor2>& rectList)
 {
     CSize output_size = CSize(spd.w,spd.h);
+    CRectCoor2 video_rect = CRect(0,0,spd.w,spd.h);
     rectList.RemoveAll();
     if (spd.vidrect.left!=0 || spd.vidrect.top!=0 || spd.vidrect.right!=spd.w || spd.vidrect.bottom!=spd.h)
     {
@@ -3434,7 +3435,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
     }
 
     CComPtr<IXySubRenderFrame> sub_render_frame;
-    HRESULT hr = RenderEx(&sub_render_frame, spd.type, output_size, output_size, rt, fps);
+    HRESULT hr = RenderEx(&sub_render_frame, spd.type, video_rect, output_size, rt, fps);
     if (SUCCEEDED(hr) && sub_render_frame)
     {
         int count = 0;
@@ -3481,14 +3482,22 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
 }
 
 STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame, int spd_type, 
-    const SIZECoor2& size_scale_to, const SIZE& original_video_size,
+    const RECT& video_rect,
+    const SIZE& original_video_size,
     REFERENCE_TIME rt, double fps )
 {
     if (!subRenderFrame)
     {
         return S_FALSE;
     }
-    
+
+    if (video_rect.left!=0 || video_rect.top!=0)
+    {
+        XY_LOG_WARN("NOT supported yet!");
+        return E_NOTIMPL;
+    }
+    CRectCoor2 video_rect2 = video_rect;
+
     XyColorSpace color_space = XY_CS_ARGB;
     switch(spd_type)
     {
@@ -3512,12 +3521,12 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
     render_frame_creater->SetColorSpace(color_space);
 
-    if( m_size_scale_to != CSize(size_scale_to.cx*8, size_scale_to.cy*8) 
+    if( m_size_scale_to != CSize(video_rect2.Width()*8, video_rect2.Height()*8) 
         || m_size != CSize(original_video_size.cx*8, original_video_size.cy*8) )
     {
-        Init(size_scale_to, original_video_size);
-        render_frame_creater->SetOutputRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
-        render_frame_creater->SetClipRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
+        Init(video_rect2.Size(), original_video_size);
+        render_frame_creater->SetOutputRect(video_rect2);
+        render_frame_creater->SetClipRect(video_rect2);
     }
 
     CSubtitle2List sub2List;
@@ -3528,7 +3537,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     }
 
     CompositeDrawItemListList compDrawItemListList;
-    DoRender(size_scale_to, sub2List, &compDrawItemListList);
+    DoRender(video_rect2.Size(), sub2List, &compDrawItemListList);
 
     XySubRenderFrame *sub_render_frame;
     CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);

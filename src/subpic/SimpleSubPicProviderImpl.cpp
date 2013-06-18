@@ -254,7 +254,8 @@ HRESULT SimpleSubPicProvider::RenderTo( IXySubRenderFrame** pSubPic, REFERENCE_T
         return hr;
     }
 
-    hr = pSubPicProviderEx->RenderEx(pSubPic, m_spd_type, m_spd_size, 
+    hr = pSubPicProviderEx->RenderEx(pSubPic, m_spd_type,
+        CRect(CPoint(),m_spd_size),
         size_render_with, 
         bIsAnimated ? rtStart : ((rtStart+rtStop)/2), fps);
 

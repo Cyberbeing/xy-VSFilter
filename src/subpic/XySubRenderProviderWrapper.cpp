@@ -259,8 +259,9 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
         return hr;
     }
     ASSERT(m_output_rect.TopLeft()==CPoint(0,0));
-    hr = m_provider->RenderEx(&m_xy_sub_render_frame, MSP_RGBA_F, m_output_rect.Size(), m_original_video_size,
-        now, m_fps);
+    hr = m_provider->RenderEx(&m_xy_sub_render_frame, MSP_RGBA_F
+        , m_output_rect
+        , m_original_video_size, now, m_fps);
 
     ASSERT(SUCCEEDED(hr));
 
