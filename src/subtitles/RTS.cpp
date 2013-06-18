@@ -1974,17 +1974,17 @@ void CRenderedTextSubtitle::OnChanged()
 }
 
 
-bool CRenderedTextSubtitle::Init( const SIZECoor2& size_scale_to, const SIZE& size1 )
+bool CRenderedTextSubtitle::Init( const SIZECoor2& size_scale_to, const SIZE& original_video_size )
 {
     XY_LOG_INFO(_T(""));
     Deinit();
-    m_size_scale_to = CSize(size_scale_to.cx*8, size_scale_to.cy*8);//fix me?
-    m_size = CSize(size1.cx*8, size1.cy*8);
+    m_size_scale_to = CSize(size_scale_to.cx*8, size_scale_to.cy*8);
+    m_size = CSize(original_video_size.cx*8, original_video_size.cy*8);
 
-    ASSERT(size1.cx!=0 && size1.cy!=0);
+    ASSERT(original_video_size.cx!=0 && original_video_size.cy!=0);
 
-    m_target_scale_x = size_scale_to.cx * 1.0 / size1.cx;
-    m_target_scale_y = size_scale_to.cy * 1.0 / size1.cy;
+    m_target_scale_x = size_scale_to.cx * 1.0 / original_video_size.cx;
+    m_target_scale_y = size_scale_to.cy * 1.0 / original_video_size.cy;
 
     return(true);
 }
@@ -3481,7 +3481,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
 }
 
 STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame, int spd_type, 
-    const SIZECoor2& size_scale_to, const SIZE& size1,
+    const SIZECoor2& size_scale_to, const SIZE& original_video_size,
     REFERENCE_TIME rt, double fps )
 {
     if (!subRenderFrame)
@@ -3513,9 +3513,9 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     render_frame_creater->SetColorSpace(color_space);
 
     if( m_size_scale_to != CSize(size_scale_to.cx*8, size_scale_to.cy*8) 
-        || m_size != CSize(size1.cx*8, size1.cy*8) )
+        || m_size != CSize(original_video_size.cx*8, original_video_size.cy*8) )
     {
-        Init(size_scale_to, size1);
+        Init(size_scale_to, original_video_size);
         render_frame_creater->SetOutputRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
         render_frame_creater->SetClipRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
     }

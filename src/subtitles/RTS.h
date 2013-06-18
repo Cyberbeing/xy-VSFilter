@@ -454,7 +454,7 @@ public:
     virtual void Empty();
 
 public:
-    bool Init(const SIZECoor2& size_scale_to, const SIZE& size1); // will call Deinit()
+    bool Init(const SIZECoor2& size_scale_to, const SIZE& original_video_size); // will call Deinit()
     void Deinit();
 
     DECLARE_IUNKNOWN
@@ -465,7 +465,7 @@ public:
     STDMETHODIMP Unlock();
     STDMETHODIMP RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, 
         const SIZECoor2& size_scale_to,
-        const SIZE& size1,
+        const SIZE& original_video_size,
         REFERENCE_TIME rt, double fps);
 
     // ISubPicProviderEx && ISubPicProviderEx2
