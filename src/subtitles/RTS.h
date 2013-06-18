@@ -412,7 +412,7 @@ private:
 
     CScreenLayoutAllocator m_sla;
 
-    CSizeCoor2 m_size_scale_to;
+    CRectCoor2 m_video_rect;//scaled video rect
 
     CSize m_size;
 
@@ -454,7 +454,7 @@ public:
     virtual void Empty();
 
 public:
-    bool Init(const SIZECoor2& size_scale_to, const SIZE& original_video_size); // will call Deinit()
+    bool Init(const CRectCoor2& video_rect, const SIZE& original_video_size); // will call Deinit()
     void Deinit();
 
     DECLARE_IUNKNOWN
