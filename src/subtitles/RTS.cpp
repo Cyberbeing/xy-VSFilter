@@ -1974,14 +1974,13 @@ void CRenderedTextSubtitle::OnChanged()
 }
 
 
-bool CRenderedTextSubtitle::Init( const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect )
+bool CRenderedTextSubtitle::Init( const SIZECoor2& size_scale_to, const SIZE& size1 )
 {
     XY_LOG_INFO(_T(""));
     Deinit();
     m_size_scale_to = CSize(size_scale_to.cx*8, size_scale_to.cy*8);//fix me?
     m_size = CSize(size1.cx*8, size1.cy*8);
-    m_vidrect = CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8);
-    
+
     ASSERT(size1.cx!=0 && size1.cy!=0);
 
     m_target_scale_x = size_scale_to.cx * 1.0 / size1.cx;
@@ -2005,7 +2004,6 @@ void CRenderedTextSubtitle::Deinit()
 
     m_size_scale_to = CSize(0, 0);
     m_size = CSize(0, 0);
-    m_vidrect.SetRectEmpty();
 
     m_target_scale_x = m_target_scale_y = 1.0;
 
@@ -2448,17 +2446,11 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                         wcstod(params[1], NULL)+0.5,
                         wcstod(params[2], NULL)+0.5,
                         wcstod(params[3], NULL)+0.5);
-                    CPoint o(0, 0);
-                    if(sub->m_relativeTo == 1) // TODO: this should also apply to the other two clippings above
-                    {
-                        o.x = m_vidrect.left>>3;
-                        o.y = m_vidrect.top>>3;
-                    }
                     sub->m_clip.SetRect(
-                        (int)CalcAnimation(sub->m_scalex*r.left + o.x, sub->m_clip.left, fAnimate),
-                        (int)CalcAnimation(sub->m_scaley*r.top + o.y, sub->m_clip.top, fAnimate),
-                        (int)CalcAnimation(sub->m_scalex*r.right + o.x, sub->m_clip.right, fAnimate),
-                        (int)CalcAnimation(sub->m_scaley*r.bottom + o.y, sub->m_clip.bottom, fAnimate));
+                        (int)CalcAnimation(sub->m_scalex*r.left, sub->m_clip.left, fAnimate),
+                        (int)CalcAnimation(sub->m_scaley*r.top, sub->m_clip.top, fAnimate),
+                        (int)CalcAnimation(sub->m_scalex*r.right, sub->m_clip.right, fAnimate),
+                        (int)CalcAnimation(sub->m_scaley*r.bottom, sub->m_clip.bottom, fAnimate));
                 }
                 break;
             }
@@ -3012,8 +3004,8 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
     sub->m_wrapStyle = m_defaultWrapStyle;
     sub->m_fAnimated = false;
     sub->m_relativeTo = stss.relativeTo;
-    sub->m_scalex = m_dstScreenSize.cx > 0 ? 1.0 * (stss.relativeTo == 1 ? m_vidrect.Width() : m_size.cx) / (m_dstScreenSize.cx*8) : 1.0;
-    sub->m_scaley = m_dstScreenSize.cy > 0 ? 1.0 * (stss.relativeTo == 1 ? m_vidrect.Height() : m_size.cy) / (m_dstScreenSize.cy*8) : 1.0;
+    sub->m_scalex = m_dstScreenSize.cx > 0 ? 1.0 * m_size.cx / (m_dstScreenSize.cx*8) : 1.0;
+    sub->m_scaley = m_dstScreenSize.cy > 0 ? 1.0 * m_size.cy / (m_dstScreenSize.cy*8) : 1.0;
 
     sub->m_target_scale_x = m_target_scale_x;
     sub->m_target_scale_y = m_target_scale_y;
@@ -3086,13 +3078,7 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
     marginRect.top = (int)(sub->m_scaley*marginRect.top*8);
     marginRect.right = (int)(sub->m_scalex*marginRect.right*8);
     marginRect.bottom = (int)(sub->m_scaley*marginRect.bottom*8);
-    if(stss.relativeTo == 1)
-    {
-        marginRect.left += m_vidrect.left;
-        marginRect.top += m_vidrect.top;
-        marginRect.right += m_size.cx - m_vidrect.right;
-        marginRect.bottom += m_size.cy - m_vidrect.bottom;
-    }
+
     sub->CreateClippers(m_size, m_size_scale_to);
     sub->MakeLines(m_size, marginRect);
     m_subtitleCache[entry] = sub;
@@ -3360,8 +3346,6 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
                         CPoint((s->m_scrAlignment%3) == 1 ? p.x : (s->m_scrAlignment%3) == 0 ? p.x - spaceNeeded.cx : p.x - (spaceNeeded.cx+1)/2,
                         s->m_scrAlignment <= 3 ? p.y - spaceNeeded.cy : s->m_scrAlignment <= 6 ? p.y - (spaceNeeded.cy+1)/2 : p.y),
                         spaceNeeded);
-                    if(s->m_relativeTo == 1)
-                        r.OffsetRect(m_vidrect.TopLeft());
                     fPosOverride = true;
                 }
                 break;
@@ -3395,8 +3379,8 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
                 break;
             case EF_BANNER: // Banner;delay=param[0][;leftoright=param[1];fadeawaywidth=param[2]]
                 {
-                    int left = s->m_relativeTo == 1 ? m_vidrect.left : 0,
-                        right = s->m_relativeTo == 1 ? m_vidrect.right : m_size.cx;
+                    int left = 0,
+                        right = m_size.cx;
                     r.left = !!s->m_effects[k]->param[1]
                     ? (left/*marginRect.left*/ - spaceNeeded.cx) + (int)(m_time*8.0/s->m_effects[k]->param[0])
                         : (right /*- marginRect.right*/) - (int)(m_time*8.0/s->m_effects[k]->param[0]);
@@ -3412,11 +3396,6 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
                         : s->m_effects[k]->param[1] - (int)(m_time*8.0/s->m_effects[k]->param[2]);
                     r.bottom = r.top + spaceNeeded.cy;
                     CRect cr(0, (s->m_effects[k]->param[0] + 4) >> 3, (m_size.cx>>3), (s->m_effects[k]->param[1] + 4) >> 3);
-                    if(s->m_relativeTo == 1)
-                        r.top += m_vidrect.top,
-                        r.bottom += m_vidrect.top,
-                        cr.top += m_vidrect.top>>3,
-                        cr.bottom += m_vidrect.top>>3;
                     clipRect &= cr;
                     fPosOverride = true;
                 }
@@ -3536,7 +3515,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     if( m_size_scale_to != CSize(size_scale_to.cx*8, size_scale_to.cy*8) 
         || m_size != CSize(size1.cx*8, size1.cy*8) )
     {
-        Init(size_scale_to, size1, CRect(CPoint(), size1));
+        Init(size_scale_to, size1);
         render_frame_creater->SetOutputRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
         render_frame_creater->SetClipRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
     }

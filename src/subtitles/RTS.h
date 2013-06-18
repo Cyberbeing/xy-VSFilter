@@ -415,7 +415,6 @@ private:
     CSizeCoor2 m_size_scale_to;
 
     CSize m_size;
-    CRect m_vidrect;
 
     // temp variables, used when parsing the script
     int m_time, m_delay;
@@ -455,7 +454,7 @@ public:
     virtual void Empty();
 
 public:
-    bool Init(const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect); // will call Deinit()
+    bool Init(const SIZECoor2& size_scale_to, const SIZE& size1); // will call Deinit()
     void Deinit();
 
     DECLARE_IUNKNOWN
