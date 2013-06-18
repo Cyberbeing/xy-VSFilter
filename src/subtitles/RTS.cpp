@@ -1974,11 +1974,14 @@ void CRenderedTextSubtitle::OnChanged()
 }
 
 
-bool CRenderedTextSubtitle::Init( const CRectCoor2& video_rect, const SIZE& original_video_size )
+bool CRenderedTextSubtitle::Init( const CRectCoor2& video_rect, const CRectCoor2& subtitle_target_rect,
+    const SIZE& original_video_size )
 {
     XY_LOG_INFO(_T(""));
     Deinit();
     m_video_rect = CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8);
+    m_subtitle_target_rect = CRect(subtitle_target_rect.left*8, subtitle_target_rect.top*8, 
+        subtitle_target_rect.right*8, subtitle_target_rect.bottom*8);
     m_size = CSize(original_video_size.cx*8, original_video_size.cy*8);
 
     ASSERT(original_video_size.cx!=0 && original_video_size.cy!=0);
@@ -2003,6 +2006,7 @@ void CRenderedTextSubtitle::Deinit()
     m_sla.Empty();
 
     m_video_rect.SetRectEmpty();
+    m_subtitle_target_rect.SetRectEmpty();
     m_size = CSize(0, 0);
 
     m_target_scale_x = m_target_scale_y = 1.0;
@@ -3525,9 +3529,11 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     render_frame_creater->SetColorSpace(color_space);
 
     if( m_video_rect != CRect(video_rect.left*8,video_rect.top*8,video_rect.right*8,video_rect.bottom*8)
+        || m_subtitle_target_rect != CRect(subtitle_target_rect.left*8, subtitle_target_rect.top*8
+        , subtitle_target_rect.right*8, subtitle_target_rect.bottom*8)
         || m_size != CSize(original_video_size.cx*8, original_video_size.cy*8) )
     {
-        Init(video_rect, original_video_size);
+        Init(video_rect, subtitle_target_rect, original_video_size);
         render_frame_creater->SetOutputRect(video_rect);
         render_frame_creater->SetClipRect(video_rect);
     }
