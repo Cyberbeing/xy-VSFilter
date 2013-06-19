@@ -2181,7 +2181,7 @@ CStringW XySubFilter::DumpProviderInfo()
     CStringW strTemp;
     strTemp.Format(L"name:'%ls' version:'%ls' yuvMatrix:'%ls' combineBitmaps:%ls",
         m_xy_str_opt[STRING_NAME]      , m_xy_str_opt[STRING_VERSION],
-        m_xy_str_opt[STRING_YUV_MATRIX], m_xy_str_opt[BOOL_COMBINE_BITMAPS]?L"True":L"False");
+        m_xy_str_opt[STRING_YUV_MATRIX], m_xy_bool_opt[BOOL_COMBINE_BITMAPS]?L"True":L"False");
     return strTemp;
 }
 
