@@ -45,6 +45,7 @@ public:
     STDMETHODIMP XyGetInt      (unsigned field, int      *value);
     STDMETHODIMP XyGetString   (unsigned field, LPWSTR   *value, int *chars);
     STDMETHODIMP XySetInt      (unsigned field, int       value);
+    STDMETHODIMP XySetBool     (unsigned field, bool      value);
 
     // IDirectVobSub
     STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
@@ -137,6 +138,10 @@ private:
     CCritSec m_csReceive;
 
     CCritSec m_csSubLock;
+
+    CCritSec m_csProviderFields;// critical section protecting fields to be read by consumer
+                                // it is needed because otherwise consumer has to hold m_csSubLock which may be holded 
+                                // by renderring thread for a long time
 
     CComPtr<IXySubRenderProvider> m_sub_provider;
 

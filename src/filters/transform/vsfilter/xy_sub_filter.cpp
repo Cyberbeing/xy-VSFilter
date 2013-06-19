@@ -385,7 +385,6 @@ STDMETHODIMP XySubFilter::XyGetInt( unsigned field, int *value )
 
 STDMETHODIMP XySubFilter::XyGetString( unsigned field, LPWSTR *value, int *chars )
 {
-    CAutoLock cAutolock(&m_csSubLock);
     switch(field)
     {
     case STRING_CONNECTED_CONSUMER:
@@ -400,7 +399,22 @@ STDMETHODIMP XySubFilter::XyGetString( unsigned field, LPWSTR *value, int *chars
             return m_consumer->GetString("version", value, chars);
         }
         break;
+
+    case STRING_NAME:
+    case STRING_VERSION:
+        //they're read only, no need to lock
+        return XyOptionsImpl::XyGetString(field, value, chars);
+        break;
+    case STRING_YUV_MATRIX:
+    case BOOL_COMBINE_BITMAPS:
+    case BOOL_SUB_FRAME_USE_DST_ALPHA:
+        {
+            CAutoLock cAutolock(&m_csProviderFields);//do NOT hold m_csSubLock so that it is faster
+            return XyOptionsImpl::XyGetString(field, value, chars);
+        }
+        break;
     }
+    CAutoLock cAutolock(&m_csSubLock);
     return CDirectVobSub::XyGetString(field, value,chars);
 }
 
@@ -462,6 +476,22 @@ STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
     }
 
     return hr;
+}
+
+STDMETHODIMP XySubFilter::XySetBool(unsigned field, bool      value)
+{
+    switch(field)
+    {
+    case BOOL_COMBINE_BITMAPS:
+    case BOOL_SUB_FRAME_USE_DST_ALPHA:
+        {
+            CAutoLock cAutolock1(&m_csSubLock);
+            CAutoLock cAutolock2(&m_csProviderFields);
+            return XyOptionsImpl::XySetBool(field, value);
+        }
+        break;
+    }
+    return CDirectVobSub::XySetBool(field, value);
 }
 
 //
@@ -1123,6 +1153,8 @@ STDMETHODIMP XySubFilter::Disconnect( void )
 // 
 void XySubFilter::SetYuvMatrix()
 {
+    CAutoLock cAutolock(&m_csSubLock);
+    CAutoLock cAutoLock(&m_csProviderFields);
     m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
     if (dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream)!=NULL) {
         ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
@@ -2178,6 +2210,7 @@ void XySubFilter::UpdateLanguageCount()
 
 CStringW XySubFilter::DumpProviderInfo()
 {
+    CAutoLock cAutoLock(&m_csProviderFields);
     CStringW strTemp;
     strTemp.Format(L"name:'%ls' version:'%ls' yuvMatrix:'%ls' combineBitmaps:%ls",
         m_xy_str_opt[STRING_NAME]      , m_xy_str_opt[STRING_VERSION],
