@@ -162,3 +162,46 @@ private:
 
     REFERENCE_TIME m_last_requested;
 };
+
+
+class ExternalSubtitleDetector;
+
+class DummyExternalSubtitleOutputPin : public CSourceStream
+{
+    friend class ExternalSubtitleDetector;
+public:
+    DummyExternalSubtitleOutputPin(ExternalSubtitleDetector* pFilter, HRESULT* phr);
+
+protected:
+    HRESULT CheckMediaType(const CMediaType* pmt);
+
+    HRESULT DecideBufferSize(IMemAllocator * pAlloc, ALLOCATOR_PROPERTIES *pProp);
+
+    HRESULT GetMediaType(CMediaType *pMediaType);
+
+    HRESULT FillBuffer(IMediaSample *pSamp);
+};
+
+[uuid("d82e7c90-718b-4ab5-9b60-65e2a7769a57")]
+class ExternalSubtitleDetector 
+    : public CSource
+{
+public:
+    ExternalSubtitleDetector(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid = __uuidof(ExternalSubtitleDetector));
+    virtual ~ExternalSubtitleDetector();
+
+    DECLARE_IUNKNOWN;
+
+    //CBaseFilter
+    CBasePin* GetPin(int n);
+    int GetPinCount();
+    STDMETHODIMP JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName);
+
+    STDMETHODIMP QueryFilterInfo(FILTER_INFO* pInfo);
+
+protected:
+    bool ExternalSubtitleExists(IFilterGraph* pGraph);
+protected:
+    bool m_external_sub_found;
+    DummyExternalSubtitleOutputPin *m_output_pin;
+};

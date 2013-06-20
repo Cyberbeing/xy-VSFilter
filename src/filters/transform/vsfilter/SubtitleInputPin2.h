@@ -18,6 +18,9 @@ protected:
 
     HRESULT CheckMediaType(const CMediaType* pmt);
     HRESULT CompleteConnect(IPin* pReceivePin);
+
+public:
+    static bool IsDummy(const CMediaType* pmt);
 protected:
     XySubFilter * xy_sub_filter;
 };

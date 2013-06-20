@@ -254,29 +254,12 @@ STDMETHODIMP XySubFilter::Pause()
     // if we have an input pin
 
     else {
-        //input pins not all connected
-        bool input_pin_connected = true;
-        for (int i=0,n=m_pSubtitleInputPin.GetCount()-1;i<n;i++)
-        {
-            if (m_pSubtitleInputPin.GetAt(i)->IsConnected()==FALSE)
-            {
-                TRACE_RENDERER_REQUEST("Pin "<<XY_LOG_VAR_2_STR(i)<<" not connected");
-                input_pin_connected = false;
-                break;
-            }
+        if (m_State == State_Stopped) {
+            CAutoLock lck2(&m_csReceive);
+            hr = StartStreaming();
         }
-        if (!input_pin_connected)
-        {
-            m_State = State_Paused;
-        }
-        else {
-            if (m_State == State_Stopped) {
-                CAutoLock lck2(&m_csReceive);
-                hr = StartStreaming();
-            }
-            if (SUCCEEDED(hr)) {
-                hr = CBaseFilter::Pause();
-            }
+        if (SUCCEEDED(hr)) {
+            hr = CBaseFilter::Pause();
         }
     }
 
@@ -1396,8 +1379,12 @@ bool XySubFilter::Open()
     {
         if(m_pSubtitleInputPin[i]->IsConnected())
         {
-            m_pSubStreams.AddTail(m_pSubtitleInputPin[i]->GetSubStream());
-            m_fIsSubStreamEmbeded.AddTail(true);
+            ISubStream * sub_stream = m_pSubtitleInputPin[i]->GetSubStream();
+            if (sub_stream != NULL)
+            {
+                m_pSubStreams.AddTail(sub_stream);
+                m_fIsSubStreamEmbeded.AddTail(true);
+            }
         }
     }
 
@@ -1929,13 +1916,6 @@ void XySubFilter::AddSubStream(ISubStream* pSubStream)
     XY_LOG_INFO(pSubStream);
     CAutoLock cAutolock(&m_csSubLock);
 
-    POSITION pos = m_pSubStreams.Find(pSubStream);
-    if(!pos)
-    {
-        m_pSubStreams.AddTail(pSubStream);
-        m_fIsSubStreamEmbeded.AddTail(true);//todo: fix me
-    }
-
     int len = m_pSubtitleInputPin.GetCount();
     for(unsigned i = 0; i < m_pSubtitleInputPin.GetCount(); i++)
         if(m_pSubtitleInputPin[i]->IsConnected()) len--;
@@ -1945,38 +1925,54 @@ void XySubFilter::AddSubStream(ISubStream* pSubStream)
         HRESULT hr = S_OK;
         m_pSubtitleInputPin.Add(DEBUG_NEW SubtitleInputPin2(this, m_pLock, &m_csSubLock, &hr));
     }
-    UpdateSubtitle(false);
+
+    if (pSubStream!=NULL)
+    {
+        POSITION pos = m_pSubStreams.Find(pSubStream);
+        if(!pos)
+        {
+            m_pSubStreams.AddTail(pSubStream);
+            m_fIsSubStreamEmbeded.AddTail(true);//todo: fix me
+        }
+
+        UpdateSubtitle(false);
+    }
 }
 
 void XySubFilter::RemoveSubStream(ISubStream* pSubStream)
 {
     XY_LOG_INFO(pSubStream);
     CAutoLock cAutolock(&m_csSubLock);
-
-    POSITION pos = m_pSubStreams.GetHeadPosition();
-    POSITION pos2 = m_fIsSubStreamEmbeded.GetHeadPosition();
-    while(pos!=NULL)
+    if (pSubStream!=NULL)
     {
-        if( m_pSubStreams.GetAt(pos)==pSubStream )
+        POSITION pos = m_pSubStreams.GetHeadPosition();
+        POSITION pos2 = m_fIsSubStreamEmbeded.GetHeadPosition();
+        while(pos!=NULL)
         {
-            m_pSubStreams.RemoveAt(pos);
-            m_fIsSubStreamEmbeded.RemoveAt(pos2);
-            break;
+            if( m_pSubStreams.GetAt(pos)==pSubStream )
+            {
+                m_pSubStreams.RemoveAt(pos);
+                m_fIsSubStreamEmbeded.RemoveAt(pos2);
+                break;
+            }
+            else
+            {
+                m_pSubStreams.GetNext(pos);
+                m_fIsSubStreamEmbeded.GetNext(pos2);
+            }
         }
-        else
-        {
-            m_pSubStreams.GetNext(pos);
-            m_fIsSubStreamEmbeded.GetNext(pos2);
-        }
+        UpdateSubtitle(false);
     }
-    UpdateSubtitle(false);
 }
 
 HRESULT XySubFilter::CheckInputType( const CMediaType* pmt )
 {
-    bool accept_embedded = m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]==LOADLEVEL_ALWAYS ||
-        (m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]!=LOADLEVEL_DISABLED && m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED]);
-    return accept_embedded ? S_OK : E_NOT_SET;
+    bool result = m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]==LOADLEVEL_ALWAYS 
+        || (m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]!=LOADLEVEL_DISABLED && (
+        (m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] && !SubtitleInputPin2::IsDummy(pmt)) ||
+        (m_xy_bool_opt[BOOL_LOAD_SETTINGS_EXTENAL]||m_xy_bool_opt[BOOL_LOAD_SETTINGS_WEB] && SubtitleInputPin2::IsDummy(pmt))
+        ));
+    return result ? S_OK : VFW_E_TYPE_NOT_ACCEPTED;
 }
 
 HRESULT XySubFilter::CompleteConnect( SubtitleInputPin2* pSubPin, IPin* pReceivePin )
@@ -2203,4 +2199,204 @@ CStringW XySubFilter::DumpConsumerInfo()
         m_xy_str_opt[STRING_CONNECTED_CONSUMER], m_xy_str_opt[STRING_CONSUMER_VERSION],
         m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX]);
     return strTemp;
+}
+
+//
+// DummyExternalSubtitleOutputPin
+//
+
+DummyExternalSubtitleOutputPin::DummyExternalSubtitleOutputPin( ExternalSubtitleDetector* pFilter, HRESULT* phr )
+    : CSourceStream(NAME("DummyExternalSubtitleOutputPin"), phr, pFilter, L"DummyOutput")
+{
+
+}
+
+HRESULT DummyExternalSubtitleOutputPin::CheckMediaType( const CMediaType* pmt )
+{
+    XY_LOG_DEBUG(XY_LOG_VAR_2_STR(pmt));
+    return __super::CheckMediaType(pmt);
+}
+
+HRESULT DummyExternalSubtitleOutputPin::DecideBufferSize( IMemAllocator * pAlloc, ALLOCATOR_PROPERTIES *pProp )
+{
+    XY_LOG_DEBUG("Align:"<<pProp->cbAlign<<" Buffer:"<<pProp->cbBuffer<<" Prefix:"<<pProp->cbPrefix<<" Buffers:"<<pProp->cBuffers);
+    ALLOCATOR_PROPERTIES Actual;
+
+    pProp->cBuffers = pProp->cBuffers > 0 ? pProp->cBuffers : 1;
+    pProp->cbBuffer = pProp->cbBuffer > 0 ? pProp->cbBuffer : 1;
+    pProp->cbAlign  = 1;
+    pProp->cbPrefix = 0;
+
+    HRESULT hr = pAlloc->SetProperties(pProp,&Actual);
+    XY_LOG_DEBUG("Align:"<<Actual.cbAlign<<" Buffer:"<<Actual.cbBuffer<<" Prefix:"<<Actual.cbPrefix<<" Buffers:"<<Actual.cBuffers);
+    return hr;
+    //return S_FALSE;
+}
+
+HRESULT DummyExternalSubtitleOutputPin::GetMediaType( CMediaType *pMediaType )
+{
+    pMediaType->majortype  = MEDIATYPE_Subtitle;
+    pMediaType->subtype    = MEDIASUBTYPE_EXTERNAL_SUB_DUMMY;
+    pMediaType->formattype = GUID_NULL;
+    return S_OK;
+}
+
+HRESULT DummyExternalSubtitleOutputPin::FillBuffer( IMediaSample *pSamp )
+{
+    return S_FALSE;
+}
+
+//
+//  ExternalSubtitleDetector
+//
+
+ExternalSubtitleDetector::ExternalSubtitleDetector( LPUNKNOWN punk, HRESULT* phr
+    , const GUID& clsid /*= __uuidof(ExternalSubtitleDetector)*/ )
+    : CSource(NAME("ExternalSubtitleDetector"), punk, clsid)
+    , m_external_sub_found(false)
+{
+    m_output_pin = DEBUG_NEW DummyExternalSubtitleOutputPin(this, phr);
+}
+
+ExternalSubtitleDetector::~ExternalSubtitleDetector()
+{
+    XY_LOG_DEBUG(_T(""));
+}
+
+CBasePin* ExternalSubtitleDetector::GetPin( int n )
+{
+    if (n == 0 && m_external_sub_found)
+        return __super::GetPin(0);
+
+    return NULL;
+}
+
+int ExternalSubtitleDetector::GetPinCount()
+{
+    return m_external_sub_found ? 1 : 0;
+}
+
+STDMETHODIMP ExternalSubtitleDetector::JoinFilterGraph( IFilterGraph* pGraph, LPCWSTR pName )
+{
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this)<<"pGraph:"<<(void*)pGraph);
+    HRESULT hr = NOERROR;
+    if(pGraph)
+    {
+        CComPtr<IBaseFilter> xy_sub_filter;
+        BeginEnumFilters(pGraph, pEF, pBF)
+        {
+            if (pBF != (IBaseFilter*)this)
+            {
+                CLSID clsid;
+                pBF->GetClassID(&clsid);
+                if (clsid==__uuidof(ExternalSubtitleDetector))
+                {
+                    XY_LOG_INFO("Another ExternalSubtitleDetector filter has been added to the graph.");
+                    return E_FAIL;
+                }
+                if (clsid==__uuidof(XySubFilter))
+                {
+                    xy_sub_filter = pBF;
+                }
+            }
+        }
+        EndEnumFilters;
+        hr = __super::JoinFilterGraph(pGraph, pName);
+        if (hr!=NOERROR)
+        {
+            return hr;
+        }
+        m_external_sub_found = ExternalSubtitleExists(pGraph);
+        if (m_external_sub_found)
+        {
+            if (!xy_sub_filter)
+            {
+                hr = xy_sub_filter.CoCreateInstance(__uuidof(XySubFilter));
+                if (FAILED(hr))
+                {
+                    XY_LOG_ERROR("Failed to create XySubFilter."<<XY_LOG_VAR_2_STR(hr));
+                    return S_OK;
+                }
+                hr = pGraph->AddFilter(xy_sub_filter, L"XySubFilter(AutoLoad)");
+                if (FAILED(hr))
+                {
+                    XY_LOG_ERROR("Failed to AddFilter. "<<XY_LOG_VAR_2_STR(xy_sub_filter)<<XY_LOG_VAR_2_STR(hr));
+                    return S_OK;
+                }
+            }
+            XySubFilter * tmp = dynamic_cast<XySubFilter*>( (IBaseFilter*)xy_sub_filter );
+            int n = tmp->GetPinCount();
+            IPin *pIn = tmp->GetPin(n-1);
+            ASSERT(pIn);
+            CMediaType mt;
+            ASSERT( SUCCEEDED(m_output_pin->GetMediaType(&mt)) );
+            hr = pGraph->ConnectDirect(m_output_pin, pIn, &mt);
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed to connect xy_sub_filter!"<<XY_LOG_VAR_2_STR(hr));
+                return S_OK;
+            }
+        }
+    }
+    else
+    {
+        m_external_sub_found = false;
+        hr = __super::JoinFilterGraph(pGraph, pName);
+    }
+
+    return hr;
+}
+
+STDMETHODIMP ExternalSubtitleDetector::QueryFilterInfo( FILTER_INFO* pInfo )
+{
+    CheckPointer(pInfo, E_POINTER);
+    ValidateReadWritePtr(pInfo, sizeof(FILTER_INFO));
+
+    HRESULT hr = __super::QueryFilterInfo(pInfo);
+    if (SUCCEEDED(hr))
+    {
+        wcscpy_s(pInfo->achName, countof(pInfo->achName)-1, L"ExternalSubtitleDetector");
+    }
+    return hr;
+}
+
+bool ExternalSubtitleDetector::ExternalSubtitleExists( IFilterGraph* pGraph )
+{
+    XY_LOG_INFO(_T(""));
+
+    bool fRet = false;
+    HRESULT hr = NOERROR;
+
+    // find file name
+    CStringW fn;
+
+    BeginEnumFilters(pGraph, pEF, pBF)
+    {
+        if(CComQIPtr<IFileSourceFilter> pFSF = pBF)
+        {
+            LPOLESTR fnw = NULL;
+            if(!pFSF || FAILED(pFSF->GetCurFile(&fnw, NULL)) || !fnw)
+                continue;
+            fn = CStringW(fnw);
+            CoTaskMemFree(fnw);
+            break;
+        }
+    }
+    EndEnumFilters
+    XY_LOG_INFO(L"fn:"<<fn.GetString());
+    CAtlArray<CString> paths;
+
+    for(int i = 0; i < 10; i++)
+    {
+        CString tmp;
+        tmp.Format(IDS_RP_PATH, i);
+        CString path = theApp.GetProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp);
+        if(!path.IsEmpty()) paths.Add(path);
+    }
+    CString load_ext_list = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), _T("ass;ssa;srt;sub;idx;sup;txt;usf;xss;ssf;smi;psb;rt"));
+
+    CAtlArray<SubFile> ret;
+    GetSubFileNames(WToT(fn), paths, load_ext_list, ret);
+
+    return ret.GetCount()>0;
 }

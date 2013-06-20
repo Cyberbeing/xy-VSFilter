@@ -42,6 +42,18 @@ STDMETHODIMP CHdmvInputPinHepler2::EndOfStream( void )
 }
 
 //
+// CDummyInputPinHelper
+//
+class CDummyInputPinHelper: public CSubtitleInputPinHelper
+{
+public:
+    STDMETHODIMP NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate) { return S_FALSE; }
+    STDMETHODIMP Receive(IMediaSample* pSample) { return S_FALSE; }
+    STDMETHODIMP EndOfStream(void) { return S_FALSE; }
+    STDMETHODIMP_(ISubStream*) GetSubStream() { return NULL; }
+};
+
+//
 // SubtitleInputPin2
 //
 SubtitleInputPin2::SubtitleInputPin2( XySubFilter* pFilter, CCritSec* pLock
@@ -69,7 +81,11 @@ void SubtitleInputPin2::InvalidateSubtitle( REFERENCE_TIME rtStart, ISubStream* 
 
 STDMETHODIMP_(CSubtitleInputPinHelper*) SubtitleInputPin2::CreateHelper( const CMediaType& mt, IPin* pReceivePin )
 {
-    if (IsHdmvSub(&mt)) 
+    if (IsDummy(&mt))
+    {
+        return DEBUG_NEW CDummyInputPinHelper();
+    }
+    else if (IsHdmvSub(&mt)) 
     {
         XY_LOG_INFO("Create CHdmvInputPinHepler2");
         SUBTITLEINFO* psi = (SUBTITLEINFO*)mt.pbFormat;
@@ -109,7 +125,7 @@ HRESULT SubtitleInputPin2::CheckMediaType(const CMediaType* pmt)
     {
         return hr;
     }
-    return __super::CheckMediaType(pmt);
+    return IsDummy(pmt) ? S_OK : __super::CheckMediaType(pmt);
 }
 
 HRESULT SubtitleInputPin2::CompleteConnect( IPin* pReceivePin )
@@ -120,4 +136,9 @@ HRESULT SubtitleInputPin2::CompleteConnect( IPin* pReceivePin )
         return hr;
     }
     return xy_sub_filter->CompleteConnect(this, pReceivePin);
+}
+
+bool SubtitleInputPin2::IsDummy( const CMediaType* pmt )
+{
+    return pmt->majortype == MEDIATYPE_Subtitle && pmt->subtype == MEDIASUBTYPE_EXTERNAL_SUB_DUMMY;
 }

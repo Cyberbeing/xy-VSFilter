@@ -40,7 +40,13 @@ const AMOVIESETUP_MEDIATYPE sudPinTypesIn[] =
     {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_SSF},
     {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_VOBSUB},
     {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_HDMVSUB},
-    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_DVB_SUBTITLES}
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_DVB_SUBTITLES},
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_EXTERNAL_SUB_DUMMY}
+};
+
+const AMOVIESETUP_MEDIATYPE sudPinTypesOut[] =
+{
+    {&MEDIATYPE_Subtitle, &MEDIASUBTYPE_EXTERNAL_SUB_DUMMY}
 };
 
 const AMOVIESETUP_PIN sudpPins[] =
@@ -48,14 +54,21 @@ const AMOVIESETUP_PIN sudpPins[] =
     {L"Input", TRUE, FALSE, FALSE, TRUE, &CLSID_NULL, NULL, countof(sudPinTypesIn), sudPinTypesIn}
 };
 
+const AMOVIESETUP_PIN sudpPinsExternalSubtitleDetector[] =
+{
+    {L"Output", TRUE, FALSE, FALSE, TRUE, &CLSID_NULL, NULL, countof(sudPinTypesOut), sudPinTypesOut}
+};
+
 /*const*/ AMOVIESETUP_FILTER sudFilter[] =
 {
     {&__uuidof(XySubFilter), L"XySubFilter", MERIT_PREFERRED+2, countof(sudpPins), sudpPins}, 
+    {&__uuidof(ExternalSubtitleDetector), L"ExternalSubtitleDetector", MERIT_PREFERRED+2, countof(sudpPinsExternalSubtitleDetector), sudpPinsExternalSubtitleDetector}, 
 };
 
 CFactoryTemplate g_Templates[] =
 {
     {sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<XySubFilter>, NULL, &sudFilter[0]},
+    {sudFilter[1].strName, sudFilter[1].clsID, CreateInstance<ExternalSubtitleDetector>, NULL, &sudFilter[1]},
     {L"XySubFilterMainPPage", &__uuidof(CXySubFilterMainPPage), CreateInstance<CXySubFilterMainPPage>},
     {L"XySubFilterMorePPage", &__uuidof(CXySubFilterMorePPage), CreateInstance<CXySubFilterMorePPage>},
     {L"XySubFilterTimingPPage", &__uuidof(CXySubFilterTimingPPage), CreateInstance<CXySubFilterTimingPPage>},
@@ -77,7 +90,7 @@ void RegisterXySubFilterAsAutoLoad()
     if(RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("Autoload.SubtitleProvider"), 0, NULL, REG_OPTION_NON_VOLATILE,
         KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
-        CString in_uuid = XyUuidToString(*sudFilter[0].clsID);
+        CString in_uuid = XyUuidToString(*sudFilter[1].clsID);
         if(RegSetValueEx(hKey, _T(""), NULL, REG_SZ, reinterpret_cast<const BYTE*>(in_uuid.GetString()), in_uuid.GetLength()*2+1) != ERROR_SUCCESS)
         {
             MessageBox(NULL, _T("Failed to install as autoload subtitle provider"), _T("Warning"), 0);
