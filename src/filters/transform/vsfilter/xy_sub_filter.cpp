@@ -1971,6 +1971,13 @@ void XySubFilter::RemoveSubStream(ISubStream* pSubStream)
     UpdateSubtitle(false);
 }
 
+HRESULT XySubFilter::CheckInputType( const CMediaType* pmt )
+{
+    bool accept_embedded = m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]==LOADLEVEL_ALWAYS ||
+        (m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]!=LOADLEVEL_DISABLED && m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED]);
+    return accept_embedded ? S_OK : E_NOT_SET;
+}
+
 HRESULT XySubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
 {
     CAutoLock cAutolock(&m_csSubLock);

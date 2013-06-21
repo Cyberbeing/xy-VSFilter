@@ -89,6 +89,8 @@ private:
     // the text input pin is using these
     void AddSubStream(ISubStream* pSubStream);
     void RemoveSubStream(ISubStream* pSubStream);
+    HRESULT CheckInputType(const CMediaType* pmt);
+
 
     HRESULT GetIsEmbeddedSubStream(int iSelected, bool *fIsEmbedded);
 

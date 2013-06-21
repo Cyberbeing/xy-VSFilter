@@ -102,3 +102,12 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) SubtitleInputPin2::CreateHelper( const C
     return NULL;
 }
 
+HRESULT SubtitleInputPin2::CheckMediaType(const CMediaType* pmt)
+{
+    HRESULT hr = xy_sub_filter->CheckInputType(pmt);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+    return __super::CheckMediaType(pmt);
+}
