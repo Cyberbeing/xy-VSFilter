@@ -90,11 +90,11 @@ private:
     void AddSubStream(ISubStream* pSubStream);
     void RemoveSubStream(ISubStream* pSubStream);
     HRESULT CheckInputType(const CMediaType* pmt);
-
+    HRESULT CompleteConnect(SubtitleInputPin2* pSubPin, IPin* pReceivePin);
 
     HRESULT GetIsEmbeddedSubStream(int iSelected, bool *fIsEmbedded);
 
-    bool ShouldWeAutoload(IFilterGraph* pGraph);
+    bool LoadExternalSubtitle(IFilterGraph* pGraph);
 
     HRESULT StartStreaming();
 

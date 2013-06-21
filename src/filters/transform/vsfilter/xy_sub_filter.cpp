@@ -153,18 +153,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
             }
         }
         EndEnumFilters;
-        if (ShouldWeAutoload(pGraph))
-        {
-            if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
-            {
-                m_tbid.graph = pGraph;
-                m_tbid.dvs = static_cast<IDirectVobSub*>(this);
-
-                DWORD tid;
-                m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
-                XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
-            }
-        }
+        LoadExternalSubtitle(pGraph);
     }
     else
     {
@@ -227,6 +216,15 @@ STDMETHODIMP XySubFilter::Pause()
 
     if (!m_not_first_pause)
     {
+        if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
+        {
+            m_tbid.graph = m_pGraph;
+            m_tbid.dvs = static_cast<IDirectVobSub*>(this);
+
+            DWORD tid;
+            m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
+            XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
+        }
         hr = FindAndConnectConsumer(m_pGraph);
         if (FAILED(hr))
         {
@@ -1973,6 +1971,21 @@ HRESULT XySubFilter::CheckInputType( const CMediaType* pmt )
     return accept_embedded ? S_OK : E_NOT_SET;
 }
 
+HRESULT XySubFilter::CompleteConnect( SubtitleInputPin2* pSubPin, IPin* pReceivePin )
+{
+    ASSERT(m_pGraph);
+    if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
+    {
+        m_tbid.graph = m_pGraph;
+        m_tbid.dvs = static_cast<IDirectVobSub*>(this);
+
+        DWORD tid;
+        m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
+        XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
+    }
+    return S_OK;
+}
+
 HRESULT XySubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
 {
     CAutoLock cAutolock(&m_csSubLock);
@@ -2004,7 +2017,7 @@ HRESULT XySubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
     return hr;
 }
 
-bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
+bool XySubFilter::LoadExternalSubtitle(IFilterGraph* pGraph)
 {
     XY_LOG_INFO(pGraph);
 
@@ -2021,56 +2034,11 @@ bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
 
     if(level < 0 || level >= LOADLEVEL_COUNT || level==LOADLEVEL_DISABLED) {
         XY_LOG_DEBUG("Disabled by load setting: "<<XY_LOG_VAR_2_STR(level));
-        return(false);
+        return false;
     }
 
     if(level == LOADLEVEL_ALWAYS)
-        fRet = m_fExternalLoad = m_fWebLoad = m_fEmbeddedLoad = true;
-
-    // find text stream on known splitters
-
-    if(!fRet && m_fEmbeddedLoad)
-    {
-        CComPtr<IBaseFilter> pBF;
-        if((pBF = FindFilter(CLSID_OggSplitter, pGraph)) || (pBF = FindFilter(CLSID_AviSplitter, pGraph))
-            || (pBF = FindFilter(L"{34293064-02F2-41D5-9D75-CC5967ACA1AB}", pGraph)) // matroska demux
-            || (pBF = FindFilter(L"{0A68C3B5-9164-4a54-AFAF-995B2FF0E0D4}", pGraph)) // matroska source
-            || (pBF = FindFilter(L"{149D2E01-C32E-4939-80F6-C07B81015A7A}", pGraph)) // matroska splitter
-            || (pBF = FindFilter(L"{55DA30FC-F16B-49fc-BAA5-AE59FC65F82D}", pGraph)) // Haali Media Splitter
-            || (pBF = FindFilter(L"{564FD788-86C9-4444-971E-CC4A243DA150}", pGraph)) // Haali Media Splitter (AR)
-            || (pBF = FindFilter(L"{8F43B7D9-9D6B-4F48-BE18-4D787C795EEA}", pGraph)) // Haali Simple Media Splitter
-            || (pBF = FindFilter(L"{52B63861-DC93-11CE-A099-00AA00479A58}", pGraph)) // 3ivx splitter
-            || (pBF = FindFilter(L"{6D3688CE-3E9D-42F4-92CA-8A11119D25CD}", pGraph)) // our ogg source
-            || (pBF = FindFilter(L"{9FF48807-E133-40AA-826F-9B2959E5232D}", pGraph)) // our ogg splitter
-            || (pBF = FindFilter(L"{803E8280-F3CE-4201-982C-8CD8FB512004}", pGraph)) // dsm source
-            || (pBF = FindFilter(L"{0912B4DD-A30A-4568-B590-7179EBB420EC}", pGraph)) // dsm splitter
-            || (pBF = FindFilter(L"{3CCC052E-BDEE-408a-BEA7-90914EF2964B}", pGraph)) // mp4 source
-            || (pBF = FindFilter(L"{61F47056-E400-43d3-AF1E-AB7DFFD4C4AD}", pGraph)) // mp4 splitter
-            || (pBF = FindFilter(L"{171252A0-8820-4AFE-9DF8-5C92B2D66B04}", pGraph)) // LAV splitter
-            || (pBF = FindFilter(L"{B98D13E7-55DB-4385-A33D-09FD1BA26338}", pGraph)) // LAV Splitter Source
-            || (pBF = FindFilter(L"{E436EBB5-524F-11CE-9F53-0020AF0BA770}", pGraph)) // Solveig matroska splitter
-            || (pBF = FindFilter(L"{1365BE7A-C86A-473C-9A41-C0A6E82C9FA3}", pGraph)) // MPC-HC MPEG PS/TS/PVA source
-            || (pBF = FindFilter(L"{DC257063-045F-4BE2-BD5B-E12279C464F0}", pGraph)) // MPC-HC MPEG splitter
-            || (pBF = FindFilter(L"{529A00DB-0C43-4f5b-8EF2-05004CBE0C6F}", pGraph)) // AV splitter
-            || (pBF = FindFilter(L"{D8980E15-E1F6-4916-A10F-D7EB4E9E10B8}", pGraph)) // AV source
-            ) 
-        {
-            BeginEnumPins(pBF, pEP, pPin)
-            {
-                BeginEnumMediaTypes(pPin, pEM, pmt)
-                {
-                    if(pmt->majortype == MEDIATYPE_Text || pmt->majortype == MEDIATYPE_Subtitle)
-                    {
-                        fRet = true;
-                        break;
-                    }
-                }
-                EndEnumMediaTypes(pmt);
-                if(fRet) break;
-            }
-            EndEnumFilters
-        }
-    }
+        m_fExternalLoad = m_fWebLoad = m_fEmbeddedLoad = true;
 
     // find file name
 
@@ -2094,12 +2062,11 @@ bool XySubFilter::ShouldWeAutoload(IFilterGraph* pGraph)
     {
         bool fTemp = m_xy_bool_opt[BOOL_HIDE_SUBTITLES];
         fRet = !fn.IsEmpty() && SUCCEEDED(put_FileName((LPWSTR)(LPCWSTR)fn))
-            || SUCCEEDED(put_FileName(L"c:\\tmp.srt"))
-            || fRet;
+            || SUCCEEDED(put_FileName(L"c:\\tmp.srt"));
         if(fTemp) m_xy_bool_opt[BOOL_HIDE_SUBTITLES] = true;
     }
 
-    return(fRet);
+    return fRet;
 }
 
 HRESULT XySubFilter::StartStreaming()

@@ -17,6 +17,7 @@ protected:
     STDMETHODIMP_(CSubtitleInputPinHelper*) CreateHelper( const CMediaType& mt, IPin* pReceivePin );
 
     HRESULT CheckMediaType(const CMediaType* pmt);
+    HRESULT CompleteConnect(IPin* pReceivePin);
 protected:
     XySubFilter * xy_sub_filter;
 };
