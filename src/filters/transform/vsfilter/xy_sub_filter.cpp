@@ -53,7 +53,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
     XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
-    m_xy_str_opt[STRING_NAME] = L"xy_sub_filter";
+    m_xy_str_opt[STRING_NAME] = L"XySubFilter";
 
     theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Hint"), _T("The first three are fixed, but you can add more up to ten entries."));
 
@@ -196,10 +196,10 @@ STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
         ASSERT(SUCCEEDED(test_hr));
         CStringW new_name;
         if (consumer_name) {
-            new_name.Format(L"XySubFilter (Connected with %s, %s)", consumer_name, test);
+            new_name.Format(L"%s (Connected with %s, %s)", m_xy_str_opt[STRING_NAME].GetString(), consumer_name, test);
         }
         else {
-            new_name.Format(L"XySubFilter (%s)", test);
+            new_name.Format(L"%s (%s)", m_xy_str_opt[STRING_NAME].GetString(), test);
         }
         LocalFree(test);
         LocalFree(consumer_name);
