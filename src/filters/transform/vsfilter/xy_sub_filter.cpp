@@ -153,7 +153,6 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
             }
         }
         EndEnumFilters;
-        LoadExternalSubtitle(pGraph);
     }
     else
     {
@@ -216,14 +215,23 @@ STDMETHODIMP XySubFilter::Pause()
 
     if (!m_not_first_pause)
     {
-        if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
+        if (m_pSubtitleInputPin.GetCount()<=1)
         {
-            m_tbid.graph = m_pGraph;
-            m_tbid.dvs = static_cast<IDirectVobSub*>(this);
+            //no pins connected, hence it is likely we not yet try to scan for external subtitles
+            //but if m_xy_str_opt[STRING_FILE_NAME] has been specified, we do NOT want to overwrite it
+            if (m_xy_str_opt[STRING_FILE_NAME].IsEmpty())
+            {
+                LoadExternalSubtitle(m_pGraph);
+            }
+            if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
+            {
+                m_tbid.graph = m_pGraph;
+                m_tbid.dvs = static_cast<IDirectVobSub*>(this);
 
-            DWORD tid;
-            m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
-            XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
+                DWORD tid;
+                m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
+                XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
+            }
         }
         hr = FindAndConnectConsumer(m_pGraph);
         if (FAILED(hr))
@@ -1974,6 +1982,7 @@ HRESULT XySubFilter::CheckInputType( const CMediaType* pmt )
 HRESULT XySubFilter::CompleteConnect( SubtitleInputPin2* pSubPin, IPin* pReceivePin )
 {
     ASSERT(m_pGraph);
+    LoadExternalSubtitle(m_pGraph);
     if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
     {
         m_tbid.graph = m_pGraph;
