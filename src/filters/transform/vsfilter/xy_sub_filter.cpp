@@ -165,11 +165,6 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
                 XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
             }
         }
-        else
-        {
-            XY_LOG_INFO("No we should not auto load`");
-            return E_FAIL;
-        }
     }
     else
     {
