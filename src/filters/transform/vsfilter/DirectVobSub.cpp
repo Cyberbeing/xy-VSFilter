@@ -1025,10 +1025,10 @@ STDMETHODIMP CDirectVobSub::get_LoadSettings(int* level, bool* fExternalLoad, bo
 
 STDMETHODIMP CDirectVobSub::put_LoadSettings(int level, bool fExternalLoad, bool fWebLoad, bool fEmbeddedLoad)
 {
-    if (!TestOption(DirectVobSubXyOptions::INT_LOAD_SETTINGS_LEVEL   , OPTION_TYPE_INT , OPTION_MODE_WRITE) ||
-        !TestOption(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_EXTENAL, OPTION_TYPE_BOOL, OPTION_MODE_WRITE) ||
-        !TestOption(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_WEB    , OPTION_TYPE_BOOL, OPTION_MODE_WRITE) ||
-        !TestOption(DirectVobSubXyOptions::BOOL_MEDIA_FPS_ENABLED    , OPTION_TYPE_BOOL, OPTION_MODE_WRITE))
+    if (!TestOption(DirectVobSubXyOptions::INT_LOAD_SETTINGS_LEVEL    , OPTION_TYPE_INT , OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_EXTENAL , OPTION_TYPE_BOOL, OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_WEB     , OPTION_TYPE_BOOL, OPTION_MODE_WRITE) ||
+        !TestOption(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_EMBEDDED, OPTION_TYPE_BOOL, OPTION_MODE_WRITE))
     {
         return E_NOTIMPL;
     }
@@ -1050,7 +1050,7 @@ STDMETHODIMP CDirectVobSub::put_LoadSettings(int level, bool fExternalLoad, bool
         XY_LOG_ERROR("Failed to set option BOOL_LOAD_SETTINGS_WEB."<<XY_LOG_VAR_2_STR(fWebLoad));
         return hr3;
     }
-    HRESULT hr4 = XySetBool(DirectVobSubXyOptions::BOOL_MEDIA_FPS_ENABLED, fEmbeddedLoad);
+    HRESULT hr4 = XySetBool(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_EMBEDDED, fEmbeddedLoad);
     if (FAILED(hr4))
     {
         XY_LOG_ERROR("Failed to set option BOOL_MEDIA_FPS_ENABLED."<<XY_LOG_VAR_2_STR(fEmbeddedLoad));
