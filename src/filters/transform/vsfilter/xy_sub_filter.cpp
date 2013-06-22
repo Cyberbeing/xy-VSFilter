@@ -1339,7 +1339,7 @@ void XySubFilter::SetYuvMatrix()
     }
     else if (m_curSubStream)
     {
-        XY_LOG_WARN("I do NOT know how to make VSFilter compact and right.");
+        m_xy_str_opt[STRING_YUV_MATRIX] = L"TV.601";
     }
 }
 
