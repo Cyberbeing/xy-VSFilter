@@ -414,17 +414,10 @@ STDMETHODIMP CHdmvInputPinHepler::EndOfStream( void )
 
 CSubtitleInputPin::CSubtitleInputPin(CBaseFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr)
     : CBaseInputPin(NAME("CSubtitleInputPin"), pFilter, pLock, phr, L"Input")
-    , m_ceNotReceive(TRUE)
     , m_pSubLock(pSubLock)
     , m_helper(NULL)
 {
     m_bCanReconnectWhenActive = TRUE;
-    m_ceNotReceive.Set();
-}
-
-BOOL CSubtitleInputPin::WaitTillNotReceiving(DWORD dwTimeout /*= INFINITE*/)
-{
-    return m_ceNotReceive.Wait(dwTimeout);
 }
 
 HRESULT CSubtitleInputPin::CheckMediaType(const CMediaType* pmt)
@@ -442,6 +435,7 @@ HRESULT CSubtitleInputPin::CheckMediaType(const CMediaType* pmt)
 
 HRESULT CSubtitleInputPin::CompleteConnect(IPin* pReceivePin)
 {
+    CAutoLock cAutoLock(m_pSubLock);
     XY_LOG_DEBUG(XY_LOG_VAR_2_STR(pReceivePin));
     delete m_helper; m_helper = NULL;
     m_helper = CreateHelper(m_mt, pReceivePin);
@@ -557,6 +551,7 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) CSubtitleInputPin::CreateHelper( const C
 
 HRESULT CSubtitleInputPin::BreakConnect()
 {
+    CAutoLock cAutoLock(m_pSubLock);
     XY_LOG_DEBUG("");
     if (m_helper)
     {
@@ -570,6 +565,7 @@ HRESULT CSubtitleInputPin::BreakConnect()
 
 STDMETHODIMP CSubtitleInputPin::ReceiveConnection(IPin* pConnector, const AM_MEDIA_TYPE* pmt)
 {
+    CAutoLock cAutoLock(m_pSubLock);
     XY_LOG_DEBUG(XY_LOG_VAR_2_STR(pConnector)<<XY_LOG_VAR_2_STR(pmt));
 	if(m_Connected)
 	{
@@ -586,13 +582,9 @@ STDMETHODIMP CSubtitleInputPin::ReceiveConnection(IPin* pConnector, const AM_MED
 STDMETHODIMP CSubtitleInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
     TRACE_SAMPLE(XY_LOG_VAR_2_STR(tStart)<<XY_LOG_VAR_2_STR(tStop)<<XY_LOG_VAR_2_STR(dRate));
-    if (!m_ceNotReceive.Check()) {
-        XY_LOG_ERROR("A previous call to NewSegment does NOT followed with a call to Receive");
-    }
-    m_ceNotReceive.Reset();
+    CAutoLock cAutoLock(m_pSubLock);
     if(m_helper)
     {
-        CAutoLock cAutoLock(m_pSubLock);
         TRACE_SAMPLE("Lock acquired "<<XY_LOG_VAR_2_STR(&m_pSubLock));
         m_helper->NewSegment(tStart, tStop, dRate);
     }
@@ -620,23 +612,16 @@ STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
     tStart += m_tStart; 
 
     hr = __super::Receive(pSample);
-    if(FAILED(hr))
-    {
-        XY_LOG_ERROR("Failed to receive sample"<<XY_LOG_VAR_2_STR(hr));
-        m_ceNotReceive.Set();
-        return hr;
-    }
 
+    CAutoLock cAutoLock(m_pSubLock);
     if (m_helper)
     {
-        CAutoLock cAutoLock(m_pSubLock);
         hr = m_helper->Receive(pSample);
         TRACE_SAMPLE("InvalidateSubtitle :"<<ReftimeToCString(tStart));
         InvalidateSubtitle(tStart, m_helper->GetSubStream());
     }
 
     hr = S_OK;
-    m_ceNotReceive.Set();
     return hr;
 }
 
@@ -666,4 +651,10 @@ bool CSubtitleInputPin::IsHdmvSub(const CMediaType* pmt)
 			(pmt->subtype == MEDIASUBTYPE_NULL && pmt->formattype == FORMAT_SubtitleInfo)) // Workaround : support for Haali PGS
 		   ? true
 		   : false;
+}
+
+ISubStream* CSubtitleInputPin::GetSubStream()
+{
+    CAutoLock cAutoLock(m_pSubLock);
+    return m_helper ? m_helper->GetSubStream() : NULL;
 }

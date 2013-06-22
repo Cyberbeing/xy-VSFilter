@@ -61,8 +61,6 @@ protected:
 class CSubtitleInputPin : public CBaseInputPin
 {
 protected:
-    CAMEvent m_ceNotReceive;
-
     CCritSec* m_pSubLock;
     CSubtitleInputPinHelper *m_helper;
 protected:
@@ -75,8 +73,6 @@ protected:
 public:
     CSubtitleInputPin(CBaseFilter* pFilter, CCritSec* pLock, CCritSec* pSubLock, HRESULT* phr);
 
-    BOOL WaitTillNotReceiving(DWORD dwTimeout = INFINITE);
-
     HRESULT CheckMediaType(const CMediaType* pmt);
     HRESULT CompleteConnect(IPin* pReceivePin);
     HRESULT BreakConnect();
@@ -85,5 +81,5 @@ public:
     STDMETHODIMP Receive(IMediaSample* pSample);
     STDMETHODIMP EndOfStream(void);
 
-    ISubStream* GetSubStream() { return m_helper ? m_helper->GetSubStream() : NULL; }
+    ISubStream* GetSubStream();
 };

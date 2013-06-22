@@ -1087,14 +1087,6 @@ DWORD XySubFilter::ThreadProc()
 
 STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME stop, LPVOID context )
 {
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
-    for (int i=0,n=m_pSubtitleInputPin.GetCount();i<n;i++)
-    {
-        if (!m_pSubtitleInputPin[i]->WaitTillNotReceiving(5))
-        {
-            XY_LOG_ERROR("Still receiving subtitle samples for pin "<<XY_LOG_VAR_2_STR(i));
-        }
-    }
     CAutoLock cAutoLock(&m_csSubLock);
     TRACE_RENDERER_REQUEST("Lock acuqired"<<XY_LOG_VAR_2_STR(&m_csSubLock));
 
