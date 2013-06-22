@@ -2145,21 +2145,18 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
         EndEnumFilters;//Add a ; so that my editor can do a correct auto-indent
         if (consumer)
         {
-            hr = consumer->Connect(this);
-            if (FAILED(hr))
-            {
-                XY_LOG_ERROR("Failed to connect "<<XY_LOG_VAR_2_STR(consumer)<<XY_LOG_VAR_2_STR(hr));
-                return hr;
-            }
             m_consumer = consumer;
             hr = UpdateParamFromConsumer(true);
             if (FAILED(hr))
             {
                 XY_LOG_WARN("Failed to read consumer field.");
-                if (FAILED(consumer->Disconnect()))
-                {
-                    XY_LOG_ERROR("Failed to disconnect consumer");
-                }
+                m_consumer = NULL;
+                return hr;
+            }
+            hr = consumer->Connect(this);
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed to connect "<<XY_LOG_VAR_2_STR(consumer)<<XY_LOG_VAR_2_STR(hr));
                 m_consumer = NULL;
                 return hr;
             }
