@@ -74,13 +74,6 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     ASSERT(SUCCEEDED(*phr));
     if(phr && FAILED(*phr)) return;
 
-    m_frd.ThreadStartedEvent.Create(0, FALSE, FALSE, 0);
-    m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
-    m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
-    CAMThread::Create();
-
-    WaitForSingleObject(m_frd.ThreadStartedEvent, INFINITE);
-
     m_tbid.WndCreatedEvent.Create(0, FALSE, FALSE, 0);
     m_tbid.hSystrayWnd = NULL;
     m_tbid.graph = NULL;
@@ -100,6 +93,13 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM]);
 
     SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]) );
+
+    m_frd.ThreadStartedEvent.Create(0, FALSE, FALSE, 0);
+    m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
+    m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
+    CAMThread::Create();
+
+    WaitForSingleObject(m_frd.ThreadStartedEvent, INFINITE);
 }
 
 XySubFilter::~XySubFilter()
