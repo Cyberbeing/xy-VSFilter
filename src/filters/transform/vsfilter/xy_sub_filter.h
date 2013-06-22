@@ -79,8 +79,6 @@ private:
     void SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyle = true);
     void InvalidateSubtitle(REFERENCE_TIME rtInvalidate = -1, DWORD_PTR nSubtitleId = -1);
 
-    void InitSubPicQueue();
-
     HRESULT UpdateParamFromConsumer(bool getNameAndVersion=false);
 
     int FindPreferedLanguage(bool fHideToo = true);
@@ -123,21 +121,8 @@ private:
     CInterfaceList<ISubStream> m_pSubStreams;
     CAtlList<bool> m_fIsSubStreamEmbeded;
 
-    bool m_consumer_options_read;
-
     // critical section protecting filter state.
     CCritSec m_csFilter;
-
-    // critical section stopping state changes (ie Stop) while we're
-    // processing a sample.
-    //
-    // This critical section is held when processing
-    // events that occur on the receive thread - Receive() and EndOfStream().
-    //
-    // If you want to hold both m_csReceive and m_csFilter then grab
-    // m_csFilter FIRST - like CTransformFilter::Stop() does.
-
-    CCritSec m_csReceive;
 
     CCritSec m_csSubLock;
 

@@ -46,7 +46,6 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     , m_curSubStream(NULL)
     , m_not_first_pause(false)
     , m_hSystrayThread(0)
-    , m_consumer_options_read(false)
     , m_context_id(0)
     , m_last_requested(-1)
     , m_workaround_mpc_hc(false)
@@ -87,6 +86,20 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     m_tbid.graph = NULL;
     m_tbid.fRunOnce = false;
     m_tbid.fShowIcon = (theApp.m_AppName.Find(_T("zplayer"), 0) < 0 || m_xy_bool_opt[BOOL_ENABLE_ZP_ICON]);
+
+    CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
+    CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]);
+    CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM]);
+    CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM]);
+
+    XyFwGroupedDrawItemsHashKey::GetCacher()->SetMaxItemNum(m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM]);
+    CacheManager::GetBitmapMruCache()->SetMaxItemNum(m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM]);
+
+    CacheManager::GetClipperAlphaMaskMruCache()->SetMaxItemNum(m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM]);
+    CacheManager::GetTextInfoCache()->SetMaxItemNum(m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM]);
+    CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM]);
+
+    SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]) );
 }
 
 XySubFilter::~XySubFilter()
@@ -223,6 +236,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
         }
         ::DeleteSystray(&m_hSystrayThread, &m_tbid);
         m_workaround_mpc_hc = false;
+        m_not_first_pause = false;
     }
 
     return __super::JoinFilterGraph(pGraph, pName);
@@ -283,6 +297,12 @@ STDMETHODIMP XySubFilter::Pause()
             m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
             XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
         }
+        hr = StartStreaming();
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to StartStreaming."<<XY_LOG_VAR_2_STR(hr));
+            return hr;
+        }
         hr = FindAndConnectConsumer(m_pGraph);
         if (FAILED(hr))
         {
@@ -291,46 +311,7 @@ STDMETHODIMP XySubFilter::Pause()
         }
         m_not_first_pause = true;
     }
-
-    if (m_State == State_Paused) {
-        ASSERT(m_not_first_pause);
-        // (This space left deliberately blank)
-    }
-    // If we have no input pins
-
-    else if (m_pSubtitleInputPin.GetCount()<=1) {
-        m_State = State_Paused;
-    }
-    // if we have an input pin
-
-    else {
-        //input pins not all connected
-        bool input_pin_connected = true;
-        for (int i=0,n=m_pSubtitleInputPin.GetCount()-1;i<n;i++)
-        {
-            if (m_pSubtitleInputPin.GetAt(i)->IsConnected()==FALSE)
-            {
-                TRACE_RENDERER_REQUEST("Pin "<<XY_LOG_VAR_2_STR(i)<<" not connected");
-                input_pin_connected = false;
-                break;
-            }
-        }
-        if (!input_pin_connected)
-        {
-            m_State = State_Paused;
-        }
-        else {
-            if (m_State == State_Stopped) {
-                CAutoLock lck2(&m_csReceive);
-                hr = StartStreaming();
-            }
-            if (SUCCEEDED(hr)) {
-                hr = CBaseFilter::Pause();
-            }
-        }
-    }
-
-    return hr;
+    return CBaseFilter::Pause();
 }
 
 //
@@ -1728,28 +1709,6 @@ void XySubFilter::InvalidateSubtitle( REFERENCE_TIME rtInvalidate /*= -1*/, DWOR
     }
 }
 
-void XySubFilter::InitSubPicQueue()
-{
-    CAutoLock cAutoLock(&m_csSubLock);
-
-    CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
-    CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]);
-    CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM]);
-    CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM]);
-
-    XyFwGroupedDrawItemsHashKey::GetCacher()->SetMaxItemNum(m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM]);
-    CacheManager::GetBitmapMruCache()->SetMaxItemNum(m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM]);
-
-    CacheManager::GetClipperAlphaMaskMruCache()->SetMaxItemNum(m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM]);
-    CacheManager::GetTextInfoCache()->SetMaxItemNum(m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM]);
-    CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM]);
-
-    SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]) );
-
-    UpdateSubtitle(false);
-}
-
-
 HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
 {
 
@@ -1859,13 +1818,12 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
         XY_LOG_INFO(L"Consumer yuv matrix changed from "<<m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].GetString()
         <<L" to "<<consumer_yuv_matrix.GetString());
         m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX] = consumer_yuv_matrix;
+        update_subtitle = true;
     }
-    update_subtitle &= m_consumer_options_read;
     if (update_subtitle)
     {
         UpdateSubtitle(false);
     }
-    m_consumer_options_read = true;
     return hr;
 }
 
@@ -2139,8 +2097,6 @@ HRESULT XySubFilter::StartStreaming()
 
     m_tbid.fRunOnce = true;
 
-    InitSubPicQueue();
-
     HRESULT hr = put_MediaFPS(m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED], m_xy_double_opt[DOUBLE_MEDIA_FPS]);
     CHECK_N_LOG(hr, "Failed to set option");
 
@@ -2194,7 +2150,6 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
                 return hr;
             }
             m_consumer = consumer;
-            m_consumer_options_read = false;
             hr = UpdateParamFromConsumer(true);
             if (FAILED(hr))
             {
