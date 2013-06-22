@@ -79,7 +79,7 @@ const REFERENCE_TIME DEFAULT_FRAME_RATE = 10000000.0/25;
 //
 
 XySubFilterConsumer::XySubFilterConsumer(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid)
-    : CDirectVobSub(XyConsumerVobFilterOptions)
+    : CDirectVobSub(XyConsumerVobFilterOptions, &m_csSubLock)
     , CBaseVideoFilter(NAME("XySubFilterConsumer"), punk, phr, clsid)
     , m_fMSMpeg4Fix(false)
     , SubRenderOptionsImpl(::options, this)

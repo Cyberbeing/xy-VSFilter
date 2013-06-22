@@ -68,7 +68,7 @@ protected:
 public:
     CFilter() 
         : CUnknown(NAME("CFilter"), NULL)
-        , CDirectVobSub(DirectVobFilterOptions)
+        , CDirectVobSub(DirectVobFilterOptions, &m_csSubLock)
         , m_fps(-1), m_SubPicProviderId(0), m_fLazyInit(false)
     {
         m_xy_str_opt[STRING_NAME] = L"CFilter";

@@ -25,8 +25,9 @@
 
 using namespace DirectVobSubXyOptions;
 
-CDirectVobSub::CDirectVobSub(const Option *options)
+CDirectVobSub::CDirectVobSub(const Option *options, CCritSec * pLock)
     : XyOptionsImpl(options)
+    , m_propsLock(pLock)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
@@ -281,7 +282,7 @@ CDirectVobSub::CDirectVobSub(const Option *options)
 
 CDirectVobSub::~CDirectVobSub()
 {
-	CAutoLock cAutoLock(&m_propsLock);
+	CAutoLock cAutoLock(m_propsLock);
 }
 
 STDMETHODIMP CDirectVobSub::get_FileName(WCHAR* fn)
@@ -448,7 +449,7 @@ STDMETHODIMP CDirectVobSub::get_TextSettings(void* lf, int lflen, COLORREF* colo
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     HRESULT hr = OnOptionReading(BIN2_TEXT_SETTINGS);
     if (FAILED(hr))
     {
@@ -486,7 +487,7 @@ STDMETHODIMP CDirectVobSub::put_TextSettings(void* lf, int lflen, COLORREF color
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     STSStyle tmp = m_defStyle;
     if(lf)
     {
@@ -594,7 +595,7 @@ STDMETHODIMP CDirectVobSub::get_SubtitleTiming(int* delay, int* speedmul, int* s
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     HRESULT hr = OnOptionReading(BIN2_SUBTITLE_TIMING);
     if (FAILED(hr))
     {
@@ -614,7 +615,7 @@ STDMETHODIMP CDirectVobSub::put_SubtitleTiming(int delay, int speedmul, int spee
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
 
     if(m_SubtitleDelay == delay && m_SubtitleSpeedMul == speedmul && m_SubtitleSpeedDiv == speeddiv) return S_FALSE;
 
@@ -632,7 +633,7 @@ STDMETHODIMP CDirectVobSub::get_MediaFPS(bool* fEnabled, double* fps)
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
 
     if(fEnabled) *fEnabled = m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED];
     if(fps) *fps = m_xy_double_opt[DOUBLE_MEDIA_FPS];
@@ -647,7 +648,7 @@ STDMETHODIMP CDirectVobSub::put_MediaFPS(bool fEnabled, double fps)
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
 
     if(m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED] == fEnabled && m_xy_double_opt[DOUBLE_MEDIA_FPS] == fps) return S_FALSE;
 
@@ -666,7 +667,7 @@ STDMETHODIMP CDirectVobSub::get_ZoomRect(NORMALIZEDRECT* rect)
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     HRESULT hr = OnOptionReading(BIN2_ZOOM_RECT);
     if (FAILED(hr))
     {
@@ -687,7 +688,7 @@ STDMETHODIMP CDirectVobSub::put_ZoomRect(NORMALIZEDRECT* rect)
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
 
     if(!rect) return E_POINTER;
 
@@ -700,7 +701,7 @@ STDMETHODIMP CDirectVobSub::put_ZoomRect(NORMALIZEDRECT* rect)
 
 STDMETHODIMP CDirectVobSub::get_CachesInfo(CachesInfo* caches_info)
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     if(caches_info)
     {
         caches_info->path_cache_cur_item_num    = 0;
@@ -734,7 +735,7 @@ STDMETHODIMP CDirectVobSub::get_CachesInfo(CachesInfo* caches_info)
 
 STDMETHODIMP CDirectVobSub::get_XyFlyWeightInfo(XyFlyWeightInfo* xy_fw_info)
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     if(xy_fw_info)
     {
         xy_fw_info->xy_fw_string_w.cur_item_num = 0;
@@ -754,7 +755,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-	CAutoLock cAutoLock(&m_propsLock);
+	CAutoLock cAutoLock(m_propsLock);
 
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), m_xy_bool_opt[BOOL_HIDE_SUBTITLES]);
 	theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), m_xy_bool_opt[BOOL_PRE_BUFFERING]);
@@ -899,7 +900,7 @@ STDMETHODIMP CDirectVobSub::LockSubtitleReloader(bool fLock)
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
 
     if(fLock) m_nReloaderDisableCount++;
     else m_nReloaderDisableCount--;
@@ -1095,7 +1096,7 @@ STDMETHODIMP CDirectVobSub::get_TextSettings(STSStyle* pDefStyle)
     }
 	CheckPointer(pDefStyle, E_POINTER);
 
-	CAutoLock cAutoLock(&m_propsLock);
+	CAutoLock cAutoLock(m_propsLock);
 
 	*pDefStyle = m_defStyle;
 
@@ -1110,7 +1111,7 @@ STDMETHODIMP CDirectVobSub::put_TextSettings(STSStyle* pDefStyle)
     }
     CheckPointer(pDefStyle, E_POINTER);
 
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
 
     if(m_defStyle==*pDefStyle)
         return S_FALSE;
@@ -1185,13 +1186,13 @@ STDMETHODIMP CDirectVobSub::XyGetBool( unsigned field, bool *value )
 
 STDMETHODIMP CDirectVobSub::XyGetInt( unsigned field, int *value )
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     return XyOptionsImpl::XyGetInt(field, value);
 }
 
 STDMETHODIMP CDirectVobSub::XyGetSize( unsigned field, SIZE *value )
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     HRESULT hr = XyOptionsImpl::XyGetSize(field, value);
     if (hr != S_OK)
     {
@@ -1223,25 +1224,25 @@ STDMETHODIMP CDirectVobSub::XyGetSize( unsigned field, SIZE *value )
 
 STDMETHODIMP CDirectVobSub::XyGetRect( unsigned field, RECT *value )
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     return XyOptionsImpl::XyGetRect(field, value);
 }
 
 STDMETHODIMP CDirectVobSub::XyGetUlonglong( unsigned field, ULONGLONG *value )
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     return XyOptionsImpl::XyGetUlonglong(field, value);
 }
 
 STDMETHODIMP CDirectVobSub::XyGetDouble( unsigned field, double *value )
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     return XyOptionsImpl::XyGetDouble(field, value);
 }
 
 STDMETHODIMP CDirectVobSub::XyGetString( unsigned field, LPWSTR *value, int *chars )
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     return XyOptionsImpl::XyGetString(field, value, chars);
 }
 
@@ -1251,7 +1252,7 @@ STDMETHODIMP CDirectVobSub::XyGetBin      (unsigned field, LPVOID    *value, int
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     if (!size)
     {
         return E_INVALIDARG;
@@ -1297,7 +1298,7 @@ STDMETHODIMP CDirectVobSub::XyGetBin2( unsigned field, void *value, int size )
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     CheckPointer(value, E_POINTER);
     switch(field)
     {
@@ -1351,7 +1352,7 @@ STDMETHODIMP CDirectVobSub::XySetBool( unsigned field, bool value )
     case DirectVobSubXyOptions::BOOL_SUBTITLE_RELOADER_LOCK:
         return LockSubtitleReloader(value);
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     return XyOptionsImpl::XySetBool(field, value);
 }
 
@@ -1380,7 +1381,7 @@ STDMETHODIMP CDirectVobSub::XySetInt( unsigned field, int value )
         break;
     }
 
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     HRESULT hr = XyOptionsImpl::XySetInt(field, value);
 
     return hr;
@@ -1388,7 +1389,7 @@ STDMETHODIMP CDirectVobSub::XySetInt( unsigned field, int value )
 
 STDMETHODIMP CDirectVobSub::XySetSize( unsigned field, SIZE value )
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     HRESULT hr = XyOptionsImpl::XySetSize(field, value);
 
     return hr;
@@ -1396,7 +1397,7 @@ STDMETHODIMP CDirectVobSub::XySetSize( unsigned field, SIZE value )
 
 STDMETHODIMP CDirectVobSub::XySetRect( unsigned field, RECT value )
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
 
     HRESULT hr = XyOptionsImpl::XySetRect(field, value);
 
@@ -1405,7 +1406,7 @@ STDMETHODIMP CDirectVobSub::XySetRect( unsigned field, RECT value )
 
 STDMETHODIMP CDirectVobSub::XySetUlonglong( unsigned field, ULONGLONG value )
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
 
     HRESULT hr = XyOptionsImpl::XySetUlonglong(field, value);
 
@@ -1414,7 +1415,7 @@ STDMETHODIMP CDirectVobSub::XySetUlonglong( unsigned field, ULONGLONG value )
 
 STDMETHODIMP CDirectVobSub::XySetDouble( unsigned field, double value )
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
 
     HRESULT hr = XyOptionsImpl::XySetDouble(field, value);
 
@@ -1423,7 +1424,7 @@ STDMETHODIMP CDirectVobSub::XySetDouble( unsigned field, double value )
 
 STDMETHODIMP CDirectVobSub::XySetString( unsigned field, LPWSTR value, int chars )
 {
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
 
     switch (field)
     {
@@ -1450,7 +1451,7 @@ STDMETHODIMP CDirectVobSub::XySetBin( unsigned field, LPVOID value, int size )
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(&m_propsLock);
+    CAutoLock cAutoLock(m_propsLock);
     switch(field)
     {
     case BIN_OUTPUT_COLOR_FORMAT:

@@ -60,13 +60,13 @@ public:
     typedef DirectVobSubXyOptions::XyFlyWeightInfo XyFlyWeightInfo;
     typedef DirectVobSubXyOptions::ColorSpaceOpt ColorSpaceOpt;
 protected:
-    CDirectVobSub(const Option *options);
+    CDirectVobSub(const Option *options, CCritSec * pLock);
     virtual ~CDirectVobSub();
 
     bool is_compatible();
     UINT GetCompatibleProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault);
 protected:
-    CCritSec m_propsLock;
+    CCritSec *m_propsLock;
 
     int m_bt601Width, m_bt601Height;//for AUTO_GUESS
 
