@@ -121,10 +121,8 @@ private:
     CInterfaceList<ISubStream> m_pSubStreams;
     CAtlList<bool> m_fIsSubStreamEmbeded;
 
-    // critical section protecting filter state.
+    // critical section protecting all
     CCritSec m_csFilter;
-
-    CCritSec m_csSubLock;
 
     CCritSec m_csProviderFields;// critical section protecting fields to be read by consumer
                                 // it is needed because otherwise consumer has to hold m_csSubLock which may be holded 

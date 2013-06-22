@@ -282,7 +282,6 @@ CDirectVobSub::CDirectVobSub(const Option *options, CCritSec * pLock)
 
 CDirectVobSub::~CDirectVobSub()
 {
-	CAutoLock cAutoLock(m_propsLock);
 }
 
 STDMETHODIMP CDirectVobSub::get_FileName(WCHAR* fn)

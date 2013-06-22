@@ -585,7 +585,7 @@ STDMETHODIMP CSubtitleInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME
     CAutoLock cAutoLock(m_pSubLock);
     if(m_helper)
     {
-        TRACE_SAMPLE("Lock acquired "<<XY_LOG_VAR_2_STR(&m_pSubLock));
+        TRACE_SAMPLE("Lock acquired "<<XY_LOG_VAR_2_STR(m_pSubLock));
         m_helper->NewSegment(tStart, tStop, dRate);
     }
     else
