@@ -1533,9 +1533,6 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-    BYTE* pData = NULL;
-    UINT nSize  = 0;
-
     m_supported_filter_verion = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), 0);
     m_config_info_version     = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), 0);
 
@@ -1662,24 +1659,15 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
     }
 
     //
-    if(pData)
+    CString media_fps = theApp.GetProfileString(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), _T("25.0"));
+    m_xy_double_opt[DOUBLE_MEDIA_FPS] = _tcstod(media_fps, NULL);
+    if (m_xy_double_opt[DOUBLE_MEDIA_FPS]<=0.000001)
     {
-        delete [] pData;
-        pData = NULL;
+        m_xy_double_opt[DOUBLE_MEDIA_FPS] = 25.0;
     }
-    if(theApp.GetProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), &pData, &nSize) && pData)
-    {
-        if(nSize != sizeof(m_xy_double_opt[DOUBLE_MEDIA_FPS])) m_xy_double_opt[DOUBLE_MEDIA_FPS] = 25.0;
-        else memcpy(&m_xy_double_opt[DOUBLE_MEDIA_FPS], pData, sizeof(m_xy_double_opt[DOUBLE_MEDIA_FPS]));
-    }
+
     m_ZoomRect.left = m_ZoomRect.top = 0;
     m_ZoomRect.right = m_ZoomRect.bottom = 1;
-
-    if(pData)
-    {
-        delete [] pData;
-        pData = NULL;
-    }
 
     //fix me: CStringw = CString
     m_xy_str_opt[STRING_LOAD_EXT_LIST] = 
@@ -1761,7 +1749,11 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), m_SubtitleSpeedMul);
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), m_SubtitleSpeedDiv);
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED]);
-    theApp.WriteProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), (BYTE*)&m_xy_double_opt[DOUBLE_MEDIA_FPS], sizeof(m_xy_double_opt[DOUBLE_MEDIA_FPS]));
+
+    CString media_fps;
+    media_fps.Format(_T("%4.6f"), m_xy_double_opt[DOUBLE_MEDIA_FPS]);
+    theApp.WriteProfileString(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), media_fps);
+
     theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS]);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), m_xy_bool_opt[BOOL_HIDE_TRAY_ICON]);
 
