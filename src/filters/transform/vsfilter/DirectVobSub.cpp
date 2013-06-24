@@ -1715,7 +1715,18 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
         m_xy_int_opt[INT_MAX_BITMAP_COUNT] = 1;
     }
 
-    m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL     ] =   theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL), 0) & 3;
+    m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL     ] = LOADLEVEL_WHEN_NEEDED;
+    CString str_load_level = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL), _T("when_needed"));
+    str_load_level.MakeLower();
+    if (str_load_level.Compare(_T("always"))==0)
+    {
+        m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL] = LOADLEVEL_ALWAYS;
+    }
+    else if (str_load_level.Compare(_T("disabled"))==0)
+    {
+        m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL] = LOADLEVEL_DISABLED;
+    }
+
     m_xy_bool_opt[BOOL_LOAD_SETTINGS_EXTENAL ] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD), 1);
     m_xy_bool_opt[BOOL_LOAD_SETTINGS_WEB     ] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD), 0);
     m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), 1);
@@ -1792,7 +1803,21 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
     CString str_pgs_yuv_type = m_xy_str_opt[STRING_PGS_YUV_RANGE] + m_xy_str_opt[STRING_PGS_YUV_MATRIX];
     theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_PGS_COLOR_TYPE), str_pgs_yuv_type);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL   ), m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL     ] & 3);
+    CString str_load_level;
+    switch(m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL])
+    {
+    case LOADLEVEL_ALWAYS:
+        str_load_level = _T("always");
+        break;
+    case LOADLEVEL_DISABLED:
+        str_load_level = _T("disabled");
+        break;
+    default:
+        str_load_level = _T("when_needed");
+        break;
+    }
+    theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL), str_load_level);
+
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD), m_xy_bool_opt[BOOL_LOAD_SETTINGS_EXTENAL ] );
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD     ), m_xy_bool_opt[BOOL_LOAD_SETTINGS_WEB     ] );
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] );
