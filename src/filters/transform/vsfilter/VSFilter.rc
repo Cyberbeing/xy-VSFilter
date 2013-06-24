@@ -726,6 +726,50 @@ END
 // XySubFilter Reg Options
 STRINGTABLE
 BEGIN
+#if defined XY_SUB_FILTER_DLL
+    IDS_RG_LOADLEVEL        "load_level"
+    IDS_RG_EXTERNALLOAD     "ext_load"
+    IDS_RG_WEBLOAD          "web_load"
+    IDS_RG_EMBEDDEDLOAD     "emb_load"
+    IDS_RG_DISABLERELOADER  "disable_reloader"
+    IDS_RG_HIDE             "hide"
+    IDS_RG_YUV_RANGE        "yuv_range"
+    IDS_RG_COLOR_SPACE      "color_space"
+    IDS_RG_BT601_WIDTH      "bt_601_width_for_guess"
+    IDS_RG_BT601_HEIGHT     "bt_601_height_for_guess"
+    IDS_RT_OVERRIDEPLACEMENT "override_placement"
+    IDS_RT_XPERC            "x_perc"
+    IDS_RT_YPERC            "y_perc"
+    IDS_RV_BUFFER           "buffer"
+    IDS_RV_ONLYSHOWFORCEDSUBS "only_show_forced_subs"
+    IDS_RV_POLYGONIZE       "polygonize"
+    IDS_RT_STYLE            "style2"
+    IDS_RTM_SUBTITLEDELAY   "subtitle_delay"
+    IDS_RTM_SUBTITLESPEEDMUL "subtitle_speed_mul"
+    IDS_RTM_SUBTITLESPEEDDIV "subtitle_Speed_div"
+    IDS_RTM_MEDIAFPSENABLED "media_fps_enabled"
+    IDS_RTM_MEDIAFPS        "media_fps"
+    IDS_RT_AUTOPARCOMPENSATION "automatic_par_compensation"
+    IDS_RG_HIDE_TRAY_ICON   "hide_tray_icon"
+    IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM    "bitmap_mru_cache_item_num"
+    IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM   "clipper_mru_cache_item_num"
+    IDS_RP_TEXT_INFO_CACHE_ITEM_NUM     "text_info_cache_item_num"
+    IDS_RP_ASS_TAG_LIST_CACHE_ITEM_NUM  "ass_tag_list_cache_item_num"
+    IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM   "overlay_cache_max_item_num"
+    IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM "scan_line_data_cache_max_item_num"
+    IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM "path_cache_max_item_num"
+    IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM "overlay_no_blur_cache_max_item_num"
+    IDS_RP_SUBPIXEL_POS_LEVEL "subpixel_positioning_level"
+    IDS_RG_LAYOUT_SIZE_OPT              "render_size_opt"
+    IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X "user_specified_render_size_x"
+    IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y "user_specified_render_size_y"
+    IDS_RG_LOAD_EXT_LIST                "load_ext_list"
+    IDS_RG_PGS_COLOR_TYPE               "pgs_color_type"
+    IDS_RP_MAX_BITMAP_COUNT             "max_bitmap_count"
+    IDS_RG_RGB_CORRECTION               "rgb_correction"
+    IDS_RG_SUPPORTED_VERSION "supported_version"
+    IDS_RG_VERSION          "version"
+#else
     IDS_RG_LOADLEVEL        "LoadLevel"
     IDS_RG_EXTERNALLOAD     "ExtLoad"
     IDS_RG_WEBLOAD          "WebLoad"
@@ -768,6 +812,7 @@ BEGIN
     IDS_RG_RGB_CORRECTION               "RGB_CORRECTION"
     IDS_RG_SUPPORTED_VERSION "Supported Version"
     IDS_RG_VERSION          "Version"
+#endif
 END
 
 #endif    // English (United States) resources
