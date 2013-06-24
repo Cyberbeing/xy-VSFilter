@@ -641,10 +641,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_RG_LOADLEVEL        "LoadLevel"
     IDS_RG_INSTANTUPDATE    "InstantUpdate"
     IDS_RG_FLIPPICTURE      "FlipPicture"
-    IDS_RG_HIDE             "Hide"
     IDS_RG_NOYUY2COLORS     "NoYUY2Colors"
     IDS_RG_DOPREBUFFERING   "DoPreBuffering"
     IDS_RG_SHOWOSDSTATS     "ShowOSDStats"
@@ -652,7 +650,6 @@ BEGIN
     IDS_RG_RESX2            "ResX2Mode"
     IDS_RG_RESX2MINW        "ResX2MinWidth"
     IDS_RG_RESX2MINH        "ResX2MinHeight"
-    IDS_RTM_MEDIAFPS        "MediaFPS"
     IDS_RT_SHADOW           "Shadow"
     IDS_RT_OUTLINE          "Outline"
     IDS_RT_LOGFONT          "LOGFONT"
@@ -661,42 +658,27 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_RT_OVERRIDEPLACEMENT "OverridePlacement"
-    IDS_RT_XPERC            "XPerc"
-    IDS_RT_YPERC            "YPerc"
-    IDS_RV_BUFFER           "Buffer"
     IDS_RP_PATH             "Path%d"
     IDS_RL_LANG             "Lang%d"
     IDS_M_SHOWSUBTITLES     "Show Subtitles"
     IDS_M_HIDESUBTITLES     "Hide Subtitles"
     IDS_M_ORIGINALPICTURE   "Original Picture"
     IDS_M_FLIPPEDPICTURE    "Flipped Picture"
-    IDS_RV_POLYGONIZE       "Polygonize"
-    IDS_RG_EXTERNALLOAD     "ExtLoad"
-    IDS_RG_WEBLOAD          "WebLoad"
-    IDS_RG_EMBEDDEDLOAD     "EmbLoad"
-    IDS_RG_COLOR_SPACE     "Color Space"
     IDS_R_PERFORMANCE       "Performance"
 END
 
 STRINGTABLE
 BEGIN
     IDS_R_TIMING            "Timing"
-    IDS_RTM_SUBTITLEDELAY   "Subtitle Delay"
-    IDS_RTM_SUBTITLESPEEDMUL "Subtitle Speedmul"
     IDS_RT_ADVANCEDRENDERER "AdvancedRenderer"
-    IDS_RV_ONLYSHOWFORCEDSUBS "OnlyShowForcedSubs"
     IDS_ORGHEIGHT           "Original height"
     IDS_RG_VMRZOOMENABLED   "VMRZoomEnabled"
-    IDS_RTM_SUBTITLESPEEDDIV "Subtitle Speeddiv"
     IDS_RG_USE_UPSTREAM_PREFERRED_ORDER 
                             "Use Upstream filter's preferred order"
     IDS_EXTTO169            "Extend to 16:9"
     IDS_RG_FORCERGB         "ForceRGB"
     IDS_RG_ENABLEZPICON     "EnableZPIcon"
     IDS_RG_FLIPSUBTITLES    "FlipSubtitles"
-    IDS_RTM_MEDIAFPSENABLED "MediaFPSEnabled"
-    IDS_RG_DISABLERELOADER  "DisableReloader"
     IDS_EXTTO43             "Extend to 4:3"
 END
 
@@ -729,39 +711,54 @@ BEGIN
     IDS_ALWAYSLOAD          "Always load"
     IDS_EXTTO576            "Extend to 576 lines"
     IDS_EXTTO480            "Extend to 480 lines"
-    IDS_RT_AUTOPARCOMPENSATION "AutomaticPARCompensation"
     IDS_RT_PAR_DISABLED     "Disabled"
     IDS_RT_PAR_UPSCALE      "Upscale"
     IDS_RT_PAR_DOWNSCALE    "Downscale"
     IDS_RT_PAR_ACCURATE_SIZE "Accurate size"
-    IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM "Overlay_cache_max_item_num"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_RT_STYLE            "Style2"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM 
-                            "Scan_line_data_cache_max_item_num"
-    IDS_RP_SUBPIXEL_POS_LEVEL "Subpixel Positioning Level"
-    IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM "Path_cache_max_item_num"
-    IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM 
-                            "Overlay_no_blur_cache_max_item_num"
     IDS_RG_OUTPUT_COLORFORMATS "Output Color Format"
     IDS_RG_INPUT_COLORFORMATS "Input Color Format"
+END
+
+// XySubFilter Reg Options
+STRINGTABLE
+BEGIN
+    IDS_RG_LOADLEVEL        "LoadLevel"
+    IDS_RG_EXTERNALLOAD     "ExtLoad"
+    IDS_RG_WEBLOAD          "WebLoad"
+    IDS_RG_EMBEDDEDLOAD     "EmbLoad"
+    IDS_RG_DISABLERELOADER  "DisableReloader"
+    IDS_RG_HIDE             "Hide"
+    IDS_RG_YUV_RANGE        "Yuv Range"
+    IDS_RG_COLOR_SPACE      "Color Space"
     IDS_RG_BT601_WIDTH      "bt.601 width(for guess)"
     IDS_RG_BT601_HEIGHT     "bt.601 height(for guess)"
-    IDS_RG_YUV_RANGE        "Yuv Range"
+    IDS_RT_OVERRIDEPLACEMENT "OverridePlacement"
+    IDS_RT_XPERC            "XPerc"
+    IDS_RT_YPERC            "YPerc"
+    IDS_RV_BUFFER           "Buffer"
+    IDS_RV_ONLYSHOWFORCEDSUBS "OnlyShowForcedSubs"
+    IDS_RV_POLYGONIZE       "Polygonize"
+    IDS_RT_STYLE            "Style2"
+    IDS_RTM_SUBTITLEDELAY   "Subtitle Delay"
+    IDS_RTM_SUBTITLESPEEDMUL "Subtitle Speedmul"
+    IDS_RTM_SUBTITLESPEEDDIV "Subtitle Speeddiv"
+    IDS_RTM_MEDIAFPSENABLED "MediaFPSEnabled"
+    IDS_RTM_MEDIAFPS        "MediaFPS"
+    IDS_RT_AUTOPARCOMPENSATION "AutomaticPARCompensation"
     IDS_RG_HIDE_TRAY_ICON   "hide tray icon"
-    IDS_RG_SUPPORTED_VERSION "Supported Version"
-    IDS_RG_VERSION          "Version"
     IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM    "BITMAP_MRU_CACHE_ITEM_NUM"
     IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM   "CLIPPER_MRU_CACHE_ITEM_NUM"
     IDS_RP_TEXT_INFO_CACHE_ITEM_NUM     "TEXT_INFO_CACHE_ITEM_NUM"
     IDS_RP_ASS_TAG_LIST_CACHE_ITEM_NUM  "ASS_TAG_LIST_CACHE_ITEM_NUM"
+    IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM   "Overlay_cache_max_item_num"
+    IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM "Scan_line_data_cache_max_item_num"
+    IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM "Path_cache_max_item_num"
+    IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM "Overlay_no_blur_cache_max_item_num"
+    IDS_RP_SUBPIXEL_POS_LEVEL "Subpixel Positioning Level"
     IDS_RG_LAYOUT_SIZE_OPT              "RENDER_SIZE_OPT"
     IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X "USER_SPECIFIED_RENDER_SIZE_X"
     IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y "USER_SPECIFIED_RENDER_SIZE_Y"
@@ -769,6 +766,8 @@ BEGIN
     IDS_RG_PGS_COLOR_TYPE               "PGS_COLOR_TYPE"
     IDS_RP_MAX_BITMAP_COUNT             "MAX_BITMAP_COUNT"
     IDS_RG_RGB_CORRECTION               "RGB_CORRECTION"
+    IDS_RG_SUPPORTED_VERSION "Supported Version"
+    IDS_RG_VERSION          "Version"
 END
 
 #endif    // English (United States) resources
