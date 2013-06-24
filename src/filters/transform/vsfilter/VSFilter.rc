@@ -733,7 +733,6 @@ BEGIN
     IDS_RG_EMBEDDEDLOAD     "emb_load"
     IDS_RG_DISABLERELOADER  "disable_reloader"
     IDS_RG_HIDE             "hide"
-    IDS_RG_YUV_RANGE        "yuv_range"
     IDS_RG_COLOR_SPACE      "color_space"
     IDS_RG_BT601_WIDTH      "bt_601_width_for_guess"
     IDS_RG_BT601_HEIGHT     "bt_601_height_for_guess"

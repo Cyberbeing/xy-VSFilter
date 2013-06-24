@@ -1539,20 +1539,36 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
     m_xy_int_opt [INT_SELECTED_LANGUAGE] = 0;
     m_xy_bool_opt[BOOL_HIDE_SUBTITLES  ] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), 0);
 
-    m_xy_int_opt[INT_COLOR_SPACE] = GetCompatibleProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOR_SPACE), DirectVobSubImpl::YuvMatrix_AUTO);
-    if( m_xy_int_opt[INT_COLOR_SPACE]!=DirectVobSubImpl::YuvMatrix_AUTO && 
-        m_xy_int_opt[INT_COLOR_SPACE]!=DirectVobSubImpl::BT_601 && 
-        m_xy_int_opt[INT_COLOR_SPACE]!=DirectVobSubImpl::BT_709 &&
-        m_xy_int_opt[INT_COLOR_SPACE]!=DirectVobSubImpl::GUESS)
+
+    CString str_color_space = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOR_SPACE), _T("AUTO"));
+    if (str_color_space.Left(2).CompareNoCase(_T("TV"))==0)
     {
-        m_xy_int_opt[INT_COLOR_SPACE] = DirectVobSubImpl::YuvMatrix_AUTO;
+        m_xy_int_opt[INT_YUV_RANGE] = DirectVobSubImpl::YuvRange_TV;
     }
-    m_xy_int_opt[INT_YUV_RANGE] = GetCompatibleProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), DirectVobSubImpl::YuvRange_Auto);
-    if( m_xy_int_opt[INT_YUV_RANGE]!=DirectVobSubImpl::YuvRange_Auto && 
-        m_xy_int_opt[INT_YUV_RANGE]!=DirectVobSubImpl::YuvRange_PC && 
-        m_xy_int_opt[INT_YUV_RANGE]!=DirectVobSubImpl::YuvRange_TV )
+    else if (str_color_space.Left(2).CompareNoCase(_T("PC"))==0)
+    {
+        m_xy_int_opt[INT_YUV_RANGE] = DirectVobSubImpl::YuvRange_PC;
+    }
+    else
     {
         m_xy_int_opt[INT_YUV_RANGE] = DirectVobSubImpl::YuvRange_Auto;
+    }
+
+    if (str_color_space.Right(3).CompareNoCase(_T("601"))==0)
+    {
+        m_xy_int_opt[INT_COLOR_SPACE] = DirectVobSubImpl::BT_601;
+    }
+    else if (str_color_space.Right(3).CompareNoCase(_T("709"))==0)
+    {
+        m_xy_int_opt[INT_COLOR_SPACE] = DirectVobSubImpl::BT_709;
+    }
+    else if (str_color_space.Right(5).CompareNoCase(_T("GUESS"))==0)
+    {
+        m_xy_int_opt[INT_COLOR_SPACE] = DirectVobSubImpl::GUESS;
+    }
+    else
+    {
+        m_xy_int_opt[INT_COLOR_SPACE] = DirectVobSubImpl::YuvMatrix_AUTO;
     }
 
     m_bt601Width  = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
@@ -1742,9 +1758,36 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), m_xy_bool_opt[BOOL_HIDE_SUBTITLES]);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), m_xy_int_opt[INT_YUV_RANGE]);
+    CString str_color_space;
+    switch(m_xy_int_opt[INT_YUV_RANGE])
+    {
+    case DirectVobSubImpl::YuvRange_TV:
+        str_color_space = _T("TV");
+        break;
+    case DirectVobSubImpl::YuvRange_PC:
+        str_color_space = _T("PC");
+        break;
+    default:
+        str_color_space = _T("AUTO");
+        break;
+    }
+    switch(m_xy_int_opt[INT_COLOR_SPACE])
+    {
+    case DirectVobSubImpl::BT_601:
+        str_color_space += _T(".BT601");
+        break;
+    case DirectVobSubImpl::BT_709:
+        str_color_space += _T(".BT709");
+        break;
+    case DirectVobSubImpl::GUESS:
+        str_color_space += _T(".GUESS");
+        break;
+    default:
+        str_color_space += _T(".AUTO");
+        break;
+    }
+    theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOR_SPACE), str_color_space);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLOR_SPACE), m_xy_int_opt[INT_COLOR_SPACE]);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_WIDTH), 1024);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_BT601_HEIGHT), 600);
 
