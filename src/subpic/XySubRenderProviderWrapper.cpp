@@ -85,10 +85,6 @@ STDMETHODIMP XySubRenderProviderWrapper::RequestFrame( IXySubRenderFrame**subRen
         {
             ResetAllocator();
         }
-        if(FAILED(m_allocator->AllocDynamicEx(&m_pSubPic))) {
-            XY_LOG_ERROR("Failed to allocate subpic");
-            return E_FAIL;
-        }
     }
 
     POSITION pos = m_provider->GetStartPosition(now, fps);
@@ -119,12 +115,20 @@ STDMETHODIMP XySubRenderProviderWrapper::RequestFrame( IXySubRenderFrame**subRen
 
 HRESULT XySubRenderProviderWrapper::Render( REFERENCE_TIME now, POSITION pos, double fps )
 {
-    ASSERT(m_pSubPic);
-    if(m_pSubPic->GetStart() <= now && now < m_pSubPic->GetStop())
+    if(m_pSubPic && m_pSubPic->GetStart() <= now && now < m_pSubPic->GetStop())
     {
         return S_OK;
     }
     HRESULT hr = E_FAIL;
+
+    //should always re-alloc one for the old be in used by the consumer
+    m_pSubPic = NULL;
+    ASSERT(m_allocator);
+    if(FAILED(m_allocator->AllocDynamicEx(&m_pSubPic))) {
+        XY_LOG_ERROR("Failed to allocate subpic");
+        return E_FAIL;
+    }
+    ASSERT(m_pSubPic);
 
     if(FAILED(m_provider->Lock())) {
         return hr;

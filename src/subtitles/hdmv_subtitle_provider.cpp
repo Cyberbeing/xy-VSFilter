@@ -131,14 +131,6 @@ STDMETHODIMP HdmvSubtitleProvider::RequestFrame( IXySubRenderFrame**subRenderFra
             return S_FALSE;
         }
     }
-    ASSERT(m_allocator);
-    if(!m_pSubPic)
-    {
-        if(FAILED(m_allocator->AllocDynamicEx(&m_pSubPic))) {
-            XY_LOG_ERROR("Failed to allocate subpic");
-            return E_FAIL;
-        }
-    }
 
     hr = Render( now, pos );
     if (SUCCEEDED(hr) && m_xy_sub_render_frame)
@@ -267,16 +259,27 @@ HRESULT HdmvSubtitleProvider::Render( REFERENCE_TIME now, POSITION pos )
 {
     REFERENCE_TIME start = m_pSub->GetStart(pos);
     REFERENCE_TIME stop = m_pSub->GetStop(pos);
+
     if (!(start <= now && now < stop))
     {
         return S_FALSE;
     }
 
-    ASSERT(m_pSubPic);
-    if(m_pSubPic->GetStart() <= now && now < m_pSubPic->GetStop())
+    if(m_pSubPic && m_pSubPic->GetStart() <= now && now < m_pSubPic->GetStop())
     {
         return S_OK;
     }
+
+    //should always re-alloc one for the old be in used by the consumer
+    m_pSubPic = NULL;
+    ASSERT(m_allocator);
+    if(FAILED(m_allocator->AllocDynamicEx(&m_pSubPic))) {
+        XY_LOG_ERROR("Failed to allocate subpic");
+        return E_FAIL;
+    }
+
+    ASSERT(m_pSubPic);
+
     HRESULT hr = E_FAIL;
 
     CMemSubPic * mem_subpic = dynamic_cast<CMemSubPic*>((ISubPicEx *)m_pSubPic);
