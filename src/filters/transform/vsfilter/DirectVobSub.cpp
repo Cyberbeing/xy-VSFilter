@@ -1707,7 +1707,6 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
     CAutoLock cAutoLock(m_propsLock);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE), m_xy_bool_opt[BOOL_HIDE_SUBTITLES]);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DOPREBUFFERING), m_xy_bool_opt[BOOL_PRE_BUFFERING]);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_YUV_RANGE), m_xy_int_opt[INT_YUV_RANGE]);
 
@@ -1723,10 +1722,6 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_VOBSUB), ResStr(IDS_RV_POLYGONIZE), m_xy_bool_opt[BOOL_VOBSUBSETTINGS_POLYGONIZE]);
     CString style;
     theApp.WriteProfileString(ResStr(IDS_R_TEXT), ResStr(IDS_RT_STYLE), style <<= m_defStyle);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPPICTURE), m_xy_bool_opt[BOOL_FLIP_PICTURE]);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FLIPSUBTITLES), m_xy_bool_opt[BOOL_FLIP_SUBTITLE]);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SHOWOSDSTATS), m_xy_bool_opt[BOOL_OSD]);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SAVEFULLPATH), m_xy_bool_opt[BOOL_SAVE_FULL_PATH]);
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), m_SubtitleDelay);
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), m_SubtitleSpeedMul);
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), m_SubtitleSpeedDiv);
@@ -1745,7 +1740,6 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM), m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USE_UPSTREAM_PREFERRED_ORDER), m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER]);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), m_xy_int_opt[INT_LAYOUT_SIZE_OPT]);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx);
@@ -1771,48 +1765,12 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
     CString str_pgs_yuv_type = m_xy_str_opt[STRING_PGS_YUV_RANGE] + m_xy_str_opt[STRING_PGS_YUV_MATRIX];
     theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_PGS_COLOR_TYPE), str_pgs_yuv_type);
 
-    //save output color config
-    {
-        int count = GetOutputColorSpaceNumber();
-        BYTE* pData = DEBUG_NEW BYTE[2*count];
-        for(int i = 0; i < count; i++)
-        {
-            pData[2*i] = static_cast<BYTE>(m_outputColorSpace[i].color_space);
-            pData[2*i+1] = static_cast<BYTE>(m_outputColorSpace[i].selected);
-        }
-        theApp.WriteProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_OUTPUT_COLORFORMATS), pData, 2*count);
-
-        delete [] pData;
-    }
-
-    //save input color config
-    {
-        int count = GetInputColorSpaceNumber();
-        BYTE* pData = DEBUG_NEW BYTE[2*count];
-        for(int i = 0; i < count; i++)
-        {
-            pData[2*i] = static_cast<BYTE>(m_inputColorSpace[i].color_space);
-            pData[2*i+1] = static_cast<BYTE>(m_inputColorSpace[i].selected);
-        }
-        theApp.WriteProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INPUT_COLORFORMATS), pData, 2*count);
-
-        delete [] pData;
-    }
-
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_MOD32FIX ), m_xy_int_opt[INT_EXTEND_PICTURE_HORIZONTAL] & 1);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTPIC   ), m_xy_int_opt[INT_EXTEND_PICTURE_VERTICAL]);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2    ), m_xy_int_opt[INT_EXTEND_PICTURE_RESX2] & 3);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINW), m_xy_size_opt[SIZE_EXTEND_PICTURE_RESX2MIN].cx);
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RESX2MINH), m_xy_size_opt[SIZE_EXTEND_PICTURE_RESX2MIN].cy);
-
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL   ), m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL     ] & 3);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD), m_xy_bool_opt[BOOL_LOAD_SETTINGS_EXTENAL ] );
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD     ), m_xy_bool_opt[BOOL_LOAD_SETTINGS_WEB     ] );
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] );
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED]);
-
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), m_xy_bool_opt[BOOL_ENABLE_ZP_ICON]);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), CUR_SUPPORTED_FILTER_VERSION);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), XY_VSFILTER_VERSION_COMMIT);
