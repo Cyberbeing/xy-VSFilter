@@ -10,7 +10,7 @@ class CDirectVobSubFilter;
 [uuid("2dfcb782-ec20-4a7c-b530-4577adb33f21")]
 class XySubFilter
     : public CBaseFilter
-    , public CDirectVobSub
+    , public CDVS4XySubFilter
     , public ISpecifyPropertyPages
     , public IAMStreamSelect
     , public CAMThread

@@ -41,7 +41,7 @@ const SubRenderOptionsImpl::OptionMap options[] =
 XySubFilter::XySubFilter( LPUNKNOWN punk, 
     HRESULT* phr, const GUID& clsid /*= __uuidof(XySubFilter)*/ )
     : CBaseFilter(NAME("XySubFilter"), punk, &m_csFilter, clsid)
-    , CDirectVobSub(XyVobFilterOptions, &m_csFilter)
+    , CDVS4XySubFilter(XyVobFilterOptions, &m_csFilter)
     , SubRenderOptionsImpl(::options, this)
     , m_curSubStream(NULL)
     , m_not_first_pause(false)
@@ -322,7 +322,7 @@ STDMETHODIMP XySubFilter::Pause()
 
 HRESULT XySubFilter::OnOptionChanged( unsigned field )
 {
-    HRESULT hr = CDirectVobSub::OnOptionChanged(field);
+    HRESULT hr = DirectVobSubImpl::OnOptionChanged(field);
     if (FAILED(hr))
     {
         return hr;
@@ -375,7 +375,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
 
 HRESULT XySubFilter::OnOptionReading( unsigned field )
 {
-    HRESULT hr = CDirectVobSub::OnOptionReading(field);
+    HRESULT hr = DirectVobSubImpl::OnOptionReading(field);
     if (FAILED(hr))
     {
         return hr;
@@ -396,7 +396,7 @@ HRESULT XySubFilter::OnOptionReading( unsigned field )
 STDMETHODIMP XySubFilter::XyGetInt( unsigned field, int *value )
 {
     CAutoLock cAutoLock(&m_csFilter);
-    HRESULT hr = CDirectVobSub::XyGetInt(field, value);
+    HRESULT hr = DirectVobSubImpl::XyGetInt(field, value);
     if(hr != NOERROR)
     {
         return hr;
@@ -448,13 +448,13 @@ STDMETHODIMP XySubFilter::XyGetString( unsigned field, LPWSTR *value, int *chars
         }
         break;
     }
-    return CDirectVobSub::XyGetString(field, value,chars);
+    return DirectVobSubImpl::XyGetString(field, value,chars);
 }
 
 STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
 {
     CAutoLock cAutolock(&m_csFilter);
-    HRESULT hr = CDirectVobSub::XySetInt(field, value);
+    HRESULT hr = DirectVobSubImpl::XySetInt(field, value);
     if(hr != NOERROR)
     {
         return hr;
@@ -524,7 +524,7 @@ STDMETHODIMP XySubFilter::XySetBool(unsigned field, bool      value)
         }
         break;
     }
-    return CDirectVobSub::XySetBool(field, value);
+    return DirectVobSubImpl::XySetBool(field, value);
 }
 
 //
@@ -532,7 +532,7 @@ STDMETHODIMP XySubFilter::XySetBool(unsigned field, bool      value)
 //
 STDMETHODIMP XySubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 {
-    HRESULT hr = CDirectVobSub::get_LanguageName(iLanguage, ppName);
+    HRESULT hr = DirectVobSubImpl::get_LanguageName(iLanguage, ppName);
 
     if(!ppName) return E_POINTER;
 
@@ -567,7 +567,7 @@ STDMETHODIMP XySubFilter::get_CachesInfo(CachesInfo* caches_info)
 {
     XY_LOG_INFO(caches_info);
     CAutoLock cAutolock(&m_csFilter);
-    HRESULT hr = CDirectVobSub::get_CachesInfo(caches_info);
+    HRESULT hr = DirectVobSubImpl::get_CachesInfo(caches_info);
 
     caches_info->path_cache_cur_item_num    = CacheManager::GetPathDataMruCache()->GetCurItemNum();
     caches_info->path_cache_hit_count       = CacheManager::GetPathDataMruCache()->GetCacheHitCount();
@@ -616,7 +616,7 @@ STDMETHODIMP XySubFilter::get_XyFlyWeightInfo( XyFlyWeightInfo* xy_fw_info )
 {
     XY_LOG_INFO(xy_fw_info);
     CAutoLock cAutolock(&m_csFilter);
-    HRESULT hr = CDirectVobSub::get_XyFlyWeightInfo(xy_fw_info);
+    HRESULT hr = DirectVobSubImpl::get_XyFlyWeightInfo(xy_fw_info);
 
     xy_fw_info->xy_fw_string_w.cur_item_num = XyFwStringW::GetCacher()->GetCurItemNum();
     xy_fw_info->xy_fw_string_w.hit_count = XyFwStringW::GetCacher()->GetCacheHitCount();
@@ -633,7 +633,7 @@ STDMETHODIMP XySubFilter::get_MediaFPS(bool* fEnabled, double* fps)
 {
     CAutoLock cAutolock(&m_csFilter);
     XY_LOG_INFO(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
-    HRESULT hr = CDirectVobSub::get_MediaFPS(fEnabled, fps);
+    HRESULT hr = DirectVobSubImpl::get_MediaFPS(fEnabled, fps);
 
     CComQIPtr<IMediaSeeking> pMS = m_pGraph;
     double rate;
@@ -650,7 +650,7 @@ STDMETHODIMP XySubFilter::put_MediaFPS(bool fEnabled, double fps)
 {
     CAutoLock cAutolock(&m_csFilter);
     XY_LOG_INFO(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
-    HRESULT hr = CDirectVobSub::put_MediaFPS(fEnabled, fps);
+    HRESULT hr = DirectVobSubImpl::put_MediaFPS(fEnabled, fps);
 
     CComQIPtr<IMediaSeeking> pMS = m_pGraph;
     if (pMS)
@@ -674,7 +674,7 @@ STDMETHODIMP XySubFilter::put_MediaFPS(bool fEnabled, double fps)
 STDMETHODIMP XySubFilter::put_TextSettings(STSStyle* pDefStyle)
 {
     XY_LOG_INFO(pDefStyle);
-    HRESULT hr = CDirectVobSub::put_TextSettings(pDefStyle);
+    HRESULT hr = DirectVobSubImpl::put_TextSettings(pDefStyle);
 
     if(hr == NOERROR)
     {
@@ -687,7 +687,7 @@ STDMETHODIMP XySubFilter::put_TextSettings(STSStyle* pDefStyle)
 STDMETHODIMP XySubFilter::put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType)
 {
     XY_LOG_INFO(ePARCompensationType);
-    HRESULT hr = CDirectVobSub::put_AspectRatioSettings(ePARCompensationType);
+    HRESULT hr = DirectVobSubImpl::put_AspectRatioSettings(ePARCompensationType);
 
     if(hr == NOERROR)
     {
@@ -1186,7 +1186,7 @@ void XySubFilter::SetYuvMatrix()
     if (dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream)!=NULL) {
         ColorConvTable::YuvMatrixType yuv_matrix = ColorConvTable::BT601;
         ColorConvTable::YuvRangeType  yuv_range  = ColorConvTable::RANGE_TV;
-        if ( m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::YuvMatrix_AUTO )
+        if ( m_xy_int_opt[INT_COLOR_SPACE]==DirectVobSubImpl::YuvMatrix_AUTO )
         {
             if (m_video_yuv_matrix_decided_by_sub!=ColorConvTable::NONE)
             {
@@ -1201,13 +1201,13 @@ void XySubFilter::SetYuvMatrix()
         {
             switch(m_xy_int_opt[INT_COLOR_SPACE])
             {
-            case CDirectVobSub::BT_601:
+            case DirectVobSubImpl::BT_601:
                 yuv_matrix = ColorConvTable::BT601;
                 break;
-            case CDirectVobSub::BT_709:
+            case DirectVobSubImpl::BT_709:
                 yuv_matrix = ColorConvTable::BT709;
                 break;
-            case CDirectVobSub::GUESS:
+            case DirectVobSubImpl::GUESS:
             default:
                 if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Right(3).CompareNoCase(L"601")==0)
                 {
@@ -1227,7 +1227,7 @@ void XySubFilter::SetYuvMatrix()
             }
         }
 
-        if( m_xy_int_opt[INT_YUV_RANGE]==CDirectVobSub::YuvRange_Auto )
+        if( m_xy_int_opt[INT_YUV_RANGE]==DirectVobSubImpl::YuvRange_Auto )
         {
             if (m_video_yuv_range_decided_by_sub!=ColorConvTable::RANGE_NONE)
                 yuv_range = m_video_yuv_range_decided_by_sub;
@@ -1238,13 +1238,13 @@ void XySubFilter::SetYuvMatrix()
         {
             switch(m_xy_int_opt[INT_YUV_RANGE])
             {
-            case CDirectVobSub::YuvRange_TV:
+            case DirectVobSubImpl::YuvRange_TV:
                 yuv_range = ColorConvTable::RANGE_TV;
                 break;
-            case CDirectVobSub::YuvRange_PC:
+            case DirectVobSubImpl::YuvRange_PC:
                 yuv_range = ColorConvTable::RANGE_PC;
                 break;
-            case CDirectVobSub::YuvRange_Auto:
+            case DirectVobSubImpl::YuvRange_Auto:
                 yuv_range = ColorConvTable::RANGE_TV;
                 break;
             }

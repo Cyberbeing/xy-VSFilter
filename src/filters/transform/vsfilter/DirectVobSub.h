@@ -27,7 +27,7 @@
 #include "version.h"
 #include "XyOptionsImpl.h"
 
-class CDirectVobSub : public IDirectVobSub2, public XyOptionsImpl, public IFilterVersion
+class DirectVobSubImpl : public IDirectVobSub2, public XyOptionsImpl, public IFilterVersion
 {
 public:
     typedef XyOptionsImpl::Option Option;
@@ -60,8 +60,8 @@ public:
     typedef DirectVobSubXyOptions::XyFlyWeightInfo XyFlyWeightInfo;
     typedef DirectVobSubXyOptions::ColorSpaceOpt ColorSpaceOpt;
 protected:
-    CDirectVobSub(const Option *options, CCritSec * pLock);
-    virtual ~CDirectVobSub();
+    DirectVobSubImpl(const Option *options, CCritSec * pLock);
+    virtual ~DirectVobSubImpl();
 
     bool is_compatible();
     UINT GetCompatibleProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault);
@@ -164,8 +164,6 @@ public:
 
     STDMETHOD (get_CachesInfo)(CachesInfo* caches_info);
     STDMETHOD (get_XyFlyWeightInfo)(XyFlyWeightInfo* xy_fw_info);
-    
-	STDMETHODIMP UpdateRegistry();
 
 	STDMETHODIMP HasConfigDialog(int iSelected);
 	STDMETHODIMP ShowConfigDialog(int iSelected, HWND hWndParent);
@@ -197,4 +195,24 @@ public:
 	// IFilterVersion
 	
 	STDMETHODIMP_(DWORD) GetFilterVersion();
+};
+
+// For DirectVobSubFilter
+class CDirectVobSub: public DirectVobSubImpl
+{
+public:
+    CDirectVobSub(const Option *options, CCritSec * pLock);
+
+protected:
+    STDMETHODIMP UpdateRegistry();
+};
+
+// For XySubFilter
+class CDVS4XySubFilter: public DirectVobSubImpl
+{
+public:
+    CDVS4XySubFilter(const Option *options, CCritSec * pLock);
+
+protected:
+    STDMETHODIMP UpdateRegistry();
 };
