@@ -78,7 +78,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     m_tbid.hSystrayWnd = NULL;
     m_tbid.graph = NULL;
     m_tbid.fRunOnce = false;
-    m_tbid.fShowIcon = (theApp.m_AppName.Find(_T("zplayer"), 0) < 0 || m_xy_bool_opt[BOOL_ENABLE_ZP_ICON]);
+    m_tbid.fShowIcon = true;
 
     CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
     CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]);
