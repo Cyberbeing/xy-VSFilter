@@ -333,6 +333,7 @@ void CDVBSub::Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox)
 {
     DVB_PAGE* pPage = FindPage(rt);
 
+    ::SetRectEmpty(&bbox);
     if (pPage != NULL) {
         pPage->rendered = true;
         TRACE_DVB((_T("DVB - Renderer - %s - %s\n"), ReftimeToCString(pPage->rtStart), ReftimeToCString(pPage->rtStop)));
@@ -358,18 +359,12 @@ void CDVBSub::Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox)
                         pObject->SetPalette(pCLUT->size, pCLUT->palette, color_type, 
                             m_yuvRangeSetting==CompositionObject::RANGE_NONE ? CompositionObject::RANGE_TV : m_yuvRangeSetting);
                         pObject->InitColor(spd);
-                        pObject->RenderDvb(spd, nX, nY);
+                        pObject->RenderDvb(spd, nX, nY, &bbox);
                         TRACE_DVB((_T(" --> %d/%d - %d/%d\n"), i + 1, pPage->regionCount, j + 1, pRegion->objectCount));
                     }
                 }
             }
         }
-
-        bbox.left   = 0;
-        bbox.top    = 0;
-        bbox.right  = m_Display.width < spd.w ? m_Display.width : spd.w;
-        ASSERT(spd.h>=0);
-        bbox.bottom = m_Display.height < spd.h ? m_Display.height : spd.h;
     }
 }
 

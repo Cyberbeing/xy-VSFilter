@@ -382,7 +382,7 @@ void CompositionObject::RenderHdmv(SubPicDesc& spd)
 }
 
 
-void CompositionObject::RenderDvb(SubPicDesc& spd, short nX, short nY)
+void CompositionObject::RenderDvb(SubPicDesc& spd, short nX, short nY, RECT *dirtyRect /*= NULL*/)
 {
     if (!m_pRLEData) {
         return;
@@ -395,12 +395,12 @@ void CompositionObject::RenderDvb(SubPicDesc& spd, short nX, short nY)
     sTopFieldLength    = gb.ReadShort();
     sBottomFieldLength = gb.ReadShort();
 
-    DvbRenderField(spd, gb, nX, nY,     sTopFieldLength);
-    DvbRenderField(spd, gb, nX, nY + 1, sBottomFieldLength);
+    DvbRenderField(spd, gb, nX, nY,     sTopFieldLength,    dirtyRect);
+    DvbRenderField(spd, gb, nX, nY + 1, sBottomFieldLength, dirtyRect);
 }
 
 
-void CompositionObject::DvbRenderField(SubPicDesc& spd, CGolombBuffer& gb, short nXStart, short nYStart, short nLength)
+void CompositionObject::DvbRenderField(SubPicDesc& spd, CGolombBuffer& gb, short nXStart, short nYStart, short nLength, RECT *dirtyRect /*= NULL*/)
 {
     //FillSolidRect(spd, nXStart, nYStart, m_width, m_height, 0xFFFF0000);  // Red opaque
     //FillSolidRect(spd, nXStart, nYStart, m_width, m_height, 0xCC00FF00);  // Green 80%
@@ -413,13 +413,13 @@ void CompositionObject::DvbRenderField(SubPicDesc& spd, CGolombBuffer& gb, short
         BYTE bType = gb.ReadByte();
         switch (bType) {
             case 0x10:
-                Dvb2PixelsCodeString(spd, gb, nX, nY);
+                Dvb2PixelsCodeString(spd, gb, nX, nY, dirtyRect);
                 break;
             case 0x11:
-                Dvb4PixelsCodeString(spd, gb, nX, nY);
+                Dvb4PixelsCodeString(spd, gb, nX, nY, dirtyRect);
                 break;
             case 0x12:
-                Dvb8PixelsCodeString(spd, gb, nX, nY);
+                Dvb8PixelsCodeString(spd, gb, nX, nY, dirtyRect);
                 break;
             case 0x20:
                 gb.SkipBytes(2);
@@ -442,7 +442,7 @@ void CompositionObject::DvbRenderField(SubPicDesc& spd, CGolombBuffer& gb, short
 }
 
 
-void CompositionObject::Dvb2PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb, short& nX, short& nY)
+void CompositionObject::Dvb2PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb, short& nX, short& nY, RECT *dirtyRect /*= NULL*/)
 {
     BYTE  bTemp;
     BYTE  nPaletteIndex = 0;
@@ -491,6 +491,11 @@ void CompositionObject::Dvb2PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb,
 
         if (nCount > 0) {
             FillSolidRect(spd, nX, nY, nCount, 1, m_Colors[nPaletteIndex]);
+            if (dirtyRect)
+            {
+                CRect tmp(nX,nY,nX+nCount,nY+1);
+                ::UnionRect(dirtyRect, dirtyRect, &tmp);
+            }
             nX += nCount;
         }
     }
@@ -498,7 +503,7 @@ void CompositionObject::Dvb2PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb,
     gb.BitByteAlign();
 }
 
-void CompositionObject::Dvb4PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb, short& nX, short& nY)
+void CompositionObject::Dvb4PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb, short& nX, short& nY, RECT *dirtyRect /*= NULL*/)
 {
     BYTE  bTemp;
     BYTE  nPaletteIndex = 0;
@@ -554,6 +559,11 @@ void CompositionObject::Dvb4PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb,
 
         if (nCount > 0) {
             FillSolidRect(spd, nX, nY, nCount, 1, m_Colors[nPaletteIndex]);
+            if (dirtyRect)
+            {
+                CRect tmp(nX,nY,nX+nCount,nY+1);
+                ::UnionRect(dirtyRect, dirtyRect, &tmp);
+            }
             nX += nCount;
         }
     }
@@ -561,7 +571,7 @@ void CompositionObject::Dvb4PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb,
     gb.BitByteAlign();
 }
 
-void CompositionObject::Dvb8PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb, short& nX, short& nY)
+void CompositionObject::Dvb8PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb, short& nX, short& nY, RECT *dirtyRect /*= NULL*/)
 {
     BYTE  bTemp;
     BYTE  nPaletteIndex = 0;
@@ -594,6 +604,11 @@ void CompositionObject::Dvb8PixelsCodeString(SubPicDesc& spd, CGolombBuffer& gb,
 
         if (nCount > 0) {
             FillSolidRect(spd, nX, nY, nCount, 1, m_Colors[nPaletteIndex]);
+            if (dirtyRect)
+            {
+                CRect tmp(nX,nY,nX+nCount,nY+1);
+                ::UnionRect(dirtyRect, dirtyRect, &tmp);
+            }
             nX += nCount;
         }
     }
