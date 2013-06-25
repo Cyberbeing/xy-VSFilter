@@ -1194,7 +1194,20 @@ void XySubFilter::SetYuvMatrix()
             }
             else
             {
-                yuv_matrix = ColorConvTable::BT601;
+                if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Right(3).CompareNoCase(L"601")==0)
+                {
+                    yuv_matrix = ColorConvTable::BT601;
+                }
+                else if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Right(3).CompareNoCase(L"709")==0)
+                {
+                    yuv_matrix = ColorConvTable::BT709;
+                }
+                else
+                {
+                    XY_LOG_WARN(L"Can NOT get useful YUV range from consumer:"<<m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].GetString());
+                    yuv_matrix = (m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cx > m_bt601Width || 
+                        m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cy > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
+                }
             }
         }
         else

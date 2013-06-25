@@ -1416,6 +1416,9 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
 
     int version = 3, sver = 3;
 
+    ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT601;
+    ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_TV;
+
     CStringW buff;
     while(file->ReadString(buff))
     {
@@ -1900,8 +1903,8 @@ CSimpleTextSubtitle::CSimpleTextSubtitle()
     m_encoding = CTextFile::ASCII;
     m_ePARCompensationType = EPCTDisabled;
     m_dPARCompensation = 1.0;
-    m_eYCbCrMatrix = YCbCrMatrix_BT601;
-    m_eYCbCrRange = YCbCrRange_TV;
+    m_eYCbCrMatrix = YCbCrMatrix_AUTO;
+    m_eYCbCrRange = YCbCrRange_AUTO;
 }
 
 CSimpleTextSubtitle::~CSimpleTextSubtitle()
