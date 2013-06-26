@@ -216,29 +216,15 @@ LRESULT CSystrayWindow::OnNotifyIcon(WPARAM wParam, LPARAM lParam)
 			// or else when closing the app the graph doesn't get released and dvobsub's JoinFilterGraph
 			// is never called to close us down.
 
-			CComPtr<IBaseFilter> pBF2;
+            if(CComQIPtr<IVideoWindow> pVW = m_tbid->graph)
+            {
+                HWND hwnd;
+                if (SUCCEEDED(pVW->get_Owner((OAHWND*)&hwnd))
+                    || SUCCEEDED(pVW->get_MessageDrain((OAHWND*)&hwnd)))
+                    hWnd = hwnd;
+            }
 
-			BeginEnumFilters(m_tbid->graph, pEF, pBF)
-			{
-				if(!CComQIPtr<IDirectVobSub>(pBF))
-					continue;
-
-				if(CComQIPtr<IVideoWindow> pVW = m_tbid->graph) 
-				{
-					HWND hwnd;
-					if(SUCCEEDED(pVW->get_Owner((OAHWND*)&hwnd))
-					|| SUCCEEDED(pVW->get_MessageDrain((OAHWND*)&hwnd)))
-						hWnd = hwnd;
-				}
-
-				pBF2 = pBF;
-
-				break;
-			}
-			EndEnumFilters
-
-			if(pBF2)
-				ShowPPage(pBF2, hWnd);
+			ShowPPage(CComQIPtr<IBaseFilter>(m_tbid->dvs), hWnd);
 		}
 		break;
 
