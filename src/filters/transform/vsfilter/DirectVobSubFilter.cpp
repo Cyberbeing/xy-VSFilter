@@ -566,7 +566,7 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
         if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
         {
             m_tbid.graph = m_pGraph;
-            m_tbid.dvs = static_cast<IDirectVobSub*>(this);
+            m_tbid.dvs = this;
 
             m_hSystrayThread = ::CreateSystray(&m_tbid);
             XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);

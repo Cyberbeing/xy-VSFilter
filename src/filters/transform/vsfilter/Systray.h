@@ -27,7 +27,7 @@ typedef struct
 {
     HWND hSystrayWnd;
     IFilterGraph* graph;
-    IDirectVobSub* dvs;
+    IDirectVobSub2* dvs;
     bool fRunOnce, fShowIcon;
     ATL::CEvent WndCreatedEvent;
 } SystrayIconData;
