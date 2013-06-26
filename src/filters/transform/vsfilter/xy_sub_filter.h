@@ -114,6 +114,13 @@ private:
     void SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles);
     DWORD ThreadProc();
 private:
+    void KeepVSFilterAway();
+    void RestoreVSFilterLoadingOption();
+
+    int m_old_dvs_load_level;
+    bool m_old_dvs_load_embeded, m_old_dvs_load_external, m_old_dvs_load_web;
+    bool m_dvs_load_option_changed;
+private:
     ColorConvTable::YuvMatrixType m_video_yuv_matrix_decided_by_sub;
     ColorConvTable::YuvRangeType m_video_yuv_range_decided_by_sub;
 

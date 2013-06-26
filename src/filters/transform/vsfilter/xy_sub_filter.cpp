@@ -49,6 +49,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     , m_context_id(0)
     , m_last_requested(-1)
     , m_workaround_mpc_hc(false)
+    , m_dvs_load_option_changed(false)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
@@ -230,6 +231,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
                 m_workaround_mpc_hc = true;
             }
         }
+        KeepVSFilterAway();
         LoadExternalSubtitle(pGraph);
     }
     else
@@ -244,6 +246,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
         ::DeleteSystray(&m_hSystrayThread, &m_tbid);
         m_workaround_mpc_hc = false;
         m_not_first_pause = false;
+        RestoreVSFilterLoadingOption();
     }
 
     return __super::JoinFilterGraph(pGraph, pName);
@@ -314,6 +317,7 @@ STDMETHODIMP XySubFilter::Pause()
             XY_LOG_ERROR("Failed when find and connect consumer");
             return hr;
         }
+        RestoreVSFilterLoadingOption();
         m_not_first_pause = true;
     }
     return CBaseFilter::Pause();
@@ -1088,6 +1092,59 @@ DWORD XySubFilter::ThreadProc()
     return 0;
 }
 
+
+void XySubFilter::KeepVSFilterAway()
+{
+    //The auto-loading version CDirectVobSubFilter2 won't join the graph if it finds a filter exposing a IDirectVobSub interface
+    //But CDirectVobSubFilter always join the graph happily
+    if (m_dvs_load_option_changed)
+    {
+        return;
+    }
+    HRESULT hr = NOERROR;
+    CComPtr<IDirectVobSub> pDVS;
+    if (SUCCEEDED(pDVS.CoCreateInstance(__uuidof(CDirectVobSubFilter))))
+    {
+        hr = pDVS->get_LoadSettings(&m_old_dvs_load_level, &m_old_dvs_load_external, &m_old_dvs_load_web, &m_old_dvs_load_embeded);
+        if ( m_old_dvs_load_level==DirectVobSubImpl::LOADLEVEL_DISABLED || 
+            !(m_old_dvs_load_external||m_old_dvs_load_web||m_old_dvs_load_embeded) )
+        {
+            return;
+        }
+        if (SUCCEEDED(hr))
+        {
+            hr = pDVS->put_LoadSettings(DirectVobSubImpl::LOADLEVEL_DISABLED, m_old_dvs_load_external, m_old_dvs_load_web, m_old_dvs_load_embeded);
+            if (FAILED(hr))
+            {
+                XY_LOG_FATAL("Failed to set VSFilter's loading option.");
+            }
+            m_dvs_load_option_changed = true;
+        }
+    }
+    else
+    {
+        XY_LOG_INFO("VSFilter may not installed.");
+    }
+}
+
+void XySubFilter::RestoreVSFilterLoadingOption()
+{
+    if (m_dvs_load_option_changed)
+    {
+        HRESULT hr = NOERROR;
+        CComPtr<IDirectVobSub> pDVS;
+        if (SUCCEEDED(pDVS.CoCreateInstance(__uuidof(CDirectVobSubFilter))))
+        {
+            hr = pDVS->put_LoadSettings(m_old_dvs_load_level, m_old_dvs_load_external, m_old_dvs_load_web, m_old_dvs_load_embeded);
+            if (FAILED(hr))
+            {
+                XY_LOG_FATAL("Failed to set VSFilter's loading option.");
+            }
+        }
+        m_dvs_load_option_changed = false;
+    }
+}
+
 //
 // ISubRenderProvider
 //
@@ -1180,7 +1237,7 @@ STDMETHODIMP XySubFilter::Disconnect( void )
 
 //
 // XySubFilter
-// 
+//
 void XySubFilter::SetYuvMatrix()
 {
     CAutoLock cAutolock(&m_csFilter);
