@@ -370,6 +370,14 @@ DWORD CALLBACK SystrayThreadProc(void* pParam)
 	return 0;
 }
 
+HANDLE CreateSystray( SystrayIconData *data )
+{
+    DWORD tid;
+    HANDLE ret = CreateThread(0, 0, SystrayThreadProc, data, 0, &tid);
+    WaitForSingleObject(data->WndCreatedEvent, INFINITE);
+    return ret;
+}
+
 void DeleteSystray(HANDLE *pSystrayThread, SystrayIconData* data )
 {
     ASSERT(data&&pSystrayThread);
@@ -377,16 +385,13 @@ void DeleteSystray(HANDLE *pSystrayThread, SystrayIconData* data )
     if (*pSystrayThread)
     {
         XY_LOG_INFO(data<<XY_LOG_VAR_2_STR(data->hSystrayWnd));
-        if (data->hSystrayWnd || WaitForSingleObject(data->WndCreatedEvent, 1000)== WAIT_OBJECT_0)
+        if (data->hSystrayWnd)
         {
-            if (data->hSystrayWnd)
+            SendMessage(data->hSystrayWnd, WM_CLOSE, 0, 0);
+            if(WaitForSingleObject(*pSystrayThread, 10000) != WAIT_OBJECT_0)
             {
-                SendMessage(data->hSystrayWnd, WM_CLOSE, 0, 0);
-                if(WaitForSingleObject(*pSystrayThread, 10000) != WAIT_OBJECT_0)
-                {
-                    XY_LOG_WARN(_T("CALL THE AMBULANCE!!!"));
-                    TerminateThread(*pSystrayThread, (DWORD)-1);
-                }
+                XY_LOG_WARN(_T("CALL THE AMBULANCE!!!"));
+                TerminateThread(*pSystrayThread, (DWORD)-1);
             }
         }
         else

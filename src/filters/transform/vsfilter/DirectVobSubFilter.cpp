@@ -568,8 +568,7 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
             m_tbid.graph = m_pGraph;
             m_tbid.dvs = static_cast<IDirectVobSub*>(this);
 
-            DWORD tid;
-            m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
+            m_hSystrayThread = ::CreateSystray(&m_tbid);
             XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
         }
         m_pInput->SetMediaType( &m_pInput->CurrentMediaType() );

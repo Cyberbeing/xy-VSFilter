@@ -295,8 +295,7 @@ STDMETHODIMP XySubFilter::Pause()
             m_tbid.graph = m_pGraph;
             m_tbid.dvs = static_cast<IDirectVobSub*>(this);
 
-            DWORD tid;
-            m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
+            m_hSystrayThread = ::CreateSystray(&m_tbid);
             XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
         }
         hr = StartStreaming();
@@ -2004,8 +2003,7 @@ HRESULT XySubFilter::CompleteConnect( SubtitleInputPin2* pSubPin, IPin* pReceive
         m_tbid.graph = m_pGraph;
         m_tbid.dvs = static_cast<IDirectVobSub*>(this);
 
-        DWORD tid;
-        m_hSystrayThread = CreateThread(0, 0, SystrayThreadProc, &m_tbid, 0, &tid);
+        m_hSystrayThread = ::CreateSystray(&m_tbid);
         XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
     }
     return S_OK;
