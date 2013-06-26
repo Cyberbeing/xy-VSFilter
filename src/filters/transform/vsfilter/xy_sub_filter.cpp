@@ -165,11 +165,15 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
     {
         BeginEnumFilters(pGraph, pEF, pBF)
         {
-            if(pBF != (IBaseFilter*)this && CComQIPtr<IDirectVobSub>(pBF))
+            if(pBF != (IBaseFilter*)this)
             {
                 CLSID clsid;
                 pBF->GetClassID(&clsid);
                 if (clsid==__uuidof(XySubFilter))
+                {
+                    return E_FAIL;
+                }
+                else if (clsid==__uuidof(CDirectVobSubFilter) || clsid==__uuidof(CDirectVobSubFilter2))
                 {
                     return E_FAIL;
                 }
