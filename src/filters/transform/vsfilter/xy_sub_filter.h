@@ -7,6 +7,13 @@
 
 class CDirectVobSubFilter;
 
+// Expose this interface if you do NOT want to work with XySubFilter in a graph
+[uuid("8871ac83-89c8-44e9-913f-a9a2a322440a")]
+interface IXySubFilterGraphMutex : public IUnknown
+{
+
+};
+
 [uuid("2dfcb782-ec20-4a7c-b530-4577adb33f21")]
 class XySubFilter
     : public CBaseFilter
@@ -16,6 +23,7 @@ class XySubFilter
     , public CAMThread
     , public SubRenderOptionsImpl
     , public ISubRenderProvider
+    , public IXySubFilterGraphMutex
 {
 public:
     friend class SubtitleInputPin2;

@@ -129,6 +129,7 @@ STDMETHODIMP XySubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
         QI(ISpecifyPropertyPages)
         QI(IAMStreamSelect)
         QI(ISubRenderProvider)
+        QI(IXySubFilterGraphMutex)
         (riid==__uuidof(ISubRenderOptions)) ? GetInterface((ISubRenderProvider*)this, ppv) :
         __super::NonDelegatingQueryInterface(riid, ppv);
 }
@@ -168,13 +169,13 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
         {
             if(pBF != (IBaseFilter*)this)
             {
-                CLSID clsid;
-                pBF->GetClassID(&clsid);
-                if (clsid==__uuidof(XySubFilter))
+                if (CComQIPtr<IXySubFilterGraphMutex>(pBF))
                 {
                     return E_FAIL;
                 }
-                else if (clsid==__uuidof(CDirectVobSubFilter) || clsid==__uuidof(CDirectVobSubFilter2))
+                CLSID clsid;
+                pBF->GetClassID(&clsid);
+                if (clsid==__uuidof(CDirectVobSubFilter) || clsid==__uuidof(CDirectVobSubFilter2))
                 {
                     return E_FAIL;
                 }
