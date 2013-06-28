@@ -1343,6 +1343,11 @@ void XySubFilter::SetYuvMatrix()
             m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
             return;
         }
+        else if (m_video_yuv_matrix_decided_by_sub==ColorConvTable::NONE)
+        {
+            m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
+            return;
+        }
 
         if (yuv_range==ColorConvTable::RANGE_TV) {
             m_xy_str_opt[STRING_YUV_MATRIX] = L"TV";
