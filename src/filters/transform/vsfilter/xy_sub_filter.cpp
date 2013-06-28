@@ -299,6 +299,7 @@ STDMETHODIMP XySubFilter::Pause()
     if (!m_not_first_pause)
     {
         m_not_first_pause = true;
+        RestoreVSFilterLoadingOption();
         if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
         {
             m_tbid.graph = m_pGraph;
@@ -319,7 +320,6 @@ STDMETHODIMP XySubFilter::Pause()
             XY_LOG_ERROR("Failed when find and connect consumer");
             return hr;
         }
-        RestoreVSFilterLoadingOption();
     }
     return CBaseFilter::Pause();
 }
