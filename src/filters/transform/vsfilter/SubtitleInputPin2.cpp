@@ -111,13 +111,3 @@ HRESULT SubtitleInputPin2::CheckMediaType(const CMediaType* pmt)
     }
     return __super::CheckMediaType(pmt);
 }
-
-HRESULT SubtitleInputPin2::CompleteConnect( IPin* pReceivePin )
-{
-    HRESULT hr = __super::CompleteConnect(pReceivePin);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-    return xy_sub_filter->CompleteConnect(this, pReceivePin);
-}

@@ -300,24 +300,27 @@ STDMETHODIMP XySubFilter::Pause()
     {
         m_not_first_pause = true;
         RestoreVSFilterLoadingOption();
-        if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
+        hr = FindAndConnectConsumer(m_pGraph);
+        if (FAILED(hr))
         {
-            m_tbid.graph = m_pGraph;
-            m_tbid.dvs = this;
+            XY_LOG_ERROR("Failed when find and connect consumer");
+            return hr;
+        }
+        if (hr==S_OK && m_consumer)//a consumer exists
+        {
+            if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
+            {
+                m_tbid.graph = m_pGraph;
+                m_tbid.dvs = this;
 
-            m_hSystrayThread = ::CreateSystray(&m_tbid);
-            XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
+                m_hSystrayThread = ::CreateSystray(&m_tbid);
+                XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
+            }
         }
         hr = StartStreaming();
         if (FAILED(hr))
         {
             XY_LOG_ERROR("Failed to StartStreaming."<<XY_LOG_VAR_2_STR(hr));
-            return hr;
-        }
-        hr = FindAndConnectConsumer(m_pGraph);
-        if (FAILED(hr))
-        {
-            XY_LOG_ERROR("Failed when find and connect consumer");
             return hr;
         }
     }
@@ -2054,21 +2057,6 @@ HRESULT XySubFilter::CheckInputType( const CMediaType* pmt )
     bool accept_embedded = m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]==LOADLEVEL_ALWAYS ||
         (m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]!=LOADLEVEL_DISABLED && m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED]);
     return accept_embedded ? S_OK : E_NOT_SET;
-}
-
-HRESULT XySubFilter::CompleteConnect( SubtitleInputPin2* pSubPin, IPin* pReceivePin )
-{
-    CAutoLock cAutolock(&m_csFilter);
-    ASSERT(m_pGraph);
-    if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
-    {
-        m_tbid.graph = m_pGraph;
-        m_tbid.dvs = this;
-
-        m_hSystrayThread = ::CreateSystray(&m_tbid);
-        XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
-    }
-    return S_OK;
 }
 
 HRESULT XySubFilter::GetIsEmbeddedSubStream( int iSelected, bool *fIsEmbedded )
