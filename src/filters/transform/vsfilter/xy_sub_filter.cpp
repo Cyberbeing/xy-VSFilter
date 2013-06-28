@@ -316,12 +316,12 @@ STDMETHODIMP XySubFilter::Pause()
                 m_hSystrayThread = ::CreateSystray(&m_tbid);
                 XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
             }
-        }
-        hr = StartStreaming();
-        if (FAILED(hr))
-        {
-            XY_LOG_ERROR("Failed to StartStreaming."<<XY_LOG_VAR_2_STR(hr));
-            return hr;
+            hr = StartStreaming();
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed to StartStreaming."<<XY_LOG_VAR_2_STR(hr));
+                return hr;
+            }
         }
     }
     return CBaseFilter::Pause();
