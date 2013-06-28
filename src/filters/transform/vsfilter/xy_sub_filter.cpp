@@ -298,6 +298,7 @@ STDMETHODIMP XySubFilter::Pause()
     CAutoLock lck(&m_csFilter);
     if (!m_not_first_pause)
     {
+        m_not_first_pause = true;
         if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
         {
             m_tbid.graph = m_pGraph;
@@ -319,7 +320,6 @@ STDMETHODIMP XySubFilter::Pause()
             return hr;
         }
         RestoreVSFilterLoadingOption();
-        m_not_first_pause = true;
     }
     return CBaseFilter::Pause();
 }
