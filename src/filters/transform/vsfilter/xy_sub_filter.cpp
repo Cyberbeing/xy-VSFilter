@@ -165,6 +165,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
     XY_LOG_INFO("JoinFilterGraph. pGraph:"<<(void*)pGraph);
     if(pGraph)
     {
+        bool found_consumer = false;
         BeginEnumFilters(pGraph, pEF, pBF)
         {
             if(pBF != (IBaseFilter*)this)
@@ -179,11 +180,15 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
                 {
                     return E_FAIL;
                 }
+                if (!found_consumer && CComQIPtr<ISubRenderConsumer>(pBF))
+                {
+                    found_consumer = true;
+                }
             }
         }
         EndEnumFilters;
         bool under_mpc_hc = (theApp.m_AppName.MakeLower().Find(_T("mpc-hc"), 0)==0);
-        if (under_mpc_hc)
+        if (under_mpc_hc && found_consumer)
         {
             bool found_sub_pin = false;
             bool accept_embedded = m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]==LOADLEVEL_ALWAYS ||
