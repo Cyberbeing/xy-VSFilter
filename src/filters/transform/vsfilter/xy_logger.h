@@ -26,7 +26,12 @@
 
 #  define CHECK_N_LOG(hr, msg) if(FAILED(hr)) XY_LOG_ERROR(msg)
 
-#  define XY_AUTO_TIMING(msg) TimingLogger(xy_logger::g_logger, msg, __FILE__, __LINE__)
+#  define XY_RAND_VAR2(v,line) v ## line
+#  define XY_RAND_VAR(v,line) XY_RAND_VAR2(v,line)
+#  define XY_AUTO_TIMING(msg) TimingLogger XY_RAND_VAR(t,__LINE__)(xy_logger::g_logger, \
+    ((log4cplus::tostringstream*)&(log4cplus::tostringstream()<<msg))->str(), \
+    __FILE__, __LINE__)
+
 #  define XY_LOG_ONCE(id, msg) OnceLogger(id, xy_logger::g_logger, msg, __FILE__, __LINE__)
 #  define XY_LOG_ONCE2(msg) {                    \
     static bool entered=false;                   \
