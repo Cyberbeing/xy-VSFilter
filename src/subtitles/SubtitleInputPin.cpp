@@ -51,8 +51,10 @@
 
 #if ENABLE_XY_LOG_EMBEDDED_SAMPLE
 # define TRACE_SAMPLE(msg) XY_LOG_TRACE(msg)
+# define TRACE_SAMPLE_TIMING(msg) XY_AUTO_TIMING(msg)
 #else
 # define TRACE_SAMPLE(msg)
+# define TRACE_SAMPLE_TIMING(msg)
 #endif
 
 //
@@ -581,11 +583,10 @@ STDMETHODIMP CSubtitleInputPin::ReceiveConnection(IPin* pConnector, const AM_MED
 
 STDMETHODIMP CSubtitleInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
-    TRACE_SAMPLE(XY_LOG_VAR_2_STR(tStart)<<XY_LOG_VAR_2_STR(tStop)<<XY_LOG_VAR_2_STR(dRate));
+    TRACE_SAMPLE_TIMING(XY_LOG_VAR_2_STR(tStart)<<XY_LOG_VAR_2_STR(tStop)<<XY_LOG_VAR_2_STR(dRate));
     CAutoLock cAutoLock(m_pSubLock);
     if(m_helper)
     {
-        TRACE_SAMPLE("Lock acquired "<<XY_LOG_VAR_2_STR(m_pSubLock));
         m_helper->NewSegment(tStart, tStop, dRate);
     }
     else
@@ -604,7 +605,7 @@ public IUnknown {
 
 STDMETHODIMP CSubtitleInputPin::Receive(IMediaSample* pSample)
 {
-    TRACE_SAMPLE(pSample);
+    TRACE_SAMPLE_TIMING(__FUNCTIONW__);
     HRESULT hr;
     REFERENCE_TIME tStart, tStop;
     hr = pSample->GetTime(&tStart, &tStop);

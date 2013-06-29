@@ -17,8 +17,10 @@
 
 #if ENABLE_XY_LOG_RENDERER_REQUEST
 #  define TRACE_RENDERER_REQUEST(msg) XY_LOG_TRACE(msg)
+#  define TRACE_RENDERER_REQUEST_TIMING(msg) XY_AUTO_TIMING(msg)
 #else
 #  define TRACE_RENDERER_REQUEST(msg)
+#  define TRACE_RENDERER_REQUEST_TIMING(msg)
 #endif
 
 using namespace DirectVobSubXyOptions;
@@ -1160,6 +1162,9 @@ void XySubFilter::RestoreVSFilterLoadingOption()
 
 STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME stop, LPVOID context )
 {
+    TRACE_RENDERER_REQUEST_TIMING("Look up subpic for start:"<<start
+        <<"("<<ReftimeToCString(start)<<")"
+        <<" stop:"<<stop<<"("<<ReftimeToCString(stop)<<XY_LOG_VAR_2_STR((int)context));
     CAutoLock cAutoLock(&m_csFilter);
 
     ASSERT(m_consumer);
@@ -1182,12 +1187,10 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
     if(m_sub_provider)
     {
         CComPtr<ISimpleSubPic> pSubPic;
-        TRACE_RENDERER_REQUEST("Look up subpic for "<<ReftimeToCString(now)<<"("<<now<<")");
-
         hr = m_sub_provider->RequestFrame(&sub_render_frame, now);
-        TRACE_RENDERER_REQUEST("Returned "<<XY_LOG_VAR_2_STR(hr)<<XY_LOG_VAR_2_STR(sub_render_frame));
         if (FAILED(hr))
         {
+            XY_LOG_ERROR("Failed to RequestFrame."<<XY_LOG_VAR_2_STR(hr));
             return hr;
         }
         if (sub_render_frame)
@@ -1211,7 +1214,9 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
     }
 
     //fix me: print osd message
-    return m_consumer->DeliverFrame(start, stop, context, sub_render_frame);
+    TRACE_RENDERER_REQUEST("Returnning "<<XY_LOG_VAR_2_STR(hr)<<XY_LOG_VAR_2_STR(sub_render_frame));
+    hr =  m_consumer->DeliverFrame(start, stop, context, sub_render_frame);
+    return hr;
 }
 
 STDMETHODIMP XySubFilter::Disconnect( void )
