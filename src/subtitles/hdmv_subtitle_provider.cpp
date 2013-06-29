@@ -305,20 +305,35 @@ HRESULT HdmvSubtitleProvider::Render( REFERENCE_TIME now, POSITION pos )
             XY_LOG_ERROR("Failed to unlock subtitle."
                 <<XY_LOG_VAR_2_STR(hr)<<XY_LOG_VAR_2_STR(dirty_rect));
         }
-        hr = m_pSubPic->GetDirtyRect(&dirty_rect);
-        ASSERT(SUCCEEDED(hr));
-        if (!m_use_dst_alpha)
+        if (!dirty_rect.IsRectEmpty())
         {
-            hr = mem_subpic->FlipAlphaValue(dirty_rect);//fixme: mem_subpic.type is now MSP_RGBA_F, not MSP_RGBA
+            hr = m_pSubPic->GetDirtyRect(&dirty_rect);
             ASSERT(SUCCEEDED(hr));
-            if (FAILED(hr))
+            if (!m_use_dst_alpha)
             {
-                XY_LOG_ERROR("Failed. "<<XY_LOG_VAR_2_STR(hr));
-                return hr;
+                hr = mem_subpic->FlipAlphaValue(dirty_rect);//fixme: mem_subpic.type is now MSP_RGBA_F, not MSP_RGBA
+                ASSERT(SUCCEEDED(hr));
+                if (FAILED(hr))
+                {
+                    XY_LOG_ERROR("Failed. "<<XY_LOG_VAR_2_STR(hr));
+                    return hr;
+                }
             }
+            hr = S_OK;
+        }
+        else
+        {
+            hr = S_FALSE;
         }
     }
-    CRect video_rect(CPoint(0,0), m_cur_output_size);
-    m_xy_sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper(mem_subpic, video_rect, video_rect, now, &hr);
+    if (hr == S_OK)
+    {
+        CRect video_rect(CPoint(0,0), m_cur_output_size);
+        m_xy_sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper(mem_subpic, video_rect, video_rect, now, &hr);
+    }
+    else
+    {
+        m_xy_sub_render_frame = NULL;
+    }
     return hr;
 }
