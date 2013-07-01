@@ -242,6 +242,14 @@ DWORD ColorConvTable::Argb2Ayuv( DWORD argb )
     return (argb & 0xff000000) | s_default_conv_set.r8g8b8_to_yuv_func(r, g, b);
 }
 
+DWORD ColorConvTable::Argb2Ayuv_TV_BT601( DWORD argb )
+{
+    int r = (argb & 0x00ff0000) >> 16;
+    int g = (argb & 0x0000ff00) >> 8;
+    int b = (argb & 0x000000ff);
+    return (argb & 0xff000000) | RGBToYUV_TV_BT601(r, g, b);
+}
+
 DWORD ColorConvTable::Ayuv2Auyv( DWORD ayuv )
 {
     int y = (ayuv & 0x00ff0000) >> 8;
