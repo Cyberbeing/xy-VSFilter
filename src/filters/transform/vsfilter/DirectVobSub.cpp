@@ -811,6 +811,7 @@ HRESULT DirectVobSubImpl::OnOptionReading( unsigned field )
 
 STDMETHODIMP DirectVobSubImpl::XyGetBool( unsigned field, bool *value )
 {
+    CAutoLock cAutoLock(m_propsLock);
     return XyOptionsImpl::XyGetBool(field, value);
 }
 
