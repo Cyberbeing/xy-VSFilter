@@ -456,20 +456,7 @@ STDMETHODIMP DirectVobSubImpl::get_CachesInfo(CachesInfo* caches_info)
 
 STDMETHODIMP DirectVobSubImpl::get_XyFlyWeightInfo(XyFlyWeightInfo* xy_fw_info)
 {
-    CAutoLock cAutoLock(m_propsLock);
-    if(xy_fw_info)
-    {
-        xy_fw_info->xy_fw_string_w.cur_item_num = 0;
-        xy_fw_info->xy_fw_string_w.hit_count = 0;
-        xy_fw_info->xy_fw_string_w.query_count = 0;
-
-        xy_fw_info->xy_fw_grouped_draw_items_hash_key.cur_item_num = 0;
-        xy_fw_info->xy_fw_grouped_draw_items_hash_key.hit_count = 0;
-        xy_fw_info->xy_fw_grouped_draw_items_hash_key.query_count = 0;
-
-        return S_OK;
-    }
-    return S_FALSE;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP DirectVobSubImpl::HasConfigDialog(int iSelected)

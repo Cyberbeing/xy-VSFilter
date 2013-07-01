@@ -633,8 +633,8 @@ STDMETHODIMP XySubFilter::get_CachesInfo(CachesInfo* caches_info)
 STDMETHODIMP XySubFilter::get_XyFlyWeightInfo( XyFlyWeightInfo* xy_fw_info )
 {
     XY_LOG_INFO(xy_fw_info);
+    CheckPointer(xy_fw_info, S_FALSE);
     CAutoLock cAutolock(&m_csFilter);
-    HRESULT hr = DirectVobSubImpl::get_XyFlyWeightInfo(xy_fw_info);
 
     xy_fw_info->xy_fw_string_w.cur_item_num = XyFwStringW::GetCacher()->GetCurItemNum();
     xy_fw_info->xy_fw_string_w.hit_count = XyFwStringW::GetCacher()->GetCacheHitCount();
@@ -644,7 +644,7 @@ STDMETHODIMP XySubFilter::get_XyFlyWeightInfo( XyFlyWeightInfo* xy_fw_info )
     xy_fw_info->xy_fw_grouped_draw_items_hash_key.hit_count = XyFwGroupedDrawItemsHashKey::GetCacher()->GetCacheHitCount();
     xy_fw_info->xy_fw_grouped_draw_items_hash_key.query_count = XyFwGroupedDrawItemsHashKey::GetCacher()->GetQueryCount();
 
-    return hr;
+    return S_OK;
 }
 
 STDMETHODIMP XySubFilter::get_MediaFPS(bool* fEnabled, double* fps)
