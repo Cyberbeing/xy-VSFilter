@@ -584,8 +584,8 @@ STDMETHODIMP XySubFilter::get_LanguageName(int iLanguage, WCHAR** ppName)
 STDMETHODIMP XySubFilter::get_CachesInfo(CachesInfo* caches_info)
 {
     XY_LOG_INFO(caches_info);
+    CheckPointer(caches_info, S_FALSE);
     CAutoLock cAutolock(&m_csFilter);
-    HRESULT hr = DirectVobSubImpl::get_CachesInfo(caches_info);
 
     caches_info->path_cache_cur_item_num    = CacheManager::GetPathDataMruCache()->GetCurItemNum();
     caches_info->path_cache_hit_count       = CacheManager::GetPathDataMruCache()->GetCacheHitCount();
@@ -627,7 +627,7 @@ STDMETHODIMP XySubFilter::get_CachesInfo(CachesInfo* caches_info)
     caches_info->clipper_cache_hit_count    = CacheManager::GetClipperAlphaMaskMruCache()->GetCacheHitCount();
     caches_info->clipper_cache_query_count  = CacheManager::GetClipperAlphaMaskMruCache()->GetQueryCount();
 
-    return hr;
+    return S_OK;
 }
 
 STDMETHODIMP XySubFilter::get_XyFlyWeightInfo( XyFlyWeightInfo* xy_fw_info )
