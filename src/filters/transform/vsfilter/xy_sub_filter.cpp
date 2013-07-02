@@ -1172,7 +1172,6 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
 
         if(m_sub_provider)
         {
-            CComPtr<ISimpleSubPic> pSubPic;
             hr = m_sub_provider->RequestFrame(&sub_render_frame, now);
             if (FAILED(hr))
             {
