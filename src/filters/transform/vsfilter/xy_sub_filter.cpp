@@ -347,11 +347,9 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     }
     switch(field)
     {
-    case INT_SUBPIXEL_POS_LEVEL:
     case SIZE_ASS_PLAY_RESOLUTION:
     case SIZE_USER_SPECIFIED_LAYOUT_SIZE:
     case DOUBLE_FPS:
-    case INT_SELECTED_LANGUAGE:
     case BOOL_SUB_FRAME_USE_DST_ALPHA:
         m_context_id++;
         break;
@@ -385,6 +383,52 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
             m_last_requested = -1;
         }
         InvalidateSubtitle();
+        break;
+
+    case INT_COLOR_SPACE:
+    case INT_YUV_RANGE:
+        SetYuvMatrix();
+        break;
+    case INT_OVERLAY_CACHE_MAX_ITEM_NUM:
+        CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM:
+        CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case INT_PATH_DATA_CACHE_MAX_ITEM_NUM:
+        CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM:
+        CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case INT_BITMAP_MRU_CACHE_ITEM_NUM:
+        CacheManager::GetBitmapMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case INT_CLIPPER_MRU_CACHE_ITEM_NUM:
+        CacheManager::GetClipperAlphaMaskMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case INT_TEXT_INFO_CACHE_ITEM_NUM:
+        CacheManager::GetTextInfoCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case INT_ASS_TAG_LIST_CACHE_ITEM_NUM:
+        CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case INT_SUBPIXEL_VARIANCE_CACHE_ITEM_NUM:
+        CacheManager::GetSubpixelVarianceCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case INT_SUBPIXEL_POS_LEVEL:
+        SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[field]) );
+        m_context_id++;
+        break;
+    case INT_LAYOUT_SIZE_OPT:
+        //fix me: is it really supported?
+        break;
+    case INT_MAX_BITMAP_COUNT2:
+        hr = E_INVALIDARG;
+        break;
+    case INT_SELECTED_LANGUAGE:
+        UpdateSubtitle(false);
+        m_context_id++;
         break;
     }
 
@@ -458,66 +502,6 @@ STDMETHODIMP XySubFilter::XyGetString( unsigned field, LPWSTR *value, int *chars
         break;
     }
     return DirectVobSubImpl::XyGetString(field, value,chars);
-}
-
-STDMETHODIMP XySubFilter::XySetInt( unsigned field, int value )
-{
-    CAutoLock cAutolock(&m_csFilter);
-    HRESULT hr = DirectVobSubImpl::XySetInt(field, value);
-    if(hr != NOERROR)
-    {
-        return hr;
-    }
-    switch(field)
-    {
-    case DirectVobSubXyOptions::INT_COLOR_SPACE:
-    case DirectVobSubXyOptions::INT_YUV_RANGE:
-        SetYuvMatrix();
-        break;
-    case DirectVobSubXyOptions::INT_OVERLAY_CACHE_MAX_ITEM_NUM:
-        CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
-        break;
-    case DirectVobSubXyOptions::INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM:
-        CacheManager::GetScanLineData2MruCache()->SetMaxItemNum(m_xy_int_opt[field]);
-        break;
-    case DirectVobSubXyOptions::INT_PATH_DATA_CACHE_MAX_ITEM_NUM:
-        CacheManager::GetPathDataMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
-        break;
-    case DirectVobSubXyOptions::INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM:
-        CacheManager::GetOverlayNoBlurMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
-        break;
-    case DirectVobSubXyOptions::INT_BITMAP_MRU_CACHE_ITEM_NUM:
-        CacheManager::GetBitmapMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
-        break;
-    case DirectVobSubXyOptions::INT_CLIPPER_MRU_CACHE_ITEM_NUM:
-        CacheManager::GetClipperAlphaMaskMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
-        break;
-    case DirectVobSubXyOptions::INT_TEXT_INFO_CACHE_ITEM_NUM:
-        CacheManager::GetTextInfoCache()->SetMaxItemNum(m_xy_int_opt[field]);
-        break;
-    case DirectVobSubXyOptions::INT_ASS_TAG_LIST_CACHE_ITEM_NUM:
-        CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
-        break;
-    case DirectVobSubXyOptions::INT_SUBPIXEL_VARIANCE_CACHE_ITEM_NUM:
-        CacheManager::GetSubpixelVarianceCache()->SetMaxItemNum(m_xy_int_opt[field]);
-        break;
-    case DirectVobSubXyOptions::INT_SUBPIXEL_POS_LEVEL:
-        SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[field]) );
-        break;
-    case DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT:
-        //fix me: is it really supported?
-        break;
-    case DirectVobSubXyOptions::INT_MAX_BITMAP_COUNT2:
-        hr = E_INVALIDARG;
-        break;
-    case DirectVobSubXyOptions::INT_SELECTED_LANGUAGE:
-        UpdateSubtitle(false);
-        break;
-    default:
-        break;
-    }
-
-    return hr;
 }
 
 STDMETHODIMP XySubFilter::XySetBool(unsigned field, bool      value)
