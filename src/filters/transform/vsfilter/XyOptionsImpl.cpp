@@ -22,9 +22,7 @@ XyOptionsImpl::XyOptionsImpl( const Option *option_list )
 #define XY_GET_TEMPLATE(OPTION_TYPE_x, m_xy_opt_x)                                 \
     if (!TestOption(field, OPTION_TYPE_x, OPTION_MODE_READ)) return E_INVALIDARG;  \
     if (!value) return S_FALSE;                                                    \
-    HRESULT hr = OnOptionReading(field);                                           \
-    if (SUCCEEDED(hr)) *value = m_xy_opt_x[field];                                 \
-    return hr;
+    return DoGetField(field, value);
 
 STDMETHODIMP XyOptionsImpl::XyGetBool(unsigned field, bool *value)
 {
@@ -60,18 +58,19 @@ STDMETHODIMP XyOptionsImpl::XyGetString(unsigned field, LPWSTR *value, int *char
 {
     if (!TestOption(field, OPTION_TYPE_STRING, OPTION_MODE_READ)) return E_INVALIDARG;
     if (!value && !chars) return S_FALSE;
-    HRESULT hr = OnOptionReading(field);
+    CStringW tmp;
+    HRESULT hr = DoGetField(field, &tmp);
     if (SUCCEEDED(hr))
     {
         if (value)
         {
-            *value = static_cast<LPWSTR>(LocalAlloc(LPTR, sizeof(WCHAR)*(m_xy_str_opt[field].GetLength()+1)));
+            *value = static_cast<LPWSTR>(LocalAlloc(LPTR, sizeof(WCHAR)*(tmp.GetLength()+1)));
             ASSERT(*value);
-            memcpy(*value, m_xy_str_opt[field].GetString(), (m_xy_str_opt[field].GetLength()+1)*sizeof(WCHAR));
+            memcpy(*value, tmp.GetString(), (tmp.GetLength()+1)*sizeof(WCHAR));
         }
         if (chars)
         {
-            *chars = m_xy_str_opt[field].GetLength();
+            *chars = tmp.GetLength();
         }
     }
     return hr;
@@ -80,12 +79,14 @@ STDMETHODIMP XyOptionsImpl::XyGetString(unsigned field, LPWSTR *value, int *char
 STDMETHODIMP XyOptionsImpl::XyGetBin(unsigned field, LPVOID *value, int *size)
 {
     if (!TestOption(field, OPTION_TYPE_BIN, OPTION_MODE_READ)) return E_INVALIDARG;
+    if (!value && !size) return S_FALSE;
     return E_NOTIMPL;
 }
 
 STDMETHODIMP XyOptionsImpl::XyGetBin2( unsigned field, void *value, int size )
 {
     if (!TestOption(field, OPTION_TYPE_BIN, OPTION_MODE_READ)) return E_INVALIDARG;
+    if (!value) return S_FALSE;
     return E_NOTIMPL;
 }
 
@@ -230,8 +231,35 @@ STDMETHODIMP XyOptionsImpl::XySetBins(unsigned field, int id, LPVOID value, int 
     return E_NOTIMPL;
 }
 
-HRESULT XyOptionsImpl::OnOptionReading( unsigned field )
+HRESULT XyOptionsImpl::DoGetField( unsigned field, void *value )
 {
+    switch(m_option_type[field] & ~OPTION_MODE_RW)
+    {
+    case OPTION_TYPE_BOOL:
+        *(bool*)value = m_xy_bool_opt[field];
+        break;
+    case OPTION_TYPE_INT:
+        *(int*)value = m_xy_int_opt[field];
+        break;
+    case OPTION_TYPE_SIZE:
+        *(SIZE*)value = m_xy_size_opt[field];
+        break;
+    case OPTION_TYPE_RECT:
+        *(RECT*)value = m_xy_rect_opt[field];
+        break;
+    case OPTION_TYPE_ULONGLONG:
+        *(ULONGLONG*)value = m_xy_ulonglong_opt[field];
+        break;
+    case OPTION_TYPE_DOUBLE:
+        *(double*)value = m_xy_double_opt[field];
+        break;
+    case OPTION_TYPE_STRING:
+        *(CStringW*)value = m_xy_str_opt[field];
+        break;
+    case OPTION_TYPE_BIN:
+    case OPTION_TYPE_BIN2:
+        return E_NOTIMPL;
+    }
     return S_OK;
 }
 

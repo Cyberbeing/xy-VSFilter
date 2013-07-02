@@ -200,12 +200,6 @@ STDMETHODIMP DirectVobSubImpl::get_TextSettings(void* lf, int lflen, COLORREF* c
         return E_NOTIMPL;
     }
     CAutoLock cAutoLock(m_propsLock);
-    HRESULT hr = OnOptionReading(BIN2_TEXT_SETTINGS);
-    if (FAILED(hr))
-    {
-        XY_LOG_DEBUG("Failed to read text settings. "<<XY_LOG_VAR_2_STR(hr));
-        return hr;
-    }
     if (lf)
     {
         if(lflen == sizeof(LOGFONTA))
@@ -346,12 +340,7 @@ STDMETHODIMP DirectVobSubImpl::get_SubtitleTiming(int* delay, int* speedmul, int
         return E_NOTIMPL;
     }
     CAutoLock cAutoLock(m_propsLock);
-    HRESULT hr = OnOptionReading(BIN2_SUBTITLE_TIMING);
-    if (FAILED(hr))
-    {
-        XY_LOG_ERROR("Failed to get subtitle timing."<<XY_LOG_VAR_2_STR(hr));
-        return hr;
-    }
+
     if(delay) *delay = m_SubtitleDelay;
     if(speedmul) *speedmul = m_SubtitleSpeedMul;
     if(speeddiv) *speeddiv = m_SubtitleSpeedDiv;
@@ -417,15 +406,10 @@ STDMETHODIMP DirectVobSubImpl::get_ZoomRect(NORMALIZEDRECT* rect)
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(m_propsLock);
-    HRESULT hr = OnOptionReading(BIN2_ZOOM_RECT);
-    if (FAILED(hr))
-    {
-        XY_LOG_ERROR("Failed to get zoom rect "<<XY_LOG_VAR_2_STR(hr));
-        return hr;
-    }
 
     if(!rect) return E_POINTER;
+
+    CAutoLock cAutoLock(m_propsLock);
 
     *rect = m_ZoomRect;
 
@@ -438,9 +422,10 @@ STDMETHODIMP DirectVobSubImpl::put_ZoomRect(NORMALIZEDRECT* rect)
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(m_propsLock);
 
     if(!rect) return E_POINTER;
+
+    CAutoLock cAutoLock(m_propsLock);
 
     if(!memcmp(&m_ZoomRect, rect, sizeof(m_ZoomRect))) return S_FALSE;
 
@@ -755,11 +740,36 @@ UINT DirectVobSubImpl::GetCompatibleProfileInt( LPCTSTR lpszSection, LPCTSTR lps
 
 // XyOptionsImpl
 
-HRESULT DirectVobSubImpl::OnOptionReading( unsigned field )
+HRESULT DirectVobSubImpl::DoGetField( unsigned field, void *value )
 {
+    CAutoLock cAutoLock(m_propsLock);
     switch(field) {
-    case BOOL_SUBTITLE_RELOADER_LOCK:
-        m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_LOCK] = m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED] || m_nReloaderDisableCount > 0;
+    case BOOL_SUBTITLE_RELOADER_LOCK: 
+        *(bool*)value = m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED] || m_nReloaderDisableCount > 0;
+        break;
+    case SIZE_LAYOUT_WITH:
+        {
+            SIZE *size_value = (SIZE*)value;
+            switch(m_xy_int_opt[INT_LAYOUT_SIZE_OPT])
+            {
+            case LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
+                *size_value = m_xy_size_opt[SIZE_ORIGINAL_VIDEO];
+                break;
+            case LAYOUT_SIZE_OPT_USER_SPECIFIED:
+                *size_value = m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE];
+                break;
+            default:
+                *size_value = m_xy_size_opt[SIZE_ASS_PLAY_RESOLUTION];
+                break;
+            }
+            if (size_value->cx * size_value->cy == 0)
+            {
+                *size_value = m_xy_size_opt[SIZE_ORIGINAL_VIDEO];
+            }
+        }
+        break;
+    default:
+        return XyOptionsImpl::DoGetField(field, value);
         break;
     }
     return S_OK;
@@ -767,81 +777,12 @@ HRESULT DirectVobSubImpl::OnOptionReading( unsigned field )
 
 // IXyOptions
 
-STDMETHODIMP DirectVobSubImpl::XyGetBool( unsigned field, bool *value )
-{
-    CAutoLock cAutoLock(m_propsLock);
-    return XyOptionsImpl::XyGetBool(field, value);
-}
-
-STDMETHODIMP DirectVobSubImpl::XyGetInt( unsigned field, int *value )
-{
-    CAutoLock cAutoLock(m_propsLock);
-    return XyOptionsImpl::XyGetInt(field, value);
-}
-
-STDMETHODIMP DirectVobSubImpl::XyGetSize( unsigned field, SIZE *value )
-{
-    CAutoLock cAutoLock(m_propsLock);
-    HRESULT hr = XyOptionsImpl::XyGetSize(field, value);
-    if (hr != S_OK)
-    {
-        return hr;
-    }
-    switch(field)
-    {
-    case SIZE_LAYOUT_WITH:
-        switch(m_xy_int_opt[DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT])
-        {
-        case LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
-            *value = m_xy_size_opt[DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO];
-            break;
-        case LAYOUT_SIZE_OPT_USER_SPECIFIED:
-            *value = m_xy_size_opt[DirectVobSubXyOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE];
-            break;
-        default:
-            *value = m_xy_size_opt[DirectVobSubXyOptions::SIZE_ASS_PLAY_RESOLUTION];
-            break;
-        }
-        if (value->cx * value->cy == 0)
-        {
-            *value = m_xy_size_opt[DirectVobSubXyOptions::SIZE_ORIGINAL_VIDEO];
-        }
-        break;
-    }
-    return hr;
-}
-
-STDMETHODIMP DirectVobSubImpl::XyGetRect( unsigned field, RECT *value )
-{
-    CAutoLock cAutoLock(m_propsLock);
-    return XyOptionsImpl::XyGetRect(field, value);
-}
-
-STDMETHODIMP DirectVobSubImpl::XyGetUlonglong( unsigned field, ULONGLONG *value )
-{
-    CAutoLock cAutoLock(m_propsLock);
-    return XyOptionsImpl::XyGetUlonglong(field, value);
-}
-
-STDMETHODIMP DirectVobSubImpl::XyGetDouble( unsigned field, double *value )
-{
-    CAutoLock cAutoLock(m_propsLock);
-    return XyOptionsImpl::XyGetDouble(field, value);
-}
-
-STDMETHODIMP DirectVobSubImpl::XyGetString( unsigned field, LPWSTR *value, int *chars )
-{
-    CAutoLock cAutoLock(m_propsLock);
-    return XyOptionsImpl::XyGetString(field, value, chars);
-}
-
 STDMETHODIMP DirectVobSubImpl::XyGetBin      (unsigned field, LPVOID    *value, int *size )
 {
     if (!TestOption(field, XyOptionsImpl::OPTION_TYPE_BIN, XyOptionsImpl::OPTION_MODE_READ))
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(m_propsLock);
     if (!size)
     {
         return E_INVALIDARG;
@@ -851,6 +792,7 @@ STDMETHODIMP DirectVobSubImpl::XyGetBin      (unsigned field, LPVOID    *value, 
     {
         *value = NULL;
     }
+    CAutoLock cAutoLock(m_propsLock);
     switch(field)
     {
     case BIN_OUTPUT_COLOR_FORMAT:
@@ -887,8 +829,8 @@ STDMETHODIMP DirectVobSubImpl::XyGetBin2( unsigned field, void *value, int size 
     {
         return E_NOTIMPL;
     }
-    CAutoLock cAutoLock(m_propsLock);
     CheckPointer(value, E_POINTER);
+    CAutoLock cAutoLock(m_propsLock);
     switch(field)
     {
     case BIN2_CACHES_INFO:

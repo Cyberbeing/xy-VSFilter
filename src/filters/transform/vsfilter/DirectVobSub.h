@@ -88,17 +88,9 @@ protected:
 
 public:
     // XyOptionsImpl
-    HRESULT OnOptionReading(unsigned field);
+    HRESULT DoGetField(unsigned field, void *value);
 
     // IXyOptions
-
-    STDMETHODIMP XyGetBool     (unsigned field, bool      *value);
-    STDMETHODIMP XyGetInt      (unsigned field, int       *value);
-    STDMETHODIMP XyGetSize     (unsigned field, SIZE      *value);
-    STDMETHODIMP XyGetRect     (unsigned field, RECT      *value);
-    STDMETHODIMP XyGetUlonglong(unsigned field, ULONGLONG *value);
-    STDMETHODIMP XyGetDouble   (unsigned field, double    *value);
-    STDMETHODIMP XyGetString   (unsigned field, LPWSTR    *value, int *chars);
     STDMETHODIMP XyGetBin      (unsigned field, LPVOID    *value, int *size );
     STDMETHODIMP XyGetBin2     (unsigned field, void      *value, int size );
 

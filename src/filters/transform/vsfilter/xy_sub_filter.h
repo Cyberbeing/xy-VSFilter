@@ -47,10 +47,9 @@ public:
 
     // XyOptionsImpl
     virtual HRESULT OnOptionChanged(unsigned field);
-    virtual HRESULT OnOptionReading(unsigned field);
+    virtual HRESULT DoGetField(unsigned field, void *value);
 
     // IXyOptions
-    STDMETHODIMP XyGetInt      (unsigned field, int      *value);
     STDMETHODIMP XyGetString   (unsigned field, LPWSTR   *value, int *chars);
     STDMETHODIMP XySetInt      (unsigned field, int       value);
     STDMETHODIMP XySetBool     (unsigned field, bool      value);

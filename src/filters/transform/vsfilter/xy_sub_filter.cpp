@@ -391,17 +391,46 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     return hr;
 }
 
-HRESULT XySubFilter::OnOptionReading( unsigned field )
+HRESULT XySubFilter::DoGetField( unsigned field, void *value )
 {
-    HRESULT hr = DirectVobSubImpl::OnOptionReading(field);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
+    HRESULT hr = NOERROR;
     switch(field)
     {
+    case STRING_NAME:
+    case STRING_VERSION:
+        //they're read only, no need to lock
+        hr = XyOptionsImpl::DoGetField(field, value);
+        break;
+    case STRING_YUV_MATRIX:
+    case BOOL_COMBINE_BITMAPS:
+    case BOOL_SUB_FRAME_USE_DST_ALPHA:
+        {
+            CAutoLock cAutolock(&m_csProviderFields);//do NOT hold m_csSubLock so that it is faster
+            hr = XyOptionsImpl::DoGetField(field, value);
+        }
+        break;
     case INT_LANGUAGE_COUNT:
-        UpdateLanguageCount();
+        {
+            CAutoLock cAutoLock(&m_csFilter);
+            UpdateLanguageCount();
+            hr = DirectVobSubImpl::DoGetField(field, value);
+        }
+        break;
+    case INT_MAX_BITMAP_COUNT2:
+        {
+            CAutoLock cAutoLock(&m_csFilter);
+            if (m_xy_bool_opt[BOOL_COMBINE_BITMAPS])
+            {
+                *(int*)value = 1;
+            }
+            else
+            {
+                *(int*)value = m_xy_int_opt[INT_MAX_BITMAP_COUNT];
+            }
+        }
+        break;
+    default:
+        hr = DirectVobSubImpl::DoGetField(field, value);
         break;
     }
     return hr;
@@ -410,30 +439,6 @@ HRESULT XySubFilter::OnOptionReading( unsigned field )
 //
 // IXyOptions
 //
-
-STDMETHODIMP XySubFilter::XyGetInt( unsigned field, int *value )
-{
-    CAutoLock cAutoLock(&m_csFilter);
-    HRESULT hr = DirectVobSubImpl::XyGetInt(field, value);
-    if(hr != NOERROR)
-    {
-        return hr;
-    }
-    switch(field)
-    {
-    case DirectVobSubXyOptions::INT_MAX_BITMAP_COUNT2:
-        if (m_xy_bool_opt[BOOL_COMBINE_BITMAPS])
-        {
-            *value = 1;
-        }
-        else
-        {
-            *value = m_xy_int_opt[DirectVobSubXyOptions::INT_MAX_BITMAP_COUNT];
-        }
-        break;
-    }
-    return hr;
-}
 
 STDMETHODIMP XySubFilter::XyGetString( unsigned field, LPWSTR *value, int *chars )
 {
@@ -449,20 +454,6 @@ STDMETHODIMP XySubFilter::XyGetString( unsigned field, LPWSTR *value, int *chars
         if (m_consumer)
         {
             return m_consumer->GetString("version", value, chars);
-        }
-        break;
-
-    case STRING_NAME:
-    case STRING_VERSION:
-        //they're read only, no need to lock
-        return XyOptionsImpl::XyGetString(field, value, chars);
-        break;
-    case STRING_YUV_MATRIX:
-    case BOOL_COMBINE_BITMAPS:
-    case BOOL_SUB_FRAME_USE_DST_ALPHA:
-        {
-            CAutoLock cAutolock(&m_csProviderFields);//do NOT hold m_csSubLock so that it is faster
-            return XyOptionsImpl::XyGetString(field, value, chars);
         }
         break;
     }

@@ -83,7 +83,7 @@ public:
         return (field < MAX_OPTION_ID && (m_option_type[field] & type)== type);
     }
 protected:
-    virtual HRESULT OnOptionReading(unsigned field);
+    virtual HRESULT DoGetField(unsigned field, void *value);
     virtual HRESULT OnOptionChanged(unsigned field);
 
 protected:

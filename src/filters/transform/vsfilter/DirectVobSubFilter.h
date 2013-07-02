@@ -93,7 +93,7 @@ public:
 
     // XyOptionsImpl
     virtual HRESULT OnOptionChanged(unsigned field);
-    virtual HRESULT OnOptionReading(unsigned field);
+    virtual HRESULT DoGetField(unsigned field, void *value);
 
     // IXyOptions
     STDMETHODIMP XySetBool     (unsigned field, bool      value);

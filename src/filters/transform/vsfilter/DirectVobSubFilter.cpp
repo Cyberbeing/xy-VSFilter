@@ -2282,17 +2282,17 @@ HRESULT CDirectVobSubFilter::OnOptionChanged( unsigned field )
     return hr;
 }
 
-HRESULT CDirectVobSubFilter::OnOptionReading( unsigned field )
+HRESULT CDirectVobSubFilter::DoGetField(unsigned field, void *value)
 {
-    HRESULT hr = CDirectVobSub::OnOptionReading(field);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
+    HRESULT hr = NOERROR;
     switch(field)
     {
     case INT_LANGUAGE_COUNT:
         UpdateLanguageCount();
+        hr = DirectVobSubImpl::DoGetField(field, value);
+        break;
+    default:
+        hr = DirectVobSubImpl::DoGetField(field, value);
         break;
     }
     return hr;
