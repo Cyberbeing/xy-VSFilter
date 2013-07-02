@@ -84,6 +84,7 @@ public:
     }
 protected:
     virtual HRESULT DoGetField(unsigned field, void *value);
+    virtual HRESULT DoSetField(unsigned field, void const *value);
     virtual HRESULT OnOptionChanged(unsigned field);
 
 protected:

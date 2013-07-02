@@ -92,9 +92,7 @@ STDMETHODIMP XyOptionsImpl::XyGetBin2( unsigned field, void *value, int size )
 
 #define XY_SET_TEMPLATE(OPTION_TYPE_x, m_xy_opt_x)                                  \
     if (!TestOption(field, OPTION_TYPE_x, OPTION_MODE_WRITE)) return E_INVALIDARG;  \
-    if (m_xy_opt_x[field] == value) return S_FALSE;                                 \
-    m_xy_opt_x[field] = value;                                                      \
-    return OnOptionChanged(field);
+    return DoSetField(field, &value);
 
 STDMETHODIMP XyOptionsImpl::XySetBool(unsigned field, bool value)
 {
@@ -129,13 +127,8 @@ STDMETHODIMP XyOptionsImpl::XySetDouble(unsigned field, double value)
 STDMETHODIMP XyOptionsImpl::XySetString(unsigned field, LPWSTR value, int chars)
 {
     if (!TestOption(field, OPTION_TYPE_STRING, OPTION_MODE_WRITE)) return E_INVALIDARG;
-    if (m_xy_str_opt[field] == CStringW(value, chars)) return S_FALSE;
-    if (chars<0)
-    {
-        m_xy_str_opt[field] = "";
-    }
-    m_xy_str_opt[field].SetString(value, chars);
-    return OnOptionChanged(field);
+    CStringW tmp(value, chars);
+    return DoSetField(field, &tmp);
 }
 
 STDMETHODIMP XyOptionsImpl::XySetBin(unsigned field, LPVOID value, int size)
@@ -259,6 +252,68 @@ HRESULT XyOptionsImpl::DoGetField( unsigned field, void *value )
     case OPTION_TYPE_BIN:
     case OPTION_TYPE_BIN2:
         return E_NOTIMPL;
+    }
+    return S_OK;
+}
+
+HRESULT XyOptionsImpl::DoSetField( unsigned field, void const *value )
+{
+    HRESULT hr = S_FALSE;
+    switch(m_option_type[field] & ~OPTION_MODE_RW)
+    {
+    case OPTION_TYPE_BOOL:
+        if (m_xy_bool_opt[field] != *(bool*)value)
+        {
+            m_xy_bool_opt[field] = *(bool*)value;
+            hr = OnOptionChanged(field);
+        }
+        break;
+    case OPTION_TYPE_INT:
+        if (m_xy_int_opt[field] != *(int*)value)
+        {
+            m_xy_int_opt[field] = *(int*)value;
+            hr = OnOptionChanged(field);
+        }
+        break;
+    case OPTION_TYPE_SIZE:
+        if (m_xy_size_opt[field] != *(SIZE*)value)
+        {
+            m_xy_size_opt[field] = *(SIZE*)value;
+            hr = OnOptionChanged(field);
+        }
+        break;
+    case OPTION_TYPE_RECT:
+        if (m_xy_rect_opt[field] != *(RECT*)value)
+        {
+            m_xy_rect_opt[field] = *(RECT*)value;
+            hr = OnOptionChanged(field);
+        }
+        break;
+    case OPTION_TYPE_ULONGLONG:
+        if (m_xy_ulonglong_opt[field] = *(ULONGLONG*)value)
+        {
+            m_xy_ulonglong_opt[field] = *(ULONGLONG*)value;
+            hr = OnOptionChanged(field);
+        }
+        break;
+    case OPTION_TYPE_DOUBLE:
+        if (m_xy_double_opt[field] != *(double*)value)
+        {
+            m_xy_double_opt[field] = *(double*)value;
+            hr = OnOptionChanged(field);
+        }
+        break;
+    case OPTION_TYPE_STRING:
+        if (m_xy_str_opt[field] != *(CStringW*)value)
+        {
+            m_xy_str_opt[field] = *(CStringW*)value;
+            hr = OnOptionChanged(field);
+        }
+        break;
+    case OPTION_TYPE_BIN:
+    case OPTION_TYPE_BIN2:
+        hr = E_NOTIMPL;
+        break;
     }
     return S_OK;
 }

@@ -775,6 +775,47 @@ HRESULT DirectVobSubImpl::DoGetField( unsigned field, void *value )
     return S_OK;
 }
 
+HRESULT DirectVobSubImpl::DoSetField( unsigned field, void const *value )
+{
+    switch(field)
+    {
+    case BOOL_SUBTITLE_RELOADER_LOCK:
+        return LockSubtitleReloader(*(bool*)value);
+    case INT_LAYOUT_SIZE_OPT:
+        if (*(int*)value<0 || *(int*)value>=LAYOUT_SIZE_OPT_COUNT)
+        {
+            return E_INVALIDARG;
+        }
+        break;
+    case INT_VSFILTER_COMPACT_RGB_CORRECTION:
+        if (*(int*)value<0 || *(int*)value>=RGB_CORRECTION_COUNT)
+        {
+            return E_INVALIDARG;
+        }
+        break;
+    case INT_SELECTED_LANGUAGE:
+        int nCount;
+        if(FAILED(get_LanguageCount(&nCount))
+            || *(int*)value < 0 
+            || *(int*)value >= nCount) 
+            return E_FAIL;
+        break;
+    case STRING_FILE_NAME:
+        {
+            CAutoLock cAutoLock(m_propsLock);
+            CStringW tmp = *(CStringW*)value;
+            tmp = tmp.Left(tmp.ReverseFind(L'.')+1);
+            CStringW file_name = m_xy_str_opt[STRING_FILE_NAME].Left(m_xy_str_opt[STRING_FILE_NAME].ReverseFind(L'.')+1);
+            if(!file_name.CompareNoCase(tmp))
+                return S_FALSE;
+            return XyOptionsImpl::DoSetField(field, value);
+        }
+        break;
+    }
+    CAutoLock cAutoLock(m_propsLock);
+    return XyOptionsImpl::DoSetField(field, value);
+}
+
 // IXyOptions
 
 STDMETHODIMP DirectVobSubImpl::XyGetBin      (unsigned field, LPVOID    *value, int *size )
@@ -876,105 +917,6 @@ STDMETHODIMP DirectVobSubImpl::XyGetBin2( unsigned field, void *value, int size 
     return E_NOTIMPL;
 }
 
-STDMETHODIMP DirectVobSubImpl::XySetBool( unsigned field, bool value )
-{
-    switch(field)
-    {
-    case DirectVobSubXyOptions::BOOL_SUBTITLE_RELOADER_LOCK:
-        return LockSubtitleReloader(value);
-    }
-    CAutoLock cAutoLock(m_propsLock);
-    return XyOptionsImpl::XySetBool(field, value);
-}
-
-STDMETHODIMP DirectVobSubImpl::XySetInt( unsigned field, int value )
-{
-    switch (field)
-    {
-    case DirectVobSubXyOptions::INT_LAYOUT_SIZE_OPT:
-        if (value<0 || value>=DirectVobSubXyOptions::LAYOUT_SIZE_OPT_COUNT)
-        {
-            return E_INVALIDARG;
-        }
-        break;
-    case DirectVobSubXyOptions::INT_VSFILTER_COMPACT_RGB_CORRECTION:
-        if (value<0 || value>=DirectVobSubXyOptions::RGB_CORRECTION_COUNT)
-        {
-            return E_INVALIDARG;
-        }
-        break;
-    case DirectVobSubXyOptions::INT_SELECTED_LANGUAGE:
-        int nCount;
-        if(FAILED(get_LanguageCount(&nCount))
-            || value < 0 
-            || value >= nCount) 
-            return E_FAIL;
-        break;
-    }
-
-    CAutoLock cAutoLock(m_propsLock);
-    HRESULT hr = XyOptionsImpl::XySetInt(field, value);
-
-    return hr;
-}
-
-STDMETHODIMP DirectVobSubImpl::XySetSize( unsigned field, SIZE value )
-{
-    CAutoLock cAutoLock(m_propsLock);
-    HRESULT hr = XyOptionsImpl::XySetSize(field, value);
-
-    return hr;
-}
-
-STDMETHODIMP DirectVobSubImpl::XySetRect( unsigned field, RECT value )
-{
-    CAutoLock cAutoLock(m_propsLock);
-
-    HRESULT hr = XyOptionsImpl::XySetRect(field, value);
-
-    return hr;
-}
-
-STDMETHODIMP DirectVobSubImpl::XySetUlonglong( unsigned field, ULONGLONG value )
-{
-    CAutoLock cAutoLock(m_propsLock);
-
-    HRESULT hr = XyOptionsImpl::XySetUlonglong(field, value);
-
-    return hr;
-}
-
-STDMETHODIMP DirectVobSubImpl::XySetDouble( unsigned field, double value )
-{
-    CAutoLock cAutoLock(m_propsLock);
-
-    HRESULT hr = XyOptionsImpl::XySetDouble(field, value);
-
-    return hr;
-}
-
-STDMETHODIMP DirectVobSubImpl::XySetString( unsigned field, LPWSTR value, int chars )
-{
-    CAutoLock cAutoLock(m_propsLock);
-
-    switch (field)
-    {
-    case DirectVobSubXyOptions::STRING_FILE_NAME:
-        if(!value) return E_POINTER;
-
-        CStringW tmp = CStringW(value, chars);
-        tmp = tmp.Left(tmp.ReverseFind(L'.')+1);
-        CStringW file_name = m_xy_str_opt[STRING_FILE_NAME].Left(m_xy_str_opt[STRING_FILE_NAME].ReverseFind(L'.')+1);
-        if(!file_name.CompareNoCase(tmp))
-            return S_FALSE;
-        break;
-    }
-
-    HRESULT hr = XyOptionsImpl::XySetString(field, value, chars);
-
-    return hr;
-}
-
 STDMETHODIMP DirectVobSubImpl::XySetBin( unsigned field, LPVOID value, int size )
 {
     if (!TestOption(field, XyOptionsImpl::OPTION_TYPE_BIN, XyOptionsImpl::OPTION_MODE_WRITE) &&
@@ -1030,6 +972,7 @@ STDMETHODIMP DirectVobSubImpl::XySetBin( unsigned field, LPVOID value, int size 
     }
     return E_NOTIMPL;
 }
+
 
 //
 // CDirectVobSub

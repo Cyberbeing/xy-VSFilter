@@ -89,18 +89,12 @@ protected:
 public:
     // XyOptionsImpl
     HRESULT DoGetField(unsigned field, void *value);
+    HRESULT DoSetField(unsigned field, void const *value);
 
     // IXyOptions
     STDMETHODIMP XyGetBin      (unsigned field, LPVOID    *value, int *size );
     STDMETHODIMP XyGetBin2     (unsigned field, void      *value, int size );
 
-    STDMETHODIMP XySetBool     (unsigned field, bool      value);
-    STDMETHODIMP XySetInt      (unsigned field, int       value);
-    STDMETHODIMP XySetSize     (unsigned field, SIZE      value);
-    STDMETHODIMP XySetRect     (unsigned field, RECT      value);
-    STDMETHODIMP XySetUlonglong(unsigned field, ULONGLONG value);
-    STDMETHODIMP XySetDouble   (unsigned field, double    value);
-    STDMETHODIMP XySetString   (unsigned field, LPWSTR    value, int chars);
     STDMETHODIMP XySetBin      (unsigned field, LPVOID    value, int size );
 
 	// IDirectVobSub
