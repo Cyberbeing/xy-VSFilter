@@ -249,6 +249,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
             if (FAILED(m_consumer->Disconnect())) {
                 XY_LOG_ERROR("Failed to disconnect consumer");
             }
+            CAutoLock cAutoLock(&m_csConsumer);
             m_consumer = NULL;
         }
         ::DeleteSystray(&m_hSystrayThread, &m_tbid);
@@ -489,15 +490,22 @@ STDMETHODIMP XySubFilter::XyGetString( unsigned field, LPWSTR *value, int *chars
     switch(field)
     {
     case STRING_CONNECTED_CONSUMER:
-        if (m_consumer)
         {
-            return m_consumer->GetString("name", value, chars);
+            CAutoLock cAutoLock(&m_csConsumer);
+            if (m_consumer)
+            {
+                return m_consumer->GetString("name", value, chars);
+            }
         }
+
         break;
     case STRING_CONSUMER_VERSION:
-        if (m_consumer)
         {
-            return m_consumer->GetString("version", value, chars);
+            CAutoLock cAutoLock(&m_csConsumer);
+            if (m_consumer)
+            {
+                return m_consumer->GetString("version", value, chars);
+            }
         }
         break;
     }
@@ -1140,54 +1148,55 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
     TRACE_RENDERER_REQUEST_TIMING("Look up subpic for start:"<<start
         <<"("<<ReftimeToCString(start)<<")"
         <<" stop:"<<stop<<"("<<ReftimeToCString(stop)<<XY_LOG_VAR_2_STR((int)context));
-    CAutoLock cAutoLock(&m_csFilter);
 
-    ASSERT(m_consumer);
     HRESULT hr;
-
-    hr = UpdateParamFromConsumer();
-    if (FAILED(hr))
-    {
-        XY_LOG_ERROR("Failed to get parameters from consumer.");
-        return hr;
-    }
-
-    //
-    start = (start - 10000i64*m_SubtitleDelay) * m_SubtitleSpeedMul / m_SubtitleSpeedDiv; // no, it won't overflow if we use normal parameters (__int64 is enough for about 2000 hours if we multiply it by the max: 65536 as m_SubtitleSpeedMul)
-    stop = (stop - 10000i64*m_SubtitleDelay) * m_SubtitleSpeedMul / m_SubtitleSpeedDiv;
-    REFERENCE_TIME now = start; //fix me: (start + stop) / 2;
-    m_last_requested = now;
-
     CComPtr<IXySubRenderFrame> sub_render_frame;
-    if(m_sub_provider)
     {
-        CComPtr<ISimpleSubPic> pSubPic;
-        hr = m_sub_provider->RequestFrame(&sub_render_frame, now);
+        CAutoLock cAutoLock(&m_csFilter);
+
+        hr = UpdateParamFromConsumer();
         if (FAILED(hr))
         {
-            XY_LOG_ERROR("Failed to RequestFrame."<<XY_LOG_VAR_2_STR(hr));
+            XY_LOG_ERROR("Failed to get parameters from consumer.");
             return hr;
         }
-        if (sub_render_frame)
+
+        //
+        start = (start - 10000i64*m_SubtitleDelay) * m_SubtitleSpeedMul / m_SubtitleSpeedDiv; // no, it won't overflow if we use normal parameters (__int64 is enough for about 2000 hours if we multiply it by the max: 65536 as m_SubtitleSpeedMul)
+        stop = (stop - 10000i64*m_SubtitleDelay) * m_SubtitleSpeedMul / m_SubtitleSpeedDiv;
+        REFERENCE_TIME now = start; //fix me: (start + stop) / 2;
+        m_last_requested = now;
+
+        if(m_sub_provider)
         {
-            sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper2(sub_render_frame, m_context_id);
-#ifdef SUBTITLE_FRAME_DUMP_FILE
-            static int s_count=0;
-            if (s_count<10 && s_count%2==0) {
-                CStringA dump_file;
-                dump_file.Format("%s%lld",SUBTITLE_FRAME_DUMP_FILE,start);
-                DumpSubRenderFrame(sub_render_frame, dump_file.GetString());
+            CComPtr<ISimpleSubPic> pSubPic;
+            hr = m_sub_provider->RequestFrame(&sub_render_frame, now);
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed to RequestFrame."<<XY_LOG_VAR_2_STR(hr));
+                return hr;
             }
-            s_count++;
+            if (sub_render_frame)
+            {
+                sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper2(sub_render_frame, m_context_id);
+#ifdef SUBTITLE_FRAME_DUMP_FILE
+                static int s_count=0;
+                if (s_count<10 && s_count%2==0) {
+                    CStringA dump_file;
+                    dump_file.Format("%s%lld",SUBTITLE_FRAME_DUMP_FILE,start);
+                    DumpSubRenderFrame(sub_render_frame, dump_file.GetString());
+                }
+                s_count++;
 #endif
-        }
-        if(m_xy_bool_opt[BOOL_FLIP_SUBTITLE])
-        {
-            //fix me:
-            ASSERT(0);
+            }
+            if(m_xy_bool_opt[BOOL_FLIP_SUBTITLE])
+            {
+                //fix me:
+                ASSERT(0);
+            }
         }
     }
-
+    CAutoLock cAutoLock(&m_csConsumer);
     //fix me: print osd message
     TRACE_RENDERER_REQUEST("Returnning "<<XY_LOG_VAR_2_STR(hr)<<XY_LOG_VAR_2_STR(sub_render_frame));
     hr =  m_consumer->DeliverFrame(start, stop, context, sub_render_frame);
@@ -1202,8 +1211,8 @@ STDMETHODIMP XySubFilter::Disconnect( void )
     //we won't fall into a dead loop.
     if (!entered)
     {
-        entered = true;
         CAutoLock cAutoLock(&m_csFilter);
+        entered = true;
         ASSERT(m_consumer);
         if (m_consumer)
         {
@@ -1212,6 +1221,7 @@ STDMETHODIMP XySubFilter::Disconnect( void )
             {
                 XY_LOG_WARN("Failed to disconnect with consumer!");
             }
+            CAutoLock cAutoLock(&m_csConsumer);
             m_consumer = NULL;
         }
         else

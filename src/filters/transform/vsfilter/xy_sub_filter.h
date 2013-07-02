@@ -140,6 +140,8 @@ private:
                                 // it is needed because otherwise consumer has to hold m_csSubLock which may be holded 
                                 // by renderring thread for a long time
 
+    CCritSec m_csConsumer;      // critical section protecting m_consumer
+
     CComPtr<IXySubRenderProvider> m_sub_provider;
 
     CAtlArray<SubtitleInputPin2*> m_pSubtitleInputPin;
