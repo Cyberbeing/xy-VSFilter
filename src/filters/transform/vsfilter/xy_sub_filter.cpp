@@ -53,6 +53,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     , m_last_requested(-1)
     , m_workaround_mpc_hc(false)
     , m_dvs_load_option_changed(false)
+    , m_disconnect_entered(false)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
@@ -1208,13 +1209,12 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
 STDMETHODIMP XySubFilter::Disconnect( void )
 {
     XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
-    static bool entered = false;
     //If the consumer also calls provider->Disconnect inside its Disconnect implementation, 
     //we won't fall into a dead loop.
-    if (!entered)
+    if (!m_disconnect_entered)
     {
         CAutoLock cAutoLock(&m_csFilter);
-        entered = true;
+        m_disconnect_entered = true;
         ASSERT(m_consumer);
         if (m_consumer)
         {
@@ -1230,7 +1230,7 @@ STDMETHODIMP XySubFilter::Disconnect( void )
         {
             XY_LOG_ERROR("No consumer connected. It is expected to be called by a consumer!");
         }
-        entered = false;
+        m_disconnect_entered = false;
         return S_OK;
     }
     return S_FALSE;

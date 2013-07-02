@@ -160,4 +160,6 @@ private:
     REFERENCE_TIME m_last_requested;
 
     bool m_workaround_mpc_hc;//enable workaround for MPC-HC to prevent be removed from the graph
+
+    bool m_disconnect_entered;
 };
