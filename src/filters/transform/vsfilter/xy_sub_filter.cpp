@@ -32,6 +32,7 @@ const SubRenderOptionsImpl::OptionMap options[] =
     {"yuvMatrix",      SubRenderOptionsImpl::OPTION_TYPE_STRING, STRING_YUV_MATRIX           },
     {"combineBitmaps", SubRenderOptionsImpl::OPTION_TYPE_BOOL,   BOOL_COMBINE_BITMAPS        },
     {"useDestAlpha",   SubRenderOptionsImpl::OPTION_TYPE_BOOL,   BOOL_SUB_FRAME_USE_DST_ALPHA},
+    {"outputLevels",   SubRenderOptionsImpl::OPTION_TYPE_BOOL,   STRING_OUTPUT_LEVELS},
     {0}
 };
 
@@ -57,6 +58,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
 
     XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     m_xy_str_opt[STRING_NAME] = L"XySubFilter";
+    m_xy_str_opt[STRING_OUTPUT_LEVELS] = L"PC";
 
     theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Hint"), _T("The first three are fixed, but you can add more up to ten entries."));
 
@@ -443,6 +445,7 @@ HRESULT XySubFilter::DoGetField( unsigned field, void *value )
     {
     case STRING_NAME:
     case STRING_VERSION:
+    case STRING_OUTPUT_LEVELS:
         //they're read only, no need to lock
         hr = XyOptionsImpl::DoGetField(field, value);
         break;

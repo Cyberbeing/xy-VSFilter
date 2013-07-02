@@ -113,6 +113,8 @@ namespace DirectVobSubXyOptions
 
         BOOL_SUB_FRAME_USE_DST_ALPHA,
 
+        STRING_OUTPUT_LEVELS,
+
         BIN2_TEXT_SETTINGS,//@see struct TextSettings
         BIN2_SUBTITLE_TIMING,//@see struct SubtitleTiming
         BIN2_ZOOM_RECT,//@see: NORMALIZEDRECT
@@ -355,6 +357,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, BOOL_SUBTITLE_RELOADER_LOCK},
         //{XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AdviseSubClock},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_SUB_FRAME_USE_DST_ALPHA},
+        {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_OUTPUT_LEVELS},
 
         {XyOptionsImpl::OPTION_TYPE_END_FLAG}
     };
