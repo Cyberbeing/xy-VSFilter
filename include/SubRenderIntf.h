@@ -1,9 +1,12 @@
 // ***************************************************************
-//  SubRenderIntf.h           version: 1.0.3  -  date: 2012-10-15
+//  SubRenderIntf.h           version: 1.0.6  -  date: 2013-07-01
 //  -------------------------------------------------------------
-//  Copyright (C) 2011-2012, BSD license
+//  Copyright (C) 2011-2013, BSD license
 // ***************************************************************
 
+// 2013-07-01 1.0.6 added support for TV level subtitle transport
+// 2013-06-05 1.0.5 added support for BT.2020 matrix
+// 2012-12-04 1.0.4 changed auto-loading to supports multiple sub renderers
 // 2012-10-15 1.0.3 (1) added some comments about interface management
 //                  (2) added "context" parameter to "Request/DeliverFrame"
 // 2012-09-11 1.0.2 (1) modified "yuvMatrix" fields to match Aegisub ("None")
@@ -57,10 +60,10 @@
 // chance to pick up external subtitle tracks.
 
 // In order to give the subtitle renderer a chance to find external subtitle
-// tracks, every consumer is required to auto-load the subtitle renderer
-// registered in the following registry key:
+// tracks, every consumer is required to enumerate and auto-load all subtitle
+// renderers registered in the following registry key:
 
-// HKEY_CLASSES_ROOT\Autoload.SubtitleProvider\(Default) REG_SZ
+// HKEY_CLASSES_ROOT\Autoload.SubtitleProvider\YourSubProvName REG_SZ %GUID%
 
 // ---------------------------------------------------------------------------
 // subtitle color correction
@@ -111,6 +114,19 @@
 // double check whether the subtitle matrix matches the video matrix. If the
 // matrixes differ, the consumer should perform the necessary color correction
 // to make sure that subtitle and video colors match perfectly.
+
+// ---------------------------------------------------------------------------
+// subtitle levels
+// ---------------------------------------------------------------------------
+
+// Subtitles are by default transported as premultiplied RGBA pixels with
+// PC levels (black = 0; white = 255). All consumers and providers are
+// required to support this format.
+
+// Optionally, the consumer can signal (see "supportedLevels" info field)
+// that it supports TV levels, too. If it does (and only then), the provider
+// can optionally output subtitles in TV levels. If it does, it has to set
+// the info field "outputLevels" to "TV".
 
 // ---------------------------------------------------------------------------
 // subtitle repositioning
@@ -183,53 +199,58 @@ interface ISubRenderFrame;
 [uuid("7CFD3728-235E-4430-9A2D-9F25F426BD70")]
 interface ISubRenderOptions : public IUnknown
 {
-  // Allows one party to get information from the other party.
-  // The memory for strings and binary data is allocated by the callee
-  // by using LocalAlloc. It is the caller's responsibility to release the
-  // memory by calling LocalFree.
-  // LPWSTR properties should be read case insensitive.
-  STDMETHOD(GetBool     )(LPCSTR field, bool      *value) = 0;
-  STDMETHOD(GetInt      )(LPCSTR field, int       *value) = 0;
-  STDMETHOD(GetSize     )(LPCSTR field, SIZE      *value) = 0;
-  STDMETHOD(GetRect     )(LPCSTR field, RECT      *value) = 0;
-  STDMETHOD(GetUlonglong)(LPCSTR field, ULONGLONG *value) = 0;
-  STDMETHOD(GetDouble   )(LPCSTR field, double    *value) = 0;
-  STDMETHOD(GetString   )(LPCSTR field, LPWSTR    *value, int *chars) = 0;
-  STDMETHOD(GetBin      )(LPCSTR field, LPVOID    *value, int *size ) = 0;
+    // Allows one party to get information from the other party.
+    // The memory for strings and binary data is allocated by the callee
+    // by using LocalAlloc. It is the caller's responsibility to release the
+    // memory by calling LocalFree.
+    // Field names and LPWSTR values should be read case insensitive.
+    STDMETHOD(GetBool     )(LPCSTR field, bool      *value) = 0;
+    STDMETHOD(GetInt      )(LPCSTR field, int       *value) = 0;
+    STDMETHOD(GetSize     )(LPCSTR field, SIZE      *value) = 0;
+    STDMETHOD(GetRect     )(LPCSTR field, RECT      *value) = 0;
+    STDMETHOD(GetUlonglong)(LPCSTR field, ULONGLONG *value) = 0;
+    STDMETHOD(GetDouble   )(LPCSTR field, double    *value) = 0;
+    STDMETHOD(GetString   )(LPCSTR field, LPWSTR    *value, int *chars) = 0;
+    STDMETHOD(GetBin      )(LPCSTR field, LPVOID    *value, int *size ) = 0;
 
-  // Allows one party to configure or send information to the other party.
-  // The callee should copy the strings/binary data, if needed.
-  // LPWSTR properties should be set with the exact case listed in this header.
-  STDMETHOD(SetBool     )(LPCSTR field, bool      value) = 0;
-  STDMETHOD(SetInt      )(LPCSTR field, int       value) = 0;
-  STDMETHOD(SetSize     )(LPCSTR field, SIZE      value) = 0;
-  STDMETHOD(SetRect     )(LPCSTR field, RECT      value) = 0;
-  STDMETHOD(SetUlonglong)(LPCSTR field, ULONGLONG value) = 0;
-  STDMETHOD(SetDouble   )(LPCSTR field, double    value) = 0;
-  STDMETHOD(SetString   )(LPCSTR field, LPWSTR    value, int chars) = 0;
-  STDMETHOD(SetBin      )(LPCSTR field, LPVOID    value, int size ) = 0;
+    // Allows one party to configure or send information to the other party.
+    // The callee should copy the strings/binary data, if needed.
+    // Field names and LPWSTR values should be set with the exact case listed
+    // in this header (just to be safe).
+    STDMETHOD(SetBool     )(LPCSTR field, bool      value) = 0;
+    STDMETHOD(SetInt      )(LPCSTR field, int       value) = 0;
+    STDMETHOD(SetSize     )(LPCSTR field, SIZE      value) = 0;
+    STDMETHOD(SetRect     )(LPCSTR field, RECT      value) = 0;
+    STDMETHOD(SetUlonglong)(LPCSTR field, ULONGLONG value) = 0;
+    STDMETHOD(SetDouble   )(LPCSTR field, double    value) = 0;
+    STDMETHOD(SetString   )(LPCSTR field, LPWSTR    value, int chars) = 0;
+    STDMETHOD(SetBin      )(LPCSTR field, LPVOID    value, int size ) = 0;
 
-  // "field" must be zero terminated and is case insensitive.
+    // "field" must be zero terminated
 
-  // mandatory fields for consumers:
-  // "name",                LPWSTR,    info,   read only,  get name / description of the consumer
-  // "version",             LPWSTR,    info,   read only,  get version number of the consumer
-  // "originalVideoSize",   SIZE,      info,   read only,  size of the video before scaling and AR adjustments
-  // "arAdjustedVideoSize", SIZE,      info,   read only,  size of the video after AR adjustments
-  // "videoOutputRect",     RECT,      info,   read only,  final pos/size of the video after all scaling operations
-  // "subtitleTargetRect",  RECT,      info,   read only,  consumer wish for where to place the subtitles
-  // "frameRate",           ULONGLONG, info,   read only,  frame rate of the video after deinterlacing (REFERENCE_TIME)
-  // "refreshRate",         double,    info,   read only,  display refresh rate (0, if unknown)
+    // mandatory fields for consumers:
+    // "name",                LPWSTR,    info,   read only,  get name / description of the consumer
+    // "version",             LPWSTR,    info,   read only,  get version number of the consumer
+    // "originalVideoSize",   SIZE,      info,   read only,  size of the video before scaling and AR adjustments
+    // "arAdjustedVideoSize", SIZE,      info,   read only,  size of the video after AR adjustments
+    // "videoOutputRect",     RECT,      info,   read only,  final pos/size of the video after all scaling operations
+    // "subtitleTargetRect",  RECT,      info,   read only,  consumer wish for where to place the subtitles
+    // "frameRate",           ULONGLONG, info,   read only,  frame rate of the video after deinterlacing (REFERENCE_TIME)
+    // "refreshRate",         double,    info,   read only,  display refresh rate (0, if unknown)
 
-  // mandatory fields for providers:
-  // "name",                LPWSTR,    info,   read only,  get name / description of the provider
-  // "version",             LPWSTR,    info,   read only,  get version number of the provider
-  // "yuvMatrix",           LPWSTR,    info,   read only,  RGB Subtitles: "None" (fullrange); YCbCr Subtitles: "Levels.Matrix", Levels: TV|PC, Matrix: 601|709|240M|FCC
-  // "combineBitmaps",      bool,      option, write/read, must the provider combine all bitmaps into one? (default: false)
+    // mandatory fields for providers:
+    // "name",                LPWSTR,    info,   read only,  get name / description of the provider
+    // "version",             LPWSTR,    info,   read only,  get version number of the provider
+    // "yuvMatrix",           LPWSTR,    info,   read only,  RGB Subtitles: "None" (fullrange); YCbCr Subtitles: "Levels.Matrix", Levels: TV|PC, Matrix: 601|709|240M|FCC|2020
+    // "combineBitmaps",      bool,      option, write/read, must the provider combine all bitmaps into one? (default: false)
 
-  // optional fields for consumers:
-  // "displayModeSize",     SIZE,      info,   read only,  display mode width/height
-  // "yuvMatrix",           LPWSTR,    info,   read only,  RGB Video: "None" (fullrange); YCbCr Video: "Levels.Matrix", Levels: TV|PC, Matrix: 601|709|240M|FCC
+    // optional fields for consumers:
+    // "displayModeSize",     SIZE,      info,   read only,  display mode width/height
+    // "yuvMatrix",           LPWSTR,    info,   read only,  RGB Video: "None" (fullrange); YCbCr Video: "Levels.Matrix", Levels: TV|PC, Matrix: 601|709|240M|FCC|2020
+    // "supportedLevels",     int,       info,   read only,  0: PC only (default); 1: PC+TV, no preference; 2: PC+TV, PC preferred; 3: PC+TV, TV preferred
+
+    // optional fields for providers:
+    // "outputLevels",        LPWSTR,    info,   read only,  are subtitles rendered/output in RGB "TV" or "PC" levels?
 };
 
 // ---------------------------------------------------------------------------
@@ -241,44 +262,44 @@ interface ISubRenderOptions : public IUnknown
 [uuid("9DF90966-FE9F-4F0E-881E-DAF8A572D900")]
 interface ISubRenderConsumer : public ISubRenderOptions
 {
-  // Called by the subtitle renderer to ask the merit of the consumer.
-  // Recommended merits:
-  // - Subtitle Manager     0x00080000
-  // - Video Renderer       0x00040000
-  // - Video Post Processor 0x00020000
-  // - Video Decoder        0x00010000
-  STDMETHOD(GetMerit)(ULONG *merit) = 0;
+    // Called by the subtitle renderer to ask the merit of the consumer.
+    // Recommended merits:
+    // - Subtitle Manager     0x00080000
+    // - Video Renderer       0x00040000
+    // - Video Post Processor 0x00020000
+    // - Video Decoder        0x00010000
+    STDMETHOD(GetMerit)(ULONG *merit) = 0;
 
-  // Called by the subtitle renderer to init the provider <-> consumer
-  // connection. The subtitle renderer provides an "ISubRenderProvider"
-  // interface for the consumer to store and use. The consumer should
-  // call "AddRef()" to make sure that the interface instance stays alive
-  // as long as needed.
-  STDMETHOD(Connect)(ISubRenderProvider *subtitleRenderer) = 0;
+    // Called by the subtitle renderer to init the provider <-> consumer
+    // connection. The subtitle renderer provides an "ISubRenderProvider"
+    // interface for the consumer to store and use. The consumer should
+    // call "AddRef()" to make sure that the interface instance stays alive
+    // as long as needed.
+    STDMETHOD(Connect)(ISubRenderProvider *subtitleRenderer) = 0;
 
-  // Called by the subtitle renderer to close the connection. The
-  // consumer should react by immediately "Release()"ing the stored
-  // "ISubRenderProvider" instance.
-  STDMETHOD(Disconnect)(void) = 0;
+    // Called by the subtitle renderer to close the connection. The
+    // consumer should react by immediately "Release()"ing the stored
+    // "ISubRenderProvider" instance.
+    STDMETHOD(Disconnect)(void) = 0;
 
-  // Called by the subtitle renderer to deliver a rendered subtitle frame
-  // to the consumer. The renderer may only deliver frames which were
-  // requested before by the consumer.
-  // The frames will be delivered in the same order as they were requested.
-  // The deliverance can occur in different threads than the request, though.
-  // The subtitle renderer can deliver a "NULL" subtitle frame to indicate
-  // that the specified frame has no visible subtitles. The subtitle renderer
-  // can also reuse the same "ISubRenderFrame" instance for multiple video
-  // frames, if the subtitles didn't change.
-  // The consumer should "AddRef()" the "ISubRenderFrame", if the consumer
-  // wants to use it after returning from "DeliverFrame()". If the consumer
-  // does that, it also needs to call "Release()" later when the
-  // "ISubRenderFrame" instance is no longer needed.
-  // The subtitle renderer should not require the "ISubRenderFrame" instance
-  // to be released immediately. The consumer may store it for buffering/queue
-  // purposes. All properties of the "ISubRenderFrame" instance must return
-  // the correct results until it is released by the consumer.
-  STDMETHOD(DeliverFrame)(REFERENCE_TIME start, REFERENCE_TIME stop, LPVOID context, ISubRenderFrame *subtitleFrame) = 0;
+    // Called by the subtitle renderer to deliver a rendered subtitle frame
+    // to the consumer. The renderer may only deliver frames which were
+    // requested before by the consumer.
+    // The frames will be delivered in the same order as they were requested.
+    // The deliverance can occur in different threads than the request, though.
+    // The subtitle renderer can deliver a "NULL" subtitle frame to indicate
+    // that the specified frame has no visible subtitles. The subtitle renderer
+    // can also reuse the same "ISubRenderFrame" instance for multiple video
+    // frames, if the subtitles didn't change.
+    // The consumer should "AddRef()" the "ISubRenderFrame", if the consumer
+    // wants to use it after returning from "DeliverFrame()". If the consumer
+    // does that, it also needs to call "Release()" later when the
+    // "ISubRenderFrame" instance is no longer needed.
+    // The subtitle renderer should not require the "ISubRenderFrame" instance
+    // to be released immediately. The consumer may store it for buffering/queue
+    // purposes. All properties of the "ISubRenderFrame" instance must return
+    // the correct results until it is released by the consumer.
+    STDMETHOD(DeliverFrame)(REFERENCE_TIME start, REFERENCE_TIME stop, LPVOID context, ISubRenderFrame *subtitleFrame) = 0;
 };
 
 // ---------------------------------------------------------------------------
@@ -291,24 +312,24 @@ interface ISubRenderConsumer : public ISubRenderOptions
 [uuid("20752113-C883-455A-BA7B-ABA4E9115CA8")]
 interface ISubRenderProvider : public ISubRenderOptions
 {
-  // Called by the consumer to request a rendered subtitle frame.
-  // The subtitle renderer will deliver the frame when it is completed, by
-  // calling "ISubRenderConsumer.DeliverFrame()".
-  // The subtitle renderer must pass the "context" parameter to the
-  // consumer when calling "DeliverFrame()".
-  // Depending on the internal thread design of the subtitle renderer,
-  // "RequestFrame()" can return at once, with delivery being performed
-  // asynchronously in a different thread. Alternatively, "RequestFrame()"
-  // may also block until the frame was delivered. The consumer should not
-  // depend on either threading model, but leave this decision to the
-  // subtitle renderer.
-  STDMETHOD(RequestFrame)(REFERENCE_TIME start, REFERENCE_TIME stop, LPVOID context) = 0;
+    // Called by the consumer to request a rendered subtitle frame.
+    // The subtitle renderer will deliver the frame when it is completed, by
+    // calling "ISubRenderConsumer.DeliverFrame()".
+    // The subtitle renderer must pass the "context" parameter to the
+    // consumer when calling "DeliverFrame()".
+    // Depending on the internal thread design of the subtitle renderer,
+    // "RequestFrame()" can return at once, with delivery being performed
+    // asynchronously in a different thread. Alternatively, "RequestFrame()"
+    // may also block until the frame was delivered. The consumer should not
+    // depend on either threading model, but leave this decision to the
+    // subtitle renderer.
+    STDMETHOD(RequestFrame)(REFERENCE_TIME start, REFERENCE_TIME stop, LPVOID context) = 0;
 
-  // Called by the consumer to close the connection. The subtitle renderer
-  // should react by immediately "Release()"ing any stored
-  // "ISubRenderConsumer" interface instances pointing to this specific
-  // consumer.
-  STDMETHOD(Disconnect)(void) = 0;
+    // Called by the consumer to close the connection. The subtitle renderer
+    // should react by immediately "Release()"ing any stored
+    // "ISubRenderConsumer" interface instances pointing to this specific
+    // consumer.
+    STDMETHOD(Disconnect)(void) = 0;
 };
 
 // ---------------------------------------------------------------------------
@@ -320,43 +341,43 @@ interface ISubRenderProvider : public ISubRenderOptions
 [uuid("81746AB5-9407-4B43-A014-1FAAC340F973")]
 interface ISubRenderFrame : public IUnknown
 {
-  // "GetOutputRect()" specifies for which video rect the subtitles were
-  // rendered. If the subtitle renderer doesn't scale the subtitles at all,
-  // which is the recommended method for bitmap (DVD/PGS) subtitles formats,
-  // GetOutputRect() should return "0, 0, originalVideoSize". If the subtitle
-  // renderer scales the subtitles, which is the recommend method for text
-  // (SRT, ASS) subtitle formats, GetOutputRect() should aim to match the
-  // consumer's "videoOutputRect". In any case, the consumer can look at
-  // GetOutputRect() to see if (and how) the rendered subtitles need to be
-  // scaled before blending them onto the video image.
-  STDMETHOD(GetOutputRect)(RECT *outputRect) = 0;
+    // "GetOutputRect()" specifies for which video rect the subtitles were
+    // rendered. If the subtitle renderer doesn't scale the subtitles at all,
+    // which is the recommended method for bitmap (DVD/PGS) subtitles formats,
+    // GetOutputRect() should return "0, 0, originalVideoSize". If the subtitle
+    // renderer scales the subtitles, which is the recommend method for text
+    // (SRT, ASS) subtitle formats, GetOutputRect() should aim to match the
+    // consumer's "videoOutputRect". In any case, the consumer can look at
+    // GetOutputRect() to see if (and how) the rendered subtitles need to be
+    // scaled before blending them onto the video image.
+    STDMETHOD(GetOutputRect)(RECT *outputRect) = 0;
 
-  // "GetClipRect()" specifies how the consumer should clip the rendered
-  // subtitles, before blending them onto the video image. Usually,
-  // GetClipRect() should be identical to "GetVideoOutputRect()", unless the
-  // subtitle renderer repositioned the subtitles (see the top of this header
-  // for more information about repositioning).
-  STDMETHOD(GetClipRect)(RECT *clipRect) = 0;
+    // "GetClipRect()" specifies how the consumer should clip the rendered
+    // subtitles, before blending them onto the video image. Usually,
+    // GetClipRect() should be identical to "GetVideoOutputRect()", unless the
+    // subtitle renderer repositioned the subtitles (see the top of this header
+    // for more information about repositioning).
+    STDMETHOD(GetClipRect)(RECT *clipRect) = 0;
 
-  // How many separate bitmaps does this subtitle frame consist of?
-  // The subtitle renderer should combine small subtitle elements which are
-  // positioned near to each other, in order to optimize performance.
-  // Ideally, if there are e.g. two subtitle lines, one at the top and one
-  // at the bottom of the frame, the subtitle renderer should output two
-  // bitmaps per frame.
-  STDMETHOD(GetBitmapCount)(int *count) = 0;
+    // How many separate bitmaps does this subtitle frame consist of?
+    // The subtitle renderer should combine small subtitle elements which are
+    // positioned near to each other, in order to optimize performance.
+    // Ideally, if there are e.g. two subtitle lines, one at the top and one
+    // at the bottom of the frame, the subtitle renderer should output two
+    // bitmaps per frame.
+    STDMETHOD(GetBitmapCount)(int *count) = 0;
 
-  // Returns the premultiplied RGBA pixel data for the specified bitmap.
-  // The ID is guaranteed to change if the content of the bitmap has changed.
-  // The ID can stay identical if only the position changes.
-  // Reusing the same ID for unchanged bitmaps can improve performance.
-  // Subtitle bitmaps may move in and out of the video frame rectangle, so
-  // the position of the subtitle bitmaps can become negative. The consumer
-  // is required to do proper clipping if the subtitle bitmap is partially
-  // outside the video rectangle.
-  // The memory pointed to by "pixels" is only valid until the next
-  // "GetBitmap" call, or until the "ISubRenderFrame" instance is released.
-  STDMETHOD(GetBitmap)(int index, ULONGLONG *id, POINT *position, SIZE *size, LPCVOID *pixels, int *pitch) = 0;
+    // Returns the premultiplied RGBA pixel data for the specified bitmap.
+    // The ID is guaranteed to change if the content of the bitmap has changed.
+    // The ID can stay identical if only the position changes.
+    // Reusing the same ID for unchanged bitmaps can improve performance.
+    // Subtitle bitmaps may move in and out of the video frame rectangle, so
+    // the position of the subtitle bitmaps can become negative. The consumer
+    // is required to do proper clipping if the subtitle bitmap is partially
+    // outside the video rectangle.
+    // The memory pointed to by "pixels" is only valid until the next
+    // "GetBitmap" call, or until the "ISubRenderFrame" instance is released.
+    STDMETHOD(GetBitmap)(int index, ULONGLONG *id, POINT *position, SIZE *size, LPCVOID *pixels, int *pitch) = 0;
 };
 
 // ---------------------------------------------------------------------------
