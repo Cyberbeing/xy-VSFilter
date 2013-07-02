@@ -335,6 +335,19 @@ DWORD ColorConvTable::A8Y8U8V8_TV_To_PC( int a8, int y8, int u8, int v8 )
     return (a8<<24) | (y8<<16) | (u8<<8) | v8;
 }
 
+DWORD ColorConvTable::RGB_PC_TO_TV( DWORD argb )
+{
+    const int MIN = 16;
+    const int SCALE = int(219.0/255*FRACTION_SCALE+0.5);
+    DWORD r = (argb & 0x00ff0000)>>16;
+    DWORD g = (argb & 0x0000ff00)>>8;
+    DWORD b = (argb & 0x000000ff);
+    r = ((r*SCALE)>>16) + MIN;
+    g = ((g*SCALE)>>16) + MIN;
+    b = ((b*SCALE)>>16) + MIN;
+    return (argb & 0xff000000)|(r<<16)|(g<<8)|b;
+}
+
 struct YuvPos
 {
     int y;

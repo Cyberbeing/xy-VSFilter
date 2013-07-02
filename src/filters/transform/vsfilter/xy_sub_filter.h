@@ -79,6 +79,7 @@ public:
     STDMETHODIMP Disconnect(void);
 private:
     void SetYuvMatrix();
+    void SetRgbOutputLevel();
     bool Open();
 
     void UpdateSubtitle(bool fApplyDefStyle = true);

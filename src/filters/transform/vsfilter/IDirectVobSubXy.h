@@ -113,7 +113,9 @@ namespace DirectVobSubXyOptions
 
         BOOL_SUB_FRAME_USE_DST_ALPHA,
 
-        STRING_OUTPUT_LEVELS,
+        STRING_OUTPUT_LEVELS,//for report to consumer
+        INT_RGB_OUTPUT_TV_LEVEL,//option: see @RgbOutputLevel
+        INT_CONSUMER_SUPPORTED_LEVELS,
 
         BIN2_TEXT_SETTINGS,//@see struct TextSettings
         BIN2_SUBTITLE_TIMING,//@see struct SubtitleTiming
@@ -175,6 +177,13 @@ namespace DirectVobSubXyOptions
         RGB_CORRECTION_NEVER,
         RGB_CORRECTION_ALWAYS,
         RGB_CORRECTION_COUNT
+    };
+    enum RgbOutputLevel
+    {
+        RGB_OUTPUT_LEVEL_PC = 0,
+        RGB_OUTPUT_LEVEL_PREFER_TV,
+        RGB_OUTPUT_LEVEL_FORCE_TV,
+        RGB_OUTPUT_LEVEL_COUNT
     };
     struct TextSettings {
         void* lf;
@@ -358,6 +367,8 @@ namespace DirectVobSubXyOptions
         //{XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AdviseSubClock},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_SUB_FRAME_USE_DST_ALPHA},
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_OUTPUT_LEVELS},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_RGB_OUTPUT_TV_LEVEL},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_READ, INT_CONSUMER_SUPPORTED_LEVELS},
 
         {XyOptionsImpl::OPTION_TYPE_END_FLAG}
     };

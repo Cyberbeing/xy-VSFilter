@@ -47,6 +47,8 @@ struct ColorConvTable
 
     static DWORD A8Y8U8V8_PC_To_TV( int a8, int y8, int u8, int v8 );
     static DWORD A8Y8U8V8_TV_To_PC( int a8, int y8, int u8, int v8 );
+
+    static DWORD RGB_PC_TO_TV(DWORD argb);
 private:
     ColorConvTable();
 };

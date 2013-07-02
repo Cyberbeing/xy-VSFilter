@@ -102,6 +102,7 @@
 #define IDS_RG_PGS_COLOR_TYPE               196
 #define IDS_RP_MAX_BITMAP_COUNT             197
 #define IDS_RG_RGB_CORRECTION               198
+#define IDS_RG_RGB_OUTPUT_LEVEL             199
 #define IDC_FILENAME                    201
 #define IDD_DVSMAINPAGE                 201
 #define IDC_OPEN                        202
@@ -240,6 +241,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        337
 #define _APS_NEXT_COMMAND_VALUE         32770
 #define _APS_NEXT_CONTROL_VALUE         341
-#define _APS_NEXT_SYMED_VALUE           195
+#define _APS_NEXT_SYMED_VALUE           200
 #endif
 #endif

@@ -426,6 +426,16 @@ HRESULT XySubRenderFrameCreater::SetVsfilterCompactRgbCorrection( bool value )
     return S_FALSE;
 }
 
+HRESULT XySubRenderFrameCreater::SetRgbOutputTvLevel( bool value )
+{
+    if (m_rgb_output_tv_level!=value)
+    {
+        m_rgb_output_tv_level = value;
+        return S_OK;
+    }
+    return S_FALSE;
+}
+
 HRESULT XySubRenderFrameCreater::GetOutputRect( RECT *output_rect )
 {
     if (!output_rect)
@@ -487,9 +497,28 @@ DWORD XySubRenderFrameCreater::TransColor( DWORD argb )
     case XY_CS_ARGB:
     case XY_CS_ARGB_F:
         if (m_vsfilter_compact_rgb_correction) {
-            return ColorConvTable::Ayuv2Argb_TV_BT709(ColorConvTable::Argb2Ayuv_TV_BT601(argb));
+            //fix me: quality
+            if (!m_rgb_output_tv_level)
+            {
+                return ColorConvTable::Ayuv2Argb_TV_BT709(ColorConvTable::Argb2Ayuv_TV_BT601(argb));
+            }
+            else
+            {
+                return ColorConvTable::RGB_PC_TO_TV(
+                    ColorConvTable::Ayuv2Argb_TV_BT709(ColorConvTable::Argb2Ayuv_TV_BT601(argb)));
+            }
         }
-        return argb;
+        else
+        {
+            if (!m_rgb_output_tv_level)
+            {
+                return argb;
+            }
+            else
+            {
+                return ColorConvTable::RGB_PC_TO_TV(argb);
+            }
+        }
         break;
     }
     return argb;
@@ -499,4 +528,10 @@ bool XySubRenderFrameCreater::GetVsfilterCompactRgbCorrection()
 {
     return m_vsfilter_compact_rgb_correction;
 }
+
+bool XySubRenderFrameCreater::GetRgbOutputTvLevel()
+{
+    return m_rgb_output_tv_level;
+}
+
 

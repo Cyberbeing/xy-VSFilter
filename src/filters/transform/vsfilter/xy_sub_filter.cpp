@@ -32,7 +32,7 @@ const SubRenderOptionsImpl::OptionMap options[] =
     {"yuvMatrix",      SubRenderOptionsImpl::OPTION_TYPE_STRING, STRING_YUV_MATRIX           },
     {"combineBitmaps", SubRenderOptionsImpl::OPTION_TYPE_BOOL,   BOOL_COMBINE_BITMAPS        },
     {"useDestAlpha",   SubRenderOptionsImpl::OPTION_TYPE_BOOL,   BOOL_SUB_FRAME_USE_DST_ALPHA},
-    {"outputLevels",   SubRenderOptionsImpl::OPTION_TYPE_BOOL,   STRING_OUTPUT_LEVELS},
+    {"outputLevels",   SubRenderOptionsImpl::OPTION_TYPE_STRING,   STRING_OUTPUT_LEVELS},
     {0}
 };
 
@@ -388,7 +388,10 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
         }
         InvalidateSubtitle();
         break;
-
+    case INT_RGB_OUTPUT_TV_LEVEL:
+        SetRgbOutputLevel();
+        m_context_id++;
+        break;
     case INT_COLOR_SPACE:
     case INT_YUV_RANGE:
         SetYuvMatrix();
@@ -446,11 +449,11 @@ HRESULT XySubFilter::DoGetField( unsigned field, void *value )
     {
     case STRING_NAME:
     case STRING_VERSION:
-    case STRING_OUTPUT_LEVELS:
         //they're read only, no need to lock
         hr = XyOptionsImpl::DoGetField(field, value);
         break;
     case STRING_YUV_MATRIX:
+    case STRING_OUTPUT_LEVELS:
     case BOOL_COMBINE_BITMAPS:
     case BOOL_SUB_FRAME_USE_DST_ALPHA:
         {
@@ -1422,6 +1425,34 @@ void XySubFilter::SetYuvMatrix()
     }
 }
 
+void XySubFilter::SetRgbOutputLevel()
+{
+    const int NO_PREFERENCE = 1;
+    const int PREFERED_TV = 3;
+
+    CAutoLock cAutolock(&m_csFilter);
+    CAutoLock cAutoLock(&m_csProviderFields);
+    if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_PREFER_TV)
+    {
+        if (m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==PREFERED_TV || 
+            m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==NO_PREFERENCE)
+        {
+            XySubRenderFrameCreater::GetDefaultCreater()->SetRgbOutputTvLevel(true);
+            m_xy_str_opt[STRING_OUTPUT_LEVELS] = L"TV";
+        }
+    }
+    else if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_FORCE_TV)
+    {
+        XySubRenderFrameCreater::GetDefaultCreater()->SetRgbOutputTvLevel(true);
+        m_xy_str_opt[STRING_OUTPUT_LEVELS] = L"TV";
+    }
+    else
+    {
+        XySubRenderFrameCreater::GetDefaultCreater()->SetRgbOutputTvLevel(false);
+        m_xy_str_opt[STRING_OUTPUT_LEVELS] = L"PC";
+    }
+}
+
 bool XySubFilter::Open()
 {
     XY_AUTO_TIMING(TEXT("XySubFilter::Open"));
@@ -1734,6 +1765,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
     m_curSubStream = pSubStream;
 
     SetYuvMatrix();
+    SetRgbOutputLevel();
 
     m_xy_size_opt[SIZE_ASS_PLAY_RESOLUTION] = playres;
 
@@ -1839,6 +1871,14 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
     CStringW consumer_yuv_matrix(str, len);
     LocalFree(str);
 
+    int consumer_supported_levels = 0;
+    hr = m_consumer->GetInt("supportedLevels", &consumer_supported_levels);
+    if (FAILED(hr))
+    {
+        XY_LOG_INFO("Failed to get supportedLevels from consumer");
+        consumer_supported_levels = 0;
+    }
+
     ULONGLONG rt_fps;
     hr = m_consumer->GetUlonglong("frameRate", &rt_fps);
     if (FAILED(hr))
@@ -1891,6 +1931,13 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
         XY_LOG_INFO(L"Consumer yuv matrix changed from "<<m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].GetString()
         <<L" to "<<consumer_yuv_matrix.GetString());
         m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX] = consumer_yuv_matrix;
+        update_subtitle = true;
+    }
+    if (m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]!=consumer_supported_levels)
+    {
+        XY_LOG_INFO("Consumer supportedLevels changed from "<<m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]
+            <<" to "<<consumer_supported_levels);
+        m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS] = consumer_supported_levels;
         update_subtitle = true;
     }
     if (update_subtitle)
@@ -2256,9 +2303,10 @@ CStringW XySubFilter::DumpProviderInfo()
 {
     CAutoLock cAutoLock(&m_csProviderFields);
     CStringW strTemp;
-    strTemp.Format(L"name:'%ls' version:'%ls' yuvMatrix:'%ls' combineBitmaps:%ls",
+    strTemp.Format(L"name:'%ls' version:'%ls' yuvMatrix:'%ls' outputLevels:'%ls' combineBitmaps:%ls",
         m_xy_str_opt[STRING_NAME]      , m_xy_str_opt[STRING_VERSION],
-        m_xy_str_opt[STRING_YUV_MATRIX], m_xy_bool_opt[BOOL_COMBINE_BITMAPS]?L"True":L"False");
+        m_xy_str_opt[STRING_YUV_MATRIX], m_xy_str_opt[STRING_OUTPUT_LEVELS],
+        m_xy_bool_opt[BOOL_COMBINE_BITMAPS]?L"True":L"False");
     return strTemp;
 }
 
@@ -2266,8 +2314,8 @@ CStringW XySubFilter::DumpConsumerInfo()
 {
     CAutoLock cAutolock(&m_csFilter);
     CStringW strTemp;
-    strTemp.Format(L"name:'%ls' version:'%ls' yuvMatrix:'%ls'",
+    strTemp.Format(L"name:'%ls' version:'%ls' yuvMatrix:'%ls' supportedLevels:'%d'",
         m_xy_str_opt[STRING_CONNECTED_CONSUMER], m_xy_str_opt[STRING_CONSUMER_VERSION],
-        m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX]);
+        m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX], m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]);
     return strTemp;
 }

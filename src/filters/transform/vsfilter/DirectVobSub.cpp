@@ -1592,6 +1592,21 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
     m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), 1);
 
     m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0);
+
+    CString str_rgb_output_level = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_OUTPUT_LEVEL), _T("PC(Best quality)"));
+    str_rgb_output_level.MakeLower();
+    if (str_rgb_output_level.Left(9)==_T("prefer_tv"))
+    {
+        m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL] = RGB_OUTPUT_LEVEL_PREFER_TV;
+    }
+    else if (str_rgb_output_level.Left(8)==_T("force_tv"))
+    {
+        m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL] = RGB_OUTPUT_LEVEL_FORCE_TV;
+    }
+    else
+    {
+        m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL] = RGB_OUTPUT_LEVEL_PC;
+    }
 }
 
 STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
@@ -1710,6 +1725,21 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD), m_xy_bool_opt[BOOL_LOAD_SETTINGS_EMBEDDED] );
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED]);
+
+    CString str_rgb_output_level = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_OUTPUT_LEVEL), _T("PC(Best quality)"));
+    switch (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL])
+    {
+    case RGB_OUTPUT_LEVEL_PREFER_TV:
+        str_rgb_output_level = _T("PREFER_TV(Better porformance for poor GPU)");
+        break;
+    case RGB_OUTPUT_LEVEL_FORCE_TV:
+        str_rgb_output_level = _T("FORCE_TV(Don't try it if you don't know what you're doing)");
+        break;
+    default:
+        str_rgb_output_level = _T("PC(Best quality)");
+        break;
+    }
+    theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_OUTPUT_LEVEL), str_rgb_output_level);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), CUR_SUPPORTED_FILTER_VERSION);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), XY_VSFILTER_VERSION_COMMIT);
