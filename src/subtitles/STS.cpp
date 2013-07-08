@@ -1995,6 +1995,7 @@ void CSimpleTextSubtitle::Empty()
 {
     m_dstScreenSize = CSize(0, 0);
     m_styles.Free();
+    m_fUsingDefaultStyleFromScript = false;
     m_segments.RemoveAll();
     m_entries.RemoveAll();
 }
