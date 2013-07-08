@@ -50,30 +50,29 @@ protected:
 	}
 };
 
-// CStyleEditorDialog dialog
+// CStyleEditorPPage Property Page
 
-class CStyleEditorDialog : public CDialog
+class CStyleEditorPPage : public CPropertyPage
 {
-	DECLARE_DYNAMIC(CStyleEditorDialog)
+	DECLARE_DYNAMIC(CStyleEditorPPage)
 
 	CString m_title;
-	CWnd* m_pParent;
 
 	void UpdateControlData(bool fSave);
 	void AskColor(int i);
 
 public:
-	CStyleEditorDialog(CString title, STSStyle* pstss, CWnd* pParent = NULL);   // standard constructor
-	virtual ~CStyleEditorDialog();
+	CStyleEditorPPage(CString title, const STSStyle* pstss);   // standard constructor
+	virtual ~CStyleEditorPPage();
 
 // Dialog Data
-	enum { IDD = IDD_STYLEDIALOG };
+	enum { IDD = IDD_STYLE_PAGE };
 
 	STSStyle m_stss;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	virtual BOOL OnInitDialog();
+	virtual BOOL OnSetActive();
 	virtual void OnOK();
 
 	DECLARE_MESSAGE_MAP()
@@ -114,3 +113,5 @@ public:
 	afx_msg void OnBnClickedCheck1();
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 };
+
+// CStyleEditorDialog : CPropertySheet

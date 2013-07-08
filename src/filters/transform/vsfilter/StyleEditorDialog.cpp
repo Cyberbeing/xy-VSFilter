@@ -33,14 +33,13 @@ BEGIN_MESSAGE_MAP(CColorStatic, CStatic)
 END_MESSAGE_MAP()
 
 
-// CStyleEditorDialog dialog
+// CStyleEditorPPage Property Page
 
-IMPLEMENT_DYNAMIC(CStyleEditorDialog, CDialog)
-CStyleEditorDialog::CStyleEditorDialog(CString title, STSStyle* pstss, CWnd* pParent /*=NULL*/)
-	: CDialog(CStyleEditorDialog::IDD, pParent)
+IMPLEMENT_DYNAMIC(CStyleEditorPPage, CPropertyPage)
+CStyleEditorPPage::CStyleEditorPPage(CString title, const STSStyle* pstss)
+	: CPropertyPage(CStyleEditorPPage::IDD)
 	, m_title(title)
 	, m_stss(*pstss)
-	, m_pParent(pParent)
 	, m_iCharset(0)
 	, m_spacing(0)
 	, m_angle(0)
@@ -53,15 +52,17 @@ CStyleEditorDialog::CStyleEditorDialog(CString title, STSStyle* pstss, CWnd* pPa
 	, m_margin(0,0,0,0)
 	, m_linkalphasliders(FALSE)
 {
+    m_pPSP->pszTitle = (m_title = title);
+    m_psp.dwFlags |= PSP_USETITLE;
 }
 
-CStyleEditorDialog::~CStyleEditorDialog()
+CStyleEditorPPage::~CStyleEditorPPage()
 {
 }
 
-void CStyleEditorDialog::DoDataExchange(CDataExchange* pDX)
+void CStyleEditorPPage::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
+	CPropertyPage::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_BUTTON1, m_font);
 	DDX_CBIndex(pDX, IDC_COMBO1, m_iCharset);
 	DDX_Control(pDX, IDC_COMBO1, m_charset);
@@ -102,7 +103,7 @@ void CStyleEditorDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK1, m_linkalphasliders);
 }
 
-void CStyleEditorDialog::UpdateControlData(bool fSave)
+void CStyleEditorPPage::UpdateControlData(bool fSave)
 {
 	if(fSave)
 	{
@@ -172,7 +173,7 @@ void CStyleEditorDialog::UpdateControlData(bool fSave)
 	}
 }
 
-void CStyleEditorDialog::AskColor(int i)
+void CStyleEditorPPage::AskColor(int i)
 {
 	CColorDialog dlg(m_stss.colors[i]);
 	dlg.m_cc.Flags |= CC_FULLOPEN;
@@ -183,7 +184,7 @@ void CStyleEditorDialog::AskColor(int i)
 	}
 }
 
-BEGIN_MESSAGE_MAP(CStyleEditorDialog, CDialog)
+BEGIN_MESSAGE_MAP(CStyleEditorPPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_BUTTON1, OnBnClickedButton1)
 	ON_STN_CLICKED(IDC_COLORPRI, OnStnClickedColorpri)
 	ON_STN_CLICKED(IDC_COLORSEC, OnStnClickedColorsec)
@@ -196,26 +197,23 @@ END_MESSAGE_MAP()
 
 // CStyleEditorDialog message handlers
 
-BOOL CStyleEditorDialog::OnInitDialog()
+BOOL CStyleEditorPPage::OnSetActive()
 {
-	CDialog::OnInitDialog();
-
-	SetWindowText(_T("Style Editor - \"") + m_title + _T("\""));
+	//SetWindowText(_T("Style Editor - \"") + m_title + _T("\""));
 
 	UpdateControlData(false);
 
-	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX Property Pages should return FALSE
+    return __super::OnSetActive();
 }
 
-void CStyleEditorDialog::OnOK()
+void CStyleEditorPPage::OnOK()
 {
 	UpdateControlData(true);
 
 	CDialog::OnOK();
 }
 
-void CStyleEditorDialog::OnBnClickedButton1()
+void CStyleEditorPPage::OnBnClickedButton1()
 {
 	LOGFONT lf;
 	lf <<= m_stss;
@@ -240,27 +238,27 @@ void CStyleEditorDialog::OnBnClickedButton1()
 	}
 }
 
-void CStyleEditorDialog::OnStnClickedColorpri()
+void CStyleEditorPPage::OnStnClickedColorpri()
 {
 	AskColor(0);
 }
 
-void CStyleEditorDialog::OnStnClickedColorsec()
+void CStyleEditorPPage::OnStnClickedColorsec()
 {
 	AskColor(1);
 }
 
-void CStyleEditorDialog::OnStnClickedColoroutl()
+void CStyleEditorPPage::OnStnClickedColoroutl()
 {
 	AskColor(2);
 }
 
-void CStyleEditorDialog::OnStnClickedColorshad()
+void CStyleEditorPPage::OnStnClickedColorshad()
 {
 	AskColor(3);
 }
 
-void CStyleEditorDialog::OnBnClickedCheck1()
+void CStyleEditorPPage::OnBnClickedCheck1()
 {
 	UpdateData();
 
@@ -270,7 +268,7 @@ void CStyleEditorDialog::OnBnClickedCheck1()
 	for(int i = 0; i < 4; i++) m_alphasliders[i].SetPos(avg);
 }
 
-void CStyleEditorDialog::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+void CStyleEditorPPage::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	if(m_linkalphasliders && pScrollBar)
 	{
@@ -278,5 +276,5 @@ void CStyleEditorDialog::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollB
 		for(int i = 0; i < 4; i++) m_alphasliders[i].SetPos(pos);
 	}
 
-	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
+	CPropertyPage::OnHScroll(nSBCode, nPos, pScrollBar);
 }

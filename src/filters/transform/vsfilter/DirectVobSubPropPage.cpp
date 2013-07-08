@@ -349,11 +349,12 @@ bool CDVSMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                     {
                         AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-                        CStyleEditorDialog dlg(_T("Default"), &m_defStyle, CWnd::FromHandle(m_hwnd));
-
+                        CStyleEditorPPage page(_T("Default"), &m_defStyle);
+                        CPropertySheet dlg(_T("Styles"), CWnd::FromHandle(m_hwnd));
+                        dlg.AddPage(&page);
                         if(dlg.DoModal() == IDOK)
                         {
-                            m_defStyle = dlg.m_stss;
+                            m_defStyle = page.m_stss;
                             CString str = m_defStyle.fontName;
                             if(str.GetLength() > 18) str = str.Left(16).TrimRight() + _T("...");
                             m_font.SetWindowText(str);
@@ -1636,11 +1637,12 @@ bool CXySubFilterMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                     {
                         AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-                        CStyleEditorDialog dlg(_T("Default"), &m_defStyle, CWnd::FromHandle(m_hwnd));
-
+                        CStyleEditorPPage page(_T("Default"), &m_defStyle);
+                        CPropertySheet dlg(_T("Styles"), CWnd::FromHandle(m_hwnd));
+                        dlg.AddPage(&page);
                         if(dlg.DoModal() == IDOK)
                         {
-                            m_defStyle = dlg.m_stss;
+                            m_defStyle = page.m_stss;
                             CString str = m_defStyle.fontName;
                             if(str.GetLength() > 18) str = str.Left(16).TrimRight() + _T("...");
                             m_font.SetWindowText(str);

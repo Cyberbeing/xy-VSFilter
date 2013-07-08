@@ -149,7 +149,7 @@
 #define IDC_EDIT3                       238
 #define IDC_SPIN3                       239
 #define IDC_EDIT4                       240
-#define IDD_STYLEDIALOG                 240
+#define IDD_STYLE_PAGE                  240
 #define IDC_SPIN4                       241
 #define IDD_DVSMOREPAGE                 241
 #define IDC_EDIT5                       242
