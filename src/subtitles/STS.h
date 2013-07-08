@@ -238,7 +238,6 @@ public:
 	STSStyle* CreateDefaultStyle(int CharSet);
 	void ChangeUnknownStylesToDefault();
 	void AddStyle(CString name, STSStyle* style); // style will be stored and freed in Empty() later
-	bool CopyStyles(const CSTSStyleMap& styles, bool fAppend = false);
 
 	bool SetDefaultStyle(STSStyle& s);
 	bool GetDefaultStyle(STSStyle& s);
@@ -288,6 +287,8 @@ public:
 	void SetStr(int i, CStringW str, bool fUnicode);
 
     friend bool OpenMicroDVD(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet);
+private:
+    bool CopyStyles(const CSTSStyleMap& styles, bool fAppend = false);
 };
 
 extern BYTE CharSetList[];
