@@ -218,8 +218,6 @@ public:
     void RemoveAllEntries();
 	void CreateSegments();    
 
-	void Append(CSimpleTextSubtitle& sts, int timeoff = -1);
-
 	bool Open(CString fn, int CharSet, CString name = _T(""));
 	bool Open(CTextFile* f, int CharSet, CString name);
 	bool Open(BYTE* data, int len, int CharSet, CString name);

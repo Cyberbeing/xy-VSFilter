@@ -1955,36 +1955,6 @@ void CSimpleTextSubtitle::Copy(CSimpleTextSubtitle& sts)
     m_entries.Copy(sts.m_entries);
 }
 
-void CSimpleTextSubtitle::Append(CSimpleTextSubtitle& sts, int timeoff)
-{
-    if(timeoff < 0)
-    {
-        timeoff = m_entries.GetCount() > 0 ? m_entries.GetAt(m_entries.GetCount()-1).end : 0;
-    }
-
-    for(int i = 0, j = m_entries.GetCount(); i < j; i++)
-    {
-        if(m_entries.GetAt(i).start > timeoff)
-        {
-            m_entries.RemoveAt(i, j - i);
-            break;
-        }
-    }
-
-    CopyStyles(sts.m_styles, true);
-
-    for(int i = 0, j = sts.m_entries.GetCount(); i < j; i++)
-    {
-        STSEntry stse = sts.m_entries.GetAt(i);
-        stse.start += timeoff;
-        stse.end += timeoff;
-        stse.readorder += m_entries.GetCount();
-        m_entries.Add(stse);
-    }
-
-    CreateSegments();
-}
-
 void CSTSStyleMap::Free()
 {
     POSITION pos = GetStartPosition();
