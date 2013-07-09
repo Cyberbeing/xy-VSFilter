@@ -2211,27 +2211,42 @@ void CSimpleTextSubtitle::ChangeUnknownStylesToDefault()
 {
     CAtlMap<CString, STSStyle*, CStringElementTraits<CString> > unknown;
     bool fReport = true;
-
+    CString last_style = _T("!@dkdfjlakfkjjklezdv^5132ae");
+    bool last_style_changed_to_unknow = false;
     for(size_t i = 0; i < m_entries.GetCount(); i++)
     {
         STSEntry& stse = m_entries.GetAt(i);
 
         STSStyle* val;
-        if(!m_styles.Lookup(stse.style, val))
+        if (last_style == stse.style)
         {
-            if(!unknown.Lookup(stse.style, val))
+            // simple heuristic rule: the style is likely to be the same as the last one,
+            // then there is no need to query the map
+            if (last_style_changed_to_unknow)
             {
-                if(fReport)
+                stse.style = g_default_style;
+            }
+        }
+        else
+        {
+            last_style = stse.style;
+            last_style_changed_to_unknow = !m_styles.Lookup(stse.style, val);
+            if (last_style_changed_to_unknow)
+            {
+                if(!unknown.Lookup(stse.style, val))
                 {
-                    CString msg;
-                    msg.Format(_T("Unknown style found: \"%s\", changed to \"Default\"!\n\nPress Cancel to ignore further warnings."), stse.style);
-                    if(MessageBox(NULL, msg, _T("Warning"), MB_OKCANCEL|MB_ICONWARNING) != IDOK) fReport = false;
+                    if(fReport)
+                    {
+                        CString msg;
+                        msg.Format(_T("Unknown style found: \"%s\", changed to \"Default\"!\n\nPress Cancel to ignore further warnings."), stse.style);
+                        if(MessageBox(NULL, msg, _T("Warning"), MB_OKCANCEL|MB_ICONWARNING) != IDOK) fReport = false;
+                    }
+
+                    unknown[stse.style] = NULL;
                 }
 
-                unknown[stse.style] = NULL;
+                stse.style = g_default_style;
             }
-
-            stse.style = g_default_style;
         }
     }
 }
