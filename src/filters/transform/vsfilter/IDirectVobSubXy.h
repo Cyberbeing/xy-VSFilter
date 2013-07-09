@@ -126,6 +126,9 @@ namespace DirectVobSubXyOptions
 
         BOOL_ENABLE_ZP_ICON,
 
+        INT_CUR_STYLES_COUNT,
+        BIN2_CUR_STYLES,
+
         //The following is not really supported yet
         void_LanguageName,
         void_HasConfigDialog,
@@ -195,6 +198,11 @@ namespace DirectVobSubXyOptions
     };
     struct SubtitleTiming {
         int delay, speedmul, speeddiv;
+    };
+    struct SubStyle
+    {
+        WCHAR name[64];
+        void *style;//STSStyle*
     };
     const XyOptionsImpl::Option DirectVobFilterOptions[] = {
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_COLOR_SPACE},
@@ -278,6 +286,8 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, BOOL_SUBTITLE_RELOADER_LOCK},
         {XyOptionsImpl::OPTION_TYPE_BIN   , XyOptionsImpl::OPTION_MODE_RW, void_AdviseSubClock},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_ENABLE_ZP_ICON},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_READ, INT_CUR_STYLES_COUNT},
+        {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_RW, BIN2_CUR_STYLES},
 
         {XyOptionsImpl::OPTION_TYPE_END_FLAG}
     };
@@ -369,6 +379,8 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_STRING, XyOptionsImpl::OPTION_MODE_READ, STRING_OUTPUT_LEVELS},
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_RGB_OUTPUT_TV_LEVEL},
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_READ, INT_CONSUMER_SUPPORTED_LEVELS},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_READ, INT_CUR_STYLES_COUNT},
+        {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_RW, BIN2_CUR_STYLES},
 
         {XyOptionsImpl::OPTION_TYPE_END_FLAG}
     };

@@ -31,6 +31,7 @@ class DirectVobSubImpl : public IDirectVobSub2, public XyOptionsImpl, public IFi
 {
 public:
     typedef XyOptionsImpl::Option Option;
+    typedef DirectVobSubXyOptions::SubStyle SubStyle;
 
     enum ColorSpaceOption
     {
@@ -65,6 +66,9 @@ protected:
 
     bool is_compatible();
     UINT GetCompatibleProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault);
+
+    virtual HRESULT GetCurStyles(SubStyle sub_style[], int count) { return E_NOTIMPL; }
+    virtual HRESULT SetCurStyles(const SubStyle sub_style[], int count) { return E_NOTIMPL; }
 protected:
     CCritSec *m_propsLock;
 

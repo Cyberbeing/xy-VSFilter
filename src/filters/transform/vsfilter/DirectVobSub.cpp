@@ -913,6 +913,8 @@ STDMETHODIMP DirectVobSubImpl::XyGetBin2( unsigned field, void *value, int size 
             NORMALIZEDRECT* tmp = reinterpret_cast<NORMALIZEDRECT*>(value);
             return get_ZoomRect(tmp);
         }
+    case BIN2_CUR_STYLES:
+        return GetCurStyles( reinterpret_cast<SubStyle*>(value), size );
     }
     return E_NOTIMPL;
 }
@@ -969,6 +971,8 @@ STDMETHODIMP DirectVobSubImpl::XySetBin( unsigned field, LPVOID value, int size 
             return E_INVALIDARG;
         }
         return put_ZoomRect(reinterpret_cast<NORMALIZEDRECT*>(value));
+    case BIN2_CUR_STYLES:
+        return SetCurStyles(reinterpret_cast<const SubStyle*>(value), size);
     }
     return E_NOTIMPL;
 }

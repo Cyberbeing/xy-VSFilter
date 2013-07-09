@@ -53,6 +53,10 @@ public:
     STDMETHODIMP XyGetString   (unsigned field, LPWSTR   *value, int *chars);
     STDMETHODIMP XySetBool     (unsigned field, bool      value);
 
+    // DirectVobSubImpl
+    HRESULT GetCurStyles(SubStyle sub_style[], int count);
+    HRESULT SetCurStyles(const SubStyle sub_style[], int count);
+
     // IDirectVobSub
     STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
 

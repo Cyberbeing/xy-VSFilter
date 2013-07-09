@@ -434,6 +434,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
         hr = E_INVALIDARG;
         break;
     case INT_SELECTED_LANGUAGE:
+    case BIN2_CUR_STYLES:
         UpdateSubtitle(false);
         m_context_id++;
         break;
@@ -478,6 +479,22 @@ HRESULT XySubFilter::DoGetField( unsigned field, void *value )
             else
             {
                 *(int*)value = m_xy_int_opt[INT_MAX_BITMAP_COUNT];
+            }
+        }
+        break;
+    case INT_CUR_STYLES_COUNT:
+        {
+            CAutoLock cAutoLock(&m_csFilter);
+            if (dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream)!=NULL)
+            {
+                hr = S_OK;
+                CRenderedTextSubtitle * rts = dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream);
+                *(int*)value = rts->m_styles.GetCount();
+            }
+            else
+            {
+                hr = S_FALSE;
+                *(int*)value = 0;
             }
         }
         break;
@@ -533,6 +550,91 @@ STDMETHODIMP XySubFilter::XySetBool(unsigned field, bool      value)
         break;
     }
     return DirectVobSubImpl::XySetBool(field, value);
+}
+
+//
+// DirectVobSubImpl
+//
+HRESULT XySubFilter::GetCurStyles( SubStyle sub_style[], int count )
+{
+    CAutoLock cAutoLock(&m_csFilter);
+    if (dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream)!=NULL)
+    {
+        CRenderedTextSubtitle * rts = dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream);
+        if (count != rts->m_styles.GetCount())
+        {
+            return E_INVALIDARG;
+        }
+        POSITION pos = rts->m_styles.GetStartPosition();
+        int i = 0;
+        while(pos)
+        {
+            CSTSStyleMap::CPair *pair = rts->m_styles.GetNext(pos);
+            if (!pair)
+            {
+                return E_FAIL;
+            }
+            if (pair->m_key.GetLength()>=countof(sub_style[0].name))
+            {
+                return ERROR_BUFFER_OVERFLOW;
+            }
+            wcscpy_s(sub_style[i].name, pair->m_key.GetString());
+            if (sub_style[i].style)
+            {
+                *(STSStyle*)(sub_style[i].style) = *pair->m_value;
+            }
+            i++;
+        }
+    }
+    else
+    {
+        return S_FALSE;
+    }
+    return S_OK;
+}
+
+HRESULT XySubFilter::SetCurStyles( const SubStyle sub_style[], int count )
+{
+    HRESULT hr = NOERROR;
+    CAutoLock cAutoLock(&m_csFilter);
+    if (dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream)!=NULL)
+    {
+        CRenderedTextSubtitle * rts = dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream);
+        if (count != rts->m_styles.GetCount())
+        {
+            return E_INVALIDARG;
+        }
+        for (int i=0;i<count;i++)
+        {
+            if (!rts->m_styles.Lookup(sub_style[i].name))
+            {
+                return E_FAIL;
+            }
+        }
+        bool changed = false;
+        for (int i=0;i<count;i++)
+        {
+            STSStyle * style = NULL;
+            rts->m_styles.Lookup(sub_style[i].name, style);
+            ASSERT(style);
+            if (sub_style[i].style)
+            {
+                *style = *static_cast<STSStyle*>(sub_style[i].style);
+                changed = true;
+            }
+        }
+        if (changed) {
+            hr = OnOptionChanged(BIN2_CUR_STYLES);
+            //fixme: the default style implemetation is still a mess
+            //so that once users modified styles setting, the default style would NOT be overwritten by the global default
+            rts->m_fUsingDefaultStyleFromScript = true;
+        }
+    }
+    else
+    {
+        return E_FAIL;
+    }
+    return hr;
 }
 
 //
