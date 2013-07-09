@@ -114,7 +114,7 @@
 #define IDC_ONLYSHOWFORCEDSUBS          207
 #define IDC_POLYGONIZE                  208
 #define IDC_CHECKBOX_HideTrayIcon       209
-#define IDC_FONT                        212
+#define IDC_STYLES                      212
 #define IDC_CONFIGDLG                   213
 #define IDC_SHADOW                      214
 #define IDI_ICON1                       214

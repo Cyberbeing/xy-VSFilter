@@ -50,6 +50,142 @@ BOOL WINAPI MyGetDialogSize(int iResourceID, DLGPROC pDlgProc, LPARAM lParam, SI
     return TRUE;
 }
 
+/************************************************************************/
+
+DirectVobSubXyOptions::SubStyle * NewSubStyles(int count);
+void DeleteSubStyles(DirectVobSubXyOptions::SubStyle* style, int count);
+HRESULT GetSubStyles(IXyOptions *filter, DirectVobSubXyOptions::SubStyle* *style, int *count);
+HRESULT CreateSubStyleEditDialog(const STSStyle& default_style
+    , const DirectVobSubXyOptions::SubStyle sub_styles[], int count
+    , CPropertySheet& dlg, /*out*/CStyleEditorPPage **pages);
+void EditStyle(HWND hWnd, IXyOptions *filter, /* in-out */STSStyle* default_style);
+
+/********************/
+
+DirectVobSubXyOptions::SubStyle * NewSubStyles(int count)
+{
+    using namespace DirectVobSubXyOptions;
+    SubStyle * ret = DEBUG_NEW SubStyle[count];
+    if (ret==NULL)
+    {
+        XY_LOG_FATAL("Overflow");
+        return NULL;
+    }
+    for (int i=0;i<count;i++)
+    {
+        ret[i].style = NULL;
+    }
+    for (int i=0;i<count;i++)
+    {
+        ret[i].style = DEBUG_NEW STSStyle();
+        if (ret[i].style==NULL)
+        {
+            XY_LOG_FATAL("Overflow");
+            DeleteSubStyles(ret, count);
+            return NULL;
+        }
+    }
+    return ret;
+}
+
+void DeleteSubStyles(DirectVobSubXyOptions::SubStyle* style, int count)
+{
+    if (!style)
+    {
+        return;
+    }
+    for (int i=0; i<count; i++)
+    {
+        delete style[i].style;
+    }
+    delete[] style;
+}
+
+HRESULT GetSubStyles(IXyOptions *filter, DirectVobSubXyOptions::SubStyle* *style, int *count)
+{
+    ASSERT(style && count);
+    *style = NULL;
+    HRESULT hr = filter->XyGetInt(DirectVobSubXyOptions::INT_CUR_STYLES_COUNT, count);
+    if (hr != S_OK || *count==0)
+    {
+        return hr;
+    }
+    *style = NewSubStyles(*count);
+    if (!*style)
+    {
+        return E_FAIL;
+    }
+    hr = filter->XyGetBin2(DirectVobSubXyOptions::BIN2_CUR_STYLES, *style, *count);
+    if (hr != S_OK)
+    {
+        DeleteSubStyles(*style, *count);
+        *style = NULL;
+        *count = 0;
+    }
+    return hr;
+}
+
+HRESULT CreateSubStyleEditDialog(const STSStyle& default_style
+    , const DirectVobSubXyOptions::SubStyle sub_styles[], int count
+    , CPropertySheet& dlg, /*out*/CStyleEditorPPage **pages)
+{
+    ASSERT(pages);
+    *pages = DEBUG_NEW CStyleEditorPPage[count+1];
+    if (!*pages)
+    {
+        return E_FAIL;
+    }
+    (*pages)[0].init(_T("Global Default"), &default_style);
+    dlg.AddPage(*pages);
+    for (int i=0;i<count;i++)
+    {
+        ASSERT(sub_styles);
+        CString title = sub_styles[i].name;
+        (*pages)[i+1].init(title, static_cast<STSStyle*>(sub_styles[i].style));
+        dlg.AddPage((*pages)+i+1);
+    }
+    return S_OK;
+}
+
+void EditStyle(HWND hWnd, IXyOptions *filter, /* in-out */STSStyle* default_style)
+{
+    int style_count = 0;
+    DirectVobSubXyOptions::SubStyle* styles = NULL;
+    HRESULT hr = GetSubStyles(filter, &styles, &style_count);
+    CHECK_N_LOG(hr, "Failed to get styles."<<XY_LOG_VAR_2_STR(hr));
+    CStyleEditorPPage* pages = NULL;
+    CPropertySheet dlg(_T("Styles"), CWnd::FromHandle(hWnd));
+    hr = CreateSubStyleEditDialog(*default_style, styles, style_count, dlg, &pages);
+    if (FAILED(hr))
+    {
+        MessageBoxW(hWnd,
+            L"Failed to create Style editor dialog",
+            L"Fatal",
+            MB_OK | MB_ICONERROR | MB_APPLMODAL
+            );
+        DeleteSubStyles(styles, style_count);
+        return;
+    }
+    if(dlg.DoModal() == IDOK)
+    {
+        *default_style = pages[0].m_stss;
+        if (style_count>0)
+        {
+            for (int i=0;i<style_count;i++)
+            {
+                *static_cast<STSStyle*>(styles[i].style) = pages[i+1].m_stss;
+            }
+            hr = filter->XySetBin(DirectVobSubXyOptions::BIN2_CUR_STYLES, styles, style_count);
+            CHECK_N_LOG(hr, "Failed to set option "<<XY_LOG_VAR_2_STR(DirectVobSubXyOptions::BIN2_CUR_STYLES));
+        }
+    }
+    DeleteSubStyles(styles, style_count);
+    delete []pages;
+    return;
+}
+
+/************************************************************************/
+
 STDMETHODIMP CDVSBasePPage::GetPageInfo(LPPROPPAGEINFO pPageInfo)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
@@ -290,7 +426,7 @@ CDVSMainPPage::CDVSMainPPage(LPUNKNOWN pUnk, HRESULT* phr)
     BindControl(IDC_OVERRIDEPLACEMENT, m_oplacement);
     BindControl(IDC_SPIN1, m_subposx);
     BindControl(IDC_SPIN2, m_subposy);
-    BindControl(IDC_FONT, m_font);
+    BindControl(IDC_STYLES, m_styles);
     BindControl(IDC_ONLYSHOWFORCEDSUBS, m_forcedsubs);
     BindControl(IDC_PARCOMBO, m_PARCombo);
     BindControl(IDC_CHECKBOX_HideTrayIcon, m_hide_tray_icon);
@@ -345,21 +481,10 @@ bool CDVSMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                         return(true);
                     }
-                    else if(LOWORD(wParam) == IDC_FONT)
+                    else if(LOWORD(wParam) == IDC_STYLES)
                     {
                         AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-                        CStyleEditorPPage page(_T("Default"), &m_defStyle);
-                        CPropertySheet dlg(_T("Styles"), CWnd::FromHandle(m_hwnd));
-                        dlg.AddPage(&page);
-                        if(dlg.DoModal() == IDOK)
-                        {
-                            m_defStyle = page.m_stss;
-                            CString str = m_defStyle.fontName;
-                            if(str.GetLength() > 18) str = str.Left(16).TrimRight() + _T("...");
-                            m_font.SetWindowText(str);
-                        }
-
+                        EditStyle(m_hwnd, m_pDirectVobSubXy, &m_defStyle);
                         return(true);
                     }
                 }
@@ -466,7 +591,6 @@ void CDVSMainPPage::UpdateControlData(bool fSave)
         m_subposy.SetRange(-20, 120);
         m_subposy.SetPos(m_PlacementYperc);
         m_subposy.EnableWindow(m_fOverridePlacement);
-        m_font.SetWindowText(m_defStyle.fontName);
         m_forcedsubs.SetCheck(m_fOnlyShowForcedVobSubs);
         m_langs.ResetContent();
         m_langs.EnableWindow(m_nLangs > 0);
@@ -1573,7 +1697,7 @@ CXySubFilterMainPPage::CXySubFilterMainPPage(LPUNKNOWN pUnk, HRESULT* phr)
     BindControl(IDC_OVERRIDEPLACEMENT, m_oplacement);
     BindControl(IDC_SPIN1, m_subposx);
     BindControl(IDC_SPIN2, m_subposy);
-    BindControl(IDC_FONT, m_font);
+    BindControl(IDC_STYLES, m_styles);
     BindControl(IDC_ONLYSHOWFORCEDSUBS, m_forcedsubs);
     BindControl(IDC_PARCOMBO, m_PARCombo);
     BindControl(IDC_CHECKBOX_HideTrayIcon, m_hide_tray_icon);
@@ -1633,21 +1757,10 @@ bool CXySubFilterMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                         return(true);
                     }
-                    else if(LOWORD(wParam) == IDC_FONT)
+                    else if(LOWORD(wParam) == IDC_STYLES)
                     {
                         AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-                        CStyleEditorPPage page(_T("Default"), &m_defStyle);
-                        CPropertySheet dlg(_T("Styles"), CWnd::FromHandle(m_hwnd));
-                        dlg.AddPage(&page);
-                        if(dlg.DoModal() == IDOK)
-                        {
-                            m_defStyle = page.m_stss;
-                            CString str = m_defStyle.fontName;
-                            if(str.GetLength() > 18) str = str.Left(16).TrimRight() + _T("...");
-                            m_font.SetWindowText(str);
-                        }
-
+                        EditStyle(m_hwnd, m_pDirectVobSubXy, &m_defStyle);
                         return(true);
                     }
                 }
@@ -1775,7 +1888,6 @@ void CXySubFilterMainPPage::UpdateControlData(bool fSave)
         m_subposy.SetRange(-20, 120);
         m_subposy.SetPos(m_PlacementYperc);
         m_subposy.EnableWindow(m_fOverridePlacement);
-        m_font.SetWindowText(m_defStyle.fontName);
         m_forcedsubs.SetCheck(m_fOnlyShowForcedVobSubs);
         m_langs.ResetContent();
         m_langs.EnableWindow(m_nLangs > 0);

@@ -80,7 +80,7 @@ class CDVSMainPPage : public CDVSBasePPage
 	CComboBox m_langs;
 	CButton m_oplacement;
 	CSpinButtonCtrl m_subposx, m_subposy;
-	CButton m_font, m_forcedsubs;
+	CButton m_styles, m_forcedsubs;
 	CButton m_AutoPARCompensation;
 	CComboBox m_PARCombo;
     CButton m_hide_tray_icon;
@@ -270,7 +270,7 @@ class CXySubFilterMainPPage : public CDVSBasePPage
     CComboBox m_langs;
     CButton m_oplacement;
     CSpinButtonCtrl m_subposx, m_subposy;
-    CButton m_font, m_forcedsubs;
+    CButton m_styles, m_forcedsubs;
     CButton m_AutoPARCompensation;
     CComboBox m_PARCombo;
     CButton m_hide_tray_icon;

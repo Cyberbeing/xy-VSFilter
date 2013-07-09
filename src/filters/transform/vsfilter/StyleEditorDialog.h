@@ -62,8 +62,11 @@ class CStyleEditorPPage : public CPropertyPage
 	void AskColor(int i);
 
 public:
-	CStyleEditorPPage(CString title, const STSStyle* pstss);   // standard constructor
+    CStyleEditorPPage();
+    CStyleEditorPPage(CString title, const STSStyle* pstss);
 	virtual ~CStyleEditorPPage();
+
+    void init(CString title, const STSStyle* pstss);
 
 // Dialog Data
 	enum { IDD = IDD_STYLE_PAGE };

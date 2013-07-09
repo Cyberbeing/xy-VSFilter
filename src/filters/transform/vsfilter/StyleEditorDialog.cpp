@@ -36,6 +36,24 @@ END_MESSAGE_MAP()
 // CStyleEditorPPage Property Page
 
 IMPLEMENT_DYNAMIC(CStyleEditorPPage, CPropertyPage)
+
+CStyleEditorPPage::CStyleEditorPPage()
+    : CPropertyPage(CStyleEditorPPage::IDD)
+    , m_iCharset(0)
+    , m_spacing(0)
+    , m_angle(0)
+    , m_scalex(0)
+    , m_scaley(0)
+    , m_borderstyle(0)
+    , m_borderwidth(0)
+    , m_shadowdepth(0)
+    , m_screenalignment(0)
+    , m_margin(0,0,0,0)
+    , m_linkalphasliders(FALSE)
+{
+
+}
+
 CStyleEditorPPage::CStyleEditorPPage(CString title, const STSStyle* pstss)
 	: CPropertyPage(CStyleEditorPPage::IDD)
 	, m_title(title)
@@ -52,12 +70,20 @@ CStyleEditorPPage::CStyleEditorPPage(CString title, const STSStyle* pstss)
 	, m_margin(0,0,0,0)
 	, m_linkalphasliders(FALSE)
 {
-    m_pPSP->pszTitle = (m_title = title);
+    m_pPSP->pszTitle = m_title;
     m_psp.dwFlags |= PSP_USETITLE;
 }
 
 CStyleEditorPPage::~CStyleEditorPPage()
 {
+}
+
+void CStyleEditorPPage::init( CString title, const STSStyle* pstss )
+{
+    m_title = title;
+    m_stss = *pstss;
+    m_pPSP->pszTitle = m_title;
+    m_psp.dwFlags |= PSP_USETITLE;
 }
 
 void CStyleEditorPPage::DoDataExchange(CDataExchange* pDX)
