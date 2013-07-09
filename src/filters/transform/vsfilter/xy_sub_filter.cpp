@@ -1623,7 +1623,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
         else if(clsid == __uuidof(CRenderedTextSubtitle))
         {
             CRenderedTextSubtitle* pRTS = dynamic_cast<CRenderedTextSubtitle*>(pSubStream);
-
+            pRTS->Deinit();//clear caches
             if(fApplyDefStyle || !pRTS->m_fUsingDefaultStyleFromScript)
             {
                 STSStyle s = m_defStyle;
