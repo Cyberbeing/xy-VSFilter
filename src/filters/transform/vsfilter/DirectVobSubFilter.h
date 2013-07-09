@@ -99,6 +99,10 @@ public:
     STDMETHODIMP XySetBool     (unsigned field, bool      value);
     STDMETHODIMP XySetInt      (unsigned field, int       value);
 
+    // DirectVobSubImpl
+    HRESULT GetCurStyles( SubStyle sub_style[], int count );
+    HRESULT SetCurStyles( const SubStyle sub_style[], int count );
+
     // IDirectVobSub
 	STDMETHODIMP get_LanguageName(int iLanguage, WCHAR** ppName);
 	STDMETHODIMP put_PreBuffering(bool fDoPreBuffering);
@@ -185,7 +189,6 @@ private:
 
 	void SetupFRD(CStringArray& paths, CAtlArray<HANDLE>& handles);
 	DWORD ThreadProc();
-
 private:
 	HANDLE m_hSystrayThread;
 	SystrayIconData m_tbid;
