@@ -447,8 +447,8 @@ void CWord::Transform_C(PathData* path_data, const CPointCoor2 &org )
      Formula:
        (x,y,z)' = (S0*A0*A1*A2*A3*A4 + B0) * (x y 1)'
        z = max(1000,z)
-       x = x/z + tagetScaleX*org.x
-       y = y/z + tagetScaleY*org.y
+       x = x/z + org.x
+       y = y/z + org.y
     *******************/
 
     //A3*A4
@@ -525,7 +525,7 @@ void CWord::Transform_C(PathData* path_data, const CPointCoor2 &org )
         x = x / z;
         y = y / z;
 
-        path_data->mpPathPoints[i].x = (long)(x + scaled_org_x);        
+        path_data->mpPathPoints[i].x = (long)(x + scaled_org_x);
         path_data->mpPathPoints[i].y = (long)(y + scaled_org_y);
         if (m_round_to_whole_pixel_after_scale_to_target && (m_target_scale_x!=1.0 || m_target_scale_y!=1.0))
         {
