@@ -1469,7 +1469,8 @@ void XySubFilter::SetYuvMatrix()
             return;
         }
     }
-    else if (dynamic_cast<HdmvSubtitleProvider*>(m_curSubStream)!=NULL)
+    else if (dynamic_cast<HdmvSubtitleProvider*>(m_curSubStream)!=NULL
+        || dynamic_cast<SupFileSubtitleProvider*>(m_curSubStream)!=NULL)
     {
         if ( m_xy_str_opt[STRING_PGS_YUV_RANGE].CompareNoCase(_T("PC"))==0 )
         {
@@ -1634,6 +1635,14 @@ bool XySubFilter::Open()
             }
         }
 
+        if (!pSubStream)
+        {
+            CAutoPtr<SupFileSubtitleProvider> sup(DEBUG_NEW SupFileSubtitleProvider());
+            if (sup && sup->Open(ret[i].full_file_name) && sup->GetStreamCount() > 0)
+            {
+                pSubStream = sup.Detach();
+            }
+        }
         if(pSubStream)
         {
             m_pSubStreams.AddTail(pSubStream);
@@ -1801,9 +1810,8 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             pRTS->Deinit();
             playres = pRTS->m_dstScreenSize;
         }
-        else if(clsid == __uuidof(HdmvSubtitleProvider))
+        else if(clsid == __uuidof(HdmvSubtitleProvider) || clsid == __uuidof(SupFileSubtitleProvider))
         {
-            HdmvSubtitleProvider *sub = dynamic_cast<HdmvSubtitleProvider*>(pSubStream);
             CompositionObject::ColorType color_type = CompositionObject::NONE;
             CompositionObject::YuvRangeType range_type = CompositionObject::RANGE_NONE;
             if ( m_xy_str_opt[STRING_PGS_YUV_RANGE].CompareNoCase(_T("PC"))==0 )
@@ -1853,7 +1861,17 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
                     XY_LOG_WARN(L"Can NOT get useful YUV matrix from consumer:"<<m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].GetString());
                 }
             }
-            sub->SetYuvType(color_type, range_type);
+
+            if (clsid == __uuidof(HdmvSubtitleProvider))
+            {
+                HdmvSubtitleProvider *sub = dynamic_cast<HdmvSubtitleProvider*>(pSubStream);
+                sub->SetYuvType(color_type, range_type);
+            }
+            else
+            {
+                SupFileSubtitleProvider *sub = dynamic_cast<SupFileSubtitleProvider*>(pSubStream);
+                sub->SetYuvType(color_type, range_type);
+            }
         }
     }
 

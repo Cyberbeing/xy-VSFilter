@@ -121,6 +121,14 @@ HRESULT CHdmvSub::ParseSample(IMediaSample* pSample)
     lSampleLen = pSample->GetActualDataLength();
 
     pSample->GetTime(&rtStart, &rtStop);
+
+    return ParseSample(pData, lSampleLen, rtStart, rtStop);
+}
+
+HRESULT CHdmvSub::ParseSample(BYTE* pData, int lSampleLen, REFERENCE_TIME rtStart, REFERENCE_TIME rtStop)
+{
+    HRESULT hr = S_OK;
+
     if (pData) {
         CGolombBuffer SampleBuffer(pData, lSampleLen);
 
@@ -131,23 +139,23 @@ HRESULT CHdmvSub::ParseSample(IMediaSample* pSample)
                 lSampleLen -= 3;
 
                 switch (nSegType) {
-                    case PALETTE:
-                    case OBJECT:
-                    case PRESENTATION_SEG:
-                    case END_OF_DISPLAY:
-                        m_nCurSegment = nSegType;
-                        AllocSegment(nUnitSize);
-                        break;
+                case PALETTE:
+                case OBJECT:
+                case PRESENTATION_SEG:
+                case END_OF_DISPLAY:
+                    m_nCurSegment = nSegType;
+                    AllocSegment(nUnitSize);
+                    break;
 
-                    case WINDOW_DEF:
-                    case INTERACTIVE_SEG:
-                    case HDMV_SUB1:
-                    case HDMV_SUB2:
-                        // Ignored stuff...
-                        SampleBuffer.SkipBytes(nUnitSize);
-                        break;
-                    default:
-                        return VFW_E_SAMPLE_REJECTED;
+                case WINDOW_DEF:
+                case INTERACTIVE_SEG:
+                case HDMV_SUB1:
+                case HDMV_SUB2:
+                    // Ignored stuff...
+                    SampleBuffer.SkipBytes(nUnitSize);
+                    break;
+                default:
+                    return VFW_E_SAMPLE_REJECTED;
                 }
             }
 
@@ -162,31 +170,31 @@ HRESULT CHdmvSub::ParseSample(IMediaSample* pSample)
                     CGolombBuffer SegmentBuffer(m_pSegBuffer, m_nSegSize);
 
                     switch (m_nCurSegment) {
-                        case PALETTE:
-                            TRACE_HDMVSUB( (_T("CHdmvSub:PALETTE            rtStart=%10I64d\n"), rtStart) );
-                            ParsePalette(&SegmentBuffer, m_nSegSize);
-                            break;
-                        case OBJECT:
-                            TRACE_HDMVSUB( (_T("CHdmvSub:OBJECT             %lS\n"), ReftimeToCString(rtStart)) );
-                            ParseObject(&SegmentBuffer, m_nSegSize);
-                            break;
-                        case PRESENTATION_SEG:
-                            TRACE_HDMVSUB( (_T("CHdmvSub:PRESENTATION_SEG   %lS (size=%d)\n"), ReftimeToCString(rtStart), m_nSegSize) );
+                    case PALETTE:
+                        TRACE_HDMVSUB( (_T("CHdmvSub:PALETTE            rtStart=%10I64d\n"), rtStart) );
+                        ParsePalette(&SegmentBuffer, m_nSegSize);
+                        break;
+                    case OBJECT:
+                        TRACE_HDMVSUB( (_T("CHdmvSub:OBJECT             %lS\n"), ReftimeToCString(rtStart)) );
+                        ParseObject(&SegmentBuffer, m_nSegSize);
+                        break;
+                    case PRESENTATION_SEG:
+                        TRACE_HDMVSUB( (_T("CHdmvSub:PRESENTATION_SEG   %lS (size=%d)\n"), ReftimeToCString(rtStart), m_nSegSize) );
 
-                            // Enqueue the current presentation segment if any
-                            EnqueuePresentationSegment(rtStart);
-                            // Parse the new presentation segment
-                            ParsePresentationSegment(rtStart, &SegmentBuffer);
+                        // Enqueue the current presentation segment if any
+                        EnqueuePresentationSegment(rtStart);
+                        // Parse the new presentation segment
+                        ParsePresentationSegment(rtStart, &SegmentBuffer);
 
-                            break;
-                        case WINDOW_DEF:
-                            //TRACE_HDMVSUB( (_T("CHdmvSub:WINDOW_DEF         %lS\n"), ReftimeToCString(rtStart)) );
-                            break;
-                        case END_OF_DISPLAY:
-                            //TRACE_HDMVSUB( (_T("CHdmvSub:END_OF_DISPLAY     %lS\n"), ReftimeToCString(rtStart)) );
-                            break;
-                        default:
-                            TRACE_HDMVSUB( (_T("CHdmvSub:UNKNOWN Seg %d     rtStart=0x%10dd\n"), m_nCurSegment, rtStart) );
+                        break;
+                    case WINDOW_DEF:
+                        //TRACE_HDMVSUB( (_T("CHdmvSub:WINDOW_DEF         %lS\n"), ReftimeToCString(rtStart)) );
+                        break;
+                    case END_OF_DISPLAY:
+                        //TRACE_HDMVSUB( (_T("CHdmvSub:END_OF_DISPLAY     %lS\n"), ReftimeToCString(rtStart)) );
+                        break;
+                    default:
+                        TRACE_HDMVSUB( (_T("CHdmvSub:UNKNOWN Seg %d     rtStart=0x%10dd\n"), m_nCurSegment, rtStart) );
                     }
 
                     m_nCurSegment = NO_SEGMENT;

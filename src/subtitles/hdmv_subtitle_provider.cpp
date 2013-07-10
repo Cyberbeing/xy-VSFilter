@@ -227,9 +227,9 @@ HRESULT HdmvSubtitleProviderImpl::Render( REFERENCE_TIME now, POSITION pos )
 // HdmvSubtitleProvider
 //
 HdmvSubtitleProvider::HdmvSubtitleProvider( CCritSec* pLock, SUBTITLE_TYPE nType
-                                           , const CString& name, LCID lcid )
-                                           : CUnknown(NAME("HdmvSubtitleProvider"), NULL)
-                                           , m_name(name), m_lcid(lcid)
+    , const CString& name, LCID lcid )
+    : CUnknown(NAME("HdmvSubtitleProvider"), NULL)
+    , m_name(name), m_lcid(lcid)
 {
     switch (nType) {
     case ST_DVB :
@@ -366,6 +366,222 @@ HRESULT HdmvSubtitleProvider::EndOfStream( void )
 }
 
 HRESULT HdmvSubtitleProvider::SetYuvType( CBaseSub::ColorType colorType, CBaseSub::YuvRangeType yuvRangeType )
+{
+    CAutoLock cAutoLock(&m_csCritSec);
+    return m_pSub->SetYuvType(colorType, yuvRangeType);
+}
+
+//
+// SupFileSubtitleProvider
+//
+SupFileSubtitleProvider::SupFileSubtitleProvider()
+    : CUnknown(NAME("SupSubFile"), NULL)
+    , m_pSub(NULL)
+    , m_helper(NULL)
+{
+}
+
+SupFileSubtitleProvider::~SupFileSubtitleProvider()
+{
+    CAMThread::Close();
+
+    delete m_pSub;
+    delete m_helper;
+}
+
+static UINT64 ReadByte(CFile* mfile, size_t count = 1)
+{
+    if (count <= 0 || count >= 64) {
+        return 0;
+    }
+    UINT64 ret = 0;
+    BYTE buf[64];
+    if (mfile->Read(buf, count) != count) {
+        return 0;
+    }
+    for(size_t i = 0; i<count; i++) {
+        ret = (ret << 8) + (buf[i] & 0xff);
+    }
+
+    return ret;
+}
+
+static CString StripPath(CString path)
+{
+    CString p = path;
+    p.Replace('\\', '/');
+    p = p.Mid(p.ReverseFind('/')+1);
+    return (p.IsEmpty() ? path : p);
+}
+
+bool SupFileSubtitleProvider::Open(CString fn, CString subName /*= _T("")*/)
+{
+    if (!m_fname.IsEmpty())
+    {
+        return false;
+    }
+
+    CFile f;
+    if (!f.Open(fn, CFile::modeRead|CFile::typeBinary|CFile::shareDenyNone)) {
+        return false;
+    }
+
+    WORD sync = 0;
+    sync = (WORD)ReadByte(&f, 2);
+    if (sync != 'PG') {
+        return false;
+    }
+
+    m_fname   = fn;
+    m_subname = subName;
+    if (m_subname.IsEmpty())
+    {
+        m_subname = fn.Left(fn.ReverseFind('.'));
+        m_subname = m_subname.Mid(m_subname.ReverseFind('/')+1);
+        m_subname = m_subname.Mid(m_subname.ReverseFind('.')+1);
+    }
+
+    {
+        CAutoLock cAutoLock(&m_csCritSec);
+
+        delete m_pSub;
+        delete m_helper;
+        m_pSub    = DEBUG_NEW CHdmvSub();
+        m_helper  = DEBUG_NEW HdmvSubtitleProviderImpl(m_pSub);
+    }
+
+    return CAMThread::Create()==TRUE;
+}
+
+DWORD SupFileSubtitleProvider::ThreadProc()
+{
+    CFile f;
+    if (!f.Open(m_fname, CFile::modeRead|CFile::typeBinary|CFile::shareDenyNone)) {
+        return 1;
+    }
+
+    f.SeekToBegin();
+
+    CMemFile sub;
+    sub.SetLength(f.GetLength());
+    sub.SeekToBegin();
+
+    int len;
+    BYTE buff[65536];
+    while ((len = f.Read(buff, sizeof(buff))) > 0) {
+        sub.Write(buff, len);
+    }
+    sub.SeekToBegin();
+
+    WORD sync              = 0;
+    USHORT size            = 0;
+    REFERENCE_TIME rtStart = 0;
+
+    CAutoLock cAutoLock(&m_csCritSec);
+    while (sub.GetPosition() < (sub.GetLength() - 10)) {
+        sync = (WORD)ReadByte(&sub, 2);
+        if (sync == 'PG') {
+            rtStart = UINT64(ReadByte(&sub, 4) * (1000 / 9));
+            sub.Seek(4 + 1, CFile::current); // rtStop + Segment type
+            size = ReadByte(&sub, 2) + 3;    // Segment size
+            sub.Seek(-3, CFile::current);
+            sub.Read(buff, size);
+            m_pSub->ParseSample(buff, size, rtStart, 0);
+        } else {
+            break;
+        }
+    }
+
+    sub.Close();
+
+    return 0;
+}
+
+STDMETHODIMP SupFileSubtitleProvider::NonDelegatingQueryInterface(REFIID riid, void** ppv)
+{
+    CheckPointer(ppv, E_POINTER);
+    *ppv = NULL;
+
+    return
+        QI(IPersist)
+        QI(ISubStream)
+        QI(IXySubRenderProvider)
+        __super::NonDelegatingQueryInterface(riid, ppv);
+}
+
+// IXySubRenderProvider
+
+STDMETHODIMP SupFileSubtitleProvider::Connect( IXyOptions *consumer )
+{
+    CAutoLock cAutoLock(&m_csCritSec);
+    return m_helper->Connect(consumer);
+}
+
+STDMETHODIMP SupFileSubtitleProvider::RequestFrame( IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now )
+{
+    CAutoLock cAutoLock(&m_csCritSec);
+    return m_helper->RequestFrame(subRenderFrame, now);
+}
+
+STDMETHODIMP SupFileSubtitleProvider::Invalidate( REFERENCE_TIME rtInvalidate /*= -1*/ )
+{
+    CAutoLock cAutoLock(&m_csCritSec);
+    return m_helper->Invalidate(rtInvalidate);
+}
+
+// IPersist
+
+STDMETHODIMP SupFileSubtitleProvider::GetClassID(CLSID* pClassID)
+{
+    return pClassID ? *pClassID = __uuidof(this), S_OK : E_POINTER;
+}
+
+// ISubStream
+
+STDMETHODIMP_(int) SupFileSubtitleProvider::GetStreamCount()
+{
+    return 1;
+}
+
+STDMETHODIMP SupFileSubtitleProvider::GetStreamInfo(int iStream, WCHAR** ppName, LCID* pLCID)
+{
+    if (iStream != 0) {
+        return E_INVALIDARG;
+    }
+
+    if (ppName) {
+        *ppName = (WCHAR*)CoTaskMemAlloc((m_subname.GetLength()+1)*sizeof(WCHAR));
+        if (!(*ppName)) {
+            return E_OUTOFMEMORY;
+        }
+
+        wcscpy_s (*ppName, m_subname.GetLength()+1, CStringW(m_subname));
+    }
+
+    if (pLCID) {
+        *pLCID = 0;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP_(int) SupFileSubtitleProvider::GetStream()
+{
+    return 0;
+}
+
+STDMETHODIMP SupFileSubtitleProvider::SetStream(int iStream)
+{
+    return iStream == 0 ? S_OK : E_FAIL;
+}
+
+STDMETHODIMP SupFileSubtitleProvider::Reload()
+{
+    CAutoLock cAutoLock(&m_csCritSec);
+    return Open(m_fname, m_subname) ? S_OK : E_FAIL;
+}
+
+HRESULT SupFileSubtitleProvider::SetYuvType( CBaseSub::ColorType colorType, CBaseSub::YuvRangeType yuvRangeType )
 {
     CAutoLock cAutoLock(&m_csCritSec);
     return m_pSub->SetYuvType(colorType, yuvRangeType);
