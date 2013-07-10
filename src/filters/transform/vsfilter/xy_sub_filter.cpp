@@ -1534,23 +1534,35 @@ void XySubFilter::SetRgbOutputLevel()
 
     CAutoLock cAutolock(&m_csFilter);
     CAutoLock cAutoLock(&m_csProviderFields);
+
+    XySubRenderFrameCreater * sub_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
     if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_PREFER_TV)
     {
         if (m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==PREFERED_TV || 
             m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==NO_PREFERENCE)
         {
-            XySubRenderFrameCreater::GetDefaultCreater()->SetRgbOutputTvLevel(true);
-            m_xy_str_opt[STRING_OUTPUT_LEVELS] = L"TV";
+            sub_frame_creater->SetRgbOutputTvLevel(true);
+        }
+        else
+        {
+            sub_frame_creater->SetRgbOutputTvLevel(false);
         }
     }
     else if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_FORCE_TV)
     {
-        XySubRenderFrameCreater::GetDefaultCreater()->SetRgbOutputTvLevel(true);
-        m_xy_str_opt[STRING_OUTPUT_LEVELS] = L"TV";
+        sub_frame_creater->SetRgbOutputTvLevel(true);
     }
     else
     {
-        XySubRenderFrameCreater::GetDefaultCreater()->SetRgbOutputTvLevel(false);
+        sub_frame_creater->SetRgbOutputTvLevel(false);
+    }
+    if (dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream)!=NULL)
+    {
+        m_xy_str_opt[STRING_OUTPUT_LEVELS] = sub_frame_creater->GetRgbOutputTvLevel() ? 
+            L"TV" : L"PC";
+    }
+    else
+    {
         m_xy_str_opt[STRING_OUTPUT_LEVELS] = L"PC";
     }
 }
