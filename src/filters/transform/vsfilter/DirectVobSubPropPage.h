@@ -292,6 +292,7 @@ class CXySubFilterMorePPage : public CDVSBasePPage
     int m_overlay_cache_max_item_num, m_overlay_no_blur_cache_max_item_num, m_path_cache_max_item_num, 
         m_scan_line_data_cache_max_item_num, m_subpixel_pos_level;
     int m_layout_size_opt;
+    int m_yuv_matrix, m_yuv_range, m_rgb_level;
     SIZE m_layout_size;
 
     bool m_fHideSubtitles, m_fReloaderDisabled;
@@ -302,6 +303,8 @@ class CXySubFilterMorePPage : public CDVSBasePPage
 
     CSpinButtonCtrl m_layout_size_x, m_layout_size_y;
     CComboBox m_combo_subpixel_pos, m_combo_layout_size_opt;
+
+    CComboBox m_combo_yuv_matrix, m_combo_yuv_range, m_combo_rgb_level;
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
     virtual void UpdateControlData(bool fSave);

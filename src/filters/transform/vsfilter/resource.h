@@ -206,6 +206,7 @@
 #define IDC_SPIN_LAYOUT_SIZE_X          334
 #define IDC_EDIT_LAYOUT_SIZE_Y          335
 #define IDC_SPIN_LAYOUT_SIZE_Y          336
+#define IDC_COMBO_RGB_LEVEL             337
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
 #define IDC_LABLE_OVERLAY_CACHE         403
@@ -238,7 +239,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        337
+#define _APS_NEXT_RESOURCE_VALUE        338
 #define _APS_NEXT_COMMAND_VALUE         32770
 #define _APS_NEXT_CONTROL_VALUE         341
 #define _APS_NEXT_SYMED_VALUE           200

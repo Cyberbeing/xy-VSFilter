@@ -1951,6 +1951,10 @@ CXySubFilterMorePPage::CXySubFilterMorePPage(LPUNKNOWN pUnk, HRESULT* phr)
     BindControl(IDC_HIDE, m_hidesub);
     BindControl(IDC_AUTORELOAD, m_autoreload);
     BindControl(IDC_INSTANTUPDATE, m_instupd);
+
+    BindControl(IDC_COMBO_COLOR_SPACE, m_combo_yuv_matrix);
+    BindControl(IDC_COMBO_YUV_RANGE, m_combo_yuv_range);
+    BindControl(IDC_COMBO_RGB_LEVEL, m_combo_rgb_level);
 }
 
 bool CXySubFilterMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -2054,6 +2058,13 @@ void CXySubFilterMorePPage::UpdateObjectData(bool fSave)
         CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
         CHECK_N_LOG(hr, "Failed to set option");
+
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_YUV_RANGE, m_yuv_range);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_COLOR_SPACE, m_yuv_matrix);
+        CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_RGB_OUTPUT_TV_LEVEL, m_rgb_level);
+        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
@@ -2075,6 +2086,13 @@ void CXySubFilterMorePPage::UpdateObjectData(bool fSave)
         hr = m_pDirectVobSub->get_HideSubtitles(&m_fHideSubtitles);
         CHECK_N_LOG(hr, "Failed to get option");
         hr = m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
+        CHECK_N_LOG(hr, "Failed to get option");
+
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_YUV_RANGE, &m_yuv_range);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_COLOR_SPACE, &m_yuv_matrix);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_RGB_OUTPUT_TV_LEVEL, &m_rgb_level);
         CHECK_N_LOG(hr, "Failed to get option");
     }
 }
@@ -2110,6 +2128,32 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
 
         m_fHideSubtitles = !!m_hidesub.GetCheck();
         m_fReloaderDisabled = !m_autoreload.GetCheck();
+
+
+        if (m_combo_yuv_range.GetCurSel() != CB_ERR)
+        {
+            m_yuv_range = m_combo_yuv_range.GetCurSel();
+        }
+        else
+        {
+            m_yuv_range = CDirectVobSub::YuvRange_Auto;
+        }
+        if (m_combo_yuv_matrix.GetCurSel() != CB_ERR)
+        {
+            m_yuv_matrix = m_combo_yuv_matrix.GetCurSel();
+        }
+        else
+        {
+            m_yuv_matrix = CDirectVobSub::YuvMatrix_AUTO;
+        }
+        if (m_combo_rgb_level.GetCurSel() != CB_ERR)
+        {
+            m_rgb_level = m_combo_rgb_level.GetCurSel();
+        }
+        else
+        {
+            m_rgb_level = DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PC;
+        }
     }
     else
     {
@@ -2164,5 +2208,52 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         m_hidesub.SetCheck(m_fHideSubtitles);
         m_autoreload.SetCheck(!m_fReloaderDisabled);
         m_instupd.SetCheck(!!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), 1));
+
+        if( m_yuv_range != CDirectVobSub::YuvRange_Auto &&
+            m_yuv_range != CDirectVobSub::YuvRange_PC &&
+            m_yuv_range != CDirectVobSub::YuvRange_TV )
+        {
+            m_yuv_range = CDirectVobSub::YuvRange_Auto;
+        }
+        m_combo_yuv_range.ResetContent();
+        m_combo_yuv_range.AddString( CString(_T("Auto")) );
+        m_combo_yuv_range.SetItemData( CDirectVobSub::YuvRange_Auto, CDirectVobSub::YuvRange_Auto );
+        m_combo_yuv_range.AddString( CString(_T("TV")) );
+        m_combo_yuv_range.SetItemData( CDirectVobSub::YuvRange_TV, CDirectVobSub::YuvRange_TV );
+        m_combo_yuv_range.AddString( CString(_T("PC")) );
+        m_combo_yuv_range.SetItemData( CDirectVobSub::YuvRange_PC, CDirectVobSub::YuvRange_PC );
+        m_combo_yuv_range.SetCurSel( m_yuv_range );
+
+        if( m_yuv_matrix != CDirectVobSub::YuvMatrix_AUTO && 
+            m_yuv_matrix != CDirectVobSub::BT_601 && 
+            m_yuv_matrix != CDirectVobSub::BT_709 &&
+            m_yuv_matrix != CDirectVobSub::GUESS )
+        {
+            m_yuv_matrix = CDirectVobSub::YuvMatrix_AUTO;
+        }
+        m_combo_yuv_matrix.ResetContent();
+        m_combo_yuv_matrix.AddString( CString(_T("Auto")) );
+        m_combo_yuv_matrix.SetItemData( CDirectVobSub::YuvMatrix_AUTO, CDirectVobSub::YuvMatrix_AUTO );
+        m_combo_yuv_matrix.AddString( CString(_T("BT.601")) ); 
+        m_combo_yuv_matrix.SetItemData( CDirectVobSub::BT_601, CDirectVobSub::BT_601 );
+        m_combo_yuv_matrix.AddString( CString(_T("BT.709")) ); 
+        m_combo_yuv_matrix.SetItemData( CDirectVobSub::BT_709, CDirectVobSub::BT_709);
+        m_combo_yuv_matrix.AddString( CString(_T("Guess")) );
+        m_combo_yuv_matrix.SetItemData( CDirectVobSub::GUESS, CDirectVobSub::GUESS );
+        m_combo_yuv_matrix.SetCurSel( m_yuv_matrix );
+
+        if (m_rgb_level != DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PREFER_TV &&
+            m_rgb_level != DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_FORCE_TV)
+        {
+            m_rgb_level = DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PC;
+        }
+        m_combo_rgb_level.ResetContent();
+        m_combo_rgb_level.AddString( CString(_T("PC")) );
+        m_combo_rgb_level.SetItemData( DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PC, DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PC );
+        m_combo_rgb_level.AddString( CString(_T("Prefer TV")) );
+        m_combo_rgb_level.SetItemData( DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PREFER_TV, DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PREFER_TV );
+        m_combo_rgb_level.AddString( CString(_T("Force TV")) );
+        m_combo_rgb_level.SetItemData( DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_FORCE_TV, DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_FORCE_TV );
+        m_combo_rgb_level.SetCurSel( m_rgb_level );
     }
 }

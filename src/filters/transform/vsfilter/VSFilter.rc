@@ -423,7 +423,7 @@ BEGIN
     CONTROL         "&Embedded",IDC_EMBLOAD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,183,177,47,12
 END
 
-IDD_XY_SUB_FILTER_MOREPAGE DIALOGEX 0, 0, 247, 188
+IDD_XY_SUB_FILTER_MOREPAGE DIALOGEX 0, 0, 247, 245
 STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
 FONT 8, "MS Sans Serif", 400, 0, 0x1
 BEGIN
@@ -451,12 +451,19 @@ BEGIN
     CONTROL         "",IDC_SPIN_LAYOUT_SIZE_X,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,144,110,11,14
     EDITTEXT        IDC_EDIT_LAYOUT_SIZE_Y,168,107,32,12,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "",IDC_SPIN_LAYOUT_SIZE_Y,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,183,110,11,14
-    CONTROL         "&Hide subtitles",IDC_HIDE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,130,79,10
+    GROUPBOX        "Subtitle Output",IDC_STATIC,7,126,233,46
+    COMBOBOX        IDC_COMBO_YUV_RANGE,28,152,36,16,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "YCbCr matrix",IDC_STATIC,29,141,57,11
+    COMBOBOX        IDC_COMBO_COLOR_SPACE,64,152,46,16,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "RGB Level",IDC_STATIC,122,141,44,11
+    COMBOBOX        IDC_COMBO_RGB_LEVEL,121,152,48,16,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "&Hide subtitles",IDC_HIDE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,178,79,10
     CONTROL         "&Auto-reload subtitle files after detecting modification",IDC_AUTORELOAD,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,145,224,10
-    LTEXT           " (reloading is disabled while showing the property pages)",IDC_STATIC,25,159,182,8
-    CONTROL         "Appl&y changes immediately",IDC_INSTANTUPDATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,172,104,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,193,224,10
+    LTEXT           " (reloading is disabled while showing the property pages)",IDC_STATIC,25,205,182,8
+    CONTROL         "Appl&y changes immediately",IDC_INSTANTUPDATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,225,104,10
 END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -601,7 +608,6 @@ BEGIN
         VERTGUIDE, 124
         VERTGUIDE, 132
         TOPMARGIN, 7
-        BOTTOMMARGIN, 244
         HORZGUIDE, 24
         HORZGUIDE, 188
     END
@@ -610,7 +616,7 @@ BEGIN
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 240
-        BOTTOMMARGIN, 226
+        BOTTOMMARGIN, 188
     END
 END
 #endif    // APSTUDIO_INVOKED
