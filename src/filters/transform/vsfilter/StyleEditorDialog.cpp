@@ -236,7 +236,7 @@ void CStyleEditorPPage::OnOK()
 {
 	UpdateControlData(true);
 
-	CDialog::OnOK();
+	CPropertyPage::OnOK();
 }
 
 void CStyleEditorPPage::OnBnClickedButton1()
