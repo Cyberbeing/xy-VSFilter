@@ -437,14 +437,14 @@ public:
     typedef R8G8B8ToYuvFunc R8G8B8ToY;
     typedef R8G8B8ToYuvFunc Y8U8V8ToRGBFunc;
 
-    R8G8B8ToYuvFunc r8g8b8_to_yuv_func;
-    R8G8B8ToYuvFunc r8g8b8_to_uyv_func;
+    R8G8B8ToYuvFunc      r8g8b8_to_yuv_func;
+    R8G8B8ToYuvFunc      r8g8b8_to_uyv_func;
     PreMulArgbToAyuvFunc pre_mul_argb_to_ayuv_func;
-    R8G8B8ToY r8g8b8_to_y_func;
-    Y8U8V8ToRGBFunc y8u8v8_to_rgb_func;
+    R8G8B8ToY            r8g8b8_to_y_func;
+    Y8U8V8ToRGBFunc      y8u8v8_to_rgb_func;
 
     YuvMatrixType _yuv_type;
-    YuvRangeType _range_type;
+    YuvRangeType  _range_type;
 };
 
 ConvFunc s_default_conv_set(ColorConvTable::BT601, ColorConvTable::RANGE_TV);
@@ -455,57 +455,57 @@ bool ConvFunc::InitConvFunc(YuvMatrixType yuv_type, YuvRangeType range)
 
     if ( yuv_type==ColorConvTable::BT601 && range==ColorConvTable::RANGE_TV )
     {
-        r8g8b8_to_yuv_func = RGBToYUV_TV_BT601;
-        r8g8b8_to_uyv_func = RGBToUYV_TV_BT601;
+        r8g8b8_to_yuv_func        = RGBToYUV_TV_BT601;
+        r8g8b8_to_uyv_func        = RGBToUYV_TV_BT601;
         pre_mul_argb_to_ayuv_func = PREMUL_ARGB2AYUV_TV_BT601;
-        r8g8b8_to_y_func = RGBToY_TV_BT601;
-        y8u8v8_to_rgb_func = YUVToRGB_TV_BT601;
+        r8g8b8_to_y_func          = RGBToY_TV_BT601;
+        y8u8v8_to_rgb_func        = YUVToRGB_TV_BT601;
 
-        _yuv_type = yuv_type;
+        _yuv_type   = yuv_type;
         _range_type = range;
     }
     else if ( yuv_type==ColorConvTable::BT709 && range==ColorConvTable::RANGE_TV )
     {
-        r8g8b8_to_yuv_func = RGBToYUV_TV_BT709;
-        r8g8b8_to_uyv_func = RGBToUYV_TV_BT709;
+        r8g8b8_to_yuv_func        = RGBToYUV_TV_BT709;
+        r8g8b8_to_uyv_func        = RGBToUYV_TV_BT709;
         pre_mul_argb_to_ayuv_func = PREMUL_ARGB2AYUV_TV_BT709;
-        r8g8b8_to_y_func = RGBToY_TV_BT709;
-        y8u8v8_to_rgb_func = YUVToRGB_TV_BT709;
+        r8g8b8_to_y_func          = RGBToY_TV_BT709;
+        y8u8v8_to_rgb_func        = YUVToRGB_TV_BT709;
 
-        _yuv_type = yuv_type;
+        _yuv_type   = yuv_type;
         _range_type = range;
     }
     else if ( yuv_type==ColorConvTable::BT601 && range==ColorConvTable::RANGE_PC )
     {
-        r8g8b8_to_yuv_func = RGBToYUV_PC_BT601;
-        r8g8b8_to_uyv_func = RGBToUYV_PC_BT601;
+        r8g8b8_to_yuv_func        = RGBToYUV_PC_BT601;
+        r8g8b8_to_uyv_func        = RGBToUYV_PC_BT601;
         pre_mul_argb_to_ayuv_func = PREMUL_ARGB2AYUV_PC_BT601;
-        r8g8b8_to_y_func = RGBToY_PC_BT601;
-        y8u8v8_to_rgb_func = YUVToRGB_PC_BT601;
+        r8g8b8_to_y_func          = RGBToY_PC_BT601;
+        y8u8v8_to_rgb_func        = YUVToRGB_PC_BT601;
 
-        _yuv_type = yuv_type;
+        _yuv_type   = yuv_type;
         _range_type = range;
     }
     else if ( yuv_type==ColorConvTable::BT709 && range==ColorConvTable::RANGE_PC )
     {
-        r8g8b8_to_yuv_func = RGBToYUV_PC_BT709;
-        r8g8b8_to_uyv_func = RGBToUYV_PC_BT709;
+        r8g8b8_to_yuv_func        = RGBToYUV_PC_BT709;
+        r8g8b8_to_uyv_func        = RGBToUYV_PC_BT709;
         pre_mul_argb_to_ayuv_func = PREMUL_ARGB2AYUV_PC_BT709;
-        r8g8b8_to_y_func = RGBToY_PC_BT709;
-        y8u8v8_to_rgb_func = YUVToRGB_PC_BT709;
+        r8g8b8_to_y_func          = RGBToY_PC_BT709;
+        y8u8v8_to_rgb_func        = YUVToRGB_PC_BT709;
 
-        _yuv_type = yuv_type;
+        _yuv_type   = yuv_type;
         _range_type = range;
     }
     else
     {
-        r8g8b8_to_yuv_func = RGBToYUV_TV_BT601;
-        r8g8b8_to_uyv_func = RGBToUYV_TV_BT601;
+        r8g8b8_to_yuv_func        = RGBToYUV_TV_BT601;
+        r8g8b8_to_uyv_func        = RGBToUYV_TV_BT601;
         pre_mul_argb_to_ayuv_func = PREMUL_ARGB2AYUV_TV_BT601;
-        r8g8b8_to_y_func = RGBToY_TV_BT601;
-        y8u8v8_to_rgb_func = YUVToRGB_TV_BT601;
+        r8g8b8_to_y_func          = RGBToY_TV_BT601;
+        y8u8v8_to_rgb_func        = YUVToRGB_TV_BT601;
 
-        _yuv_type = ColorConvTable::BT601;
+        _yuv_type   = ColorConvTable::BT601;
         _range_type = ColorConvTable::RANGE_TV;
     }
 
