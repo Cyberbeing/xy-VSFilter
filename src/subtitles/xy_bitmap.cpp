@@ -497,16 +497,7 @@ DWORD XySubRenderFrameCreater::TransColor( DWORD argb )
     case XY_CS_ARGB:
     case XY_CS_ARGB_F:
         if (m_vsfilter_compact_rgb_correction) {
-            //fix me: quality
-            if (!m_rgb_output_tv_level)
-            {
-                return ColorConvTable::Ayuv2Argb_TV_BT709(ColorConvTable::Argb2Ayuv_TV_BT601(argb));
-            }
-            else
-            {
-                return ColorConvTable::RGB_PC_TO_TV(
-                    ColorConvTable::Ayuv2Argb_TV_BT709(ColorConvTable::Argb2Ayuv_TV_BT601(argb)));
-            }
+            return ColorConvTable::VSFilterCompactCorretion(argb, m_rgb_output_tv_level);
         }
         else
         {

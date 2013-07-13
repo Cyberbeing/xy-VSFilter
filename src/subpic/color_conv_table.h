@@ -57,6 +57,8 @@ struct ColorConvTable
         YuvRangeType in_range, YuvMatrixType in_type);
 
     static DWORD RGB_PC_TO_TV(DWORD argb);
+
+    static DWORD VSFilterCompactCorretion(DWORD argb, bool output_tv_level);
 private:
     ColorConvTable();
 };

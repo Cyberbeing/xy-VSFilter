@@ -166,8 +166,11 @@ public:
 
     bool Init();
     DWORD Convert(int x1, int x2, int x3, int in_level, int in_type, int out_level, int out_type);
+    static DWORD DoConvert(int x1, int x2, int x3, const int *matrix);
 
+    DWORD VSFilterCompactCorretion( int r8, int g8, int b8, int output_rgb_level );
     void InitMatrix(int in_level, int in_type, int out_level, int out_type);
+    void InitVSFilterCompactCorretionMatrix();
 private:
     const float * MATRIX_DE_QUAN  [LEVEL_COUNT][COLOR_COUNT];
     const float * MATRIX_INV_TRANS[COLOR_COUNT];
@@ -176,6 +179,8 @@ private:
 
     //m_matrix[in_level][in_type][out_level][out_type]
     int * m_matrix[LEVEL_COUNT][COLOR_COUNT][LEVEL_COUNT][COLOR_COUNT];
+
+    int m_matrix_vsfilter_compact_corretion[LEVEL_COUNT][3][4];
 };
 
 ConvMatrix::ConvMatrix()
@@ -222,6 +227,7 @@ bool ConvMatrix::Init()
     MATRIX_QUAN[LEVEL_PC][COLOR_YUV_709] = &YUV_PC[0][0];
     MATRIX_QUAN[LEVEL_PC][COLOR_RGB    ] = &RGB_PC[0][0];
 
+    InitVSFilterCompactCorretionMatrix();
     //InitMatrix(LEVEL_PC, COLOR_RGB, LEVEL_TV, COLOR_YUV_601);
     //InitMatrix(LEVEL_PC, COLOR_RGB, LEVEL_TV, COLOR_YUV_709);
     //InitMatrix(LEVEL_TV, COLOR_YUV_601, LEVEL_PC, COLOR_RGB);
@@ -257,6 +263,32 @@ void ConvMatrix::InitMatrix( int in_level, int in_type, int out_level, int out_t
     }
 }
 
+void ConvMatrix::InitVSFilterCompactCorretionMatrix()
+{
+    int * out_matrix = &m_matrix_vsfilter_compact_corretion[LEVEL_PC][0][0];
+
+    float matrix[3][4];
+    float *p_matrix = &matrix[0][0];
+    memcpy(p_matrix, MATRIX_INV_TRANS[COLOR_YUV_709], 3*4*sizeof(float));
+    MultiplyMatrix(p_matrix, MATRIX_TRANS[COLOR_YUV_601]);
+    for (int i=0;i<3*4;i++)
+    {
+        out_matrix[i] = p_matrix[i] * (1<<16) + 0.5f;
+        ASSERT(out_matrix[i] <¡¡(1<<24));
+    }
+
+    out_matrix = &m_matrix_vsfilter_compact_corretion[LEVEL_TV][0][0];
+    memcpy(p_matrix, MATRIX_QUAN[LEVEL_TV][COLOR_RGB], 3*4*sizeof(float));
+    MultiplyMatrix(p_matrix, MATRIX_INV_TRANS[COLOR_YUV_709]);
+    MultiplyMatrix(p_matrix, MATRIX_TRANS[COLOR_YUV_601]);
+    MultiplyMatrix(p_matrix, MATRIX_DE_QUAN[LEVEL_PC][COLOR_RGB]);
+    for (int i=0;i<3*4;i++)
+    {
+        out_matrix[i] = p_matrix[i] * (1<<16) + 0.5f;
+        ASSERT(out_matrix[i] <¡¡(1<<24));
+    }
+}
+
 DWORD ConvMatrix::Convert(int x1, int x2, int x3, int in_level, int in_type, int out_level, int out_type)
 {
     int * &matrix_int = m_matrix[in_level][in_type][out_level][out_type];
@@ -265,13 +297,25 @@ DWORD ConvMatrix::Convert(int x1, int x2, int x3, int in_level, int in_type, int
         InitMatrix(in_level, in_type, out_level, out_type);
         ASSERT(matrix_int);
     }
-    int tmp1 = (E(matrix_int,0,0) * x1 + E(matrix_int,0,1) * x2 + E(matrix_int,0,2) * x3 + E(matrix_int,0,3) + (1<<15)) >> 16;
-    int tmp2 = (E(matrix_int,1,0) * x1 + E(matrix_int,1,1) * x2 + E(matrix_int,1,2) * x3 + E(matrix_int,1,3) + (1<<15)) >> 16;
-    int tmp3 = (E(matrix_int,2,0) * x1 + E(matrix_int,2,1) * x2 + E(matrix_int,2,2) * x3 + E(matrix_int,2,3) + (1<<15)) >> 16;
+    return DoConvert(x1,x2,x3,matrix_int);
+}
+
+DWORD ConvMatrix::DoConvert( int x1, int x2, int x3, const int *matrix )
+{
+    ASSERT(matrix);
+    int tmp1 = (E(matrix,0,0) * x1 + E(matrix,0,1) * x2 + E(matrix,0,2) * x3 + E(matrix,0,3) + (1<<15)) >> 16;
+    int tmp2 = (E(matrix,1,0) * x1 + E(matrix,1,1) * x2 + E(matrix,1,2) * x3 + E(matrix,1,3) + (1<<15)) >> 16;
+    int tmp3 = (E(matrix,2,0) * x1 + E(matrix,2,1) * x2 + E(matrix,2,2) * x3 + E(matrix,2,3) + (1<<15)) >> 16;
     tmp1 = clip(tmp1, 255);
     tmp2 = clip(tmp2, 255);
     tmp3 = clip(tmp3, 255);
     return (tmp1<<16) | (tmp2<<8) | tmp3;
+}
+
+DWORD ConvMatrix::VSFilterCompactCorretion( int r8, int g8, int b8, int output_rgb_level )
+{
+    ASSERT(output_rgb_level==LEVEL_PC || output_rgb_level==LEVEL_TV);
+    return DoConvert(r8, g8, b8, &m_matrix_vsfilter_compact_corretion[output_rgb_level][0][0]);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -731,6 +775,16 @@ DWORD ColorConvTable::A8Y8U8V8_TO_CUR_AYUV( int a8, int y8, int u8, int v8, YuvR
 {
     return A8Y8U8V8_TO_AYUV(a8,y8,u8,v8,in_range,in_type,
         s_default_conv_set._range_type,s_default_conv_set._yuv_type);
+}
+
+DWORD ColorConvTable::VSFilterCompactCorretion( DWORD argb, bool output_tv_level )
+{
+    int r = (argb & 0x00ff0000) >> 16;
+    int g = (argb & 0x0000ff00) >> 8;
+    int b = (argb & 0x000000ff);
+    return (argb & 0xff000000) | 
+        s_default_conv_set._conv_matrix.VSFilterCompactCorretion(r,g,b,
+            output_tv_level?ConvMatrix::LEVEL_TV : ConvMatrix::LEVEL_PC);
 }
 
 struct YuvPos
