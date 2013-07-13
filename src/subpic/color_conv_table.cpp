@@ -166,7 +166,7 @@ public:
 
     bool Init();
     DWORD Convert(int x1, int x2, int x3, int in_level, int in_type, int out_level, int out_type);
-private:
+
     void InitMatrix(int in_level, int in_type, int out_level, int out_type);
 private:
     const float * MATRIX_DE_QUAN  [LEVEL_COUNT][COLOR_COUNT];
@@ -429,7 +429,7 @@ typedef ColorConvTable::YuvRangeType YuvRangeType;
 class ConvFunc
 {
 public:
-    ConvFunc(YuvMatrixType yuv_type, YuvRangeType range){ InitConvFunc(yuv_type, range); }
+    ConvFunc(YuvMatrixType yuv_type, YuvRangeType range);
     bool InitConvFunc(YuvMatrixType yuv_type, YuvRangeType range);
 
     typedef DWORD (*R8G8B8ToYuvFunc)(int r8, int g8, int b8);
@@ -445,6 +445,8 @@ public:
 
     YuvMatrixType _yuv_type;
     YuvRangeType  _range_type;
+
+    ConvMatrix    _conv_matrix;//for YUV to YUV or other complicated conversions
 };
 
 ConvFunc s_default_conv_set(ColorConvTable::BT601, ColorConvTable::RANGE_TV);
@@ -512,6 +514,40 @@ bool ConvFunc::InitConvFunc(YuvMatrixType yuv_type, YuvRangeType range)
     return result;
 }
 
+ConvFunc::ConvFunc( YuvMatrixType yuv_type, YuvRangeType range )
+{
+    _conv_matrix.Init();
+    _conv_matrix.InitMatrix(
+        ConvMatrix::LEVEL_TV, ConvMatrix::COLOR_YUV_601,
+        ConvMatrix::LEVEL_TV, ConvMatrix::COLOR_YUV_709);
+    _conv_matrix.InitMatrix(
+        ConvMatrix::LEVEL_TV, ConvMatrix::COLOR_YUV_601,
+        ConvMatrix::LEVEL_PC, ConvMatrix::COLOR_YUV_709);
+    _conv_matrix.InitMatrix(
+        ConvMatrix::LEVEL_PC, ConvMatrix::COLOR_YUV_601,
+        ConvMatrix::LEVEL_TV, ConvMatrix::COLOR_YUV_709);
+    _conv_matrix.InitMatrix(
+        ConvMatrix::LEVEL_PC, ConvMatrix::COLOR_YUV_601,
+        ConvMatrix::LEVEL_PC, ConvMatrix::COLOR_YUV_709);
+
+    _conv_matrix.InitMatrix(
+        ConvMatrix::LEVEL_TV, ConvMatrix::COLOR_YUV_709,
+        ConvMatrix::LEVEL_TV, ConvMatrix::COLOR_YUV_601);
+    _conv_matrix.InitMatrix(
+        ConvMatrix::LEVEL_TV, ConvMatrix::COLOR_YUV_709,
+        ConvMatrix::LEVEL_PC, ConvMatrix::COLOR_YUV_601);
+    _conv_matrix.InitMatrix(
+        ConvMatrix::LEVEL_PC, ConvMatrix::COLOR_YUV_709,
+        ConvMatrix::LEVEL_TV, ConvMatrix::COLOR_YUV_601);
+    _conv_matrix.InitMatrix(
+        ConvMatrix::LEVEL_PC, ConvMatrix::COLOR_YUV_709,
+        ConvMatrix::LEVEL_PC, ConvMatrix::COLOR_YUV_601);
+    InitConvFunc(yuv_type, range);
+}
+
+//
+// ColorConvTable
+//
 ColorConvTable::YuvMatrixType ColorConvTable::GetDefaultYUVType()
 {
     return s_default_conv_set._yuv_type;
@@ -650,6 +686,51 @@ DWORD ColorConvTable::RGB_PC_TO_TV( DWORD argb )
     g = ((g*SCALE)>>16) + MIN;
     b = ((b*SCALE)>>16) + MIN;
     return (argb & 0xff000000)|(r<<16)|(g<<8)|b;
+}
+
+DWORD ColorConvTable::A8Y8U8V8_TO_AYUV( int a8, int y8, int u8, int v8,
+    YuvRangeType in_range, YuvMatrixType in_type, YuvRangeType out_range, YuvMatrixType out_type )
+{
+    const int level_map[3] = {
+        ConvMatrix::LEVEL_TV,
+        ConvMatrix::LEVEL_TV,
+        ConvMatrix::LEVEL_PC
+    };
+    const int type_map[3] = {
+        ConvMatrix::COLOR_YUV_601,
+        ConvMatrix::COLOR_YUV_601,
+        ConvMatrix::COLOR_YUV_709
+
+    };
+    //level_map[ColorConvTable::RANGE_NONE] = ConvMatrix::LEVEL_TV;
+    //level_map[ColorConvTable::RANGE_TV]   = ConvMatrix::LEVEL_TV;
+    //level_map[ColorConvTable::RANGE_PC]   = ConvMatrix::LEVEL_PC;
+    //type_map[ColorConvTable::NONE]        = ConvMatrix::COLOR_YUV_601;
+    //type_map[ColorConvTable::BT601]       = ConvMatrix::COLOR_YUV_601;
+    //type_map[ColorConvTable::BT709]       = ConvMatrix::COLOR_YUV_709;
+    if (in_type==out_type)
+    {
+        if (in_range==RANGE_PC && out_range==RANGE_TV)
+        {
+            return A8Y8U8V8_PC_To_TV(a8,y8,u8,v8);
+        }
+        else if (in_range==RANGE_TV && out_range==RANGE_PC)
+        {
+            return A8Y8U8V8_TV_To_PC(a8,y8,u8,v8);
+        }
+        else
+        {
+            return (a8<<24) | (y8<<16) | (u8<<8) | v8;
+        }
+    }
+    return (a8<<24) | s_default_conv_set._conv_matrix.Convert(y8, u8, v8, 
+        level_map[in_range], type_map[in_type], level_map[out_range], type_map[out_type]);
+}
+
+DWORD ColorConvTable::A8Y8U8V8_TO_CUR_AYUV( int a8, int y8, int u8, int v8, YuvRangeType in_range, YuvMatrixType in_type )
+{
+    return A8Y8U8V8_TO_AYUV(a8,y8,u8,v8,in_range,in_type,
+        s_default_conv_set._range_type,s_default_conv_set._yuv_type);
 }
 
 struct YuvPos
