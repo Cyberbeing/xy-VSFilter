@@ -55,6 +55,10 @@ struct ColorConvTable
         YuvRangeType out_range, YuvMatrixType out_type);
     static DWORD A8Y8U8V8_TO_CUR_AYUV(int a8, int y8, int u8, int v8,
         YuvRangeType in_range, YuvMatrixType in_type);
+    static DWORD A8Y8U8V8_TO_ARGB(
+        int a8, int y8, int u8, int v8,
+        YuvRangeType in_range, YuvMatrixType in_type,
+        bool output_tv_level);
 
     static DWORD RGB_PC_TO_TV(DWORD argb);
 

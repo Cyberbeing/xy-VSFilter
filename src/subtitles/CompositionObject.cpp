@@ -29,7 +29,7 @@ CompositionObject::CompositionObject()
     m_pRLEData      = NULL;
     m_nRLEDataSize  = 0;
     m_nRLEPos       = 0;
-	
+
     memsetd(m_Colors, 0xFF000000, sizeof(m_Colors));
 }
 
@@ -62,8 +62,8 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
     if (m_colorType!=spd.type)
     {
         m_colorType = -1;
-        ColorConvTable::YuvMatrixType cur_type;
-        ColorConvTable::YuvRangeType cur_range;
+        ColorConvTable::YuvMatrixType cur_type = ColorConvTable::BT709;
+        ColorConvTable::YuvRangeType cur_range = ColorConvTable::RANGE_TV;
         if (m_OriginalColorType==YUV_Rec601)
         {
             cur_type = ColorConvTable::BT601;
@@ -117,51 +117,13 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
             }
             break;
         case MSP_RGBA:
-            if (FULL_TYPE(cur_type,cur_range)==
-                FULL_TYPE(ColorConvTable::BT709, ColorConvTable::RANGE_TV))
+            for (int i=0;i<paletteNumber;i++)
             {
-                for (int i=0;i<paletteNumber;i++)
-                {
-                    DWORD argb = ColorConvTable::A8Y8U8V8_To_ARGB_TV_BT709(m_Palette[i].T, m_Palette[i].Y
-                        , m_Palette[i].Cb, m_Palette[i].Cr);
-                    m_Colors[m_Palette[i].entry_id] = argb;
-                }
-            }
-            else if (FULL_TYPE(cur_type,cur_range)==
-                FULL_TYPE(ColorConvTable::BT709, ColorConvTable::RANGE_PC))
-            {
-                for (int i=0;i<paletteNumber;i++)
-                {
-                    DWORD argb = ColorConvTable::A8Y8U8V8_To_ARGB_PC_BT709(m_Palette[i].T, m_Palette[i].Y
-                        , m_Palette[i].Cb, m_Palette[i].Cr);
-                    m_Colors[m_Palette[i].entry_id] = argb;
-                }
-            }
-            else if (FULL_TYPE(cur_type,cur_range)==
-                FULL_TYPE(ColorConvTable::BT601, ColorConvTable::RANGE_TV))
-            {
-                for (int i=0;i<paletteNumber;i++)
-                {
-                    DWORD argb = ColorConvTable::A8Y8U8V8_To_ARGB_TV_BT601(m_Palette[i].T, m_Palette[i].Y
-                        , m_Palette[i].Cb, m_Palette[i].Cr);
-                    m_Colors[m_Palette[i].entry_id] = argb;
-                }
-            }
-            else if (FULL_TYPE(cur_type,cur_range)==
-                FULL_TYPE(ColorConvTable::BT601, ColorConvTable::RANGE_PC))
-            {
-                for (int i=0;i<paletteNumber;i++)
-                {
-                    DWORD argb = ColorConvTable::A8Y8U8V8_To_ARGB_PC_BT601(m_Palette[i].T, m_Palette[i].Y
-                        , m_Palette[i].Cb, m_Palette[i].Cr);
-                    m_Colors[m_Palette[i].entry_id] = argb;
-                }
-            }
-            else
-            {
-                XY_LOG_ERROR("Not supported. "<<XY_LOG_VAR_2_STR(cur_type)<<XY_LOG_VAR_2_STR(cur_range));
-                ASSERT(0);
-                return;
+                DWORD argb = ColorConvTable::A8Y8U8V8_TO_ARGB(
+                    m_Palette[i].T, 
+                    m_Palette[i].Y, m_Palette[i].Cb, m_Palette[i].Cr,
+                    cur_range, cur_type, false);
+                m_Colors[m_Palette[i].entry_id] = argb;
             }
             break;
         default:
