@@ -1597,11 +1597,11 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
 
     m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0);
 
-    CString str_rgb_output_level = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_OUTPUT_LEVEL), _T("PC(Best quality)"));
+    CString str_rgb_output_level = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_OUTPUT_LEVEL), _T("AUTO"));
     str_rgb_output_level.MakeLower();
-    if (str_rgb_output_level.Left(9)==_T("prefer_tv"))
+    if (str_rgb_output_level.Left(2)==_T("pc"))
     {
-        m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL] = RGB_OUTPUT_LEVEL_PREFER_TV;
+        m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL] = RGB_OUTPUT_LEVEL_PC;
     }
     else if (str_rgb_output_level.Left(8)==_T("force_tv"))
     {
@@ -1609,7 +1609,7 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
     }
     else
     {
-        m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL] = RGB_OUTPUT_LEVEL_PC;
+        m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL] = RGB_OUTPUT_LEVEL_AUTO;
     }
 }
 
@@ -1730,17 +1730,17 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED]);
 
-    CString str_rgb_output_level = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_OUTPUT_LEVEL), _T("PC(Best quality)"));
+    CString str_rgb_output_level;
     switch (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL])
     {
-    case RGB_OUTPUT_LEVEL_PREFER_TV:
-        str_rgb_output_level = _T("PREFER_TV(Better porformance for poor GPU)");
+    case RGB_OUTPUT_LEVEL_PC:
+        str_rgb_output_level = _T("PC");
         break;
     case RGB_OUTPUT_LEVEL_FORCE_TV:
-        str_rgb_output_level = _T("FORCE_TV(Don't try it if you don't know what you're doing)");
+        str_rgb_output_level = _T("FORCE_TV");
         break;
     default:
-        str_rgb_output_level = _T("PC(Best quality)");
+        str_rgb_output_level = _T("AUTO");
         break;
     }
     theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_OUTPUT_LEVEL), str_rgb_output_level);

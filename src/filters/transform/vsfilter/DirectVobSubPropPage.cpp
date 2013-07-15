@@ -2152,7 +2152,7 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         }
         else
         {
-            m_rgb_level = DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PC;
+            m_rgb_level = DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_AUTO;
         }
     }
     else
@@ -2242,16 +2242,16 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         m_combo_yuv_matrix.SetItemData( CDirectVobSub::GUESS, CDirectVobSub::GUESS );
         m_combo_yuv_matrix.SetCurSel( m_yuv_matrix );
 
-        if (m_rgb_level != DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PREFER_TV &&
+        if (m_rgb_level != DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PC &&
             m_rgb_level != DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_FORCE_TV)
         {
-            m_rgb_level = DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PC;
+            m_rgb_level = DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_AUTO;
         }
         m_combo_rgb_level.ResetContent();
+        m_combo_rgb_level.AddString( CString(_T("AUTO")) );
+        m_combo_rgb_level.SetItemData( DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_AUTO, DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_AUTO );
         m_combo_rgb_level.AddString( CString(_T("PC")) );
         m_combo_rgb_level.SetItemData( DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PC, DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PC );
-        m_combo_rgb_level.AddString( CString(_T("Prefer TV")) );
-        m_combo_rgb_level.SetItemData( DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PREFER_TV, DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_PREFER_TV );
         m_combo_rgb_level.AddString( CString(_T("Force TV")) );
         m_combo_rgb_level.SetItemData( DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_FORCE_TV, DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_FORCE_TV );
         m_combo_rgb_level.SetCurSel( m_rgb_level );

@@ -1537,10 +1537,9 @@ void XySubFilter::SetRgbOutputLevel()
     XySubRenderFrameCreater * sub_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
     if (dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream)!=NULL)
     {
-        if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_PREFER_TV)
+        if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_AUTO)
         {
-            if (m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==PREFERED_TV || 
-                m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==NO_PREFERENCE)
+            if (m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==PREFERED_TV)
             {
                 sub_frame_creater->SetRgbOutputTvLevel(true);
             }
@@ -1564,7 +1563,7 @@ void XySubFilter::SetRgbOutputLevel()
     else if (dynamic_cast<HdmvSubtitleProvider*>(m_curSubStream)!=NULL
         || dynamic_cast<SupFileSubtitleProvider*>(m_curSubStream)!=NULL)
     {
-        if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_PREFER_TV)
+        if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_AUTO)
         {
             if (m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==PREFERED_TV || 
                 m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==NO_PREFERENCE)

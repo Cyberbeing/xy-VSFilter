@@ -183,8 +183,8 @@ namespace DirectVobSubXyOptions
     };
     enum RgbOutputLevel
     {
-        RGB_OUTPUT_LEVEL_PC = 0,
-        RGB_OUTPUT_LEVEL_PREFER_TV,
+        RGB_OUTPUT_LEVEL_AUTO = 0,
+        RGB_OUTPUT_LEVEL_PC,
         RGB_OUTPUT_LEVEL_FORCE_TV,
         RGB_OUTPUT_LEVEL_COUNT
     };
