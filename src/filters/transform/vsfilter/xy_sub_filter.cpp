@@ -389,12 +389,10 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
         InvalidateSubtitle();
         break;
     case INT_RGB_OUTPUT_TV_LEVEL:
-        SetRgbOutputLevel();
-        m_context_id++;
-        break;
     case INT_COLOR_SPACE:
     case INT_YUV_RANGE:
-        SetYuvMatrix();
+        UpdateSubtitle(false);
+        m_context_id++;
         break;
     case INT_OVERLAY_CACHE_MAX_ITEM_NUM:
         CacheManager::GetOverlayMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
