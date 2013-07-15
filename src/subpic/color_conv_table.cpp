@@ -442,30 +442,30 @@ DWORD func(int r8, int g8, int b8)                                              
     return y;                                                                                \
 }
 
-DWORD RGBToYUV_TV_BT601(int r8, int g8, int b8);
-DWORD RGBToYUV_PC_BT601(int r8, int g8, int b8);
-DWORD RGBToYUV_TV_BT709(int r8, int g8, int b8);
-DWORD RGBToYUV_PC_BT709(int r8, int g8, int b8);
+DWORD RGB_PC_TO_YUV_TV_601(int r8, int g8, int b8);
+DWORD RGB_PC_TO_YUV_PC_601(int r8, int g8, int b8);
+DWORD RGB_PC_TO_YUV_TV_709(int r8, int g8, int b8);
+DWORD RGB_PC_TO_YUV_PC_709(int r8, int g8, int b8);
 
-DWORD RGBToUYV_TV_BT601(int r8, int g8, int b8);
-DWORD RGBToUYV_PC_BT601(int r8, int g8, int b8);
-DWORD RGBToUYV_TV_BT709(int r8, int g8, int b8);
-DWORD RGBToUYV_PC_BT709(int r8, int g8, int b8);
+DWORD RGB_PC_TO_UYV_TV_601(int r8, int g8, int b8);
+DWORD RGB_PC_TO_UYV_PC_601(int r8, int g8, int b8);
+DWORD RGB_PC_TO_UYV_TV_709(int r8, int g8, int b8);
+DWORD RGB_PC_TO_UYV_PC_709(int r8, int g8, int b8);
 
-DWORD PREMUL_ARGB2AYUV_TV_BT601(int a8, int r8, int g8, int b8);
-DWORD PREMUL_ARGB2AYUV_PC_BT601(int a8, int r8, int g8, int b8);
-DWORD PREMUL_ARGB2AYUV_TV_BT709(int a8, int r8, int g8, int b8);
-DWORD PREMUL_ARGB2AYUV_PC_BT709(int a8, int r8, int g8, int b8);
+DWORD PREMUL_ARGB_PC_TO_AYUV_TV_601(int a8, int r8, int g8, int b8);
+DWORD PREMUL_ARGB_PC_TO_AYUV_PC_601(int a8, int r8, int g8, int b8);
+DWORD PREMUL_ARGB_PC_TO_AYUV_TV_709(int a8, int r8, int g8, int b8);
+DWORD PREMUL_ARGB_PC_TO_AYUV_PC_709(int a8, int r8, int g8, int b8);
 
-DWORD RGBToY_TV_BT601(int r8, int g8, int b8);
-DWORD RGBToY_PC_BT601(int r8, int g8, int b8);
-DWORD RGBToY_TV_BT709(int r8, int g8, int b8);
-DWORD RGBToY_PC_BT709(int r8, int g8, int b8);
+DWORD RGB_PC_TO_Y_TV_601(int r8, int g8, int b8);
+DWORD RGB_PC_TO_Y_PC_601(int r8, int g8, int b8);
+DWORD RGB_PC_TO_Y_TV_709(int r8, int g8, int b8);
+DWORD RGB_PC_TO_Y_PC_709(int r8, int g8, int b8);
 
-DWORD YUVToRGB_TV_BT601(int y, int u, int v);
-DWORD YUVToRGB_PC_BT601(int y, int u, int v);
-DWORD YUVToRGB_TV_BT709(int y, int u, int v);
-DWORD YUVToRGB_PC_BT709(int y, int u, int v);
+DWORD YUV_TV_TO_RGB_PC_601(int y, int u, int v);
+DWORD YUV_PC_TO_RGB_PC_601(int y, int u, int v);
+DWORD YUV_TV_TO_RGB_PC_709(int y, int u, int v);
+DWORD YUV_PC_TO_RGB_PC_709(int y, int u, int v);
 
 typedef ColorConvTable::YuvMatrixType YuvMatrixType;
 typedef ColorConvTable::YuvRangeType YuvRangeType;
@@ -501,55 +501,55 @@ bool ConvFunc::InitConvFunc(YuvMatrixType yuv_type, YuvRangeType range)
 
     if ( yuv_type==ColorConvTable::BT601 && range==ColorConvTable::RANGE_TV )
     {
-        r8g8b8_to_yuv_func        = RGBToYUV_TV_BT601;
-        r8g8b8_to_uyv_func        = RGBToUYV_TV_BT601;
-        pre_mul_argb_to_ayuv_func = PREMUL_ARGB2AYUV_TV_BT601;
-        r8g8b8_to_y_func          = RGBToY_TV_BT601;
-        y8u8v8_to_rgb_func        = YUVToRGB_TV_BT601;
+        r8g8b8_to_yuv_func        = RGB_PC_TO_YUV_TV_601;
+        r8g8b8_to_uyv_func        = RGB_PC_TO_UYV_TV_601;
+        pre_mul_argb_to_ayuv_func = PREMUL_ARGB_PC_TO_AYUV_TV_601;
+        r8g8b8_to_y_func          = RGB_PC_TO_Y_TV_601;
+        y8u8v8_to_rgb_func        = YUV_TV_TO_RGB_PC_601;
 
         _yuv_type   = yuv_type;
         _range_type = range;
     }
     else if ( yuv_type==ColorConvTable::BT709 && range==ColorConvTable::RANGE_TV )
     {
-        r8g8b8_to_yuv_func        = RGBToYUV_TV_BT709;
-        r8g8b8_to_uyv_func        = RGBToUYV_TV_BT709;
-        pre_mul_argb_to_ayuv_func = PREMUL_ARGB2AYUV_TV_BT709;
-        r8g8b8_to_y_func          = RGBToY_TV_BT709;
-        y8u8v8_to_rgb_func        = YUVToRGB_TV_BT709;
+        r8g8b8_to_yuv_func        = RGB_PC_TO_YUV_TV_709;
+        r8g8b8_to_uyv_func        = RGB_PC_TO_UYV_TV_709;
+        pre_mul_argb_to_ayuv_func = PREMUL_ARGB_PC_TO_AYUV_TV_709;
+        r8g8b8_to_y_func          = RGB_PC_TO_Y_TV_709;
+        y8u8v8_to_rgb_func        = YUV_TV_TO_RGB_PC_709;
 
         _yuv_type   = yuv_type;
         _range_type = range;
     }
     else if ( yuv_type==ColorConvTable::BT601 && range==ColorConvTable::RANGE_PC )
     {
-        r8g8b8_to_yuv_func        = RGBToYUV_PC_BT601;
-        r8g8b8_to_uyv_func        = RGBToUYV_PC_BT601;
-        pre_mul_argb_to_ayuv_func = PREMUL_ARGB2AYUV_PC_BT601;
-        r8g8b8_to_y_func          = RGBToY_PC_BT601;
-        y8u8v8_to_rgb_func        = YUVToRGB_PC_BT601;
+        r8g8b8_to_yuv_func        = RGB_PC_TO_YUV_PC_601;
+        r8g8b8_to_uyv_func        = RGB_PC_TO_UYV_PC_601;
+        pre_mul_argb_to_ayuv_func = PREMUL_ARGB_PC_TO_AYUV_PC_601;
+        r8g8b8_to_y_func          = RGB_PC_TO_Y_PC_601;
+        y8u8v8_to_rgb_func        = YUV_PC_TO_RGB_PC_601;
 
         _yuv_type   = yuv_type;
         _range_type = range;
     }
     else if ( yuv_type==ColorConvTable::BT709 && range==ColorConvTable::RANGE_PC )
     {
-        r8g8b8_to_yuv_func        = RGBToYUV_PC_BT709;
-        r8g8b8_to_uyv_func        = RGBToUYV_PC_BT709;
-        pre_mul_argb_to_ayuv_func = PREMUL_ARGB2AYUV_PC_BT709;
-        r8g8b8_to_y_func          = RGBToY_PC_BT709;
-        y8u8v8_to_rgb_func        = YUVToRGB_PC_BT709;
+        r8g8b8_to_yuv_func        = RGB_PC_TO_YUV_PC_709;
+        r8g8b8_to_uyv_func        = RGB_PC_TO_UYV_PC_709;
+        pre_mul_argb_to_ayuv_func = PREMUL_ARGB_PC_TO_AYUV_PC_709;
+        r8g8b8_to_y_func          = RGB_PC_TO_Y_PC_709;
+        y8u8v8_to_rgb_func        = YUV_PC_TO_RGB_PC_709;
 
         _yuv_type   = yuv_type;
         _range_type = range;
     }
     else
     {
-        r8g8b8_to_yuv_func        = RGBToYUV_TV_BT601;
-        r8g8b8_to_uyv_func        = RGBToUYV_TV_BT601;
-        pre_mul_argb_to_ayuv_func = PREMUL_ARGB2AYUV_TV_BT601;
-        r8g8b8_to_y_func          = RGBToY_TV_BT601;
-        y8u8v8_to_rgb_func        = YUVToRGB_TV_BT601;
+        r8g8b8_to_yuv_func        = RGB_PC_TO_YUV_TV_601;
+        r8g8b8_to_uyv_func        = RGB_PC_TO_UYV_TV_601;
+        pre_mul_argb_to_ayuv_func = PREMUL_ARGB_PC_TO_AYUV_TV_601;
+        r8g8b8_to_y_func          = RGB_PC_TO_Y_TV_601;
+        y8u8v8_to_rgb_func        = YUV_TV_TO_RGB_PC_601;
 
         _yuv_type   = ColorConvTable::BT601;
         _range_type = ColorConvTable::RANGE_TV;
@@ -631,7 +631,7 @@ DWORD ColorConvTable::Argb2Ayuv_TV_BT601( DWORD argb )
     int r = (argb & 0x00ff0000) >> 16;
     int g = (argb & 0x0000ff00) >> 8;
     int b = (argb & 0x000000ff);
-    return (argb & 0xff000000) | RGBToYUV_TV_BT601(r, g, b);
+    return (argb & 0xff000000) | RGB_PC_TO_YUV_TV_601(r, g, b);
 }
 
 DWORD ColorConvTable::Ayuv2Auyv( DWORD ayuv )
@@ -656,7 +656,7 @@ DWORD ColorConvTable::Ayuv2Argb_TV_BT601( DWORD ayuv )
     int y = (ayuv & 0x00ff0000) >> 16;
     int u = (ayuv & 0x0000ff00) >> 8;
     int v = (ayuv & 0x000000ff);
-    return (ayuv & 0xff000000) | YUVToRGB_TV_BT601(y, u, v);
+    return (ayuv & 0xff000000) | YUV_TV_TO_RGB_PC_601(y, u, v);
 }
 
 DWORD ColorConvTable::Ayuv2Argb_TV_BT709( DWORD ayuv )
@@ -664,7 +664,7 @@ DWORD ColorConvTable::Ayuv2Argb_TV_BT709( DWORD ayuv )
     int y = (ayuv & 0x00ff0000) >> 16;
     int u = (ayuv & 0x0000ff00) >> 8;
     int v = (ayuv & 0x000000ff);
-    return (ayuv & 0xff000000) | YUVToRGB_TV_BT709(y, u, v);
+    return (ayuv & 0xff000000) | YUV_TV_TO_RGB_PC_709(y, u, v);
 }
 
 DWORD ColorConvTable::Ayuv2Argb( DWORD ayuv )
@@ -677,22 +677,22 @@ DWORD ColorConvTable::Ayuv2Argb( DWORD ayuv )
 
 DWORD ColorConvTable::A8Y8U8V8_To_ARGB_TV_BT601( int a8, int y8, int u8, int v8 )
 {
-    return (a8<<24) | YUVToRGB_TV_BT601(y8, u8, v8);
+    return (a8<<24) | YUV_TV_TO_RGB_PC_601(y8, u8, v8);
 }
 
 DWORD ColorConvTable::A8Y8U8V8_To_ARGB_PC_BT601( int a8, int y8, int u8, int v8 )
 {
-    return (a8<<24) | YUVToRGB_PC_BT601(y8, u8, v8);
+    return (a8<<24) | YUV_PC_TO_RGB_PC_601(y8, u8, v8);
 }
 
 DWORD ColorConvTable::A8Y8U8V8_To_ARGB_TV_BT709( int a8, int y8, int u8, int v8 )
 {
-    return (a8<<24) | YUVToRGB_TV_BT709(y8, u8, v8);
+    return (a8<<24) | YUV_TV_TO_RGB_PC_709(y8, u8, v8);
 }
 
 DWORD ColorConvTable::A8Y8U8V8_To_ARGB_PC_BT709( int a8, int y8, int u8, int v8 )
 {
-    return (a8<<24) | YUVToRGB_PC_BT709(y8, u8, v8);
+    return (a8<<24) | YUV_PC_TO_RGB_PC_709(y8, u8, v8);
 }
 
 DWORD ColorConvTable::A8Y8U8V8_PC_To_TV( int a8, int y8, int u8, int v8 )
@@ -797,27 +797,27 @@ const YuvPos POS_YUV = {16, 8, 0};
 const YuvPos POS_UYV = {8, 16, 0};
 
 
-DEFINE_RGB2YUV_FUNC(RGBToYUV_TV_BT601, RGB_LVL_PC, YUV_LVL_TV, 0.299 , 0.587 , 0.114 , POS_YUV)
-DEFINE_RGB2YUV_FUNC(RGBToYUV_PC_BT601, RGB_LVL_PC, YUV_LVL_PC, 0.299 , 0.587 , 0.114 , POS_YUV)
-DEFINE_RGB2YUV_FUNC(RGBToYUV_TV_BT709, RGB_LVL_PC, YUV_LVL_TV, 0.2126, 0.7152, 0.0722, POS_YUV)
-DEFINE_RGB2YUV_FUNC(RGBToYUV_PC_BT709, RGB_LVL_PC, YUV_LVL_PC, 0.2126, 0.7152, 0.0722, POS_YUV)
+DEFINE_RGB2YUV_FUNC(RGB_PC_TO_YUV_TV_601, RGB_LVL_PC, YUV_LVL_TV, 0.299 , 0.587 , 0.114 , POS_YUV)
+DEFINE_RGB2YUV_FUNC(RGB_PC_TO_YUV_PC_601, RGB_LVL_PC, YUV_LVL_PC, 0.299 , 0.587 , 0.114 , POS_YUV)
+DEFINE_RGB2YUV_FUNC(RGB_PC_TO_YUV_TV_709, RGB_LVL_PC, YUV_LVL_TV, 0.2126, 0.7152, 0.0722, POS_YUV)
+DEFINE_RGB2YUV_FUNC(RGB_PC_TO_YUV_PC_709, RGB_LVL_PC, YUV_LVL_PC, 0.2126, 0.7152, 0.0722, POS_YUV)
 
-DEFINE_RGB2YUV_FUNC(RGBToUYV_TV_BT601, RGB_LVL_PC, YUV_LVL_TV, 0.299 , 0.587 , 0.114 , POS_UYV)
-DEFINE_RGB2YUV_FUNC(RGBToUYV_PC_BT601, RGB_LVL_PC, YUV_LVL_PC, 0.299 , 0.587 , 0.114 , POS_UYV)
-DEFINE_RGB2YUV_FUNC(RGBToUYV_TV_BT709, RGB_LVL_PC, YUV_LVL_TV, 0.2126, 0.7152, 0.0722, POS_UYV)
-DEFINE_RGB2YUV_FUNC(RGBToUYV_PC_BT709, RGB_LVL_PC, YUV_LVL_PC, 0.2126, 0.7152, 0.0722, POS_UYV)
+DEFINE_RGB2YUV_FUNC(RGB_PC_TO_UYV_TV_601, RGB_LVL_PC, YUV_LVL_TV, 0.299 , 0.587 , 0.114 , POS_UYV)
+DEFINE_RGB2YUV_FUNC(RGB_PC_TO_UYV_PC_601, RGB_LVL_PC, YUV_LVL_PC, 0.299 , 0.587 , 0.114 , POS_UYV)
+DEFINE_RGB2YUV_FUNC(RGB_PC_TO_UYV_TV_709, RGB_LVL_PC, YUV_LVL_TV, 0.2126, 0.7152, 0.0722, POS_UYV)
+DEFINE_RGB2YUV_FUNC(RGB_PC_TO_UYV_PC_709, RGB_LVL_PC, YUV_LVL_PC, 0.2126, 0.7152, 0.0722, POS_UYV)
 
-DEFINE_YUV2RGB_FUNC(YUVToRGB_TV_BT601, RGB_LVL_PC, YUV_LVL_TV, 0.299 , 0.587 , 0.114 )
-DEFINE_YUV2RGB_FUNC(YUVToRGB_PC_BT601, RGB_LVL_PC, YUV_LVL_PC, 0.299 , 0.587 , 0.114 )
-DEFINE_YUV2RGB_FUNC(YUVToRGB_TV_BT709, RGB_LVL_PC, YUV_LVL_TV, 0.2126, 0.7152, 0.0722)
-DEFINE_YUV2RGB_FUNC(YUVToRGB_PC_BT709, RGB_LVL_PC, YUV_LVL_PC, 0.2126, 0.7152, 0.0722)
+DEFINE_YUV2RGB_FUNC(YUV_TV_TO_RGB_PC_601, RGB_LVL_PC, YUV_LVL_TV, 0.299 , 0.587 , 0.114 )
+DEFINE_YUV2RGB_FUNC(YUV_PC_TO_RGB_PC_601, RGB_LVL_PC, YUV_LVL_PC, 0.299 , 0.587 , 0.114 )
+DEFINE_YUV2RGB_FUNC(YUV_TV_TO_RGB_PC_709, RGB_LVL_PC, YUV_LVL_TV, 0.2126, 0.7152, 0.0722)
+DEFINE_YUV2RGB_FUNC(YUV_PC_TO_RGB_PC_709, RGB_LVL_PC, YUV_LVL_PC, 0.2126, 0.7152, 0.0722)
 
-DEFINE_PREMUL_ARGB2AYUV_FUNC(PREMUL_ARGB2AYUV_TV_BT601, RGB_LVL_PC, YUV_LVL_TV, 0.299 , 0.587 , 0.114 , POS_YUV)
-DEFINE_PREMUL_ARGB2AYUV_FUNC(PREMUL_ARGB2AYUV_PC_BT601, RGB_LVL_PC, YUV_LVL_PC, 0.299 , 0.587 , 0.114 , POS_YUV)
-DEFINE_PREMUL_ARGB2AYUV_FUNC(PREMUL_ARGB2AYUV_TV_BT709, RGB_LVL_PC, YUV_LVL_TV, 0.2126, 0.7152, 0.0722, POS_YUV)
-DEFINE_PREMUL_ARGB2AYUV_FUNC(PREMUL_ARGB2AYUV_PC_BT709, RGB_LVL_PC, YUV_LVL_PC, 0.2126, 0.7152, 0.0722, POS_YUV)
+DEFINE_PREMUL_ARGB2AYUV_FUNC(PREMUL_ARGB_PC_TO_AYUV_TV_601, RGB_LVL_PC, YUV_LVL_TV, 0.299 , 0.587 , 0.114 , POS_YUV)
+DEFINE_PREMUL_ARGB2AYUV_FUNC(PREMUL_ARGB_PC_TO_AYUV_PC_601, RGB_LVL_PC, YUV_LVL_PC, 0.299 , 0.587 , 0.114 , POS_YUV)
+DEFINE_PREMUL_ARGB2AYUV_FUNC(PREMUL_ARGB_PC_TO_AYUV_TV_709, RGB_LVL_PC, YUV_LVL_TV, 0.2126, 0.7152, 0.0722, POS_YUV)
+DEFINE_PREMUL_ARGB2AYUV_FUNC(PREMUL_ARGB_PC_TO_AYUV_PC_709, RGB_LVL_PC, YUV_LVL_PC, 0.2126, 0.7152, 0.0722, POS_YUV)
 
-DEFINE_RGB2Y_FUNC(RGBToY_TV_BT601, RGB_LVL_PC, YUV_LVL_TV, 0.299 , 0.587 , 0.114 )
-DEFINE_RGB2Y_FUNC(RGBToY_PC_BT601, RGB_LVL_PC, YUV_LVL_PC, 0.299 , 0.587 , 0.114 )
-DEFINE_RGB2Y_FUNC(RGBToY_TV_BT709, RGB_LVL_PC, YUV_LVL_TV, 0.2126, 0.7152, 0.0722)
-DEFINE_RGB2Y_FUNC(RGBToY_PC_BT709, RGB_LVL_PC, YUV_LVL_PC, 0.2126, 0.7152, 0.0722)
+DEFINE_RGB2Y_FUNC(RGB_PC_TO_Y_TV_601, RGB_LVL_PC, YUV_LVL_TV, 0.299 , 0.587 , 0.114 )
+DEFINE_RGB2Y_FUNC(RGB_PC_TO_Y_PC_601, RGB_LVL_PC, YUV_LVL_PC, 0.299 , 0.587 , 0.114 )
+DEFINE_RGB2Y_FUNC(RGB_PC_TO_Y_TV_709, RGB_LVL_PC, YUV_LVL_TV, 0.2126, 0.7152, 0.0722)
+DEFINE_RGB2Y_FUNC(RGB_PC_TO_Y_PC_709, RGB_LVL_PC, YUV_LVL_PC, 0.2126, 0.7152, 0.0722)
