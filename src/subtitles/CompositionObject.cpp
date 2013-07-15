@@ -23,6 +23,7 @@
 #include "../DSUtil/GolombBuffer.h"
 #include "../subpic/color_conv_table.h"
 
+bool CompositionObject::m_output_tv_range_rgb = false;
 
 CompositionObject::CompositionObject()
 {
@@ -122,7 +123,7 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
                 DWORD argb = ColorConvTable::A8Y8U8V8_TO_ARGB(
                     m_Palette[i].T, 
                     m_Palette[i].Y, m_Palette[i].Cb, m_Palette[i].Cr,
-                    cur_range, cur_type, false);
+                    cur_range, cur_type, m_output_tv_range_rgb);
                 m_Colors[m_Palette[i].entry_id] = argb;
             }
             break;

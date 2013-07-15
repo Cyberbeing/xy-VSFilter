@@ -103,7 +103,8 @@ public:
 
         return pCompositionObject;
     }
-
+public:
+    static bool m_output_tv_range_rgb;//fix me
 private:
     BYTE* m_pRLEData;
     int   m_nRLEDataSize;

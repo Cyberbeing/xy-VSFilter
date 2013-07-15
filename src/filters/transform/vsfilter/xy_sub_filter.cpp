@@ -1537,10 +1537,21 @@ void XySubFilter::SetRgbOutputLevel()
     CAutoLock cAutoLock(&m_csProviderFields);
 
     XySubRenderFrameCreater * sub_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
-    if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_PREFER_TV)
+    if (dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream)!=NULL)
     {
-        if (m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==PREFERED_TV || 
-            m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==NO_PREFERENCE)
+        if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_PREFER_TV)
+        {
+            if (m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==PREFERED_TV || 
+                m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==NO_PREFERENCE)
+            {
+                sub_frame_creater->SetRgbOutputTvLevel(true);
+            }
+            else
+            {
+                sub_frame_creater->SetRgbOutputTvLevel(false);
+            }
+        }
+        else if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_FORCE_TV)
         {
             sub_frame_creater->SetRgbOutputTvLevel(true);
         }
@@ -1548,19 +1559,33 @@ void XySubFilter::SetRgbOutputLevel()
         {
             sub_frame_creater->SetRgbOutputTvLevel(false);
         }
-    }
-    else if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_FORCE_TV)
-    {
-        sub_frame_creater->SetRgbOutputTvLevel(true);
-    }
-    else
-    {
-        sub_frame_creater->SetRgbOutputTvLevel(false);
-    }
-    if (dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream)!=NULL)
-    {
+
         m_xy_str_opt[STRING_OUTPUT_LEVELS] = sub_frame_creater->GetRgbOutputTvLevel() ? 
             L"TV" : L"PC";
+    }
+    else if (dynamic_cast<HdmvSubtitleProvider*>(m_curSubStream)!=NULL
+        || dynamic_cast<SupFileSubtitleProvider*>(m_curSubStream)!=NULL)
+    {
+        if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_PREFER_TV)
+        {
+            if (m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==PREFERED_TV || 
+                m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]==NO_PREFERENCE)
+            {
+                CompositionObject::m_output_tv_range_rgb = true;
+            }
+            else
+            {
+                CompositionObject::m_output_tv_range_rgb = false;
+            }
+        }
+        else if (m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL]==RGB_OUTPUT_LEVEL_FORCE_TV)
+        {
+            CompositionObject::m_output_tv_range_rgb = true;
+        }
+        else
+        {
+            CompositionObject::m_output_tv_range_rgb = false;
+        }
     }
     else
     {
