@@ -368,6 +368,7 @@ HRESULT HdmvSubtitleProvider::EndOfStream( void )
 HRESULT HdmvSubtitleProvider::SetYuvType( CBaseSub::ColorType colorType, CBaseSub::YuvRangeType yuvRangeType )
 {
     CAutoLock cAutoLock(&m_csCritSec);
+    Invalidate(-1);
     return m_pSub->SetYuvType(colorType, yuvRangeType);
 }
 
@@ -584,6 +585,7 @@ STDMETHODIMP SupFileSubtitleProvider::Reload()
 HRESULT SupFileSubtitleProvider::SetYuvType( CBaseSub::ColorType colorType, CBaseSub::YuvRangeType yuvRangeType )
 {
     CAutoLock cAutoLock(&m_csCritSec);
+    Invalidate(-1);
     return m_pSub->SetYuvType(colorType, yuvRangeType);
 }
 
