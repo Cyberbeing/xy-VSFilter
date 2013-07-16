@@ -302,6 +302,7 @@ BOOL CTextFile::ReadString(CStringA& str)
 
             if (Utf8::isSingleByte(buffer[0]))
             { // 0xxxxxxx
+                bValid = true;
                 c = buffer[0] & 0x7f;
             }
             else if (Utf8::isFirstOfMultibyte(buffer[0]))
@@ -446,6 +447,7 @@ BOOL CTextFile::ReadString(CStringW& str)
             WCHAR c = L'?';
 
             if (Utf8::isSingleByte(buffer[0])) { // 0xxxxxxx
+                bValid = true;
                 c = buffer[0] & 0x7f;
             } else if (Utf8::isFirstOfMultibyte(buffer[0])) {
                 int nContinuationBytes = Utf8::continuationBytes(buffer[0]);
