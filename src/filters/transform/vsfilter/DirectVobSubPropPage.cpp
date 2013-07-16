@@ -1960,6 +1960,8 @@ CXySubFilterMorePPage::CXySubFilterMorePPage(LPUNKNOWN pUnk, HRESULT* phr)
     BindControl(IDC_COMBO_COLOR_SPACE, m_combo_yuv_matrix);
     BindControl(IDC_COMBO_YUV_RANGE, m_combo_yuv_range);
     BindControl(IDC_COMBO_RGB_LEVEL, m_combo_rgb_level);
+
+    BindControl(IDC_CHECKBOX_RENDER_TO_ORIGINAL_VIDEO_SIZE, m_checkbox_render_to_original_video_size);
 }
 
 bool CXySubFilterMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -2070,6 +2072,9 @@ void CXySubFilterMorePPage::UpdateObjectData(bool fSave)
         CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_RGB_OUTPUT_TV_LEVEL, m_rgb_level);
         CHECK_N_LOG(hr, "Failed to set option");
+
+        hr = m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_RENDER_TO_ORIGINAL_VIDEO_SIZE, m_render_to_original_video_size);
+        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
@@ -2098,6 +2103,9 @@ void CXySubFilterMorePPage::UpdateObjectData(bool fSave)
         hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_COLOR_SPACE, &m_yuv_matrix);
         CHECK_N_LOG(hr, "Failed to get option");
         hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_RGB_OUTPUT_TV_LEVEL, &m_rgb_level);
+        CHECK_N_LOG(hr, "Failed to get option");
+
+        hr = m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_RENDER_TO_ORIGINAL_VIDEO_SIZE, &m_render_to_original_video_size);
         CHECK_N_LOG(hr, "Failed to get option");
     }
 }
@@ -2159,6 +2167,8 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         {
             m_rgb_level = DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_AUTO;
         }
+
+        m_render_to_original_video_size = !!m_checkbox_render_to_original_video_size.GetCheck();
     }
     else
     {
@@ -2265,5 +2275,7 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         m_combo_rgb_level.AddString( CString(_T("Force TV")) );
         m_combo_rgb_level.SetItemData( DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_FORCE_TV, DirectVobSubXyOptions::RGB_OUTPUT_LEVEL_FORCE_TV );
         m_combo_rgb_level.SetCurSel( m_rgb_level );
+
+        m_checkbox_render_to_original_video_size.SetCheck(m_render_to_original_video_size);
     }
 }

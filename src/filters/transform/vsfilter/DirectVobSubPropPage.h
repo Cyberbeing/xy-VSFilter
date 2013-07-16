@@ -296,6 +296,7 @@ class CXySubFilterMorePPage : public CDVSBasePPage
     SIZE m_layout_size;
 
     bool m_fHideSubtitles, m_fReloaderDisabled;
+    bool m_render_to_original_video_size;
 
     CButton m_hidesub, m_autoreload, m_instupd;
 
@@ -303,6 +304,7 @@ class CXySubFilterMorePPage : public CDVSBasePPage
 
     CSpinButtonCtrl m_layout_size_x, m_layout_size_y;
     CComboBox m_combo_subpixel_pos, m_combo_layout_size_opt;
+    CButton m_checkbox_render_to_original_video_size;
 
     CComboBox m_combo_yuv_matrix, m_combo_yuv_range, m_combo_rgb_level;
 protected:
