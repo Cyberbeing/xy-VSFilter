@@ -1906,6 +1906,7 @@ CSimpleTextSubtitle::CSimpleTextSubtitle()
     m_eYCbCrMatrix = YCbCrMatrix_AUTO;
     m_eYCbCrRange = YCbCrRange_AUTO;
     m_fUsingDefaultStyleFromScript = false;
+    m_fUseForcedStyle = false;
 }
 
 CSimpleTextSubtitle::~CSimpleTextSubtitle()
@@ -2325,6 +2326,15 @@ bool CSimpleTextSubtitle::GetDefaultStyle(STSStyle& s)
     return true;
 }
 
+bool CSimpleTextSubtitle::SetUseForcedStyle( bool use_forced_style, const STSStyle *forced_style /*= NULL*/ )
+{
+    m_fUseForcedStyle = use_forced_style;
+    if (forced_style)
+    {
+        m_forcedStyle = *forced_style;
+    }
+}
+
 void CSimpleTextSubtitle::ConvertToTimeBased(double fps)
 {
     if(m_mode == TIME) return;
@@ -2547,18 +2557,23 @@ void CSimpleTextSubtitle::TranslateSegmentStartEnd(int i, double fps, /*out*/int
 }
 
 STSStyle* CSimpleTextSubtitle::GetStyle(int i)
-{    
+{
     STSStyle* style = NULL;
-    m_styles.Lookup(m_entries.GetAt(i).style, style);
-
-    STSStyle* defstyle = NULL;
-    m_styles.Lookup(g_default_style, defstyle);
-
-    if(!style)
+    if (!m_fUseForcedStyle)
     {
-        style = defstyle;
-    }
+        m_styles.Lookup(m_entries.GetAt(i).style, style);
 
+        if(!style)
+        {
+            STSStyle* defstyle = NULL;
+            m_styles.Lookup(g_default_style, defstyle);
+            style = defstyle;
+        }
+    }
+    else
+    {
+        style = &m_forcedStyle;
+    }
     ASSERT(style);
 
     return style;
@@ -2567,26 +2582,30 @@ STSStyle* CSimpleTextSubtitle::GetStyle(int i)
 bool CSimpleTextSubtitle::GetStyle(int i, STSStyle* const stss)
 {
     STSStyle* style = NULL;
-    m_styles.Lookup(m_entries.GetAt(i).style, style);
-
-    STSStyle* defstyle = NULL;
-    m_styles.Lookup(g_default_style, defstyle);
-
-    if(!style)
+    if (!m_fUseForcedStyle)
     {
-        if(!defstyle)
+        m_styles.Lookup(m_entries.GetAt(i).style, style);
+
+        STSStyle* defstyle = NULL;
+        m_styles.Lookup(g_default_style, defstyle);
+
+        if(!style)
         {
-            defstyle = CreateDefaultStyle(DEFAULT_CHARSET);
+            if(!defstyle)
+            {
+                defstyle = CreateDefaultStyle(DEFAULT_CHARSET);
+            }
+
+            style = defstyle;
         }
 
-        style = defstyle;
+        if(!style) {ASSERT(0); return false;}
     }
-
-    if(!style) {ASSERT(0); return false;}
-
+    else
+    {
+        style = &m_forcedStyle;
+    }
     *stss = *style;
-    if(stss->relativeTo == 2 && defstyle)
-        stss->relativeTo = defstyle->relativeTo;
 
     return true;
 }

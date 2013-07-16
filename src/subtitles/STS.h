@@ -180,6 +180,9 @@ public:
 
 	CSTSStyleMap m_styles;
 
+    bool m_fUseForcedStyle;
+    STSStyle m_forcedStyle;
+
 	enum EPARCompensationType
 	{
 		EPCTDisabled = 0,
@@ -216,7 +219,7 @@ public:
 
 	void Sort(bool fRestoreReadorder = false);
     void RemoveAllEntries();
-	void CreateSegments();    
+	void CreateSegments();
 
 	bool Open(CString fn, int CharSet, CString name = _T(""));
 	bool Open(CTextFile* f, int CharSet, CString name);
@@ -241,6 +244,8 @@ public:
 
 	bool SetDefaultStyle(STSStyle& s);
 	bool GetDefaultStyle(STSStyle& s);
+
+    bool SetUseForcedStyle(bool use_forced_style, const STSStyle *forced_style = NULL);
 
 	void ConvertToTimeBased(double fps);
 	void ConvertToFrameBased(double fps);
