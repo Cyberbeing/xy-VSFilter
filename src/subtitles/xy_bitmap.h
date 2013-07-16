@@ -55,12 +55,16 @@ public:
     ~XySubRenderFrame();
 
     typedef ::boost::shared_ptr<XyBitmap> SharedBitmap;
+
+    void MoveTo(int x, int y);
 public:
     CAtlArray<SharedBitmap> m_bitmaps;
     CAtlArray<int> m_bitmap_ids;
     CRect m_output_rect;
     CRect m_clip_rect;
     XyColorSpace m_xy_color_space;
+
+    int m_left, m_top;
 };
 
 typedef ::boost::shared_ptr<XySubRenderFrame> SharedPtrXySubRenderFrame;

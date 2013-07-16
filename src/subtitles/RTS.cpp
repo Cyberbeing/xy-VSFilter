@@ -3539,10 +3539,18 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         return S_FALSE;
     }
 
-    if (video_rect.left!=0 || video_rect.top!=0 || CRect(video_rect)!=subtitle_target_rect)
+    CRect cvideo_rect = video_rect;
+
+    if (cvideo_rect!=subtitle_target_rect)
     {
         XY_LOG_WARN("NOT supported yet!");
         return E_NOTIMPL;
+    }
+
+    if (cvideo_rect.left!=0 || cvideo_rect.top!=0)
+    {
+        XY_LOG_WARN("FIXME: supported with hack");
+        cvideo_rect.MoveToXY(0,0);
     }
 
     XyColorSpace color_space = XY_CS_ARGB;
@@ -3568,14 +3576,15 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
     render_frame_creater->SetColorSpace(color_space);
 
-    if( m_video_rect != CRect(video_rect.left*8,video_rect.top*8,video_rect.right*8,video_rect.bottom*8)
+    if( m_video_rect != CRect(cvideo_rect.left*8,cvideo_rect.top*8,cvideo_rect.right*8,cvideo_rect.bottom*8)
         || m_subtitle_target_rect != CRect(subtitle_target_rect.left*8, subtitle_target_rect.top*8
         , subtitle_target_rect.right*8, subtitle_target_rect.bottom*8)
         || m_size != CSize(original_video_size.cx*8, original_video_size.cy*8) )
     {
-        Init(video_rect, subtitle_target_rect, original_video_size);
-        render_frame_creater->SetOutputRect(video_rect);
-        render_frame_creater->SetClipRect(video_rect);
+        Init(cvideo_rect, subtitle_target_rect, original_video_size);
+
+        render_frame_creater->SetOutputRect(cvideo_rect);
+        render_frame_creater->SetClipRect(cvideo_rect);
     }
 
     CSubtitle2List sub2List;
@@ -3586,10 +3595,11 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     }
 
     CompositeDrawItemListList compDrawItemListList;
-    DoRender(CRect(video_rect).Size(), sub2List, &compDrawItemListList);
+    DoRender(cvideo_rect.Size(), sub2List, &compDrawItemListList);
 
     XySubRenderFrame *sub_render_frame;
     CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);
+    sub_render_frame->MoveTo(video_rect.left, video_rect.top);
     (*subRenderFrame = sub_render_frame)->AddRef();
 
     return hr;

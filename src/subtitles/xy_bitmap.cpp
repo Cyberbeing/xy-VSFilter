@@ -379,6 +379,14 @@ STDMETHODIMP XySubRenderFrame::GetBitmapExtra( int index, LPVOID extra_info )
     return S_OK;
 }
 
+void XySubRenderFrame::MoveTo( int x, int y )
+{
+    m_left = x;
+    m_top  = y;
+    m_output_rect.MoveToXY(x, y);
+    m_clip_rect.MoveToXY(x, y);
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 // XySubRenderFrameCreater
