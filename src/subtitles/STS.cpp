@@ -2326,7 +2326,7 @@ bool CSimpleTextSubtitle::GetDefaultStyle(STSStyle& s)
     return true;
 }
 
-bool CSimpleTextSubtitle::SetUseForcedStyle( bool use_forced_style, const STSStyle *forced_style /*= NULL*/ )
+void CSimpleTextSubtitle::SetUseForcedStyle( bool use_forced_style, const STSStyle *forced_style /*= NULL*/ )
 {
     m_fUseForcedStyle = use_forced_style;
     if (forced_style)

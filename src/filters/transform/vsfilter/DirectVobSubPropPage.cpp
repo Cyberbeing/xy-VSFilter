@@ -1703,6 +1703,7 @@ CXySubFilterMainPPage::CXySubFilterMainPPage(LPUNKNOWN pUnk, HRESULT* phr)
     BindControl(IDC_SPIN1, m_subposx);
     BindControl(IDC_SPIN2, m_subposy);
     BindControl(IDC_STYLES, m_styles);
+    BindControl(IDC_CHECKBOX_FORCE_DEFAULT_STYLE, m_force_default_style);
     BindControl(IDC_ONLYSHOWFORCEDSUBS, m_forcedsubs);
     BindControl(IDC_PARCOMBO, m_PARCombo);
     BindControl(IDC_CHECKBOX_HideTrayIcon, m_hide_tray_icon);
@@ -1825,6 +1826,8 @@ void CXySubFilterMainPPage::UpdateObjectData(bool fSave)
         CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSub->put_LoadSettings(m_LoadLevel, m_fExternalLoad, m_fWebLoad, m_fEmbeddedLoad);
         CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_FORCE_DEFAULT_STYLE, m_fForceDefaultStyle);
+        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
@@ -1852,6 +1855,8 @@ void CXySubFilterMainPPage::UpdateObjectData(bool fSave)
         CHECK_N_LOG(hr, "Failed to get option");
         hr = m_pDirectVobSub->get_LoadSettings(&m_LoadLevel, &m_fExternalLoad, &m_fWebLoad, &m_fEmbeddedLoad);
         CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_FORCE_DEFAULT_STYLE, &m_fForceDefaultStyle);
+        CHECK_N_LOG(hr, "Failed to get option");
     }
 }
 
@@ -1871,6 +1876,7 @@ void CXySubFilterMainPPage::UpdateControlData(bool fSave)
         m_fOverridePlacement = !!m_oplacement.GetCheck();
         m_PlacementXperc = m_subposx.GetPos();
         m_PlacementYperc = m_subposy.GetPos();
+        m_fForceDefaultStyle = !!m_force_default_style.GetCheck();
         m_fOnlyShowForcedVobSubs = !!m_forcedsubs.GetCheck();
         if (m_PARCombo.GetCurSel() != CB_ERR)
             m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(m_PARCombo.GetItemData(m_PARCombo.GetCurSel()));
@@ -1893,6 +1899,7 @@ void CXySubFilterMainPPage::UpdateControlData(bool fSave)
         m_subposy.SetRange(-20, 120);
         m_subposy.SetPos(m_PlacementYperc);
         m_subposy.EnableWindow(m_fOverridePlacement);
+        m_force_default_style.SetCheck(m_fForceDefaultStyle);
         m_forcedsubs.SetCheck(m_fOnlyShowForcedVobSubs);
         m_langs.ResetContent();
         m_langs.EnableWindow(m_nLangs > 0);

@@ -370,6 +370,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case BOOL_OVERRIDE_PLACEMENT:
     case SIZE_PLACEMENT_PERC:
     case INT_ASPECT_RATIO_SETTINGS:
+    case BOOL_FORCE_DEFAULT_STYLE:
         m_context_id++;
         UpdateSubtitle(false);
         break;
@@ -846,7 +847,7 @@ STDMETHODIMP XySubFilter::Count(DWORD* pcStreams)
     if(SUCCEEDED(get_LanguageCount(&nLangs)))
         (*pcStreams) += nLangs;
 
-    (*pcStreams) += 2; // enable ... disable
+    (*pcStreams) += 2; // enable disable force_default_style
 
     //fix me: support subtitle flipping
     //(*pcStreams) += 2; // normal flipped
@@ -1794,6 +1795,8 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
                     XY_LOG_ERROR("Failed to set default style");
                 }
             }
+            pRTS->SetUseForcedStyle(m_xy_bool_opt[BOOL_FORCE_DEFAULT_STYLE], 
+                m_xy_bool_opt[BOOL_FORCE_DEFAULT_STYLE] ? &m_defStyle : NULL);
 
             pRTS->m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS]);
             if (m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO] != CSize(0,0) && m_xy_size_opt[SIZE_ORIGINAL_VIDEO] != CSize(0,0))

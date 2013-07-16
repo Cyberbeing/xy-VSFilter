@@ -245,7 +245,7 @@ public:
 	bool SetDefaultStyle(STSStyle& s);
 	bool GetDefaultStyle(STSStyle& s);
 
-    bool SetUseForcedStyle(bool use_forced_style, const STSStyle *forced_style = NULL);
+    void SetUseForcedStyle(bool use_forced_style, const STSStyle *forced_style = NULL);
 
 	void ConvertToTimeBased(double fps);
 	void ConvertToFrameBased(double fps);

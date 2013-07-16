@@ -261,6 +261,7 @@ class CXySubFilterMainPPage : public CDVSBasePPage
     bool m_fHideTrayIcon;
     int m_PlacementXperc, m_PlacementYperc;
     STSStyle m_defStyle;
+    bool m_fForceDefaultStyle;
     bool m_fOnlyShowForcedVobSubs;
     CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;
     int m_LoadLevel;
@@ -270,7 +271,7 @@ class CXySubFilterMainPPage : public CDVSBasePPage
     CComboBox m_langs;
     CButton m_oplacement;
     CSpinButtonCtrl m_subposx, m_subposy;
-    CButton m_styles, m_forcedsubs;
+    CButton m_styles, m_force_default_style, m_forcedsubs;
     CButton m_AutoPARCompensation;
     CComboBox m_PARCombo;
     CButton m_hide_tray_icon;

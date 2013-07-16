@@ -114,7 +114,9 @@
 #define IDC_CACHESUB                    206
 #define IDC_ONLYSHOWFORCEDSUBS          207
 #define IDC_POLYGONIZE                  208
+#define IDC_CHECKBOX_FORCE_DEFAULT_STYLE 208
 #define IDC_CHECKBOX_HideTrayIcon       209
+#define IDS_RG_FORCE_DEFAULT_STYLE      210
 #define IDC_STYLES                      212
 #define IDC_CONFIGDLG                   213
 #define IDC_SHADOW                      214
