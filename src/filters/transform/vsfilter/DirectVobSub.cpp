@@ -1073,15 +1073,19 @@ CDirectVobSub::CDirectVobSub( const Option *options, CCritSec * pLock )
     if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]<0) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=0;
     else if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]>=SubpixelPositionControler::MAX_COUNT) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=SubpixelPositionControler::EIGHT_X_EIGHT;
 
-    m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE);
-    switch(m_xy_int_opt[INT_LAYOUT_SIZE_OPT])
+    CString str_layout_size_opt = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), _T("Use Original Video Size"));
+    str_layout_size_opt.MakeLower();
+    if (str_layout_size_opt.Left(14)==_T("user specified"))
     {
-    case LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE:
-    case LAYOUT_SIZE_OPT_USER_SPECIFIED:
-        break;
-    default:
+        m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = LAYOUT_SIZE_OPT_USER_SPECIFIED;
+    }
+    else if (str_layout_size_opt.Left(26)==_T("use ar adjusted video size"))
+    {
+        m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = LAYOUT_SIZE_OPT_AR_ADJUSTED_VIDEO_SIZE;
+    }
+    else
+    {
         m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE;
-        break;
     }
 
     m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION] = DirectVobSubXyOptions::RGB_CORRECTION_AUTO;
@@ -1303,7 +1307,20 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USE_UPSTREAM_PREFERRED_ORDER), m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER]);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), m_xy_int_opt[INT_LAYOUT_SIZE_OPT]);
+    CString str_layout_size_opt = _T("Use Original Video Size");
+    switch(m_xy_int_opt[INT_LAYOUT_SIZE_OPT])
+    {
+    case LAYOUT_SIZE_OPT_USER_SPECIFIED:
+        str_layout_size_opt = _T("User Specified");
+        break;
+    case LAYOUT_SIZE_OPT_AR_ADJUSTED_VIDEO_SIZE:
+        str_layout_size_opt = _T("Use AR Adjusted Video Size");
+        break;
+    default:
+        str_layout_size_opt = _T("Use Original Video Size");
+        break;
+    }
+    theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), str_layout_size_opt);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy);
 
@@ -1494,15 +1511,19 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
     if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]<0) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=0;
     else if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]>=SubpixelPositionControler::MAX_COUNT) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=SubpixelPositionControler::EIGHT_X_EIGHT;
 
-    m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE);
-    switch(m_xy_int_opt[INT_LAYOUT_SIZE_OPT])
+    CString str_layout_size_opt = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), _T("Use Original Video Size"));
+    str_layout_size_opt.MakeLower();
+    if (str_layout_size_opt.Left(14)==_T("user specified"))
     {
-    case LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE:
-    case LAYOUT_SIZE_OPT_USER_SPECIFIED:
-        break;
-    default:
+        m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = LAYOUT_SIZE_OPT_USER_SPECIFIED;
+    }
+    else if (str_layout_size_opt.Left(26)==_T("use ar adjusted video size"))
+    {
+        m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = LAYOUT_SIZE_OPT_AR_ADJUSTED_VIDEO_SIZE;
+    }
+    else
+    {
         m_xy_int_opt[INT_LAYOUT_SIZE_OPT] = LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE;
-        break;
     }
 
     m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION] = DirectVobSubXyOptions::RGB_CORRECTION_AUTO;
@@ -1688,7 +1709,20 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), m_xy_int_opt[INT_LAYOUT_SIZE_OPT]);
+    CString str_layout_size_opt = _T("Use Original Video Size");
+    switch(m_xy_int_opt[INT_LAYOUT_SIZE_OPT])
+    {
+    case LAYOUT_SIZE_OPT_USER_SPECIFIED:
+        str_layout_size_opt = _T("User Specified");
+        break;
+    case LAYOUT_SIZE_OPT_AR_ADJUSTED_VIDEO_SIZE:
+        str_layout_size_opt = _T("Use AR Adjusted Video Size");
+        break;
+    default:
+        str_layout_size_opt = _T("Use Original Video Size");
+        break;
+    }
+    theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LAYOUT_SIZE_OPT), str_layout_size_opt);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_X), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_USER_SPECIFIED_LAYOUT_SIZE_Y), m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy);
 
