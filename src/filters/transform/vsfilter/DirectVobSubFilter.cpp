@@ -2238,7 +2238,8 @@ void CDirectVobSubFilter::SetYuvMatrix()
         }
         else
         {
-            yuv_matrix = ColorConvTable::BT601;
+            yuv_matrix = (m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cx > m_bt601Width ||
+                          m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cy > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
         }
     }
     else
