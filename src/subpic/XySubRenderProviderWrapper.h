@@ -59,6 +59,9 @@ private:
     CRect m_output_rect, m_subtitle_target_rect;
     CSize m_original_video_size;
     bool m_use_dst_alpha;
+    bool m_render_to_original_video_size;
+
+    CRect m_rect_render_to;
 
     double m_fps;
 

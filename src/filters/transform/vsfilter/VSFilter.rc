@@ -771,6 +771,7 @@ BEGIN
     IDS_RP_MAX_BITMAP_COUNT             "max_bitmap_count"
     IDS_RG_RGB_CORRECTION               "rgb_correction"
     IDS_RG_RGB_OUTPUT_LEVEL             "rgb_output_level"
+    IDS_RG_RENDER_TO_ORIGINAL_VIDEO_SIZE "render_to_original_video_size"
     IDS_RG_SUPPORTED_VERSION "supported_version"
     IDS_RG_VERSION          "version"
 #else

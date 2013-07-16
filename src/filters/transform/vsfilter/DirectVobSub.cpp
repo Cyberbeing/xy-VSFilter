@@ -1635,6 +1635,9 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
     {
         m_xy_int_opt[INT_RGB_OUTPUT_TV_LEVEL] = RGB_OUTPUT_LEVEL_AUTO;
     }
+
+    m_xy_bool_opt[BOOL_RENDER_TO_ORIGINAL_VIDEO_SIZE] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL)
+        , ResStr(IDS_RG_RENDER_TO_ORIGINAL_VIDEO_SIZE), 0);
 }
 
 STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
@@ -1781,6 +1784,9 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
         break;
     }
     theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_RGB_OUTPUT_LEVEL), str_rgb_output_level);
+
+    theApp.WriteProfileInt(ResStr(IDS_R_GENERAL)
+        , ResStr(IDS_RG_RENDER_TO_ORIGINAL_VIDEO_SIZE), m_xy_bool_opt[BOOL_RENDER_TO_ORIGINAL_VIDEO_SIZE]);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), CUR_SUPPORTED_FILTER_VERSION);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), XY_VSFILTER_VERSION_COMMIT);
