@@ -755,6 +755,9 @@ HRESULT DirectVobSubImpl::DoGetField( unsigned field, void *value )
             case LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE:
                 *size_value = m_xy_size_opt[SIZE_ORIGINAL_VIDEO];
                 break;
+            case LAYOUT_SIZE_OPT_AR_ADJUSTED_VIDEO_SIZE:
+                *size_value = m_xy_size_opt[SIZE_AR_ADJUSTED_VIDEO];
+                break;
             case LAYOUT_SIZE_OPT_USER_SPECIFIED:
                 *size_value = m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE];
                 break;
