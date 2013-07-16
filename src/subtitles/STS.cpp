@@ -1599,6 +1599,9 @@ if(sver <= 4)   style->scrAlignment = (style->scrAlignment&4) ? ((style->scrAlig
         else if(entry == L"ycbcr matrix")
         {
             buff = GetStr(buff);
+            // When used with no parameters, TrimRight removes trailing newline,
+            // space, and tab characters from the string.
+            buff.TrimRight();
             buff.MakeLower();
             if (buff=="none")
             {
