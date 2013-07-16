@@ -356,6 +356,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case DOUBLE_FPS:
     case BOOL_SUB_FRAME_USE_DST_ALPHA:
         m_context_id++;
+        InvalidateSubtitle();
         break;
     case STRING_FILE_NAME:
         if (!Open())
@@ -426,7 +427,8 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
         m_context_id++;
         break;
     case INT_LAYOUT_SIZE_OPT:
-        //fix me: is it really supported?
+        m_context_id++;
+        InvalidateSubtitle();
         break;
     case INT_MAX_BITMAP_COUNT2:
         hr = E_INVALIDARG;
