@@ -62,15 +62,15 @@ CRectCoor2 DrawItem::Draw( XyBitmap* bitmap, DrawItem& draw_item, const CRectCoo
 DrawItem* DrawItem::CreateDrawItem( const SharedPtrOverlayPaintMachine& overlay_paint_machine, const CRect& clipRect,
     const SharedPtrCClipperPaintMachine &clipper, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
 {
-    DrawItem* result = DEBUG_NEW DrawItem();
+    DrawItem* result              = DEBUG_NEW DrawItem();
     result->overlay_paint_machine = overlay_paint_machine;
-    result->clip_rect = clipRect;
-    result->clipper = clipper;
-    result->xsub = xsub;
-    result->ysub = ysub;
+    result->clip_rect             = clipRect;
+    result->clipper               = clipper;
+    result->xsub                  = xsub;
+    result->ysub                  = ysub;
 
     memcpy(result->switchpts, switchpts, sizeof(result->switchpts));
-    result->fBody = fBody;
+    result->fBody   = fBody;
     result->fBorder = fBorder;
 
     result->m_key.reset( DEBUG_NEW DrawItemHashKey(*result) );
@@ -91,7 +91,7 @@ const SharedPtrDrawItemHashKey& DrawItem::GetHashKey()
 
 CRectCoor2 CompositeDrawItem::GetDirtyRect( CompositeDrawItem& item )
 {
-    CRectCoor2 result;    
+    CRectCoor2 result;
     if (item.shadow)
     {
         result |= item.shadow->GetDirtyRect();

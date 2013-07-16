@@ -19,14 +19,14 @@ typedef ::boost::shared_ptr<DrawItemHashKey> SharedPtrDrawItemHashKey;
 struct DrawItem
 {
 public:
-    SharedPtrOverlayPaintMachine overlay_paint_machine;
+    SharedPtrOverlayPaintMachine  overlay_paint_machine;
     CRect clip_rect;
     SharedPtrCClipperPaintMachine clipper;
-    int xsub;
-    int ysub;
+    int   xsub;
+    int   ysub;
     DWORD switchpts[6];
-    bool fBody;
-    bool fBorder;
+    bool  fBody;
+    bool  fBorder;
 
     SharedPtrDrawItemHashKey m_key;
 public:
@@ -71,7 +71,7 @@ public:
     CRectCoor2 clip_rect;
 public:
     void Draw(SharedPtrXyBitmap *bitmap, int *bitmap_identity_num);
-	
+
     void CreateHashKey(GroupedDrawItemsHashKey *key);
 };
 

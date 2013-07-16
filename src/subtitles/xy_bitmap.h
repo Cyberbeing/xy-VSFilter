@@ -53,7 +53,7 @@ public:
 public:
     XySubRenderFrame();
     ~XySubRenderFrame();
-    
+
     typedef ::boost::shared_ptr<XyBitmap> SharedBitmap;
 public:
     CAtlArray<SharedBitmap> m_bitmaps;

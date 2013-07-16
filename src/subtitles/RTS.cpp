@@ -1454,36 +1454,41 @@ CRectCoor2 CLine::PaintAll( CompositeDrawItemList* output, const CRectCoor2& cli
         CPointCoor2 shadowPos, outlinePos, bodyPos, org_coor2;
 
         double shadowPos_x = p.x + w->m_style.get().shadowDepthX;
-        double shadowPos_y = p.y + m_ascent - w->m_ascent + w->m_style.get().shadowDepthY;
+        double shadowPos_y = p.y + w->m_style.get().shadowDepthY + m_ascent - w->m_ascent;
         outlinePos = CPoint(p.x, p.y + m_ascent - w->m_ascent);
-        bodyPos = CPoint(p.x, p.y + m_ascent - w->m_ascent);
+        bodyPos    = CPoint(p.x, p.y + m_ascent - w->m_ascent);
 
-        shadowPos.x = static_cast<int>(shadowPos_x * w->m_target_scale_x + 0.5);
-        shadowPos.y = static_cast<int>(shadowPos_y * w->m_target_scale_y + 0.5);
-        outlinePos.x *= w->m_target_scale_x;
-        outlinePos.y *= w->m_target_scale_y;
-        bodyPos.x *= w->m_target_scale_x;
-        bodyPos.y *= w->m_target_scale_y;
-        org_coor2.x = org.x * w->m_target_scale_x;//fix me: move it out of this loop
-        org_coor2.y = org.y * w->m_target_scale_y;
+        shadowPos.x   = static_cast<int>(w->m_target_scale_x * shadowPos_x + 0.5);
+        shadowPos.y   = static_cast<int>(w->m_target_scale_y * shadowPos_y + 0.5);
+        outlinePos.x *=                  w->m_target_scale_x;
+        outlinePos.y *=                  w->m_target_scale_y;
+        bodyPos.x    *=                  w->m_target_scale_x;
+        bodyPos.y    *=                  w->m_target_scale_y;
+        org_coor2.x   =                  w->m_target_scale_x * org.x;//fix me: move it out of this loop
+        org_coor2.y   =                  w->m_target_scale_y * org.y;
 
-        bool hasShadow = w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0;
+        bool hasShadow  =   w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0;
         bool hasOutline = ((w->m_style.get().outlineWidthX*w->m_target_scale_x+0.5>=1.0) ||
-            (w->m_style.get().outlineWidthY*w->m_target_scale_y+0.5)>=1.0) && !(w->m_ktype == 2 && time < w->m_kstart);
+                           (w->m_style.get().outlineWidthY*w->m_target_scale_y+0.5>=1.0)) && 
+                          !(w->m_ktype == 2 && time < w->m_kstart);
         bool hasBody = true;
 
         SharedPtrOverlayPaintMachine shadow_pm, outline_pm, body_pm;
         CWordPaintMachine::CreatePaintMachines(w, shadowPos, outlinePos, bodyPos, org_coor2,
-            hasShadow ? &shadow_pm : NULL, 
+            hasShadow  ? &shadow_pm  : NULL, 
             hasOutline ? &outline_pm : NULL, 
-            hasBody ? &body_pm : NULL);
+            hasBody    ? &body_pm    : NULL);
 
         //shadow
         if(hasShadow)
-        {    
+        {
+            //NOTE: Calculation of shadow's alpha value is different from outline's and body's in the way they're rounded.
+            // Shadow is rounded to invisible while outline and body is rounded to visible.
+            // Should we change it to be consist with one rounding polocy?
             DWORD a = 0xff - w->m_style.get().alpha[3];
             if(alpha > 0) a = MulDiv(a, 0xff - alpha, 0xff);
             COLORREF shadow = revcolor(w->m_style.get().colors[3]) | (a<<24);
+
             DWORD sw[6] = {shadow, -1};
             sw[0] = XySubRenderFrameCreater::GetDefaultCreater()->TransColor(sw[0]);
             if(w->m_style.get().borderStyle == 0)
@@ -1503,7 +1508,7 @@ CRectCoor2 CLine::PaintAll( CompositeDrawItemList* output, const CRectCoor2& cli
         }
         //outline
         if(hasOutline)
-        {              
+        {
             DWORD aoutline = w->m_style.get().alpha[2];
             if(alpha > 0) aoutline += MulDiv(alpha, 0xff - w->m_style.get().alpha[2], 0xff);
             COLORREF outline = revcolor(w->m_style.get().colors[2]) | ((0xff-aoutline)<<24);
@@ -1525,13 +1530,13 @@ CRectCoor2 CLine::PaintAll( CompositeDrawItemList* output, const CRectCoor2& cli
         }
         //body
         if(hasBody)
-        {   
+        {
             // colors
-            DWORD aprimary = w->m_style.get().alpha[0];
-            if(alpha > 0) aprimary += MulDiv(alpha, 0xff - w->m_style.get().alpha[0], 0xff);
-            COLORREF primary = revcolor(w->m_style.get().colors[0]) | ((0xff-aprimary)<<24);
+            DWORD aprimary   = w->m_style.get().alpha[0];
             DWORD asecondary = w->m_style.get().alpha[1];
-            if(alpha > 0) asecondary += MulDiv(alpha, 0xff - w->m_style.get().alpha[1], 0xff);
+            if(alpha > 0) aprimary   += MulDiv(alpha, 0xff - w->m_style.get().alpha[0], 0xff),
+                          asecondary += MulDiv(alpha, 0xff - w->m_style.get().alpha[1], 0xff);
+            COLORREF primary   = revcolor(w->m_style.get().colors[0]) | ((0xff-aprimary  )<<24);
             COLORREF secondary = revcolor(w->m_style.get().colors[1]) | ((0xff-asecondary)<<24);
             DWORD sw[6] = {primary, 0, secondary};
             // karaoke
@@ -1849,11 +1854,11 @@ CRect CScreenLayoutAllocator::AllocRect(CSubtitle* s, int segment, int entry, in
                 if(fSearchDown)
                 {
                     r.bottom = sr.r.bottom + r.Height();
-                    r.top = sr.r.bottom;
+                    r.top    = sr.r.bottom;
                 }
                 else
                 {
-                    r.top = sr.r.top - r.Height();
+                    r.top    = sr.r.top - r.Height();
                     r.bottom = sr.r.top;
                 }
                 fOK = false;
@@ -1862,10 +1867,10 @@ CRect CScreenLayoutAllocator::AllocRect(CSubtitle* s, int segment, int entry, in
     }
     while(!fOK);
     SubRect sr;
-    sr.r = r;
+    sr.r       = r;
     sr.segment = segment;
-    sr.entry = entry;
-    sr.layer = layer;
+    sr.entry   = entry;
+    sr.layer   = layer;
     m_subrects.AddTail(sr);
     return(sr.r + CRect(0, -s->m_topborder, 0, -s->m_bottomborder));
 }
@@ -3032,19 +3037,22 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
     orgstss = stss;
     sub->m_clip.SetRect(0, 0, m_size.cx>>3, m_size.cy>>3);
     sub->m_scrAlignment = -stss.scrAlignment;
-    sub->m_wrapStyle = m_defaultWrapStyle;
-    sub->m_fAnimated = false;
-    sub->m_relativeTo = stss.relativeTo;
-    sub->m_scalex = m_dstScreenSize.cx > 0 ? 1.0 * m_size.cx / (m_dstScreenSize.cx*8) : 1.0;
-    sub->m_scaley = m_dstScreenSize.cy > 0 ? 1.0 * m_size.cy / (m_dstScreenSize.cy*8) : 1.0;
+    sub->m_wrapStyle    = m_defaultWrapStyle;
+    sub->m_fAnimated    = false;
+    sub->m_relativeTo   = stss.relativeTo;
+    sub->m_scalex       = m_dstScreenSize.cx > 0 ? 1.0 * m_size.cx / (m_dstScreenSize.cx*8) : 1.0;
+    sub->m_scaley       = m_dstScreenSize.cy > 0 ? 1.0 * m_size.cy / (m_dstScreenSize.cy*8) : 1.0;
 
     sub->m_target_scale_x = m_target_scale_x;
     sub->m_target_scale_y = m_target_scale_y;
 
-    m_animStart = m_animEnd = 0;
-    m_animAccel = 1;
-    m_ktype = m_kstart = m_kend = 0;
-    m_nPolygon = 0;
+    m_animStart             =
+    m_animEnd               = 0;
+    m_animAccel             = 1;
+    m_ktype                 = 
+    m_kstart                = 
+    m_kend                  = 0;
+    m_nPolygon              = 0;
     m_polygonBaselineOffset = 0;
     ParseEffect(sub, m_entries.GetAt(entry).effect);
     while(!str.IsEmpty())
@@ -3075,13 +3083,13 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
             if(i < 0) i = str.GetLength()-1;
             i++;
         }
-        STSStyle tmp = stss;
-        tmp.fontSize = sub->m_scaley*tmp.fontSize*64;
-        tmp.fontSpacing = sub->m_scalex*tmp.fontSpacing*64;
+        STSStyle tmp       = stss;
+        tmp.fontSpacing   *=                 sub->m_scalex * 64;
+        tmp.fontSize      *=                 sub->m_scaley * 64;
         tmp.outlineWidthX *= (m_fScaledBAS ? sub->m_scalex : 1) * 8;
         tmp.outlineWidthY *= (m_fScaledBAS ? sub->m_scaley : 1) * 8;
-        tmp.shadowDepthX *= (m_fScaledBAS ? sub->m_scalex : 1) * 8;
-        tmp.shadowDepthY *= (m_fScaledBAS ? sub->m_scaley : 1) * 8;
+        tmp.shadowDepthX  *= (m_fScaledBAS ? sub->m_scalex : 1) * 8;
+        tmp.shadowDepthY  *= (m_fScaledBAS ? sub->m_scaley : 1) * 8;
         FwSTSStyle fw_tmp(tmp);
         if(m_nPolygon)
         {
@@ -3092,7 +3100,7 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
             ParseString(sub, str.Left(i), fw_tmp);
         }
         str = str.Mid(i);
-    }    
+    }
     if( sub->m_effects[EF_BANNER] || sub->m_effects[EF_SCROLL] )
         sub->m_fAnimated2 = true;
     // just a "work-around" solution... in most cases nobody will want to use \org together with moving but without rotating the subs
@@ -3101,13 +3109,13 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
     sub->m_scrAlignment = abs(sub->m_scrAlignment);
     STSEntry stse = m_entries.GetAt(entry);
     CRect marginRect = stse.marginRect;
-    if(marginRect.left == 0) marginRect.left = orgstss.marginRect.get().left;
-    if(marginRect.top == 0) marginRect.top = orgstss.marginRect.get().top;
-    if(marginRect.right == 0) marginRect.right = orgstss.marginRect.get().right;
+    if(marginRect.left   == 0) marginRect.left   = orgstss.marginRect.get().left;
+    if(marginRect.top    == 0) marginRect.top    = orgstss.marginRect.get().top;
+    if(marginRect.right  == 0) marginRect.right  = orgstss.marginRect.get().right;
     if(marginRect.bottom == 0) marginRect.bottom = orgstss.marginRect.get().bottom;
-    marginRect.left = (int)(sub->m_scalex*marginRect.left*8);
-    marginRect.top = (int)(sub->m_scaley*marginRect.top*8);
-    marginRect.right = (int)(sub->m_scalex*marginRect.right*8);
+    marginRect.left   = (int)(sub->m_scalex*marginRect.left  *8);
+    marginRect.top    = (int)(sub->m_scaley*marginRect.top   *8);
+    marginRect.right  = (int)(sub->m_scalex*marginRect.right *8);
     marginRect.bottom = (int)(sub->m_scaley*marginRect.bottom*8);
 
     sub->CreateClippers(m_size, m_video_rect.Size());
@@ -3326,8 +3334,8 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
     for(int i = 0, j = stss->subs.GetCount(); i < j; i++)
     {
         LSub ls;
-        ls.idx = stss->subs[i];
-        ls.layer = m_entries.GetAt(stss->subs[i]).layer;
+        ls.idx       = stss->subs[i];
+        ls.layer     = m_entries.GetAt(stss->subs[i]).layer;
         ls.readorder = m_entries.GetAt(stss->subs[i]).readorder;
         subs.Add(ls);
     }
@@ -3339,14 +3347,14 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
         STSEntry stse = m_entries.GetAt(entry);
         {
             int start = TranslateStart(entry, fps);
-            m_time = t - start;
-            m_delay = TranslateEnd(entry, fps) - start;
-        }        
+            m_time    = t - start;
+            m_delay   = TranslateEnd(entry, fps) - start;
+        }
         CSubtitle* s = GetSubtitle(entry);
         if(!s) continue;
         stss->animated |= s->m_fAnimated2;
-        CRect clipRect = s->m_clip & CRect(0,0, (m_size.cx>>3), (m_size.cy>>3));
-        CRect r = s->m_rect;
+        CRect clipRect  = s->m_clip & CRect(0,0, (m_size.cx>>3), (m_size.cy>>3));
+        CRect r         = s->m_rect;
         CSize spaceNeeded = r.Size();
         // apply the effects
         bool fPosOverride = false, fOrgOverride = false;
@@ -3364,10 +3372,10 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
                     CPoint p2(s->m_effects[k]->param[2], s->m_effects[k]->param[3]);
                     int t1 = s->m_effects[k]->t[0];
                     int t2 = s->m_effects[k]->t[1];
-                    if(t2 < t1) {int t = t1; t1 = t2; t2 = t;}
-                    if(t1 <= 0 && t2 <= 0) {t1 = 0; t2 = m_delay;}
-                    if(m_time <= t1) p = p1;
-                    else if (p1 == p2) p = p1;
+                    if(t2 < t1)            {int t = t1; t1 = t2; t2 = t;      }
+                    if(t1 <= 0 && t2 <= 0) {            t1 = 0;  t2 = m_delay;}
+                    if(m_time <= t1)  p = p1;
+                    else if(p1 == p2) p = p1;
                     else if(t1 < m_time && m_time < t2)
                     {
                         double t = 1.0*(m_time-t1)/(t2-t1);
@@ -3375,10 +3383,13 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
                         p.y = (int)((1-t)*p1.y + t*p2.y);
                     }
                     else p = p2;
-                    r = CRect(
-                        CPoint((s->m_scrAlignment%3) == 1 ? p.x : (s->m_scrAlignment%3) == 0 ? p.x - spaceNeeded.cx : p.x - (spaceNeeded.cx+1)/2,
-                        s->m_scrAlignment <= 3 ? p.y - spaceNeeded.cy : s->m_scrAlignment <= 6 ? p.y - (spaceNeeded.cy+1)/2 : p.y),
-                        spaceNeeded);
+                    int x = (s->m_scrAlignment%3) == 1 ? p.x : 
+                            (s->m_scrAlignment%3) == 0 ? p.x - spaceNeeded.cx :
+                                                         p.x - (spaceNeeded.cx+1)/2;
+                    int y =  s->m_scrAlignment <= 3    ? p.y - spaceNeeded.cy : 
+                             s->m_scrAlignment <= 6    ? p.y - (spaceNeeded.cy+1)/2 :
+                                                         p.y;
+                    r = CRect(CPoint(x,y), spaceNeeded);
                     fPosOverride = true;
                 }
                 break;
@@ -3414,9 +3425,9 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
                 {
                     int left = 0,
                         right = m_size.cx;
-                    r.left = !!s->m_effects[k]->param[1]
-                    ? (left/*marginRect.left*/ - spaceNeeded.cx) + (int)(m_time*8.0/s->m_effects[k]->param[0])
-                        : (right /*- marginRect.right*/) - (int)(m_time*8.0/s->m_effects[k]->param[0]);
+                    r.left = !!s->m_effects[k]->param[1] 
+                        ? (left  /*marginRect.left*/ - spaceNeeded.cx) + (int)(m_time*8.0/s->m_effects[k]->param[0])
+                        : (right /*marginRect.right*/)                 - (int)(m_time*8.0/s->m_effects[k]->param[0]);
                     r.right = r.left + spaceNeeded.cx;
                     clipRect &= CRect(left>>3, clipRect.top, right>>3, clipRect.bottom);
                     fPosOverride = true;
@@ -3425,7 +3436,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
             case EF_SCROLL: // Scroll up/down(toptobottom=param[3]);top=param[0];bottom=param[1];delay=param[2][;fadeawayheight=param[4]]
                 {
                     r.top = !!s->m_effects[k]->param[3]
-                    ? s->m_effects[k]->param[0] + (int)(m_time*8.0/s->m_effects[k]->param[2]) - spaceNeeded.cy
+                        ? s->m_effects[k]->param[0] + (int)(m_time*8.0/s->m_effects[k]->param[2]) - spaceNeeded.cy
                         : s->m_effects[k]->param[1] - (int)(m_time*8.0/s->m_effects[k]->param[2]);
                     r.bottom = r.top + spaceNeeded.cy;
                     CRect cr(0, (s->m_effects[k]->param[0] + 4) >> 3, (m_size.cx>>3), (s->m_effects[k]->param[1] + 4) >> 3);
@@ -3440,16 +3451,20 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
         if(!fPosOverride && !fOrgOverride && !s->m_fAnimated)
             r = m_sla.AllocRect(s, segment, entry, stse.layer, m_collisions);
         CPoint org;
-        org.x = (s->m_scrAlignment%3) == 1 ? r.left : (s->m_scrAlignment%3) == 2 ? r.CenterPoint().x : r.right;
-        org.y = s->m_scrAlignment <= 3 ? r.bottom : s->m_scrAlignment <= 6 ? r.CenterPoint().y : r.top;
+        org.x = (s->m_scrAlignment%3) == 1 ? r.left   : 
+                (s->m_scrAlignment%3) == 2 ? r.CenterPoint().x 
+                                           : r.right;
+        org.y =  s->m_scrAlignment <= 3    ? r.bottom : 
+                 s->m_scrAlignment <= 6    ? r.CenterPoint().y 
+                                           : r.top;
         if(!fOrgOverride) org2 = org;
         CPoint p2(0, r.top);
         // Rectangles for inverse clip
 
         CRectCoor2 clipRect_coor2;
-        clipRect_coor2.left = clipRect.left * m_target_scale_x;
-        clipRect_coor2.right = clipRect.right * m_target_scale_x;
-        clipRect_coor2.top = clipRect.top * m_target_scale_y;
+        clipRect_coor2.left   = clipRect.left   * m_target_scale_x;
+        clipRect_coor2.right  = clipRect.right  * m_target_scale_x;
+        clipRect_coor2.top    = clipRect.top    * m_target_scale_y;
         clipRect_coor2.bottom = clipRect.bottom * m_target_scale_y;
         CSubtitle2& sub2 = outputSub2List->GetAt(outputSub2List->AddTail( CSubtitle2(s, clipRect_coor2, org, org2, p2, alpha, m_time) ));
     }
@@ -3596,43 +3611,43 @@ void CRenderedTextSubtitle::DoRender( const SIZECoor2& output_size, const CSubti
 void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size, const CSubtitle2& sub2, 
     CompositeDrawItemList* compDrawItemList /*output*/)
 {   
-    CSubtitle* s = sub2.s;
-    const CRect& clipRect = sub2.clipRect;
-    const CPoint& org = sub2.org;
-    const CPoint& org2 = sub2.org2;
-    const CPoint& p2 = sub2.p;
-    int alpha = sub2.alpha;
-    int time = sub2.time;
+    CSubtitle   * s        = sub2.s;
+    const CRect & clipRect = sub2.clipRect;
+    const CPoint& org      = sub2.org;
+    const CPoint& org2     = sub2.org2;
+    const CPoint& p2       = sub2.p;
+    int           alpha    = sub2.alpha;
+    int           time     = sub2.time;
     if(!s) return;
 
     SharedPtrCClipperPaintMachine clipper( DEBUG_NEW CClipperPaintMachine(s->m_pClipper) );
 
     CRect iclipRect[4];
-    iclipRect[0] = CRect(0, 0, output_size.cx, clipRect.top);
-    iclipRect[1] = CRect(0, clipRect.top, clipRect.left, clipRect.bottom);
-    iclipRect[2] = CRect(clipRect.right, clipRect.top, output_size.cx, clipRect.bottom);
-    iclipRect[3] = CRect(0, clipRect.bottom, output_size.cx, output_size.cy);
+    iclipRect[0] = CRect(0             , 0              , output_size.cx, clipRect.top   );
+    iclipRect[1] = CRect(0             , clipRect.top   , clipRect.left , clipRect.bottom);
+    iclipRect[2] = CRect(clipRect.right, clipRect.top   , output_size.cx, clipRect.bottom);
+    iclipRect[3] = CRect(0             , clipRect.bottom, output_size.cx, output_size.cy );
     CRect bbox2(0,0,0,0);
     POSITION pos = s->GetHeadLinePosition();
     CPoint p = p2;
     while(pos)
     {
         CLine* l = s->GetNextLine(pos);
-        p.x = (s->m_scrAlignment%3) == 1 ? org.x
-            : (s->m_scrAlignment%3) == 0 ? org.x - l->m_width
-            :                            org.x - (l->m_width/2);
+        p.x = (s->m_scrAlignment%3) == 1 ? org.x :
+              (s->m_scrAlignment%3) == 0 ? org.x -  l->m_width :
+                                           org.x - (l->m_width/2);
 
         CompositeDrawItemList tmpCompDrawItemList;
         if (s->m_clipInverse)
         {
-            CompositeDrawItemList tmp1,tmp2,tmp3,tmp4;              
+            CompositeDrawItemList tmp1,tmp2,tmp3,tmp4;
             for (int i=0;i<l->GetWordCount();i++)
             {
                 tmp1.AddTail();
                 tmp2.AddTail();
                 tmp3.AddTail();
                 tmp4.AddTail();
-            }                
+            }
             bbox2 |= l->PaintAll(&tmp1, iclipRect[0], clipper, p, org2, time, alpha);
             bbox2 |= l->PaintAll(&tmp2, iclipRect[1], clipper, p, org2, time, alpha);
             bbox2 |= l->PaintAll(&tmp3, iclipRect[2], clipper, p, org2, time, alpha);
