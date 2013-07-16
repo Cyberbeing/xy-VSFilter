@@ -349,7 +349,7 @@ BOOL CTextFile::ReadString(CStringA& str)
                 }
                 str += c;
             }
-            else
+            else if (!m_offset)
             {
                 // Switch to text and read again
                 m_encoding = ASCII;
@@ -489,7 +489,7 @@ BOOL CTextFile::ReadString(CStringW& str)
                     break;
                 }
                 str += c;
-            } else {
+            } else if (!m_offset) {
                 // Switch to text and read again
                 m_encoding = ASCII;
                 // Rewind to the end of the line and save the position
