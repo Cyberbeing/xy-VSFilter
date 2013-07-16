@@ -1341,7 +1341,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 
     theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), m_xy_str_opt[STRING_LOAD_EXT_LIST]);//fix me:m_xy_str_opt[] is wide char string
 
-    CString str_pgs_yuv_type = m_xy_str_opt[STRING_PGS_YUV_RANGE] + m_xy_str_opt[STRING_PGS_YUV_MATRIX];
+    CString str_pgs_yuv_type = m_xy_str_opt[STRING_PGS_YUV_RANGE] + _T(".") + m_xy_str_opt[STRING_PGS_YUV_MATRIX];
     theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_PGS_COLOR_TYPE), str_pgs_yuv_type);
 
     //save output color config
@@ -1746,7 +1746,7 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
 
     theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), m_xy_str_opt[STRING_LOAD_EXT_LIST]);//fix me:m_xy_str_opt[] is wide char string
 
-    CString str_pgs_yuv_type = m_xy_str_opt[STRING_PGS_YUV_RANGE] + m_xy_str_opt[STRING_PGS_YUV_MATRIX];
+    CString str_pgs_yuv_type = m_xy_str_opt[STRING_PGS_YUV_RANGE] + _T(".") + m_xy_str_opt[STRING_PGS_YUV_MATRIX];
     theApp.WriteProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_PGS_COLOR_TYPE), str_pgs_yuv_type);
 
     CString str_load_level;
