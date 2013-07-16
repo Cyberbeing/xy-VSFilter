@@ -170,7 +170,7 @@ namespace DirectVobSubXyOptions
     };
     enum LayoutSizeOpt
     {
-        LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE,
+        LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE,
         LAYOUT_SIZE_OPT_USER_SPECIFIED,
         LAYOUT_SIZE_OPT_COUNT
     };

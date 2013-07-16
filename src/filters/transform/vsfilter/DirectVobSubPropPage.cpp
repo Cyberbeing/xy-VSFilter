@@ -1159,7 +1159,7 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         }
         else
         {
-            m_layout_size_opt = DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE;
+            m_layout_size_opt = DirectVobSubXyOptions::LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE;
         }
         m_layout_size.cx = m_layout_size_x.GetPos32();
         m_layout_size.cy = m_layout_size_y.GetPos32();
@@ -1194,7 +1194,7 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
         switch(m_layout_size_opt)
         {
         default:
-        case DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
+        case DirectVobSubXyOptions::LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE:
             temp = 0;
             break;
         case DirectVobSubXyOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED:
@@ -1204,7 +1204,7 @@ void CDVSMorePPage::UpdateControlData(bool fSave)
 
         m_combo_layout_size_opt.ResetContent();
         m_combo_layout_size_opt.AddString( CString(_T("Use Original Video Size")) );
-        m_combo_layout_size_opt.SetItemData(0, DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE);
+        m_combo_layout_size_opt.SetItemData(0, DirectVobSubXyOptions::LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE);
         m_combo_layout_size_opt.AddString( CString(_T("Customize ...")) );
         m_combo_layout_size_opt.SetItemData(1, DirectVobSubXyOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED);
         m_combo_layout_size_opt.SetCurSel( temp );
@@ -2121,7 +2121,7 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         }
         else
         {
-            m_layout_size_opt = DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE;
+            m_layout_size_opt = DirectVobSubXyOptions::LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE;
         }
         m_layout_size.cx = m_layout_size_x.GetPos32();
         m_layout_size.cy = m_layout_size_y.GetPos32();
@@ -2185,7 +2185,7 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         switch(m_layout_size_opt)
         {
         default:
-        case DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE:
+        case DirectVobSubXyOptions::LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE:
             temp = 0;
             break;
         case DirectVobSubXyOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED:
@@ -2195,7 +2195,7 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
 
         m_combo_layout_size_opt.ResetContent();
         m_combo_layout_size_opt.AddString( CString(_T("Use Original Video Size")) );
-        m_combo_layout_size_opt.SetItemData(0, DirectVobSubXyOptions::LAYOUT_SIZE_OPT_FOLLOW_ORIGINAL_VIDEO_SIZE);
+        m_combo_layout_size_opt.SetItemData(0, DirectVobSubXyOptions::LAYOUT_SIZE_OPT_ORIGINAL_VIDEO_SIZE);
         m_combo_layout_size_opt.AddString( CString(_T("Customize ...")) );
         m_combo_layout_size_opt.SetItemData(1, DirectVobSubXyOptions::LAYOUT_SIZE_OPT_USER_SPECIFIED);
         m_combo_layout_size_opt.SetCurSel( temp );
