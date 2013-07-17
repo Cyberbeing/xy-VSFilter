@@ -404,10 +404,10 @@ BEGIN
     CONTROL         "Spin1",IDC_SPIN2,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,210,53,11,14
     GROUPBOX        "Text Settings",IDC_STATIC,7,74,111,35
     PUSHBUTTON      "Styles...",IDC_STYLES,15,88,41,13
-    GROUPBOX        "VobSub Settings",IDC_STATIC,124,74,115,35
+    GROUPBOX        "VobSub Settings",IDC_STATIC,124,24,115,85
     CONTROL         "Only show &forced subtitles",IDC_ONLYSHOWFORCEDSUBS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,132,88,99,12
-    GROUPBOX        "General Settings",IDC_STATIC,7,24,232,47
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,132,71,99,12
+    GROUPBOX        "General Settings",IDC_STATIC,7,24,111,47
     COMBOBOX        IDC_LANGCOMBO,15,50,95,65,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CTEXT           "This space was intentionally left blank... :)",IDC_STATIC,8,201,232,31,SS_CENTERIMAGE | NOT WS_VISIBLE | WS_BORDER
     LTEXT           "Language:",IDC_STATIC,15,37,35,8
