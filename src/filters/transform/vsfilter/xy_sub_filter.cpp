@@ -1752,21 +1752,15 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
         {
             CVobSubSettings* pVSS = dynamic_cast<CVobSubFile*>(pSubStream);
 
-            if(fApplyDefStyle)
-            {
-                pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
-                pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
-            }
+            pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
+            pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
         }
         else if(clsid == __uuidof(CVobSubStream))
         {
             CVobSubSettings* pVSS = dynamic_cast<CVobSubStream*>(pSubStream);
 
-            if(fApplyDefStyle)
-            {
-                pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
-                pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
-            }
+            pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
+            pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
         }
         else if(clsid == __uuidof(CRenderedTextSubtitle))
         {
@@ -1775,19 +1769,6 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             if(fApplyDefStyle || !pRTS->m_fUsingDefaultStyleFromScript)
             {
                 STSStyle s = m_defStyle;
-
-                if(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT])
-                {
-                    s.scrAlignment = 2;
-                    int w = pRTS->m_dstScreenSize.cx;
-                    int h = pRTS->m_dstScreenSize.cy;
-                    CRect tmp_rect = s.marginRect.get();
-                    int mw = w - tmp_rect.left - tmp_rect.right;
-                    tmp_rect.bottom = h - MulDiv(h, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 100);
-                    tmp_rect.left = MulDiv(w, m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, 100) - mw/2;
-                    tmp_rect.right = w - (tmp_rect.left + mw);
-                    s.marginRect = tmp_rect;
-                }
 
                 bool succeeded = pRTS->SetDefaultStyle(s);
                 if (!succeeded)
