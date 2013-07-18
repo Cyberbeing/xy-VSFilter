@@ -45,7 +45,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <TargetExt>.dll</TargetExt>
-    <TargetName>xy_sub_filter</TargetName>
+    <TargetName>XySubFilter</TargetName>
     <IncludePath>$(SolutionDir)..\..\BaseClasses;$(SolutionDir)..\..\..\thirdparty\boost_1_47_0\;$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\..\thirdparty\VirtualDub\h\;$(SolutionDir)..\..\..\..\include\;$(IncludePath)</IncludePath>
     <IntDir>$(SolutionDir)..\..\..\..\bin\obj\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
     <OutDir>$(SolutionDir)..\..\..\..\bin\lib\$(PlatformName)\$(Configuration)\</OutDir>

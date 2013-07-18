@@ -1,6 +1,6 @@
 ; xy_sub_filter.def : Declares the module parameters.
 
-LIBRARY      "xy_sub_filter.dll"
+LIBRARY      "XySubFilter.dll"
 
 EXPORTS
 	DllCanUnloadNow			PRIVATE
