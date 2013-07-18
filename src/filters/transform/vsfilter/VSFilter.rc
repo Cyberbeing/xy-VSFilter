@@ -475,7 +475,11 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
+#if defined XY_SUB_FILTER_DLL
+IDI_ICON1               ICON                    "res\\Icon_xy_sub_fillter.ico"
+#else
 IDI_ICON1               ICON                    "res\\Icon_147.ico"
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 //

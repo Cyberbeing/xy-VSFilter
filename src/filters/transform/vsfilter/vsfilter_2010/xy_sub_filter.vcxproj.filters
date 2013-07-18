@@ -132,7 +132,7 @@
     <None Include="..\xy_sub_filter.def">
       <Filter>源文件</Filter>
     </None>
-    <None Include="..\res\Icon_147.ico">
+    <None Include="..\res\Icon_xy_sub_fillter.ico">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>
