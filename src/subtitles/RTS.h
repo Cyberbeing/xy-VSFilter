@@ -65,11 +65,10 @@ interface IXySubRenderFrame;
 
 class CWord
 {
-    bool NeedTransform();
-    void Transform(PathData* path_data, const CPointCoor2& org);
-
-	void Transform_C(PathData* path_data, const CPointCoor2 &org );
-	void Transform_SSE2(PathData* path_data, const CPointCoor2 &org );
+    bool NeedTransform  ();
+    void Transform      (PathData* path_data, const CPointCoor2& org);
+    void Transform_C    (PathData* path_data, const CPointCoor2 &org );
+    void Transform_SSE2 (PathData* path_data, const CPointCoor2 &org );
     bool CreateOpaqueBox();
 
 protected:
@@ -89,27 +88,22 @@ public:
     
     bool operator==(const CWord& rhs)const;
 
-    static void PaintFromOverlay(const CPointCoor2& p, const CPointCoor2& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay);
+    static void PaintFromOverlay   (const CPointCoor2& p, const CPointCoor2& trans_org2, OverlayKey &subpixel_variance_key, SharedPtrOverlay& overlay);
     void PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const OverlayKey& overlay_key, SharedPtrOverlay* overlay);
-    bool PaintFromScanLineData2(const CPointCoor2& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay);
-    bool PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_org, const PathData& path_data, const OverlayKey& key, SharedPtrOverlay* overlay );
-    bool PaintFromRawData( const CPointCoor2& psub, const CPointCoor2& trans_org, const OverlayKey& key, SharedPtrOverlay* overlay );
+    bool PaintFromScanLineData2    (const CPointCoor2& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key    , SharedPtrOverlay* overlay);
+    bool PaintFromPathData         (const CPointCoor2& psub, const CPointCoor2& trans_org, const PathData& path_data, const OverlayKey& key, SharedPtrOverlay* overlay );
+    bool PaintFromRawData          (const CPointCoor2& psub, const CPointCoor2& trans_org, const OverlayKey& key    , SharedPtrOverlay* overlay );
 
 protected:
-    XyFwStringW m_str;
+    XyFwStringW       m_str;
 public:
-    bool m_fWhiteSpaceChar, m_fLineBreak;
-
-    FwSTSStyle m_style;
-
+    bool              m_fWhiteSpaceChar, m_fLineBreak;
+    FwSTSStyle        m_style;
     SharedPtrCPolygon m_pOpaqueBox;
-
-    int m_ktype, m_kstart, m_kend;
-
-    int m_width, m_ascent, m_descent;
-
-    double m_target_scale_x, m_target_scale_y;
-    bool m_round_to_whole_pixel_after_scale_to_target;//it is necessary to avoid some artifacts
+    int               m_ktype, m_kstart, m_kend;
+    int               m_width, m_ascent, m_descent;
+    double            m_target_scale_x, m_target_scale_y;
+    bool              m_round_to_whole_pixel_after_scale_to_target;//it is necessary to avoid some artifacts
 
     //friend class CWordCache;
     friend class PathDataCacheKey;
@@ -148,10 +142,9 @@ class CPolygon : public CWord
     bool ParseStr();
 
 protected:
-    double m_scalex, m_scaley;
-    int m_baseline;
-
-    CAtlArray<BYTE> m_pathTypesOrg;
+    double            m_scalex, m_scaley;
+    int               m_baseline;
+    CAtlArray<BYTE>   m_pathTypesOrg;
     CAtlArray<CPoint> m_pathPointsOrg;
 
     virtual bool CreatePath(PathData* path_data);
@@ -208,14 +201,11 @@ class CClipper
 {
 private:
     SharedPtrCPolygon m_polygon;
-
-    CSizeCoor2 m_size;
-    bool m_inverse;
-    
-    Effect m_effect;
-    int m_effectType;
-
-    bool m_painted;
+    CSizeCoor2        m_size;
+    bool              m_inverse;
+    Effect            m_effect;
+    int               m_effectType;
+    bool              m_painted;
 
     GrayImage2* PaintSimpleClipper();
     GrayImage2* PaintBaseClipper();
@@ -262,24 +252,19 @@ class CSubtitle: private CAtlList<CLine*>
     CLine* GetNextLine(POSITION& pos, int maxwidth);
 
 public:
-    int m_scrAlignment;
-    int m_wrapStyle;
-    bool m_fAnimated;
-    bool m_fAnimated2; //If this Subtitle has animate effect
-    int m_relativeTo;
-
-    Effect* m_effects[EF_NUMBEROFEFFECTS];
-
+    int                      m_scrAlignment;
+    int                      m_wrapStyle;
+    bool                     m_fAnimated;
+    bool                     m_fAnimated2; //If this Subtitle has animate effect
+    int                      m_relativeTo;
+    Effect*                  m_effects[EF_NUMBEROFEFFECTS];
     CAtlList<SharedPtrCWord> m_words;
-
-    SharedPtrCClipper m_pClipper;
-
-    CRect m_rect, m_clip;
-    int m_topborder, m_bottomborder;
-    bool m_clipInverse;
-
-    double m_scalex, m_scaley;
-    double m_target_scale_x, m_target_scale_y;
+    SharedPtrCClipper        m_pClipper;
+    CRect                    m_rect, m_clip;
+    int                      m_topborder, m_bottomborder;
+    bool                     m_clipInverse;
+    double                   m_scalex, m_scaley;
+    double                   m_target_scale_x, m_target_scale_y;
 public:
     CSubtitle();
     virtual ~CSubtitle();
@@ -304,13 +289,13 @@ struct CSubtitle2
 
     }
 
-    CSubtitle *s;
+    CSubtitle       *s;
     const CRectCoor2 clipRect;
-    const CPoint org;
-    const CPoint org2;
-    const CPoint p;
-    int alpha; 
-    int time;
+    const CPoint     org;
+    const CPoint     org2;
+    const CPoint     p;
+    int              alpha; 
+    int              time;
 };
 
 typedef CAtlList<CSubtitle2> CSubtitle2List;
@@ -410,28 +395,28 @@ public:
 private:
     CAtlMap<int, CSubtitle*> m_subtitleCache;
 
-    CScreenLayoutAllocator m_sla;
+    CScreenLayoutAllocator   m_sla;
 
-    CRectCoor2 m_video_rect;//scaled video rect
-    CRectCoor2 m_subtitle_target_rect;//NOT really supported yet
+    CRectCoor2               m_video_rect;//scaled video rect
+    CRectCoor2               m_subtitle_target_rect;//NOT really supported yet
 
-    CSize m_size;
+    CSize                    m_size;
 
     // temp variables, used when parsing the script
-    int m_time, m_delay;
-    int m_animStart, m_animEnd;
-    double m_animAccel;
-    int m_ktype, m_kstart, m_kend;
-    int m_nPolygon;
-    int m_polygonBaselineOffset;
-    double m_fps;
-    int m_period;//1000/m_fps
-    double m_target_scale_x, m_target_scale_y;
+    int                      m_time, m_delay;
+    int                      m_animStart, m_animEnd;
+    double                   m_animAccel;
+    int                      m_ktype, m_kstart, m_kend;
+    int                      m_nPolygon;
+    int                      m_polygonBaselineOffset;
+    double                   m_fps;
+    int                      m_period;//1000/m_fps
+    double                   m_target_scale_x, m_target_scale_y;
 
     static void InitCmdMap();
 
-    void ParseEffect(CSubtitle* sub, const CString& str);
-    void ParseString(CSubtitle* sub, CStringW str, const FwSTSStyle& style);
+    void ParseEffect (CSubtitle* sub, const CString& str);
+    void ParseString (CSubtitle* sub, CStringW str, const FwSTSStyle& style);
     void ParsePolygon(CSubtitle* sub, const CStringW& str, const FwSTSStyle& style);
 
     static bool ParseSSATag(AssTagList *assTags, const CStringW& str);
@@ -494,5 +479,5 @@ public:
     STDMETHODIMP GetStreamInfo(int i, WCHAR** ppName, LCID* pLCID);
     STDMETHODIMP_(int) GetStream();
     STDMETHODIMP SetStream(int iStream);
-    STDMETHODIMP Reload();    
+    STDMETHODIMP Reload();
 };
