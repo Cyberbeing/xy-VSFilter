@@ -1275,23 +1275,7 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED]);
     theApp.WriteProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), (BYTE*)&m_xy_double_opt[DOUBLE_MEDIA_FPS], sizeof(m_xy_double_opt[DOUBLE_MEDIA_FPS]));
 
-    CString par_compensation_type;
-    switch(m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS])
-    {
-    case CSimpleTextSubtitle::EPCTDisabled:
-        par_compensation_type = _T("disabled");
-        break;
-    case CSimpleTextSubtitle::EPCTDownscale:
-        par_compensation_type = _T("downscale");
-        break;
-    case CSimpleTextSubtitle::EPCTUpscale:
-        par_compensation_type = _T("upscale");
-        break;
-    case CSimpleTextSubtitle::EPCTAccurateSize:
-        par_compensation_type = _T("accurate_size");
-        break;
-    }
-    theApp.WriteProfileString(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), par_compensation_type);
+    theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS]);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), m_xy_bool_opt[BOOL_HIDE_TRAY_ICON]);
 
@@ -1701,7 +1685,24 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
     media_fps.Format(_T("%4.6f"), m_xy_double_opt[DOUBLE_MEDIA_FPS]);
     theApp.WriteProfileString(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), media_fps);
 
-    theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS]);
+    CString par_compensation_type;
+    switch(m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS])
+    {
+    case CSimpleTextSubtitle::EPCTDisabled:
+        par_compensation_type = _T("disabled");
+        break;
+    case CSimpleTextSubtitle::EPCTDownscale:
+        par_compensation_type = _T("downscale");
+        break;
+    case CSimpleTextSubtitle::EPCTUpscale:
+        par_compensation_type = _T("upscale");
+        break;
+    case CSimpleTextSubtitle::EPCTAccurateSize:
+        par_compensation_type = _T("accurate_size");
+        break;
+    }
+    theApp.WriteProfileString(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), par_compensation_type);
+
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), m_xy_bool_opt[BOOL_HIDE_TRAY_ICON]);
 
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM), m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM]);
