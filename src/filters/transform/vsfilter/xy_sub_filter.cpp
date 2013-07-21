@@ -311,28 +311,20 @@ STDMETHODIMP XySubFilter::Pause()
     {
         m_not_first_pause = true;
         RestoreVSFilterLoadingOption();
-        hr = FindAndConnectConsumer(m_pGraph);
-        if (FAILED(hr))
+        if (m_pSubStreams.GetCount()>0 || m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]==LOADLEVEL_ALWAYS)
         {
-            XY_LOG_ERROR("Failed when find and connect consumer");
-            return hr;
-        }
-        if (hr==S_OK && m_consumer)//a consumer exists
-        {
-            if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
-            {
-                m_tbid.graph = m_pGraph;
-                m_tbid.dvs = this;
-
-                m_hSystrayThread = ::CreateSystray(&m_tbid);
-                XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
-            }
-            hr = StartStreaming();
+            hr = FindAndConnectConsumer(m_pGraph);
             if (FAILED(hr))
             {
-                XY_LOG_ERROR("Failed to StartStreaming."<<XY_LOG_VAR_2_STR(hr));
+                XY_LOG_ERROR("Failed when find and connect consumer");
                 return hr;
             }
+        }
+        hr = StartStreaming();
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to StartStreaming."<<XY_LOG_VAR_2_STR(hr));
+            return hr;
         }
     }
     return CBaseFilter::Pause();
@@ -364,6 +356,15 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
             m_xy_str_opt[STRING_FILE_NAME].Empty();
             hr = E_FAIL;
             break;
+        }
+        if (!m_consumer)
+        {
+            hr = FindAndConnectConsumer(m_pGraph);
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed when find and connect consumer");
+                break;
+            }
         }
         m_context_id++;
         break;
@@ -1691,7 +1692,7 @@ bool XySubFilter::Open()
 
     m_frd.RefreshEvent.Set();
 
-    return(m_pSubStreams.GetCount() > 0);
+    return (m_pSubStreams.GetCount() > 0);
 }
 
 void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
@@ -2419,6 +2420,14 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
             }
             XY_LOG_INFO("Connected with "<<XY_LOG_VAR_2_STR(consumer)<<" "
                 <<DumpConsumerInfo().GetString()<<" as "<<DumpProviderInfo().GetString());
+            if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
+            {
+                m_tbid.graph = m_pGraph;
+                m_tbid.dvs = this;
+
+                m_hSystrayThread = ::CreateSystray(&m_tbid);
+                XY_LOG_INFO("Systray thread created "<<m_hSystrayThread);
+            }
         }
         else
         {
