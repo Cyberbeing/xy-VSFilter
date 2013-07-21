@@ -259,7 +259,7 @@ void ConvMatrix::InitMatrix( int in_level, int in_type, int out_level, int out_t
     for (int i=0;i<3*4;i++)
     {
         out_matrix[i] = p_matrix[i] * (1<<16) + 0.5f;
-        ASSERT(out_matrix[i] <¡¡(1<<24));
+        ASSERT(out_matrix[i] < (1<<24));
     }
 }
 
@@ -274,7 +274,7 @@ void ConvMatrix::InitVSFilterCompactCorretionMatrix()
     for (int i=0;i<3*4;i++)
     {
         out_matrix[i] = p_matrix[i] * (1<<16) + 0.5f;
-        ASSERT(out_matrix[i] <¡¡(1<<24));
+        ASSERT(out_matrix[i] < (1<<24));
     }
 
     out_matrix = &m_matrix_vsfilter_compact_corretion[LEVEL_TV][0][0];
@@ -285,7 +285,7 @@ void ConvMatrix::InitVSFilterCompactCorretionMatrix()
     for (int i=0;i<3*4;i++)
     {
         out_matrix[i] = p_matrix[i] * (1<<16) + 0.5f;
-        ASSERT(out_matrix[i] <¡¡(1<<24));
+        ASSERT(out_matrix[i] < (1<<24));
     }
 }
 
