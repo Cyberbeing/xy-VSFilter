@@ -481,6 +481,7 @@ HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
             dirty_rect |= CRect(pos, size);
             XyBitmap::BltPack(spd, pos, size, pixels, pitch);
         }
+        dirty_rect &= m_rect_render_to;
         hr = m_subpic->Unlock(&dirty_rect);
         if (FAILED(hr))
         {
