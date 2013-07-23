@@ -164,6 +164,8 @@ private:
 
     bool m_be_auto_loaded;
 
+    CStringW m_filter_info_string;
+
     friend class XySubFilterAutoLoader;
 };
 
