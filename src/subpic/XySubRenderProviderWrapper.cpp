@@ -286,14 +286,12 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     bool combine_bitmap = false;
     bool render_to_original_video_size = false;
 
-    CRect rect_render_to;
-
     ASSERT(m_consumer);
     hr = m_consumer->XyGetRect(DirectVobSubXyOptions::RECT_VIDEO_OUTPUT, &output_rect);
     ASSERT(SUCCEEDED(hr));
     hr = m_consumer->XyGetRect(DirectVobSubXyOptions::RECT_SUBTITLE_TARGET, &subtitle_target_rect);
     ASSERT(SUCCEEDED(hr));
-    ASSERT(output_rect==subtitle_target_rect);
+    ASSERT(output_rect.Width()<=subtitle_target_rect.Width() && output_rect.Height()<=subtitle_target_rect.Height());
     hr = m_consumer->XyGetSize(DirectVobSubXyOptions::SIZE_LAYOUT_WITH, &original_video_size);
     ASSERT(SUCCEEDED(hr));
     hr = m_consumer->XyGetInt(DirectVobSubXyOptions::INT_MAX_BITMAP_COUNT2, &m_max_bitmap_count2);
@@ -301,24 +299,28 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     hr = m_consumer->XyGetBool(DirectVobSubXyOptions::BOOL_SUB_FRAME_USE_DST_ALPHA, &use_dst_alpha);
     hr = m_consumer->XyGetBool(DirectVobSubXyOptions::BOOL_RENDER_TO_ORIGINAL_VIDEO_SIZE, &render_to_original_video_size);
 
-    rect_render_to = !render_to_original_video_size ? output_rect : CRect(CPoint(), original_video_size);
+    if (render_to_original_video_size)
+    {
+        output_rect = CRect(CPoint(), original_video_size);
+        subtitle_target_rect = output_rect;
+    }
 
-    m_output_rect                   = output_rect;
-    m_subtitle_target_rect          = subtitle_target_rect;
     m_render_to_original_video_size = render_to_original_video_size;
 
     bool should_invalidate = false;
     bool should_invalidate_allocator = false;
     if (m_original_video_size!=original_video_size
         || m_use_dst_alpha!=use_dst_alpha
-        || m_rect_render_to!=rect_render_to)
+        || m_output_rect!=output_rect
+        || m_subtitle_target_rect!=subtitle_target_rect)
     {
         should_invalidate = true;
-        should_invalidate_allocator = (m_rect_render_to!=rect_render_to)==TRUE;
+        should_invalidate_allocator = (m_subtitle_target_rect!=subtitle_target_rect)==TRUE;
 
         m_original_video_size  = original_video_size;
         m_use_dst_alpha        = use_dst_alpha;
-        m_rect_render_to       = rect_render_to;
+        m_output_rect          = output_rect;
+        m_subtitle_target_rect = subtitle_target_rect;
     }
 
     if (m_xy_sub_render_frame)
@@ -334,7 +336,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     }
     if (should_invalidate_allocator)
     {
-        CSize max_size(m_rect_render_to.right, m_rect_render_to.bottom);
+        CSize max_size(m_subtitle_target_rect.right, m_subtitle_target_rect.bottom);
 
         m_allocator = DEBUG_NEW CPooledSubPicAllocator(MSP_RGB32, max_size,2);
         ASSERT(m_allocator);
@@ -402,7 +404,7 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
 
     int spd_type = m_use_dst_alpha ? MSP_RGBA : MSP_RGBA_F;
     hr = m_provider->RenderEx(&m_xy_sub_render_frame, spd_type, 
-        m_rect_render_to, m_rect_render_to,
+        m_output_rect, m_subtitle_target_rect,
         m_original_video_size, now, m_fps);
     ASSERT(SUCCEEDED(hr));
 
@@ -481,7 +483,7 @@ HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
             dirty_rect |= CRect(pos, size);
             XyBitmap::BltPack(spd, pos, size, pixels, pitch);
         }
-        dirty_rect &= m_rect_render_to;
+        dirty_rect &= m_subtitle_target_rect;
         hr = m_subpic->Unlock(&dirty_rect);
         if (FAILED(hr))
         {
@@ -493,7 +495,7 @@ HRESULT XySubRenderProviderWrapper2::CombineBitmap(REFERENCE_TIME now)
         CMemSubPic * mem_subpic = dynamic_cast<CMemSubPic*>((ISubPicEx *)m_subpic);
         ASSERT(mem_subpic);
 
-        m_xy_sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper(mem_subpic, m_rect_render_to, m_rect_render_to
+        m_xy_sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper(mem_subpic, m_output_rect, m_subtitle_target_rect
             , s_combined_bitmap_id++, &hr);
         return hr;
     }

@@ -1452,6 +1452,7 @@ void CLine::Compact()
 }
 
 CRectCoor2 CLine::PaintAll( CompositeDrawItemList* output, const CRectCoor2& clipRect, 
+    const CPointCoor2& margin,
     const SharedPtrCClipperPaintMachine &clipper, CPoint p, const CPoint& org, const int time, const int alpha )
 {
     CRectCoor2 bbox(0, 0, 0, 0);
@@ -1469,14 +1470,14 @@ CRectCoor2 CLine::PaintAll( CompositeDrawItemList* output, const CRectCoor2& cli
         outlinePos = CPoint(p.x, p.y + m_ascent - w->m_ascent);
         bodyPos    = CPoint(p.x, p.y + m_ascent - w->m_ascent);
 
-        shadowPos.x   = static_cast<int>(w->m_target_scale_x * shadowPos_x + 0.5);
-        shadowPos.y   = static_cast<int>(w->m_target_scale_y * shadowPos_y + 0.5);
-        outlinePos.x *=                  w->m_target_scale_x;
-        outlinePos.y *=                  w->m_target_scale_y;
-        bodyPos.x    *=                  w->m_target_scale_x;
-        bodyPos.y    *=                  w->m_target_scale_y;
-        org_coor2.x   =                  w->m_target_scale_x * org.x;//fix me: move it out of this loop
-        org_coor2.y   =                  w->m_target_scale_y * org.y;
+        shadowPos.x   = static_cast<int>(w->m_target_scale_x * shadowPos_x + 0.5) + margin.x;
+        shadowPos.y   = static_cast<int>(w->m_target_scale_y * shadowPos_y + 0.5) + margin.y;
+        outlinePos.x  =                  w->m_target_scale_x * outlinePos.x       + margin.x;
+        outlinePos.y  =                  w->m_target_scale_y * outlinePos.y       + margin.y;
+        bodyPos.x     =                  w->m_target_scale_x * bodyPos.x          + margin.x;
+        bodyPos.y     =                  w->m_target_scale_y * bodyPos.y          + margin.y;
+        org_coor2.x   =                  w->m_target_scale_x * org.x              + margin.x;//fix me: move it out of this loop
+        org_coor2.y   =                  w->m_target_scale_y * org.y              + margin.y;
 
         bool hasShadow  =   w->m_style.get().shadowDepthX != 0 || w->m_style.get().shadowDepthY != 0;
         bool hasOutline = ((w->m_style.get().outlineWidthX*w->m_target_scale_x+0.5>=1.0) ||
@@ -1614,10 +1615,11 @@ CSubtitle::CSubtitle()
 {
     memset(m_effects, 0, sizeof(Effect*)*EF_NUMBEROFEFFECTS);
     m_clipInverse = false;
-    m_scalex = m_scaley = 1;    
+    m_scalex = m_scaley = 1;
     m_fAnimated2 = false;
 
     m_target_scale_x = m_target_scale_y = 1.0;
+    m_hard_position_level = -1;
 }
 
 CSubtitle::~CSubtitle()
@@ -1890,6 +1892,8 @@ CRect CScreenLayoutAllocator::AllocRect(CSubtitle* s, int segment, int entry, in
 
 CAtlMap<CStringW, CRenderedTextSubtitle::AssCmdType, CStringElementTraits<CStringW>> CRenderedTextSubtitle::m_cmdMap;
 
+CAtlArray<AssCmdPosLevel> CRenderedTextSubtitle::m_cmd_pos_level;
+
 CRenderedTextSubtitle::CRenderedTextSubtitle(CCritSec* pLock)
     : CSubPicProviderImpl(pLock)
     , m_target_scale_x(1.0), m_target_scale_y(1.0)
@@ -1920,61 +1924,124 @@ void CRenderedTextSubtitle::InitCmdMap()
 {
     if( m_cmdMap.IsEmpty() )
     {
-        m_cmdMap.SetAt(L"1c",        CMD_1c);
-        m_cmdMap.SetAt(L"2c",        CMD_2c);
-        m_cmdMap.SetAt(L"3c",        CMD_3c);
-        m_cmdMap.SetAt(L"4c",        CMD_4c);
-        m_cmdMap.SetAt(L"1a",        CMD_1a);
-        m_cmdMap.SetAt(L"2a",        CMD_2a);
-        m_cmdMap.SetAt(L"3a",        CMD_3a);
-        m_cmdMap.SetAt(L"4a",        CMD_4a);
+        m_cmdMap.SetAt(L"1c",        CMD_1c   );
+        m_cmdMap.SetAt(L"2c",        CMD_2c   );
+        m_cmdMap.SetAt(L"3c",        CMD_3c   );
+        m_cmdMap.SetAt(L"4c",        CMD_4c   );
+        m_cmdMap.SetAt(L"1a",        CMD_1a   );
+        m_cmdMap.SetAt(L"2a",        CMD_2a   );
+        m_cmdMap.SetAt(L"3a",        CMD_3a   );
+        m_cmdMap.SetAt(L"4a",        CMD_4a   );
         m_cmdMap.SetAt(L"alpha",     CMD_alpha);
-        m_cmdMap.SetAt(L"an",        CMD_an);
-        m_cmdMap.SetAt(L"a",         CMD_a);
-        m_cmdMap.SetAt(L"blur",      CMD_blur);
-        m_cmdMap.SetAt(L"bord",      CMD_bord);
-        m_cmdMap.SetAt(L"be",        CMD_be);
-        m_cmdMap.SetAt(L"b",         CMD_b);
-        m_cmdMap.SetAt(L"clip",      CMD_clip);
+        m_cmdMap.SetAt(L"an",        CMD_an   );
+        m_cmdMap.SetAt(L"a",         CMD_a    );
+        m_cmdMap.SetAt(L"blur",      CMD_blur );
+        m_cmdMap.SetAt(L"bord",      CMD_bord );
+        m_cmdMap.SetAt(L"be",        CMD_be   );
+        m_cmdMap.SetAt(L"b",         CMD_b    );
+        m_cmdMap.SetAt(L"clip",      CMD_clip );
         m_cmdMap.SetAt(L"iclip",     CMD_iclip);
-        m_cmdMap.SetAt(L"c",         CMD_c);
-        m_cmdMap.SetAt(L"fade",      CMD_fade);
-        m_cmdMap.SetAt(L"fad",       CMD_fad);
-        m_cmdMap.SetAt(L"fax",       CMD_fax);
-        m_cmdMap.SetAt(L"fay",       CMD_fay);
-        m_cmdMap.SetAt(L"fe",        CMD_fe);
-        m_cmdMap.SetAt(L"fn",        CMD_fn);
-        m_cmdMap.SetAt(L"frx",       CMD_frx);
-        m_cmdMap.SetAt(L"fry",       CMD_fry);
-        m_cmdMap.SetAt(L"frz",       CMD_frz);
-        m_cmdMap.SetAt(L"fr",        CMD_fr);
-        m_cmdMap.SetAt(L"fscx",      CMD_fscx);
-        m_cmdMap.SetAt(L"fscy",      CMD_fscy);
-        m_cmdMap.SetAt(L"fsc",       CMD_fsc);
-        m_cmdMap.SetAt(L"fsp",       CMD_fsp);
-        m_cmdMap.SetAt(L"fs",        CMD_fs);
-        m_cmdMap.SetAt(L"i",         CMD_i);
-        m_cmdMap.SetAt(L"kt",        CMD_kt);
-        m_cmdMap.SetAt(L"kf",        CMD_kf);
-        m_cmdMap.SetAt(L"K",         CMD_K);
-        m_cmdMap.SetAt(L"ko",        CMD_ko);
-        m_cmdMap.SetAt(L"k",         CMD_k);
-        m_cmdMap.SetAt(L"move",      CMD_move);
-        m_cmdMap.SetAt(L"org",       CMD_org);
-        m_cmdMap.SetAt(L"pbo",       CMD_pbo);
-        m_cmdMap.SetAt(L"pos",       CMD_pos);
-        m_cmdMap.SetAt(L"p",         CMD_p);
-        m_cmdMap.SetAt(L"q",         CMD_q);
-        m_cmdMap.SetAt(L"r",         CMD_r);
-        m_cmdMap.SetAt(L"shad",      CMD_shad);
-        m_cmdMap.SetAt(L"s",         CMD_s);
-        m_cmdMap.SetAt(L"t",         CMD_t);
-        m_cmdMap.SetAt(L"u",         CMD_u);
+        m_cmdMap.SetAt(L"c",         CMD_c    );
+        m_cmdMap.SetAt(L"fade",      CMD_fade );
+        m_cmdMap.SetAt(L"fad",       CMD_fad  );
+        m_cmdMap.SetAt(L"fax",       CMD_fax  );
+        m_cmdMap.SetAt(L"fay",       CMD_fay  );
+        m_cmdMap.SetAt(L"fe",        CMD_fe   );
+        m_cmdMap.SetAt(L"fn",        CMD_fn   );
+        m_cmdMap.SetAt(L"frx",       CMD_frx  );
+        m_cmdMap.SetAt(L"fry",       CMD_fry  );
+        m_cmdMap.SetAt(L"frz",       CMD_frz  );
+        m_cmdMap.SetAt(L"fr",        CMD_fr   );
+        m_cmdMap.SetAt(L"fscx",      CMD_fscx );
+        m_cmdMap.SetAt(L"fscy",      CMD_fscy );
+        m_cmdMap.SetAt(L"fsc",       CMD_fsc  );
+        m_cmdMap.SetAt(L"fsp",       CMD_fsp  );
+        m_cmdMap.SetAt(L"fs",        CMD_fs   );
+        m_cmdMap.SetAt(L"i",         CMD_i    );
+        m_cmdMap.SetAt(L"kt",        CMD_kt   );
+        m_cmdMap.SetAt(L"kf",        CMD_kf   );
+        m_cmdMap.SetAt(L"K",         CMD_K    );
+        m_cmdMap.SetAt(L"ko",        CMD_ko   );
+        m_cmdMap.SetAt(L"k",         CMD_k    );
+        m_cmdMap.SetAt(L"move",      CMD_move );
+        m_cmdMap.SetAt(L"org",       CMD_org  );
+        m_cmdMap.SetAt(L"pbo",       CMD_pbo  );
+        m_cmdMap.SetAt(L"pos",       CMD_pos  );
+        m_cmdMap.SetAt(L"p",         CMD_p    );
+        m_cmdMap.SetAt(L"q",         CMD_q    );
+        m_cmdMap.SetAt(L"r",         CMD_r    );
+        m_cmdMap.SetAt(L"shad",      CMD_shad );
+        m_cmdMap.SetAt(L"s",         CMD_s    );
+        m_cmdMap.SetAt(L"t",         CMD_t    );
+        m_cmdMap.SetAt(L"u",         CMD_u    );
         m_cmdMap.SetAt(L"xbord",     CMD_xbord);
         m_cmdMap.SetAt(L"xshad",     CMD_xshad);
         m_cmdMap.SetAt(L"ybord",     CMD_ybord);
         m_cmdMap.SetAt(L"yshad",     CMD_yshad);
     }
+    m_cmd_pos_level[CMD_1c   ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_2c   ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_3c   ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_4c   ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_1a   ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_2a   ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_3a   ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_4a   ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_alpha] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_an   ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_a    ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_blur ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_bord ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_be   ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_b    ] = POS_LVL_NONE;
+
+    m_cmd_pos_level[CMD_clip ] = POS_LVL_HARD;
+    m_cmd_pos_level[CMD_iclip] = POS_LVL_HARD;
+
+    m_cmd_pos_level[CMD_c    ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_fade ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_fad  ] = POS_LVL_NONE;
+
+    m_cmd_pos_level[CMD_fax  ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_fay  ] = POS_LVL_SOFT;
+
+    m_cmd_pos_level[CMD_fe   ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_fn   ] = POS_LVL_NONE;
+
+    m_cmd_pos_level[CMD_frx  ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_fry  ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_frz  ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_fr   ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_fscx ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_fscy ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_fsc  ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_fsp  ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_fs   ] = POS_LVL_SOFT;
+
+    m_cmd_pos_level[CMD_i    ] = POS_LVL_NONE;
+
+    m_cmd_pos_level[CMD_kt   ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_kf   ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_K    ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_ko   ] = POS_LVL_SOFT;
+    m_cmd_pos_level[CMD_k    ] = POS_LVL_SOFT;
+
+    m_cmd_pos_level[CMD_move ] = POS_LVL_HARD;
+    m_cmd_pos_level[CMD_org  ] = POS_LVL_HARD;
+    m_cmd_pos_level[CMD_pbo  ] = POS_LVL_HARD;
+    m_cmd_pos_level[CMD_pos  ] = POS_LVL_HARD;
+    m_cmd_pos_level[CMD_p    ] = POS_LVL_HARD;
+
+    m_cmd_pos_level[CMD_q    ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_r    ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_shad ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_s    ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_t    ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_u    ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_xbord] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_xshad] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_ybord] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_yshad] = POS_LVL_NONE;
 }
 
 void CRenderedTextSubtitle::Copy(CSimpleTextSubtitle& sts)
@@ -2094,6 +2161,9 @@ void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
         e->param[1] = lefttoright;
         e->param[2] = (int)(sub->m_scalex*fadeawaywidth);
         sub->m_wrapStyle = 2;
+
+        sub->m_hard_position_level = sub->m_hard_position_level > POS_LVL_NONE ? 
+                                     sub->m_hard_position_level : POS_LVL_NONE;
     }
     else if(!effect.CompareNoCase(L"Scroll up;") || !effect.CompareNoCase(L"Scroll down;"))
     {
@@ -2108,6 +2178,8 @@ void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
         e->param[2] = (int)(max(1.0*delay/sub->m_scaley, 1));
         e->param[3] = (effect.GetLength() == 12);
         e->param[4] = (int)(sub->m_scaley*fadeawayheight);
+
+        sub->m_hard_position_level = POS_LVL_HARD;
     }
 }
 
@@ -2371,6 +2443,8 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
         AssCmdType cmd_type = assTag.cmdType;
         const CAtlArray<CStringW>& params = assTag.strParams;
 
+        sub->m_hard_position_level = sub->m_hard_position_level > m_cmd_pos_level[cmd_type] ?
+                                     sub->m_hard_position_level : m_cmd_pos_level[cmd_type];
         // TODO: call ParseStyleModifier(cmd, params, ..) and move the rest there
         const CStringW& p = params.GetCount() > 0 ? params[0] : CStringW("");
         switch ( cmd_type )
@@ -3353,7 +3427,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
         subs.Add(ls);
     }
     qsort(subs.GetData(), subs.GetCount(), sizeof(LSub), lscomp);
-        
+
     for(int i = 0, j = subs.GetCount(); i < j; i++)
     {
         int entry = subs[i].idx;
@@ -3554,7 +3628,8 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
 
     CRect cvideo_rect = video_rect;
 
-    if (cvideo_rect!=subtitle_target_rect)
+    cvideo_rect &= subtitle_target_rect;
+    if (cvideo_rect!=video_rect)
     {
         XY_LOG_WARN("NOT supported yet!");
         return E_NOTIMPL;
@@ -3597,7 +3672,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         Init(cvideo_rect, subtitle_target_rect, original_video_size);
 
         render_frame_creater->SetOutputRect(cvideo_rect);
-        render_frame_creater->SetClipRect(cvideo_rect);
+        render_frame_creater->SetClipRect(subtitle_target_rect);
     }
 
     CSubtitle2List sub2List;
@@ -3607,8 +3682,14 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         return hr;
     }
 
+    CRectCoor2 margin_rect(
+        cvideo_rect.left - subtitle_target_rect.left,
+        cvideo_rect.top  - subtitle_target_rect.top,
+        subtitle_target_rect.right - cvideo_rect.right,
+        subtitle_target_rect.bottom - cvideo_rect.bottom);
+
     CompositeDrawItemListList compDrawItemListList;
-    DoRender(cvideo_rect.Size(), sub2List, &compDrawItemListList);
+    DoRender(cvideo_rect.Size(), cvideo_rect.TopLeft(), margin_rect, sub2List, &compDrawItemListList);
 
     XySubRenderFrame *sub_render_frame;
     CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);
@@ -3618,7 +3699,10 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     return hr;
 }
 
-void CRenderedTextSubtitle::DoRender( const SIZECoor2& output_size, const CSubtitle2List& sub2List, 
+void CRenderedTextSubtitle::DoRender( const SIZECoor2& output_size, 
+    const POINTCoor2& video_org,
+    const RECTCoor2& margin_rect, 
+    const CSubtitle2List& sub2List, 
     CompositeDrawItemListList *compDrawItemListList /*output*/)
 {
     //check input and log error
@@ -3627,21 +3711,51 @@ void CRenderedTextSubtitle::DoRender( const SIZECoor2& output_size, const CSubti
     {
         const CSubtitle2& sub2 = sub2List.GetNext(pos);
         CompositeDrawItemList& compDrawItemList = compDrawItemListList->GetAt(compDrawItemListList->AddTail());
-        RenderOneSubtitle(output_size, sub2, &compDrawItemList);
+        RenderOneSubtitle(output_size, video_org, margin_rect, sub2, &compDrawItemList);
     }
 }
 
-void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size, const CSubtitle2& sub2, 
+void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size, 
+    const POINTCoor2& video_org, const RECTCoor2& margin_rect, 
+    const CSubtitle2& sub2, 
     CompositeDrawItemList* compDrawItemList /*output*/)
-{   
+{
     CSubtitle   * s        = sub2.s;
-    const CRect & clipRect = sub2.clipRect;
+    CRect         clipRect = sub2.clipRect;
     const CPoint& org      = sub2.org;
     const CPoint& org2     = sub2.org2;
     const CPoint& p2       = sub2.p;
     int           alpha    = sub2.alpha;
     int           time     = sub2.time;
     if(!s) return;
+
+    CPointCoor2 margin;
+    if (s->m_hard_position_level > POS_LVL_NONE)
+    {
+        margin = video_org;
+    }
+    else
+    {
+        //set margin to move subtitles to black bars
+        switch(s->m_scrAlignment%3)
+        {
+        case 1: margin.x = video_org.x - margin_rect.left; break; //move to left
+        case 2: margin.x = video_org.x; break; //do not move so that it aligns with the middle of the video
+        case 3: margin.x = video_org.x + margin_rect.right; break; //move to right
+        }
+        switch((s->m_scrAlignment-1)/3)
+        {
+        case 0: margin.y = video_org.y - margin_rect.top; break; //move to top
+        case 1: margin.y = video_org.y; break; //do not move so that it aligns with the middle of the video
+        case 2: margin.y = video_org.y + margin_rect.bottom; break;//move to bottom
+        }
+        ASSERT(clipRect.Width()==output_size.cx && clipRect.Height()==output_size.cy);
+        clipRect.SetRect(0,0, 
+            output_size.cx + video_org.x+margin_rect.left+margin_rect.right,
+            output_size.cy + video_org.y+margin_rect.top +margin_rect.bottom);
+    }
+    margin.x *= 8;
+    margin.y *= 8;
 
     SharedPtrCClipperPaintMachine clipper( DEBUG_NEW CClipperPaintMachine(s->m_pClipper) );
 
@@ -3671,10 +3785,10 @@ void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size, con
                 tmp3.AddTail();
                 tmp4.AddTail();
             }
-            bbox2 |= l->PaintAll(&tmp1, iclipRect[0], clipper, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmp2, iclipRect[1], clipper, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmp3, iclipRect[2], clipper, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmp4, iclipRect[3], clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp1, iclipRect[0], margin, clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp2, iclipRect[1], margin, clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp3, iclipRect[2], margin, clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp4, iclipRect[3], margin, clipper, p, org2, time, alpha);
             tmpCompDrawItemList.AddTailList(&tmp1);
             tmpCompDrawItemList.AddTailList(&tmp2);
             tmpCompDrawItemList.AddTailList(&tmp3);
@@ -3686,7 +3800,7 @@ void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size, con
             {
                 tmpCompDrawItemList.AddTail();
             }
-            bbox2 |= l->PaintAll(&tmpCompDrawItemList, clipRect, clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmpCompDrawItemList, clipRect, margin, clipper, p, org2, time, alpha);
         }
         compDrawItemList->AddTailList(&tmpCompDrawItemList);
         p.y += l->m_ascent + l->m_descent;
