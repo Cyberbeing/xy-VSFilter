@@ -103,6 +103,7 @@ private:
     HRESULT GetIsEmbeddedSubStream(int iSelected, bool *fIsEmbedded);
 
     bool LoadExternalSubtitle(IFilterGraph* pGraph);
+    bool ShouldWeAutoLoad(IFilterGraph* pGraph);
 
     HRESULT StartStreaming();
 
@@ -160,4 +161,41 @@ private:
     bool m_workaround_mpc_hc;//enable workaround for MPC-HC to prevent be removed from the graph
 
     bool m_disconnect_entered;
+
+    bool m_be_auto_loaded;
+
+    friend class XySubFilterAutoLoader;
+};
+
+class XyAutoLoaderDummyInputPin: public CBaseInputPin
+{
+public:
+    XyAutoLoaderDummyInputPin(
+        CBaseFilter *pFilter,
+        CCritSec *pLock,
+        HRESULT *phr,
+        LPCWSTR pName);
+
+    HRESULT CheckMediaType(const CMediaType *);
+};
+
+[uuid("6b237877-902b-4c6c-92f6-e63169a5166c")]
+class XySubFilterAutoLoader : public CBaseFilter
+{
+public:
+    XySubFilterAutoLoader(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid = __uuidof(XySubFilterAutoLoader));
+    virtual ~XySubFilterAutoLoader();
+
+    DECLARE_IUNKNOWN;
+
+    //CBaseFilter
+    CBasePin* GetPin(int n);
+    int GetPinCount();
+    STDMETHODIMP JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName);
+
+    STDMETHODIMP QueryFilterInfo(FILTER_INFO* pInfo);
+
+protected:
+    CCritSec m_pLock;
+    XyAutoLoaderDummyInputPin * m_pin;
 };

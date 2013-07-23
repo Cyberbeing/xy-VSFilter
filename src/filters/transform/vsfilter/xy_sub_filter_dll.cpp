@@ -48,14 +48,20 @@ const AMOVIESETUP_PIN sudpPins[] =
     {L"Input", TRUE, FALSE, FALSE, TRUE, &CLSID_NULL, NULL, countof(sudPinTypesIn), sudPinTypesIn}
 };
 
+
+const AMOVIESETUP_MEDIATYPE sudPinTypeIn2 = {&MEDIATYPE_Video, &GUID_NULL};
+const AMOVIESETUP_PIN sudpPin2 = {L"Input", FALSE, FALSE, TRUE, FALSE, &CLSID_NULL, NULL, 1, &sudPinTypeIn2};
+
 /*const*/ AMOVIESETUP_FILTER sudFilter[] =
 {
     {&__uuidof(XySubFilter), L"XySubFilter", MERIT_DO_NOT_USE, countof(sudpPins), sudpPins}, 
+    {&__uuidof(XySubFilterAutoLoader), L"XySubFilterAutoLoader", 0xffffffff, 1, &sudpPin2}
 };
 
 CFactoryTemplate g_Templates[] =
 {
     {sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<XySubFilter>, NULL, &sudFilter[0]},
+    {sudFilter[1].strName, sudFilter[1].clsID, CreateInstance<XySubFilterAutoLoader>, NULL, &sudFilter[1]},
     {L"XySubFilterMainPPage", &__uuidof(CXySubFilterMainPPage), CreateInstance<CXySubFilterMainPPage>},
     {L"XySubFilterMorePPage", &__uuidof(CXySubFilterMorePPage), CreateInstance<CXySubFilterMorePPage>},
     {L"XySubFilterTimingPPage", &__uuidof(CXySubFilterTimingPPage), CreateInstance<CXySubFilterTimingPPage>},

@@ -53,6 +53,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     , m_last_requested(-1)
     , m_workaround_mpc_hc(false)
     , m_disconnect_entered(false)
+    , m_be_auto_loaded(false)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
@@ -169,7 +170,6 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
     XY_LOG_INFO("JoinFilterGraph. pGraph:"<<(void*)pGraph);
     if(pGraph)
     {
-        bool found_consumer = false;
         BeginEnumFilters(pGraph, pEF, pBF)
         {
             if(pBF != (IBaseFilter*)this)
@@ -184,15 +184,11 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
                 {
                     return E_FAIL;
                 }
-                if (!found_consumer && CComQIPtr<ISubRenderConsumer>(pBF))
-                {
-                    found_consumer = true;
-                }
             }
         }
         EndEnumFilters;
         bool under_mpc_hc = (theApp.m_AppName.MakeLower().Find(_T("mpc-hc"), 0)==0);
-        if (under_mpc_hc && found_consumer)
+        if (under_mpc_hc)
         {
             bool found_sub_pin = false;
             bool accept_embedded = m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]==LOADLEVEL_ALWAYS ||
@@ -313,6 +309,14 @@ STDMETHODIMP XySubFilter::Pause()
             if (FAILED(hr))
             {
                 XY_LOG_ERROR("Failed when find and connect consumer");
+                if (m_be_auto_loaded && GetPinCount()==1/*No pins connected*/)
+                {
+                    XY_LOG_WARN("We'll leave here quietly");
+                    if (FAILED(m_pGraph->RemoveFilter(this)))
+                    {
+                        XY_LOG_WARN("Failed to remove ourself.");
+                    }
+                }
                 return hr;
             }
         }
@@ -2266,6 +2270,132 @@ bool XySubFilter::LoadExternalSubtitle(IFilterGraph* pGraph)
     return fRet;
 }
 
+HRESULT IsPinConnected(IPin *pPin, bool *pResult)
+{
+    CComPtr<IPin> pTmp = NULL;
+    HRESULT hr = pPin->ConnectedTo(&pTmp);
+    if (SUCCEEDED(hr))
+    {
+        *pResult = true;
+    }
+    else if (hr == VFW_E_NOT_CONNECTED)
+    {
+        // The pin is not connected. This is not an error for our purposes.
+        *pResult = false;
+        hr = S_OK;
+    }
+
+    return hr;
+}
+
+bool XySubFilter::ShouldWeAutoLoad(IFilterGraph* pGraph)
+{
+    XY_LOG_INFO(_T(""));
+
+    bool fRet = false;
+    HRESULT hr = NOERROR;
+
+    int level;
+    bool load_external, load_web, load_embedded;
+    hr = get_LoadSettings(&level, &load_external, &load_web, &load_embedded);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get option");
+        return false;
+    }
+
+    if(level < 0 || level >= LOADLEVEL_COUNT || level==LOADLEVEL_DISABLED) {
+        XY_LOG_DEBUG("Disabled by load setting: "<<XY_LOG_VAR_2_STR(level));
+        return false;
+    }
+
+    if(level == LOADLEVEL_ALWAYS)
+        load_external = load_web = load_embedded = true;
+
+
+    // find text stream on known splitters
+
+    bool have_subtitle_pin = false;
+    CComPtr<IBaseFilter> pBF;
+    if((pBF = FindFilter(CLSID_OggSplitter, pGraph)) || (pBF = FindFilter(CLSID_AviSplitter, pGraph))
+        || (pBF = FindFilter(L"{34293064-02F2-41D5-9D75-CC5967ACA1AB}", pGraph)) // matroska demux
+        || (pBF = FindFilter(L"{0A68C3B5-9164-4a54-AFAF-995B2FF0E0D4}", pGraph)) // matroska source
+        || (pBF = FindFilter(L"{149D2E01-C32E-4939-80F6-C07B81015A7A}", pGraph)) // matroska splitter
+        || (pBF = FindFilter(L"{55DA30FC-F16B-49fc-BAA5-AE59FC65F82D}", pGraph)) // Haali Media Splitter
+        || (pBF = FindFilter(L"{564FD788-86C9-4444-971E-CC4A243DA150}", pGraph)) // Haali Media Splitter (AR)
+        || (pBF = FindFilter(L"{8F43B7D9-9D6B-4F48-BE18-4D787C795EEA}", pGraph)) // Haali Simple Media Splitter
+        || (pBF = FindFilter(L"{52B63861-DC93-11CE-A099-00AA00479A58}", pGraph)) // 3ivx splitter
+        || (pBF = FindFilter(L"{6D3688CE-3E9D-42F4-92CA-8A11119D25CD}", pGraph)) // our ogg source
+        || (pBF = FindFilter(L"{9FF48807-E133-40AA-826F-9B2959E5232D}", pGraph)) // our ogg splitter
+        || (pBF = FindFilter(L"{803E8280-F3CE-4201-982C-8CD8FB512004}", pGraph)) // dsm source
+        || (pBF = FindFilter(L"{0912B4DD-A30A-4568-B590-7179EBB420EC}", pGraph)) // dsm splitter
+        || (pBF = FindFilter(L"{3CCC052E-BDEE-408a-BEA7-90914EF2964B}", pGraph)) // mp4 source
+        || (pBF = FindFilter(L"{61F47056-E400-43d3-AF1E-AB7DFFD4C4AD}", pGraph)) // mp4 splitter
+        || (pBF = FindFilter(L"{171252A0-8820-4AFE-9DF8-5C92B2D66B04}", pGraph)) // LAV splitter
+        || (pBF = FindFilter(L"{B98D13E7-55DB-4385-A33D-09FD1BA26338}", pGraph)) // LAV Splitter Source
+        || (pBF = FindFilter(L"{E436EBB5-524F-11CE-9F53-0020AF0BA770}", pGraph)) // Solveig matroska splitter
+        || (pBF = FindFilter(L"{1365BE7A-C86A-473C-9A41-C0A6E82C9FA3}", pGraph)) // MPC-HC MPEG PS/TS/PVA source
+        || (pBF = FindFilter(L"{DC257063-045F-4BE2-BD5B-E12279C464F0}", pGraph)) // MPC-HC MPEG splitter
+        || (pBF = FindFilter(L"{529A00DB-0C43-4f5b-8EF2-05004CBE0C6F}", pGraph)) // AV splitter
+        || (pBF = FindFilter(L"{D8980E15-E1F6-4916-A10F-D7EB4E9E10B8}", pGraph)) // AV source
+        ) 
+    {
+        BeginEnumPins(pBF, pEP, pPin)
+        {
+            BeginEnumMediaTypes(pPin, pEM, pmt)
+            {
+                if (pmt->majortype == MEDIATYPE_Text || pmt->majortype == MEDIATYPE_Subtitle)
+                {
+                    have_subtitle_pin = true;
+                    bool tmp = false;
+                    if ( SUCCEEDED(IsPinConnected(pPin, &tmp)) && tmp )
+                    {
+                        XY_LOG_DEBUG("There's a connnected subtitle pin in the source filter! We'll leave here.");
+                        return false;
+                    }
+                }
+            }
+            EndEnumMediaTypes(pmt)
+        }
+        EndEnumFilters
+    }
+
+    if(load_embedded && have_subtitle_pin)
+    {
+        fRet = true;
+    }
+
+    // find file name
+    CStringW fn;
+
+    BeginEnumFilters(pGraph, pEF, pBF)
+    {
+        if(CComQIPtr<IFileSourceFilter> pFSF = pBF)
+        {
+            LPOLESTR fnw = NULL;
+            if(!pFSF || FAILED(pFSF->GetCurFile(&fnw, NULL)) || !fnw)
+                continue;
+            fn = CStringW(fnw);
+            CoTaskMemFree(fnw);
+            break;
+        }
+    }
+    EndEnumFilters
+    XY_LOG_INFO(L"fn:"<<fn.GetString());
+    CAtlArray<CString> paths;
+
+    if((load_external || load_web) && (load_web || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
+    {
+        bool fTemp = m_xy_bool_opt[BOOL_HIDE_SUBTITLES];
+        fRet = !fn.IsEmpty() && SUCCEEDED(put_FileName((LPWSTR)(LPCWSTR)fn))
+            || SUCCEEDED(put_FileName(L"c:\\tmp.srt"))
+            || fRet;
+        if(fTemp) m_xy_bool_opt[BOOL_HIDE_SUBTITLES] = true;
+    }
+
+    return fRet;
+}
+
 HRESULT XySubFilter::StartStreaming()
 {
     XY_LOG_INFO("");
@@ -2400,4 +2530,115 @@ CStringW XySubFilter::DumpConsumerInfo()
         m_xy_str_opt[STRING_CONNECTED_CONSUMER], m_xy_str_opt[STRING_CONSUMER_VERSION],
         m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX], m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]);
     return strTemp;
+}
+
+//
+// DummyInputPin
+//
+
+XyAutoLoaderDummyInputPin::XyAutoLoaderDummyInputPin( CBaseFilter *pFilter, CCritSec *pLock, HRESULT *phr, LPCWSTR pName )
+    : CBaseInputPin(NAME("DummyInputPin"), pFilter, pLock, phr, pName)
+{
+
+}
+
+HRESULT XyAutoLoaderDummyInputPin::CheckMediaType( const CMediaType * )
+{
+    return E_NOTIMPL;
+}
+
+//
+//  XySubFilterAutoLoader
+//
+
+XySubFilterAutoLoader::XySubFilterAutoLoader( LPUNKNOWN punk, HRESULT* phr
+    , const GUID& clsid /*= __uuidof(XySubFilterAutoLoader)*/ )
+    : CBaseFilter(NAME("XySubFilterAutoLoader"), punk, &m_pLock, clsid)
+{
+    m_pin = DEBUG_NEW XyAutoLoaderDummyInputPin(this, &m_pLock, phr, NULL);;
+}
+
+XySubFilterAutoLoader::~XySubFilterAutoLoader()
+{
+    XY_LOG_DEBUG(_T(""));
+    delete m_pin;
+}
+
+CBasePin* XySubFilterAutoLoader::GetPin( int n )
+{
+    if (n==0)
+    {
+        return m_pin;
+    }
+    return NULL;
+}
+
+int XySubFilterAutoLoader::GetPinCount()
+{
+    return 1;
+}
+
+STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWSTR pName )
+{
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this)<<"pGraph:"<<(void*)pGraph);
+    HRESULT hr = NOERROR;
+    if(pGraph)
+    {
+        BeginEnumFilters(pGraph, pEF, pBF)
+        {
+            if (pBF != (IBaseFilter*)this)
+            {
+                CLSID clsid;
+                pBF->GetClassID(&clsid);
+                if (clsid==__uuidof(XySubFilterAutoLoader))
+                {
+                    XY_LOG_INFO("Another XySubFilterAutoLoader filter has been added to the graph.");
+                    return E_FAIL;
+                }
+                if (clsid==__uuidof(XySubFilter))
+                {
+                    return E_FAIL;
+                }
+            }
+        }
+        EndEnumFilters;
+        CComPtr<IBaseFilter> filter;
+        hr = filter.CoCreateInstance(__uuidof(XySubFilter));
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to create XySubFilter."<<XY_LOG_VAR_2_STR(hr));
+            return E_FAIL;
+        }
+        XySubFilter * xy_sub_filter = dynamic_cast<XySubFilter*>((IBaseFilter*)filter);
+        if (xy_sub_filter->ShouldWeAutoLoad(pGraph))
+        {
+            hr = pGraph->AddFilter(xy_sub_filter, L"XySubFilter(AutoLoad)");
+            xy_sub_filter->m_be_auto_loaded = true;
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed to AddFilter. "<<XY_LOG_VAR_2_STR(xy_sub_filter)<<XY_LOG_VAR_2_STR(hr));
+                return S_OK;
+            }
+        }
+        hr = __super::JoinFilterGraph(pGraph, pName);
+    }
+    else
+    {
+        hr = __super::JoinFilterGraph(pGraph, pName);
+    }
+
+    return hr;
+}
+
+STDMETHODIMP XySubFilterAutoLoader::QueryFilterInfo( FILTER_INFO* pInfo )
+{
+    CheckPointer(pInfo, E_POINTER);
+    ValidateReadWritePtr(pInfo, sizeof(FILTER_INFO));
+
+    HRESULT hr = __super::QueryFilterInfo(pInfo);
+    if (SUCCEEDED(hr))
+    {
+        wcscpy_s(pInfo->achName, countof(pInfo->achName)-1, L"XySubFilterAutoLoader");
+    }
+    return hr;
 }
