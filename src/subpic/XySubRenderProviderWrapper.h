@@ -61,8 +61,6 @@ private:
     bool m_use_dst_alpha;
     bool m_render_to_original_video_size;
 
-    CRect m_rect_render_to;
-
     double m_fps;
 
     int m_max_bitmap_count2;

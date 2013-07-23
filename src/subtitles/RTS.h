@@ -31,6 +31,14 @@
 #include "mru_cache.h"
 #include "xy_int_map.h"
 
+//how hard positioned is the ass cmd 
+enum AssCmdPosLevel
+{
+    POS_LVL_NONE,
+    POS_LVL_SOFT,
+    POS_LVL_HARD
+};
+
 class CMyFont : public CFont
 {
 public:
@@ -238,6 +246,7 @@ public:
     bool IsEmpty();
 
     CRectCoor2 PaintAll(CompositeDrawItemList* output, const CRectCoor2& clipRect, 
+        const CPointCoor2& margin,
         const SharedPtrCClipperPaintMachine &clipper, 
         CPoint p, const CPoint& org, const int time, const int alpha);
 };
@@ -263,6 +272,7 @@ public:
     bool                     m_clipInverse;
     double                   m_scalex, m_scaley;
     double                   m_target_scale_x, m_target_scale_y;
+    int                      m_hard_position_level;//-1: for no style override at all, others see @AssCmdPosLevel
 public:
     CSubtitle();
     virtual ~CSubtitle();
@@ -292,7 +302,7 @@ struct CSubtitle2
     const CPoint     org;
     const CPoint     org2;
     const CPoint     p;
-    int              alpha; 
+    int              alpha;
     int              time;
 };
 
@@ -380,6 +390,8 @@ public:
     static const int MIN_CMD_LENGTH = 1;//c etc
     static const int MAX_CMD_LENGTH = 5;//alpha, iclip, xbord, xshad, ybord, yshad
     static CAtlMap<CStringW, AssCmdType, CStringElementTraits<CStringW>> m_cmdMap;
+
+    static CAtlArray<AssCmdPosLevel> m_cmd_pos_level;
 
     struct AssTag;
     typedef CAtlList<AssTag> AssTagList;
@@ -470,9 +482,13 @@ public:
     STDMETHODIMP Render(SubPicDesc& spd, REFERENCE_TIME rt, double fps, RECTCoor2& bbox);
     STDMETHODIMP RenderEx(SubPicDesc& spd, REFERENCE_TIME rt, double fps, CAtlList<CRectCoor2>& rectList);
     HRESULT ParseScript(REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List );
-    static void DoRender( const SIZECoor2& output_size, const CSubtitle2List& sub2List, 
+    static void DoRender( const SIZECoor2& output_size, 
+        const POINTCoor2& video_org, const RECTCoor2& margin_rect, 
+        const CSubtitle2List& sub2List, 
         CompositeDrawItemListList *compDrawItemListList /*output*/);
-    static void RenderOneSubtitle(const SIZECoor2& output_size, const CSubtitle2& sub2, 
+    static void RenderOneSubtitle(const SIZECoor2& output_size, 
+        const POINTCoor2& video_org, const RECTCoor2& margin_rect, 
+        const CSubtitle2& sub2, 
         CompositeDrawItemList* compDrawItemList /*output*/);
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
 
