@@ -191,9 +191,10 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
     CAutoLock cAutoLock(&m_csFilter);
     XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     XY_LOG_INFO("JoinFilterGraph. pGraph:"<<(void*)pGraph);
+    HRESULT hr = NOERROR;
     if(pGraph)
     {
-        bool found_consumer = false;
+        bool found_vsfilter = false;
         BeginEnumFilters(pGraph, pEF, pBF)
         {
             if(pBF != (IBaseFilter*)this)
@@ -206,17 +207,19 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
                 pBF->GetClassID(&clsid);
                 if (clsid==__uuidof(CDirectVobSubFilter) || clsid==__uuidof(CDirectVobSubFilter2))
                 {
-                    return E_FAIL;
-                }
-                if (!found_consumer && CComQIPtr<ISubRenderConsumer>(pBF))
-                {
-                    found_consumer = true;
+                    XY_LOG_INFO("I see VSFilter");
+                    if (!m_xy_bool_opt[BOOL_GET_RID_OF_VSFILTER])
+                    {
+                        return E_FAIL;
+                    }
+                    found_vsfilter = true;
                 }
             }
         }
         EndEnumFilters;
+
         bool under_mpc_hc = (theApp.m_AppName.MakeLower().Find(_T("mpc-hc"), 0)==0);
-        if (under_mpc_hc && found_consumer)
+        if (under_mpc_hc)
         {
             bool found_sub_pin = false;
             bool accept_embedded = m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]==LOADLEVEL_ALWAYS ||
@@ -265,7 +268,23 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
                 m_workaround_mpc_hc = true;
             }
         }
+        hr = __super::JoinFilterGraph(pGraph, pName);
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to join filter graph");
+            return hr;
+        }
+        if (found_vsfilter && m_xy_bool_opt[BOOL_GET_RID_OF_VSFILTER])
+        {
+            hr = GetRidOfVSFilter();
+            if (FAILED(hr))
+            {
+                XY_LOG_FATAL("Failed to get rid of VSFilter");
+                return E_FAIL;
+            }
+        }
         LoadExternalSubtitle(pGraph);
+        return hr;
     }
     else
     {
@@ -279,11 +298,14 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
             m_consumer = NULL;
         }
         ::DeleteSystray(&m_hSystrayThread, &m_tbid);
-        m_workaround_mpc_hc = false;
-        m_not_first_pause = false;
-    }
+        m_workaround_mpc_hc   = false;
+        m_not_first_pause     = false;
+        m_xy_bool_opt[BOOL_BE_AUTO_LOADED     ] = false;
+        m_xy_bool_opt[BOOL_GET_RID_OF_VSFILTER] = false;
 
-    return __super::JoinFilterGraph(pGraph, pName);
+        return __super::JoinFilterGraph(pGraph, pName);
+    }
+    return E_FAIL;
 }
 
 STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
@@ -311,18 +333,20 @@ STDMETHODIMP XySubFilter::Pause()
         if (m_pSubStreams.GetCount()>0 || m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]==LOADLEVEL_ALWAYS)
         {
             hr = FindAndConnectConsumer(m_pGraph);
-            if (FAILED(hr))
+            if (FAILED(hr) || !m_consumer)
             {
                 m_filter_info_string.Format(L"%s (=> !!!)", m_xy_str_opt[STRING_NAME].GetString());
                 XY_LOG_ERROR("Failed when find and connect consumer");
-                return hr;
             }
         }
-        hr = StartStreaming();
-        if (FAILED(hr))
+        if (SUCCEEDED(hr))
         {
-            XY_LOG_ERROR("Failed to StartStreaming."<<XY_LOG_VAR_2_STR(hr));
-            return hr;
+            hr = StartStreaming();
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed to StartStreaming."<<XY_LOG_VAR_2_STR(hr));
+                return hr;
+            }
         }
     }
     return CBaseFilter::Pause();
@@ -2279,6 +2303,93 @@ bool XySubFilter::LoadExternalSubtitle(IFilterGraph* pGraph)
     }
 
     return fRet;
+}
+
+HRESULT IsPinConnected(IPin *pPin, bool *pResult)
+{
+    CComPtr<IPin> pTmp = NULL;
+    HRESULT hr = pPin->ConnectedTo(&pTmp);
+    if (SUCCEEDED(hr))
+    {
+        *pResult = true;
+    }
+    else if (hr == VFW_E_NOT_CONNECTED)
+    {
+        // The pin is not connected. This is not an error for our purposes.
+        *pResult = false;
+        hr = S_OK;
+    }
+
+    return hr;
+}
+
+HRESULT XySubFilter::GetRidOfVSFilter()
+{
+    HRESULT hr = NOERROR;
+    CComPtr<IBaseFilter> pBF;
+    CComPtr<IPin> video_input_pin,video_output_pin;
+    while((pBF=FindFilter(__uuidof(CDirectVobSubFilter2), m_pGraph)) || 
+          (pBF=FindFilter(__uuidof(CDirectVobSubFilter ), m_pGraph)))
+    {
+        BeginEnumPins(pBF, pEP, pPin)
+        {
+            PIN_DIRECTION dir;
+            CComPtr<IPin> pPinTo;
+
+            hr = pPin->QueryDirection(&dir);
+            if (FAILED(hr))
+            {
+                XY_LOG_FATAL("Failed to QueryDirection.");
+                return hr;
+            }
+            if (dir==PINDIR_OUTPUT)
+            {
+                if (SUCCEEDED(pPin->ConnectedTo(&video_input_pin)))
+                {
+                    m_pGraph->Disconnect(video_input_pin);
+                    m_pGraph->Disconnect(pPin);
+                }
+            }
+            else/*PINDIR_INPUT*/
+            {
+                if (SUCCEEDED(pPin->ConnectedTo(&pPinTo)))
+                {
+                    m_pGraph->Disconnect(pPinTo);
+                    m_pGraph->Disconnect(pPin);
+                    bool is_video_pin = false;
+                    BeginEnumMediaTypes(pPinTo, pEM, pmt)
+                    {
+                        if (pmt->majortype == MEDIATYPE_Video)
+                        {
+                            is_video_pin = true;
+                            break;
+                        }
+                    }
+                    EndEnumMediaTypes(pmt)
+                    if (is_video_pin)
+                    {
+                        video_output_pin = pPinTo;
+                    }
+                    else if (GetPinCount()>0)
+                    {
+                        m_pGraph->ConnectDirect(pPinTo, GetPin(m_pSubtitleInputPin.GetCount()-1), NULL);
+                    }
+                }
+            }
+        }
+        EndEnumPins
+        if (video_input_pin && video_output_pin)
+        {
+            m_pGraph->ConnectDirect(video_input_pin, video_output_pin, NULL);
+        }
+        hr = m_pGraph->RemoveFilter(pBF);
+        if (FAILED(hr))
+        {
+            XY_LOG_FATAL("Failed to remove filter");
+            return hr;
+        }
+    }
+    return hr;
 }
 
 HRESULT XySubFilter::StartStreaming()

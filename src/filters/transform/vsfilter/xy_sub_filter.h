@@ -104,6 +104,7 @@ private:
 
     bool LoadExternalSubtitle(IFilterGraph* pGraph);
 
+    HRESULT GetRidOfVSFilter();
     HRESULT StartStreaming();
 
     HRESULT FindAndConnectConsumer(IFilterGraph* pGraph);
