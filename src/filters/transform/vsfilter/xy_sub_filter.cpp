@@ -1960,6 +1960,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
         else
         {
             m_xy_str_opt[STRING_CONNECTED_CONSUMER] = CStringW(str, len);
+            LocalFree(str);
         }
         hr = m_consumer->GetString("version", &str, &len);
         if (FAILED(hr))
@@ -1969,6 +1970,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
         else
         {
             m_xy_str_opt[STRING_CONSUMER_VERSION] = CStringW(str, len);
+            LocalFree(str);
         }
     }
     SIZE originalVideoSize;
