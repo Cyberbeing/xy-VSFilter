@@ -1987,12 +1987,16 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
 
     LPWSTR str;
     int len;
+    CStringW consumer_yuv_matrix = m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX];
     hr = m_consumer->GetString("yuvMatrix", &str, &len);
     if (FAILED(hr)) {
-        XY_LOG_ERROR("Failed to get yuvMatrix from consumer.");
+        XY_LOG_WARN("Failed to get yuvMatrix from consumer.");
     }
-    CStringW consumer_yuv_matrix(str, len);
-    LocalFree(str);
+    else
+    {
+        consumer_yuv_matrix = CStringW(str, len);
+        LocalFree(str);
+    }
 
     int consumer_supported_levels = 0;
     hr = m_consumer->GetInt("supportedLevels", &consumer_supported_levels);
