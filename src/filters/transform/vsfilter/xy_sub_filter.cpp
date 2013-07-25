@@ -2581,6 +2581,19 @@ STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWS
     HRESULT hr = NOERROR;
     if(pGraph)
     {
+        DWORD merit = MERIT_DO_NOT_USE;
+        hr = XySubFilterAutoLoader::GetMerit( __uuidof(XySubFilter), &merit );
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to get merit of XySubFilter");
+            return hr;
+        }
+        if (merit==MERIT_DO_NOT_USE)
+        {
+            XY_LOG_DEBUG("XySubFilter's has been set to MERIT_DO_NOT_USE. We should not auto load.");
+            return E_FAIL;
+        }
+
         BeginEnumFilters(pGraph, pEF, pBF)
         {
             if (pBF != (IBaseFilter*)this)
@@ -2638,4 +2651,45 @@ STDMETHODIMP XySubFilterAutoLoader::QueryFilterInfo( FILTER_INFO* pInfo )
         wcscpy_s(pInfo->achName, countof(pInfo->achName)-1, L"XySubFilterAutoLoader");
     }
     return hr;
+}
+
+HRESULT XySubFilterAutoLoader::GetMerit( const GUID& clsid, DWORD *merit )
+{
+    CheckPointer(merit, E_POINTER);
+
+    LPOLESTR    str;
+    StringFromCLSID(clsid, &str);
+    CString     str_clsid(str);
+    CString     key_name;
+    if (str) CoTaskMemFree(str);
+
+    /*
+    Load the FilterData buffer, then change the merit value and
+    write it back.
+    */
+
+    key_name.Format(_T("CLSID\\{083863F1-70DE-11d0-BD40-00A0C911CE86}\\Instance\\%s"), str_clsid);
+    CRegKey key;
+    if (key.Open(HKEY_CLASSES_ROOT, key_name, KEY_READ) == ERROR_SUCCESS) { 
+        ULONG size = 256*1024;
+        BYTE  *largebuf = (BYTE*)malloc(size);
+        LONG  lret;
+
+        if (!largebuf) { XY_LOG_DEBUG(key_name<<" "<<lret); key.Close(); return E_FAIL; }
+
+        lret = key.QueryBinaryValue(_T("FilterData"), largebuf, &size);
+        if (lret != ERROR_SUCCESS) { XY_LOG_DEBUG(key_name<<" "<<lret); free(largebuf); key.Close(); return E_FAIL; }
+
+        // change the merit
+        DWORD *dwbuf = (DWORD*)largebuf;
+        *merit = dwbuf[1];
+
+        free(largebuf);
+
+    } else {
+        XY_LOG_DEBUG(key_name.GetString());
+        return E_FAIL;
+    }
+    key.Close();
+    return S_OK;
 }

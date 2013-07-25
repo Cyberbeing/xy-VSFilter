@@ -196,7 +196,8 @@ public:
     STDMETHODIMP JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName);
 
     STDMETHODIMP QueryFilterInfo(FILTER_INFO* pInfo);
-
+public:
+    static HRESULT GetMerit( const GUID& clsid, DWORD *merit );
 protected:
     CCritSec m_pLock;
     XyAutoLoaderDummyInputPin * m_pin;
