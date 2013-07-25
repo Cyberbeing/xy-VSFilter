@@ -254,6 +254,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
         ::DeleteSystray(&m_hSystrayThread, &m_tbid);
         m_workaround_mpc_hc = false;
         m_not_first_pause = false;
+        m_be_auto_loaded = false;
     }
 
     return __super::JoinFilterGraph(pGraph, pName);
