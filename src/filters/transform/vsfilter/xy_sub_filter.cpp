@@ -292,17 +292,15 @@ STDMETHODIMP XySubFilter::Pause()
         if (m_pSubStreams.GetCount()>0 || m_xy_int_opt[INT_LOAD_SETTINGS_LEVEL]==LOADLEVEL_ALWAYS)
         {
             hr = FindAndConnectConsumer(m_pGraph);
-            if (FAILED(hr))
+            if (FAILED(hr) || !m_consumer)
             {
                 m_filter_info_string.Format(L"%s (=> !!!)", m_xy_str_opt[STRING_NAME].GetString());
                 XY_LOG_ERROR("Failed when find and connect consumer");
-                if (m_be_auto_loaded && GetPinCount()==1/*No pins connected*/)
+                XY_LOG_WARN("We'll leave here quietly");
+                CComQIPtr<IFilterChain> filter_chain(m_pGraph);
+                if (FAILED(filter_chain->RemoveChain(this, NULL)))
                 {
-                    XY_LOG_WARN("We'll leave here quietly");
-                    if (FAILED(m_pGraph->RemoveFilter(this)))
-                    {
-                        XY_LOG_WARN("Failed to remove ourself.");
-                    }
+                    XY_LOG_WARN("Failed to remove ourself.");
                 }
                 return hr;
             }
