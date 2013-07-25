@@ -102,6 +102,10 @@ void write_file(const char * filename, const void * buff, int size);
 
 void DumpPackBitmap2File(POINT pos, SIZE size, LPCVOID pixels, int pitch, const char *filename);
 
+void XyDisplayType(LPTSTR label, const AM_MEDIA_TYPE *pmtIn);
+
+void XyDumpGraph(IFilterGraph *pGraph, DWORD dwLevel);
+
 } //namespace xy
 
 #endif // end of __XY_LOGGER_H_3716A27F_2940_4636_8BC9_C764648362AE__
