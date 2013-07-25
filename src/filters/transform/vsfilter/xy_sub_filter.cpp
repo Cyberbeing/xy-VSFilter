@@ -2298,7 +2298,7 @@ bool XySubFilter::ShouldWeAutoLoad(IFilterGraph* pGraph)
     }
 
     if(level == LOADLEVEL_ALWAYS)
-        load_external = load_web = load_embedded = true;
+        fRet = load_external = load_web = load_embedded = true;
 
 
     // find text stream on known splitters
