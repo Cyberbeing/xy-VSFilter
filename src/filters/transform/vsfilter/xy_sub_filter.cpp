@@ -248,6 +248,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
             if (FAILED(m_consumer->Disconnect())) {
                 XY_LOG_ERROR("Failed to disconnect consumer");
             }
+            m_filter_info_string = m_xy_str_opt[STRING_NAME];
             CAutoLock cAutoLock(&m_csConsumer);
             m_consumer = NULL;
         }
@@ -1263,6 +1264,7 @@ STDMETHODIMP XySubFilter::Disconnect( void )
         {
             XY_LOG_ERROR("No consumer connected. It is expected to be called by a consumer!");
         }
+        m_filter_info_string = m_xy_str_opt[STRING_NAME];
         m_disconnect_entered = false;
         return S_OK;
     }
