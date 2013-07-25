@@ -1503,7 +1503,7 @@ bool CDirectVobSubFilter2::ShouldWeAutoload(IFilterGraph* pGraph)
 				EndEnumMediaTypes(pmt)
 				if(fRet) break;
 			}
-			EndEnumFilters
+			EndEnumPins
 		}
 	}
 

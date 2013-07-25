@@ -233,7 +233,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
                     EndEnumMediaTypes(pmt);
                     if(found_sub_pin) break;
                 }
-                EndEnumFilters
+                EndEnumPins
             }
             if (!found_sub_pin) {
                 m_workaround_mpc_hc = true;
@@ -2336,7 +2336,7 @@ bool XySubFilter::ShouldWeAutoLoad(IFilterGraph* pGraph)
             }
             EndEnumMediaTypes(pmt)
         }
-        EndEnumFilters
+        EndEnumPins
     }
 
     if(load_embedded && have_subtitle_pin)
