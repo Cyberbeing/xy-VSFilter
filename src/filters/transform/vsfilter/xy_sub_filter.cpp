@@ -2348,11 +2348,6 @@ bool XySubFilter::ShouldWeAutoLoad(IFilterGraph* pGraph)
         EndEnumPins
     }
 
-    if(load_embedded && have_subtitle_pin)
-    {
-        fRet = true;
-    }
-
     // find file name
     CStringW fn;
 
