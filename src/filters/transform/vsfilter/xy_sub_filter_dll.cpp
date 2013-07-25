@@ -54,7 +54,7 @@ const AMOVIESETUP_PIN sudpPin2 = {L"Input", FALSE, FALSE, TRUE, FALSE, &CLSID_NU
 
 /*const*/ AMOVIESETUP_FILTER sudFilter[] =
 {
-    {&__uuidof(XySubFilter), L"XySubFilter", MERIT_DO_NOT_USE, countof(sudpPins), sudpPins}, 
+    {&__uuidof(XySubFilter), L"XySubFilter", MERIT_NORMAL, countof(sudpPins), sudpPins}, 
     {&__uuidof(XySubFilterAutoLoader), L"XySubFilterAutoLoader", 0xffffffff, 1, &sudpPin2}
 };
 
@@ -73,42 +73,15 @@ int g_cTemplates = countof(g_Templates);
 
 //////////////////////////////
 
-extern void RegisterXySubFilterAsAutoLoad();
-
-
-void RegisterXySubFilterAsAutoLoad()
-{
-    HKEY hKey;
-
-    if(RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("Autoload.SubtitleProvider"), 0, NULL, REG_OPTION_NON_VOLATILE,
-        KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
-    {
-        CString in_uuid = XyUuidToString(*sudFilter[0].clsID);
-        if(RegSetValueEx(hKey, _T("XySubFilter"), NULL, REG_SZ, reinterpret_cast<const BYTE*>(in_uuid.GetString()), in_uuid.GetLength()*2+1) != ERROR_SUCCESS)
-        {
-            MessageBox(NULL, _T("Failed to install as autoload subtitle provider"), _T("Warning"), 0);
-        }
-        RegCloseKey(hKey);
-    }
-    else
-    {
-        MessageBox(NULL, _T("Failed to install as autoload subtitle provider"), _T("Warning"), 0);
-    }
-}
-
 STDAPI DllRegisterServer()
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-    RegisterXySubFilterAsAutoLoad();
 
     return AMovieDllRegisterServer2(TRUE);
 }
 
 STDAPI DllUnregisterServer()
 {
-    //ToDo: reset auto subtitle provider setting
-
     return AMovieDllRegisterServer2(FALSE);
 }
 
