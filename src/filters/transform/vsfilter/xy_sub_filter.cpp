@@ -344,11 +344,9 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
         }
         if (!m_consumer)
         {
-            hr = FindAndConnectConsumer(m_pGraph);
-            if (FAILED(hr))
+            if (FAILED(FindAndConnectConsumer(m_pGraph)))
             {
-                XY_LOG_ERROR("Failed when find and connect consumer");
-                break;
+                XY_LOG_INFO("Failed when find and connect consumer");
             }
         }
         m_context_id++;
