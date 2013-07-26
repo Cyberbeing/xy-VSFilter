@@ -40,6 +40,19 @@ const SharedPtrOverlayKey& OverlayPaintMachine::GetHashKey()
     return m_inner_paint_machine->GetHashKey(m_layer);
 }
 
+//static
+bool OverlayPaintMachine::CheckOverlap( const OverlayPaintMachine& a, const OverlayPaintMachine& b )
+{
+    if (  a.m_inner_paint_machine == b.m_inner_paint_machine && 
+          !a.m_inner_paint_machine->ReallyHasBlurEffect() &&
+        ((a.m_layer==CWordPaintMachine::OUTLINE && b.m_layer==CWordPaintMachine::BODY) ||
+         (a.m_layer==CWordPaintMachine::BODY    && b.m_layer==CWordPaintMachine::OUTLINE)) )
+    {
+        return false;
+    }
+    return true;
+}
+
 void CWordPaintMachine::Paint( LAYER layer, SharedPtrOverlay* overlay )
 {
     switch (layer)
@@ -238,4 +251,9 @@ OverlayKey* CWordPaintMachine::CreateOutlineOverlayHashKey( const SharedPtrCWord
 OverlayKey* CWordPaintMachine::CreateShadowOverlayHashKey( const SharedPtrCWord& word, const CPointCoor2& p )
 {
     return CreateOutlineOverlayHashKey(word, p);
+}
+
+bool CWordPaintMachine::ReallyHasBlurEffect()
+{
+    return Rasterizer::IsItReallyBlur(m_word->m_style.get().fBlur, m_word->m_style.get().fGaussianBlur);
 }

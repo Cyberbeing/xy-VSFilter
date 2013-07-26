@@ -59,6 +59,25 @@ CRectCoor2 DrawItem::Draw( XyBitmap* bitmap, DrawItem& draw_item, const CRectCoo
     return result;
 }
 
+CRectCoor2 DrawItem::AdditionDraw( XyBitmap *bitmap, DrawItem& draw_item, const CRectCoor2& clip_rect )
+{
+    CRect result;
+    SharedPtrGrayImage2 alpha_mask;
+    draw_item.clipper->Paint(&alpha_mask);
+
+    SharedPtrOverlay overlay;
+    ASSERT(draw_item.overlay_paint_machine);
+    draw_item.overlay_paint_machine->Paint(&overlay);
+
+    const SharedPtrByte& alpha = Rasterizer::CompositeAlphaMask(overlay, draw_item.clip_rect & clip_rect, alpha_mask.get(),
+        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder,
+        &result);
+
+    Rasterizer::AdditionDraw(bitmap, overlay, result, alpha.get(),
+        draw_item.xsub, draw_item.ysub, draw_item.switchpts, draw_item.fBody, draw_item.fBorder);
+    return result;
+}
+
 DrawItem* DrawItem::CreateDrawItem( const SharedPtrOverlayPaintMachine& overlay_paint_machine, const CRect& clipRect,
     const SharedPtrCClipperPaintMachine &clipper, int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder )
 {
@@ -82,6 +101,13 @@ DrawItem* DrawItem::CreateDrawItem( const SharedPtrOverlayPaintMachine& overlay_
 const SharedPtrDrawItemHashKey& DrawItem::GetHashKey()
 {
     return m_key;
+}
+
+bool DrawItem::CheckOverlap( const DrawItem& a, const DrawItem& b )
+{
+    return a.switchpts[1]!=0xffffffff || b.switchpts[1]!=0xffffffff ||
+        a.fBody==true || b.fBorder==true || 
+        OverlayPaintMachine::CheckOverlap(*a.overlay_paint_machine, *b.overlay_paint_machine);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -435,15 +461,28 @@ void GroupedDrawItems::Draw( SharedPtrXyBitmap *bitmap, int *bitmap_identity_num
         POSITION pos = draw_item_list.GetHeadPosition();
         XyBitmap *tmp = XySubRenderFrameCreater::GetDefaultCreater()->CreateBitmap(clip_rect);
         bitmap->reset(tmp);
-        while(pos)
+
+        bool have_overlap_region = CheckOverlap();
+        if (have_overlap_region)
         {
-            DrawItem::Draw(tmp, *draw_item_list.GetNext(pos), clip_rect);
+            while(pos)
+            {
+                DrawItem::Draw(tmp, *draw_item_list.GetNext(pos), clip_rect);
+            }
+        }
+        else
+        {
+            XyBitmap::FlipAlphaValue(tmp->bits, tmp->w, tmp->h, tmp->pitch);
+            while(pos)
+            {
+                DrawItem::AdditionDraw(tmp, *draw_item_list.GetNext(pos), clip_rect);
+            }
         }
 
         XyColorSpace color_space;
         HRESULT hr = XySubRenderFrameCreater::GetDefaultCreater()->GetColorSpace(&color_space);
         ASSERT(SUCCEEDED(hr));
-        if (color_space==XY_CS_ARGB_F)
+        if (color_space==XY_CS_ARGB_F && have_overlap_region)
             XyBitmap::FlipAlphaValue(tmp->bits, tmp->w, tmp->h, tmp->pitch);
 
         bitmap_cache->UpdateCache(key_id, *bitmap);
@@ -454,6 +493,18 @@ void GroupedDrawItems::Draw( SharedPtrXyBitmap *bitmap, int *bitmap_identity_num
         bitmap_cache->UpdateCache(pos);
     }
     *bitmap_identity_num  = key_id;
+}
+
+bool GroupedDrawItems::CheckOverlap()
+{
+    if (draw_item_list.GetCount()==2)
+    {
+        POSITION pos =  draw_item_list.GetHeadPosition();
+        DrawItem &a  = *draw_item_list.GetNext(pos);
+        DrawItem &b  = *draw_item_list.GetNext(pos);
+        return DrawItem::CheckOverlap(a, b);
+    }
+    return true;
 }
 
 void GroupedDrawItems::CreateHashKey(GroupedDrawItemsHashKey *key)
@@ -471,4 +522,3 @@ void GroupedDrawItems::CreateHashKey(GroupedDrawItemsHashKey *key)
     }
     key->UpdateHashValue();
 }
-

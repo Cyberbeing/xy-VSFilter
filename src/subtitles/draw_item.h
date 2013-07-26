@@ -31,8 +31,11 @@ public:
     SharedPtrDrawItemHashKey m_key;
 public:
     CRectCoor2 GetDirtyRect();
-    static CRectCoor2 Draw( XyBitmap *bitmap, DrawItem& draw_item, const CRectCoor2& clip_rect );
+    static CRectCoor2 Draw        ( XyBitmap *bitmap, DrawItem& draw_item, const CRectCoor2& clip_rect );
+    static CRectCoor2 AdditionDraw( XyBitmap *bitmap, DrawItem& draw_item, const CRectCoor2& clip_rect );
     const SharedPtrDrawItemHashKey& GetHashKey();
+
+    static bool CheckOverlap(const DrawItem& a, const DrawItem& b);
 
     static DrawItem* CreateDrawItem(const SharedPtrOverlayPaintMachine& overlay_paint_machine,
         const CRect& clipRect,
@@ -71,6 +74,8 @@ public:
     CRectCoor2 clip_rect;
 public:
     void Draw(SharedPtrXyBitmap *bitmap, int *bitmap_identity_num);
+
+    bool CheckOverlap();
 
     void CreateHashKey(GroupedDrawItemsHashKey *key);
 };

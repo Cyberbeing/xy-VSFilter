@@ -33,6 +33,8 @@ public:
 
     void Paint(LAYER layer, SharedPtrOverlay* overlay);
     const SharedPtrOverlayKey& GetHashKey(LAYER layer);
+
+    bool ReallyHasBlurEffect();
 private:
     CWordPaintMachine(){}
 
@@ -63,6 +65,8 @@ public:
     void Paint(SharedPtrOverlay* overlay);
     CRectCoor2 CalcDirtyRect();//return a 8x8 supersampled rect
     const SharedPtrOverlayKey& GetHashKey();
+
+    static bool CheckOverlap(const OverlayPaintMachine& a, const OverlayPaintMachine& b);
 private:
     SharedCWordPaintMachine m_inner_paint_machine;
     CWordPaintMachine::LAYER m_layer;
