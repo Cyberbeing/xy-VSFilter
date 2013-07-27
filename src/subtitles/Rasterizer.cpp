@@ -2449,12 +2449,13 @@ void FillAlphaMashBodyMasked_c(       BYTE* dst        ,
                                 const BYTE* am         , 
                                 int         am_pitch)
 {
+    const int ROUND_ERR = 1<<(12-1);
     while(h--)
     {
         int j=0;
         for( ; j<w; j++ )
         {
-            dst[j] = (src[j] * am[j] * color_alpha)>>12;
+            dst[j] = ((src[j] * am[j] * color_alpha)+ROUND_ERR)>>12;
         }
         src += pitch;
         am  += am_pitch;
@@ -2472,6 +2473,8 @@ void FillAlphaMashBodyMasked_sse2(       BYTE* dst        ,
                                    int         am_pitch)
 {
 #ifndef _WIN64
+    const int ROUND_ERR = 1<<(12-1);
+
     const int x0 = ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) < w ?
                    ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) : w; //IMPORTANT! Should not exceed w.
     const int x00 = ((reinterpret_cast<int>(dst)+15)&~15) - reinterpret_cast<int>(dst) < w ?
@@ -2480,13 +2483,15 @@ void FillAlphaMashBodyMasked_sse2(       BYTE* dst        ,
     const int x_end0 = ((reinterpret_cast<int>(dst)+w)&~3) - reinterpret_cast<int>(dst);
     const int x_end = w;
     __m64   color_alpha_64  = _mm_set1_pi16 (color_alpha);
+    __m64   round_err_64    = _mm_set1_pi16 (ROUND_ERR>>8);//important!
     __m128i color_alpha_128 = _mm_set1_epi16(color_alpha);
+    __m128i round_err_128   = _mm_set1_epi16(ROUND_ERR>>8);//important!
     while(h--)
     {
         int j=0;
         for( ; j<x0; j++ )
         {
-            dst[j] = (src[j] * am[j] * color_alpha)>>12;
+            dst[j] = ((src[j] * am[j] * color_alpha)+ROUND_ERR)>>12;
         }
         for( ;j<x00;j+=4 )
         {
@@ -2497,6 +2502,7 @@ void FillAlphaMashBodyMasked_sse2(       BYTE* dst        ,
             src1 = _mm_mullo_pi16(src1, color_alpha_64);
             mask = _mm_unpacklo_pi8(zero, mask); //important!
             src1 = _mm_mulhi_pi16(src1, mask); //important!
+            src1 = _mm_adds_pu16(src1, round_err_64);
             src1 = _mm_srli_pi16(src1, 12+8-16); //important!
             src1 = _mm_packs_pu16(src1,src1);
             *reinterpret_cast<int*>(dst+j) = _mm_cvtsi64_si32(src1);
@@ -2507,18 +2513,22 @@ void FillAlphaMashBodyMasked_sse2(       BYTE* dst        ,
             __m128i src1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(src+j));
             __m128i mask = _mm_loadu_si128(reinterpret_cast<const __m128i*>(am+j));
             __m128i src1hi = src1;
-            __m128i maskhi = mask;                 
-            src1 = _mm_unpacklo_epi8(src1, zero);
-            src1hi = _mm_unpackhi_epi8(src1hi, zero);
-            mask = _mm_unpacklo_epi8(zero, mask); //important!
-            maskhi = _mm_unpackhi_epi8(zero, maskhi);
-            src1 = _mm_mullo_epi16(src1, color_alpha_128);
-            src1hi = _mm_mullo_epi16(src1hi, color_alpha_128);
-            src1 = _mm_mulhi_epu16(src1, mask); //important!
-            src1hi = _mm_mulhi_epu16(src1hi, maskhi);
-            src1 = _mm_srli_epi16(src1, 12+8-16); //important!
-            src1hi = _mm_srli_epi16(src1hi, 12+8-16);
-            src1 = _mm_packus_epi16(src1, src1hi);
+            __m128i maskhi = mask;
+
+            src1   = _mm_unpacklo_epi8(src1  , zero           );
+            src1hi = _mm_unpackhi_epi8(src1hi, zero           );
+            mask   = _mm_unpacklo_epi8(zero  , mask           ); //important!
+            maskhi = _mm_unpackhi_epi8(zero  , maskhi         );
+            src1   = _mm_mullo_epi16  (src1  , color_alpha_128);
+            src1hi = _mm_mullo_epi16  (src1hi, color_alpha_128);
+            src1   = _mm_mulhi_epu16  (src1  , mask           ); //important!
+            src1hi = _mm_mulhi_epu16  (src1hi, maskhi         );
+            src1   = _mm_adds_epu16   (src1  , round_err_128  );
+            src1hi = _mm_adds_epu16   (src1hi, round_err_128  );
+            src1   = _mm_srli_epi16   (src1  , 12+8-16        ); //important!
+            src1hi = _mm_srli_epi16   (src1hi, 12+8-16        );
+            src1   = _mm_packus_epi16 (src1  , src1hi         );
+
             _mm_storeu_si128(reinterpret_cast<__m128i*>(dst+j), src1);
         }
         for( ;j<x_end0;j+=4)
@@ -2530,13 +2540,14 @@ void FillAlphaMashBodyMasked_sse2(       BYTE* dst        ,
             src1 = _mm_mullo_pi16(src1, color_alpha_64);
             mask = _mm_unpacklo_pi8(zero, mask); //important!
             src1 = _mm_mulhi_pi16(src1, mask); //important!
+            src1 = _mm_adds_pu16(src1, round_err_64);
             src1 = _mm_srli_pi16(src1, 12+8-16); //important!
             src1 = _mm_packs_pu16(src1,src1);
             *reinterpret_cast<int*>(dst+j) = _mm_cvtsi64_si32(src1);
         }
         for( ;j<x_end;j++)
         {
-            dst[j] = (src[j] * am[j] * color_alpha)>>12;
+            dst[j] = ((src[j] * am[j] * color_alpha)+ROUND_ERR)>>12;
         }
         src += pitch;
         am  += am_pitch;
