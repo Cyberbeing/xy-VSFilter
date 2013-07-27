@@ -2325,7 +2325,8 @@ void Rasterizer::AdditionDraw(XyBitmap         *bitmap   ,
         DoAdditionDraw<packed_pix_add_sse2>
     };
     const DoAdditionDrawMultiColorFunc do_draw_multi_color[] = {
-        DoAdditionDrawMultiColor<packed_pix_add_c   >
+        DoAdditionDrawMultiColor<packed_pix_add_c   >,
+        DoAdditionDrawMultiColor<packed_pix_add_sse2>
     };
 
     // CPUID from VDub
@@ -2371,7 +2372,7 @@ void Rasterizer::AdditionDraw(XyBitmap         *bitmap   ,
                 break;
             }
         }
-        do_draw_multi_color[0](dst, s, new_switchpts, w, h, overlayPitch, bitmap->pitch);
+        do_draw_multi_color[fSSE2](dst, s, new_switchpts, w, h, overlayPitch, bitmap->pitch);
     }
     return;
 }
