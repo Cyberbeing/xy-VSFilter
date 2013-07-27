@@ -2119,6 +2119,10 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
 
 void FillAlphaMashBody_c  (BYTE* dst, const BYTE* src, int color_alpha, int w, int h, int pitch);
 void FillAlphaMashBorder_c(BYTE* dst, const BYTE* border, const BYTE* body, int color_alpha, int w, int h, int pitch);
+void FillAlphaMashBodyMasked_c  (BYTE* dst, const BYTE* src, int color_alpha, int w, int h, int pitch,
+    const BYTE* am, int am_pitch);
+void FillAlphaMashBorderMasked_c(BYTE* dst, const BYTE* border, const BYTE* body, int color_alpha, int w, int h, int pitch,
+    const BYTE* am, int am_pitch);
 
 void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const byte* pBorder, int x, int y, int w, int h, 
     const byte* pAlphaMask, int pitch, DWORD color_alpha )
@@ -2450,35 +2454,13 @@ void Overlay::_DoFillAlphaMash_c(byte* outputAlphaMask, const byte* pBody, const
     }
     else if( ((pBody==NULL) + (pBorder==NULL))==1 && pAlphaMask!=NULL)
     {
-        const BYTE* src1 = pBody!=NULL ? pBody : pBorder;
-        while(h--)
-        {
-            int j=0;
-            for( ; j<w; j++ )
-            {
-                dst[j] = (src1[j] * pAlphaMask[j] * color_alpha)>>12;
-            }
-            src1 += mOverlayPitch;
-            pAlphaMask += pitch;
-            dst += mOverlayPitch;
-        }
+        FillAlphaMashBodyMasked_c(dst, pBody!=NULL ? pBody : pBorder, color_alpha, w, h, mOverlayPitch,
+            pAlphaMask, pitch);
     }
     else if( pAlphaMask!=NULL && pBody!=NULL && pBorder!=NULL )
     {
-        while(h--)
-        {
-            int j=0;
-            for( ; j<w; j++ )
-            {
-                int temp = pBorder[j]-pBody[j];
-                temp = temp<0 ? 0 : temp;
-                dst[j] = (temp * pAlphaMask[j] * color_alpha)>>12;
-            }
-            pBody += mOverlayPitch;
-            pBorder += mOverlayPitch;
-            pAlphaMask += pitch;
-            dst += mOverlayPitch;
-        }
+        FillAlphaMashBorderMasked_c(dst, pBorder, pBody,  color_alpha, w, h, mOverlayPitch,
+            pAlphaMask, pitch);
     }
     else
     {
@@ -2508,6 +2490,7 @@ void FillAlphaMashBody_c(BYTE* dst, const BYTE* src, int color_alpha, int w, int
         dst += pitch;
     }
 }
+
 void FillAlphaMashBorder_c(BYTE* dst, const BYTE* border, const BYTE* body, int color_alpha, int w, int h, int pitch)
 {
     while(h--)
@@ -2521,6 +2504,54 @@ void FillAlphaMashBorder_c(BYTE* dst, const BYTE* border, const BYTE* body, int 
         }
         body   += pitch;
         border += pitch;
+        dst    += pitch;
+    }
+}
+
+void FillAlphaMashBodyMasked_c(       BYTE* dst        , 
+                                const BYTE* src        , 
+                                int         color_alpha, 
+                                int         w          , 
+                                int         h          , 
+                                int         pitch      , 
+                                const BYTE* am         , 
+                                int         am_pitch)
+{
+    while(h--)
+    {
+        int j=0;
+        for( ; j<w; j++ )
+        {
+            dst[j] = (src[j] * am[j] * color_alpha)>>12;
+        }
+        src += pitch;
+        am  += am_pitch;
+        dst += pitch;
+    }
+}
+
+void FillAlphaMashBorderMasked_c(       BYTE* dst        , 
+                                  const BYTE* border     , 
+                                  const BYTE* body       ,
+                                  int         color_alpha, 
+                                  int         w          , 
+                                  int         h          , 
+                                  int         pitch      , 
+                                  const BYTE* am         , 
+                                  int         am_pitch)
+{
+    while(h--)
+    {
+        int j=0;
+        for( ; j<w; j++ )
+        {
+            int temp = border[j]-body[j];
+            temp = temp<0 ? 0 : temp;
+            dst[j] = (temp * am[j] * color_alpha)>>12;
+        }
+        body   += pitch;
+        border += pitch;
+        am     += am_pitch;
         dst    += pitch;
     }
 }
