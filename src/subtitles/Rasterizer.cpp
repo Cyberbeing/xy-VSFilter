@@ -2143,17 +2143,6 @@ void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const b
         pBorder = pBorder!=NULL ? pBorder + y*mOverlayPitch + x: NULL;
         byte* dst = outputAlphaMask + y*mOverlayPitch + x;
 
-        const int x0 = ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) < w ?
-            ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) : w; //IMPORTANT! Should not exceed w.
-        const int x00 = ((reinterpret_cast<int>(dst)+15)&~15) - reinterpret_cast<int>(dst) < w ?
-            ((reinterpret_cast<int>(dst)+15)&~15) - reinterpret_cast<int>(dst) : w;//IMPORTANT! Should not exceed w.
-        const int x_end00  = ((reinterpret_cast<int>(dst)+w)&~15) - reinterpret_cast<int>(dst);
-        const int x_end0 = ((reinterpret_cast<int>(dst)+w)&~3) - reinterpret_cast<int>(dst);
-        const int x_end = w;
-
-        __m64 color_alpha_64 = _mm_set1_pi16(color_alpha);
-        __m128i color_alpha_128 = _mm_set1_epi16(color_alpha);
-
         if(pAlphaMask==NULL && pBody!=NULL && pBorder!=NULL)
         {
             FillAlphaMashBorder_sse2(dst, pBorder, pBody, color_alpha, w, h, mOverlayPitch);
@@ -2179,14 +2168,13 @@ void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const b
             ASSERT(0);
             while(h--)
             {
-                for(int j=0;j<x_end;j++)
+                for(int j=0;j<w;j++)
                 {
                     dst[j] = 0;
                 }
                 dst += mOverlayPitch;
             }
         }
-        _mm_empty();
     }
     else
     {
