@@ -25,6 +25,9 @@
 
 #define ENABLE_XY_LOG_TRACE_GRAPH 0
 
+//it may be REALLY VERBOSE for animate script
+#define ENABLE_XY_LOG_TRACE_DRAW 0
+
 //#define CONSUMRE_MERIT 0x00080000
 
 //#define SUBTITLE_FRAME_DUMP_FILE "C:/sub_"

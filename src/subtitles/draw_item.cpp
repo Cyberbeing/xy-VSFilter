@@ -8,6 +8,12 @@
 #include "../SubPic/ISubPic.h"
 #include "xy_bitmap.h"
 
+#if ENABLE_XY_LOG_TRACE_DRAW
+#  define TRACE_DRAW(msg) XY_LOG_TRACE(msg)
+#else
+#  define TRACE_DRAW(msg)
+#endif
+
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////
@@ -472,6 +478,7 @@ void GroupedDrawItems::Draw( SharedPtrXyBitmap *bitmap, int *bitmap_identity_num
         }
         else
         {
+            TRACE_DRAW("AdditionDraw");
             XyBitmap::FlipAlphaValue(tmp->bits, tmp->w, tmp->h, tmp->pitch);
             while(pos)
             {
