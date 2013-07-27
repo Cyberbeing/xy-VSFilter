@@ -2147,6 +2147,60 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
 
 ///////////////////////////////////////////////////////////////
 
+typedef void (*MixLineFunc)(BYTE* dst, const BYTE* alpha, int w, DWORD color);
+
+typedef void (*DoAdditionDrawFunc)(BYTE* dst, const BYTE* src, DWORD color, int w, int h, int src_pitch, int dst_pitch);
+typedef void (*DoAdditionDrawMultiColorFunc)(      BYTE  *dst, 
+                                             const BYTE  *src, 
+                                             const DWORD *switchpts, 
+                                             int          w, 
+                                             int          h,
+                                             int          src_pitch,
+                                             int          dst_pitch);
+
+template<MixLineFunc mix_line_func>
+void DoAdditionDraw(BYTE* dst, const BYTE* src, DWORD color, int w, int h, int src_pitch, int dst_pitch)
+{
+    while(h--)
+    {
+        mix_line_func( dst, src, w, color );
+        src += src_pitch;
+        dst += dst_pitch;
+    }
+}
+
+template<MixLineFunc mix_line_func>
+void DoAdditionDrawMultiColor(      BYTE  *dst, 
+                              const BYTE  *src, 
+                              const DWORD *switchpts, 
+                              int          w, 
+                              int          h,
+                              int          src_pitch,
+                              int          dst_pitch)
+{
+    ASSERT(w>=0);
+    while(h--)
+    {
+        const DWORD *sw = switchpts;
+        DWORD *dst1 = (DWORD *)dst;
+        const BYTE *src1 = src;
+        DWORD last_x = switchpts[0];
+        while(last_x<(DWORD)w)
+        {
+            DWORD new_x = sw[3] < (DWORD)w ? sw[3] : (DWORD)w;
+            DWORD color = sw[0];
+            sw += 2;
+            if( new_x < last_x )
+                continue;
+            mix_line_func((BYTE*)dst1, src1, new_x-last_x, color);
+            dst1 += new_x - last_x;
+            src1 += new_x - last_x;
+        }
+        dst += dst_pitch;
+        src += src_pitch;
+    }
+}
+
 // 
 // draw overlay[clipRect] to bitmap[0,0,w,h] using addition instead of alphablend, i.e. bitmap += overlay
 // 
@@ -2191,17 +2245,17 @@ void Rasterizer::AdditionDraw(XyBitmap         *bitmap   ,
         ASSERT(0);
     }
 
+    const DoAdditionDrawFunc do_draw_single_color[] = {
+        DoAdditionDraw<packed_pix_add_c   >
+    };
+    const DoAdditionDrawMultiColorFunc do_draw_multi_color[] = {
+        DoAdditionDrawMultiColor<packed_pix_add_c   >
+    };
+
     // CPUID from VDub
     bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
     bool fSingleColor = (switchpts[1]==0xffffffff);
     bool PLANAR = (bitmap->type==XyBitmap::PLANNA);
-    int draw_method = 0;
-    if(fSingleColor)
-        draw_method |= DM::SINGLE_COLOR;
-    if(fSSE2)
-        draw_method |= DM::SSE2;
-    if(PLANAR)
-        draw_method |= DM::AYUV_PLANAR;
 
     // draw
     // Grab the first colour
@@ -2213,7 +2267,7 @@ void Rasterizer::AdditionDraw(XyBitmap         *bitmap   ,
         dst_offset = bitmap->pitch*(y-bitmap->y) +  x - bitmap->x;
     else
         dst_offset = bitmap->pitch*(y-bitmap->y) + (x - bitmap->x)*4;
-    unsigned long* dst = (unsigned long*)((BYTE*)bitmap->plans[0] + dst_offset);
+    BYTE* dst = (BYTE*)bitmap->plans[0] + dst_offset;
 
     if (PLANAR)
     {
@@ -2223,36 +2277,25 @@ void Rasterizer::AdditionDraw(XyBitmap         *bitmap   ,
     }
     if (fSingleColor)
     {
-        while(h--)
-        {
-            packed_pix_add_c((BYTE*)dst, s, w, color );
-            s += overlayPitch;
-            dst = (unsigned long *)((char *)dst + bitmap->pitch);
-        }
+        do_draw_single_color[0](dst, s, color, w, h, overlayPitch, bitmap->pitch);
     }
     else
     {
-        while(h--)
+        const int MAX_COLOR_NUM = 4;
+        DWORD new_switchpts[MAX_COLOR_NUM*2];
+        new_switchpts[0] = switchpts[0];
+        new_switchpts[1] = 0;
+        for (int i=1;i<MAX_COLOR_NUM;i++)
         {
-            const DWORD *sw = switchpts;
-            DWORD *dst1 = dst;
-            const BYTE *src1 = s;
-            int last_x = xo;
-            color = sw[0];
-            while(last_x<w+xo)
+            new_switchpts[2*i] = switchpts[2*i];
+            new_switchpts[2*i+1] = switchpts[2*i+1] > xo ? switchpts[2*i+1] - xo : 0;
+            if (new_switchpts[2*i+1]>= w)
             {
-                int new_x = sw[3] < w+xo ? sw[3] : w+xo;
-                color = sw[0];
-                sw += 2;
-                if( new_x < last_x )
-                    continue;
-                packed_pix_add_c((BYTE*)dst1, src1, new_x-last_x, color);
-                dst1 += new_x - last_x;
-                src1 += new_x - last_x;
+                new_switchpts[2*i+1] = w;
+                break;
             }
-            dst = (DWORD *)((char *)dst + bitmap->pitch);
-            s += overlayPitch;
         }
+        do_draw_multi_color[0](dst, s, new_switchpts, w, h, overlayPitch, bitmap->pitch);
     }
     return;
 }
