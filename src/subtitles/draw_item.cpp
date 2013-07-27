@@ -111,8 +111,7 @@ const SharedPtrDrawItemHashKey& DrawItem::GetHashKey()
 
 bool DrawItem::CheckOverlap( const DrawItem& a, const DrawItem& b )
 {
-    return a.switchpts[1]!=0xffffffff || b.switchpts[1]!=0xffffffff ||
-        a.fBody==true || b.fBorder==true || 
+    return a.fBody==true || b.fBorder==true || 
         OverlayPaintMachine::CheckOverlap(*a.overlay_paint_machine, *b.overlay_paint_machine);
 }
 

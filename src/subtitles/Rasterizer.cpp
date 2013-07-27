@@ -2215,17 +2215,44 @@ void Rasterizer::AdditionDraw(XyBitmap         *bitmap   ,
         dst_offset = bitmap->pitch*(y-bitmap->y) + (x - bitmap->x)*4;
     unsigned long* dst = (unsigned long*)((BYTE*)bitmap->plans[0] + dst_offset);
 
-    if (PLANAR || !fSingleColor)
+    if (PLANAR)
     {
         ASSERT(0);
         XY_LOG_FATAL("Not Supported yet");
         return;
     }
-    while(h--)
+    if (fSingleColor)
     {
-        packed_pix_add_c((BYTE*)dst, s, w, color );
-        s += overlayPitch;
-        dst = (unsigned long *)((char *)dst + bitmap->pitch);
+        while(h--)
+        {
+            packed_pix_add_c((BYTE*)dst, s, w, color );
+            s += overlayPitch;
+            dst = (unsigned long *)((char *)dst + bitmap->pitch);
+        }
+    }
+    else
+    {
+        while(h--)
+        {
+            const DWORD *sw = switchpts;
+            DWORD *dst1 = dst;
+            const BYTE *src1 = s;
+            int last_x = xo;
+            color = sw[0];
+            while(last_x<w+xo)
+            {
+                int new_x = sw[3] < w+xo ? sw[3] : w+xo;
+                color = sw[0];
+                sw += 2;
+                if( new_x < last_x )
+                    continue;
+                packed_pix_add_c((BYTE*)dst1, src1, new_x-last_x, color);
+                dst1 += new_x - last_x;
+                src1 += new_x - last_x;
+            }
+            dst = (DWORD *)((char *)dst + bitmap->pitch);
+            s += overlayPitch;
+        }
     }
     return;
 }
