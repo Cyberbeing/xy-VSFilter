@@ -1504,6 +1504,81 @@ static __forceinline void packed_pix_add_c(BYTE* dst, const BYTE* alpha, int w, 
     }
 }
 
+static __forceinline __m128i packed_pix_add_sse2(const __m128i& dst_argbargbargbargb, 
+    const __m128i& _r_b_r_b_r_b_r_b, const __m128i& _a_g_a_g_a_g_a_g, const __m128i& _a_a_a_a_a_a_a_a)
+{
+    __m128i _r_b, a_g_;
+
+    _r_b = _mm_mullo_epi16(_r_b_r_b_r_b_r_b, _a_a_a_a_a_a_a_a);
+    a_g_ = _mm_mullo_epi16(_a_g_a_g_a_g_a_g, _a_a_a_a_a_a_a_a);
+    _r_b = _mm_srli_epi16(_r_b, 8);
+    a_g_ = _mm_srli_epi16(a_g_, 8);
+    a_g_ = _mm_slli_epi16(a_g_, 8);
+    a_g_ = _mm_or_si128  (a_g_, _r_b);
+    return _mm_adds_epu8(dst_argbargbargbargb, a_g_);
+}
+
+static __forceinline void packed_pix_add_sse2(BYTE* dst, const BYTE* alpha, int w, DWORD color)
+{
+    DWORD _r_b =   (color & 0xFF00FF);
+    DWORD _f_g = (((color & 0x00FF00)>>8)|0xFF0000);
+
+    __m128i _r_b_r_b_r_b_r_b = _mm_set1_epi32( _r_b );
+    __m128i _F_g_F_g_F_g_F_g = _mm_set1_epi32( _f_g );
+
+    __m128i zero = _mm_setzero_si128();
+
+    __m128i ones = _mm_set1_epi16(0x1);
+
+    const BYTE *alpha_end0 = alpha + (w&~15);
+    const BYTE *alpha_end = alpha + w;
+    for ( ; alpha<alpha_end0; alpha+=16, dst+=16*4 )
+    {
+        __m128i a  = _mm_loadu_si128(reinterpret_cast<const __m128i*>(alpha));
+        __m128i d1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst));
+        __m128i d2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst+16));
+        __m128i d3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst+32));
+        __m128i d4 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(dst+48));
+
+        __m128i a1, a2, a3, a4;
+        a1 = _mm_unpacklo_epi8(a , zero);
+        a1 = _mm_adds_epu16   (a1, ones);
+        a2 = _mm_unpackhi_epi16(a1, a1);
+        a1 = _mm_unpacklo_epi16(a1, a1);
+
+        a3 = _mm_unpackhi_epi8(a , zero);
+        a3 = _mm_adds_epu16   (a3, ones);
+        a4 = _mm_unpackhi_epi16(a3, a3);
+        a3 = _mm_unpacklo_epi16(a3, a3);
+
+        // FF * (a+1) >> 8 = a
+        // d? += (a, r*(a+1)>>8, g*(a+1)>>8, b*(a+1)>>8)
+        d1 = packed_pix_add_sse2(d1, _r_b_r_b_r_b_r_b, _F_g_F_g_F_g_F_g, a1);
+        d2 = packed_pix_add_sse2(d2, _r_b_r_b_r_b_r_b, _F_g_F_g_F_g_F_g, a2);
+        d3 = packed_pix_add_sse2(d3, _r_b_r_b_r_b_r_b, _F_g_F_g_F_g_F_g, a3);
+        d4 = packed_pix_add_sse2(d4, _r_b_r_b_r_b_r_b, _F_g_F_g_F_g_F_g, a4);
+
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst)   , d1);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst+16), d2);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst+32), d3);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(dst+48), d4);
+    }
+    DWORD * dst_w = reinterpret_cast<DWORD*>(dst);
+    for ( ; alpha<alpha_end; alpha++, dst_w++ )
+    {
+        int a = *alpha + 1;
+        DWORD r_b = ((_r_b * a)&0xff00ff00)>>8;
+        DWORD f_g = ((_f_g * a)&0xff00ff00)>>8;// FF * (*alpha+1) >> 8 = alpha
+        r_b +=  (*dst_w & 0x00ff00ff);
+        f_g += ((*dst_w & 0xff00ff00)>>8);
+        r_b = r_b ^ ((r_b ^ 0xff00ff) & (((r_b&0xff00ff00)>>8)*0x0FFF));//r < 0xff ? r : 0xff;
+        f_g = f_g ^ ((f_g ^ 0xff00ff) & (((f_g&0xff00ff00)>>8)*0x0FFF));
+        f_g <<= 8;
+        *dst_w = (r_b | f_g);
+    }
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 
 
@@ -2246,7 +2321,8 @@ void Rasterizer::AdditionDraw(XyBitmap         *bitmap   ,
     }
 
     const DoAdditionDrawFunc do_draw_single_color[] = {
-        DoAdditionDraw<packed_pix_add_c   >
+        DoAdditionDraw<packed_pix_add_c   >,
+        DoAdditionDraw<packed_pix_add_sse2>
     };
     const DoAdditionDrawMultiColorFunc do_draw_multi_color[] = {
         DoAdditionDrawMultiColor<packed_pix_add_c   >
@@ -2277,7 +2353,7 @@ void Rasterizer::AdditionDraw(XyBitmap         *bitmap   ,
     }
     if (fSingleColor)
     {
-        do_draw_single_color[0](dst, s, color, w, h, overlayPitch, bitmap->pitch);
+        do_draw_single_color[fSSE2](dst, s, color, w, h, overlayPitch, bitmap->pitch);
     }
     else
     {
