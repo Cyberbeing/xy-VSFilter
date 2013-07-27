@@ -2117,6 +2117,9 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
 
 // Overlay
 
+void FillAlphaMashBody_c(BYTE* dst, const BYTE* src, int color_alpha, int w, int h, int pitch);
+
+
 void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const byte* pBorder, int x, int y, int w, int h, 
     const byte* pAlphaMask, int pitch, DWORD color_alpha )
 {
@@ -2456,18 +2459,7 @@ void Overlay::_DoFillAlphaMash_c(byte* outputAlphaMask, const byte* pBody, const
     }
     else if( ((pBody==NULL) + (pBorder==NULL))==1 && pAlphaMask==NULL)
     {
-        const BYTE* src1 = pBody!=NULL ? pBody : pBorder;
-        while(h--)
-        {
-            int j=0;
-            for( ; j<w; j++ )
-            {
-                dst[j] = (src1[j] * color_alpha)>>6;
-            }
-            src1 += mOverlayPitch;
-            //pAlphaMask += pitch;
-            dst += mOverlayPitch;
-        }
+        FillAlphaMashBody_c(dst, pBody!=NULL?pBody:pBorder, color_alpha, w, h, mOverlayPitch);
     }
     else if( ((pBody==NULL) + (pBorder==NULL))==1 && pAlphaMask!=NULL)
     {
@@ -2513,6 +2505,20 @@ void Overlay::_DoFillAlphaMash_c(byte* outputAlphaMask, const byte* pBody, const
             }
             dst += mOverlayPitch;
         }
+    }
+}
+
+void FillAlphaMashBody_c(BYTE* dst, const BYTE* src, int color_alpha, int w, int h, int pitch)
+{
+    while(h--)
+    {
+        int j=0;
+        for( ; j<w; j++ )
+        {
+            dst[j] = (src[j] * color_alpha)>>6;
+        }
+        src += pitch;
+        dst += pitch;
     }
 }
 
