@@ -2133,100 +2133,6 @@ void FillAlphaMashBorderMasked_c   (BYTE* dst, const BYTE* border, const BYTE* b
 void FillAlphaMashBorderMasked_sse2(BYTE* dst, const BYTE* border, const BYTE* body, int color_alpha, int w, int h, int pitch,
     const BYTE* am, int am_pitch);
 
-void Overlay::_DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const byte* pBorder, int x, int y, int w, int h, 
-    const byte* pAlphaMask, int pitch, DWORD color_alpha )
-{
-#ifndef _WIN64
-    if (g_cpuid.m_flags & CCpuID::sse2)
-    {
-        pBody = pBody!=NULL ? pBody + y*mOverlayPitch + x: NULL;
-        pBorder = pBorder!=NULL ? pBorder + y*mOverlayPitch + x: NULL;
-        byte* dst = outputAlphaMask + y*mOverlayPitch + x;
-
-        if(pAlphaMask==NULL && pBody!=NULL && pBorder!=NULL)
-        {
-            FillAlphaMashBorder_sse2(dst, pBorder, pBody, color_alpha, w, h, mOverlayPitch);
-        }
-        else if( ((pBody==NULL) + (pBorder==NULL))==1 && pAlphaMask==NULL)
-        {
-            FillAlphaMashBody_sse2(dst, pBody!=NULL?pBody:pBorder, color_alpha, w, h, mOverlayPitch);
-        }
-        else if( ((pBody==NULL) + (pBorder==NULL))==1 && pAlphaMask!=NULL)
-        {
-            FillAlphaMashBodyMasked_sse2(dst, pBody!=NULL ? pBody : pBorder, color_alpha, w, h, mOverlayPitch,
-                pAlphaMask, pitch);
-
-        }
-        else if( pAlphaMask!=NULL && pBody!=NULL && pBorder!=NULL )
-        {
-            FillAlphaMashBorderMasked_sse2(dst, pBorder, pBody,  color_alpha, w, h, mOverlayPitch,
-                pAlphaMask, pitch);
-        }
-        else
-        {
-            //should NOT happen!
-            ASSERT(0);
-            while(h--)
-            {
-                for(int j=0;j<w;j++)
-                {
-                    dst[j] = 0;
-                }
-                dst += mOverlayPitch;
-            }
-        }
-    }
-    else
-    {
-        _DoFillAlphaMash_c(outputAlphaMask, pBody, pBorder, x, y, w, h, pAlphaMask, pitch, color_alpha);
-        return;
-    }
-#else
-    _DoFillAlphaMash_c(outputAlphaMask, pBody, pBorder, x, y, w, h, pAlphaMask, pitch, color_alpha);
-    return;
-#endif
-}
-
-void Overlay::_DoFillAlphaMash_c(byte* outputAlphaMask, const byte* pBody, const byte* pBorder, int x, int y, int w, int h, 
-    const byte* pAlphaMask, int pitch, DWORD color_alpha )
-{
-    pBody = pBody!=NULL ? pBody + y*mOverlayPitch + x: NULL;
-    pBorder = pBorder!=NULL ? pBorder + y*mOverlayPitch + x: NULL;
-    byte* dst = outputAlphaMask + y*mOverlayPitch + x;
-
-    if(pAlphaMask==NULL && pBody!=NULL && pBorder!=NULL)
-    {
-        FillAlphaMashBorder_c(dst, pBorder, pBody, color_alpha, w, h, mOverlayPitch);
-    }
-    else if( ((pBody==NULL) + (pBorder==NULL))==1 && pAlphaMask==NULL)
-    {
-        FillAlphaMashBody_c(dst, pBody!=NULL?pBody:pBorder, color_alpha, w, h, mOverlayPitch);
-    }
-    else if( ((pBody==NULL) + (pBorder==NULL))==1 && pAlphaMask!=NULL)
-    {
-        FillAlphaMashBodyMasked_c(dst, pBody!=NULL ? pBody : pBorder, color_alpha, w, h, mOverlayPitch,
-            pAlphaMask, pitch);
-    }
-    else if( pAlphaMask!=NULL && pBody!=NULL && pBorder!=NULL )
-    {
-        FillAlphaMashBorderMasked_c(dst, pBorder, pBody,  color_alpha, w, h, mOverlayPitch,
-            pAlphaMask, pitch);
-    }
-    else
-    {
-        //should NOT happen!
-        ASSERT(0);
-        while(h--)
-        {
-            for(int j=0;j<w;j++)
-            {
-                dst[j] = 0;
-            }
-            dst += mOverlayPitch;
-        }
-    }
-}
-
 void FillAlphaMashBody_c(BYTE* dst, const BYTE* src, int color_alpha, int w, int h, int pitch)
 {
     while(h--)
@@ -2243,6 +2149,7 @@ void FillAlphaMashBody_c(BYTE* dst, const BYTE* src, int color_alpha, int w, int
 
 void FillAlphaMashBody_sse2(BYTE* dst, const BYTE* src, int color_alpha, int w, int h, int pitch)
 {
+#ifndef _WIN64
     const int x0 = ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) < w ?
                    ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) : w; //IMPORTANT! Should not exceed w.
     const int x00 = ((reinterpret_cast<int>(dst)+15)&~15) - reinterpret_cast<int>(dst) < w ?
@@ -2301,6 +2208,9 @@ void FillAlphaMashBody_sse2(BYTE* dst, const BYTE* src, int color_alpha, int w, 
         dst += pitch;
     }
     _mm_empty();
+#else
+    FillAlphaMashBody_c(dst, src, color_alpha, w, h, pitch);
+#endif
 }
 
 void FillAlphaMashBorder_c(BYTE* dst, const BYTE* border, const BYTE* body, int color_alpha, int w, int h, int pitch)
@@ -2322,6 +2232,7 @@ void FillAlphaMashBorder_c(BYTE* dst, const BYTE* border, const BYTE* body, int 
 
 void FillAlphaMashBorder_sse2( BYTE* dst, const BYTE* border, const BYTE* body, int color_alpha, int w, int h, int pitch )
 {
+#ifndef _WIN64
     const int x0 = ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) < w ?
                    ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) : w; //IMPORTANT! Should not exceed w.
     const int x00 = ((reinterpret_cast<int>(dst)+15)&~15) - reinterpret_cast<int>(dst) < w ?
@@ -2391,6 +2302,9 @@ void FillAlphaMashBorder_sse2( BYTE* dst, const BYTE* border, const BYTE* body, 
         dst    += pitch;
     }
     _mm_empty();
+#else
+    FillAlphaMashBorder_c(dst, border, body, color_alpha, w, h, pitch);
+#endif
 }
 
 void FillAlphaMashBodyMasked_c(       BYTE* dst        , 
@@ -2424,6 +2338,7 @@ void FillAlphaMashBodyMasked_sse2(       BYTE* dst        ,
                                    const BYTE* am         , 
                                    int         am_pitch)
 {
+#ifndef _WIN64
     const int x0 = ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) < w ?
                    ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) : w; //IMPORTANT! Should not exceed w.
     const int x00 = ((reinterpret_cast<int>(dst)+15)&~15) - reinterpret_cast<int>(dst) < w ?
@@ -2495,6 +2410,9 @@ void FillAlphaMashBodyMasked_sse2(       BYTE* dst        ,
         dst += pitch;
     }
     _mm_empty();
+#else
+    FillAlphaMashBodyMasked_c(dst, src, color_alpha, w, h, pitch, am, am_pitch);
+#endif
 }
 
 void FillAlphaMashBorderMasked_c(       BYTE* dst        , 
@@ -2533,6 +2451,7 @@ void FillAlphaMashBorderMasked_sse2(       BYTE* dst        ,
                                      const BYTE* am         , 
                                      int         am_pitch)
 {
+#ifndef _WIN64
     const int x0 = ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) < w ?
                    ((reinterpret_cast<int>(dst)+3)&~3) - reinterpret_cast<int>(dst) : w; //IMPORTANT! Should not exceed w.
     const int x00 = ((reinterpret_cast<int>(dst)+15)&~15) - reinterpret_cast<int>(dst) < w ?
@@ -2616,34 +2535,84 @@ void FillAlphaMashBorderMasked_sse2(       BYTE* dst        ,
         dst    += pitch;
     }
     _mm_empty();
+#else
+    FillAlphaMashBorderMasked_c(dst, border, body, color_alpha,w,h,pitch,am,am_pitch);
+#endif
 }
 
 void Overlay::FillAlphaMash( byte* outputAlphaMask, bool fBody, bool fBorder, int x, int y, int w, int h, const byte* pAlphaMask, int pitch, DWORD color_alpha)
 {
-    if(!fBorder && fBody && pAlphaMask==NULL)
+    const BYTE * body = mBody.get();
+    const BYTE * border = mBorder.get();
+    body   = body  !=NULL ? body   + y*mOverlayPitch + x: NULL;
+    border = border!=NULL ? border + y*mOverlayPitch + x: NULL;
+    byte* dst = outputAlphaMask + y*mOverlayPitch + x;
+
+    if (g_cpuid.m_flags & CCpuID::sse2)
     {
-        _DoFillAlphaMash(outputAlphaMask, mBody.get(), NULL, x, y, w, h, pAlphaMask, pitch, color_alpha);        
-    }
-    else if(/*fBorder &&*/ fBody && pAlphaMask==NULL)
-    {
-        _DoFillAlphaMash(outputAlphaMask, NULL, mBorder.get(), x, y, w, h, pAlphaMask, pitch, color_alpha);        
-    }
-    else if(!fBody && fBorder /* pAlphaMask==NULL or not*/)
-    {
-        _DoFillAlphaMash(outputAlphaMask, mBody.get(), mBorder.get(), x, y, w, h, pAlphaMask, pitch, color_alpha);        
-    }
-    else if(!fBorder && fBody && pAlphaMask!=NULL)
-    {
-        _DoFillAlphaMash(outputAlphaMask, mBody.get(), NULL, x, y, w, h, pAlphaMask, pitch, color_alpha);        
-    }
-    else if(fBorder && fBody && pAlphaMask!=NULL)
-    {
-        _DoFillAlphaMash(outputAlphaMask, NULL, mBorder.get(), x, y, w, h, pAlphaMask, pitch, color_alpha);        
+        if(!fBorder && fBody && pAlphaMask==NULL)
+        {
+            FillAlphaMashBody_sse2(dst, body, color_alpha, w, h, mOverlayPitch);
+        }
+        else if(fBorder && fBody && pAlphaMask==NULL)
+        {
+            FillAlphaMashBody_sse2(dst, border, color_alpha, w, h, mOverlayPitch);
+        }
+        else if(fBorder && !fBody && pAlphaMask==NULL)
+        {
+            FillAlphaMashBorder_sse2(dst, border, body, color_alpha, w, h, mOverlayPitch);
+        }
+        else if(!fBorder && fBody && pAlphaMask!=NULL)
+        {
+            FillAlphaMashBodyMasked_sse2(dst, body, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
+        }
+        else if(fBorder && fBody && pAlphaMask!=NULL)
+        {
+            FillAlphaMashBodyMasked_sse2(dst, border, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
+        }
+        else if(fBorder && !fBody && pAlphaMask!=NULL)
+        {
+            FillAlphaMashBorderMasked_sse2(dst, border, body, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
+        }
+        else
+        {
+            //should NOT happen
+            ASSERT(0);
+            XY_LOG_FATAL("Unexpected!");
+        }
     }
     else
     {
-        //should NOT happen
-        ASSERT(0);
+        if(!fBorder && fBody && pAlphaMask==NULL)
+        {
+            FillAlphaMashBody_c(dst, body, color_alpha, w, h, mOverlayPitch);
+        }
+        else if(fBorder && fBody && pAlphaMask==NULL)
+        {
+            FillAlphaMashBody_c(dst, border, color_alpha, w, h, mOverlayPitch);
+        }
+        else if(fBorder && !fBody && pAlphaMask==NULL)
+        {
+            FillAlphaMashBorder_c(dst, border, body, color_alpha, w, h, mOverlayPitch);
+        }
+        else if(!fBorder && fBody && pAlphaMask!=NULL)
+        {
+            FillAlphaMashBodyMasked_c(dst, body, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
+        }
+        else if(fBorder && fBody && pAlphaMask!=NULL)
+        {
+            FillAlphaMashBodyMasked_c(dst, border, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
+        }
+        else if(fBorder && !fBody && pAlphaMask!=NULL)
+        {
+            FillAlphaMashBorderMasked_c(dst, border, body, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
+        }
+        else
+        {
+            //should NOT happen
+            ASSERT(0);
+            XY_LOG_FATAL("Unexpected!");
+        }
     }
 }
 

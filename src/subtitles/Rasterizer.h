@@ -178,11 +178,6 @@ public:
     int mOverlayWidth, mOverlayHeight, mOverlayPitch;
 
     bool mfWideOutlineEmpty;//specially for blur
-private:
-    void _DoFillAlphaMash(byte* outputAlphaMask, const byte* pBody, const byte* pBorder,
-        int x, int y, int w, int h,
-        const byte* pAlphaMask, int pitch, DWORD color_alpha);
-    void _DoFillAlphaMash_c(byte* outputAlphaMask, const byte* pBody, const byte* pBorder, int x, int y, int w, int h, const byte* pAlphaMask, int pitch, DWORD color_alpha );
 };
 
 typedef ::boost::shared_ptr<Overlay> SharedPtrOverlay;
