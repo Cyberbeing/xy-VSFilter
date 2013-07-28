@@ -1588,12 +1588,29 @@ static __forceinline void packed_pix_add_sse2(BYTE* dst, const BYTE* alpha, int 
 
 ///////////////////////////////////////////////////////////////////////////
 
+void AlphaBlt8bppC(byte* pY,
+    const byte* pAlphaMask, 
+    const byte Y, 
+    int h, int w, int src_stride, int dst_stride)
+{
+    for( ; h>0; h--, pAlphaMask += src_stride, pY += dst_stride )
+    {
+        const BYTE* sa = pAlphaMask;
+        BYTE* dy = pY;
+        const BYTE* dy_end = pY + w;
+
+        for(;dy < dy_end; sa++, dy++)
+        {
+            *dy = (*dy * (256 - *sa)+ Y*(*sa+1))>>8;
+        }
+    }
+}
 
 /***
  * No aligned requirement
  * 
  **/
-void AlphaBlt(byte* pY,
+void AlphaBlt8bpp(byte* pY,
     const byte* pAlphaMask, 
     const byte Y, 
     int h, int w, int src_stride, int dst_stride)
@@ -1668,26 +1685,35 @@ void AlphaBlt(byte* pY,
     }
     else
     {
-        for( ; h>0; h--, pAlphaMask += src_stride, pY += dst_stride )
-        {
-            const BYTE* sa = pAlphaMask;      
-            BYTE* dy = pY;
-            const BYTE* dy_end = pY + w;   
+        AlphaBlt8bppC(pY, pAlphaMask, Y, h, w, src_stride, dst_stride);
+    }
+}
 
-            for(;dy < dy_end; sa++, dy++)
-            {
-                *dy = (*dy * (256 - *sa)+ Y*(*sa+1))>>8;
-            }
+void AlphaBlt8bppC(byte* pY,
+    const byte alpha, 
+    const byte Y, 
+    int h, int w, int dst_stride)
+{   
+    int yPremul = Y*(alpha+1);
+    int dstAlpha = 0x100 - alpha;
+
+    for( ; h>0; h--, pY += dst_stride )
+    {
+        BYTE* dy = pY;
+        const BYTE* dy_end = pY + w;
+
+        for(;dy < dy_end; dy++)
+        {
+            *dy = (*dy * dstAlpha + yPremul)>>8;
         }
     }
-    //__asm emms;
 }
 
 /***
  * No aligned requirement
  * 
  **/
-void AlphaBlt(byte* pY,
+void AlphaBlt8bpp(byte* pY,
     const byte alpha, 
     const byte Y, 
     int h, int w, int dst_stride)
@@ -1737,43 +1763,11 @@ void AlphaBlt(byte* pY,
     }
     else
     {
-        for( ; h>0; h--, pY += dst_stride )
-        {   
-            BYTE* dy = pY;
-            const BYTE* dy_end = pY + w;
-
-            for(;dy < dy_end; dy++)
-            {
-                *dy = (*dy * dstAlpha + yPremul)>>8;
-            }
-        }
-    }
-    //__asm emms;
-}
-
-/***
- * No aligned requirement
- * 
- **/
-void AlphaBltC(byte* pY,
-    const byte alpha, 
-    const byte Y, 
-    int h, int w, int dst_stride)
-{   
-    int yPremul = Y*(alpha+1);
-    int dstAlpha = 0x100 - alpha;
-
-    for( ; h>0; h--, pY += dst_stride )
-    {
-        BYTE* dy = pY;
-        const BYTE* dy_end = pY + w;
-
-        for(;dy < dy_end; dy++)
-        {
-            *dy = (*dy * dstAlpha + yPremul)>>8;
-        }
+        AlphaBlt8bppC(pY, alpha, Y, h, w, dst_stride);
     }
 }
+
+///////////////////////////////////////////////////////////////////////////
 
 // For CPUID usage in Rasterizer::Draw
 #include "../dsutil/vd.h"
@@ -2062,10 +2056,33 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
         unsigned char* dst_U = bitmap->plans[2] + dst_offset;
         unsigned char* dst_V = bitmap->plans[3] + dst_offset;
 
-        AlphaBlt(dst_Y, s, ((color)>>16)&0xff, h, w, overlayPitch, bitmap->pitch);
-        AlphaBlt(dst_U, s, ((color)>>8)&0xff, h, w, overlayPitch, bitmap->pitch);
-        AlphaBlt(dst_V, s, ((color))&0xff, h, w, overlayPitch, bitmap->pitch);
-        AlphaBlt(dst_A, s, 0, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt8bpp(dst_Y, s, ((color)>>16)&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt8bpp(dst_U, s, ((color)>>8 )&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt8bpp(dst_V, s, ((color)    )&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt8bpp(dst_A, s,                  0, h, w, overlayPitch, bitmap->pitch);
+    }
+    break;
+    case   DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::AYUV_PLANAR :
+    {
+        //        char * debug_dst=(char*)dst;int h2 = h;
+        //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", (char*)&color, sizeof(color)) );
+        //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
+        //        debug_dst += spd.pitch*spd.h;
+        //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
+        //        debug_dst += spd.pitch*spd.h;
+        //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
+        //        debug_dst += spd.pitch*spd.h;
+        //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
+        //        debug_dst=(char*)dst;
+
+        unsigned char* dst_A = bitmap->plans[0] + dst_offset;
+        unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
+        unsigned char* dst_U = bitmap->plans[2] + dst_offset;
+        unsigned char* dst_V = bitmap->plans[3] + dst_offset;
+        AlphaBlt8bppC(dst_Y, s, ((color)>>16)&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt8bppC(dst_U, s, ((color)>>8 )&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt8bppC(dst_V, s, ((color)    )&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt8bppC(dst_A, s,                  0, h, w, overlayPitch, bitmap->pitch);
     }
     break;
     case 0*DM::SINGLE_COLOR |   DM::SSE2 |   DM::AYUV_PLANAR :
@@ -2085,10 +2102,10 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
             sw += 2;
             if( new_x < last_x )
                 continue;
-            AlphaBlt(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt(dst_U, s + last_x - xo, (color>>8)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt(dst_V, s + last_x - xo, (color)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt(dst_A, s + last_x - xo, 0, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bpp(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bpp(dst_U, s + last_x - xo, (color>>8)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bpp(dst_V, s + last_x - xo, (color)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bpp(dst_A, s + last_x - xo, 0, h, new_x-last_x, overlayPitch, bitmap->pitch);
 
             dst_A += new_x - last_x;
             dst_Y += new_x - last_x;
@@ -2096,46 +2113,6 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
             dst_V += new_x - last_x;
             last_x = new_x;
         }
-    }
-    break;
-    case   DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::AYUV_PLANAR :
-    {
-//        char * debug_dst=(char*)dst;int h2 = h;
-//        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", (char*)&color, sizeof(color)) );
-//        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
-//        debug_dst += spd.pitch*spd.h;
-//        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
-//        debug_dst += spd.pitch*spd.h;
-//        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
-//        debug_dst += spd.pitch*spd.h;
-//        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
-//        debug_dst=(char*)dst;
-
-        unsigned char* dst_A = bitmap->plans[0] + dst_offset;
-        unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
-        unsigned char* dst_U = bitmap->plans[2] + dst_offset;
-        unsigned char* dst_V = bitmap->plans[3] + dst_offset;
-        while(h--)
-        {
-            for(int wt=0; wt<w; ++wt)
-            {
-                DWORD temp = COMBINE_AYUV(dst_A[wt], dst_Y[wt], dst_U[wt], dst_V[wt]);
-                pixmix(&temp, color, s[wt]);
-                SPLIT_AYUV(temp, dst_A+wt, dst_Y+wt, dst_U+wt, dst_V+wt);
-            }
-            s += overlayPitch;
-            dst_A += bitmap->pitch;
-            dst_Y += bitmap->pitch;
-            dst_U += bitmap->pitch;
-            dst_V += bitmap->pitch;
-        }
-//        XY_DO_ONCE( xy_logger::write_file("G:\\a2_rt", debug_dst, (h2-1)*spd.pitch) );
-//        debug_dst += spd.pitch*spd.h;
-//        XY_DO_ONCE( xy_logger::write_file("G:\\a2_rt", debug_dst, (h2-1)*spd.pitch) );
-//        debug_dst += spd.pitch*spd.h;
-//        XY_DO_ONCE( xy_logger::write_file("G:\\a2_rt", debug_dst, (h2-1)*spd.pitch) );
-//        debug_dst += spd.pitch*spd.h;
-//        XY_DO_ONCE( xy_logger::write_file("G:\\a2_rt", debug_dst, (h2-1)*spd.pitch) );
     }
     break;
     case 0*DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::AYUV_PLANAR :
@@ -2204,10 +2181,10 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
         BYTE* dst_Y = dst_A + spd.pitch*spd.h;
         BYTE* dst_U = dst_Y + spd.pitch*spd.h;
         BYTE* dst_V = dst_U + spd.pitch*spd.h;
-        AlphaBlt(dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt(dst_U, argb>>24, ((argb)>>8)&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt(dst_V, argb>>24, ((argb))&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt(dst_A, argb>>24, 0, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bpp(dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bpp(dst_U, argb>>24, ((argb)>>8)&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bpp(dst_V, argb>>24, ((argb))&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bpp(dst_A, argb>>24, 0, nHeight, nWidth, spd.pitch);
     }
     break;
     case 0*DM::SSE2 |   DM::AYUV_PLANAR :
@@ -2217,10 +2194,10 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
         BYTE* dst_Y = dst_A + spd.pitch*spd.h;
         BYTE* dst_U = dst_Y + spd.pitch*spd.h;
         BYTE* dst_V = dst_U + spd.pitch*spd.h;
-        AlphaBltC(dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBltC(dst_U, argb>>24, ((argb)>>8)&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBltC(dst_V, argb>>24, ((argb))&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBltC(dst_A, argb>>24, 0, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppC(dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppC(dst_U, argb>>24, ((argb)>>8)&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppC(dst_V, argb>>24, ((argb))&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppC(dst_A, argb>>24, 0, nHeight, nWidth, spd.pitch);
     }
     break;
     }
