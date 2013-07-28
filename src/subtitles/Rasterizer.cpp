@@ -1270,7 +1270,11 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
 
 ///////////////////////////////////////////////////////////////////////////
 
-static __forceinline void pixmix(DWORD *dst, DWORD color, DWORD alpha)
+typedef              void (*PixMixFunc)(DWORD *dst, DWORD color, DWORD alpha);
+static __forceinline void   pixmix_c   (DWORD *dst, DWORD color, DWORD alpha);
+static __forceinline void   pixmix_sse2(DWORD *dst, DWORD color, DWORD alpha);
+
+static __forceinline void pixmix_c(DWORD *dst, DWORD color, DWORD alpha)
 {
     int a = alpha;
     // Make sure both a and ia are in range 1..256 for the >>8 operations below to be correct
@@ -1280,6 +1284,24 @@ static __forceinline void pixmix(DWORD *dst, DWORD color, DWORD alpha)
            | ((((*dst&0x0000ff00)*ia + (color&0x0000ff00)*a)&0x00ff0000)>>8)
            | ((((*dst>>8)&0x00ff0000)*ia)&0xff000000);
 }
+
+static __forceinline void pixmix_sse2(DWORD* dst, DWORD color, DWORD alpha)
+{
+    //    alpha = (((alpha) * (color>>24)) >> 6) & 0xff;
+    color &= 0xffffff;
+    __m128i zero = _mm_setzero_si128();
+    __m128i a = _mm_set1_epi32(((alpha+1) << 16) | (0x100 - alpha));
+    __m128i d = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*dst), zero);
+    __m128i s = _mm_unpacklo_epi8(_mm_cvtsi32_si128(color), zero);
+    __m128i r = _mm_unpacklo_epi16(d, s);
+    r = _mm_madd_epi16(r, a);
+    r = _mm_srli_epi32(r, 8);
+    r = _mm_packs_epi32(r, r);
+    r = _mm_packus_epi16(r, r);
+    *dst = (DWORD)_mm_cvtsi128_si32(r);
+}
+
+///////////////////////////////////////////////////////////////////////////
 
 static __forceinline void pixmix2(DWORD *dst, DWORD color, DWORD shapealpha, DWORD clipalpha)
 {
@@ -1298,23 +1320,7 @@ static __forceinline void packed_pix_mix_c(BYTE* dst, const BYTE* alpha, int w, 
 {
     DWORD * dst_w = (DWORD *)dst;
     for(int wt=0; wt<w; ++wt)
-        pixmix(&dst_w[wt], color, alpha[wt]);
-}
-
-static __forceinline void pixmix_sse2(DWORD* dst, DWORD color, DWORD alpha)
-{
-//    alpha = (((alpha) * (color>>24)) >> 6) & 0xff;
-    color &= 0xffffff;
-    __m128i zero = _mm_setzero_si128();
-    __m128i a = _mm_set1_epi32(((alpha+1) << 16) | (0x100 - alpha));
-    __m128i d = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*dst), zero);
-    __m128i s = _mm_unpacklo_epi8(_mm_cvtsi32_si128(color), zero);
-    __m128i r = _mm_unpacklo_epi16(d, s);
-    r = _mm_madd_epi16(r, a);
-    r = _mm_srli_epi32(r, 8);
-    r = _mm_packs_epi32(r, r);
-    r = _mm_packus_epi16(r, r);
-    *dst = (DWORD)_mm_cvtsi128_si32(r);
+        pixmix_c(&dst_w[wt], color, alpha[wt]);
 }
 
 static __forceinline __m128i packed_pix_mix_sse2(const __m128i& dst, 
@@ -1935,6 +1941,37 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(const SharedPtrOverlay& overlay, co
     return result;
 }
 
+typedef void (*DrawMultiColorPackPixFunc)(     DWORD *dst,
+                                         const BYTE  *src, 
+                                         const DWORD *switchpts, 
+                                         int          xo,
+                                         int          w, 
+                                         int          h,
+                                         int          src_pitch,
+                                         int          dst_pitch);
+template<PixMixFunc pixmix>
+void DrawMultiColorPackPix(     DWORD *dst,
+                          const BYTE  *src, 
+                          const DWORD *switchpts, 
+                          int          xo, /*fix me: remove this parameter*/
+                          int          w, 
+                          int          h,
+                          int          src_pitch,
+                          int          dst_pitch)
+{
+    DWORD color = switchpts[0];
+    while(h--)
+    {
+        const DWORD *sw = switchpts;
+        for(int wt=0; wt<w; ++wt)
+        {
+            if(wt+xo >= sw[1]) {while(wt+xo >= sw[1]) sw += 2; color = sw[-2];}
+            pixmix(&dst[wt], color, src[wt]);
+        }
+        src += src_pitch;
+        dst = (DWORD *)((BYTE *)dst + dst_pitch);
+    }
+}
 
 // 
 // draw overlay[clipRect] to bitmap[0,0,w,h]
@@ -1980,7 +2017,12 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
         draw_method |= DM::SSE2;
     if(PLANAR)
         draw_method |= DM::AYUV_PLANAR;
-    
+
+    const DrawMultiColorPackPixFunc draw_multi_color_pack_pix[] = {
+        DrawMultiColorPackPix<pixmix_c>,
+        DrawMultiColorPackPix<pixmix_sse2>
+    };
+
     // draw
     // Grab the first colour
     DWORD color = switchpts[0];
@@ -2017,36 +2059,9 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     }
     break;
     case 0*DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::AYUV_PLANAR :
-    {
-        while(h--)
-        {
-            const DWORD *sw = switchpts;
-            for(int wt=0; wt<w; ++wt)
-            {
-                // xo is the offset (usually negative) we have moved into the image
-                // So if we have passed the switchpoint (?) switch to another colour
-                // (So switchpts stores both colours *and* coordinates?)
-                if(wt+xo >= sw[1]) {while(wt+xo >= sw[1]) sw += 2; color = sw[-2];}
-                pixmix_sse2(&dst[wt], color, s[wt]);
-            }
-            s += overlayPitch;
-            dst = (unsigned long *)((char *)dst + bitmap->pitch);
-        }
-    }
-    break;
     case 0*DM::SINGLE_COLOR | 0*DM::SSE2 | 0*DM::AYUV_PLANAR :
     {
-        while(h--)
-        {
-            const DWORD *sw = switchpts;
-            for(int wt=0; wt<w; ++wt)
-            {
-                if(wt+xo >= sw[1]) {while(wt+xo >= sw[1]) sw += 2; color = sw[-2];}
-                pixmix(&dst[wt], color, s[wt]);
-            }
-            s += overlayPitch;
-            dst = (unsigned long *)((char *)dst + bitmap->pitch);
-        }
+        draw_multi_color_pack_pix[fSSE2](dst, s, switchpts, xo, w, h, overlayPitch, bitmap->pitch);
     }
     break;
     case   DM::SINGLE_COLOR |   DM::SSE2 |   DM::AYUV_PLANAR :
@@ -2132,10 +2147,10 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
             sw += 2;
             if( new_x < last_x )
                 continue;
-            AlphaBlt8bpp(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bpp(dst_U, s + last_x - xo, (color>>8 )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bpp(dst_V, s + last_x - xo, (color    )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bpp(dst_A, s + last_x - xo,                0, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppC(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppC(dst_U, s + last_x - xo, (color>>8 )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppC(dst_V, s + last_x - xo, (color    )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppC(dst_A, s + last_x - xo,                0, h, new_x-last_x, overlayPitch, bitmap->pitch);
 
             dst_A += new_x - last_x;
             dst_Y += new_x - last_x;
@@ -2175,7 +2190,7 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
         for (int wy=y; wy<y+nHeight; wy++) {
             DWORD* dst = (DWORD*)((BYTE*)spd.bits + spd.pitch * wy) + x;
             for(int wt=0; wt<nWidth; ++wt) {
-                pixmix(&dst[wt], argb,  argb>>24);
+                pixmix_c(&dst[wt], argb,  argb>>24);
             }
         }
     }
