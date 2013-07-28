@@ -1294,6 +1294,13 @@ static __forceinline void pixmix2(DWORD *dst, DWORD color, DWORD shapealpha, DWO
 #include <xmmintrin.h>
 #include <emmintrin.h>
 
+static __forceinline void packed_pix_mix_c(BYTE* dst, const BYTE* alpha, int w, DWORD color)
+{
+    DWORD * dst_w = (DWORD *)dst;
+    for(int wt=0; wt<w; ++wt)
+        pixmix(&dst_w[wt], color, alpha[wt]);
+}
+
 static __forceinline void pixmix_sse2(DWORD* dst, DWORD color, DWORD alpha)
 {
 //    alpha = (((alpha) * (color>>24)) >> 6) & 0xff;
@@ -2009,8 +2016,7 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     {
         while(h--)
         {
-            for(int wt=0; wt<w; ++wt)
-                pixmix(&dst[wt], color, s[wt]);
+            packed_pix_mix_c((BYTE*)dst, s, w, color);
             s += overlayPitch;
             dst = (unsigned long *)((char *)dst + bitmap->pitch);
         }
