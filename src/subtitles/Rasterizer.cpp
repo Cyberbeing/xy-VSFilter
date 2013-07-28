@@ -2072,8 +2072,6 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     int draw_method = 0;
     if(fSingleColor)
         draw_method |= DM::SINGLE_COLOR;
-    if(fSSE2)
-        draw_method |= DM::SSE2;
     if(PLANAR)
         draw_method |= DM::AYUV_PLANAR;
 
@@ -2105,20 +2103,17 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     // Every remaining line in the bitmap to be rendered...
     switch(draw_method)
     {
-    case   DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::AYUV_PLANAR :
-    case   DM::SINGLE_COLOR | 0*DM::SSE2 | 0*DM::AYUV_PLANAR :
+    case   DM::SINGLE_COLOR | 0*DM::AYUV_PLANAR :
     {
         draw_single_color_pack_pix[fSSE2](dst, s, color, w, h, overlayPitch, bitmap->pitch);
     }
     break;
-    case 0*DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::AYUV_PLANAR :
-    case 0*DM::SINGLE_COLOR | 0*DM::SSE2 | 0*DM::AYUV_PLANAR :
+    case 0*DM::SINGLE_COLOR | 0*DM::AYUV_PLANAR :
     {
         draw_multi_color_pack_pix[fSSE2](dst, s, switchpts, xo, w, h, overlayPitch, bitmap->pitch);
     }
     break;
-    case   DM::SINGLE_COLOR |   DM::SSE2 |   DM::AYUV_PLANAR :
-    case   DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::AYUV_PLANAR :
+    case   DM::SINGLE_COLOR |   DM::AYUV_PLANAR :
     {
         unsigned char* dst_A = bitmap->plans[0] + dst_offset;
         unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
@@ -2131,8 +2126,7 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
         alphablt_8bpp[fSSE2](dst_A, s,                  0, h, w, overlayPitch, bitmap->pitch);
     }
     break;
-    case 0*DM::SINGLE_COLOR |   DM::SSE2 |   DM::AYUV_PLANAR :
-    case 0*DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::AYUV_PLANAR :
+    case 0*DM::SINGLE_COLOR |   DM::AYUV_PLANAR :
     {
         unsigned char* dst_A = bitmap->plans[0] + dst_offset;
         unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
@@ -2181,15 +2175,12 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
     bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
     bool AYUV_PLANAR = (spd.type==MSP_AYUV_PLANAR);
     int draw_method = 0;
-    if(fSSE2)
-        draw_method |= DM::SSE2;
     if(AYUV_PLANAR)
         draw_method |= DM::AYUV_PLANAR;
 
     switch (draw_method)
     {
-    case   DM::SSE2 | 0*DM::AYUV_PLANAR :
-    case 0*DM::SSE2 | 0*DM::AYUV_PLANAR :
+    case 0*DM::AYUV_PLANAR :
     {
         BYTE *dst = ((BYTE*)spd.bits + spd.pitch * y) + x*4;
         for (int wy=y; wy<y+nHeight; wy++) {
@@ -2198,8 +2189,7 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
         }
     }
     break;
-    case   DM::SSE2 |   DM::AYUV_PLANAR :
-    case 0*DM::SSE2 |   DM::AYUV_PLANAR :
+    case   DM::AYUV_PLANAR :
     {
         BYTE* dst = reinterpret_cast<BYTE*>(spd.bits) + spd.pitch * y + x;
         BYTE* dst_A = dst;
