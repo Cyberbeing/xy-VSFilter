@@ -27,7 +27,7 @@ public:
     }
     ~XyBitmap();
 
-    static XyBitmap *CreateBitmap(const CRect& target_rect, MemLayout layout);
+    static XyBitmap *CreateBitmap(const CRect& target_rect, MemLayout layout, int alpha_value);
 
     static void FlipAlphaValue( LPVOID pixels, int w, int h, int pitch );
     static void AlphaBltPack(SubPicDesc& spd, POINT pos, SIZE size, LPCVOID pixels, int pitch);
@@ -35,7 +35,7 @@ public:
 
     static void BltPack( SubPicDesc& spd, POINT pos, SIZE size, LPCVOID pixels, int pitch );
 private:
-    static void ClearBitmap(XyBitmap *bitmap);
+    static void ClearBitmap(XyBitmap *bitmap, int alpha_value);
 };
 
 class XySubRenderFrame: public CUnknown, public IXySubRenderFrame
@@ -87,7 +87,7 @@ public:
     bool GetRgbOutputTvLevel();
 
     XySubRenderFrame* NewXySubRenderFrame(UINT bitmap_count);
-    XyBitmap* CreateBitmap(const RECT& target_rect);
+    XyBitmap* CreateBitmap(const RECT& target_rect, int alpha_value);
     DWORD TransColor(DWORD argb);
 
     XySubRenderFrameCreater():m_xy_color_space(XY_CS_ARGB), m_bitmap_layout(XyBitmap::PACK)

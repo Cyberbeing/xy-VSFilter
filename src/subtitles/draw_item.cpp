@@ -464,12 +464,13 @@ void GroupedDrawItems::Draw( SharedPtrXyBitmap *bitmap, int *bitmap_identity_num
     if (pos==NULL)
     {
         POSITION pos = draw_item_list.GetHeadPosition();
-        XyBitmap *tmp = XySubRenderFrameCreater::GetDefaultCreater()->CreateBitmap(clip_rect);
-        bitmap->reset(tmp);
+        XyBitmap *tmp = NULL;
 
         bool have_overlap_region = CheckOverlap();
         if (have_overlap_region)
         {
+            tmp = XySubRenderFrameCreater::GetDefaultCreater()->CreateBitmap(clip_rect, 0xFF);
+            bitmap->reset(tmp);
             while(pos)
             {
                 DrawItem::Draw(tmp, *draw_item_list.GetNext(pos), clip_rect);
@@ -477,8 +478,9 @@ void GroupedDrawItems::Draw( SharedPtrXyBitmap *bitmap, int *bitmap_identity_num
         }
         else
         {
+            tmp = XySubRenderFrameCreater::GetDefaultCreater()->CreateBitmap(clip_rect, 0);
+            bitmap->reset(tmp);
             TRACE_DRAW("AdditionDraw");
-            XyBitmap::FlipAlphaValue(tmp->bits, tmp->w, tmp->h, tmp->pitch);
             while(pos)
             {
                 DrawItem::AdditionDraw(tmp, *draw_item_list.GetNext(pos), clip_rect);
