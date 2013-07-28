@@ -1601,6 +1601,10 @@ static __forceinline void packed_pix_add_sse2(BYTE* dst, const BYTE* alpha, int 
 
 ///////////////////////////////////////////////////////////////////////////
 
+typedef void (*AlphaBlt8bppFunc)(byte* pY, const byte* am, const byte Y, int h, int w, int src_stride, int dst_stride);
+void           AlphaBlt8bppC    (byte* pY, const byte* am, const byte Y, int h, int w, int src_stride, int dst_stride);
+void           AlphaBlt8bppSse2 (byte* pY, const byte* am, const byte Y, int h, int w, int src_stride, int dst_stride);
+
 void AlphaBlt8bppC(byte* pY,
     const byte* pAlphaMask, 
     const byte Y, 
@@ -1623,7 +1627,7 @@ void AlphaBlt8bppC(byte* pY,
  * No aligned requirement
  * 
  **/
-void AlphaBlt8bpp(byte* pY,
+void AlphaBlt8bppSse2(byte* pY,
     const byte* pAlphaMask, 
     const byte Y, 
     int h, int w, int src_stride, int dst_stride)
@@ -1702,6 +1706,11 @@ void AlphaBlt8bpp(byte* pY,
     }
 }
 
+typedef 
+void (*AlphaBlt8bppSingleAlphaFunc)(byte* pY, const byte alpha, const byte Y, int h, int w, int dst_stride);
+void   AlphaBlt8bppC               (byte* pY, const byte alpha, const byte Y, int h, int w, int dst_stride);
+void   AlphaBlt8bppSse2            (byte* pY, const byte alpha, const byte Y, int h, int w, int dst_stride);
+
 void AlphaBlt8bppC(byte* pY,
     const byte alpha, 
     const byte Y, 
@@ -1726,7 +1735,7 @@ void AlphaBlt8bppC(byte* pY,
  * No aligned requirement
  * 
  **/
-void AlphaBlt8bpp(byte* pY,
+void AlphaBlt8bppSse2(byte* pY,
     const byte alpha, 
     const byte Y, 
     int h, int w, int dst_stride)
@@ -2063,6 +2072,10 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
         DrawSingleColorPackPix<packed_pix_mix_c>,
         DrawSingleColorPackPix<packed_pix_mix_sse2>
     };
+    const AlphaBlt8bppFunc alphablt_8bpp[] = {
+        AlphaBlt8bppC,
+        AlphaBlt8bppSse2
+    };
 
     // draw
     // Grab the first colour
@@ -2092,39 +2105,17 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     }
     break;
     case   DM::SINGLE_COLOR |   DM::SSE2 |   DM::AYUV_PLANAR :
-    {
-        unsigned char* dst_A = bitmap->plans[0] + dst_offset;
-        unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
-        unsigned char* dst_U = bitmap->plans[2] + dst_offset;
-        unsigned char* dst_V = bitmap->plans[3] + dst_offset;
-
-        AlphaBlt8bpp(dst_Y, s, ((color)>>16)&0xff, h, w, overlayPitch, bitmap->pitch);
-        AlphaBlt8bpp(dst_U, s, ((color)>>8 )&0xff, h, w, overlayPitch, bitmap->pitch);
-        AlphaBlt8bpp(dst_V, s, ((color)    )&0xff, h, w, overlayPitch, bitmap->pitch);
-        AlphaBlt8bpp(dst_A, s,                  0, h, w, overlayPitch, bitmap->pitch);
-    }
-    break;
     case   DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::AYUV_PLANAR :
     {
-        //        char * debug_dst=(char*)dst;int h2 = h;
-        //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", (char*)&color, sizeof(color)) );
-        //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
-        //        debug_dst += spd.pitch*spd.h;
-        //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
-        //        debug_dst += spd.pitch*spd.h;
-        //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
-        //        debug_dst += spd.pitch*spd.h;
-        //        XY_DO_ONCE( xy_logger::write_file("G:\\b2_rt", debug_dst, (h2-1)*spd.pitch) );
-        //        debug_dst=(char*)dst;
-
         unsigned char* dst_A = bitmap->plans[0] + dst_offset;
         unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
         unsigned char* dst_U = bitmap->plans[2] + dst_offset;
         unsigned char* dst_V = bitmap->plans[3] + dst_offset;
-        AlphaBlt8bppC(dst_Y, s, ((color)>>16)&0xff, h, w, overlayPitch, bitmap->pitch);
-        AlphaBlt8bppC(dst_U, s, ((color)>>8 )&0xff, h, w, overlayPitch, bitmap->pitch);
-        AlphaBlt8bppC(dst_V, s, ((color)    )&0xff, h, w, overlayPitch, bitmap->pitch);
-        AlphaBlt8bppC(dst_A, s,                  0, h, w, overlayPitch, bitmap->pitch);
+
+        alphablt_8bpp[fSSE2](dst_Y, s, ((color)>>16)&0xff, h, w, overlayPitch, bitmap->pitch);
+        alphablt_8bpp[fSSE2](dst_U, s, ((color)>>8 )&0xff, h, w, overlayPitch, bitmap->pitch);
+        alphablt_8bpp[fSSE2](dst_V, s, ((color)    )&0xff, h, w, overlayPitch, bitmap->pitch);
+        alphablt_8bpp[fSSE2](dst_A, s,                  0, h, w, overlayPitch, bitmap->pitch);
     }
     break;
     case 0*DM::SINGLE_COLOR |   DM::SSE2 |   DM::AYUV_PLANAR :
@@ -2144,10 +2135,10 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
             sw += 2;
             if( new_x < last_x )
                 continue;
-            AlphaBlt8bpp(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bpp(dst_U, s + last_x - xo, (color>>8 )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bpp(dst_V, s + last_x - xo, (color    )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bpp(dst_A, s + last_x - xo,                0, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppSse2(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppSse2(dst_U, s + last_x - xo, (color>>8 )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppSse2(dst_V, s + last_x - xo, (color    )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppSse2(dst_A, s + last_x - xo,                0, h, new_x-last_x, overlayPitch, bitmap->pitch);
 
             dst_A += new_x - last_x;
             dst_Y += new_x - last_x;
@@ -2229,10 +2220,10 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
         BYTE* dst_Y = dst_A + spd.pitch*spd.h;
         BYTE* dst_U = dst_Y + spd.pitch*spd.h;
         BYTE* dst_V = dst_U + spd.pitch*spd.h;
-        AlphaBlt8bpp(dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt8bpp(dst_U, argb>>24, ((argb)>>8)&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt8bpp(dst_V, argb>>24, ((argb))&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt8bpp(dst_A, argb>>24, 0, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppSse2(dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppSse2(dst_U, argb>>24, ((argb)>>8)&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppSse2(dst_V, argb>>24, ((argb))&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppSse2(dst_A, argb>>24, 0, nHeight, nWidth, spd.pitch);
     }
     break;
     case 0*DM::SSE2 |   DM::AYUV_PLANAR :
