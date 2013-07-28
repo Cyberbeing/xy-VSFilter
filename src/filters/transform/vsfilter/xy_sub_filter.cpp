@@ -1223,7 +1223,16 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
                 if (s_count<10 && s_count%2==0) {
                     CStringA dump_file;
                     dump_file.Format("%s%lld",SUBTITLE_FRAME_DUMP_FILE,start);
-                    DumpSubRenderFrame(sub_render_frame, dump_file.GetString());
+                    if (FAILED(DumpSubRenderFrame( sub_render_frame, dump_file.GetString() )))
+                    {
+                        XY_LOG_ERROR("Failed to dump subtitle frame to file: "<<dump_file.GetString());
+                    }
+
+                    CString dump_bitmap(dump_file);
+                    if (FAILED(DumpToBitmap( sub_render_frame, dump_bitmap.GetString() )))
+                    {
+                        XY_LOG_ERROR("Failed to dump subtitle frame to file: "<<dump_bitmap.GetString());
+                    }
                 }
                 s_count++;
 #endif

@@ -51,4 +51,5 @@ private:
 
 #ifdef SUBTITLE_FRAME_DUMP_FILE
 HRESULT DumpSubRenderFrame( IXySubRenderFrame *sub, const char * filename );
+HRESULT DumpToBitmap( IXySubRenderFrame *sub, LPCTSTR filename);
 #endif
