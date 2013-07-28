@@ -1708,10 +1708,10 @@ void AlphaBlt8bppSse2(byte* pY,
 
 typedef 
 void (*AlphaBlt8bppSingleAlphaFunc)(byte* pY, const byte alpha, const byte Y, int h, int w, int dst_stride);
-void   AlphaBlt8bppC               (byte* pY, const byte alpha, const byte Y, int h, int w, int dst_stride);
-void   AlphaBlt8bppSse2            (byte* pY, const byte alpha, const byte Y, int h, int w, int dst_stride);
+void   AlphaBlt8bppSingleAlphaC    (byte* pY, const byte alpha, const byte Y, int h, int w, int dst_stride);
+void   AlphaBlt8bppSingleAlphaSse2 (byte* pY, const byte alpha, const byte Y, int h, int w, int dst_stride);
 
-void AlphaBlt8bppC(byte* pY,
+void AlphaBlt8bppSingleAlphaC(byte* pY,
     const byte alpha, 
     const byte Y, 
     int h, int w, int dst_stride)
@@ -1735,7 +1735,7 @@ void AlphaBlt8bppC(byte* pY,
  * No aligned requirement
  * 
  **/
-void AlphaBlt8bppSse2(byte* pY,
+void AlphaBlt8bppSingleAlphaSse2(byte* pY,
     const byte alpha, 
     const byte Y, 
     int h, int w, int dst_stride)
@@ -1785,7 +1785,7 @@ void AlphaBlt8bppSse2(byte* pY,
     }
     else
     {
-        AlphaBlt8bppC(pY, alpha, Y, h, w, dst_stride);
+        AlphaBlt8bppSingleAlphaC(pY, alpha, Y, h, w, dst_stride);
     }
 }
 
@@ -2155,6 +2155,11 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
 
 void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nHeight, DWORD argb)
 {
+    const AlphaBlt8bppSingleAlphaFunc alphablt_8bpp[] = {
+        AlphaBlt8bppSingleAlphaC,
+        AlphaBlt8bppSingleAlphaSse2
+    };
+
     bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
     bool AYUV_PLANAR = (spd.type==MSP_AYUV_PLANAR);
     int draw_method = 0;
@@ -2185,18 +2190,6 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
     }
     break;
     case   DM::SSE2 |   DM::AYUV_PLANAR :
-    {
-        BYTE* dst = reinterpret_cast<BYTE*>(spd.bits) + spd.pitch * y + x;
-        BYTE* dst_A = dst;
-        BYTE* dst_Y = dst_A + spd.pitch*spd.h;
-        BYTE* dst_U = dst_Y + spd.pitch*spd.h;
-        BYTE* dst_V = dst_U + spd.pitch*spd.h;
-        AlphaBlt8bppSse2(dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt8bppSse2(dst_U, argb>>24, ((argb)>>8)&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt8bppSse2(dst_V, argb>>24, ((argb))&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt8bppSse2(dst_A, argb>>24, 0, nHeight, nWidth, spd.pitch);
-    }
-    break;
     case 0*DM::SSE2 |   DM::AYUV_PLANAR :
     {
         BYTE* dst = reinterpret_cast<BYTE*>(spd.bits) + spd.pitch * y + x;
@@ -2204,10 +2197,10 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
         BYTE* dst_Y = dst_A + spd.pitch*spd.h;
         BYTE* dst_U = dst_Y + spd.pitch*spd.h;
         BYTE* dst_V = dst_U + spd.pitch*spd.h;
-        AlphaBlt8bppC(dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt8bppC(dst_U, argb>>24, ((argb)>>8)&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt8bppC(dst_V, argb>>24, ((argb))&0xff, nHeight, nWidth, spd.pitch);
-        AlphaBlt8bppC(dst_A, argb>>24, 0, nHeight, nWidth, spd.pitch);
+        alphablt_8bpp[fSSE2](dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
+        alphablt_8bpp[fSSE2](dst_U, argb>>24, ((argb)>>8)&0xff , nHeight, nWidth, spd.pitch);
+        alphablt_8bpp[fSSE2](dst_V, argb>>24, ((argb))&0xff    , nHeight, nWidth, spd.pitch);
+        alphablt_8bpp[fSSE2](dst_A, argb>>24,                 0, nHeight, nWidth, spd.pitch);
     }
     break;
     }
