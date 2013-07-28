@@ -306,7 +306,7 @@ HRESULT DumpSubRenderFrame( IXySubRenderFrame *sub, const char * filename )
                 output<<" "<<setfill('0')<<setw(8)<<(int)pixels2[n];
             }
             output<<endl;
-            pixels2 += pitch;
+            pixels2 = (const DWORD*)((const BYTE*)pixels2+pitch);
         }
         output<<dec;
     }
