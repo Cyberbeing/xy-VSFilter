@@ -1439,6 +1439,19 @@ static __forceinline void packed_pix_mix_sse2(BYTE* dst, const BYTE* alpha, int 
     }
 }
 
+typedef              void (*PixLineMixSingleAlphaFunc   )(BYTE* dst, BYTE alpha, int w, DWORD color);
+static __forceinline void  packed_pix_mix_c              (BYTE* dst, BYTE alpha, int w, DWORD color);
+static __forceinline void  packed_pix_mix_sse2           (BYTE* dst, BYTE alpha, int w, DWORD color);
+
+static __forceinline void  packed_pix_mix_c              (BYTE* dst, BYTE alpha, int w, DWORD color)
+{
+    const BYTE *dst_end = dst + 4*w;
+    for ( ; dst<dst_end; dst+=4 )
+    {
+        pixmix_c(reinterpret_cast<DWORD*>(dst), color, alpha);
+    }
+}
+
 static __forceinline void packed_pix_mix_sse2(BYTE* dst, BYTE alpha, int w, DWORD color)
 {
     __m128i c_r = _mm_set1_epi32( (color & 0xFF0000) );
@@ -2160,6 +2173,11 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
         AlphaBlt8bppSingleAlphaSse2
     };
 
+    const PixLineMixSingleAlphaFunc pix_line_mix[] = {
+        packed_pix_mix_c,
+        packed_pix_mix_sse2
+    };
+
     bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
     bool AYUV_PLANAR = (spd.type==MSP_AYUV_PLANAR);
     int draw_method = 0;
@@ -2171,21 +2189,12 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
     switch (draw_method)
     {
     case   DM::SSE2 | 0*DM::AYUV_PLANAR :
+    case 0*DM::SSE2 | 0*DM::AYUV_PLANAR :
     {
         BYTE *dst = ((BYTE*)spd.bits + spd.pitch * y) + x*4;
         for (int wy=y; wy<y+nHeight; wy++) {
-            packed_pix_mix_sse2(dst, argb>>24, nWidth, argb);
+            pix_line_mix[fSSE2](dst, argb>>24, nWidth, argb);
             dst += spd.pitch;
-        }
-    }
-    break;
-    case 0*DM::SSE2 | 0*DM::AYUV_PLANAR :
-    {
-        for (int wy=y; wy<y+nHeight; wy++) {
-            DWORD* dst = (DWORD*)((BYTE*)spd.bits + spd.pitch * wy) + x;
-            for(int wt=0; wt<nWidth; ++wt) {
-                pixmix_c(&dst[wt], argb,  argb>>24);
-            }
         }
     }
     break;
