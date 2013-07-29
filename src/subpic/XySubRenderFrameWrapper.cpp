@@ -322,7 +322,8 @@ DEFINE_GUID(ImageFormatPNG, 0xb96b3caf,0x0728,0x11d3,0x9d,0x7b,0x00,0x00,0xf8,0x
 #define ARGB_TO_COLORREEF(a,r,g,b) ( (a<<24) | (b<<16) | \
     (g<<8) | (r) )
 
-HRESULT DumpToBitmap( IXySubRenderFrame *sub, LPCTSTR filename)
+HRESULT DumpToBitmap( IXySubRenderFrame *sub, LPCTSTR filename, bool dump_alpha_channel, bool dump_rgb_bmp
+    , DWORD background_color)
 {
     HRESULT hr = E_FAIL;
     CRect output_rect, clip_rect;
@@ -349,6 +350,11 @@ HRESULT DumpToBitmap( IXySubRenderFrame *sub, LPCTSTR filename)
         bmiColors[i].rgbBlue  = i;
     }
     image8bbp.SetColorTable(0, 256, bmiColors);
+
+    DWORD ba = (background_color&0xff000000)>>24;
+    DWORD br = (background_color&0x00ff0000)>>16;
+    DWORD bg = (background_color&0x0000ff00)>>8;
+    DWORD bb = (background_color&0x000000ff);
 
     hr = sub->GetClipRect(&clip_rect);
     if (FAILED(hr))
@@ -423,9 +429,9 @@ HRESULT DumpToBitmap( IXySubRenderFrame *sub, LPCTSTR filename)
                 DWORD g = (argb&0x0000ff00)>>8;
                 DWORD b = (argb&0x000000ff);
                 *pix_8bpp++ = a;
-                *pix_32bpp++ = b;
-                *pix_32bpp++ = g;
-                *pix_32bpp++ = r;
+                *pix_32bpp++ = b + (((256-a)*bb)>>8);
+                *pix_32bpp++ = g + (((256-a)*bg)>>8);
+                *pix_32bpp++ = r + (((256-a)*br)>>8);
                 *pix_32bpp++ = 0;
             }
             pixels2 = (const DWORD*)((const BYTE*)pixels2+pitch);
@@ -436,8 +442,17 @@ HRESULT DumpToBitmap( IXySubRenderFrame *sub, LPCTSTR filename)
     filename_alpha += "_alpha.bmp";
     CString filename_rgb(filename);
     filename_rgb += "_rgb.bmp";
-    succeeded = SUCCEEDED( image8bbp.Save(filename_alpha, ImageFormatBMP) ) &&
-        SUCCEEDED( imageBmp.Save(filename_rgb, ImageFormatBMP) );
+
+    succeeded = true;
+    if (dump_alpha_channel)
+    {
+        succeeded = succeeded && SUCCEEDED( image8bbp.Save(filename_alpha, ImageFormatBMP) );
+    }
+    if (dump_rgb_bmp)
+    {
+        succeeded = succeeded && SUCCEEDED( imageBmp.Save(filename_rgb, ImageFormatBMP) );
+    }
+
     return succeeded ? S_OK : E_FAIL;
 }
 
