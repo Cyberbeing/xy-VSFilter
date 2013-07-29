@@ -34,7 +34,7 @@
 
 //#define SPD_DUMP_FILE "C:/spd"
 
-//show the boundary of bitmaps
-#define XY_DBG_SHOW_BITMAP_BOUNDARY 0
+//show the bounding boxes of bitmaps
+//#define XY_DBG_SHOW_BITMAP_BOX_IN_COLOR 0x00ff00
 
 #endif // __VSFILTER_CONFIG_6A82AF4A_67EC_4840_99D5_2DF001C64FEC_H__

@@ -491,12 +491,13 @@ void GroupedDrawItems::Draw( SharedPtrXyBitmap *bitmap, int *bitmap_identity_num
         ASSERT(SUCCEEDED(hr));
         if (color_space==XY_CS_ARGB_F && have_overlap_region)
             XyBitmap::FlipAlphaValue(tmp->bits, tmp->w, tmp->h, tmp->pitch);
-#if XY_DBG_SHOW_BITMAP_BOUNDARY
+#ifdef XY_DBG_SHOW_BITMAP_BOX_IN_COLOR
         if (color_space==XY_CS_ARGB_F||color_space==XY_CS_ARGB)//not support plannar format yet
         {
             if (tmp->w>0 && tmp->h>0)
             {
-                DWORD color = color_space==XY_CS_ARGB_F ? 0xff00ff00 : 0x0000ff00;
+                DWORD color = color_space==XY_CS_ARGB_F ? (0xff000000 | XY_DBG_SHOW_BITMAP_BOX_IN_COLOR)
+                    : (0x00ffffff & XY_DBG_SHOW_BITMAP_BOX_IN_COLOR);
                 BYTE *pixel = (BYTE *)tmp->bits;
                 memsetd(pixel, color, tmp->w*4);
                 int i=1;
