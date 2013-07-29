@@ -1886,15 +1886,7 @@ void OverlapRegion(tSpanBuffer& dst, const tSpanBuffer& src, int dx, int dy)
     }
 }
 
-// Render a subpicture onto a surface.
-// spd is the surface to render on.
-// clipRect is a rectangular clip region to render inside.
-// pAlphaMask is an alpha clipping mask.
-// xsub and ysub ???
-// switchpts seems to be an array of fill colours interlaced with coordinates.
-//    switchpts[i*2] contains a colour and switchpts[i*2+1] contains the coordinate to use that colour from
-// fBody tells whether to render the body of the subs.
-// fBorder tells whether to render the border of the subs.
+
 SharedPtrByte Rasterizer::CompositeAlphaMask(const SharedPtrOverlay& overlay, const CRect& clipRect, 
     const GrayImage2* alpha_mask, 
     int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
@@ -1914,7 +1906,6 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(const SharedPtrOverlay& overlay, co
 
     // Remember that all subtitle coordinates are specified in 1/8 pixels
     // (x+4)>>3 rounds to nearest whole pixel.
-    // ??? What is xsub, ysub, mOffsetX and mOffsetY ?    
     int x = (xsub + overlay->mOffsetX + 4)>>3;
     int y = (ysub + overlay->mOffsetY + 4)>>3;
     int w = overlay->mOverlayWidth;
