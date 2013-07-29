@@ -44,7 +44,6 @@ const SharedPtrOverlayKey& OverlayPaintMachine::GetHashKey()
 bool OverlayPaintMachine::CheckOverlap( const OverlayPaintMachine& a, const OverlayPaintMachine& b )
 {
     if (  a.m_inner_paint_machine == b.m_inner_paint_machine && 
-          !a.m_inner_paint_machine->ReallyHasBlurEffect() &&
         ((a.m_layer==CWordPaintMachine::OUTLINE && b.m_layer==CWordPaintMachine::BODY) ||
          (a.m_layer==CWordPaintMachine::BODY    && b.m_layer==CWordPaintMachine::OUTLINE)) )
     {
