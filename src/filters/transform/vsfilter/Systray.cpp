@@ -58,9 +58,20 @@ LRESULT CALLBACK HookProc(UINT code, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(g_hHook, code,  wParam, lParam);
 } 
 
+static BOOL CALLBACK enumWindowCallback(HWND hwnd, LPARAM lparam)
+{
+    HWND owner = (HWND)lparam;
+    if (owner == GetWindow(hwnd, GW_OWNER)) {
+        SetForegroundWindow(hwnd);
+        return FALSE;
+    }
+    return TRUE;
+}
+
 class CSystrayWindow : public CWnd
 {
 	SystrayIconData* m_tbid;
+    bool             m_properties_page_showing;
 
 	void StepSub(int dir)
 	{
@@ -83,7 +94,7 @@ class CSystrayWindow : public CWnd
 	}
 
 public:
-	CSystrayWindow(SystrayIconData* tbid) : m_tbid(tbid) {}
+	CSystrayWindow(SystrayIconData* tbid) : m_tbid(tbid),m_properties_page_showing(false) {}
 
 protected:
 	DECLARE_MESSAGE_MAP()
@@ -212,19 +223,19 @@ LRESULT CSystrayWindow::OnNotifyIcon(WPARAM wParam, LPARAM lParam)
 	{
 		case WM_LBUTTONDBLCLK:
 		{
-			// IMPORTANT: we must not hold the graph at the same time as showing the property page 
-			// or else when closing the app the graph doesn't get released and dvobsub's JoinFilterGraph
-			// is never called to close us down.
-
-            if(CComQIPtr<IVideoWindow> pVW = m_tbid->graph)
+            if (!m_properties_page_showing)
             {
-                HWND hwnd;
-                if (SUCCEEDED(pVW->get_Owner((OAHWND*)&hwnd))
-                    || SUCCEEDED(pVW->get_MessageDrain((OAHWND*)&hwnd)))
-                    hWnd = hwnd;
+                m_properties_page_showing = true;
+                RECT desktopRect;
+                ::GetWindowRect(::GetDesktopWindow(), &desktopRect);
+                ::SetWindowPos(m_hWnd, 0, (desktopRect.right / 2) - 200, (desktopRect.bottom / 2) - 300, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+                ShowPPage(CComQIPtr<IBaseFilter>(m_tbid->dvs), hWnd);
+                m_properties_page_showing = false;
             }
-
-			ShowPPage(CComQIPtr<IBaseFilter>(m_tbid->dvs), hWnd);
+            else
+            {
+                EnumThreadWindows(GetCurrentThreadId(), enumWindowCallback, (LPARAM)hWnd);
+            }
 		}
 		break;
 
