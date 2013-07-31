@@ -1975,15 +1975,27 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
     }
     SIZE originalVideoSize;
     GET_PARAM_FROM_CONSUMER(m_consumer->GetSize, "originalVideoSize", &originalVideoSize);
+    if (originalVideoSize.cx==0 || originalVideoSize.cy==0)
+    {
+        return E_UNEXPECTED;
+    }
 
     SIZE arAdjustedVideoSize;
     GET_PARAM_FROM_CONSUMER(m_consumer->GetSize, "arAdjustedVideoSize", &arAdjustedVideoSize);
 
     RECT videoOutputRect;
     GET_PARAM_FROM_CONSUMER(m_consumer->GetRect, "videoOutputRect", &videoOutputRect);
+    if (videoOutputRect.right<=videoOutputRect.left || videoOutputRect.bottom<=videoOutputRect.top)
+    {
+        return E_UNEXPECTED;
+    }
 
     RECT subtitleTargetRect;
     GET_PARAM_FROM_CONSUMER(m_consumer->GetRect, "subtitleTargetRect", &subtitleTargetRect);
+    if (subtitleTargetRect.right<=subtitleTargetRect.left || subtitleTargetRect.bottom<=subtitleTargetRect.top)
+    {
+        return E_UNEXPECTED;
+    }
 
     LPWSTR str;
     int len;
@@ -2067,6 +2079,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
         m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS] = consumer_supported_levels;
         update_subtitle = true;
     }
+
     if (update_subtitle)
     {
         UpdateSubtitle(false);
