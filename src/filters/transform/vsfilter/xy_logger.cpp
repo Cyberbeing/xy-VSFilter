@@ -123,7 +123,7 @@ void DumpPackBitmap2File(POINT pos, SIZE size, LPCVOID pixels, int pitch, const 
 
 void XyDisplayType(LPTSTR label, const AM_MEDIA_TYPE *pmtIn)
 {
-
+#if ENABLE_XY_LOG
     /* Dump the GUID types and a short description */
 
     XY_LOG_TRACE(_T(""));
@@ -191,15 +191,16 @@ void XyDisplayType(LPTSTR label, const AM_MEDIA_TYPE *pmtIn)
             XY_LOG_TRACE(_T("cbSize         :")<<pwfx->cbSize);
         } else {
         }
-
     } else {
         XY_LOG_TRACE(_T("     Format type ")<<GuidNames[pmtIn->formattype]);
         // !!!! should add code to dump wave format, others
     }
+#endif
 }
 
 void XyDumpGraph(IFilterGraph *pGraph, DWORD dwLevel)
 {
+#if ENABLE_XY_LOG
     if( !pGraph )
     {
         return;
@@ -281,6 +282,7 @@ void XyDumpGraph(IFilterGraph *pGraph, DWORD dwLevel)
         pFilter->Release();
     }
     pFilters->Release();
+#endif
 }
 
 
