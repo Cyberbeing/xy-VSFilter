@@ -105,6 +105,7 @@ private:
     bool LoadExternalSubtitle(IFilterGraph* pGraph);
     bool ShouldWeAutoLoad(IFilterGraph* pGraph);
 
+    HRESULT GetRidOfVSFilter();
     HRESULT StartStreaming();
 
     HRESULT FindAndConnectConsumer(IFilterGraph* pGraph);
@@ -163,6 +164,8 @@ private:
     bool m_disconnect_entered;
 
     bool m_be_auto_loaded;
+
+    bool m_get_rid_of_vsfilter;
 
     CStringW m_filter_info_string;
 

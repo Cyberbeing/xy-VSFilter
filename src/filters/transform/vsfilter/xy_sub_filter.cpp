@@ -60,6 +60,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     , m_workaround_mpc_hc(false)
     , m_disconnect_entered(false)
     , m_be_auto_loaded(false)
+    , m_get_rid_of_vsfilter(false)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
@@ -193,8 +194,10 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
     CAutoLock cAutoLock(&m_csFilter);
     XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     XY_LOG_INFO("JoinFilterGraph. pGraph:"<<(void*)pGraph);
+    HRESULT hr = NOERROR;
     if(pGraph)
     {
+        bool found_vsfilter = false;
         BeginEnumFilters(pGraph, pEF, pBF)
         {
             if(pBF != (IBaseFilter*)this)
@@ -207,11 +210,17 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
                 pBF->GetClassID(&clsid);
                 if (clsid==__uuidof(CDirectVobSubFilter) || clsid==__uuidof(CDirectVobSubFilter2))
                 {
-                    return E_FAIL;
+                    XY_LOG_INFO("I see VSFilter");
+                    if (!m_get_rid_of_vsfilter)
+                    {
+                        return E_FAIL;
+                    }
+                    found_vsfilter = true;
                 }
             }
         }
         EndEnumFilters;
+
         bool under_mpc_hc = (theApp.m_AppName.MakeLower().Find(_T("mpc-hc"), 0)==0);
         if (under_mpc_hc)
         {
@@ -262,7 +271,23 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
                 m_workaround_mpc_hc = true;
             }
         }
+        hr = __super::JoinFilterGraph(pGraph, pName);
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to join filter graph");
+            return hr;
+        }
+        if (found_vsfilter && m_get_rid_of_vsfilter)
+        {
+            hr = GetRidOfVSFilter();
+            if (FAILED(hr))
+            {
+                XY_LOG_FATAL("Failed to get rid of VSFilter");
+                return E_FAIL;
+            }
+        }
         LoadExternalSubtitle(pGraph);
+        return hr;
     }
     else
     {
@@ -276,12 +301,14 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
             m_consumer = NULL;
         }
         ::DeleteSystray(&m_hSystrayThread, &m_tbid);
-        m_workaround_mpc_hc = false;
-        m_not_first_pause = false;
-        m_be_auto_loaded = false;
-    }
+        m_workaround_mpc_hc   = false;
+        m_not_first_pause     = false;
+        m_be_auto_loaded      = false;
+        m_get_rid_of_vsfilter = false;
 
-    return __super::JoinFilterGraph(pGraph, pName);
+        return __super::JoinFilterGraph(pGraph, pName);
+    }
+    return E_FAIL;
 }
 
 STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
@@ -2303,7 +2330,6 @@ bool XySubFilter::ShouldWeAutoLoad(IFilterGraph* pGraph)
 {
     XY_LOG_INFO(_T(""));
 
-    bool fRet = false;
     HRESULT hr = NOERROR;
 
     int level;
@@ -2321,14 +2347,16 @@ bool XySubFilter::ShouldWeAutoLoad(IFilterGraph* pGraph)
     }
 
     if(level == LOADLEVEL_ALWAYS)
-        fRet = load_external = load_web = load_embedded = true;
-
+    {
+        return true;
+    }
 
     // find text stream on known splitters
 
     bool have_subtitle_pin = false;
     CComPtr<IBaseFilter> pBF;
-    if((pBF = FindFilter(CLSID_OggSplitter, pGraph)) || (pBF = FindFilter(CLSID_AviSplitter, pGraph))
+    if( load_embedded && (
+        (pBF = FindFilter(CLSID_OggSplitter, pGraph)) || (pBF = FindFilter(CLSID_AviSplitter, pGraph))
         || (pBF = FindFilter(L"{34293064-02F2-41D5-9D75-CC5967ACA1AB}", pGraph)) // matroska demux
         || (pBF = FindFilter(L"{0A68C3B5-9164-4a54-AFAF-995B2FF0E0D4}", pGraph)) // matroska source
         || (pBF = FindFilter(L"{149D2E01-C32E-4939-80F6-C07B81015A7A}", pGraph)) // matroska splitter
@@ -2349,7 +2377,7 @@ bool XySubFilter::ShouldWeAutoLoad(IFilterGraph* pGraph)
         || (pBF = FindFilter(L"{DC257063-045F-4BE2-BD5B-E12279C464F0}", pGraph)) // MPC-HC MPEG splitter
         || (pBF = FindFilter(L"{529A00DB-0C43-4f5b-8EF2-05004CBE0C6F}", pGraph)) // AV splitter
         || (pBF = FindFilter(L"{D8980E15-E1F6-4916-A10F-D7EB4E9E10B8}", pGraph)) // AV source
-        ) 
+        ) )
     {
         BeginEnumPins(pBF, pEP, pPin)
         {
@@ -2358,48 +2386,130 @@ bool XySubFilter::ShouldWeAutoLoad(IFilterGraph* pGraph)
                 if (pmt->majortype == MEDIATYPE_Text || pmt->majortype == MEDIATYPE_Subtitle)
                 {
                     have_subtitle_pin = true;
-                    bool tmp = false;
-                    if ( SUCCEEDED(IsPinConnected(pPin, &tmp)) && tmp )
-                    {
-                        XY_LOG_DEBUG("There's a connnected subtitle pin in the source filter! We'll leave here.");
-                        return false;
-                    }
+                    break;
                 }
             }
             EndEnumMediaTypes(pmt)
+            if (have_subtitle_pin) break;
         }
         EndEnumPins
     }
-
-    // find file name
-    CStringW fn;
-
-    BeginEnumFilters(pGraph, pEF, pBF)
+    
+    if (load_embedded && have_subtitle_pin)
     {
-        if(CComQIPtr<IFileSourceFilter> pFSF = pBF)
+        return true;
+    }
+    
+    if (load_external || load_web)
+    {
+        // find file name
+        CStringW fn;
+
+        BeginEnumFilters(pGraph, pEF, pBF)
         {
-            LPOLESTR fnw = NULL;
-            if(!pFSF || FAILED(pFSF->GetCurFile(&fnw, NULL)) || !fnw)
-                continue;
-            fn = CStringW(fnw);
-            CoTaskMemFree(fnw);
-            break;
+            if(CComQIPtr<IFileSourceFilter> pFSF = pBF)
+            {
+                LPOLESTR fnw = NULL;
+                if(!pFSF || FAILED(pFSF->GetCurFile(&fnw, NULL)) || !fnw)
+                    continue;
+                fn = CStringW(fnw);
+                CoTaskMemFree(fnw);
+                break;
+            }
+        }
+        EndEnumFilters
+        XY_LOG_INFO(L"fn:"<<fn.GetString());
+
+        if((load_external || load_web) && (load_web || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
+        {
+            CAtlArray<CString> paths;
+
+            for(int i = 0; i < 10; i++)
+            {
+                CString tmp;
+                tmp.Format(IDS_RP_PATH, i);
+                CString path = theApp.GetProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp);
+                if(!path.IsEmpty()) paths.Add(path);
+            }
+
+            CAtlArray<SubFile> file_list;
+            GetSubFileNames(fn, paths, m_xy_str_opt[DirectVobSubXyOptions::STRING_LOAD_EXT_LIST], file_list);
+
+            return !file_list.IsEmpty();
+        }
+
+    }
+
+    return false;
+}
+
+HRESULT XySubFilter::GetRidOfVSFilter()
+{
+    HRESULT hr = NOERROR;
+    CComPtr<IBaseFilter> pBF;
+    CComPtr<IPin> video_input_pin,video_output_pin;
+    while((pBF=FindFilter(__uuidof(CDirectVobSubFilter2), m_pGraph)) || 
+          (pBF=FindFilter(__uuidof(CDirectVobSubFilter ), m_pGraph)))
+    {
+        BeginEnumPins(pBF, pEP, pPin)
+        {
+            PIN_DIRECTION dir;
+            CComPtr<IPin> pPinTo;
+
+            hr = pPin->QueryDirection(&dir);
+            if (FAILED(hr))
+            {
+                XY_LOG_FATAL("Failed to QueryDirection.");
+                return hr;
+            }
+            if (dir==PINDIR_OUTPUT)
+            {
+                if (SUCCEEDED(pPin->ConnectedTo(&video_input_pin)))
+                {
+                    m_pGraph->Disconnect(video_input_pin);
+                    m_pGraph->Disconnect(pPin);
+                }
+            }
+            else/*PINDIR_INPUT*/
+            {
+                if (SUCCEEDED(pPin->ConnectedTo(&pPinTo)))
+                {
+                    m_pGraph->Disconnect(pPinTo);
+                    m_pGraph->Disconnect(pPin);
+                    bool is_video_pin = false;
+                    BeginEnumMediaTypes(pPinTo, pEM, pmt)
+                    {
+                        if (pmt->majortype == MEDIATYPE_Video)
+                        {
+                            is_video_pin = true;
+                            break;
+                        }
+                    }
+                    EndEnumMediaTypes(pmt)
+                    if (is_video_pin)
+                    {
+                        video_output_pin = pPinTo;
+                    }
+                    else if (GetPinCount()>0)
+                    {
+                        m_pGraph->ConnectDirect(pPinTo, GetPin(m_pSubtitleInputPin.GetCount()-1), NULL);
+                    }
+                }
+            }
+        }
+        EndEnumPins
+        if (video_input_pin && video_output_pin)
+        {
+            m_pGraph->ConnectDirect(video_input_pin, video_output_pin, NULL);
+        }
+        hr = m_pGraph->RemoveFilter(pBF);
+        if (FAILED(hr))
+        {
+            XY_LOG_FATAL("Failed to remove filter");
+            return hr;
         }
     }
-    EndEnumFilters
-    XY_LOG_INFO(L"fn:"<<fn.GetString());
-    CAtlArray<CString> paths;
-
-    if((load_external || load_web) && (load_web || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
-    {
-        bool fTemp = m_xy_bool_opt[BOOL_HIDE_SUBTITLES];
-        fRet = !fn.IsEmpty() && SUCCEEDED(put_FileName((LPWSTR)(LPCWSTR)fn))
-            || SUCCEEDED(put_FileName(L"c:\\tmp.srt"))
-            || fRet;
-        if(fTemp) m_xy_bool_opt[BOOL_HIDE_SUBTITLES] = true;
-    }
-
-    return fRet;
+    return hr;
 }
 
 HRESULT XySubFilter::StartStreaming()
@@ -2606,22 +2716,11 @@ STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWS
     HRESULT hr = NOERROR;
     if(pGraph)
     {
-        DWORD merit = MERIT_DO_NOT_USE;
-        hr = XySubFilterAutoLoader::GetMerit( __uuidof(XySubFilter), &merit );
-        if (FAILED(hr))
-        {
-            XY_LOG_ERROR("Failed to get merit of XySubFilter");
-            return hr;
-        }
-        if (merit==MERIT_DO_NOT_USE)
-        {
-            XY_LOG_DEBUG("XySubFilter's has been set to MERIT_DO_NOT_USE. We should not auto load.");
-            return E_FAIL;
-        }
-
+        bool found_consumer = false;
+        bool found_vsfilter = false;
         BeginEnumFilters(pGraph, pEF, pBF)
         {
-            if (pBF != (IBaseFilter*)this)
+            if(pBF != (IBaseFilter*)this)
             {
                 CLSID clsid;
                 pBF->GetClassID(&clsid);
@@ -2634,9 +2733,25 @@ STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWS
                 {
                     return E_FAIL;
                 }
+                if (clsid==__uuidof(CDirectVobSubFilter) || clsid==__uuidof(CDirectVobSubFilter2))
+                {
+                    XY_LOG_INFO("I see VSFilter");
+                    found_vsfilter = true;
+                }
+                if (CComQIPtr<ISubRenderConsumer>(pBF))
+                {
+                    XY_LOG_INFO("I see a consumer");
+                    found_consumer = true;
+                }
             }
         }
         EndEnumFilters;
+        XY_DUMP_GRAPH(pGraph, 0);
+        if (found_vsfilter && !found_consumer)
+        {
+            XY_LOG_DEBUG("VSFilter is here but NO consumer found. We'll leave.");
+            return E_FAIL;
+        }
         CComPtr<IBaseFilter> filter;
         hr = filter.CoCreateInstance(__uuidof(XySubFilter));
         if (FAILED(hr))
@@ -2647,13 +2762,18 @@ STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWS
         XySubFilter * xy_sub_filter = dynamic_cast<XySubFilter*>((IBaseFilter*)filter);
         if (xy_sub_filter->ShouldWeAutoLoad(pGraph))
         {
+            xy_sub_filter->m_be_auto_loaded      = true;
+            xy_sub_filter->m_get_rid_of_vsfilter = true;
             hr = pGraph->AddFilter(xy_sub_filter, L"XySubFilter(AutoLoad)");
-            xy_sub_filter->m_be_auto_loaded = true;
             if (FAILED(hr))
             {
                 XY_LOG_ERROR("Failed to AddFilter. "<<XY_LOG_VAR_2_STR(xy_sub_filter)<<XY_LOG_VAR_2_STR(hr));
                 return S_OK;
             }
+        }
+        else
+        {
+            XY_LOG_DEBUG("Should NOT auto load. We'll leave.");
         }
         hr = __super::JoinFilterGraph(pGraph, pName);
     }
