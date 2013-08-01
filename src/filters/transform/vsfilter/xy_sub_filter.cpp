@@ -313,20 +313,16 @@ STDMETHODIMP XySubFilter::Pause()
             {
                 m_filter_info_string.Format(L"%s (=> !!!)", m_xy_str_opt[STRING_NAME].GetString());
                 XY_LOG_ERROR("Failed when find and connect consumer");
-                XY_LOG_WARN("We'll leave here quietly");
-                CComQIPtr<IFilterChain> filter_chain(m_pGraph);
-                if (FAILED(filter_chain->RemoveChain(this, NULL)))
-                {
-                    XY_LOG_WARN("Failed to remove ourself.");
-                }
-                return hr;
             }
         }
-        hr = StartStreaming();
-        if (FAILED(hr))
+        if (SUCCEEDED(hr))
         {
-            XY_LOG_ERROR("Failed to StartStreaming."<<XY_LOG_VAR_2_STR(hr));
-            return hr;
+            hr = StartStreaming();
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed to StartStreaming."<<XY_LOG_VAR_2_STR(hr));
+                return hr;
+            }
         }
     }
     return CBaseFilter::Pause();
