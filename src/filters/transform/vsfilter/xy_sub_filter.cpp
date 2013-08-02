@@ -2419,8 +2419,6 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
             if (FAILED(hr))
             {
                 XY_LOG_WARN("Failed to read consumer field.");
-                m_consumer = NULL;
-                return hr;
             }
             hr = consumer->Connect(this);
             if (FAILED(hr))
