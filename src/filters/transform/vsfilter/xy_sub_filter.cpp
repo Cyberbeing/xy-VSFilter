@@ -359,7 +359,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
             hr = E_FAIL;
             break;
         }
-        if (!m_consumer)
+        if (!m_consumer && !m_fLoading)
         {
             if (FAILED(FindAndConnectConsumer(m_pGraph)))
             {
