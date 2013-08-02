@@ -2760,15 +2760,16 @@ STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWS
             return E_FAIL;
         }
         XySubFilter * xy_sub_filter = dynamic_cast<XySubFilter*>((IBaseFilter*)filter);
+        bool cannot_failed = false;
         if (xy_sub_filter->ShouldWeAutoLoad(pGraph))
         {
             xy_sub_filter->m_be_auto_loaded      = true;
             xy_sub_filter->m_get_rid_of_vsfilter = true;
             hr = pGraph->AddFilter(xy_sub_filter, L"XySubFilter(AutoLoad)");
+            cannot_failed = true;//return E_FAIL after pGraph->AddFilter causes crashes
             if (FAILED(hr))
             {
                 XY_LOG_ERROR("Failed to AddFilter. "<<XY_LOG_VAR_2_STR(xy_sub_filter)<<XY_LOG_VAR_2_STR(hr));
-                return S_OK;
             }
         }
         else
@@ -2776,6 +2777,7 @@ STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWS
             XY_LOG_DEBUG("Should NOT auto load. We'll leave.");
         }
         hr = __super::JoinFilterGraph(pGraph, pName);
+        return cannot_failed ? S_OK : hr;
     }
     else
     {
