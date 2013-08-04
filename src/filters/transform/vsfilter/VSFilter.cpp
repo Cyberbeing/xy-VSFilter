@@ -53,6 +53,11 @@ CVSFilterApp::CVSFilterApp()
     xy_logger::doConfigure( dllPath.GetString() );
     delete [] strDLLPath;
 #endif
+
+#if (defined XY_SUB_FILTER_DLL)
+    free((void*)m_pszProfileName);
+    m_pszProfileName = _tcsdup(_T("XySubFilter"));
+#endif
 }
 
 extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
@@ -63,6 +68,10 @@ BOOL CVSFilterApp::InitInstance()
 		return FALSE;
 
 	SetRegistryKey(_T("Gabest"));
+#if (defined XY_SUB_FILTER_DLL)
+    free((void*)m_pszProfileName);
+    m_pszProfileName = _tcsdup(_T("XySubFilter"));//restore m_pszProfileName overwrite by SetRegistryKey
+#endif
 
 	DllEntryPoint(AfxGetInstanceHandle(), DLL_PROCESS_ATTACH, 0); // "DllMain" of the dshow baseclasses
 
