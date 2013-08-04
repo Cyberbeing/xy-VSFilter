@@ -58,7 +58,8 @@ const AMOVIESETUP_PIN sudpPin2 = {L"Input", FALSE, FALSE, TRUE, FALSE, &CLSID_NU
 
 /*const*/ AMOVIESETUP_FILTER sudFilter[] =
 {
-    {&__uuidof(XySubFilter), L"XySubFilter", MERIT_NORMAL, countof(sudpPins), sudpPins}, 
+     /* merit should larger than InternalScriptRenderer */
+    {&__uuidof(XySubFilter), L"XySubFilter", MERIT_PREFERRED+2, countof(sudpPins), sudpPins},
     {&__uuidof(XySubFilterAutoLoader), L"XySubFilterAutoLoader", 0xffffffff, 1, &sudpPin2}
 };
 
