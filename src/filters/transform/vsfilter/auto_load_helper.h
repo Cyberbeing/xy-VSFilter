@@ -12,14 +12,20 @@ public:
     HRESULT CheckMediaType(const CMediaType *);
 };
 
+[uuid("0c2c6a4c-f03c-4f89-b9b8-8b5444cef472")]
+interface IXySubFilterAutoLoaderGraphMutex : public IUnknown
+{
+};
+
 [uuid("6b237877-902b-4c6c-92f6-e63169a5166c")]
-class XySubFilterAutoLoader : public CBaseFilter
+class XySubFilterAutoLoader : public CBaseFilter, public IXySubFilterAutoLoaderGraphMutex
 {
 public:
     XySubFilterAutoLoader(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid = __uuidof(XySubFilterAutoLoader));
     virtual ~XySubFilterAutoLoader();
 
     DECLARE_IUNKNOWN;
+    STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
 
     //CBaseFilter
     CBasePin* GetPin(int n);

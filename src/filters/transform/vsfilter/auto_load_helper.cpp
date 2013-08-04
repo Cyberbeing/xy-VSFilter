@@ -161,6 +161,12 @@ XySubFilterAutoLoader::~XySubFilterAutoLoader()
     delete m_pin;
 }
 
+STDMETHODIMP XySubFilterAutoLoader::NonDelegatingQueryInterface( REFIID riid, void** ppv )
+{
+    return QI(IXySubFilterAutoLoaderGraphMutex)
+        __super::NonDelegatingQueryInterface(riid, ppv);
+}
+
 CBasePin* XySubFilterAutoLoader::GetPin( int n )
 {
     if (n==0)
@@ -187,13 +193,13 @@ STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWS
         {
             if(pBF != (IBaseFilter*)this)
             {
-                CLSID clsid;
-                pBF->GetClassID(&clsid);
-                if (clsid==__uuidof(XySubFilterAutoLoader))
+                if (CComQIPtr<IXySubFilterAutoLoaderGraphMutex>(pBF))
                 {
                     XY_LOG_INFO("Another XySubFilterAutoLoader filter has been added to the graph.");
                     return E_FAIL;
                 }
+                CLSID clsid;
+                pBF->GetClassID(&clsid);
                 if (clsid==__uuidof(XySubFilter))
                 {
                     return E_FAIL;
