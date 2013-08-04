@@ -54,6 +54,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xy_sub_filter", "vsfilter_2
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xy_sub_filter_consumer", "vsfilter_2010\xy_sub_filter_consumer.vcxproj", "{FF52CEE2-6935-4AE7-BC82-E363FC4A0029}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extra_auto_load_helper", "vsfilter_2010\extra_auto_load_helper.vcxproj", "{3FBC12B0-3D7F-4621-A1DF-83DE81028257}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -168,6 +170,14 @@ Global
 		{FF52CEE2-6935-4AE7-BC82-E363FC4A0029}.Release|Win32.Build.0 = Release|Win32
 		{FF52CEE2-6935-4AE7-BC82-E363FC4A0029}.Release|x64.ActiveCfg = Release|x64
 		{FF52CEE2-6935-4AE7-BC82-E363FC4A0029}.Release|x64.Build.0 = Release|x64
+		{3FBC12B0-3D7F-4621-A1DF-83DE81028257}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3FBC12B0-3D7F-4621-A1DF-83DE81028257}.Debug|Win32.Build.0 = Debug|Win32
+		{3FBC12B0-3D7F-4621-A1DF-83DE81028257}.Debug|x64.ActiveCfg = Debug|x64
+		{3FBC12B0-3D7F-4621-A1DF-83DE81028257}.Debug|x64.Build.0 = Debug|x64
+		{3FBC12B0-3D7F-4621-A1DF-83DE81028257}.Release|Win32.ActiveCfg = Release|Win32
+		{3FBC12B0-3D7F-4621-A1DF-83DE81028257}.Release|Win32.Build.0 = Release|Win32
+		{3FBC12B0-3D7F-4621-A1DF-83DE81028257}.Release|x64.ActiveCfg = Release|x64
+		{3FBC12B0-3D7F-4621-A1DF-83DE81028257}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

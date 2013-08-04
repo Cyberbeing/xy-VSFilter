@@ -1,0 +1,9 @@
+; extra_auto_load_helper.def : Declares the module parameters.
+
+LIBRARY      "XySubFilterExtraAutoLoadHelper.dll"
+
+EXPORTS
+	DllCanUnloadNow			PRIVATE
+	DllGetClassObject		PRIVATE
+	DllRegisterServer		PRIVATE
+	DllUnregisterServer		PRIVATE

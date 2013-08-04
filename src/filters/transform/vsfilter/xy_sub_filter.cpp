@@ -23,12 +23,6 @@
 #  define TRACE_RENDERER_REQUEST_TIMING(msg)
 #endif
 
-#if ENABLE_XY_LOG_TRACE_GRAPH
-#  define XY_DUMP_GRAPH(graph,level) xy_logger::XyDumpGraph(graph,level)
-#else
-#  define XY_DUMP_GRAPH(graph,level)
-#endif
-
 using namespace DirectVobSubXyOptions;
 
 const SubRenderOptionsImpl::OptionMap options[] = 
