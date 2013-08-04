@@ -59,8 +59,6 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     , m_last_requested(-1)
     , m_workaround_mpc_hc(false)
     , m_disconnect_entered(false)
-    , m_be_auto_loaded(false)
-    , m_get_rid_of_vsfilter(false)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
@@ -211,7 +209,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
                 if (clsid==__uuidof(CDirectVobSubFilter) || clsid==__uuidof(CDirectVobSubFilter2))
                 {
                     XY_LOG_INFO("I see VSFilter");
-                    if (!m_get_rid_of_vsfilter)
+                    if (!m_xy_bool_opt[BOOL_GET_RID_OF_VSFILTER])
                     {
                         return E_FAIL;
                     }
@@ -277,7 +275,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
             XY_LOG_ERROR("Failed to join filter graph");
             return hr;
         }
-        if (found_vsfilter && m_get_rid_of_vsfilter)
+        if (found_vsfilter && m_xy_bool_opt[BOOL_GET_RID_OF_VSFILTER])
         {
             hr = GetRidOfVSFilter();
             if (FAILED(hr))
@@ -303,8 +301,8 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
         ::DeleteSystray(&m_hSystrayThread, &m_tbid);
         m_workaround_mpc_hc   = false;
         m_not_first_pause     = false;
-        m_be_auto_loaded      = false;
-        m_get_rid_of_vsfilter = false;
+        m_xy_bool_opt[BOOL_BE_AUTO_LOADED     ] = false;
+        m_xy_bool_opt[BOOL_GET_RID_OF_VSFILTER] = false;
 
         return __super::JoinFilterGraph(pGraph, pName);
     }
@@ -2762,10 +2760,20 @@ STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWS
                 XY_LOG_ERROR("Failed to create XySubFilter."<<XY_LOG_VAR_2_STR(hr));
                 return E_FAIL;
             }
-            XySubFilter * xy_sub_filter = dynamic_cast<XySubFilter*>((IBaseFilter*)filter);
-            xy_sub_filter->m_be_auto_loaded      = true;
-            xy_sub_filter->m_get_rid_of_vsfilter = true;
-            hr = pGraph->AddFilter(xy_sub_filter, L"XySubFilter(AutoLoad)");
+            CComQIPtr<IXyOptions> xy_sub_filter(filter);
+            hr = xy_sub_filter->XySetBool(BOOL_BE_AUTO_LOADED     , true);
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed to set option BOOL_BE_AUTO_LOADED");
+                return E_FAIL;
+            }
+            hr = xy_sub_filter->XySetBool(BOOL_GET_RID_OF_VSFILTER, true);
+            if (FAILED(hr))
+            {
+                XY_LOG_ERROR("Failed to set option BOOL_GET_RID_OF_VSFILTER");
+                return E_FAIL;
+            }
+            hr = pGraph->AddFilter(filter, L"XySubFilter(AutoLoad)");
             cannot_failed = true;//return E_FAIL after pGraph->AddFilter causes crashes
             if (FAILED(hr))
             {

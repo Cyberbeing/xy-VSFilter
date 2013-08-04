@@ -162,10 +162,6 @@ private:
 
     bool m_disconnect_entered;
 
-    bool m_be_auto_loaded;
-
-    bool m_get_rid_of_vsfilter;
-
     CStringW m_filter_info_string;
 
 #ifdef SUBTITLE_FRAME_DUMP_FILE
@@ -176,8 +172,6 @@ private:
     bool  m_dump_subtitle_frame_rgb_bmp;
     DWORD m_dump_subtitle_frame_background_color;
 #endif
-
-    friend class XySubFilterAutoLoader;
 };
 
 class XyAutoLoaderDummyInputPin: public CBaseInputPin
