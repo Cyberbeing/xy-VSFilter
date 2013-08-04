@@ -103,7 +103,6 @@ private:
     HRESULT GetIsEmbeddedSubStream(int iSelected, bool *fIsEmbedded);
 
     bool LoadExternalSubtitle(IFilterGraph* pGraph);
-    bool ShouldWeAutoLoad(IFilterGraph* pGraph);
 
     HRESULT GetRidOfVSFilter();
     HRESULT StartStreaming();
