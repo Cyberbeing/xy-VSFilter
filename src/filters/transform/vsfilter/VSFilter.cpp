@@ -53,9 +53,9 @@ CVSFilterApp::CVSFilterApp()
     xy_logger::doConfigure( dllPath.GetString() );
     delete [] strDLLPath;
 #endif
-#ifdef AUTO_LOAD_HELPER_DLL
+#if (defined AUTO_LOAD_HELPER_DLL) || (defined XY_SUB_FILTER_DLL)
     free((void*)m_pszProfileName);
-    m_pszProfileName = _tcsdup(_T("XySubFilter"));//so that we can read XySubFilter's reg option
+    m_pszProfileName = _tcsdup(_T("XySubFilter"));
 #endif
 }
 
@@ -67,7 +67,7 @@ BOOL CVSFilterApp::InitInstance()
 		return FALSE;
 
 	SetRegistryKey(_T("Gabest"));
-#ifdef AUTO_LOAD_HELPER_DLL
+#if (defined AUTO_LOAD_HELPER_DLL) || (defined XY_SUB_FILTER_DLL)
     free((void*)m_pszProfileName);
     m_pszProfileName = _tcsdup(_T("XySubFilter"));//restore m_pszProfileName overwrite by SetRegistryKey
 #endif
