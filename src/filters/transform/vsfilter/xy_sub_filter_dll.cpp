@@ -21,6 +21,7 @@
 
 #include "stdafx.h"
 #include "xy_sub_filter.h"
+#include "auto_load_helper.h"
 #include "DirectVobSubPropPage.h"
 #include "VSFilter.h"
 #include "..\..\..\DSUtil\MediaTypes.h"

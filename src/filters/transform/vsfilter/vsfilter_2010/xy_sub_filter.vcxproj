@@ -161,6 +161,7 @@
     <ClCompile Include="..\..\..\..\thirdparty\mfc\winmdi.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\auto_load_helper.cpp" />
     <ClCompile Include="..\DirectVobSub.cpp" />
     <ClCompile Include="..\DirectVobSubPropPage.cpp" />
     <ClCompile Include="..\once_logger.cpp">
@@ -180,6 +181,7 @@
     <ClCompile Include="..\xy_sub_filter_dll.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\auto_load_helper.h" />
     <ClInclude Include="..\CAutoTiming.h" />
     <ClInclude Include="..\DirectVobSub.h" />
     <ClInclude Include="..\DirectVobSubPropPage.h" />
