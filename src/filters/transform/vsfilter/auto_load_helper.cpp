@@ -18,14 +18,15 @@
 // DummyInputPin
 //
 
-XyAutoLoaderDummyInputPin::XyAutoLoaderDummyInputPin( CBaseFilter *pFilter, CCritSec *pLock, HRESULT *phr, LPCWSTR pName )
+XyAutoLoaderDummyInputPin::XyAutoLoaderDummyInputPin( XySubFilterAutoLoader *pFilter, CCritSec *pLock, HRESULT *phr, LPCWSTR pName )
     : CBaseInputPin(NAME("DummyInputPin"), pFilter, pLock, phr, pName)
+    , m_filter(pFilter)
 {
 }
 
-HRESULT XyAutoLoaderDummyInputPin::CheckMediaType( const CMediaType * )
+HRESULT XyAutoLoaderDummyInputPin::CheckMediaType( const CMediaType * mt)
 {
-    return E_NOTIMPL;
+    return m_filter->CheckInput(mt);
 }
 
 //
@@ -57,7 +58,7 @@ XySubFilterAutoLoader::XySubFilterAutoLoader( LPUNKNOWN punk, HRESULT* phr
         if(!path.IsEmpty()) m_paths.Add(path);
     }
 
-    m_load_level =   CDirectVobSub::LOADLEVEL_WHEN_NEEDED;
+    m_load_level    =   CDirectVobSub::LOADLEVEL_WHEN_NEEDED;
     CString str_load_level = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL), _T("when_needed"));
     str_load_level.MakeLower();
     if (str_load_level.Compare(_T("always"))==0)
@@ -68,11 +69,14 @@ XySubFilterAutoLoader::XySubFilterAutoLoader( LPUNKNOWN punk, HRESULT* phr
     {
         m_load_level = CDirectVobSub::LOADLEVEL_DISABLED;
     }
+
     m_load_external = !!theApp.GetProfileInt(   ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD ), 1);
     m_load_web      = !!theApp.GetProfileInt(   ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD      ), 0);
     m_load_embedded = !!theApp.GetProfileInt(   ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD ), 1);
     m_load_exts  =   theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST),
         _T("ass;ssa;srt;sub;idx;sup;txt;usf;xss;ssf;smi;psb;rt"));
+
+    m_loaded = false;
 }
 
 XySubFilterAutoLoader::~XySubFilterAutoLoader()
@@ -99,10 +103,9 @@ STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWS
 {
     XY_LOG_INFO(XY_LOG_VAR_2_STR(this)<<"pGraph:"<<(void*)pGraph);
     HRESULT hr = NOERROR;
+    m_loaded = false;
     if(pGraph)
     {
-        bool found_consumer = false;
-        bool found_vsfilter = false;
         BeginEnumFilters(pGraph, pEF, pBF)
         {
             if(pBF != (IBaseFilter*)this)
@@ -118,68 +121,12 @@ STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWS
                 {
                     return E_FAIL;
                 }
-                if (clsid==__uuidof(CDirectVobSubFilter) || clsid==__uuidof(CDirectVobSubFilter2))
-                {
-                    XY_LOG_INFO("I see VSFilter");
-                    found_vsfilter = true;
-                }
-                if (CComQIPtr<ISubRenderConsumer>(pBF))
-                {
-                    XY_LOG_INFO("I see a consumer");
-                    found_consumer = true;
-                }
             }
         }
         EndEnumFilters;
-        XY_DUMP_GRAPH(pGraph, 0);
-        if (found_vsfilter && !found_consumer)
-        {
-            XY_LOG_DEBUG("VSFilter is here but NO consumer found. We'll leave.");
-            return E_FAIL;
-        }
-        bool cannot_failed = false;
-        if (ShouldWeAutoLoad(pGraph))
-        {
-            CComPtr<IBaseFilter> filter;
-            hr = filter.CoCreateInstance(__uuidof(XySubFilter));
-            if (FAILED(hr))
-            {
-                XY_LOG_ERROR("Failed to create XySubFilter."<<XY_LOG_VAR_2_STR(hr));
-                return E_FAIL;
-            }
-            CComQIPtr<IXyOptions> xy_sub_filter(filter);
-            hr = xy_sub_filter->XySetBool(DirectVobSubXyOptions::BOOL_BE_AUTO_LOADED     , true);
-            if (FAILED(hr))
-            {
-                XY_LOG_ERROR("Failed to set option BOOL_BE_AUTO_LOADED");
-                return E_FAIL;
-            }
-            hr = xy_sub_filter->XySetBool(DirectVobSubXyOptions::BOOL_GET_RID_OF_VSFILTER, true);
-            if (FAILED(hr))
-            {
-                XY_LOG_ERROR("Failed to set option BOOL_GET_RID_OF_VSFILTER");
-                return E_FAIL;
-            }
-            hr = pGraph->AddFilter(filter, L"XySubFilter(AutoLoad)");
-            cannot_failed = true;//return E_FAIL after pGraph->AddFilter causes crashes
-            if (FAILED(hr))
-            {
-                XY_LOG_ERROR("Failed to AddFilter. "<<XY_LOG_VAR_2_STR(xy_sub_filter)<<XY_LOG_VAR_2_STR(hr));
-            }
-        }
-        else
-        {
-            XY_LOG_DEBUG("Should NOT auto load. We'll leave.");
-        }
-        hr = __super::JoinFilterGraph(pGraph, pName);
-        return cannot_failed ? S_OK : hr;
-    }
-    else
-    {
-        hr = __super::JoinFilterGraph(pGraph, pName);
     }
 
-    return hr;
+    return __super::JoinFilterGraph(pGraph, pName);;
 }
 
 STDMETHODIMP XySubFilterAutoLoader::QueryFilterInfo( FILTER_INFO* pInfo )
@@ -277,8 +224,8 @@ bool XySubFilterAutoLoader::ShouldWeAutoLoad(IFilterGraph* pGraph)
                 break;
             }
         }
-        EndEnumFilters
-            XY_LOG_INFO(L"fn:"<<fn.GetString());
+        EndEnumFilters;
+        XY_LOG_INFO(L"fn:"<<fn.GetString());
 
         if((m_load_external || m_load_web) && (m_load_web || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
         {
@@ -291,6 +238,82 @@ bool XySubFilterAutoLoader::ShouldWeAutoLoad(IFilterGraph* pGraph)
     }
 
     return false;
+}
+
+HRESULT XySubFilterAutoLoader::CheckInput( const CMediaType * mt )
+{
+    HRESULT hr = NOERROR;
+    if (!m_loaded)
+    {
+        m_loaded = true;
+        if (m_load_level==CDirectVobSub::LOADLEVEL_ALWAYS || mt->majortype!=MEDIATYPE_Video)
+        {
+            bool found_consumer = false;
+            bool found_vsfilter = false;
+            BeginEnumFilters(m_pGraph, pEF, pBF)
+            {
+                if(pBF != (IBaseFilter*)this)
+                {
+                    CLSID clsid;
+                    pBF->GetClassID(&clsid);
+                    if (clsid==__uuidof(XySubFilter))
+                    {
+                        return E_FAIL;
+                    }
+                    if (clsid==__uuidof(CDirectVobSubFilter) || clsid==__uuidof(CDirectVobSubFilter2))
+                    {
+                        XY_LOG_INFO("I see VSFilter");
+                        found_vsfilter = true;
+                    }
+                    if (CComQIPtr<ISubRenderConsumer>(pBF))
+                    {
+                        XY_LOG_INFO("I see a consumer");
+                        found_consumer = true;
+                    }
+                }
+            }
+            EndEnumFilters;
+            XY_DUMP_GRAPH(m_pGraph, 0);
+            if (found_vsfilter && !found_consumer)
+            {
+                XY_LOG_DEBUG("VSFilter is here but NO consumer found. We'll leave.");
+                return E_FAIL;
+            }
+            if (ShouldWeAutoLoad(m_pGraph))
+            {
+                CComPtr<IBaseFilter> filter;
+                hr = filter.CoCreateInstance(__uuidof(XySubFilter));
+                if (FAILED(hr))
+                {
+                    XY_LOG_ERROR("Failed to create XySubFilter."<<XY_LOG_VAR_2_STR(hr));
+                    return E_FAIL;
+                }
+                CComQIPtr<IXyOptions> xy_sub_filter(filter);
+                hr = xy_sub_filter->XySetBool(DirectVobSubXyOptions::BOOL_BE_AUTO_LOADED     , true);
+                if (FAILED(hr))
+                {
+                    XY_LOG_ERROR("Failed to set option BOOL_BE_AUTO_LOADED");
+                    return E_FAIL;
+                }
+                hr = xy_sub_filter->XySetBool(DirectVobSubXyOptions::BOOL_GET_RID_OF_VSFILTER, true);
+                if (FAILED(hr))
+                {
+                    XY_LOG_ERROR("Failed to set option BOOL_GET_RID_OF_VSFILTER");
+                    return E_FAIL;
+                }
+                hr = m_pGraph->AddFilter(filter, L"XySubFilter(AutoLoad)");
+                if (FAILED(hr))
+                {
+                    XY_LOG_ERROR("Failed to AddFilter. "<<XY_LOG_VAR_2_STR(xy_sub_filter)<<XY_LOG_VAR_2_STR(hr));
+                }
+            }
+            else
+            {
+                XY_LOG_DEBUG("Should NOT auto load. We'll leave.");
+            }
+        }
+    }
+    return E_FAIL;
 }
 
 HRESULT XySubFilterAutoLoader::GetMerit( const GUID& clsid, DWORD *merit )
