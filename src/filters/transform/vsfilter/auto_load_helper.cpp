@@ -14,132 +14,6 @@
 
 ////////////////////////////////////////////////////////////////////////////
 
-bool ShouldWeAutoLoad(IFilterGraph* pGraph)
-{
-    XY_LOG_INFO(_T(""));
-
-    HRESULT hr = NOERROR;
-
-    int level =   CDirectVobSub::LOADLEVEL_WHEN_NEEDED;
-    CString str_load_level = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL), _T("when_needed"));
-    str_load_level.MakeLower();
-    if (str_load_level.Compare(_T("always"))==0)
-    {
-        level = CDirectVobSub::LOADLEVEL_ALWAYS;
-    }
-    else if (str_load_level.Compare(_T("disabled"))==0)
-    {
-        level = CDirectVobSub::LOADLEVEL_DISABLED;
-    }
-
-    bool load_external = !!theApp.GetProfileInt(   ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD ), 1);
-    bool load_web      = !!theApp.GetProfileInt(   ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD      ), 0);
-    bool load_embedded = !!theApp.GetProfileInt(   ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD ), 1);
-    CString load_exts  =   theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST),
-        _T("ass;ssa;srt;sub;idx;sup;txt;usf;xss;ssf;smi;psb;rt"));
-
-    if(level < 0 || level >= DirectVobSubImpl::LOADLEVEL_COUNT || level==DirectVobSubImpl::LOADLEVEL_DISABLED) {
-        XY_LOG_DEBUG("Disabled by load setting: "<<XY_LOG_VAR_2_STR(level));
-        return false;
-    }
-
-    if(level == DirectVobSubImpl::LOADLEVEL_ALWAYS)
-    {
-        return true;
-    }
-
-    // find text stream on known splitters
-
-    bool have_subtitle_pin = false;
-    CComPtr<IBaseFilter> pBF;
-    if( load_embedded && (
-        (pBF = FindFilter(CLSID_OggSplitter, pGraph)) || (pBF = FindFilter(CLSID_AviSplitter, pGraph))
-        || (pBF = FindFilter(L"{34293064-02F2-41D5-9D75-CC5967ACA1AB}", pGraph)) // matroska demux
-        || (pBF = FindFilter(L"{0A68C3B5-9164-4a54-AFAF-995B2FF0E0D4}", pGraph)) // matroska source
-        || (pBF = FindFilter(L"{149D2E01-C32E-4939-80F6-C07B81015A7A}", pGraph)) // matroska splitter
-        || (pBF = FindFilter(L"{55DA30FC-F16B-49fc-BAA5-AE59FC65F82D}", pGraph)) // Haali Media Splitter
-        || (pBF = FindFilter(L"{564FD788-86C9-4444-971E-CC4A243DA150}", pGraph)) // Haali Media Splitter (AR)
-        || (pBF = FindFilter(L"{8F43B7D9-9D6B-4F48-BE18-4D787C795EEA}", pGraph)) // Haali Simple Media Splitter
-        || (pBF = FindFilter(L"{52B63861-DC93-11CE-A099-00AA00479A58}", pGraph)) // 3ivx splitter
-        || (pBF = FindFilter(L"{6D3688CE-3E9D-42F4-92CA-8A11119D25CD}", pGraph)) // our ogg source
-        || (pBF = FindFilter(L"{9FF48807-E133-40AA-826F-9B2959E5232D}", pGraph)) // our ogg splitter
-        || (pBF = FindFilter(L"{803E8280-F3CE-4201-982C-8CD8FB512004}", pGraph)) // dsm source
-        || (pBF = FindFilter(L"{0912B4DD-A30A-4568-B590-7179EBB420EC}", pGraph)) // dsm splitter
-        || (pBF = FindFilter(L"{3CCC052E-BDEE-408a-BEA7-90914EF2964B}", pGraph)) // mp4 source
-        || (pBF = FindFilter(L"{61F47056-E400-43d3-AF1E-AB7DFFD4C4AD}", pGraph)) // mp4 splitter
-        || (pBF = FindFilter(L"{171252A0-8820-4AFE-9DF8-5C92B2D66B04}", pGraph)) // LAV splitter
-        || (pBF = FindFilter(L"{B98D13E7-55DB-4385-A33D-09FD1BA26338}", pGraph)) // LAV Splitter Source
-        || (pBF = FindFilter(L"{E436EBB5-524F-11CE-9F53-0020AF0BA770}", pGraph)) // Solveig matroska splitter
-        || (pBF = FindFilter(L"{1365BE7A-C86A-473C-9A41-C0A6E82C9FA3}", pGraph)) // MPC-HC MPEG PS/TS/PVA source
-        || (pBF = FindFilter(L"{DC257063-045F-4BE2-BD5B-E12279C464F0}", pGraph)) // MPC-HC MPEG splitter
-        || (pBF = FindFilter(L"{529A00DB-0C43-4f5b-8EF2-05004CBE0C6F}", pGraph)) // AV splitter
-        || (pBF = FindFilter(L"{D8980E15-E1F6-4916-A10F-D7EB4E9E10B8}", pGraph)) // AV source
-        ) )
-    {
-        BeginEnumPins(pBF, pEP, pPin)
-        {
-            BeginEnumMediaTypes(pPin, pEM, pmt)
-            {
-                if (pmt->majortype == MEDIATYPE_Text || pmt->majortype == MEDIATYPE_Subtitle)
-                {
-                    have_subtitle_pin = true;
-                    break;
-                }
-            }
-            EndEnumMediaTypes(pmt)
-                if (have_subtitle_pin) break;
-        }
-        EndEnumPins
-    }
-
-    if (load_embedded && have_subtitle_pin)
-    {
-        return true;
-    }
-
-    if (load_external || load_web)
-    {
-        // find file name
-        CStringW fn;
-
-        BeginEnumFilters(pGraph, pEF, pBF)
-        {
-            if(CComQIPtr<IFileSourceFilter> pFSF = pBF)
-            {
-                LPOLESTR fnw = NULL;
-                if(!pFSF || FAILED(pFSF->GetCurFile(&fnw, NULL)) || !fnw)
-                    continue;
-                fn = CStringW(fnw);
-                CoTaskMemFree(fnw);
-                break;
-            }
-        }
-        EndEnumFilters
-            XY_LOG_INFO(L"fn:"<<fn.GetString());
-
-        if((load_external || load_web) && (load_web || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
-        {
-            CAtlArray<CString> paths;
-
-            for(int i = 0; i < 10; i++)
-            {
-                CString tmp;
-                tmp.Format(IDS_RP_PATH, i);
-                CString path = theApp.GetProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp);
-                if(!path.IsEmpty()) paths.Add(path);
-            }
-
-            CAtlArray<SubFile> file_list;
-            GetSubFileNames(fn, paths, load_exts, file_list);
-
-            return !file_list.IsEmpty();
-        }
-
-    }
-
-    return false;
-}
-
 //
 // DummyInputPin
 //
@@ -147,7 +21,6 @@ bool ShouldWeAutoLoad(IFilterGraph* pGraph)
 XyAutoLoaderDummyInputPin::XyAutoLoaderDummyInputPin( CBaseFilter *pFilter, CCritSec *pLock, HRESULT *phr, LPCWSTR pName )
     : CBaseInputPin(NAME("DummyInputPin"), pFilter, pLock, phr, pName)
 {
-
 }
 
 HRESULT XyAutoLoaderDummyInputPin::CheckMediaType( const CMediaType * )
@@ -163,7 +36,43 @@ XySubFilterAutoLoader::XySubFilterAutoLoader( LPUNKNOWN punk, HRESULT* phr
     , const GUID& clsid /*= __uuidof(XySubFilterAutoLoader)*/ )
     : CBaseFilter(NAME("XySubFilterAutoLoader"), punk, &m_pLock, clsid)
 {
-    m_pin = DEBUG_NEW XyAutoLoaderDummyInputPin(this, &m_pLock, phr, NULL);;
+    m_pin = DEBUG_NEW XyAutoLoaderDummyInputPin(this, &m_pLock, phr, NULL);
+
+    CString tmp;
+    tmp.Format(ResStr(IDS_RP_PATH), 0);
+    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T("."));
+    tmp.Format(ResStr(IDS_RP_PATH), 1);
+    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T("c:\\subtitles"));
+    tmp.Format(ResStr(IDS_RP_PATH), 2);
+    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T(".\\subtitles"));
+
+    m_paths.Add(_T("."));
+    m_paths.Add(_T("c:\\subtitles"));
+    m_paths.Add(_T(".\\subtitles"));
+    for(int i = 3; i < 10; i++)
+    {
+        CString tmp;
+        tmp.Format(IDS_RP_PATH, i);
+        CString path = theApp.GetProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp);
+        if(!path.IsEmpty()) m_paths.Add(path);
+    }
+
+    m_load_level =   CDirectVobSub::LOADLEVEL_WHEN_NEEDED;
+    CString str_load_level = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOADLEVEL), _T("when_needed"));
+    str_load_level.MakeLower();
+    if (str_load_level.Compare(_T("always"))==0)
+    {
+        m_load_level = CDirectVobSub::LOADLEVEL_ALWAYS;
+    }
+    else if (str_load_level.Compare(_T("disabled"))==0)
+    {
+        m_load_level = CDirectVobSub::LOADLEVEL_DISABLED;
+    }
+    m_load_external = !!theApp.GetProfileInt(   ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EXTERNALLOAD ), 1);
+    m_load_web      = !!theApp.GetProfileInt(   ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD      ), 0);
+    m_load_embedded = !!theApp.GetProfileInt(   ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD ), 1);
+    m_load_exts  =   theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST),
+        _T("ass;ssa;srt;sub;idx;sup;txt;usf;xss;ssf;smi;psb;rt"));
 }
 
 XySubFilterAutoLoader::~XySubFilterAutoLoader()
@@ -284,6 +193,104 @@ STDMETHODIMP XySubFilterAutoLoader::QueryFilterInfo( FILTER_INFO* pInfo )
         wcscpy_s(pInfo->achName, countof(pInfo->achName)-1, L"XySubFilterAutoLoader");
     }
     return hr;
+}
+
+bool XySubFilterAutoLoader::ShouldWeAutoLoad(IFilterGraph* pGraph)
+{
+    XY_LOG_INFO(_T(""));
+
+    HRESULT hr = NOERROR;
+
+    if(m_load_level < 0 || m_load_level >= DirectVobSubImpl::LOADLEVEL_COUNT || m_load_level==DirectVobSubImpl::LOADLEVEL_DISABLED) {
+        XY_LOG_DEBUG("Disabled by load setting: "<<XY_LOG_VAR_2_STR(m_load_level));
+        return false;
+    }
+
+    if(m_load_level == DirectVobSubImpl::LOADLEVEL_ALWAYS)
+    {
+        return true;
+    }
+
+    // find text stream on known splitters
+
+    bool have_subtitle_pin = false;
+    CComPtr<IBaseFilter> pBF;
+    if( m_load_embedded && (
+        (pBF = FindFilter(CLSID_OggSplitter, pGraph)) || (pBF = FindFilter(CLSID_AviSplitter, pGraph))
+        || (pBF = FindFilter(L"{34293064-02F2-41D5-9D75-CC5967ACA1AB}", pGraph)) // matroska demux
+        || (pBF = FindFilter(L"{0A68C3B5-9164-4a54-AFAF-995B2FF0E0D4}", pGraph)) // matroska source
+        || (pBF = FindFilter(L"{149D2E01-C32E-4939-80F6-C07B81015A7A}", pGraph)) // matroska splitter
+        || (pBF = FindFilter(L"{55DA30FC-F16B-49fc-BAA5-AE59FC65F82D}", pGraph)) // Haali Media Splitter
+        || (pBF = FindFilter(L"{564FD788-86C9-4444-971E-CC4A243DA150}", pGraph)) // Haali Media Splitter (AR)
+        || (pBF = FindFilter(L"{8F43B7D9-9D6B-4F48-BE18-4D787C795EEA}", pGraph)) // Haali Simple Media Splitter
+        || (pBF = FindFilter(L"{52B63861-DC93-11CE-A099-00AA00479A58}", pGraph)) // 3ivx splitter
+        || (pBF = FindFilter(L"{6D3688CE-3E9D-42F4-92CA-8A11119D25CD}", pGraph)) // our ogg source
+        || (pBF = FindFilter(L"{9FF48807-E133-40AA-826F-9B2959E5232D}", pGraph)) // our ogg splitter
+        || (pBF = FindFilter(L"{803E8280-F3CE-4201-982C-8CD8FB512004}", pGraph)) // dsm source
+        || (pBF = FindFilter(L"{0912B4DD-A30A-4568-B590-7179EBB420EC}", pGraph)) // dsm splitter
+        || (pBF = FindFilter(L"{3CCC052E-BDEE-408a-BEA7-90914EF2964B}", pGraph)) // mp4 source
+        || (pBF = FindFilter(L"{61F47056-E400-43d3-AF1E-AB7DFFD4C4AD}", pGraph)) // mp4 splitter
+        || (pBF = FindFilter(L"{171252A0-8820-4AFE-9DF8-5C92B2D66B04}", pGraph)) // LAV splitter
+        || (pBF = FindFilter(L"{B98D13E7-55DB-4385-A33D-09FD1BA26338}", pGraph)) // LAV Splitter Source
+        || (pBF = FindFilter(L"{E436EBB5-524F-11CE-9F53-0020AF0BA770}", pGraph)) // Solveig matroska splitter
+        || (pBF = FindFilter(L"{1365BE7A-C86A-473C-9A41-C0A6E82C9FA3}", pGraph)) // MPC-HC MPEG PS/TS/PVA source
+        || (pBF = FindFilter(L"{DC257063-045F-4BE2-BD5B-E12279C464F0}", pGraph)) // MPC-HC MPEG splitter
+        || (pBF = FindFilter(L"{529A00DB-0C43-4f5b-8EF2-05004CBE0C6F}", pGraph)) // AV splitter
+        || (pBF = FindFilter(L"{D8980E15-E1F6-4916-A10F-D7EB4E9E10B8}", pGraph)) // AV source
+        ) )
+    {
+        BeginEnumPins(pBF, pEP, pPin)
+        {
+            BeginEnumMediaTypes(pPin, pEM, pmt)
+            {
+                if (pmt->majortype == MEDIATYPE_Text || pmt->majortype == MEDIATYPE_Subtitle)
+                {
+                    have_subtitle_pin = true;
+                    break;
+                }
+            }
+            EndEnumMediaTypes(pmt)
+                if (have_subtitle_pin) break;
+        }
+        EndEnumPins
+    }
+
+    if (m_load_embedded && have_subtitle_pin)
+    {
+        return true;
+    }
+
+    if (m_load_external || m_load_web)
+    {
+        // find file name
+        CStringW fn;
+
+        BeginEnumFilters(pGraph, pEF, pBF)
+        {
+            if(CComQIPtr<IFileSourceFilter> pFSF = pBF)
+            {
+                LPOLESTR fnw = NULL;
+                if(!pFSF || FAILED(pFSF->GetCurFile(&fnw, NULL)) || !fnw)
+                    continue;
+                fn = CStringW(fnw);
+                CoTaskMemFree(fnw);
+                break;
+            }
+        }
+        EndEnumFilters
+            XY_LOG_INFO(L"fn:"<<fn.GetString());
+
+        if((m_load_external || m_load_web) && (m_load_web || !(wcsstr(fn, L"http://") || wcsstr(fn, L"mms://"))))
+        {
+            CAtlArray<SubFile> file_list;
+            GetSubFileNames(fn, m_paths, m_load_exts, file_list);
+
+            return !file_list.IsEmpty();
+        }
+
+    }
+
+    return false;
 }
 
 HRESULT XySubFilterAutoLoader::GetMerit( const GUID& clsid, DWORD *merit )

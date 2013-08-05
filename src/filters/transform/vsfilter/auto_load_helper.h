@@ -27,9 +27,18 @@ public:
     STDMETHODIMP JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName);
 
     STDMETHODIMP QueryFilterInfo(FILTER_INFO* pInfo);
+
+    bool ShouldWeAutoLoad(IFilterGraph* pGraph);
 public:
     static HRESULT GetMerit( const GUID& clsid, DWORD *merit );
 protected:
     CCritSec m_pLock;
     XyAutoLoaderDummyInputPin * m_pin;
+
+    int                 m_load_level;
+    bool                m_load_external;
+    bool                m_load_web;
+    bool                m_load_embedded;
+    CString             m_load_exts;
+    CAtlArray<CString>  m_paths;
 };
