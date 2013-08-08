@@ -3209,7 +3209,7 @@ STDMETHODIMP CRenderedTextSubtitle::NonDelegatingQueryInterface(REFIID riid, voi
 // ISubPicProvider
 
 STDMETHODIMP_(POSITION) CRenderedTextSubtitle::GetStartPosition(REFERENCE_TIME rt, double fps)
-{    
+{
     m_fps = fps;
 
     int iSegment;

@@ -1868,25 +1868,59 @@ static bool OpenMPL2(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
     return(!ret.IsEmpty());
 }
 
-typedef bool (*STSOpenFunct)(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet);
+static bool OpenRealText(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
+{
+    wstring szFile;
 
-static bool OpenRealText(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet);
+    CStringW buff;
+    while(file->ReadString(buff))
+    {
+        buff.Trim();
+        if(buff.IsEmpty()) continue;
+
+        szFile += CStringW(_T("\n")) + buff.GetBuffer();
+    }
+
+    CRealTextParser RealTextParser;
+    if (!RealTextParser.ParseRealText(szFile))
+        return false;
+
+    CRealTextParser::Subtitles crRealText = RealTextParser.GetParsedSubtitles();
+
+    for (map<pair<int, int>, wstring>::const_iterator i = crRealText.m_mapLines.begin();
+        i != crRealText.m_mapLines.end();
+        ++i)
+    {
+        ret.Add(
+            SubRipper2SSA(i->second.c_str(), CharSet),
+            file->IsUnicode(),
+            i->first.first,
+            i->first.second);
+    }
+
+    //  std::wofstream wofsOut(L"c:/zzz.srt");
+    //  RealTextParser.OutputSRT(wofsOut);
+
+    return(!ret.IsEmpty());
+}
+
+typedef bool (*STSOpenFunct)(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet);
 
 typedef struct {STSOpenFunct open; tmode mode;} OpenFunctStruct;
 
 static OpenFunctStruct OpenFuncts[] =
 {
     OpenSubStationAlpha, TIME,
-    OpenSubRipper, TIME,
-    OpenOldSubRipper, TIME,
-    OpenSubViewer, TIME,
-    OpenMicroDVD, FRAME,
-    OpenSami, TIME,
-    OpenVPlayer, TIME,
-    OpenXombieSub, TIME,
-    OpenUSF, TIME,
-    OpenMPL2, TIME,
-    OpenRealText, TIME,
+    OpenSubRipper      , TIME,
+    OpenOldSubRipper   , TIME,
+    OpenSubViewer      , TIME,
+    OpenMicroDVD       , FRAME,
+    OpenSami           , TIME,
+    OpenVPlayer        , TIME,
+    OpenXombieSub      , TIME,
+    OpenUSF            , TIME,
+    OpenMPL2           , TIME,
+    OpenRealText       , TIME,
 };
 
 static int nOpenFuncts = countof(OpenFuncts);
@@ -1895,65 +1929,40 @@ static int nOpenFuncts = countof(OpenFuncts);
 
 CSimpleTextSubtitle::CSimpleTextSubtitle()
 {
-    m_mode = TIME;
-    m_dstScreenSize = CSize(0, 0);
-    m_defaultWrapStyle = 0;
-    m_collisions = 0;
-    m_fScaledBAS = false;
-    m_encoding = CTextFile::ASCII;
-    m_ePARCompensationType = EPCTDisabled;
-    m_dPARCompensation = 1.0;
-    m_eYCbCrMatrix = YCbCrMatrix_AUTO;
-    m_eYCbCrRange = YCbCrRange_AUTO;
+    m_mode                         = TIME;
+    m_dstScreenSize                = CSize(0, 0);
+    m_defaultWrapStyle             = 0;
+    m_collisions                   = 0;
+    m_fScaledBAS                   = false;
+    m_encoding                     = CTextFile::ASCII;
+    m_ePARCompensationType         = EPCTDisabled;
+    m_dPARCompensation             = 1.0;
+    m_eYCbCrMatrix                 = YCbCrMatrix_AUTO;
+    m_eYCbCrRange                  = YCbCrRange_AUTO;
     m_fUsingDefaultStyleFromScript = false;
-    m_fUseForcedStyle = false;
+    m_fUseForcedStyle              = false;
 }
 
 CSimpleTextSubtitle::~CSimpleTextSubtitle()
 {
     Empty();
 }
-/*
-CSimpleTextSubtitle::CSimpleTextSubtitle(CSimpleTextSubtitle& sts)
-{
-    *this = sts;
-}
-
-CSimpleTextSubtitle& CSimpleTextSubtitle::operator = (CSimpleTextSubtitle& sts)
-{
-    Empty();
-
-    m_name = sts.m_name;
-    m_mode = sts.m_mode;
-    m_dstScreenSize = sts.m_dstScreenSize;
-    m_defaultWrapStyle = sts.m_defaultWrapStyle;
-    m_collisions = sts.m_collisions;
-    m_fScaledBAS = sts.m_fScaledBAS;
-    m_fSSA = sts.m_fSSA;
-    m_fUsingDefaultStyleFromScript = sts.m_fUsingDefaultStyleFromScript;
-    CopyStyles(sts.m_styles);
-    m_segments.Copy(sts.m_segments);
-    Copy(sts);
-
-    return(*this);
-}
-*/
 
 void CSimpleTextSubtitle::Copy(CSimpleTextSubtitle& sts)
 {
     Empty();
 
-    m_name = sts.m_name;
-    m_mode = sts.m_mode;
-    m_dstScreenSize = sts.m_dstScreenSize;
-    m_defaultWrapStyle = sts.m_defaultWrapStyle;
-    m_collisions = sts.m_collisions;
-    m_fScaledBAS = sts.m_fScaledBAS;
-    m_encoding = sts.m_encoding;
+    m_name                         = sts.m_name;
+    m_mode                         = sts.m_mode;
+    m_dstScreenSize                = sts.m_dstScreenSize;
+    m_defaultWrapStyle             = sts.m_defaultWrapStyle;
+    m_collisions                   = sts.m_collisions;
+    m_fScaledBAS                   = sts.m_fScaledBAS;
+    m_encoding                     = sts.m_encoding;
     m_fUsingDefaultStyleFromScript = sts.m_fUsingDefaultStyleFromScript;
-    CopyStyles(sts.m_styles);
+    CopyStyles     (sts.m_styles  );
     m_segments.Copy(sts.m_segments);
-    m_entries.Copy(sts.m_entries);
+    m_entries.Copy (sts.m_entries );
 }
 
 void CSTSStyleMap::Free()
@@ -2022,16 +2031,16 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end,
     }
 
     STSEntry sub;
-    sub.str = str;
-    sub.fUnicode = fUnicode;
-    sub.style = style;
-    sub.actor = actor;
-    sub.effect = effect;
+    sub.str        = str;
+    sub.fUnicode   = fUnicode;
+    sub.style      = style;
+    sub.actor      = actor;
+    sub.effect     = effect;
     sub.marginRect = marginRect;
-    sub.layer = layer;
-    sub.start = start;
-    sub.end = end;
-    sub.readorder = readorder < 0 ? m_entries.GetCount() : readorder;
+    sub.layer      = layer;
+    sub.start      = start;
+    sub.end        = end;
+    sub.readorder  = readorder < 0 ? m_entries.GetCount() : readorder;
     int n = m_entries.Add(sub);
 
     int len = m_segments.GetCount();
@@ -2109,7 +2118,7 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end,
                 }
                 s.start = end;
                 m_segments.InsertAt(i, stss);
-            }            
+            }
         }
 
         if(end > m_segments[m_segments.GetCount()-1].end)
@@ -2119,52 +2128,6 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end,
             m_segments.Add(stss);
         }
     }
-/*
-    str.Remove('\r');
-    str.Replace(L"\n", L"\\N");
-    if(style.IsEmpty()) style = _T("Default");
-
-    int j = m_segments.GetCount();
-    for(int i = j-1; i >= 0; i--)
-    {
-        if(m_segments[i].end <= start)
-        {
-            break;
-        }
-        else if(m_segments[i].start >= start)
-        {
-            m_segments.SetCount(m_segments.GetCount()-1);
-            j--;
-        }
-        else if(m_segments[i].end > start)
-        {
-            if(i < j-1) m_segments.RemoveAt(i+1, j-i-1);
-            m_segments[i].end = start;
-            break;
-        }
-    }
-
-    if(m_segments.GetCount() == 0 && j > 0)
-        CSTSArray::RemoveAll();
-
-    STSSegment stss(start, end);
-    int len = m_entries.GetCount();
-    stss.subs.Add(len);
-    m_segments.Add(stss);
-
-    STSEntry sub;
-    sub.str = str;
-    sub.fUnicode = fUnicode;
-    sub.style = style;
-    sub.actor = actor;
-    sub.effect = effect;
-    sub.marginRect = marginRect;
-    sub.layer = layer;
-    sub.start = start;
-    sub.end = end;
-    sub.readorder = m_entries.GetCount();
-    CSTSArray::Add(sub);
-*/
 }
 
 void CSimpleTextSubtitle::AddSTSEntryOnly( CStringW str, bool fUnicode, int start, int end, CString style /*= _T("Default")*/, const CString& actor /*= _T("")*/, const CString& effect /*= _T("")*/, const CRect& marginRect /*= CRect(0,0,0,0)*/, int layer /*= 0*/, int readorder /*= -1*/ )
@@ -2177,16 +2140,16 @@ void CSimpleTextSubtitle::AddSTSEntryOnly( CStringW str, bool fUnicode, int star
     style.TrimLeft('*');
 
     STSEntry sub;
-    sub.str = str;
-    sub.fUnicode = fUnicode;
-    sub.style = style;
-    sub.actor = actor;
-    sub.effect = effect;
+    sub.str        = str;
+    sub.fUnicode   = fUnicode;
+    sub.style      = style;
+    sub.actor      = actor;
+    sub.effect     = effect;
     sub.marginRect = marginRect;
-    sub.layer = layer;
-    sub.start = start;
-    sub.end = end;
-    sub.readorder = readorder < 0 ? m_entries.GetCount() : readorder;
+    sub.layer      = layer;
+    sub.start      = start;
+    sub.end        = end;
+    sub.readorder  = readorder < 0 ? m_entries.GetCount() : readorder;
     m_entries.Add(sub);
     return;
 }
@@ -2494,8 +2457,6 @@ STSSegment* CSimpleTextSubtitle::SearchSubs2(int t, double fps, /*[out]*/ int* i
     }
     return(NULL);
 }
-
-
 
 int CSimpleTextSubtitle::TranslateStart(int i, double fps)
 {
@@ -3170,87 +3131,91 @@ STSStyle::STSStyle()
 
 void STSStyle::SetDefault()
 {
-    marginRect = CRect(20, 20, 20, 20);
-    scrAlignment = 2;
-    borderStyle = 0;
+    marginRect    = CRect(20, 20, 20, 20);
+    scrAlignment  = 2;
+    borderStyle   = 0;
     outlineWidthX = outlineWidthY = 2;
-    shadowDepthX = shadowDepthY = 3;
-    colors[0] = 0x00ffffff;
-    colors[1] = 0x0000ffff;
-    colors[2] = 0x00000000;
-    colors[3] = 0x00000000;
-    alpha[0] = 0x00;
-    alpha[1] = 0x00;
-    alpha[2] = 0x00;
-    alpha[3] = 0x80;
-    charSet = DEFAULT_CHARSET;
-    fontName = _T("Arial");
-    fontSize = 18;
-    fontScaleX = fontScaleY = 100;
-    fontSpacing = 0;
-    fontWeight = FW_BOLD;
-    fItalic = false;
-    fUnderline = false;
-    fStrikeOut = false;
-    fBlur = 0;
+    shadowDepthX  = shadowDepthY = 3;
+    colors[0]     = 0x00ffffff;
+    colors[1]     = 0x0000ffff;
+    colors[2]     = 0x00000000;
+    colors[3]     = 0x00000000;
+    alpha[0]      = 0x00;
+    alpha[1]      = 0x00;
+    alpha[2]      = 0x00;
+    alpha[3]      = 0x80;
+    charSet       = DEFAULT_CHARSET;
+    fontName      = _T("Arial");
+    fontSize      = 18;
+    fontScaleX    = fontScaleY = 100;
+    fontSpacing   = 0;
+    fontWeight    = FW_BOLD;
+    fItalic       = false;
+    fUnderline    = false;
+    fStrikeOut    = false;
+    fBlur         = 0;
     fGaussianBlur = 0;
-    fontShiftX = fontShiftY = fontAngleZ = fontAngleX = fontAngleY = 0;
-    relativeTo = 2;
+    fontShiftX    = 
+    fontShiftY    = 
+    fontAngleZ    = 
+    fontAngleX    = 
+    fontAngleY    = 0;
+    relativeTo    = 2;
 }
 
 bool STSStyle::operator == (const STSStyle& s)const
 {
-    return(marginRect == s.marginRect
-        && scrAlignment == s.scrAlignment
-        && borderStyle == s.borderStyle
-        && outlineWidthX == s.outlineWidthX
-        && outlineWidthY == s.outlineWidthY
-        && shadowDepthX == s.shadowDepthX
-        && shadowDepthY == s.shadowDepthY
+    return(marginRect          == s.marginRect
+        && scrAlignment        == s.scrAlignment
+        && borderStyle         == s.borderStyle
+        && outlineWidthX       == s.outlineWidthX
+        && outlineWidthY       == s.outlineWidthY
+        && shadowDepthX        == s.shadowDepthX
+        && shadowDepthY        == s.shadowDepthY
         && *((int*)&colors[0]) == *((int*)&s.colors[0])
         && *((int*)&colors[1]) == *((int*)&s.colors[1])
         && *((int*)&colors[2]) == *((int*)&s.colors[2])
         && *((int*)&colors[3]) == *((int*)&s.colors[3])
-        && alpha[0] == s.alpha[0]
-        && alpha[1] == s.alpha[1]
-        && alpha[2] == s.alpha[2]
-        && alpha[3] == s.alpha[3]
-        && fBlur == s.fBlur
-        && fGaussianBlur == s.fGaussianBlur
-        && relativeTo == s.relativeTo
+        && alpha[0]            == s.alpha[0]
+        && alpha[1]            == s.alpha[1]
+        && alpha[2]            == s.alpha[2]
+        && alpha[3]            == s.alpha[3]
+        && fBlur               == s.fBlur
+        && fGaussianBlur       == s.fGaussianBlur
+        && relativeTo          == s.relativeTo
         && IsFontStyleEqual(s));
 }
 
 bool STSStyle::IsFontStyleEqual(const STSStyle& s) const
 {
     return(
-        charSet == s.charSet
-        && fontName == s.fontName
-        && fontSize == s.fontSize
-        && fontScaleX == s.fontScaleX
-        && fontScaleY == s.fontScaleY
+        charSet        == s.charSet
+        && fontName    == s.fontName
+        && fontSize    == s.fontSize
+        && fontScaleX  == s.fontScaleX
+        && fontScaleY  == s.fontScaleY
         && fontSpacing == s.fontSpacing
-        && fontWeight == s.fontWeight
-        && fItalic == s.fItalic
-        && fUnderline == s.fUnderline
-        && fStrikeOut == s.fStrikeOut
-        && fontAngleZ == s.fontAngleZ
-        && fontAngleX == s.fontAngleX
-        && fontAngleY == s.fontAngleY
-        && fontShiftX == s.fontShiftX
-        && fontShiftY == s.fontShiftY);
+        && fontWeight  == s.fontWeight
+        && fItalic     == s.fItalic
+        && fUnderline  == s.fUnderline
+        && fStrikeOut  == s.fStrikeOut
+        && fontAngleZ  == s.fontAngleZ
+        && fontAngleX  == s.fontAngleX
+        && fontAngleY  == s.fontAngleY
+        && fontShiftX  == s.fontShiftX
+        && fontShiftY  == s.fontShiftY);
 }
 
 void STSStyle::operator = (const LOGFONT& lf)
 {
-    charSet = lf.lfCharSet;
-    fontName = lf.lfFaceName;
-    HDC hDC = GetDC(0);
-    fontSize = -MulDiv(lf.lfHeight, 72, GetDeviceCaps(hDC, LOGPIXELSY));
+    charSet    = lf.lfCharSet;
+    fontName   = lf.lfFaceName;
+    HDC hDC    = GetDC(0);
+    fontSize   = -MulDiv(lf.lfHeight, 72, GetDeviceCaps(hDC, LOGPIXELSY));
     ReleaseDC(0, hDC);
 //  fontAngleZ = (float)(1.0*lf.lfEscapement/10);
     fontWeight = lf.lfWeight;
-    fItalic = !!lf.lfItalic;
+    fItalic    = !!lf.lfItalic;
     fUnderline = !!lf.lfUnderline;
     fStrikeOut = !!lf.lfStrikeOut;
 }
@@ -3262,8 +3227,8 @@ LOGFONTA& operator <<= (LOGFONTA& lfa, const STSStyleBase& s)
     HDC hDC = GetDC(0);
     lfa.lfHeight = -MulDiv((int)(s.fontSize+0.5), GetDeviceCaps(hDC, LOGPIXELSY), 72);
     ReleaseDC(0, hDC);
-    lfa.lfWeight = s.fontWeight;
-    lfa.lfItalic = s.fItalic?-1:0;
+    lfa.lfWeight    = s.fontWeight;
+    lfa.lfItalic    = s.fItalic?-1:0;
     lfa.lfUnderline = s.fUnderline?-1:0;
     lfa.lfStrikeOut = s.fStrikeOut?-1:0;
     return(lfa);
@@ -3276,8 +3241,8 @@ LOGFONTW& operator <<= (LOGFONTW& lfw, const STSStyleBase& s)
     HDC hDC = GetDC(0);
     lfw.lfHeight = -MulDiv((int)(s.fontSize+0.5), GetDeviceCaps(hDC, LOGPIXELSY), 72);
     ReleaseDC(0, hDC);
-    lfw.lfWeight = s.fontWeight;
-    lfw.lfItalic = s.fItalic?-1:0;
+    lfw.lfWeight    = s.fontWeight;
+    lfw.lfItalic    = s.fItalic?-1:0;
     lfw.lfUnderline = s.fUnderline?-1:0;
     lfw.lfStrikeOut = s.fStrikeOut?-1:0;
     return(lfw);
@@ -3318,18 +3283,18 @@ STSStyle& operator <<= (STSStyle& s, const CString& style)
         {
             CRect tmp_rect;
             tmp_rect.left = GetInt(str,';'); tmp_rect.right = GetInt(str,';'); tmp_rect.top = GetInt(str,';'); tmp_rect.bottom = GetInt(str,';');
-            s.marginRect = tmp_rect;
-            s.scrAlignment = GetInt(str,';'); s.borderStyle = GetInt(str,';');
+            s.marginRect  = tmp_rect;
+            s.scrAlignment  = GetInt(str,';');   s.borderStyle   = GetInt(str,';');
             s.outlineWidthX = GetFloat(str,';'); s.outlineWidthY = GetFloat(str,';'); s.shadowDepthX = GetFloat(str,';'); s.shadowDepthY = GetFloat(str,';');
             for(int i = 0; i < 4; i++) s.colors[i] = (COLORREF)GetInt(str,';');
             for(int i = 0; i < 4; i++) s.alpha[i] = GetInt(str,';');
-            s.charSet = GetInt(str,';');
-            s.fontName = WToT(GetStr(str,';')); s.fontSize = GetFloat(str,';');
-            s.fontScaleX = GetFloat(str,';'); s.fontScaleY = GetFloat(str,';');
-            s.fontSpacing = GetFloat(str,';'); s.fontWeight = GetInt(str,';');
-            s.fItalic = !!GetInt(str,';'); s.fUnderline = !!GetInt(str,';'); s.fStrikeOut = !!GetInt(str,';'); s.fBlur = GetFloat(str,';'); s.fGaussianBlur = GetFloat(str,';');
-            s.fontAngleZ = GetFloat(str,';'); s.fontAngleX = GetFloat(str,';'); s.fontAngleY = GetFloat(str,';');
-            s.relativeTo = GetInt(str,';');
+            s.charSet     = GetInt(str,';');
+            s.fontName    = WToT(GetStr(str,';')); s.fontSize   = GetFloat(str,';');
+            s.fontScaleX  = GetFloat(str,';');     s.fontScaleY = GetFloat(str,';');
+            s.fontSpacing = GetFloat(str,';');     s.fontWeight = GetInt  (str,';');
+            s.fItalic     = !!GetInt(str,';');     s.fUnderline = !!GetInt(str,';'); s.fStrikeOut = !!GetInt(str,';'); s.fBlur = GetFloat(str,';'); s.fGaussianBlur = GetFloat(str,';');
+            s.fontAngleZ  = GetFloat(str,';');     s.fontAngleX = GetFloat(str,';'); s.fontAngleY = GetFloat(str,';');
+            s.relativeTo  = GetInt(str,';');
         }
     }
     catch(...)
@@ -3338,40 +3303,4 @@ STSStyle& operator <<= (STSStyle& s, const CString& style)
     }
 
     return(s);
-}
-
-static bool OpenRealText(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
-{
-    wstring szFile;
-
-    CStringW buff;
-    while(file->ReadString(buff))
-    {
-        buff.Trim();
-        if(buff.IsEmpty()) continue;
-
-        szFile += CStringW(_T("\n")) + buff.GetBuffer();
-    }
-
-    CRealTextParser RealTextParser;
-    if (!RealTextParser.ParseRealText(szFile))
-        return false;
-
-    CRealTextParser::Subtitles crRealText = RealTextParser.GetParsedSubtitles();
-
-    for (map<pair<int, int>, wstring>::const_iterator i = crRealText.m_mapLines.begin();
-         i != crRealText.m_mapLines.end();
-         ++i)
-    {
-        ret.Add(
-            SubRipper2SSA(i->second.c_str(), CharSet),
-            file->IsUnicode(),
-            i->first.first,
-            i->first.second);
-    }
-
-//  std::wofstream wofsOut(L"c:/zzz.srt");
-//  RealTextParser.OutputSRT(wofsOut);
-
-    return(!ret.IsEmpty());
 }
