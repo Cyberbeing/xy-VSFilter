@@ -641,9 +641,6 @@ HRESULT XySubFilter::SetCurStyles( const SubStyle sub_style[], int count )
         }
         if (changed) {
             hr = OnOptionChanged(BIN2_CUR_STYLES);
-            //fixme: the default style implemetation is still a mess
-            //so that once users modified styles setting, the default style would NOT be overwritten by the global default
-            rts->m_fUsingDefaultStyleFromScript = true;
         }
     }
     else
@@ -1743,18 +1740,14 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
         {
             CRenderedTextSubtitle* pRTS = dynamic_cast<CRenderedTextSubtitle*>(pSubStream);
             pRTS->Deinit();//clear caches
-            if(fApplyDefStyle || !pRTS->m_fUsingDefaultStyleFromScript)
-            {
-                STSStyle s = m_defStyle;
 
-                bool succeeded = pRTS->SetDefaultStyle(s);
-                if (!succeeded)
-                {
-                    XY_LOG_ERROR("Failed to set default style");
-                }
+            STSStyle s = m_defStyle;
+            bool succeeded = pRTS->SetDefaultStyle(s);
+            if (!succeeded)
+            {
+                XY_LOG_ERROR("Failed to set default style");
             }
-            pRTS->SetUseForcedStyle(m_xy_bool_opt[BOOL_FORCE_DEFAULT_STYLE], 
-                m_xy_bool_opt[BOOL_FORCE_DEFAULT_STYLE] ? &m_defStyle : NULL);
+            pRTS->SetForceDefaultStyle(m_xy_bool_opt[BOOL_FORCE_DEFAULT_STYLE]);
 
             pRTS->m_ePARCompensationType = CSimpleTextSubtitle::EPCTDisabled;
             pRTS->m_dPARCompensation = 1.00;

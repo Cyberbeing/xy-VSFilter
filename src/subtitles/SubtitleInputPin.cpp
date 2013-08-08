@@ -461,7 +461,6 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) CSubtitleInputPin::CreateHelper( const C
         CRenderedTextSubtitle* pRTS = DEBUG_NEW CRenderedTextSubtitle(m_pSubLock);
         pRTS->m_name = CString(GetPinName(pReceivePin)) + _T(" (embeded)");
         pRTS->m_dstScreenSize = CSize(384, 288);
-        pRTS->CreateDefaultStyle(DEFAULT_CHARSET);
         ret = DEBUG_NEW CTextSubtitleInputPinHepler(pRTS, m_mt);
     }
     else if(mt.majortype == MEDIATYPE_Subtitle)
@@ -507,7 +506,6 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) CSubtitleInputPin::CreateHelper( const C
             pRTS->m_name = name;
             pRTS->m_lcid = lcid;
             pRTS->m_dstScreenSize = CSize(384, 288);
-            pRTS->CreateDefaultStyle(DEFAULT_CHARSET);
 
             if(dwOffset > 0 && mt.cbFormat - dwOffset > 0)
             {

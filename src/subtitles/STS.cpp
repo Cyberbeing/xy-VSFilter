@@ -1929,18 +1929,18 @@ static int nOpenFuncts = countof(OpenFuncts);
 
 CSimpleTextSubtitle::CSimpleTextSubtitle()
 {
-    m_mode                         = TIME;
-    m_dstScreenSize                = CSize(0, 0);
-    m_defaultWrapStyle             = 0;
-    m_collisions                   = 0;
-    m_fScaledBAS                   = false;
-    m_encoding                     = CTextFile::ASCII;
-    m_ePARCompensationType         = EPCTDisabled;
-    m_dPARCompensation             = 1.0;
-    m_eYCbCrMatrix                 = YCbCrMatrix_AUTO;
-    m_eYCbCrRange                  = YCbCrRange_AUTO;
-    m_fUsingDefaultStyleFromScript = false;
-    m_fUseForcedStyle              = false;
+    m_mode                 = TIME;
+    m_dstScreenSize        = CSize(0, 0);
+    m_defaultWrapStyle     = 0;
+    m_collisions           = 0;
+    m_fScaledBAS           = false;
+    m_encoding             = CTextFile::ASCII;
+    m_ePARCompensationType = EPCTDisabled;
+    m_dPARCompensation     = 1.0;
+    m_eYCbCrMatrix         = YCbCrMatrix_AUTO;
+    m_eYCbCrRange          = YCbCrRange_AUTO;
+    m_fForcedDefaultStyle  = false;
+    m_defaultStyle.charSet = DEFAULT_CHARSET;
 }
 
 CSimpleTextSubtitle::~CSimpleTextSubtitle()
@@ -1959,7 +1959,8 @@ void CSimpleTextSubtitle::Copy(CSimpleTextSubtitle& sts)
     m_collisions                   = sts.m_collisions;
     m_fScaledBAS                   = sts.m_fScaledBAS;
     m_encoding                     = sts.m_encoding;
-    m_fUsingDefaultStyleFromScript = sts.m_fUsingDefaultStyleFromScript;
+    m_defaultStyle                 = sts.m_defaultStyle;
+    m_fForcedDefaultStyle          = sts.m_fForcedDefaultStyle;
     CopyStyles     (sts.m_styles  );
     m_segments.Copy(sts.m_segments);
     m_entries.Copy (sts.m_entries );
@@ -2005,7 +2006,6 @@ void CSimpleTextSubtitle::Empty()
 {
     m_dstScreenSize = CSize(0, 0);
     m_styles.Free();
-    m_fUsingDefaultStyleFromScript = false;
     m_segments.RemoveAll();
     m_entries.RemoveAll();
 }
@@ -2156,19 +2156,9 @@ void CSimpleTextSubtitle::AddSTSEntryOnly( CStringW str, bool fUnicode, int star
 
 STSStyle* CSimpleTextSubtitle::CreateDefaultStyle(int CharSet)
 {
-    STSStyle* ret = NULL;
-
-    if(!m_styles.Lookup(g_default_style, ret))
-    {
-        STSStyle* style = DEBUG_NEW STSStyle();
-        style->charSet = CharSet;
-        AddStyle(g_default_style, style);
-        m_styles.Lookup(g_default_style, ret);
-
-        m_fUsingDefaultStyleFromScript = false;
-    }
-
-    return ret;
+    m_defaultStyle = STSStyle();
+    m_defaultStyle.charSet = CharSet;
+    return &m_defaultStyle;
 }
 
 void CSimpleTextSubtitle::ChangeUnknownStylesToDefault()
@@ -2273,29 +2263,19 @@ bool CSimpleTextSubtitle::SetDefaultStyle(STSStyle& s)
 {
     LogStyles(m_styles);
 
-    STSStyle* val;
-    if (!m_styles.Lookup(g_default_style, val)) return false;
-
-    *val = s;
-    m_fUsingDefaultStyleFromScript = false;
+    m_defaultStyle = s;
     return true;
 }
 
 bool CSimpleTextSubtitle::GetDefaultStyle(STSStyle& s)
 {
-    STSStyle* val;
-    if(!m_styles.Lookup(g_default_style, val)) return false;
-    s = *val;
+    s = m_defaultStyle;
     return true;
 }
 
-void CSimpleTextSubtitle::SetUseForcedStyle( bool use_forced_style, const STSStyle *forced_style /*= NULL*/ )
+void CSimpleTextSubtitle::SetForceDefaultStyle( bool value )
 {
-    m_fUseForcedStyle = use_forced_style;
-    if (forced_style)
-    {
-        m_forcedStyle = *forced_style;
-    }
+    m_fForcedDefaultStyle = value;
 }
 
 void CSimpleTextSubtitle::ConvertToTimeBased(double fps)
@@ -2520,20 +2500,17 @@ void CSimpleTextSubtitle::TranslateSegmentStartEnd(int i, double fps, /*out*/int
 STSStyle* CSimpleTextSubtitle::GetStyle(int i)
 {
     STSStyle* style = NULL;
-    if (!m_fUseForcedStyle)
+    if (!m_fForcedDefaultStyle)
     {
-        m_styles.Lookup(m_entries.GetAt(i).style, style);
-
-        if(!style)
+        if (!m_styles.Lookup(m_entries.GetAt(i).style, style) &&
+            !m_styles.Lookup(         g_default_style, style))
         {
-            STSStyle* defstyle = NULL;
-            m_styles.Lookup(g_default_style, defstyle);
-            style = defstyle;
+            style = &m_defaultStyle;
         }
     }
     else
     {
-        style = &m_forcedStyle;
+        style = &m_defaultStyle;
     }
     ASSERT(style);
 
@@ -2542,31 +2519,7 @@ STSStyle* CSimpleTextSubtitle::GetStyle(int i)
 
 bool CSimpleTextSubtitle::GetStyle(int i, STSStyle* const stss)
 {
-    STSStyle* style = NULL;
-    if (!m_fUseForcedStyle)
-    {
-        m_styles.Lookup(m_entries.GetAt(i).style, style);
-
-        STSStyle* defstyle = NULL;
-        m_styles.Lookup(g_default_style, defstyle);
-
-        if(!style)
-        {
-            if(!defstyle)
-            {
-                defstyle = CreateDefaultStyle(DEFAULT_CHARSET);
-            }
-
-            style = defstyle;
-        }
-
-        if(!style) {ASSERT(0); return false;}
-    }
-    else
-    {
-        style = &m_forcedStyle;
-    }
-    *stss = *style;
+    *stss = *GetStyle(i);
 
     return true;
 }
@@ -2811,9 +2764,6 @@ bool CSimpleTextSubtitle::Open(CTextFile* f, int CharSet, CString name)
 
         //      Sort();
         CreateSegments();
-
-        m_fUsingDefaultStyleFromScript = !!m_styles.Lookup(g_default_style);
-        CreateDefaultStyle(CharSet);
 
         ChangeUnknownStylesToDefault();
 
@@ -3063,7 +3013,7 @@ bool CSimpleTextSubtitle::SaveAs(CString fn, exttype et, double fps, CTextFile::
     }
 
     STSStyle* s;
-    if (m_fUsingDefaultStyleFromScript && m_styles.Lookup(g_default_style, s) && et != EXTSSA && et != EXTASS)
+    if (m_styles.Lookup(g_default_style, s) && et != EXTSSA && et != EXTASS)
     {
         CTextFile f;
         if(!f.Save(fn + _T(".style"), e))

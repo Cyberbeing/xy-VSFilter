@@ -1713,29 +1713,26 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 		{
 			CRenderedTextSubtitle* pRTS = dynamic_cast<CRenderedTextSubtitle*>(pSubStream);
             pRTS->Deinit();//clear caches
-			if(fApplyDefStyle || !pRTS->m_fUsingDefaultStyleFromScript)
-			{
-				STSStyle s = m_defStyle;
 
-				if(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT])
-				{
-					s.scrAlignment = 2;
-					int w = pRTS->m_dstScreenSize.cx;
-					int h = pRTS->m_dstScreenSize.cy;
-                    CRect tmp_rect = s.marginRect.get();
-					int mw = w - tmp_rect.left - tmp_rect.right;
-					tmp_rect.bottom = h - MulDiv(h, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 100);
-					tmp_rect.left = MulDiv(w, m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, 100) - mw/2;
-					tmp_rect.right = w - (tmp_rect.left + mw);
-                    s.marginRect = tmp_rect;
-				}
+            STSStyle s = m_defStyle;
+            if(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT])
+            {
+                s.scrAlignment = 2;
+                int w = pRTS->m_dstScreenSize.cx;
+                int h = pRTS->m_dstScreenSize.cy;
+                CRect tmp_rect = s.marginRect.get();
+                int mw = w - tmp_rect.left - tmp_rect.right;
+                tmp_rect.bottom = h - MulDiv(h, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 100);
+                tmp_rect.left = MulDiv(w, m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, 100) - mw/2;
+                tmp_rect.right = w - (tmp_rect.left + mw);
+                s.marginRect = tmp_rect;
+            }
 
-                bool succeeded = pRTS->SetDefaultStyle(s);
-                if (!succeeded)
-                {
-                    XY_LOG_ERROR("Failed to set default style");
-                }
-			}
+            bool succeeded = pRTS->SetDefaultStyle(s);
+            if (!succeeded)
+            {
+                XY_LOG_ERROR("Failed to set default style");
+            }
 
 			pRTS->m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS]);
 			if (m_CurrentVIH2.dwPictAspectRatioX != 0 && m_CurrentVIH2.dwPictAspectRatioY != 0&& m_CurrentVIH2.bmiHeader.biWidth != 0 && m_CurrentVIH2.bmiHeader.biHeight != 0)
@@ -2385,9 +2382,6 @@ HRESULT CDirectVobSubFilter::SetCurStyles( const SubStyle sub_style[], int count
         }
         if (changed) {
             hr = OnOptionChanged(BIN2_CUR_STYLES);
-            //fixme: the default style implemetation is still a mess
-            //so that once users modified styles setting, the default style would NOT be overwritten by the global default
-            rts->m_fUsingDefaultStyleFromScript = true;
         }
     }
     else

@@ -176,12 +176,10 @@ public:
     int            m_collisions;
     bool           m_fScaledBAS;
 
-    bool           m_fUsingDefaultStyleFromScript;
-
     CSTSStyleMap   m_styles;
 
-    bool           m_fUseForcedStyle;
-    STSStyle       m_forcedStyle;
+    bool           m_fForcedDefaultStyle;
+    STSStyle       m_defaultStyle;
 
     enum EPARCompensationType
     {
@@ -245,7 +243,7 @@ public:
     bool SetDefaultStyle(STSStyle& s);
     bool GetDefaultStyle(STSStyle& s);
 
-    void SetUseForcedStyle(bool use_forced_style, const STSStyle *forced_style = NULL);
+    void SetForceDefaultStyle(bool value);
 
     void ConvertToTimeBased (double fps);
     void ConvertToFrameBased(double fps);
