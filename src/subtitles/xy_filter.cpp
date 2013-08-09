@@ -706,33 +706,46 @@ void xy_byte_2_float_sse(float *dst, int dst_width, int dst_stride,
     }
 }
 
+
 /****
  * Copy transposed Matrix src to dst.
  * @dst_width MUST >= @height.
  * if @dst_width > @height, the extra elements will be filled with 0.
  **/
+template<typename SrcT, typename DstT=SrcT, void* Conv=NULL>
+struct XyTranspose
+{
+    typedef DstT (*ConvFunc)(const SrcT& src);
+
+    static void transpose(DstT * dst, int dst_width, int dst_stride, const SrcT *src, int width, int height, int src_stride)
+    {
+        ASSERT(dst_width >= height);
+        PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
+        const SrcT* src_end = src + width;
+        PCUINT8 src2_end = reinterpret_cast<PCUINT8>(src) + height*src_stride;
+        for( ; src<src_end; src++, dst_byte+=dst_stride )
+        {
+            PCUINT8 src2 = reinterpret_cast<PCUINT8>(src);
+
+            DstT *dst2 = reinterpret_cast<DstT*>(dst_byte);
+            for (;src2<src2_end;src2+=src_stride,dst2++)
+            {
+                *dst2 = Conv==NULL ? *reinterpret_cast<const SrcT*>(src2)
+                                   : ConvFunc(Conv)(*reinterpret_cast<const SrcT*>(src2));
+            }
+            DstT *dst2_end = reinterpret_cast<DstT*>(dst_byte) + dst_width;
+            for (;dst2<dst2_end;dst2++)
+            {
+                *dst2 = 0;
+            }
+        }
+    }
+};
+
 void xy_float_2_float_transpose_c(float *dst, int dst_width, int dst_stride, 
     const float *src, int width, int height, int src_stride)
 {
-    ASSERT(dst_width >= height);
-    PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
-    const float* src_end = src + width;
-    PCUINT8 src2_end = reinterpret_cast<PCUINT8>(src) + height*src_stride;
-    for( ; src<src_end; src++, dst_byte+=dst_stride )
-    {
-        PCUINT8 src2 = reinterpret_cast<PCUINT8>(src);
-
-        float *dst2 = reinterpret_cast<float*>(dst_byte);        
-        for (;src2<src2_end;src2+=src_stride,dst2++)
-        {
-            *dst2 = *reinterpret_cast<const float*>(src2);
-        }
-        float *dst2_end = reinterpret_cast<float*>(dst_byte) + dst_width;
-        for (;dst2<dst2_end;dst2++)
-        {
-            *dst2 = 0;
-        }
-    }
+    XyTranspose<float>::transpose(dst, dst_width, dst_stride, src, width, height, src_stride);
 }
 
 /****
@@ -776,33 +789,16 @@ void xy_float_2_float_transpose_sse(float *dst, int dst_width, int dst_stride,
     }
 }
 
-/****
- * Transpose and round Matrix src, then copy to dst.
- * @dst_width MUST >= @height.
- * if @dst_width > @height, the extra elements will be filled with 0.
- **/
+BYTE RoundHalfUpFloat2BYTE(float f)
+{
+    return BYTE(f+.5f);
+}
+
 void xy_float_2_byte_transpose_c(UINT8 *dst, int dst_width, int dst_stride, 
     const float *src, int width, int height, int src_stride)
 {
-    ASSERT(dst_width >= height);
-    PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
-    const float* src_end = src + width;
-    PCUINT8 src2_end = reinterpret_cast<PCUINT8>(src) + height*src_stride;
-    for( ; src<src_end; src++, dst_byte+=dst_stride )
-    {
-        PCUINT8 src2 = reinterpret_cast<PCUINT8>(src);
-
-        UINT8 *dst2 = reinterpret_cast<UINT8*>(dst_byte);
-        for (;src2<src2_end;src2+=src_stride,dst2++)
-        {
-            *dst2 = static_cast<UINT8>(*reinterpret_cast<const float*>(src2)+0.5);
-        }
-        UINT8 *dst2_end = reinterpret_cast<UINT8*>(dst_byte) + dst_width;
-        for (;dst2<dst2_end;dst2++)
-        {
-            *dst2 = 0;
-        }
-    }
+    XyTranspose<float, BYTE, RoundHalfUpFloat2BYTE>::transpose(dst, dst_width, dst_stride, 
+        src, width, height, src_stride);
 }
 
 void xy_float_2_byte_transpose_sse(UINT8 *dst, int dst_width, int dst_stride, 
@@ -1287,31 +1283,10 @@ void xy_calculate_filter(float pass, PUINT filter)
     }
 }
 
-/****
- * See @xy_float_2_byte_transpose_c
- **/
 void xy_byte_2_byte_transpose_c(UINT8 *dst, int dst_width, int dst_stride, 
     PCUINT8 src, int width, int height, int src_stride)
 {
-    ASSERT(dst_width >= height);
-    PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
-    PCUINT8 src_end = src + width;
-    PCUINT8 src2_end = reinterpret_cast<PCUINT8>(src) + height*src_stride;
-    for( ; src<src_end; src++, dst_byte+=dst_stride )
-    {
-        PCUINT8 src2 = reinterpret_cast<PCUINT8>(src);
-
-        UINT8 *dst2 = reinterpret_cast<UINT8*>(dst_byte);
-        for (;src2<src2_end;src2+=src_stride,dst2++)
-        {
-            *dst2 = *src2;
-        }
-        UINT8 *dst2_end = reinterpret_cast<UINT8*>(dst_byte) + dst_width;
-        for (;dst2<dst2_end;dst2++)
-        {
-            *dst2 = 0;
-        }
-    }
+    XyTranspose<BYTE>::transpose(dst, dst_width, dst_stride, src, width, height, src_stride);
 }
 
 /****
