@@ -217,8 +217,6 @@ public:
     static bool Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay);
 
     static bool IsItReallyBlur(float be_strength, double gaussian_blur_strength);
-    static bool OldFixedPointBlur(const Overlay& input_overlay, float be_strength, double gaussian_blur_strength, 
-        double target_scale_x, double target_scale_y, SharedPtrOverlay output_overlay);
 
     static bool Blur(const Overlay& input_overlay, float be_strength, double gaussian_blur_strength, 
         double target_scale_x, double target_scale_y, SharedPtrOverlay output_overlay);
@@ -253,5 +251,9 @@ public:
                              const DWORD      *switchpts, 
                              bool              fBody    , 
                              bool              fBorder);
+private:
+    static bool OldFixedPointBlur(const Overlay& input_overlay, float be_strength, double gaussian_blur_strength, 
+        double target_scale_x, double target_scale_y, SharedPtrOverlay output_overlay);
+    static bool FloatingPointBlur(const Overlay& input_overlay, float be_strength, double gaussian_blur_strength, 
+        double target_scale_x, double target_scale_y, SharedPtrOverlay output_overlay);
 };
-

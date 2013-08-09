@@ -879,6 +879,8 @@ bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int y
     return true;
 }
 
+////////// Blur /////////////
+
 const float Rasterizer::GAUSSIAN_BLUR_THREHOLD = 0.333333f;
 
 bool Rasterizer::IsItReallyBlur( float be_strength, double gaussian_blur_strength )
@@ -896,7 +898,7 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, float be_streng
     double target_scale_x, double target_scale_y, SharedPtrOverlay output_overlay)
 {
     using namespace ::boost::flyweights;
-    
+
     ASSERT(IsItReallyBlur(be_strength, gaussian_blur_strength));
     if(!output_overlay)
     {
@@ -915,7 +917,7 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, float be_streng
     double gaussian_blur_strength_x = gaussian_blur_strength*target_scale_x;
     double gaussian_blur_strength_y = gaussian_blur_strength*target_scale_y;
 
-    int gaussian_blur_radius_x = (static_cast<int>( ceil(gaussian_blur_strength_x*3) ) | 1)/2;//fix me: rounding err?    
+    int gaussian_blur_radius_x = (static_cast<int>( ceil(gaussian_blur_strength_x*3) ) | 1)/2;//fix me: rounding err?
     int gaussian_blur_radius_y = (static_cast<int>( ceil(gaussian_blur_strength_y*3) ) | 1)/2;//fix me: rounding err?
     if( gaussian_blur_radius_x < 1 && gaussian_blur_strength>GAUSSIAN_BLUR_THREHOLD )
         gaussian_blur_radius_x = 1;//make sure that it really do a blur
@@ -1001,7 +1003,7 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, float be_streng
     if ( gaussian_blur_strength > GAUSSIAN_BLUR_THREHOLD )
     {
         byte* plan_selected= output_overlay->mfWideOutlineEmpty ? body : border;
-        
+
         flyweight<key_value<double, ass_synth_priv, GaussianFilterKey<ass_synth_priv>>, no_locking>
             fw_priv_blur_x(gaussian_blur_strength_x);
         flyweight<key_value<double, ass_synth_priv, GaussianFilterKey<ass_synth_priv>>, no_locking>
@@ -1046,7 +1048,7 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, float be_streng
 }
 
 // @return: true if actually a blur operation has done, or else false and output is leave unset.
-bool Rasterizer::Blur(const Overlay& input_overlay, float be_strength, 
+bool Rasterizer::FloatingPointBlur(const Overlay& input_overlay, float be_strength, 
     double gaussian_blur_strength, 
     double target_scale_x, double target_scale_y, 
     SharedPtrOverlay output_overlay)
@@ -1062,14 +1064,6 @@ bool Rasterizer::Blur(const Overlay& input_overlay, float be_strength,
     {
         return true;
     }
-
-    if (!(g_cpuid.m_flags & CCpuID::sse2))
-    {
-        // C code path of floating point version is extremely slow,
-        // so we fall back to fixed point version instead
-        return Rasterizer::OldFixedPointBlur(input_overlay, be_strength, 
-            gaussian_blur_strength, target_scale_x, target_scale_y, output_overlay);//fix me: important!
-    }    
 
     if (gaussian_blur_strength>0)
     {
@@ -1092,6 +1086,27 @@ bool Rasterizer::Blur(const Overlay& input_overlay, float be_strength,
     {
         bool rv = BeBlur(input_overlay, be_strength, target_scale_x, target_scale_y, output_overlay);
         ASSERT(rv);
+    }
+    return true;
+}
+
+// @return: true if actually a blur operation has done, or else false and output is leave unset.
+bool Rasterizer::Blur(const Overlay& input_overlay, float be_strength, 
+    double gaussian_blur_strength, 
+    double target_scale_x, double target_scale_y, 
+    SharedPtrOverlay output_overlay)
+{
+    if (!(g_cpuid.m_flags & CCpuID::sse2))
+    {
+        // C code path of floating point version is extremely slow,
+        // so we fall back to fixed point version instead
+        return OldFixedPointBlur(input_overlay, be_strength, 
+            gaussian_blur_strength, target_scale_x, target_scale_y, output_overlay);//fix me: important!
+    }
+    else
+    {
+        return FloatingPointBlur(input_overlay, be_strength, 
+            gaussian_blur_strength, target_scale_x, target_scale_y, output_overlay);
     }
     return true;
 }
