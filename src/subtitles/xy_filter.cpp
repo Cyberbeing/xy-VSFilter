@@ -1360,3 +1360,158 @@ void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, flo
     xy_free(tmp);
     return;
 }
+
+
+// filter [pad main ............... main pad]
+//             |-   filter_main_len   -|
+struct PaddedBoxFilter
+{
+    int filter_main_len;
+    float main;
+    float pad;
+};
+
+// filter with [tail main ............... main tail] kernel
+//                   |-   filter_main_len   -|
+// buf in  = [* * ...                     * ] <- padding
+//           [0 0 ... 0 x x ... x 0 0 ... 0 ]
+//           [ ...                          ]
+//           [0 0 ... 0 x x ... x 0 0 ... 0 ]
+//
+//     out = [0 0 ... 0 x x ... x 0 0 ... 0 ]
+//           [ ...                          ]
+//           [0 0 ... 0 x x ... x 0 0 ... 0 ]
+//           [* * ...                     * ] <- not changed
+void xy_be_filter(float *buf, int w, int h, int stride, const PaddedBoxFilter& filter)
+{
+    int   filter_main_len = filter.filter_main_len;
+    float main            = filter.main;
+    float pad             = filter.pad;
+
+    float sum=0;
+    float old_pix1=0, old_pix2=0;
+    float *dst = buf;
+    buf = (float *)((BYTE*)buf+stride);
+    while (h--)
+    {
+        old_pix1 = buf[0];
+        old_pix2 = buf[1];
+        sum = pad * buf[0];
+        for (int i=1;i<=filter_main_len;i++)
+            sum += main * buf[i];
+        for (int i=filter_main_len/2+1;i<w-filter_main_len/2-1;i++)
+        {
+            dst[i] = (sum + buf[i+filter_main_len/2+1]*pad);
+            sum -= old_pix1*pad;
+            sum -= old_pix2*(main-pad);
+            sum += buf[i+filter_main_len/2+1]*main;
+            old_pix1 = old_pix2;
+            old_pix2 = buf[i-filter_main_len/2+1];
+        }
+        dst = (float *)((BYTE*)dst+stride);
+        buf = (float *)((BYTE*)buf+stride);
+    }
+}
+
+void xy_calculate_filter(PaddedBoxFilter * output, float scale_factor)
+{
+    //int scale_factor_int = scale_factor * 32;
+    //if (scale_factor_int > 16)
+    //{
+    //    output->filter_main_len = (scale_factor_int + 16)/32*2-1;
+    //    int pad = (scale_factor_int&31)*2 + 32;
+    //    if (pad>=2*32)
+    //    {
+    //        pad -= 2*32;
+    //    }
+    //    output->pad  = pad;
+    //    output->main = 2*32;
+    //}
+    //else
+    //{
+    //    output->filter_main_len = 1;
+    //    output->main = 4*32;
+    //    output->pad  = scale_factor_int&31;
+    //}
+
+    if (scale_factor >= 1.0f)
+    {
+        output->filter_main_len = floor((scale_factor + 0.5f))*2-1;
+        int pad = (scale_factor - (int)scale_factor)*2.0f + 1.0f;
+        if (pad>=2.0f)
+        {
+            pad -= 2.0f;
+        }
+        output->pad  = pad;
+        output->main = 2.0f;
+    }
+    else
+    {
+        output->filter_main_len = 1;
+        output->main = 4.0f;
+        output->pad  = 2*(scale_factor - (int)scale_factor);
+    }
+    float vol = output->main * output->filter_main_len + 2.0*output->pad;
+    output->main = output->main / vol;
+    output->pad  = output->pad  / vol;
+}
+
+float xy_trunc(const float& src)
+{
+    return (int)src;
+}
+
+void xy_be_blur2(unsigned char *buf, int w, int h, int stride, int pass, float scaled_factor_x, float scaled_factor_y)
+{
+    PaddedBoxFilter filter_x, filter_y;
+
+    xy_calculate_filter(&filter_x, scaled_factor_x);
+    xy_calculate_filter(&filter_y, scaled_factor_y);
+
+    int stride_hor = (w + filter_x.filter_main_len + 1)*sizeof(float);
+    int stride_ver = (h + filter_y.filter_main_len + 1)*sizeof(float);
+
+    PUINT8 tmp1 = reinterpret_cast<PUINT8>(xy_malloc(2*(stride_hor+1)*(stride_ver+1)));
+    PUINT8 tmp2 = tmp1 + (w+1)*stride_ver;
+    ASSERT(tmp1);
+
+    PUINT8 src = buf;
+    int src_stride = stride;
+
+    xy_byte_2_float_c((float*)tmp2, w, stride_hor, src, w, h, src_stride);
+    src = tmp2;
+    src_stride = stride_hor;
+    for (int i=0;i<pass;i++)
+    {
+        // transpose
+        memset(tmp1, 0, (filter_y.filter_main_len/2+1)*sizeof(float)+stride_ver);
+        XyTranspose<float,float,xy_trunc>::transpose((float*)(
+            tmp1+(filter_y.filter_main_len/2+1)*sizeof(float)+stride_ver),
+            stride_ver/sizeof(float), stride_ver, (float*)src, w, h, src_stride);
+        // vertical pass
+        xy_be_filter((float*)tmp1, h+filter_y.filter_main_len+1, w, stride_ver, filter_y);
+        src = tmp1+(filter_y.filter_main_len/2+1)*sizeof(float);
+        src_stride = stride_ver;
+        // transpose
+        memset(tmp2, 0, (filter_x.filter_main_len/2+1)*sizeof(float)+stride_hor);
+        XyTranspose<float>::transpose((float*)(
+            tmp2+(filter_x.filter_main_len/2+1)*sizeof(float)+stride_hor),
+            stride_hor/sizeof(float), stride_hor, (float*)src, h, w, src_stride);
+        // horizontal pass
+        xy_be_filter((float*)tmp2, w+filter_x.filter_main_len+1, h, stride_hor, filter_x);
+        src = tmp2 + (filter_x.filter_main_len/2 + 1)*sizeof(float);
+        src_stride = stride_hor;
+    }
+    while(h--)
+    {
+        float * src_float = (float*)src;
+        for (int i=0;i<w;i++)
+        {
+            buf[i] = src_float[i];
+        }
+        buf += stride;
+        src += src_stride;
+    }
+    xy_free(tmp1);
+    return;
+}
