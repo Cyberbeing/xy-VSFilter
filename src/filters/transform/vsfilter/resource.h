@@ -135,6 +135,7 @@
 #define IDC_USEBT709                    224
 #define IDC_SHOWOSDSTATS                225
 #define IDC_OVERRIDEPLACEMENT           226
+#define IDS_R_KNOWN_SOURCE_FILTER       227
 #define IDC_EDIT1                       228
 #define IDC_EDIT2                       229
 #define IDC_EDIT7                       230
@@ -163,6 +164,9 @@
 #define IDC_SPIN6                       245
 #define IDC_EDIT9                       246
 #define IDC_SPIN9                       247
+#define IDS_RK_GUID                     248
+#define IDS_RK_FRIENDLY_NAME            249
+#define IDS_RK_TOTAL_NUMBER             250
 #define IDC_PREFLIST                    257
 #define IDC_OUTPUT_FORMAT_LIST          257
 #define IDC_DYNCHGLIST                  259
