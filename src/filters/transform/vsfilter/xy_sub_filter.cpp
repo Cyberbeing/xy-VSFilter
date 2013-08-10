@@ -189,8 +189,7 @@ int XySubFilter::GetPinCount()
 STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
 {
     CAutoLock cAutoLock(&m_csFilter);
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
-    XY_LOG_INFO("JoinFilterGraph. pGraph:"<<(void*)pGraph);
+    XY_LOG_INFO(XY_LOG_VAR_2_STR(this)<<" pGraph:"<<(void*)pGraph);
     HRESULT hr = NOERROR;
     if(pGraph)
     {
@@ -210,6 +209,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
                     XY_LOG_INFO("I see VSFilter");
                     if (!m_xy_bool_opt[BOOL_GET_RID_OF_VSFILTER])
                     {
+                        XY_LOG_INFO("We do NOT want to get rid of VSFilter");
                         return E_FAIL;
                     }
                     found_vsfilter = true;
@@ -2325,6 +2325,7 @@ HRESULT IsPinConnected(IPin *pPin, bool *pResult)
 
 HRESULT XySubFilter::GetRidOfVSFilter()
 {
+    XY_LOG_INFO("Remove VSFilter from the graph.");
     HRESULT hr = NOERROR;
     CComPtr<IBaseFilter> pBF;
     CComPtr<IPin> video_input_pin,video_output_pin;

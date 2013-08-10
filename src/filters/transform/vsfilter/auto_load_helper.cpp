@@ -106,6 +106,7 @@ STDMETHODIMP XySubFilterAutoLoader::JoinFilterGraph( IFilterGraph* pGraph, LPCWS
     m_loaded = false;
     if(pGraph)
     {
+        XY_DUMP_GRAPH(pGraph, 0);
         BeginEnumFilters(pGraph, pEF, pBF)
         {
             if(pBF != (IBaseFilter*)this)
@@ -144,7 +145,7 @@ STDMETHODIMP XySubFilterAutoLoader::QueryFilterInfo( FILTER_INFO* pInfo )
 
 bool XySubFilterAutoLoader::ShouldWeAutoLoad(IFilterGraph* pGraph)
 {
-    XY_LOG_INFO(_T(""));
+    XY_LOG_INFO(_T("pGraph:")<<pGraph);
 
     HRESULT hr = NOERROR;
 
@@ -192,6 +193,7 @@ bool XySubFilterAutoLoader::ShouldWeAutoLoad(IFilterGraph* pGraph)
             {
                 if (pmt->majortype == MEDIATYPE_Text || pmt->majortype == MEDIATYPE_Subtitle)
                 {
+                    XY_LOG_TRACE("Found subtitle pin on filter "<<CStringFromGUID(GetCLSID(pBF)).GetString());
                     have_subtitle_pin = true;
                     break;
                 }
@@ -246,6 +248,24 @@ HRESULT XySubFilterAutoLoader::CheckInput( const CMediaType * mt )
     if (!m_loaded)
     {
         m_loaded = true;
+#if ENABLE_XY_LOG_TRACE_GRAPH
+        if (mt->majortype==MEDIATYPE_Video)
+        {
+            XY_LOG_TRACE("Connecting Video Pin");
+        }
+        else if (mt->majortype==MEDIATYPE_Audio)
+        {
+            XY_LOG_TRACE("Connecting Audio Pin");
+        }
+        else if (mt->majortype==MEDIATYPE_Subtitle || mt->majortype==MEDIATYPE_Text)
+        {
+            XY_LOG_TRACE("Connecting Subtitle Pin");
+        }
+        else
+        {
+            XY_LOG_TRACE("Connecting Other Pin");
+        }
+#endif
         if (m_load_level==CDirectVobSub::LOADLEVEL_ALWAYS || mt->majortype!=MEDIATYPE_Video)
         {
             bool found_consumer = false;
@@ -338,7 +358,7 @@ HRESULT XySubFilterAutoLoader::GetMerit( const GUID& clsid, DWORD *merit )
         BYTE  *largebuf = (BYTE*)malloc(size);
         LONG  lret;
 
-        if (!largebuf) { XY_LOG_DEBUG(key_name<<" "<<lret); key.Close(); return E_FAIL; }
+        if (!largebuf) { XY_LOG_DEBUG("key_name:"<<key_name); key.Close(); return E_FAIL; }
 
         lret = key.QueryBinaryValue(_T("FilterData"), largebuf, &size);
         if (lret != ERROR_SUCCESS) { XY_LOG_DEBUG(key_name<<" "<<lret); free(largebuf); key.Close(); return E_FAIL; }
