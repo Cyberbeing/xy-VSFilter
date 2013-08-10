@@ -167,7 +167,7 @@ bool XySubFilterAutoLoader::ShouldWeAutoLoad(IFilterGraph* pGraph)
     CComPtr<IBaseFilter> pBF;
     if( m_load_embedded )
     {
-        for (int i=0;i<m_known_source_filters_guid.GetCount();i++)
+        for (int i=0, n=m_known_source_filters_guid.GetCount();i<n;i++)
         {
             if (pBF = FindFilter(m_known_source_filters_guid[i], pGraph))
             {
