@@ -60,6 +60,11 @@ public:
     typedef DirectVobSubXyOptions::CachesInfo CachesInfo;
     typedef DirectVobSubXyOptions::XyFlyWeightInfo XyFlyWeightInfo;
     typedef DirectVobSubXyOptions::ColorSpaceOpt ColorSpaceOpt;
+
+    struct FilterInfo
+    {
+        CStringW guid, friendly_name;
+    };
 protected:
     DirectVobSubImpl(const Option *options, CCritSec * pLock);
     virtual ~DirectVobSubImpl();
@@ -69,6 +74,11 @@ protected:
 
     virtual HRESULT GetCurStyles(SubStyle sub_style[], int count) { return E_NOTIMPL; }
     virtual HRESULT SetCurStyles(const SubStyle sub_style[], int count) { return E_NOTIMPL; }
+
+    static void LoadKnownSourceFilters( CAtlArray<CStringW> *filter_guid,
+                                        CAtlArray<CStringW> *filter_name );
+    static void SaveKnownSourceFilters( const CAtlArray<CStringW>& filter_guid, 
+                                        const CAtlArray<CStringW>& filter_name );
 protected:
     CCritSec *m_propsLock;
 
@@ -84,6 +94,9 @@ protected:
 	int m_nReloaderDisableCount;
 	int m_SubtitleDelay, m_SubtitleSpeedMul, m_SubtitleSpeedDiv;
 	NORMALIZEDRECT m_ZoomRect;
+
+    CAtlArray<CStringW> m_known_source_filters_guid;
+    CAtlArray<CStringW> m_known_source_filters_name;
 
     int m_supported_filter_verion;
     int m_config_info_version;

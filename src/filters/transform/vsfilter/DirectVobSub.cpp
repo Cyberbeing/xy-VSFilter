@@ -738,6 +738,87 @@ UINT DirectVobSubImpl::GetCompatibleProfileInt( LPCTSTR lpszSection, LPCTSTR lps
     return result;
 }
 
+void DirectVobSubImpl::LoadKnownSourceFilters( CAtlArray<CStringW> *filter_guid,
+    CAtlArray<CStringW> *filter_name )
+{
+    //fixme: CString VS CStringW
+    AFX_MANAGE_STATE(AfxGetStaticModuleState());
+    int number = theApp.GetProfileInt(ResStr(IDS_R_KNOWN_SOURCE_FILTER),
+                                      ResStr(IDS_RK_TOTAL_NUMBER), -248336);
+    if (number==-248336)
+    {
+        struct  
+        {
+            CStringW guid, friendly_name;
+        } DefaultKnownSourceFilters[] = {
+            {L"{f07e245f-5a1f-4d1e-8bff-dc31d84a55ab}", L"Ogg Splitter"                },
+            {L"{1b544c20-fd0b-11ce-8c63-00aa0044b51e}", L"Avi Stream Splitter"         },
+            {L"{34293064-02F2-41D5-9D75-CC5967ACA1AB}", L"Matroska Demux"              },
+            {L"{0A68C3B5-9164-4a54-AFAF-995B2FF0E0D4}", L"Matroska Source"             },
+            {L"{149D2E01-C32E-4939-80F6-C07B81015A7A}", L"Matroska Splitter"           },
+            {L"{55DA30FC-F16B-49fc-BAA5-AE59FC65F82D}", L"Haali Media Splitter"        },
+            {L"{564FD788-86C9-4444-971E-CC4A243DA150}", L"Haali Media Splitter (AR)"   },
+            {L"{8F43B7D9-9D6B-4F48-BE18-4D787C795EEA}", L"Haali Simple Media Splitter" },
+            {L"{52B63861-DC93-11CE-A099-00AA00479A58}", L"3ivx splitter"               },
+            {L"{6D3688CE-3E9D-42F4-92CA-8A11119D25CD}", L"Our Ogg Source"              },
+            {L"{9FF48807-E133-40AA-826F-9B2959E5232D}", L"Our Ogg Splitter"            },
+            {L"{803E8280-F3CE-4201-982C-8CD8FB512004}", L"Dsm Source"                  },
+            {L"{0912B4DD-A30A-4568-B590-7179EBB420EC}", L"Dsm Splitter"                },
+            {L"{3CCC052E-BDEE-408a-BEA7-90914EF2964B}", L"MP4 Source"                  },
+            {L"{61F47056-E400-43d3-AF1E-AB7DFFD4C4AD}", L"MP4 Splitter"                },
+            {L"{171252A0-8820-4AFE-9DF8-5C92B2D66B04}", L"LAV Splitter"                },
+            {L"{B98D13E7-55DB-4385-A33D-09FD1BA26338}", L"LAV Splitter Source"         },
+            {L"{E436EBB5-524F-11CE-9F53-0020AF0BA770}", L"Solveig Matroska Splitter"   },
+            {L"{1365BE7A-C86A-473C-9A41-C0A6E82C9FA3}", L"MPC-HC MPEG PS/TS/PVA Source"},
+            {L"{DC257063-045F-4BE2-BD5B-E12279C464F0}", L"MPC-HC MPEG Splitter"        },
+            {L"{529A00DB-0C43-4f5b-8EF2-05004CBE0C6F}", L"AV Splitter"                 },
+            {L"{D8980E15-E1F6-4916-A10F-D7EB4E9E10B8}", L"AV Source"                   },
+        };
+
+        number = countof(DefaultKnownSourceFilters);
+        if (filter_guid) filter_guid->SetCount(number);
+        if (filter_name) filter_name->SetCount(number);
+        for (int i=0;i<number;i++)
+        {
+            if (filter_guid) filter_guid->GetAt(i) = DefaultKnownSourceFilters[i].guid;
+            if (filter_name) filter_name->GetAt(i) = DefaultKnownSourceFilters[i].friendly_name;
+        }
+    }
+    else
+    {
+        if (filter_guid) filter_guid->SetCount(number);
+        if (filter_name) filter_name->SetCount(number);
+        CString tmp;
+        for (int i=0;i<number;i++)
+        {
+            if (filter_guid) {
+                tmp.Format(ResStr(IDS_RK_GUID), i+1);
+                filter_guid->GetAt(i) = theApp.GetProfileString(ResStr(IDS_R_KNOWN_SOURCE_FILTER), tmp, "");
+            }
+            if (filter_name) {
+                tmp.Format(ResStr(IDS_RK_FRIENDLY_NAME), i+1);
+                filter_name->GetAt(i) = theApp.GetProfileString(ResStr(IDS_R_KNOWN_SOURCE_FILTER), tmp, "");
+            }
+        }
+    }
+}
+
+void DirectVobSubImpl::SaveKnownSourceFilters( const CAtlArray<CStringW>& filter_guid, 
+                                               const CAtlArray<CStringW>& filter_name )
+{
+    //fixme: CString VS CStringW
+    int number = filter_guid.GetCount();
+    CString tmp;
+    theApp.WriteProfileInt(ResStr(IDS_R_KNOWN_SOURCE_FILTER), ResStr(IDS_RK_TOTAL_NUMBER), number);
+    for (int i=0;i<number;i++)
+    {
+        tmp.Format(ResStr(IDS_RK_GUID), i+1);
+        theApp.WriteProfileString(ResStr(IDS_R_KNOWN_SOURCE_FILTER), tmp, filter_guid[i]);
+        tmp.Format(ResStr(IDS_RK_FRIENDLY_NAME), i+1);
+        theApp.WriteProfileString(ResStr(IDS_R_KNOWN_SOURCE_FILTER), tmp, filter_name[i]);
+    }
+}
+
 // XyOptionsImpl
 
 HRESULT DirectVobSubImpl::DoGetField( unsigned field, void *value )
@@ -1240,6 +1321,8 @@ CDirectVobSub::CDirectVobSub( const Option *options, CCritSec * pLock )
     m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), 0);
 
     m_xy_bool_opt[BOOL_ENABLE_ZP_ICON] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0);
+
+    LoadKnownSourceFilters(&m_known_source_filters_guid, &m_known_source_filters_name);
 }
 
 STDMETHODIMP CDirectVobSub::UpdateRegistry()
@@ -1370,6 +1453,8 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_DISABLERELOADER), m_xy_bool_opt[BOOL_SUBTITLE_RELOADER_DISABLED]);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), m_xy_bool_opt[BOOL_ENABLE_ZP_ICON]);
+
+    SaveKnownSourceFilters(m_known_source_filters_guid, m_known_source_filters_name);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), CUR_SUPPORTED_FILTER_VERSION);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), XY_VSFILTER_VERSION_COMMIT);
@@ -1608,6 +1693,8 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
 
     m_xy_bool_opt[BOOL_FORCE_DEFAULT_STYLE] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL)
         , ResStr(IDS_RG_FORCE_DEFAULT_STYLE), 0);
+
+    LoadKnownSourceFilters(&m_known_source_filters_guid, &m_known_source_filters_name);
 }
 
 STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
@@ -1759,6 +1846,8 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL)
         , ResStr(IDS_RG_FORCE_DEFAULT_STYLE), m_xy_bool_opt[BOOL_FORCE_DEFAULT_STYLE]);
+
+    SaveKnownSourceFilters(m_known_source_filters_guid, m_known_source_filters_name);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SUPPORTED_VERSION), CUR_SUPPORTED_FILTER_VERSION);
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_VERSION), XY_VSFILTER_VERSION_COMMIT);

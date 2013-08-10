@@ -47,4 +47,5 @@ protected:
     CAtlArray<CString>  m_paths;
 
     bool                m_loaded;
+    CAtlArray<CStringW> m_known_source_filters_guid;
 };

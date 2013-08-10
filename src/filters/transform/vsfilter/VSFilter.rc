@@ -734,6 +734,10 @@ END
 // XySubFilter Reg Options
 STRINGTABLE
 BEGIN
+    IDS_R_KNOWN_SOURCE_FILTER "KnownSourceFilter"
+    IDS_RK_TOTAL_NUMBER       "total_number"
+    IDS_RK_GUID               "giud%d"
+    IDS_RK_FRIENDLY_NAME      "friendly_name%d"
 #if defined XY_SUB_FILTER_DLL
     IDS_RG_LOADLEVEL        "load_level"
     IDS_RG_EXTERNALLOAD     "ext_load"
