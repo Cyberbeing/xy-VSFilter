@@ -51,10 +51,7 @@ const AMOVIESETUP_PIN sudpPins[] =
 
 
 const AMOVIESETUP_MEDIATYPE sudPinTypeIn2[] = {
-    {&MEDIATYPE_Video   , &GUID_NULL},
-    {&MEDIATYPE_Audio   , &GUID_NULL},
-    {&MEDIATYPE_Text    , &GUID_NULL},
-    {&MEDIATYPE_Subtitle, &GUID_NULL}
+    {&GUID_NULL, &GUID_NULL}
 };
 const AMOVIESETUP_PIN sudpPin2 = {L"Input", FALSE, FALSE, TRUE, FALSE, &CLSID_NULL, NULL, countof(sudPinTypeIn2), sudPinTypeIn2};
 
