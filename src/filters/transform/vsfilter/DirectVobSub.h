@@ -74,11 +74,6 @@ protected:
 
     virtual HRESULT GetCurStyles(SubStyle sub_style[], int count) { return E_NOTIMPL; }
     virtual HRESULT SetCurStyles(const SubStyle sub_style[], int count) { return E_NOTIMPL; }
-
-    static void LoadKnownSourceFilters( CAtlArray<CStringW> *filter_guid,
-                                        CAtlArray<CStringW> *filter_name );
-    static void SaveKnownSourceFilters( const CAtlArray<CStringW>& filter_guid, 
-                                        const CAtlArray<CStringW>& filter_name );
 protected:
     CCritSec *m_propsLock;
 
@@ -103,6 +98,11 @@ protected:
 
 	CComPtr<ISubClock> m_pSubClock;
 
+public:
+    static void LoadKnownSourceFilters( CAtlArray<CStringW> *filter_guid,
+                                        CAtlArray<CStringW> *filter_name );
+    static void SaveKnownSourceFilters( const CAtlArray<CStringW>& filter_guid, 
+                                        const CAtlArray<CStringW>& filter_name );
 public:
     // XyOptionsImpl
     HRESULT DoGetField(unsigned field, void *value);
