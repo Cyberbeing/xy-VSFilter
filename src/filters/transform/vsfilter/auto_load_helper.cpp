@@ -266,7 +266,10 @@ HRESULT XySubFilterAutoLoader::CheckInput( const CMediaType * mt )
             XY_LOG_TRACE("Connecting Other Pin");
         }
 #endif
-        if (m_load_level==CDirectVobSub::LOADLEVEL_ALWAYS || mt->majortype!=MEDIATYPE_Video)
+        if (m_load_level==CDirectVobSub::LOADLEVEL_ALWAYS
+            || mt->majortype==MEDIATYPE_Audio
+            || mt->majortype==MEDIATYPE_Subtitle
+            || mt->majortype==MEDIATYPE_Text)//maybe it is better to check if video renderer exists
         {
             bool found_consumer = false;
             bool found_vsfilter = false;
