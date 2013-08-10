@@ -1192,6 +1192,8 @@ bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double gaussian_blu
     return true;
 }
 
+void xy_be_blur2(unsigned char *buf, int w, int h, int stride, int pass, float scaled_factor_x, float scaled_factor_y);
+
 bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength, 
     float target_scale_x, float target_scale_y, SharedPtrOverlay output_overlay )
 {
@@ -1200,16 +1202,16 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
     output_overlay->mfWideOutlineEmpty = input_overlay.mfWideOutlineEmpty;
 
     ASSERT(be_strength>0 && target_scale_x>0 && target_scale_y>0);
-    int bluradjust_x = static_cast<int>( target_scale_x*std::sqrt(be_strength*0.25f)+0.5 );//fix me: rounding err?
+    int bluradjust_x = target_scale_x>0.5f ? static_cast<int>( floor(target_scale_x+0.5) ) : 1;
     bluradjust_x *= 8;
-    int bluradjust_y = static_cast<int>(target_scale_y*std::sqrt(be_strength*0.25f)+0.5);//fix me: rounding err?
+    int bluradjust_y = target_scale_y>0.5f ? static_cast<int>( floor(target_scale_y*0.5) ) : 1;
     bluradjust_y *= 8;
 
-    output_overlay->mOffsetX       = input_overlay.mOffsetX - bluradjust_x;
-    output_overlay->mOffsetY       = input_overlay.mOffsetY - bluradjust_y;
-    output_overlay->mWidth         = input_overlay.mWidth + (bluradjust_x<<1);
-    output_overlay->mHeight        = input_overlay.mHeight + (bluradjust_y<<1);
-    output_overlay->mOverlayWidth  = input_overlay.mOverlayWidth + (bluradjust_x>>2);
+    output_overlay->mOffsetX       = input_overlay.mOffsetX       -  bluradjust_x;
+    output_overlay->mOffsetY       = input_overlay.mOffsetY       -  bluradjust_y;
+    output_overlay->mWidth         = input_overlay.mWidth         + (bluradjust_x<<1);
+    output_overlay->mHeight        = input_overlay.mHeight        + (bluradjust_y<<1);
+    output_overlay->mOverlayWidth  = input_overlay.mOverlayWidth  + (bluradjust_x>>2);
     output_overlay->mOverlayHeight = input_overlay.mOverlayHeight + (bluradjust_y>>2);
 
     output_overlay->mOverlayPitch = (output_overlay->mOverlayWidth+15)&~15;
@@ -1236,7 +1238,7 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
     //copy buffer
     for(int i = 1; i >= 0; i--)
     {
-        byte* plan_selected = i==0 ? body : border;
+        byte*    plan_selected = i==0 ? body : border;
         const byte* plan_input = i==0 ? input_overlay.mBody.get() : input_overlay.mBorder.get();
 
         plan_selected += (bluradjust_x>>3) + (bluradjust_y>>3)*output_overlay->mOverlayPitch;
@@ -1246,7 +1248,7 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
             {
                 memcpy(plan_selected, plan_input, input_overlay.mOverlayWidth*sizeof(plan_input[0]));
                 plan_selected += output_overlay->mOverlayPitch;
-                plan_input += input_overlay.mOverlayPitch;
+                plan_input    += input_overlay.mOverlayPitch;
             }
         }
     }
@@ -1255,30 +1257,11 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
         return true;
     }
 
-    float scaled_be_strength = be_strength * 0.5f * (target_scale_x+target_scale_y);
-    int pass_num = static_cast<int>(scaled_be_strength);
     int pitch = output_overlay->mOverlayPitch;
     byte* blur_plan = output_overlay->mfWideOutlineEmpty ? body : border;
-    ::boost::shared_array<unsigned> tmp_buf( DEBUG_NEW unsigned[max((output_overlay->mOverlayPitch+1)*(output_overlay->mOverlayHeight+1),0)] );
-    for (int pass = 0; pass < pass_num; pass++)
-    {
-        if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
-        {
-            if (g_cpuid.m_flags & CCpuID::sse2)
-            {
-                be_blur(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
-            }
-            else
-            {
-                be_blur_c(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
-            }
-        }
-    }
-    if (scaled_be_strength>pass_num)
-    {
-        xy_be_blur(blur_plan, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch, 
-            scaled_be_strength-pass_num, scaled_be_strength-pass_num);
-    }
+
+    xy_be_blur2(blur_plan, output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch,
+        be_strength, target_scale_x, target_scale_y);
 
     return true;
 }
