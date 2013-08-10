@@ -315,6 +315,18 @@ HRESULT XySubFilterAutoLoader::CheckInput( const CMediaType * mt )
                 if (FAILED(hr))
                 {
                     XY_LOG_ERROR("Failed to AddFilter. "<<XY_LOG_VAR_2_STR(xy_sub_filter)<<XY_LOG_VAR_2_STR(hr));
+                    return E_FAIL;
+                }
+                if (mt->majortype==MEDIATYPE_Subtitle || mt->majortype==MEDIATYPE_Text)
+                {
+                    hr = CComQIPtr<IGraphConfig>(m_pGraph)->AddFilterToCache(filter);
+                    if (FAILED(hr))
+                    {
+                        XY_LOG_ERROR("Failed to AddFilterToCache. "<<XY_LOG_VAR_2_STR(xy_sub_filter)
+                                                                   <<XY_LOG_VAR_2_STR(m_pGraph)
+                                                                   <<XY_LOG_VAR_2_STR(hr));
+                        return E_FAIL;
+                    }
                 }
             }
             else
