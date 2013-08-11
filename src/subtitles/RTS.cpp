@@ -43,6 +43,8 @@
 #  define TRACE_RENDERER_REQUEST_TIMING(msg)
 #endif
 
+int g_loop_number = 0;
+
 // WARNING: this isn't very thread safe, use only one RTS a time.
 static HDC g_hDC;
 static int g_hDC_refcnt = 0;
@@ -1636,10 +1638,17 @@ CSubtitle::~CSubtitle()
 void CSubtitle::Empty()
 {
     POSITION pos = GetHeadPosition();
-    while(pos) delete GetNext(pos);
+    while(pos) {
+        delete GetNext(pos);
+        g_loop_number++;
+    }
 //    pos = m_words.GetHeadPosition();
 //    while(pos) delete m_words.GetNext(pos);
-    for(int i = 0; i < EF_NUMBEROFEFFECTS; i++) {if(m_effects[i]) delete m_effects[i];}
+    for(int i = 0; i < EF_NUMBEROFEFFECTS; i++) 
+    {
+        if(m_effects[i]) delete m_effects[i];
+        g_loop_number++;
+    }
     memset(m_effects, 0, sizeof(Effect*)*EF_NUMBEROFEFFECTS);
 }
 
@@ -3330,6 +3339,7 @@ static int lscomp(const void* ls1, const void* ls2)
     return(ret);
 }
 
+
 HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List )
 {
     TRACE_RENDERER_REQUEST("Begin search subtitle segment");
@@ -3342,6 +3352,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
     // clear any cached subs not in the range of +/-30secs measured from the segment's bounds
     {
         TRACE_RENDERER_REQUEST("Begin clear parsed subtitle cache. m_subtitleCache.size:"<<m_subtitleCache.GetCount());
+        g_loop_number = 0;
         POSITION pos = m_subtitleCache.GetStartPosition();
         while(pos)
         {
@@ -3349,13 +3360,14 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
             CSubtitle* value;
             m_subtitleCache.GetNextAssoc(pos, key, value);
             STSEntry& stse = m_entries.GetAt(key);
-            if(stse.end <= t || stse.start > (t+30000))
+            if(stse.end <= (t-30000) || stse.start > (t+30000))
             {
                 delete value;
                 m_subtitleCache.RemoveKey(key);
                 pos = m_subtitleCache.GetStartPosition();
             }
         }
+        TRACE_RENDERER_REQUEST("Finished clear parsed subtitle cache. g_loop_number:"<<g_loop_number);
     }
     m_sla.AdvanceToSegment(segment, stss->subs);
     TRACE_RENDERER_REQUEST("Begin copy LSub. subs.size:"<<stss->subs.GetCount());
