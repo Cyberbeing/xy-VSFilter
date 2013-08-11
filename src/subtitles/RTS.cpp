@@ -3349,7 +3349,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
             CSubtitle* value;
             m_subtitleCache.GetNextAssoc(pos, key, value);
             STSEntry& stse = m_entries.GetAt(key);
-            if(stse.end <= (t-30000) || stse.start > (t+30000))
+            if(stse.end <= t || stse.start > (t+30000))
             {
                 delete value;
                 m_subtitleCache.RemoveKey(key);
