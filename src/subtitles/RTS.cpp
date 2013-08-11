@@ -1825,6 +1825,9 @@ void CScreenLayoutAllocator::Empty()
 
 void CScreenLayoutAllocator::AdvanceToSegment(int segment, const CAtlArray<int>& sa)
 {
+    ULONGLONG loop_number=0;
+    TRACE_RENDERER_REQUEST("Begin AdvanceToSegment. m_subrects.size:"
+        <<m_subrects.GetCount()<<" sa.size:"<<sa.GetCount());
     POSITION pos = m_subrects.GetHeadPosition();
     while(pos)
     {
@@ -1840,10 +1843,12 @@ void CScreenLayoutAllocator::AdvanceToSegment(int segment, const CAtlArray<int>&
                     sr.segment = segment;
                     fFound = true;
                 }
+                loop_number++;
             }
         }
         if(!fFound) m_subrects.RemoveAt(prev);
     }
+    TRACE_RENDERER_REQUEST("Finished AdvanceToSegment. loop_number:"<<loop_number);
 }
 
 CRect CScreenLayoutAllocator::AllocRect(CSubtitle* s, int segment, int entry, int layer, int collisions)
@@ -3327,6 +3332,7 @@ static int lscomp(const void* ls1, const void* ls2)
 
 HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List )
 {
+    TRACE_RENDERER_REQUEST("Begin search subtitle segment");
     //fix me: check input and log error
     int t = (int)(rt / 10000);
     int segment;
@@ -3335,6 +3341,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
     if(!stss) return S_FALSE;
     // clear any cached subs not in the range of +/-30secs measured from the segment's bounds
     {
+        TRACE_RENDERER_REQUEST("Begin clear parsed subtitle cache. m_subtitleCache.size:"<<m_subtitleCache.GetCount());
         POSITION pos = m_subtitleCache.GetStartPosition();
         while(pos)
         {
@@ -3351,6 +3358,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
         }
     }
     m_sla.AdvanceToSegment(segment, stss->subs);
+    TRACE_RENDERER_REQUEST("Begin copy LSub. subs.size:"<<stss->subs.GetCount());
     CAtlArray<LSub> subs;
     for(int i = 0, j = stss->subs.GetCount(); i < j; i++)
     {
@@ -3360,8 +3368,9 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
         ls.readorder = m_entries.GetAt(stss->subs[i]).readorder;
         subs.Add(ls);
     }
+    TRACE_RENDERER_REQUEST("Begin sort LSub.");
     qsort(subs.GetData(), subs.GetCount(), sizeof(LSub), lscomp);
-        
+    TRACE_RENDERER_REQUEST("Begin parse subs.");
     for(int i = 0, j = subs.GetCount(); i < j; i++)
     {
         int entry = subs[i].idx;
