@@ -35,6 +35,14 @@
 #  define TRACE_PARSER(msg)
 #endif
 
+#if ENABLE_XY_LOG_RENDERER_REQUEST
+#  define TRACE_RENDERER_REQUEST(msg) XY_LOG_TRACE(msg)
+#  define TRACE_RENDERER_REQUEST_TIMING(msg) XY_AUTO_TIMING(msg)
+#else
+#  define TRACE_RENDERER_REQUEST(msg)
+#  define TRACE_RENDERER_REQUEST_TIMING(msg)
+#endif
+
 // WARNING: this isn't very thread safe, use only one RTS a time.
 static HDC g_hDC;
 static int g_hDC_refcnt = 0;
@@ -3547,6 +3555,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     const SIZE& original_video_size,
     REFERENCE_TIME rt, double fps )
 {
+    TRACE_RENDERER_REQUEST_TIMING("CRenderedTextSubtitle::RenderEx rt "<<rt);
     if (!subRenderFrame)
     {
         return S_FALSE;
@@ -3600,6 +3609,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         render_frame_creater->SetClipRect(cvideo_rect);
     }
 
+    TRACE_RENDERER_REQUEST("Begin ParseScript");
     CSubtitle2List sub2List;
     HRESULT hr = ParseScript(rt, fps, &sub2List);
     if(hr!=S_OK)
@@ -3607,9 +3617,11 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         return hr;
     }
 
+    TRACE_RENDERER_REQUEST("Begin build draw item tree");
     CompositeDrawItemListList compDrawItemListList;
     DoRender(cvideo_rect.Size(), sub2List, &compDrawItemListList);
 
+    TRACE_RENDERER_REQUEST("Begin Draw");
     XySubRenderFrame *sub_render_frame;
     CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);
     sub_render_frame->MoveTo(video_rect.left, video_rect.top);

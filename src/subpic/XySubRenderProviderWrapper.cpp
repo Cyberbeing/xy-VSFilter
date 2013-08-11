@@ -1,6 +1,14 @@
 #include "stdafx.h"
 #include "XySubRenderProviderWrapper.h"
 
+#if ENABLE_XY_LOG_RENDERER_REQUEST
+#  define TRACE_RENDERER_REQUEST(msg) XY_LOG_TRACE(msg)
+#  define TRACE_RENDERER_REQUEST_TIMING(msg) XY_AUTO_TIMING(msg)
+#else
+#  define TRACE_RENDERER_REQUEST(msg)
+#  define TRACE_RENDERER_REQUEST_TIMING(msg)
+#endif
+
 XySubRenderProviderWrapper::XySubRenderProviderWrapper( ISubPicProviderEx *provider
     , HRESULT* phr/*=NULL*/ )
     : CUnknown(NAME("XySubRenderProviderWrapper"), NULL, phr)
@@ -267,6 +275,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::Connect( IXyOptions *consumer )
 
 STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRenderFrame, REFERENCE_TIME now )
 {
+    TRACE_RENDERER_REQUEST_TIMING("XySubRenderProviderWrapper2::Render now "<<now);
     ASSERT(m_consumer);
     double fps;
     CheckPointer(subRenderFrame, E_POINTER);
@@ -301,6 +310,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
     hr = m_consumer->XyGetBool(DirectVobSubXyOptions::BOOL_SUB_FRAME_USE_DST_ALPHA, &use_dst_alpha);
     hr = m_consumer->XyGetBool(DirectVobSubXyOptions::BOOL_RENDER_TO_ORIGINAL_VIDEO_SIZE, &render_to_original_video_size);
 
+    TRACE_RENDERER_REQUEST("Consumer fields read.");
     rect_render_to = !render_to_original_video_size ? output_rect : CRect(CPoint(), original_video_size);
 
     m_output_rect                   = output_rect;
@@ -341,6 +351,7 @@ STDMETHODIMP XySubRenderProviderWrapper2::RequestFrame( IXySubRenderFrame**subRe
 
         m_allocator->SetCurSize(max_size);
         m_allocator->SetCurVidRect(CRect(CPoint(0,0),max_size));
+        TRACE_RENDERER_REQUEST("Invalidation done.");
     }
 
     POSITION pos = m_provider->GetStartPosition(now, fps);
@@ -392,7 +403,7 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
     {
         return S_FALSE;
     }
-
+    TRACE_RENDERER_REQUEST_TIMING("XySubRenderProviderWrapper2::Render now "<<now);
     m_xy_sub_render_frame = NULL;
     HRESULT hr = E_FAIL;
 
