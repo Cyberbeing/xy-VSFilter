@@ -28,6 +28,7 @@
 #include "subpixel_position_controler.h"
 #include "xy_overlay_paint_machine.h"
 #include "xy_clipper_paint_machine.h"
+#include "xy_pool.h"
 
 #if ENABLE_XY_LOG_TEXT_PARSER
 #  define TRACE_PARSER(msg) XY_LOG_TRACE(msg)
@@ -42,6 +43,8 @@
 #  define TRACE_RENDERER_REQUEST(msg)
 #  define TRACE_RENDERER_REQUEST_TIMING(msg)
 #endif
+
+XyObjPool<Effect> g_effect_pool;
 
 int g_loop_number = 0;
 
@@ -1646,7 +1649,7 @@ void CSubtitle::Empty()
 //    while(pos) delete m_words.GetNext(pos);
     for(int i = 0; i < EF_NUMBEROFEFFECTS; i++) 
     {
-        if(m_effects[i]) delete m_effects[i];
+        g_effect_pool.Free(m_effects[i]);
         g_loop_number++;
     }
     memset(m_effects, 0, sizeof(Effect*)*EF_NUMBEROFEFFECTS);
@@ -2046,6 +2049,8 @@ bool CRenderedTextSubtitle::Init( const CRectCoor2& video_rect, const CRectCoor2
     m_target_scale_x = video_rect.Width()  * 1.0 / original_video_size.cx;
     m_target_scale_y = video_rect.Height() * 1.0 / original_video_size.cy;
 
+    g_effect_pool.Init(1024);
+
     return(true);
 }
 
@@ -2109,7 +2114,7 @@ void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
     {
         int delay, lefttoright = 0, fadeawaywidth = 0;
         if(swscanf(s, L"%d;%d;%d", &delay, &lefttoright, &fadeawaywidth) < 1) return;
-        Effect* e = DEBUG_NEW Effect;
+        Effect* e = g_effect_pool.Alloc();
         if(!e) return;
         sub->m_effects[e->type = EF_BANNER] = e;
         e->param[0] = (int)(max(1.0*delay/sub->m_scalex, 1));
@@ -2122,7 +2127,7 @@ void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
         int top, bottom, delay, fadeawayheight = 0;
         if(swscanf(s, L"%d;%d;%d;%d", &top, &bottom, &delay, &fadeawayheight) < 3) return;
         if(top > bottom) {int tmp = top; top = bottom; bottom = tmp;}
-        Effect* e = DEBUG_NEW Effect;
+        Effect* e = g_effect_pool.Alloc();
         if(!e) return;
         sub->m_effects[e->type = EF_SCROLL] = e;
         e->param[0] = (int)(sub->m_scaley*top*8);
@@ -2541,7 +2546,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 sub->m_fAnimated2 = true;
                 if(params.GetCount() == 7 && !sub->m_effects[EF_FADE])// {\fade(a1=param[0], a2=param[1], a3=param[2], t1=t[0], t2=t[1], t3=t[2], t4=t[3])
                 {
-                    if(Effect* e = DEBUG_NEW Effect)
+                    if(Effect* e = g_effect_pool.Alloc())
                     {
                         for(int i = 0; i < 3; i++)
                             e->param[i] = wcstol(params[i], NULL, 10);
@@ -2552,7 +2557,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 }
                 else if(params.GetCount() == 2 && !sub->m_effects[EF_FADE]) // {\fad(t1=t[1], t2=t[2])
                 {
-                    if(Effect* e = DEBUG_NEW Effect)
+                    if(Effect* e = g_effect_pool.Alloc())
                     {
                         e->param[0] = e->param[2] = 0xff;
                         e->param[1] = 0x00;
@@ -2718,7 +2723,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
             {
                 if((params.GetCount() == 4 || params.GetCount() == 6) && !sub->m_effects[EF_MOVE])
                 {
-                    if(Effect* e = DEBUG_NEW Effect)
+                    if(Effect* e = g_effect_pool.Alloc())
                     {
                         e->param[0] = (int)(sub->m_scalex*wcstod(params[0], NULL)*8);
                         e->param[1] = (int)(sub->m_scaley*wcstod(params[1], NULL)*8);
@@ -2740,7 +2745,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
             {
                 if(params.GetCount() == 2 && !sub->m_effects[EF_ORG])
                 {
-                    if(Effect* e = DEBUG_NEW Effect)
+                    if(Effect* e = g_effect_pool.Alloc())
                     {
                         e->param[0] = (int)(sub->m_scalex*wcstod(params[0], NULL)*8);
                         e->param[1] = (int)(sub->m_scaley*wcstod(params[1], NULL)*8);
@@ -2758,7 +2763,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
             {
                 if(params.GetCount() == 2 && !sub->m_effects[EF_MOVE])
                 {
-                    if(Effect* e = DEBUG_NEW Effect)
+                    if(Effect* e = g_effect_pool.Alloc())
                     {
                         e->param[0] = e->param[2] = (int)(sub->m_scalex*wcstod(params[0], NULL)*8);
                         e->param[1] = e->param[3] = (int)(sub->m_scaley*wcstod(params[1], NULL)*8);
