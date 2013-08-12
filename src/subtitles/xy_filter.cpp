@@ -1,6 +1,12 @@
 #include "stdafx.h"
 #include "../dsutil/vd.h"
 
+#if ENABLE_XY_LOG_BE_TRACK
+#  define TRACE_FILTER(msg) XY_LOG_TRACE(msg)
+#else
+#  define TRACE_FILTER(msg)
+#endif
+
 typedef const UINT8 CUINT8, *PCUINT8;
 typedef const UINT CUINT, *PCUINT;
 
@@ -1371,6 +1377,27 @@ struct PaddedBoxFilter
     float pad;
 };
 
+std::wostream& operator<<(std::wostream& os, const PaddedBoxFilter& obj)
+{
+    return os<<"("<<obj.filter_main_len<<","<<obj.main<<","<<obj.pad<<")";
+}
+
+ULONGLONG get_sum(const unsigned char *buf, int w, int h, int stride)
+{
+    ULONGLONG ret = 0;
+#if ENABLE_XY_LOG_BE_TRACK
+    while(h--)
+    {
+        for (int i=0;i<w;i++)
+        {
+            ret += buf[i];
+        }
+        buf += stride;
+    }
+#endif
+    return ret;
+}
+
 // filter with [tail main ............... main tail] kernel
 //                   |-   filter_main_len   -|
 // buf in  = [* * ...                     * ] <- padding
@@ -1468,6 +1495,13 @@ void xy_be_blur2(unsigned char *buf, int w, int h, int stride, int pass, float s
     xy_calculate_filter(&filter_x, scaled_factor_x);
     xy_calculate_filter(&filter_y, scaled_factor_y);
 
+    TRACE_FILTER("size:("<<w<<"x"<<h
+                         <<" total_energy:"<<get_sum(buf,w,h, stride)
+                         <<" scaled_x:"<<scaled_factor_x
+                         <<" filter_x:"<<filter_x
+                         <<" scaled_y:"<<scaled_factor_y
+                         <<" filter_y:"<<filter_y);
+
     int stride_hor = (w + filter_x.filter_main_len + 1)*sizeof(float);
     int stride_ver = (h + filter_y.filter_main_len + 1)*sizeof(float);
 
@@ -1502,7 +1536,7 @@ void xy_be_blur2(unsigned char *buf, int w, int h, int stride, int pass, float s
         src = tmp2 + (filter_x.filter_main_len/2 + 1)*sizeof(float);
         src_stride = stride_hor;
     }
-    while(h--)
+    for (int j=0;j<h;j++)
     {
         float * src_float = (float*)src;
         for (int i=0;i<w;i++)
@@ -1512,6 +1546,7 @@ void xy_be_blur2(unsigned char *buf, int w, int h, int stride, int pass, float s
         buf += stride;
         src += src_stride;
     }
+    TRACE_FILTER("size:("<<w<<"x"<<h<<" total_energy_after_filter:"<<get_sum(buf-h*stride,w,h, stride));
     xy_free(tmp1);
     return;
 }

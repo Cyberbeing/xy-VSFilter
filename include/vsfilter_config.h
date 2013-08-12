@@ -37,4 +37,6 @@
 //show the bounding boxes of bitmaps
 //#define XY_DBG_SHOW_BITMAP_BOX_IN_COLOR 0x00ff00
 
+#define ENABLE_XY_LOG_BE_TRACK 0
+
 #endif // __VSFILTER_CONFIG_6A82AF4A_67EC_4840_99D5_2DF001C64FEC_H__
