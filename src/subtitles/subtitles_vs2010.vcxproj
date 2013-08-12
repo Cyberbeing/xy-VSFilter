@@ -163,6 +163,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="xy_overlay_paint_machine.cpp" />
+    <ClCompile Include="xy_pool.cpp" />
     <ClCompile Include="xy_widen_region.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -197,6 +198,7 @@
     <ClInclude Include="xy_bitmap.h" />
     <ClInclude Include="xy_malloc.h" />
     <ClInclude Include="xy_overlay_paint_machine.h" />
+    <ClInclude Include="xy_pool.h" />
     <ClInclude Include="xy_widen_regoin.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
