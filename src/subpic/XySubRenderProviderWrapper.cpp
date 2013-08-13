@@ -153,12 +153,19 @@ HRESULT XySubRenderProviderWrapper::Render( REFERENCE_TIME now, POSITION pos, do
         {
             hr = m_provider->RenderEx(spd, now, fps, rectList);
 
-            REFERENCE_TIME start = m_provider->GetStart(pos, fps);
-            REFERENCE_TIME stop = m_provider->GetStop(pos, fps);
-            XY_LOG_TRACE(XY_LOG_VAR_2_STR(start)<<XY_LOG_VAR_2_STR(stop));
-
-            m_pSubPic->SetStart(start);
-            m_pSubPic->SetStop(stop);
+            if (!m_provider->IsAnimated(pos))
+            {
+                REFERENCE_TIME start = m_provider->GetStart(pos, fps);
+                REFERENCE_TIME stop = m_provider->GetStop(pos, fps);
+                XY_LOG_TRACE(XY_LOG_VAR_2_STR(start)<<XY_LOG_VAR_2_STR(stop));
+                m_pSubPic->SetStart(start);
+                m_pSubPic->SetStop(stop);
+            }
+            else
+            {
+                m_pSubPic->SetStart(now);
+                m_pSubPic->SetStop(now+1);
+            }
         }
         else
         {
@@ -442,8 +449,16 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
         TRACE_RENDERER_REQUEST("Finished combine bitmap");
     }
 
-    m_start = m_provider->GetStart(pos, m_fps);
-    m_stop = m_provider->GetStop(pos, m_fps);
+    if (!m_provider->IsAnimated(pos))
+    {
+        m_start = m_provider->GetStart(pos, m_fps);
+        m_stop = m_provider->GetStop(pos, m_fps);
+    }
+    else
+    {
+        m_start = now;
+        m_stop = now+1;
+    }
     XY_LOG_TRACE(XY_LOG_VAR_2_STR(m_start)<<XY_LOG_VAR_2_STR(m_stop));
 
     m_provider->Unlock();
