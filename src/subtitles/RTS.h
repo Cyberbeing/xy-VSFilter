@@ -30,9 +30,6 @@
 #include <boost/smart_ptr.hpp>
 #include "mru_cache.h"
 
-#define RTS_POS_SEGMENT_INDEX_BITS  16
-#define RTS_POS_SUB_INDEX_MASK      ((1<<RTS_POS_SEGMENT_INDEX_BITS)-1)
-
 class CMyFont : public CFont
 {
 public:

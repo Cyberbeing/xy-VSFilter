@@ -261,7 +261,15 @@ HRESULT SimpleSubPicProvider::RenderTo( IXySubRenderFrame** pSubPic, REFERENCE_T
 
     POSITION pos = pSubPicProviderEx->GetStartPosition(rtStart, fps);
 
-    pSubPicProviderEx->GetStartStop(pos, fps, m_subpic_start, m_subpic_stop);
+    if (!pSubPicProviderEx->IsAnimated(pos))
+    {
+        pSubPicProviderEx->GetStartStop(pos, fps, m_subpic_start, m_subpic_stop);
+    }
+    else
+    {
+        m_subpic_start = rtStart;
+        m_subpic_stop = rtStart+1;
+    }
 
     pSubPicProviderEx->Unlock();
 

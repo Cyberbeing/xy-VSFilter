@@ -3157,150 +3157,51 @@ STDMETHODIMP CRenderedTextSubtitle::NonDelegatingQueryInterface(REFIID riid, voi
 STDMETHODIMP_(POSITION) CRenderedTextSubtitle::GetStartPosition(REFERENCE_TIME rt, double fps)
 {    
     m_fps = fps;
-    if (m_fps>0)
-    {
-        m_period = 1000/m_fps;
-        if(m_period<=0)
-        {
-            m_period = 1;
-        }
-    }
-    else
-    {
-        //Todo: fix me. max has been defined as a macro. Use #define NOMINMAX to fix it.
-        //std::numeric_limits<int>::max(); 
-        m_period = INT_MAX;
-    }
 
     int iSegment;
-    int subIndex = 1;//If a segment has animate effect then it corresponds to several subpics.
-    //subIndex, 1 based, indicates which subpic the result corresponds to.
     rt /= 10000i64;
     const STSSegment *stss = SearchSubs((int)rt, fps, &iSegment, NULL);
     if(stss==NULL) {
         TRACE_PARSER("No subtitle at "<<XY_LOG_VAR_2_STR(rt));
         return NULL;
     }
-    else if(stss->animated)
-    {
-        int start = TranslateSegmentStart(iSegment, fps);
-        if(rt > start)
-            subIndex = (rt-start)/m_period + 1;
-    }
-    //DbgLog((LOG_TRACE, 3, "animated:%d seg:%d idx:%d DUR:%d rt:%lu", stss->animated, iSegment, subIndex, RTS_ANIMATE_SUBPIC_DUR, (ULONG)rt/10000));
-    return (POSITION)(subIndex | (iSegment<<RTS_POS_SEGMENT_INDEX_BITS));
-    //if(iSegment < 0) iSegment = 0;
-    //return(GetNext((POSITION)iSegment));
+    return (POSITION)(iSegment + 1);
 }
 
 STDMETHODIMP_(POSITION) CRenderedTextSubtitle::GetNext(POSITION pos)
 {
-    int iSegment = ((int)pos>>RTS_POS_SEGMENT_INDEX_BITS);
-    int subIndex = ((int)pos & RTS_POS_SUB_INDEX_MASK);
+    int iSegment = (int)pos;
     const STSSegment *stss = GetSegment(iSegment);
-    ASSERT(stss!=NULL && stss->subs.GetCount()>0);
-    //DbgLog((LOG_TRACE, 3, "stss:%x count:%d", stss, stss->subs.GetCount()));
-    if(!stss->animated)
-    {
+    while(stss && stss->subs.GetCount() == 0) {
         iSegment++;
-        subIndex = 1;
+        stss = GetSegment(iSegment);
     }
-    else
-    {
-        int start, end;
-        TranslateSegmentStartEnd(iSegment, m_fps, start, end);
-        if(start+m_period*subIndex < end)
-            subIndex++;
-        else
-        {
-            iSegment++;
-            subIndex = 1;
-        }
-    }
-    if(GetSegment(iSegment) != NULL)
-    {
-        ASSERT(GetSegment(iSegment)->subs.GetCount()>0);
-        return (POSITION)(subIndex | (iSegment<<RTS_POS_SEGMENT_INDEX_BITS));
-    }
-    else
-        return NULL;
+    return(stss ? (POSITION)(iSegment+1) : NULL);
 }
 
-//@return: <0 if segment not found
 STDMETHODIMP_(REFERENCE_TIME) CRenderedTextSubtitle::GetStart(POSITION pos, double fps)
 {
-    //return(10000i64 * TranslateSegmentStart((int)pos-1, fps));
-    int iSegment = ((int)pos>>RTS_POS_SEGMENT_INDEX_BITS);
-    int subIndex = ((int)pos & RTS_POS_SUB_INDEX_MASK);
-    int start = TranslateSegmentStart(iSegment, fps);
-    const STSSegment *stss = GetSegment(iSegment);
-    if(stss!=NULL)
-    {
-        return (start + (subIndex-1)*m_period)*10000i64;
-    }
-    else
-    {
-        return -1;
-    }
+    return(10000i64 * TranslateSegmentStart((int)pos-1, fps));
 }
 
-//@return: <0 if segment not found
 STDMETHODIMP_(REFERENCE_TIME) CRenderedTextSubtitle::GetStop(POSITION pos, double fps)
 {
-//  return(10000i64 * TranslateSegmentEnd((int)pos-1, fps));
-    int iSegment = ((int)pos>>RTS_POS_SEGMENT_INDEX_BITS);
-    int subIndex = ((int)pos & RTS_POS_SUB_INDEX_MASK);
-    int start, end, ret;
-    TranslateSegmentStartEnd(iSegment, fps, start, end);
-    const STSSegment *stss = GetSegment(iSegment);
-    if(stss!=NULL)
-    {
-        if(!stss->animated)
-            ret = end;
-        else
-        {
-            ret = start+subIndex*m_period;
-            if(ret > end)
-                ret = end;
-        }
-        return ret*10000i64;
-    }
-    else
-        return -1;
+	return(10000i64 * TranslateSegmentEnd((int)pos-1, fps));
 }
 
 //@start, @stop: -1 if segment not found; @stop may < @start if subIndex exceed uppper bound
 STDMETHODIMP_(VOID) CRenderedTextSubtitle::GetStartStop(POSITION pos, double fps, /*out*/REFERENCE_TIME &start, /*out*/REFERENCE_TIME &stop)
 {
-    int iSegment = ((int)pos>>RTS_POS_SEGMENT_INDEX_BITS);
-    int subIndex = ((int)pos & RTS_POS_SUB_INDEX_MASK);
+    int iSegment = (int)pos-1;
     int tempStart, tempEnd;
     TranslateSegmentStartEnd(iSegment, fps, tempStart, tempEnd);
     start = tempStart;
     stop = tempEnd;
-    const STSSegment *stss = GetSegment(iSegment);
-    if(stss!=NULL)
-    {
-        if(stss->animated)
-        {
-            start += (subIndex-1)*m_period;
-            if(start+m_period < stop)
-                stop = start+m_period;
-        }
-        //DbgLog((LOG_TRACE, 3, "animated:%d seg:%d idx:%d start:%d stop:%lu", stss->animated, iSegment, subIndex, (ULONG)start, (ULONG)stop));
-        start *= 10000i64;
-        stop *= 10000i64;
-    }
-    else
-    {
-        start = -1;
-        stop = -1;
-    }
 }
 
 STDMETHODIMP_(bool) CRenderedTextSubtitle::IsAnimated(POSITION pos)
 {
-    unsigned int iSegment = ((unsigned int)pos>>RTS_POS_SEGMENT_INDEX_BITS);
+    unsigned int iSegment = (int)pos-1;
     if(iSegment<m_segments.GetCount())
         return m_segments[iSegment].animated;
     else
