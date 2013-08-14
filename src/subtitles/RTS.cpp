@@ -2006,15 +2006,22 @@ void CRenderedTextSubtitle::Empty()
 void CRenderedTextSubtitle::OnChanged()
 {
     __super::OnChanged();
-    POSITION pos = m_subtitleCache.GetStartPosition();
+    POSITION pos = m_subtitleCacheEntry.GetHeadPosition();
     while(pos)
     {
-        int i;
-        CSubtitle* s;
-        m_subtitleCache.GetNextAssoc(pos, i, s);
-        delete s;
+        int i = m_subtitleCacheEntry.GetNext(pos);
+        delete m_subtitleCache.GetAt(i);
     }
-    m_subtitleCache.RemoveAll();
+    m_subtitleCacheEntry.RemoveAll();
+    if (m_subtitleCache.SetCount(m_entries.GetCount()))
+    {
+        ZeroMemory(m_subtitleCache.GetData(), m_subtitleCache.GetCount()*sizeof(CSubtitle*));
+    }
+    else
+    {
+        XY_LOG_FATAL("Out of Memory.");
+    }
+
     m_sla.Empty();
 }
 
@@ -2039,15 +2046,21 @@ bool CRenderedTextSubtitle::Init( const CRectCoor2& video_rect, const CRectCoor2
 
 void CRenderedTextSubtitle::Deinit()
 {
-    POSITION pos = m_subtitleCache.GetStartPosition();
+    POSITION pos = m_subtitleCacheEntry.GetHeadPosition();
     while(pos)
     {
-        int i;
-        CSubtitle* s;
-        m_subtitleCache.GetNextAssoc(pos, i, s);
-        delete s;
+        int i = m_subtitleCacheEntry.GetNext(pos);
+        delete m_subtitleCache.GetAt(i);
     }
-    m_subtitleCache.RemoveAll();
+    m_subtitleCacheEntry.RemoveAll();
+    if (m_subtitleCache.SetCount(m_entries.GetCount()))
+    {
+        ZeroMemory(m_subtitleCache.GetData(), m_subtitleCache.GetCount()*sizeof(CSubtitle*));
+    }
+    else
+    {
+        XY_LOG_FATAL("Out of Memory.");
+    }
     m_sla.Empty();
 
     m_video_rect.SetRectEmpty();
@@ -3025,11 +3038,18 @@ double CRenderedTextSubtitle::CalcAnimation(double dst, double src, bool fAnimat
 
 CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
 {
-    CSubtitle* sub;
-    if(m_subtitleCache.Lookup(entry, sub))
+    CSubtitle* sub = NULL;
+    if ((int)m_subtitleCache.GetCount()>entry)
     {
-        if(sub->m_fAnimated) {delete sub; sub = NULL;}
-        else return(sub);
+        sub =m_subtitleCache[entry];
+    }
+    else
+    {
+        XY_LOG_ERROR("Unexpected! Out of Memory?");
+    }
+    if (sub)
+    {
+        return sub;
     }
     sub = DEBUG_NEW CSubtitle();
     if(!sub) return(NULL);
@@ -3143,8 +3163,25 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
 
     sub->CreateClippers(m_size, m_video_rect.Size());
     sub->MakeLines(m_size, marginRect);
-    m_subtitleCache[entry] = sub;
+    if (!sub->m_fAnimated)
+    {
+        m_subtitleCache.SetAtGrow(entry, sub);
+        m_subtitleCacheEntry.AddTail(entry);
+    }
     return(sub);
+}
+
+void CRenderedTextSubtitle::ClearUnCachedSubtitle( CSubtitle2List& sub2List )
+{
+    POSITION pos = sub2List.GetHeadPosition();
+    while(pos)
+    {
+        CSubtitle2 & sub2 = sub2List.GetNext(pos);
+        if (sub2.s->m_fAnimated)
+        {
+            delete sub2.s;
+        }
+    }
 }
 
 //
@@ -3239,19 +3276,18 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
     if(!stss) return S_FALSE;
     // clear any cached subs not in the range of +/-30secs measured from the segment's bounds
     {
-        TRACE_RENDERER_REQUEST("Begin clear parsed subtitle cache. m_subtitleCache.size:"<<m_subtitleCache.GetCount());
-        POSITION pos = m_subtitleCache.GetStartPosition();
+        TRACE_RENDERER_REQUEST("Begin clear parsed subtitle cache. m_subtitleCache.size:"<<m_subtitleCacheEntry.GetCount());
+        POSITION pos = m_subtitleCacheEntry.GetHeadPosition();
         while(pos)
         {
-            int key;
-            CSubtitle* value;
-            m_subtitleCache.GetNextAssoc(pos, key, value);
+            POSITION pos_old = pos;
+            int key = m_subtitleCacheEntry.GetNext(pos);
             STSEntry& stse = m_entries.GetAt(key);
             if(stse.end <= (t-30000) || stse.start > (t+30000))
             {
-                delete value;
-                m_subtitleCache.RemoveKey(key);
-                pos = m_subtitleCache.GetStartPosition();
+                delete m_subtitleCache.GetAt(key);
+                m_subtitleCache.GetAt(key) = NULL;
+                m_subtitleCacheEntry.RemoveAt(pos_old);
             }
         }
     }
@@ -3269,6 +3305,17 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
     TRACE_RENDERER_REQUEST("Begin sort LSub.");
     qsort(subs.GetData(), subs.GetCount(), sizeof(LSub), lscomp);
     TRACE_RENDERER_REQUEST("Begin parse subs.");
+    //fix me: because the invalidation logic is bad, we have to do this
+    if ( m_subtitleCache.GetCount() < m_entries.GetCount() )
+    {
+        int old_count = m_subtitleCache.GetCount();
+        if (!m_subtitleCache.SetCount(m_entries.GetCount()))
+        {
+            XY_LOG_FATAL("Out of Memory.");
+            return E_OUTOFMEMORY;
+        }
+        ZeroMemory(m_subtitleCache.GetData()+old_count, (m_subtitleCache.GetCount()-old_count)*sizeof(CSubtitle*));
+    }
     for(int i = 0, j = subs.GetCount(); i < j; i++)
     {
         int entry = subs[i].idx;
@@ -3527,6 +3574,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     TRACE_RENDERER_REQUEST("Begin build draw item tree");
     CompositeDrawItemListList compDrawItemListList;
     DoRender(cvideo_rect.Size(), sub2List, &compDrawItemListList);
+    ClearUnCachedSubtitle(sub2List);
 
     TRACE_RENDERER_REQUEST("Begin Draw");
     XySubRenderFrame *sub_render_frame;

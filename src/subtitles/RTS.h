@@ -390,7 +390,8 @@ public:
         AssTagList embeded;
     };
 private:
-    CAtlMap<int, CSubtitle*> m_subtitleCache;
+    CAtlArray<CSubtitle*>    m_subtitleCache;
+    CAtlList<int>            m_subtitleCacheEntry;
 
     CScreenLayoutAllocator   m_sla;
 
@@ -426,6 +427,7 @@ private:
 
     CSubtitle* GetSubtitle(int entry);
 
+    void ClearUnCachedSubtitle(CSubtitle2List& sub2List);
 protected:
     virtual void OnChanged();
     
