@@ -2006,15 +2006,16 @@ void CRenderedTextSubtitle::Empty()
 void CRenderedTextSubtitle::OnChanged()
 {
     __super::OnChanged();
-    POSITION pos = m_subtitleCache.GetStartPosition();
+    POSITION pos = m_subtitleCacheEntry.GetHeadPosition();
     while(pos)
     {
-        int i;
-        CSubtitle* s;
-        m_subtitleCache.GetNextAssoc(pos, i, s);
-        delete s;
+        int i = m_subtitleCacheEntry.GetNext(pos);
+        delete m_subtitleCache.GetAt(i);
     }
-    m_subtitleCache.RemoveAll();
+    m_subtitleCacheEntry.RemoveAll();
+    m_subtitleCache.SetCount(m_entries.GetCount());
+    ZeroMemory(m_subtitleCache.GetData(), m_subtitleCache.GetCount()*sizeof(CSubtitle*));
+
     m_sla.Empty();
 }
 
@@ -2039,15 +2040,15 @@ bool CRenderedTextSubtitle::Init( const CRectCoor2& video_rect, const CRectCoor2
 
 void CRenderedTextSubtitle::Deinit()
 {
-    POSITION pos = m_subtitleCache.GetStartPosition();
+    POSITION pos = m_subtitleCacheEntry.GetHeadPosition();
     while(pos)
     {
-        int i;
-        CSubtitle* s;
-        m_subtitleCache.GetNextAssoc(pos, i, s);
-        delete s;
+        int i = m_subtitleCacheEntry.GetNext(pos);
+        delete m_subtitleCache.GetAt(i);
     }
-    m_subtitleCache.RemoveAll();
+    m_subtitleCacheEntry.RemoveAll();
+    m_subtitleCache.SetCount(m_entries.GetCount());
+    ZeroMemory(m_subtitleCache.GetData(), m_subtitleCache.GetCount()*sizeof(CSubtitle*));
     m_sla.Empty();
 
     m_video_rect.SetRectEmpty();
@@ -3025,11 +3026,10 @@ double CRenderedTextSubtitle::CalcAnimation(double dst, double src, bool fAnimat
 
 CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
 {
-    CSubtitle* sub;
-    if(m_subtitleCache.Lookup(entry, sub))
+    CSubtitle* sub = m_subtitleCache[entry];
+    if (sub)
     {
-        if(sub->m_fAnimated) {delete sub; sub = NULL;}
-        else return(sub);
+        return sub;
     }
     sub = DEBUG_NEW CSubtitle();
     if(!sub) return(NULL);
@@ -3143,7 +3143,11 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
 
     sub->CreateClippers(m_size, m_video_rect.Size());
     sub->MakeLines(m_size, marginRect);
-    m_subtitleCache[entry] = sub;
+    if (!sub->m_fAnimated)
+    {
+        m_subtitleCache[entry] = sub;
+        m_subtitleCacheEntry.AddTail(entry);
+    }
     return(sub);
 }
 
@@ -3239,21 +3243,27 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
     if(!stss) return S_FALSE;
     // clear any cached subs not in the range of +/-30secs measured from the segment's bounds
     {
-        TRACE_RENDERER_REQUEST("Begin clear parsed subtitle cache. m_subtitleCache.size:"<<m_subtitleCache.GetCount());
-        POSITION pos = m_subtitleCache.GetStartPosition();
+        TRACE_RENDERER_REQUEST("Begin clear parsed subtitle cache. m_subtitleCache.size:"<<m_subtitleCacheEntry.GetCount());
+        POSITION pos = m_subtitleCacheEntry.GetHeadPosition();
         while(pos)
         {
-            int key;
-            CSubtitle* value;
-            m_subtitleCache.GetNextAssoc(pos, key, value);
+            POSITION pos_old = pos;
+            int key = m_subtitleCacheEntry.GetNext(pos);
             STSEntry& stse = m_entries.GetAt(key);
             if(stse.end <= (t-30000) || stse.start > (t+30000))
             {
-                delete value;
-                m_subtitleCache.RemoveKey(key);
-                pos = m_subtitleCache.GetStartPosition();
+                delete m_subtitleCache.GetAt(key);
+                m_subtitleCache.GetAt(key) = NULL;
+                m_subtitleCacheEntry.RemoveAt(pos_old);
             }
         }
+    }
+    //fix me: because the invalidation logic is bad, we have to do this
+    if ( m_subtitleCache.GetCount() < m_entries.GetCount() )
+    {
+        int old_count = m_subtitleCache.GetCount();
+        m_subtitleCache.SetCount(m_entries.GetCount());
+        ZeroMemory(m_subtitleCache.GetData()+old_count, (m_subtitleCache.GetCount()-old_count)*sizeof(CSubtitle*));
     }
     m_sla.AdvanceToSegment(segment, stss->subs);
     TRACE_RENDERER_REQUEST("Begin copy LSub. subs.size:"<<stss->subs.GetCount());

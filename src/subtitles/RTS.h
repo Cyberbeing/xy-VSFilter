@@ -390,7 +390,8 @@ public:
         AssTagList embeded;
     };
 private:
-    CAtlMap<int, CSubtitle*> m_subtitleCache;
+    CAtlArray<CSubtitle*>    m_subtitleCache;
+    CAtlList<int>            m_subtitleCacheEntry;
 
     CScreenLayoutAllocator   m_sla;
 
