@@ -1,6 +1,14 @@
 #include "stdafx.h"
 #include "XySubRenderProviderWrapper.h"
 
+#if ENABLE_XY_LOG_RENDERER_REQUEST2
+#  define TRACE_RENDERER_REQUEST(msg) XY_LOG_TRACE(msg)
+#  define TRACE_RENDERER_REQUEST_TIMING(msg) XY_AUTO_TIMING(msg)
+#else
+#  define TRACE_RENDERER_REQUEST(msg)
+#  define TRACE_RENDERER_REQUEST_TIMING(msg)
+#endif
+
 XySubRenderProviderWrapper::XySubRenderProviderWrapper( ISubPicProviderEx *provider
     , HRESULT* phr/*=NULL*/ )
     : CUnknown(NAME("XySubRenderProviderWrapper"), NULL, phr)
@@ -438,6 +446,7 @@ HRESULT XySubRenderProviderWrapper2::Render( REFERENCE_TIME now, POSITION pos )
     {
         hr = CombineBitmap(now);
         ASSERT(SUCCEEDED(hr));
+        TRACE_RENDERER_REQUEST("Finished combine bitmap");
     }
 
     if (!m_provider->IsAnimated(pos))
