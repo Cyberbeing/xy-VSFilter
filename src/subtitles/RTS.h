@@ -29,6 +29,7 @@
 #include <boost/flyweight/key_value.hpp>
 #include <boost/smart_ptr.hpp>
 #include "mru_cache.h"
+#include "xy_int_map.h"
 
 class CMyFont : public CFont
 {
@@ -390,7 +391,7 @@ public:
         AssTagList embeded;
     };
 private:
-    CAtlArray<CSubtitle*>    m_subtitleCache;
+    XyIntMap<CSubtitle*>     m_subtitleCache;
     CAtlList<int>            m_subtitleCacheEntry;
 
     CScreenLayoutAllocator   m_sla;

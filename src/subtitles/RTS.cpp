@@ -2011,16 +2011,10 @@ void CRenderedTextSubtitle::OnChanged()
     {
         int i = m_subtitleCacheEntry.GetNext(pos);
         delete m_subtitleCache.GetAt(i);
+        m_subtitleCache.SetAt(i, NULL);
     }
     m_subtitleCacheEntry.RemoveAll();
-    if (m_subtitleCache.SetCount(m_entries.GetCount()))
-    {
-        ZeroMemory(m_subtitleCache.GetData(), m_subtitleCache.GetCount()*sizeof(CSubtitle*));
-    }
-    else
-    {
-        XY_LOG_FATAL("Out of Memory.");
-    }
+    m_subtitleCache.ReleaseMemory(m_entries.GetCount());
 
     m_sla.Empty();
 }
@@ -2052,15 +2046,8 @@ void CRenderedTextSubtitle::Deinit()
         int i = m_subtitleCacheEntry.GetNext(pos);
         delete m_subtitleCache.GetAt(i);
     }
+    m_subtitleCache.ReleaseMemory();
     m_subtitleCacheEntry.RemoveAll();
-    if (m_subtitleCache.SetCount(m_entries.GetCount()))
-    {
-        ZeroMemory(m_subtitleCache.GetData(), m_subtitleCache.GetCount()*sizeof(CSubtitle*));
-    }
-    else
-    {
-        XY_LOG_FATAL("Out of Memory.");
-    }
     m_sla.Empty();
 
     m_video_rect.SetRectEmpty();
@@ -3038,15 +3025,7 @@ double CRenderedTextSubtitle::CalcAnimation(double dst, double src, bool fAnimat
 
 CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
 {
-    CSubtitle* sub = NULL;
-    if ((int)m_subtitleCache.GetCount()>entry)
-    {
-        sub =m_subtitleCache[entry];
-    }
-    else
-    {
-        XY_LOG_ERROR("Unexpected! Out of Memory?");
-    }
+    CSubtitle* sub = m_subtitleCache.GetAt(entry);
     if (sub)
     {
         return sub;
@@ -3165,7 +3144,12 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
     sub->MakeLines(m_size, marginRect);
     if (!sub->m_fAnimated)
     {
-        m_subtitleCache.SetAtGrow(entry, sub);
+        if (!m_subtitleCache.SetAt(entry, sub))
+        {
+            XY_LOG_FATAL("Out of Memory!");
+            delete sub;
+            return NULL;
+        }
         m_subtitleCacheEntry.AddTail(entry);
     }
     return(sub);
@@ -3286,7 +3270,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
             if(stse.end <= (t-30000) || stse.start > (t+30000))
             {
                 delete m_subtitleCache.GetAt(key);
-                m_subtitleCache.GetAt(key) = NULL;
+                m_subtitleCache.SetAt(key, NULL);
                 m_subtitleCacheEntry.RemoveAt(pos_old);
             }
         }
@@ -3305,17 +3289,6 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
     TRACE_RENDERER_REQUEST("Begin sort LSub.");
     qsort(subs.GetData(), subs.GetCount(), sizeof(LSub), lscomp);
     TRACE_RENDERER_REQUEST("Begin parse subs.");
-    //fix me: because the invalidation logic is bad, we have to do this
-    if ( m_subtitleCache.GetCount() < m_entries.GetCount() )
-    {
-        int old_count = m_subtitleCache.GetCount();
-        if (!m_subtitleCache.SetCount(m_entries.GetCount()))
-        {
-            XY_LOG_FATAL("Out of Memory.");
-            return E_OUTOFMEMORY;
-        }
-        ZeroMemory(m_subtitleCache.GetData()+old_count, (m_subtitleCache.GetCount()-old_count)*sizeof(CSubtitle*));
-    }
     for(int i = 0, j = subs.GetCount(); i < j; i++)
     {
         int entry = subs[i].idx;
@@ -3514,7 +3487,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     {
         return S_FALSE;
     }
-
+    *subRenderFrame = NULL;
     CRect cvideo_rect = video_rect;
 
     if (cvideo_rect!=subtitle_target_rect)
@@ -3557,7 +3530,11 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         , subtitle_target_rect.right*8, subtitle_target_rect.bottom*8)
         || m_size != CSize(original_video_size.cx*8, original_video_size.cy*8) )
     {
-        Init(cvideo_rect, subtitle_target_rect, original_video_size);
+        if (!Init(cvideo_rect, subtitle_target_rect, original_video_size))
+        {
+            XY_LOG_FATAL("Failed to Init.");
+            return E_FAIL;
+        }
 
         render_frame_creater->SetOutputRect(cvideo_rect);
         render_frame_creater->SetClipRect(cvideo_rect);

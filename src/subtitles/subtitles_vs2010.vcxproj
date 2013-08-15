@@ -195,6 +195,7 @@
     <ClInclude Include="xy_circular_array_queue.h" />
     <ClInclude Include="xy_clipper_paint_machine.h" />
     <ClInclude Include="xy_bitmap.h" />
+    <ClInclude Include="xy_int_map.h" />
     <ClInclude Include="xy_malloc.h" />
     <ClInclude Include="xy_overlay_paint_machine.h" />
     <ClInclude Include="xy_widen_regoin.h" />
