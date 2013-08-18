@@ -2016,21 +2016,27 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
         unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
         unsigned char* dst_U = bitmap->plans[2] + dst_offset;
         unsigned char* dst_V = bitmap->plans[3] + dst_offset;
-        while(h--)
+
+        const DWORD *sw = switchpts;
+        int last_x = xo;
+        color = sw[0];
+        while(last_x<w+xo)
         {
-            const DWORD *sw = switchpts;
-            for(int wt=0; wt<w; ++wt)
-            {
-                if(wt+xo >= sw[1]) {while(wt+xo >= sw[1]) sw += 2; color = sw[-2];}
-                DWORD temp = COMBINE_AYUV(dst_A[wt], dst_Y[wt], dst_U[wt], dst_V[wt]);
-                pixmix(&temp, color, (s[wt]*(color>>24))>>8);
-                SPLIT_AYUV(temp, dst_A+wt, dst_Y+wt, dst_U+wt, dst_V+wt);
-            }
-            s += overlayPitch;
-            dst_A += bitmap->pitch;
-            dst_Y += bitmap->pitch;
-            dst_U += bitmap->pitch;
-            dst_V += bitmap->pitch;
+            int new_x = sw[3] < w+xo ? sw[3] : w+xo;
+            color = sw[0];
+            sw += 2;
+            if( new_x < last_x )
+                continue;
+            AlphaBlt8bpp(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bpp(dst_U, s + last_x - xo, (color>>8 )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bpp(dst_V, s + last_x - xo, (color    )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bpp(dst_A, s + last_x - xo,                0, h, new_x-last_x, overlayPitch, bitmap->pitch);
+
+            dst_A += new_x - last_x;
+            dst_Y += new_x - last_x;
+            dst_U += new_x - last_x;
+            dst_V += new_x - last_x;
+            last_x = new_x;
         }
     }
     break;
