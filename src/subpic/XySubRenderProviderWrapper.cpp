@@ -157,31 +157,44 @@ HRESULT XySubRenderProviderWrapper::Render( REFERENCE_TIME now, POSITION pos, do
             rectList.AddHead(CRect(CPoint(0,0),m_original_video_size));
             XY_LOG_ERROR("Failed to clear subpic!");
         }
-        m_pSubPic->UnlockEx(&rectList);
+        hr = m_pSubPic->UnlockEx(&rectList);
+        ASSERT(SUCCEEDED(hr));
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to unlock subpic. "<<XY_LOG_VAR_2_STR(hr));
+        }
         CRect dirty_rect;
         hr = m_pSubPic->GetDirtyRect(&dirty_rect);
         ASSERT(SUCCEEDED(hr));
-        if (!m_use_dst_alpha)
+        if (!dirty_rect.IsRectEmpty())
         {
-            hr = mem_subpic->FlipAlphaValue(dirty_rect);//fixme: mem_subpic.type is now MSP_RGBA_F, not MSP_RGBA
-            ASSERT(SUCCEEDED(hr));
+            if (!m_use_dst_alpha)
+            {
+                hr = mem_subpic->FlipAlphaValue(dirty_rect);//fixme: mem_subpic.type is now MSP_RGBA_F, not MSP_RGBA
+                ASSERT(SUCCEEDED(hr));
+                if (FAILED(hr))
+                {
+                    XY_LOG_ERROR("Failed. "<<XY_LOG_VAR_2_STR(hr));
+                    return hr;
+                }
+            }
+        }
+        else
+        {
+            hr = S_FALSE;
         }
     }
 
     m_provider->Unlock();
-
-    if (FAILED(hr))
+    if (hr == S_OK)
     {
-        return hr;
+        CRect video_rect(CPoint(0,0), m_original_video_size);
+        m_xy_sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper(mem_subpic, video_rect, video_rect, now, &hr);
     }
-
-    ASSERT(SUCCEEDED(hr));
-    if (FAILED(hr))
+    else
     {
-        return hr;
+        m_xy_sub_render_frame = NULL;
     }
-    CRect video_rect(CPoint(0,0), m_original_video_size);
-    m_xy_sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper(mem_subpic, video_rect, video_rect, now, &hr);
     return hr;
 }
 
