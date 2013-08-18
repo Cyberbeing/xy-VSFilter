@@ -161,6 +161,8 @@ private:
 
     bool m_disconnect_entered;
 
+    CStringW m_filter_info_string;
+
 #ifdef SUBTITLE_FRAME_DUMP_FILE
     int   m_dump_subtitle_frame_start_rt;
     int   m_dump_subtitle_frame_end_rt;

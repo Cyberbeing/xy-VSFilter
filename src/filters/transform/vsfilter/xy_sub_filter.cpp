@@ -59,6 +59,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     XY_LOG_INFO(XY_LOG_VAR_2_STR(this));
     m_xy_str_opt[STRING_NAME] = L"XySubFilter";
     m_xy_str_opt[STRING_OUTPUT_LEVELS] = L"PC";
+    m_filter_info_string = m_xy_str_opt[STRING_NAME];
 
 #ifdef SUBTITLE_FRAME_DUMP_FILE
     CString dump_subtitle_frame= theApp.GetProfileString(ResStr(IDS_R_GENERAL), _T("dump_subtitle_frame_start_time"),_T("00:00:00,000"));
@@ -267,6 +268,7 @@ STDMETHODIMP XySubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
             if (FAILED(m_consumer->Disconnect())) {
                 XY_LOG_ERROR("Failed to disconnect consumer");
             }
+            m_filter_info_string = m_xy_str_opt[STRING_NAME];
             CAutoLock cAutoLock(&m_csConsumer);
             m_consumer = NULL;
         }
@@ -287,31 +289,7 @@ STDMETHODIMP XySubFilter::QueryFilterInfo( FILTER_INFO* pInfo )
     HRESULT hr = __super::QueryFilterInfo(pInfo);
     if (SUCCEEDED(hr))
     {
-        LPWSTR consumer_name = NULL;
-        if (m_consumer) {
-            int name_len = 0;
-            hr = m_consumer->GetString("name", &consumer_name, &name_len);
-            if (FAILED(hr))
-            {
-                LocalFree(consumer_name);
-                return hr;
-            }
-        }
-
-        LPWSTR test = NULL;
-        int chars = 0;
-        HRESULT test_hr = this->GetString("yuvMatrix", &test, &chars);
-        ASSERT(SUCCEEDED(test_hr));
-        CStringW new_name;
-        if (consumer_name) {
-            new_name.Format(L"%s (Connected with %s, %s)", m_xy_str_opt[STRING_NAME].GetString(), consumer_name, test);
-        }
-        else {
-            new_name.Format(L"%s (%s)", m_xy_str_opt[STRING_NAME].GetString(), test);
-        }
-        LocalFree(test);
-        LocalFree(consumer_name);
-        wcscpy_s(pInfo->achName, countof(pInfo->achName)-1, new_name.GetString());
+        wcscpy_s(pInfo->achName, countof(pInfo->achName)-1, m_filter_info_string.GetString());
     }
     return hr;
 }
@@ -329,6 +307,7 @@ STDMETHODIMP XySubFilter::Pause()
             hr = FindAndConnectConsumer(m_pGraph);
             if (FAILED(hr))
             {
+                m_filter_info_string.Format(L"%s (=> !!!)", m_xy_str_opt[STRING_NAME].GetString());
                 XY_LOG_ERROR("Failed when find and connect consumer");
                 return hr;
             }
@@ -1308,6 +1287,7 @@ STDMETHODIMP XySubFilter::Disconnect( void )
         {
             XY_LOG_ERROR("No consumer connected. It is expected to be called by a consumer!");
         }
+        m_filter_info_string = m_xy_str_opt[STRING_NAME];
         m_disconnect_entered = false;
         return S_OK;
     }
@@ -2375,6 +2355,22 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
             }
             XY_LOG_INFO("Connected with "<<XY_LOG_VAR_2_STR(consumer)<<" "
                 <<DumpConsumerInfo().GetString()<<" as "<<DumpProviderInfo().GetString());
+
+            //update filter info string
+            do {
+                LPWSTR consumer_name = NULL;
+                int name_len = 0;
+                hr = m_consumer->GetString("name", &consumer_name, &name_len);
+                if (FAILED(hr))
+                {
+                    LocalFree(consumer_name);
+                    XY_LOG_WARN("Failed to get consumer name.");
+                    break;
+                }
+                m_filter_info_string.Format(L"%s (=> %s)", m_xy_str_opt[STRING_NAME].GetString(), consumer_name);
+                LocalFree(consumer_name);
+            } while(0);
+
             if(!m_hSystrayThread && !m_xy_bool_opt[BOOL_HIDE_TRAY_ICON])
             {
                 m_tbid.graph = m_pGraph;
