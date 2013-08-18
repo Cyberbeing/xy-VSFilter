@@ -60,6 +60,23 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     m_xy_str_opt[STRING_NAME] = L"XySubFilter";
     m_xy_str_opt[STRING_OUTPUT_LEVELS] = L"PC";
 
+#ifdef SUBTITLE_FRAME_DUMP_FILE
+    CString dump_subtitle_frame= theApp.GetProfileString(ResStr(IDS_R_GENERAL), _T("dump_subtitle_frame_start_time"),_T("00:00:00,000"));
+    m_dump_subtitle_frame_start_rt = StringToReftime(dump_subtitle_frame);
+    dump_subtitle_frame = theApp.GetProfileString(ResStr(IDS_R_GENERAL), _T("dump_subtitle_frame_end_time"),_T("00:00:00,000"));
+    m_dump_subtitle_frame_end_rt = StringToReftime(dump_subtitle_frame);
+
+    m_dump_subtitle_frame_to_txt        = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), _T("dump_subtitle_frame_to_txt"       ),1);
+    m_dump_subtitle_frame_alpha_channel = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), _T("dump_subtitle_frame_alpha_channel"),1);
+    m_dump_subtitle_frame_rgb_bmp       = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), _T("dump_subtitle_frame_rgb_bmp"    ),1);
+
+    m_dump_subtitle_frame_background_color = 0x00ffff;
+    dump_subtitle_frame = theApp.GetProfileString(ResStr(IDS_R_GENERAL), _T("dump_subtitle_frame_background_color"),_T("00ffff"));
+    dump_subtitle_frame.MakeLower().Trim(_T("&h")).TrimLeft(_T("0x"));
+    dump_subtitle_frame = _T("0x") + dump_subtitle_frame;
+    _stscanf(dump_subtitle_frame.GetString(), _T("%x"), &m_dump_subtitle_frame_background_color);
+#endif
+
     theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), _T("Hint"), _T("The first three are fixed, but you can add more up to ten entries."));
 
     CString tmp;
@@ -1230,13 +1247,27 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
             {
                 sub_render_frame = DEBUG_NEW XySubRenderFrameWrapper2(sub_render_frame, m_context_id);
 #ifdef SUBTITLE_FRAME_DUMP_FILE
-                static int s_count=0;
-                if (s_count<10 && s_count%2==0) {
+                if (now >= m_dump_subtitle_frame_start_rt && now < m_dump_subtitle_frame_end_rt)
+                {
                     CStringA dump_file;
-                    dump_file.Format("%s%lld",SUBTITLE_FRAME_DUMP_FILE,start);
-                    DumpSubRenderFrame(sub_render_frame, dump_file.GetString());
+                    dump_file.Format("%s%lld",SUBTITLE_FRAME_DUMP_FILE,now);
+                    if (m_dump_subtitle_frame_to_txt &&
+                        FAILED(DumpSubRenderFrame( sub_render_frame, dump_file.GetString() )))
+                    {
+                        XY_LOG_ERROR("Failed to dump subtitle frame to txt file: "<<dump_file.GetString());
+                    }
+                    CString dump_bitmap(dump_file);
+                    if ((m_dump_subtitle_frame_alpha_channel || m_dump_subtitle_frame_rgb_bmp) &&
+                        FAILED(
+                        DumpToBitmap( sub_render_frame,
+                                      dump_bitmap.GetString(),
+                                      m_dump_subtitle_frame_alpha_channel,
+                                      m_dump_subtitle_frame_rgb_bmp,
+                                      m_dump_subtitle_frame_background_color)))
+                    {
+                        XY_LOG_ERROR("Failed to dump subtitle frame to file: "<<dump_bitmap.GetString());
+                    }
                 }
-                s_count++;
 #endif
             }
             if(m_xy_bool_opt[BOOL_FLIP_SUBTITLE])

@@ -160,4 +160,13 @@ private:
     bool m_workaround_mpc_hc;//enable workaround for MPC-HC to prevent be removed from the graph
 
     bool m_disconnect_entered;
+
+#ifdef SUBTITLE_FRAME_DUMP_FILE
+    int   m_dump_subtitle_frame_start_rt;
+    int   m_dump_subtitle_frame_end_rt;
+    bool  m_dump_subtitle_frame_to_txt;
+    bool  m_dump_subtitle_frame_alpha_channel;
+    bool  m_dump_subtitle_frame_rgb_bmp;
+    DWORD m_dump_subtitle_frame_background_color;
+#endif
 };
