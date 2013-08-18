@@ -28,10 +28,14 @@ public:
     bool  fBody;
     bool  fBorder;
 
+    bool  use_addition_draw;
+
     SharedPtrDrawItemHashKey m_key;
 public:
     CRectCoor2 GetDirtyRect();
-    static CRectCoor2 Draw( XyBitmap *bitmap, DrawItem& draw_item, const CRectCoor2& clip_rect );
+    static CRectCoor2 Draw        ( XyBitmap *bitmap, DrawItem& draw_item, const CRectCoor2& clip_rect );
+    static CRectCoor2 AlphaBltDraw( XyBitmap *bitmap, DrawItem& draw_item, const CRectCoor2& clip_rect );
+    static CRectCoor2 AdditionDraw( XyBitmap *bitmap, DrawItem& draw_item, const CRectCoor2& clip_rect );
     const SharedPtrDrawItemHashKey& GetHashKey();
 
     static DrawItem* CreateDrawItem(const SharedPtrOverlayPaintMachine& overlay_paint_machine,
@@ -58,7 +62,7 @@ public:
     SharedPtrDrawItem shadow;
     SharedPtrDrawItem outline;
     SharedPtrDrawItem body;
-public:    
+public:
     static CRectCoor2 GetDirtyRect( CompositeDrawItem& item );
 
     static void Draw(XySubRenderFrame**output, CompositeDrawItemListList& compDrawItemListList);

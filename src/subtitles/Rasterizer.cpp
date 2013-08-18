@@ -1509,6 +1509,36 @@ static __forceinline DWORD safe_subtract(DWORD a, DWORD b)
 
 ///////////////////////////////////////////////////////////////////////////
 
+static __forceinline void packed_pix_add_c(BYTE* dst, const BYTE* alpha, int w, DWORD color)
+{
+    DWORD c_r = (color&0x00ff0000);
+    DWORD c_g = (color&0x0000ff00);
+    DWORD c_b = (color&0x000000ff);
+    const BYTE *alpha_end = alpha + w;
+    DWORD * dst_w = reinterpret_cast<DWORD*>(dst);
+    for ( ; alpha<alpha_end; alpha++, dst_w++ )
+    {
+        DWORD d_a = ((*dst_w&0xff000000)>>24);
+        DWORD d_r = (*dst_w&0x00ff0000);
+        DWORD d_g = (*dst_w&0x0000ff00);
+        DWORD d_b = (*dst_w&0x000000ff);
+
+        DWORD a = *alpha;
+        d_a = d_a >= a ? d_a - a : 0;
+        a++;
+        d_r += ((c_r*a>>8)&0x00ff0000);
+        d_g += ((c_g*a>>8)&0x0000ff00);
+        d_b += ((c_b*a>>8)&0x000000ff);
+        d_r = d_r<=0x00ff0000 ? d_r:0x00ff0000;
+        d_g = d_g<=0x0000ff00 ? d_g:0x0000ff00;
+        d_b = d_b<=0x000000ff ? d_b:0x000000ff;
+
+        *dst_w = (d_a<<24) | d_r | d_g | d_b;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////
+
 typedef void (*AlphaBlt8bppFunc)(byte* pY, const byte* am, const byte Y, int h, int w, int src_stride, int dst_stride);
 void           AlphaBlt8bppC    (byte* pY, const byte* am, const byte Y, int h, int w, int src_stride, int dst_stride);
 void           AlphaBlt8bppSse2 (byte* pY, const byte* am, const byte Y, int h, int w, int src_stride, int dst_stride);
@@ -2091,6 +2121,157 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
     }
 }
 
+///////////////////////////////////////////////////////////////
+
+typedef void (*MixLineFunc)(BYTE* dst, const BYTE* alpha, int w, DWORD color);
+
+typedef void (*DoAdditionDrawFunc)(BYTE* dst, const BYTE* src, DWORD color, int w, int h, int src_pitch, int dst_pitch);
+typedef void (*DoAdditionDrawMultiColorFunc)(      BYTE  *dst, 
+                                             const BYTE  *src, 
+                                             const DWORD *switchpts, 
+                                             int          w, 
+                                             int          h,
+                                             int          src_pitch,
+                                             int          dst_pitch);
+
+template<MixLineFunc mix_line_func>
+void DoAdditionDraw(BYTE* dst, const BYTE* src, DWORD color, int w, int h, int src_pitch, int dst_pitch)
+{
+    while(h--)
+    {
+        mix_line_func( dst, src, w, color );
+        src += src_pitch;
+        dst += dst_pitch;
+    }
+}
+
+template<MixLineFunc mix_line_func>
+void DoAdditionDrawMultiColor(      BYTE  *dst, 
+                              const BYTE  *src, 
+                              const DWORD *switchpts, 
+                              int          w, 
+                              int          h,
+                              int          src_pitch,
+                              int          dst_pitch)
+{
+    ASSERT(w>=0);
+    while(h--)
+    {
+        const DWORD *sw = switchpts;
+        DWORD *dst1 = (DWORD *)dst;
+        const BYTE *src1 = src;
+        DWORD last_x = switchpts[1];
+        while(last_x<(DWORD)w)
+        {
+            DWORD new_x = sw[3] < (DWORD)w ? sw[3] : (DWORD)w;
+            DWORD color = sw[0];
+            sw += 2;
+            if( new_x < last_x )
+                continue;
+            mix_line_func((BYTE*)dst1, src1, new_x-last_x, color);
+            dst1 += new_x - last_x;
+            src1 += new_x - last_x;
+            last_x = new_x;
+        }
+        dst += dst_pitch;
+        src += src_pitch;
+    }
+}
+
+// 
+// draw overlay[clipRect] to bitmap[0,0,w,h] using addition instead of alphablend, i.e. bitmap += overlay
+// 
+void Rasterizer::AdditionDraw(XyBitmap         *bitmap   , 
+                              SharedPtrOverlay  overlay  , 
+                              const CRect      &clipRect , 
+                              byte             *s_base   , 
+                              int               xsub     ,
+                              int               ysub     ,
+                              const DWORD      *switchpts, 
+                              bool              fBody    , 
+                              bool              fBorder)
+{
+    if (!switchpts || !fBody && !fBorder) return;
+    if (bitmap==NULL)
+    {
+        ASSERT(0);
+        return;
+    }
+    // clip
+    // Limit drawn area to rectangular clip area
+    CRect r = clipRect;
+    // Remember that all subtitle coordinates are specified in 1/8 pixels
+    // (x+4)>>3 rounds to nearest whole pixel.
+    int overlayPitch =  overlay->mOverlayPitch;
+    int x            = (overlay->mOffsetX + xsub + 4)>>3;
+    int y            = (overlay->mOffsetY + ysub + 4)>>3;
+    int w            =  overlay->mOverlayWidth;
+    int h            =  overlay->mOverlayHeight;
+    int xo = 0, yo = 0;
+
+    if(x < r.left) {xo = r.left-x; w -= r.left-x; x = r.left;}
+    if(y < r.top ) {yo = r.top -y; h -= r.top -y; y = r.top ;}
+    if(x+w > r.right ) w = r.right -x;
+    if(y+h > r.bottom) h = r.bottom-y;
+    // Check if there's actually anything to render
+    if (w <= 0 || h <= 0) return;
+    // must have enough space to draw into
+    if (!(x >= bitmap->x && y >= bitmap->y && x+w <= bitmap->x + bitmap->w && y+h <= bitmap->y + bitmap->h))
+    {
+        XY_LOG_FATAL("Overflow!");
+        ASSERT(0);
+    }
+
+    bool fSingleColor = (switchpts[1]==0xffffffff);
+    bool PLANAR = (bitmap->type==XyBitmap::PLANNA);
+
+    // draw
+    // Grab the first colour
+    DWORD color = switchpts[0];
+    const byte* s = s_base + overlay->mOverlayPitch*yo + xo;
+
+    int dst_offset = 0;
+    if (bitmap->type==XyBitmap::PLANNA)
+        dst_offset = bitmap->pitch*(y-bitmap->y) +  x - bitmap->x;
+    else
+        dst_offset = bitmap->pitch*(y-bitmap->y) + (x - bitmap->x)*4;
+    BYTE* dst = (BYTE*)bitmap->plans[0] + dst_offset;
+
+    if (PLANAR)
+    {
+        ASSERT(0);
+        XY_LOG_FATAL("Not Supported yet");
+        return;
+    }
+    if (fSingleColor)
+    {
+        DoAdditionDraw<packed_pix_add_c>(dst, s, color, w, h, overlayPitch, bitmap->pitch);
+    }
+    else
+    {
+        const int MAX_COLOR_NUM = 4;
+        DWORD new_switchpts[MAX_COLOR_NUM*2];
+        new_switchpts[0] = switchpts[0];
+        new_switchpts[1] = 0;
+        int i=1;
+        for (;i<MAX_COLOR_NUM;i++)
+        {
+            new_switchpts[2*i] = switchpts[2*i];
+            new_switchpts[2*i+1] = switchpts[2*i+1] > xo ? switchpts[2*i+1] - xo : 0;
+            if (new_switchpts[2*i+1]>= w)
+            {
+                new_switchpts[2*i+1] = w;
+                break;
+            }
+        }
+        if (i==MAX_COLOR_NUM)
+        {
+            XY_LOG_WARN("Unexpected!");
+        }
+        DoAdditionDrawMultiColor<packed_pix_add_c>(dst, s, new_switchpts, w, h, overlayPitch, bitmap->pitch);
+    }
+    return;
+}
 
 ///////////////////////////////////////////////////////////////
 
