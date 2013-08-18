@@ -28,6 +28,10 @@ typedef unsigned __int64 XY_POINT;
 #define  XY_POINT_Y(point)               ((point)>>32)
 #define  XY_POINT_SET(point,x,y)         ((point)=(((long long)(y)<<32)|(x)))
 
+//ToDo: set a reg option for these
+static const int LOOKUP_TABLE_SIZE_RX = 64;
+static const int LOOKUP_TABLE_SIZE_RY = 64;
+
 struct LinkArcItem
 {
     LinkArcItem():dead_line(0),arc_center(0){}
@@ -76,12 +80,17 @@ public:
     int init_cross_point();
 
     int m_rx, m_ry;
+    float m_f_rx, m_f_ry;
+    float m_f_half_inv_rx, m_f_half_inv_ry;
+
     int *m_left_arc;
     int *m_left_arc_base;
 
     int *m_cross_matrix;
     int *m_cross_matrix_base;
 private:
+    int cross_left(int dx, int dy) const;
+
     XyEllipse(const XyEllipse&);
     void operator=(const XyEllipse&);
 };
@@ -556,6 +565,10 @@ int XyEllipse::init( int rx, int ry )
     m_left_arc = m_left_arc_base + ry;
     m_rx = rx;
     m_ry = ry;
+    m_f_rx = rx;
+    m_f_ry = ry;
+    m_f_half_inv_rx = rx > 0 ? 0.5f / m_f_rx : 0;
+    m_f_half_inv_ry = /*ry > 0*/ 0.5f / m_f_ry;
     init_cross_point();
     return 0;
 }
@@ -586,6 +599,10 @@ int XyEllipse::init_cross_point()
     {
         return 0;
     }
+    if ((2*m_ry+1)*(2*m_rx+1)>(2*LOOKUP_TABLE_SIZE_RY+1)*(2*LOOKUP_TABLE_SIZE_RX+1))
+    {
+        return 0;
+    }
     m_cross_matrix_base = DEBUG_NEW int[ (2*m_ry+1)*(2*m_rx+1) ];
     if (!m_cross_matrix_base)
     {
@@ -595,10 +612,8 @@ int XyEllipse::init_cross_point()
     m_cross_matrix = m_cross_matrix_base + (2*m_ry)*(2*m_rx+1) + m_rx;
 
 
-    float f_rx = m_rx;
-    float f_ry = m_ry;
-    ASSERT(f_ry>0);
-    float rx_devide_ry = f_rx/f_ry;
+    ASSERT(m_f_ry>0);
+    float rx_devide_ry = m_f_rx/m_f_ry;
     float ry_2 = m_ry * m_ry;
 
     std::vector<int> cross_x_base(2*m_ry+1+1);
@@ -606,6 +621,7 @@ int XyEllipse::init_cross_point()
     cross_x[-m_ry-1] = m_rx;
     for (int dy=-2*m_ry;dy<=-1;dy++)
     {
+        static bool first = true;
         int y=-m_ry;
         for ( ;y-dy<=m_ry;y++)
         {
@@ -613,7 +629,7 @@ int XyEllipse::init_cross_point()
             cross_x[y] = ceil(f_cross_x);
             ASSERT(cross_x[y]<=cross_x[y-1] && abs(cross_x[y])<=m_rx);
         }
-        
+
         int *cross_matrix = m_cross_matrix + dy*(2*m_rx+1);
 
         y--;
@@ -644,28 +660,18 @@ int XyEllipse::cross_left( XY_POINT c1, XY_POINT base ) const
 {
     int dx = XY_POINT_X(c1) - XY_POINT_X(base);
     int dy = XY_POINT_Y(c1) - XY_POINT_Y(base);
-    ASSERT(dy<0 && dy>=-2*m_ry);
-    if (dx < -m_rx)
-    {
-        return MAX_CROSS_LINE;
-    }
-    else if (dx > m_rx)
-    {
-        return MIN_CROSS_LINE;
-    }
-    else // [-m_rx, m_rx]
-    {
-        ASSERT( abs( *(m_cross_matrix + dy*(2*m_rx+1) + dx) )<=m_ry || 
-            *(m_cross_matrix + dy*(2*m_rx+1) + dx) == MIN_CROSS_LINE || 
-            *(m_cross_matrix + dy*(2*m_rx+1) + dx) == MAX_CROSS_LINE );
-        return *(m_cross_matrix + dy*(2*m_rx+1) + dx);
-    }
+    return cross_left(dx, dy);
 }
 
 int XyEllipse::cross_right( XY_POINT c1, XY_POINT base ) const
 {
     int dx = XY_POINT_X(base) - XY_POINT_X(c1);
     int dy = XY_POINT_Y(c1) - XY_POINT_Y(base);
+    return cross_left(dx, dy);
+}
+
+int XyEllipse::cross_left( int dx, int dy ) const
+{
     ASSERT(dy<0 && dy>=-2*m_ry);
     if (dx < -m_rx)
     {
@@ -675,11 +681,38 @@ int XyEllipse::cross_right( XY_POINT c1, XY_POINT base ) const
     {
         return MIN_CROSS_LINE;
     }
-    else // [-m_rx, m_rx]
+    else if (m_cross_matrix)// [-m_rx, m_rx], use lookup table
     {
         ASSERT( abs( *(m_cross_matrix + dy*(2*m_rx+1) + dx) )<=m_ry || 
             *(m_cross_matrix + dy*(2*m_rx+1) + dx) == MIN_CROSS_LINE || 
             *(m_cross_matrix + dy*(2*m_rx+1) + dx) == MAX_CROSS_LINE );
         return *(m_cross_matrix + dy*(2*m_rx+1) + dx);
+    }
+    else
+    {
+        // unit circle with center at (0,0) and unit circle with center at (dx,dy) cross at points:
+        //   x = 0.5*dx +/- 0.5*dy*sqrt(4/(dx*dx+dy*dy)-1)
+        //   y = 0.5*dy -/+ 0.5*dx*sqrt(4/(dx*dx+dy*dy)-1)
+        float f_half_dy = dy*m_f_half_inv_ry;
+        float f_half_dx = dx*m_f_half_inv_rx;
+        float f_tmp = 1.0f/(f_half_dx*f_half_dx+f_half_dy*f_half_dy)-1.0f;
+        if (f_tmp >= 0)
+        {
+            f_tmp = sqrt(f_tmp);
+            if (fabs(f_half_dx)+f_half_dy*f_tmp<=0)
+            {
+                float ret = f_half_dy - f_half_dx*f_tmp;
+                ret *= m_f_ry;
+                return ceil(ret);
+            }
+            else
+            {
+                return dx > 0 ? MIN_CROSS_LINE : MAX_CROSS_LINE;
+            }
+        }
+        else
+        {
+            return dx > 0 ? MIN_CROSS_LINE : MAX_CROSS_LINE;
+        }
     }
 }
