@@ -444,12 +444,12 @@ int gen_left_arc(int left_arc[], int rx, int ry)
 
     rx = abs(rx);
     ry = abs(ry);
-    int a = rx;
-    int b = ry;
-    int a2 = 2* a * a;
-    int b2 = 2* b * b;
-    int x = a;
-    int y = 0;
+    __int64 a = rx;
+    __int64 b = ry;
+    __int64 a2 = 2* a * a;
+    __int64 b2 = 2* b * b;
+    __int64 x = a;
+    __int64 y = 0;
     __int64 dx = b*b*(1-2*a);
     __int64 dy = a*a;
     __int64 err = 0;
@@ -472,7 +472,7 @@ int gen_left_arc(int left_arc[], int rx, int ry)
             dx += b2;
         }
     }
-    int last_y_stop = y;
+    __int64 last_y_stop = y;
 
     x = 0;
     y = b;
@@ -505,7 +505,7 @@ int gen_left_arc(int left_arc[], int rx, int ry)
     {
         y--;
         left_arc2[y] = left_arc2[y+1];
-        left_arc2[-y] = left_arc2[y+1];        
+        left_arc2[-y] = left_arc2[y+1];
         if (y<=last_y_stop)
         {
             break;
