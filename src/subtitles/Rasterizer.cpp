@@ -2014,35 +2014,6 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     }
     break;
     case 0*DM::SINGLE_COLOR |   DM::SSE2 |   DM::AYUV_PLANAR :
-    {
-        unsigned char* dst_A = bitmap->plans[0] + dst_offset;
-        unsigned char* dst_Y = bitmap->plans[1] + dst_offset;
-        unsigned char* dst_U = bitmap->plans[2] + dst_offset;
-        unsigned char* dst_V = bitmap->plans[3] + dst_offset;
-
-        const DWORD *sw = switchpts;
-        int last_x = xo;
-        color = sw[0];
-        while(last_x<w+xo)
-        {
-            int new_x = sw[3] < w+xo ? sw[3] : w+xo;
-            color = sw[0];
-            sw += 2;
-            if( new_x < last_x )
-                continue;
-            AlphaBlt8bppSse2(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bppSse2(dst_U, s + last_x - xo, (color>>8 )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bppSse2(dst_V, s + last_x - xo, (color    )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bppSse2(dst_A, s + last_x - xo,                0, h, new_x-last_x, overlayPitch, bitmap->pitch);
-
-            dst_A += new_x - last_x;
-            dst_Y += new_x - last_x;
-            dst_U += new_x - last_x;
-            dst_V += new_x - last_x;
-            last_x = new_x;
-        }
-    }
-    break;
     case 0*DM::SINGLE_COLOR | 0*DM::SSE2 |   DM::AYUV_PLANAR :
     {
         unsigned char* dst_A = bitmap->plans[0] + dst_offset;
@@ -2060,10 +2031,10 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
             sw += 2;
             if( new_x < last_x )
                 continue;
-            AlphaBlt8bppC(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bppC(dst_U, s + last_x - xo, (color>>8 )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bppC(dst_V, s + last_x - xo, (color    )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            AlphaBlt8bppC(dst_A, s + last_x - xo,                0, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            alphablt_8bpp[fSSE2](dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            alphablt_8bpp[fSSE2](dst_U, s + last_x - xo, (color>>8 )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            alphablt_8bpp[fSSE2](dst_V, s + last_x - xo, (color    )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            alphablt_8bpp[fSSE2](dst_A, s + last_x - xo,                0, h, new_x-last_x, overlayPitch, bitmap->pitch);
 
             dst_A += new_x - last_x;
             dst_Y += new_x - last_x;
