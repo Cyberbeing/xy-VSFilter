@@ -315,7 +315,7 @@ HRESULT XyOptionsImpl::DoSetField( unsigned field, void const *value )
         hr = E_NOTIMPL;
         break;
     }
-    return S_OK;
+    return hr;
 }
 
 HRESULT XyOptionsImpl::OnOptionChanged( unsigned field )
