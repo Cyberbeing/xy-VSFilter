@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "xy_logger.h"
 #include <fstream>
+#include <moreuuids.h>
 
 #ifdef UNICODE
 
@@ -119,6 +120,171 @@ void DumpPackBitmap2File(POINT pos, SIZE size, LPCVOID pixels, int pitch, const 
     }
     axxx.close();
 }
+
+void XyDisplayType(LPTSTR label, const AM_MEDIA_TYPE *pmtIn)
+{
+#if ENABLE_XY_LOG
+    /* Dump the GUID types and a short description */
+
+    XY_LOG_TRACE(_T(""));
+    XY_LOG_TRACE(label<<_T("  M type ")<<GuidNames[pmtIn->majortype]<<_T("  S type "<<GuidNames[pmtIn->subtype]));
+    XY_LOG_TRACE(_T("Subtype description ")<<GetSubtypeName(&pmtIn->subtype));
+
+    /* Dump the generic media types */
+
+    if (pmtIn->bTemporalCompression) {
+        XY_LOG_TRACE(_T("Temporally compressed"));
+    } else {
+        XY_LOG_TRACE(_T("Not temporally compressed"));
+    }
+
+    if (pmtIn->bFixedSizeSamples) {
+        XY_LOG_TRACE(_T("Sample size ")<<pmtIn->lSampleSize);
+    } else {
+        XY_LOG_TRACE(_T("Variable size samples"));
+    }
+
+    if (pmtIn->formattype == FORMAT_VideoInfo) {
+        /* Dump the contents of the BITMAPINFOHEADER structure */
+        BITMAPINFOHEADER *pbmi = HEADER(pmtIn->pbFormat);
+        VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *)pmtIn->pbFormat;
+
+        XY_LOG_TRACE(_T("Source rectangle :")<<pVideoInfo->rcSource);
+
+        XY_LOG_TRACE(_T("Target rectangle :")<<pVideoInfo->rcTarget);
+
+        XY_LOG_TRACE(_T("Size of BITMAPINFO structure ")<<pbmi->biSize);
+        if (pbmi->biCompression < 256) {
+            XY_LOG_TRACE(pbmi->biWidth<<_T("x")<<pbmi->biHeight<<_T("x")
+                <<pbmi->biBitCount<<_T(" bit biCompression:")<<pbmi->biCompression);
+        } 
+        else {
+            XY_LOG_TRACE(pbmi->biWidth<<_T("x")<<pbmi->biHeight<<_T("x")
+                <<pbmi->biBitCount<<_T(" bit biCompression:")<<(char*)&pbmi->biCompression);
+        }
+
+        XY_LOG_TRACE(_T("Image size       ")<<pbmi->biSizeImage    );
+        XY_LOG_TRACE(_T("Planes           ")<<pbmi->biPlanes       );
+        XY_LOG_TRACE(_T("X Pels per metre ")<<pbmi->biXPelsPerMeter);
+        XY_LOG_TRACE(_T("Y Pels per metre ")<<pbmi->biYPelsPerMeter);
+        XY_LOG_TRACE(_T("Colours used     ")<<pbmi->biClrUsed      );
+
+    } else if (pmtIn->majortype == MEDIATYPE_Audio) {
+        XY_LOG_TRACE(_T("     Format type:")<<GuidNames[pmtIn->formattype]);
+        XY_LOG_TRACE(_T("     Subtype    :")<<GuidNames[pmtIn->subtype   ]);
+
+        if ((pmtIn->subtype != MEDIASUBTYPE_MPEG1Packet)
+            && (pmtIn->cbFormat >= sizeof(PCMWAVEFORMAT)))
+        {
+            /* Dump the contents of the WAVEFORMATEX type-specific format structure */
+
+            WAVEFORMATEX *pwfx = (WAVEFORMATEX *) pmtIn->pbFormat;
+            XY_LOG_TRACE(_T("wFormatTag     :")<<pwfx->wFormatTag     );
+            XY_LOG_TRACE(_T("nChannels      :")<<pwfx->nChannels      );
+            XY_LOG_TRACE(_T("nSamplesPerSec :")<<pwfx->nSamplesPerSec );
+            XY_LOG_TRACE(_T("nAvgBytesPerSec:")<<pwfx->nAvgBytesPerSec);
+            XY_LOG_TRACE(_T("nBlockAlign    :")<<pwfx->nBlockAlign    );
+            XY_LOG_TRACE(_T("wBitsPerSample :")<<pwfx->wBitsPerSample );
+
+            /* PCM uses a WAVEFORMAT and does not have the extra size field */
+            if (pmtIn->cbFormat >= sizeof(WAVEFORMATEX))
+            XY_LOG_TRACE(_T("cbSize         :")<<pwfx->cbSize);
+        } else {
+        }
+    } else {
+        XY_LOG_TRACE(_T("     Format type ")<<GuidNames[pmtIn->formattype]);
+        // !!!! should add code to dump wave format, others
+    }
+#endif
+}
+
+void XyDumpGraph(IFilterGraph *pGraph, DWORD dwLevel)
+{
+#if ENABLE_XY_LOG
+    if( !pGraph )
+    {
+        return;
+    }
+
+    IEnumFilters *pFilters;
+
+    XY_LOG_TRACE(_T("Graph: ")<<(void*)pGraph);
+
+    if (FAILED(pGraph->EnumFilters(&pFilters))) {
+        XY_LOG_TRACE(_T("    EnumFilters failed!"));
+    }
+
+    IBaseFilter *pFilter;
+    ULONG n;
+    while (pFilters->Next(1, &pFilter, &n) == S_OK) {
+        FILTER_INFO info;
+
+        if (FAILED(pFilter->QueryFilterInfo(&info))) {
+            XY_LOG_TRACE(_T("    Filter [%")<<(void*)pFilter<<_T("]  -- failed QueryFilterInfo"));
+        } 
+        else {
+            QueryFilterInfoReleaseGraph(info);
+
+            // !!! should QueryVendorInfo here!
+
+            XY_LOG_TRACE(_T("    Filter [")<<(void*)pFilter<<_T("]  '")<<info.achName<<_T("'"));
+
+            IEnumPins *pins;
+
+            if (FAILED(pFilter->EnumPins(&pins))) {
+                XY_LOG_TRACE(_T("        EnumPins failed!"));
+            }
+            else {
+                IPin *pPin;
+                while (pins->Next(1, &pPin, &n) == S_OK) {
+                    PIN_INFO info;
+
+                    if (FAILED(pPin->QueryPinInfo(&info))) {
+                        XY_LOG_TRACE(_T("          Pin [")<<(void*)pPin<<_T("]  -- failed QueryPinInfo"));
+                    } else {
+                        QueryPinInfoReleaseFilter(info);
+
+                        IPin *pPinConnected = NULL;
+
+                        HRESULT hr = pPin->ConnectedTo(&pPinConnected);
+
+                        if (pPinConnected) {
+                            XY_LOG_TRACE(_T("          Pin [")<<pPin<<_T("] ")<<info.achName<<_T(" ")
+                                <<(info.dir == PINDIR_INPUT ? _T("[Input]") : _T("[Output]"))
+                                <<_T("  Connected to pin [")<<(void*)pPinConnected<<_T("]"));
+
+                            pPinConnected->Release();
+
+                            // perhaps we should really dump the type both ways as a sanity
+                            // check?
+                            if (info.dir == PINDIR_OUTPUT) {
+                                AM_MEDIA_TYPE mt;
+
+                                hr = pPin->ConnectionMediaType(&mt);
+
+                                if (SUCCEEDED(hr)) {
+                                    XyDisplayType(TEXT("Connection type"), &mt);
+
+                                    FreeMediaType(mt);
+                                }
+                            }
+                        }
+                        else {
+                            XY_LOG_TRACE(_T("          Pin [")<<pPin<<_T("] ")<<info.achName<<_T(" ")
+                                <<(info.dir == PINDIR_INPUT ? _T("[Input]") : _T("[Output]")));
+                        }
+                    }
+                    pPin->Release();
+                }
+                pins->Release();
+            }
+        }
+        pFilter->Release();
+    }
+    pFilters->Release();
+#endif
+}
+
 
 } //namespace xy_logger
 
