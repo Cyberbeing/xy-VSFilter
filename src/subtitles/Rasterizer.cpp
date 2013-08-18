@@ -1316,6 +1316,27 @@ static __forceinline void pixmix2(DWORD *dst, DWORD color, DWORD shapealpha, DWO
 #include <xmmintrin.h>
 #include <emmintrin.h>
 
+static __forceinline void pixmix2_sse2(DWORD* dst, DWORD color, DWORD shapealpha, DWORD clipalpha)
+{
+    int alpha = (((shapealpha)*(clipalpha)*(color>>24))>>12)&0xff;
+    color &= 0xffffff;
+    __m128i zero = _mm_setzero_si128();
+    __m128i a = _mm_set1_epi32(((alpha+1) << 16) | (0x100 - alpha));
+    __m128i d = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*dst), zero);
+    __m128i s = _mm_unpacklo_epi8(_mm_cvtsi32_si128(color), zero);
+    __m128i r = _mm_unpacklo_epi16(d, s);
+    r = _mm_madd_epi16(r, a);
+    r = _mm_srli_epi32(r, 8);
+    r = _mm_packs_epi32(r, r);
+    r = _mm_packus_epi16(r, r);
+    *dst = (DWORD)_mm_cvtsi128_si32(r);
+}
+///////////////////////////////////////////////////////////////////////////
+
+typedef              void (*PixLineMixFunc   )(BYTE* dst, const BYTE* alpha, int w, DWORD color);
+static __forceinline void  packed_pix_mix_c   (BYTE* dst, const BYTE* alpha, int w, DWORD color);
+static __forceinline void  packed_pix_mix_sse2(BYTE* dst, const BYTE* alpha, int w, DWORD color);
+
 static __forceinline void packed_pix_mix_c(BYTE* dst, const BYTE* alpha, int w, DWORD color)
 {
     DWORD * dst_w = (DWORD *)dst;
@@ -1454,21 +1475,7 @@ static __forceinline void packed_pix_mix_sse2(BYTE* dst, BYTE alpha, int w, DWOR
     }
 }
 
-static __forceinline void pixmix2_sse2(DWORD* dst, DWORD color, DWORD shapealpha, DWORD clipalpha)
-{
-    int alpha = (((shapealpha)*(clipalpha)*(color>>24))>>12)&0xff;
-    color &= 0xffffff;
-    __m128i zero = _mm_setzero_si128();
-    __m128i a = _mm_set1_epi32(((alpha+1) << 16) | (0x100 - alpha));
-    __m128i d = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*dst), zero);
-    __m128i s = _mm_unpacklo_epi8(_mm_cvtsi32_si128(color), zero);
-    __m128i r = _mm_unpacklo_epi16(d, s);
-    r = _mm_madd_epi16(r, a);
-    r = _mm_srli_epi32(r, 8);
-    r = _mm_packs_epi32(r, r);
-    r = _mm_packus_epi16(r, r);
-    *dst = (DWORD)_mm_cvtsi128_si32(r);
-}
+///////////////////////////////////////////////////////////////////////////
 
 #include <mmintrin.h>
 
@@ -1846,7 +1853,7 @@ typedef void (*DrawSingleColorPackPixFunc)(      DWORD *dst,
                                            int          h,
                                            int          src_pitch,
                                            int          dst_pitch);
-template<PixMixFunc pixmix_line>
+template<PixLineMixFunc pixmix_line>
 void DrawSingleColorPackPix(      DWORD *dst,
                             const BYTE  *src, 
                             DWORD        color, 
@@ -1970,7 +1977,7 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     case   DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::AYUV_PLANAR :
     case   DM::SINGLE_COLOR | 0*DM::SSE2 | 0*DM::AYUV_PLANAR :
     {
-        draw_single_color_pack_pix[fSSE2](dst, src, color, w, h, overlayPitch, bitmap->pitch);
+        draw_single_color_pack_pix[fSSE2](dst, s, color, w, h, overlayPitch, bitmap->pitch);
     }
     break;
     case 0*DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::AYUV_PLANAR :
