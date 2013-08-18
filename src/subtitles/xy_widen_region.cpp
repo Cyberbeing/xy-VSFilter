@@ -625,7 +625,13 @@ int XyEllipse::init_cross_point()
         int y=-m_ry;
         for ( ;y-dy<=m_ry;y++)
         {
-            float f_cross_x = rx_devide_ry * ( sqrt(ry_2 - (y - dy)*(y - dy)) - sqrt(ry_2 - y*y) );
+            //f_cross_x = rx_devide_ry * ( sqrt(ry_2-(y-dy)*(y-dy))-sqrt(ry_2-y*y) )
+            // But we have to do it this way because ry_2 may < y*y due to float rounding error
+            float fxo_2 = ry_2 - float(y-dy)*float(y-dy);
+            if (fxo_2<0) fxo_2 = 0;
+            float fx_2 = ry_2 - float(y)*float(y);
+            if (fx_2<0) fx_2 = 0;
+            float f_cross_x = rx_devide_ry * ( sqrt(fxo_2)-sqrt(fx_2) );
             cross_x[y] = ceil(f_cross_x);
             ASSERT(cross_x[y]<=cross_x[y-1] && abs(cross_x[y])<=m_rx);
         }
