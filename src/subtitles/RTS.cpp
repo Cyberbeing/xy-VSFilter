@@ -35,6 +35,14 @@
 #  define TRACE_PARSER(msg)
 #endif
 
+#if ENABLE_XY_LOG_RENDERER_REQUEST2
+#  define TRACE_RENDERER_REQUEST(msg) XY_LOG_TRACE(msg)
+#  define TRACE_RENDERER_REQUEST_TIMING(msg) XY_AUTO_TIMING(msg)
+#else
+#  define TRACE_RENDERER_REQUEST(msg)
+#  define TRACE_RENDERER_REQUEST_TIMING(msg)
+#endif
+
 // WARNING: this isn't very thread safe, use only one RTS a time.
 static HDC g_hDC;
 static int g_hDC_refcnt = 0;
@@ -1817,6 +1825,8 @@ void CScreenLayoutAllocator::Empty()
 
 void CScreenLayoutAllocator::AdvanceToSegment(int segment, const CAtlArray<int>& sa)
 {
+    TRACE_RENDERER_REQUEST("Begin AdvanceToSegment. m_subrects.size:"
+        <<m_subrects.GetCount()<<" sa.size:"<<sa.GetCount());
     POSITION pos = m_subrects.GetHeadPosition();
     while(pos)
     {
@@ -3319,6 +3329,7 @@ static int lscomp(const void* ls1, const void* ls2)
 
 HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubtitle2List *outputSub2List )
 {
+    TRACE_RENDERER_REQUEST("Begin search subtitle segment");
     //fix me: check input and log error
     int t = (int)(rt / 10000);
     int segment;
@@ -3327,6 +3338,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
     if(!stss) return S_FALSE;
     // clear any cached subs not in the range of +/-30secs measured from the segment's bounds
     {
+        TRACE_RENDERER_REQUEST("Begin clear parsed subtitle cache. m_subtitleCache.size:"<<m_subtitleCache.GetCount());
         POSITION pos = m_subtitleCache.GetStartPosition();
         while(pos)
         {
@@ -3343,6 +3355,7 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
         }
     }
     m_sla.AdvanceToSegment(segment, stss->subs);
+    TRACE_RENDERER_REQUEST("Begin copy LSub. subs.size:"<<stss->subs.GetCount());
     CAtlArray<LSub> subs;
     for(int i = 0, j = stss->subs.GetCount(); i < j; i++)
     {
@@ -3352,8 +3365,9 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
         ls.readorder = m_entries.GetAt(stss->subs[i]).readorder;
         subs.Add(ls);
     }
+    TRACE_RENDERER_REQUEST("Begin sort LSub.");
     qsort(subs.GetData(), subs.GetCount(), sizeof(LSub), lscomp);
-        
+    TRACE_RENDERER_REQUEST("Begin parse subs.");
     for(int i = 0, j = subs.GetCount(); i < j; i++)
     {
         int entry = subs[i].idx;
@@ -3547,6 +3561,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     const SIZE& original_video_size,
     REFERENCE_TIME rt, double fps )
 {
+    TRACE_RENDERER_REQUEST("Begin RenderEx rt"<<rt);
     if (!subRenderFrame)
     {
         return S_FALSE;
@@ -3600,6 +3615,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         render_frame_creater->SetClipRect(cvideo_rect);
     }
 
+    TRACE_RENDERER_REQUEST("Begin ParseScript");
     CSubtitle2List sub2List;
     HRESULT hr = ParseScript(rt, fps, &sub2List);
     if(hr!=S_OK)
@@ -3607,14 +3623,16 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         return hr;
     }
 
+    TRACE_RENDERER_REQUEST("Begin build draw item tree");
     CompositeDrawItemListList compDrawItemListList;
     DoRender(cvideo_rect.Size(), sub2List, &compDrawItemListList);
 
+    TRACE_RENDERER_REQUEST("Begin Draw");
     XySubRenderFrame *sub_render_frame;
     CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);
     sub_render_frame->MoveTo(video_rect.left, video_rect.top);
     (*subRenderFrame = sub_render_frame)->AddRef();
-
+    TRACE_RENDERER_REQUEST("Finished");
     return hr;
 }
 

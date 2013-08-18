@@ -17,6 +17,9 @@
 
 #define ENABLE_XY_LOG_RENDERER_REQUEST 0
 
+//only acctual rendering will be traced, less verbose than ENABLE_XY_LOG_RENDERER_REQUEST
+#define ENABLE_XY_LOG_RENDERER_REQUEST2 0
+
 #define ENABLE_XY_LOG_SUB_RENDER_FRAME 0
 
 #define ENABLE_XY_LOG_ALLOCATOR 0
