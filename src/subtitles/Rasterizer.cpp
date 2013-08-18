@@ -1836,6 +1836,36 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(const SharedPtrOverlay& overlay, co
     return result;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+
+typedef void (*DrawSingleColorPackPixFunc)(      DWORD *dst,
+                                           const BYTE  *src, 
+                                           DWORD        color, 
+                                           int          w, 
+                                           int          h,
+                                           int          src_pitch,
+                                           int          dst_pitch);
+template<PixMixFunc pixmix_line>
+void DrawSingleColorPackPix(      DWORD *dst,
+                            const BYTE  *src, 
+                            DWORD        color, 
+                            int          w, 
+                            int          h,
+                            int          src_pitch,
+                            int          dst_pitch)
+{
+    while(h--)
+    {
+        pixmix_line((BYTE*)dst, src, w, color);
+        src += src_pitch;
+        dst = (unsigned long *)((char *)dst + dst_pitch);
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+
 typedef void (*DrawMultiColorPackPixFunc)(     DWORD *dst,
                                          const BYTE  *src, 
                                          const DWORD *switchpts, 
@@ -1917,6 +1947,10 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
         DrawMultiColorPackPix<pixmix_c>,
         DrawMultiColorPackPix<pixmix_sse2>
     };
+    const DrawSingleColorPackPixFunc draw_single_color_pack_pix[] = {
+        DrawSingleColorPackPix<packed_pix_mix_c>,
+        DrawSingleColorPackPix<packed_pix_mix_sse2>
+    };
 
     // draw
     // Grab the first colour
@@ -1934,23 +1968,9 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     switch(draw_method)
     {
     case   DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::AYUV_PLANAR :
-    {
-        while(h--)
-        {
-            packed_pix_mix_sse2((BYTE*)dst, s, w, color );
-            s += overlayPitch;
-            dst = (unsigned long *)((char *)dst + bitmap->pitch);
-        }
-    }
-    break;
     case   DM::SINGLE_COLOR | 0*DM::SSE2 | 0*DM::AYUV_PLANAR :
     {
-        while(h--)
-        {
-            packed_pix_mix_c((BYTE*)dst, s, w, color);
-            s += overlayPitch;
-            dst = (unsigned long *)((char *)dst + bitmap->pitch);
-        }
+        draw_single_color_pack_pix[fSSE2](dst, src, color, w, h, overlayPitch, bitmap->pitch);
     }
     break;
     case 0*DM::SINGLE_COLOR |   DM::SSE2 | 0*DM::AYUV_PLANAR :
