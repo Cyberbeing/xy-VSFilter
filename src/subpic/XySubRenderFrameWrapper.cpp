@@ -312,4 +312,148 @@ HRESULT DumpSubRenderFrame( IXySubRenderFrame *sub, const char * filename )
     }
     return S_OK;
 }
+
+#include <atlstr.h>
+#include <atlimage.h>
+DEFINE_GUID(ImageFormatBMP, 0xb96b3cab,0x0728,0x11d3,0x9d,0x7b,0x00,0x00,0xf8,0x1e,0xf3,0x2e);
+
+DEFINE_GUID(ImageFormatPNG, 0xb96b3caf,0x0728,0x11d3,0x9d,0x7b,0x00,0x00,0xf8,0x1e,0xf3,0x2e);
+
+#define ARGB_TO_COLORREEF(a,r,g,b) ( (a<<24) | (b<<16) | \
+    (g<<8) | (r) )
+
+HRESULT DumpToBitmap( IXySubRenderFrame *sub, LPCTSTR filename, bool dump_alpha_channel, bool dump_rgb_bmp
+    , DWORD background_color)
+{
+    HRESULT hr = E_FAIL;
+    CRect output_rect, clip_rect;
+    hr = sub->GetOutputRect(&output_rect);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get bitmap count. "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+
+    CImage imageBmp, image8bbp;
+    bool succeeded = imageBmp.Create(output_rect.Width(),output_rect.Height(),32) &&
+        image8bbp.Create(output_rect.Width(),output_rect.Height(),8);
+    if (!succeeded) {
+        XY_LOG_ERROR("Failed to create image.");
+        hr = E_FAIL;
+        return hr;
+    }
+
+    RGBQUAD bmiColors[256];
+    for (int i = 0; i < 256; i++) {
+        bmiColors[i].rgbRed   = i;
+        bmiColors[i].rgbGreen = i;
+        bmiColors[i].rgbBlue  = i;
+    }
+    image8bbp.SetColorTable(0, 256, bmiColors);
+
+    DWORD ba = (background_color&0xff000000)>>24;
+    DWORD br = (background_color&0x00ff0000)>>16;
+    DWORD bg = (background_color&0x0000ff00)>>8;
+    DWORD bb = (background_color&0x000000ff);
+
+    hr = sub->GetClipRect(&clip_rect);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get bitmap count. "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+    clip_rect &= output_rect;
+    int xyColorSpace = 0;
+    hr = sub->GetXyColorSpace(&xyColorSpace);
+    if (FAILED(hr))
+    {
+        XY_LOG_ERROR("Failed to get bitmap count. "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+
+    int count = 0;
+    hr = sub->GetBitmapCount(&count);
+    if (FAILED(hr)) {
+        XY_LOG_ERROR("Failed to get bitmap count. "<<XY_LOG_VAR_2_STR(hr));
+        return hr;
+    }
+
+    if (xyColorSpace!=XY_CS_ARGB_F) {
+        XY_LOG_ERROR("Colorspace NOT Supported!");
+        return S_FALSE;
+    }
+    for (int i=0;i<count;i++)
+    {
+        ULONGLONG id;
+        POINT position;
+        SIZE size;
+        LPCVOID pixels;
+        int pitch;
+        hr = sub->GetBitmap(i, &id, &position, &size, &pixels, &pitch );
+        if (FAILED(hr))
+        {
+            XY_LOG_ERROR("Failed to get bitmap count. "<<XY_LOG_VAR_2_STR(hr));
+            return hr;
+        }
+        const DWORD* pixels2 = (const DWORD*)pixels;
+        if (position.x < clip_rect.left)
+        {
+            pixels2 += clip_rect.left - position.x;
+            size.cx -= clip_rect.left - position.x;
+            position.x = clip_rect.left;
+        }
+        if (position.y < clip_rect.top)
+        {
+            pixels2 = (const DWORD*)((const BYTE*)pixels2+(clip_rect.top - position.y) * pitch);
+            size.cy -= clip_rect.top - position.y;
+            position.y = clip_rect.top;
+        }
+        if (position.x + size.cx > clip_rect.right)
+        {
+            size.cx -= position.x + size.cx - clip_rect.right;
+        }
+        if (position.y + size.cy > clip_rect.bottom)
+        {
+            size.cy -= position.y + size.cy - clip_rect.bottom;
+        }
+
+        for (int m=0;m<size.cy;m++)
+        {
+            BYTE * pix_8bpp = (BYTE *)image8bbp.GetPixelAddress(position.x-output_rect.left, position.y+m-output_rect.top);
+            BYTE * pix_32bpp = (BYTE *)imageBmp.GetPixelAddress(position.x-output_rect.left, position.y+m-output_rect.top);
+            for (int n=0;n<size.cx;n++)
+            {
+                DWORD argb = pixels2[n];
+                DWORD a = (argb&0xff000000)>>24;
+                DWORD r = (argb&0x00ff0000)>>16;
+                DWORD g = (argb&0x0000ff00)>>8;
+                DWORD b = (argb&0x000000ff);
+                *pix_8bpp++ = a;
+                *pix_32bpp++ = b + (((256-a)*bb)>>8);
+                *pix_32bpp++ = g + (((256-a)*bg)>>8);
+                *pix_32bpp++ = r + (((256-a)*br)>>8);
+                *pix_32bpp++ = 0;
+            }
+            pixels2 = (const DWORD*)((const BYTE*)pixels2+pitch);
+        }
+    }
+
+    CString filename_alpha(filename);
+    filename_alpha += "_alpha.bmp";
+    CString filename_rgb(filename);
+    filename_rgb += "_rgb.bmp";
+
+    succeeded = true;
+    if (dump_alpha_channel)
+    {
+        succeeded = succeeded && SUCCEEDED( image8bbp.Save(filename_alpha, ImageFormatBMP) );
+    }
+    if (dump_rgb_bmp)
+    {
+        succeeded = succeeded && SUCCEEDED( imageBmp.Save(filename_rgb, ImageFormatBMP) );
+    }
+
+    return succeeded ? S_OK : E_FAIL;
+}
+
 #endif
