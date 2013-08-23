@@ -121,6 +121,10 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
     CacheManager::GetTextInfoCache()->SetMaxItemNum(m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM]);
     CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM]);
 
+    std::size_t max_size = m_xy_int_opt[INT_MAX_CACHE_SIZE_MB] >= 0 ?
+        m_xy_int_opt[INT_MAX_CACHE_SIZE_MB] : m_xy_int_opt[INT_AUTO_MAX_CACHE_SIZE_MB];
+    max_size = max_size < (SIZE_MAX>>20) ? (max_size<<20) : SIZE_MAX;
+    CRenderedTextSubtitle::SetMaxCacheSize(max_size);
     SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]) );
 
     m_frd.ThreadStartedEvent.Create(0, FALSE, FALSE, 0);
@@ -425,6 +429,14 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
         break;
     case INT_SUBPIXEL_VARIANCE_CACHE_ITEM_NUM:
         CacheManager::GetSubpixelVarianceCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
+    case INT_MAX_CACHE_SIZE_MB:
+        {
+            std::size_t max_size = m_xy_int_opt[INT_MAX_CACHE_SIZE_MB] >= 0 ?
+                                   m_xy_int_opt[INT_MAX_CACHE_SIZE_MB] : m_xy_int_opt[INT_AUTO_MAX_CACHE_SIZE_MB];
+            max_size = max_size < (SIZE_MAX>>20) ? (max_size<<20) : SIZE_MAX;
+            CRenderedTextSubtitle::SetMaxCacheSize(max_size);
+        }
         break;
     case INT_SUBPIXEL_POS_LEVEL:
         SubpixelPositionControler::GetGlobalControler().SetSubpixelLevel( static_cast<SubpixelPositionControler::SUBPIXEL_LEVEL>(m_xy_int_opt[field]) );

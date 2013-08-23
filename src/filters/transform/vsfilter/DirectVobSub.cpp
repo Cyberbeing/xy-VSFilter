@@ -25,6 +25,8 @@
 
 using namespace DirectVobSubXyOptions;
 
+//////////////////////////////////////////////////////////////////////////
+
 DirectVobSubImpl::DirectVobSubImpl(const Option *options, CCritSec * pLock)
     : XyOptionsImpl(options)
     , m_propsLock(pLock)
@@ -1062,7 +1064,6 @@ STDMETHODIMP DirectVobSubImpl::XySetBin( unsigned field, LPVOID value, int size 
     return E_NOTIMPL;
 }
 
-
 //
 // CDirectVobSub
 //
@@ -1560,6 +1561,16 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
         , CacheManager::ASS_TAG_LIST_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM]<0) m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM] = 0;
 
+    m_xy_int_opt[INT_MAX_CACHE_SIZE_MB] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_MAX_CACHE_SIZE_MB), -1);
+
+    MEMORYSTATUSEX statex;
+    statex.dwLength = sizeof (statex);
+    GlobalMemoryStatusEx (&statex);
+    m_xy_int_opt[INT_AUTO_MAX_CACHE_SIZE_MB] = (statex.ullTotalPhys < statex.ullTotalVirtual ?
+                                                statex.ullTotalPhys : statex.ullTotalVirtual)>>22;
+    m_xy_int_opt[INT_AUTO_MAX_CACHE_SIZE_MB] = m_xy_int_opt[INT_AUTO_MAX_CACHE_SIZE_MB] < (SIZE_MAX>>23) ? 
+                                               m_xy_int_opt[INT_AUTO_MAX_CACHE_SIZE_MB] : (SIZE_MAX>>23);
+
     m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), SubpixelPositionControler::EIGHT_X_EIGHT);
     if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]<0) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=0;
     else if(m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]>=SubpixelPositionControler::MAX_COUNT) m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]=SubpixelPositionControler::EIGHT_X_EIGHT;
@@ -1767,6 +1778,7 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM), m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM]);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM), m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM), m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]);
+    theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_MAX_CACHE_SIZE_MB), m_xy_int_opt[INT_MAX_CACHE_SIZE_MB]);
     theApp.WriteProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SUBPIXEL_POS_LEVEL), m_xy_int_opt[INT_SUBPIXEL_POS_LEVEL]);
 
     CString str_layout_size_opt = _T("Use Original Video Size");

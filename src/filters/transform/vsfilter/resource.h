@@ -214,6 +214,7 @@
 #define IDC_EDIT_LAYOUT_SIZE_Y          335
 #define IDC_SPIN_LAYOUT_SIZE_Y          336
 #define IDC_COMBO_RGB_LEVEL             337
+#define IDS_RP_MAX_CACHE_SIZE_MB        338
 #define IDC_CHECKBOX_RENDER_TO_ORIGINAL_VIDEO_SIZE 341
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402

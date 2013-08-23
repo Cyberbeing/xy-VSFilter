@@ -738,6 +738,7 @@ BEGIN
     IDS_RK_TOTAL_NUMBER       "total_number"
     IDS_RK_GUID               "giud%d"
     IDS_RK_FRIENDLY_NAME      "friendly_name%d"
+    IDS_RP_MAX_CACHE_SIZE_MB  "max_cache_size_mb"
 #if defined XY_SUB_FILTER_DLL
     IDS_RG_LOADLEVEL        "load_level"
     IDS_RG_EXTERNALLOAD     "ext_load"

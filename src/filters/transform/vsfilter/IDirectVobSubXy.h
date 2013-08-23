@@ -136,6 +136,9 @@ namespace DirectVobSubXyOptions
         BOOL_BE_AUTO_LOADED,
         BOOL_GET_RID_OF_VSFILTER,
 
+        INT_AUTO_MAX_CACHE_SIZE_MB,//real max cache size when INT_MAX_CACHE_SIZE_MB<0
+        INT_MAX_CACHE_SIZE_MB,     //<0 auto, 0 disable, >0 specific size;
+
         //The following is not really supported yet
         void_LanguageName,
         void_HasConfigDialog,
@@ -315,6 +318,9 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_ASS_TAG_LIST_CACHE_ITEM_NUM},
 
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_SUBPIXEL_VARIANCE_CACHE_ITEM_NUM},
+
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_READ, INT_AUTO_MAX_CACHE_SIZE_MB},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_MAX_CACHE_SIZE_MB},
 
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_SUBPIXEL_POS_LEVEL},
 
