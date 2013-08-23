@@ -390,6 +390,8 @@ public:
         CAtlArray<CStringW> strParams;
         AssTagList embeded;
     };
+public:
+    static std::size_t SetMaxCacheSize(std::size_t max_cache_size);
 private:
     XyIntMap<CSubtitle*>     m_subtitleCache;
     CAtlList<int>            m_subtitleCacheEntry;
@@ -429,6 +431,9 @@ private:
     CSubtitle* GetSubtitle(int entry);
 
     void ClearUnCachedSubtitle(CSubtitle2List& sub2List);
+    void ShrinkCache();
+private:
+    static std::size_t s_max_cache_size;
 protected:
     virtual void OnChanged();
     

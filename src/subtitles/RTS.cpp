@@ -1900,6 +1900,15 @@ CRect CScreenLayoutAllocator::AllocRect(CSubtitle* s, int segment, int entry, in
 
 CAtlMap<CStringW, CRenderedTextSubtitle::AssCmdType, CStringElementTraits<CStringW>> CRenderedTextSubtitle::m_cmdMap;
 
+std::size_t CRenderedTextSubtitle::s_max_cache_size = SIZE_MAX;
+
+std::size_t CRenderedTextSubtitle::SetMaxCacheSize( std::size_t max_cache_size )
+{
+    s_max_cache_size = max_cache_size;
+    XY_LOG_INFO("MAX_CACHE_SIZE: "<<s_max_cache_size);
+    return s_max_cache_size;
+}
+
 CRenderedTextSubtitle::CRenderedTextSubtitle(CCritSec* pLock)
     : CSubPicProviderImpl(pLock)
     , m_target_scale_x(1.0), m_target_scale_y(1.0)
@@ -3168,6 +3177,20 @@ void CRenderedTextSubtitle::ClearUnCachedSubtitle( CSubtitle2List& sub2List )
     }
 }
 
+void CRenderedTextSubtitle::ShrinkCache()
+{
+    OverlayNoBlurMruCache *cache1 = CacheManager::GetOverlayNoBlurMruCache();
+    OverlayMruCache       *cache2 = CacheManager::GetOverlayMruCache();
+    BitmapMruCache        *cache3 = CacheManager::GetBitmapMruCache();
+    while (g_xy_malloc_used_size > s_max_cache_size && 
+        (cache1->GetCurItemNum()>0 || cache2->GetCurItemNum()>0 || cache3->GetCurItemNum()>0))
+    {
+        cache1->RemoveTail();
+        cache2->RemoveTail();
+        cache3->RemoveTail();
+    }
+}
+
 //
 
 STDMETHODIMP CRenderedTextSubtitle::NonDelegatingQueryInterface(REFIID riid, void** ppv)
@@ -3558,6 +3581,9 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     CompositeDrawItem::Draw(&sub_render_frame, compDrawItemListList);
     sub_render_frame->MoveTo(video_rect.left, video_rect.top);
     (*subRenderFrame = sub_render_frame)->AddRef();
+
+    ShrinkCache();
+
     TRACE_RENDERER_REQUEST("Finished");
     return hr;
 }

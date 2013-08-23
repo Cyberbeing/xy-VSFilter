@@ -1134,7 +1134,12 @@ public:
         _hash.RemoveAll();
         _list.RemoveAll();
     }
-    
+    inline void RemoveTail()
+    {
+        _hash.RemoveAtPos(_list.GetTail().first);
+        _list.RemoveTail();
+    }
+
     inline POSITION Lookup(const K& key) const
     {
         POSITION pos;
