@@ -297,7 +297,14 @@ void WidenRegionCreaterImpl::add_left( LinkArc* arc, XY_POINT center )
     {
         y = m_ellipse->cross_left( arc->get_at(0).arc_center, center );
         ASSERT(y>=-ry && y+line<=arc->get_at(0).dead_line);
-        arc->get_at(0).dead_line = y + line;
+        if (y<=-ry)
+        {
+            arc->pop_back();
+        }
+        else
+        {
+            arc->get_at(0).dead_line = y + line;
+        }
     }
     LinkArcItem& item = arc->inc_1_at_tail();
     item.arc_center = center;
@@ -333,13 +340,14 @@ void WidenRegionCreaterImpl::add_right( LinkArc* arc, XY_POINT center )
     if (i==0)
     {
         y = m_ellipse->cross_right( arc->get_at(0).arc_center, center );
-        if (y<-ry)
+        if (y<=-ry)
         {
             arc->pop_back();
         }
         else if (y<MAX_CROSS_LINE)
         {
             ASSERT(y+line<=arc->get_at(0).dead_line);
+            XY_POINT& arc_center = arc->get_at(0).arc_center;
             arc->get_at(0).dead_line = y + line;
         }
     }
