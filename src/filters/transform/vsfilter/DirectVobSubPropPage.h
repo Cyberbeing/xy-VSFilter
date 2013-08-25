@@ -272,8 +272,6 @@ class CXySubFilterMainPPage : public CDVSBasePPage
     CButton m_oplacement;
     CSpinButtonCtrl m_subposx, m_subposy;
     CButton m_styles, m_force_default_style, m_forcedsubs;
-    CButton m_AutoPARCompensation;
-    CComboBox m_PARCombo;
     CButton m_hide_tray_icon;
     CComboBox m_load;
     CButton m_extload, m_webload, m_embload;

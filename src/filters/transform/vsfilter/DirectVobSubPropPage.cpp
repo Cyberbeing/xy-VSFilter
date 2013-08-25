@@ -1705,7 +1705,6 @@ CXySubFilterMainPPage::CXySubFilterMainPPage(LPUNKNOWN pUnk, HRESULT* phr)
     BindControl(IDC_STYLES, m_styles);
     BindControl(IDC_CHECKBOX_FORCE_DEFAULT_STYLE, m_force_default_style);
     BindControl(IDC_ONLYSHOWFORCEDSUBS, m_forcedsubs);
-    BindControl(IDC_PARCOMBO, m_PARCombo);
     BindControl(IDC_CHECKBOX_HideTrayIcon, m_hide_tray_icon);
 
     BindControl(IDC_LOADCOMBO, m_load);
@@ -1878,10 +1877,6 @@ void CXySubFilterMainPPage::UpdateControlData(bool fSave)
         m_PlacementYperc = m_subposy.GetPos();
         m_fForceDefaultStyle = !!m_force_default_style.GetCheck();
         m_fOnlyShowForcedVobSubs = !!m_forcedsubs.GetCheck();
-        if (m_PARCombo.GetCurSel() != CB_ERR)
-            m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(m_PARCombo.GetItemData(m_PARCombo.GetCurSel()));
-        else
-            m_ePARCompensationType = CSimpleTextSubtitle::EPCTDisabled;
         m_fHideTrayIcon = !!m_hide_tray_icon.GetCheck();
 
         if(m_load.GetCurSel() >= 0) m_LoadLevel = m_load.GetItemData(m_load.GetCurSel());
@@ -1906,26 +1901,6 @@ void CXySubFilterMainPPage::UpdateControlData(bool fSave)
         for(int i = 0; i < m_nLangs; i++) m_langs.AddString(CString(m_ppLangs[i]));
         m_langs.SetCurSel(m_iSelectedLanguage);
 
-        m_PARCombo.ResetContent();
-        m_PARCombo.InsertString(0, ResStr(IDS_RT_PAR_DISABLED));
-        m_PARCombo.SetItemData(0, CSimpleTextSubtitle::EPCTDisabled);
-        if (m_ePARCompensationType == CSimpleTextSubtitle::EPCTDisabled)
-            m_PARCombo.SetCurSel(0);
-
-        m_PARCombo.InsertString(1, ResStr(IDS_RT_PAR_DOWNSCALE));
-        m_PARCombo.SetItemData(1, CSimpleTextSubtitle::EPCTDownscale);
-        if (m_ePARCompensationType == CSimpleTextSubtitle::EPCTDownscale)
-            m_PARCombo.SetCurSel(1);
-
-        m_PARCombo.InsertString(2, ResStr(IDS_RT_PAR_UPSCALE));
-        m_PARCombo.SetItemData(2, CSimpleTextSubtitle::EPCTUpscale);
-        if (m_ePARCompensationType == CSimpleTextSubtitle::EPCTUpscale)
-            m_PARCombo.SetCurSel(2);
-
-        m_PARCombo.InsertString(3, ResStr(IDS_RT_PAR_ACCURATE_SIZE));
-        m_PARCombo.SetItemData(3, CSimpleTextSubtitle::EPCTAccurateSize);
-        if (m_ePARCompensationType == CSimpleTextSubtitle::EPCTAccurateSize)
-            m_PARCombo.SetCurSel(3);
         m_hide_tray_icon.SetCheck(m_fHideTrayIcon);
 
         m_load.ResetContent();
