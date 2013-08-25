@@ -139,6 +139,8 @@ namespace DirectVobSubXyOptions
         INT_AUTO_MAX_CACHE_SIZE_MB,//real max cache size when INT_MAX_CACHE_SIZE_MB<0
         INT_MAX_CACHE_SIZE_MB,     //<0 auto, 0 disable, >0 specific size;
 
+        INT_DEFAULT_SYTLE_RELATIVE_HEIGHT,//0:original video height
+
         //The following is not really supported yet
         void_LanguageName,
         void_HasConfigDialog,
@@ -394,6 +396,7 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_READ, INT_CONSUMER_SUPPORTED_LEVELS},
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_READ, INT_CUR_STYLES_COUNT},
         {XyOptionsImpl::OPTION_TYPE_BIN2  , XyOptionsImpl::OPTION_MODE_RW, BIN2_CUR_STYLES},
+        {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_DEFAULT_SYTLE_RELATIVE_HEIGHT},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_RENDER_TO_ORIGINAL_VIDEO_SIZE},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_FORCE_DEFAULT_STYLE},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_BE_AUTO_LOADED},

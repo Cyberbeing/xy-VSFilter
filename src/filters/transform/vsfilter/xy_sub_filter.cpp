@@ -451,6 +451,7 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
         break;
     case INT_SELECTED_LANGUAGE:
     case BIN2_CUR_STYLES:
+    case INT_DEFAULT_SYTLE_RELATIVE_HEIGHT:
         UpdateSubtitle(false);
         m_context_id++;
         break;
@@ -1742,6 +1743,25 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             pRTS->Deinit();//clear caches
 
             STSStyle s = m_defStyle;
+            if (m_xy_int_opt[INT_DEFAULT_SYTLE_RELATIVE_HEIGHT]>0)
+            {
+                double rate = double(m_xy_rect_opt[RECT_VIDEO_OUTPUT].Height())/
+                    m_xy_int_opt[INT_DEFAULT_SYTLE_RELATIVE_HEIGHT];
+                s.fontScaleX    *= rate;
+                s.fontScaleY    *= rate;
+                s.outlineWidthX *= rate;
+                s.outlineWidthY *= rate;
+                s.shadowDepthX  *= rate;
+                s.shadowDepthY  *= rate;
+                s.fontSpacing   *= rate;
+                CRect tmp = s.marginRect.get();
+                tmp.left   *= rate;
+                tmp.top    *= rate;
+                tmp.right  *= rate;
+                tmp.bottom *= rate;
+                s.marginRect = tmp;
+            }
+
             bool succeeded = pRTS->SetDefaultStyle(s);
             if (!succeeded)
             {

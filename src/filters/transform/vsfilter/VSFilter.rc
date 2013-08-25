@@ -355,6 +355,8 @@ BEGIN
     CONTROL         "Link alpha channels",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,213,154,76,10
     LTEXT           "100%",IDC_STATIC,289,76,20,8
     LTEXT           "0%",IDC_STATIC,200,76,12,8
+    COMBOBOX        IDC_COMBO_OUTPUT_HEIGHT,190,177,58,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Relative output height",IDC_STATIC,132,179,62,8
 END
 
 IDD_DVSMOREPAGE DIALOGEX 0, 0, 247, 188
@@ -739,6 +741,7 @@ BEGIN
     IDS_RK_GUID               "giud%d"
     IDS_RK_FRIENDLY_NAME      "friendly_name%d"
     IDS_RP_MAX_CACHE_SIZE_MB  "max_cache_size_mb"
+    IDS_RT_DEFAULT_STYLE_RELATIVE_HEIGHT "default_style_relative_height"
 #if defined XY_SUB_FILTER_DLL
     IDS_RG_LOADLEVEL        "load_level"
     IDS_RG_EXTERNALLOAD     "ext_load"

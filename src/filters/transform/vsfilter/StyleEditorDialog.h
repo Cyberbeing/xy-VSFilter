@@ -66,12 +66,14 @@ public:
     CStyleEditorPPage(CString title, const STSStyle* pstss);
 	virtual ~CStyleEditorPPage();
 
-    void init(CString title, const STSStyle* pstss);
+    void init(CString title, const STSStyle* pstss, 
+        bool allow_change_relative_height=false, int relative_height=0);
 
 // Dialog Data
 	enum { IDD = IDD_STYLE_PAGE };
 
 	STSStyle m_stss;
+    int m_relative_output_height;//0: orignal video;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -107,6 +109,9 @@ public:
 	int m_alpha[4];
 	CSliderCtrl m_alphasliders[4];
 	BOOL m_linkalphasliders;
+    BOOL m_allow_change_relative_height;
+    int m_i_relative_output_height;
+    CComboBox m_combo_relative_output_height;
 
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnStnClickedColorpri();

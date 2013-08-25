@@ -73,6 +73,7 @@ class CDVSMainPPage : public CDVSBasePPage
     bool m_fHideTrayIcon;
 	int	m_PlacementXperc, m_PlacementYperc;
 	STSStyle m_defStyle;
+    int m_defsytle_relative_height;
 	bool m_fOnlyShowForcedVobSubs;
 	CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;
 
@@ -261,6 +262,7 @@ class CXySubFilterMainPPage : public CDVSBasePPage
     bool m_fHideTrayIcon;
     int m_PlacementXperc, m_PlacementYperc;
     STSStyle m_defStyle;
+    int m_defsytle_relative_height;
     bool m_fForceDefaultStyle;
     bool m_fOnlyShowForcedVobSubs;
     CSimpleTextSubtitle::EPARCompensationType m_ePARCompensationType;

@@ -55,10 +55,11 @@ BOOL WINAPI MyGetDialogSize(int iResourceID, DLGPROC pDlgProc, LPARAM lParam, SI
 DirectVobSubXyOptions::SubStyle * NewSubStyles(int count);
 void DeleteSubStyles(DirectVobSubXyOptions::SubStyle* style, int count);
 HRESULT GetSubStyles(IXyOptions *filter, DirectVobSubXyOptions::SubStyle* *style, int *count);
-HRESULT CreateSubStyleEditDialog(const STSStyle& default_style
+HRESULT CreateSubStyleEditDialog(const STSStyle& default_style, int default_style_relative_height
     , const DirectVobSubXyOptions::SubStyle sub_styles[], int count
     , CPropertySheet& dlg, /*out*/CStyleEditorPPage **pages);
-void EditStyle(HWND hWnd, IXyOptions *filter, /* in-out */STSStyle* default_style);
+void EditStyle(HWND hWnd, IXyOptions *filter, /* in-out */STSStyle* default_style, 
+                                              /* in-out */int     * default_style_relative_height);
 
 /********************/
 
@@ -126,6 +127,7 @@ HRESULT GetSubStyles(IXyOptions *filter, DirectVobSubXyOptions::SubStyle* *style
 }
 
 HRESULT CreateSubStyleEditDialog(const STSStyle& default_style
+    , int default_style_relative_height
     , const DirectVobSubXyOptions::SubStyle sub_styles[], int count
     , CPropertySheet& dlg, /*out*/CStyleEditorPPage **pages)
 {
@@ -135,7 +137,7 @@ HRESULT CreateSubStyleEditDialog(const STSStyle& default_style
     {
         return E_FAIL;
     }
-    (*pages)[0].init(_T("Global Default"), &default_style);
+    (*pages)[0].init(_T("Global Default"), &default_style, true, default_style_relative_height);
     dlg.AddPage(*pages);
     for (int i=0;i<count;i++)
     {
@@ -147,7 +149,8 @@ HRESULT CreateSubStyleEditDialog(const STSStyle& default_style
     return S_OK;
 }
 
-void EditStyle(HWND hWnd, IXyOptions *filter, /* in-out */STSStyle* default_style)
+void EditStyle(HWND hWnd, IXyOptions *filter, /* in-out */STSStyle* default_style,
+                                              /* in-out */int     * default_style_relative_height)
 {
     int style_count = 0;
     DirectVobSubXyOptions::SubStyle* styles = NULL;
@@ -155,7 +158,8 @@ void EditStyle(HWND hWnd, IXyOptions *filter, /* in-out */STSStyle* default_styl
     CHECK_N_LOG(hr, "Failed to get styles."<<XY_LOG_VAR_2_STR(hr));
     CStyleEditorPPage* pages = NULL;
     CPropertySheet dlg(_T("Styles"), CWnd::FromHandle(hWnd));
-    hr = CreateSubStyleEditDialog(*default_style, styles, style_count, dlg, &pages);
+    hr = CreateSubStyleEditDialog(*default_style, *default_style_relative_height, 
+                                  styles, style_count, dlg, &pages);
     if (FAILED(hr))
     {
         MessageBoxW(hWnd,
@@ -169,6 +173,7 @@ void EditStyle(HWND hWnd, IXyOptions *filter, /* in-out */STSStyle* default_styl
     if(dlg.DoModal() == IDOK)
     {
         *default_style = pages[0].m_stss;
+        *default_style_relative_height = pages[0].m_relative_output_height;
         if (style_count>0)
         {
             for (int i=0;i<style_count;i++)
@@ -484,7 +489,7 @@ bool CDVSMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                     else if(LOWORD(wParam) == IDC_STYLES)
                     {
                         AFX_MANAGE_STATE(AfxGetStaticModuleState());
-                        EditStyle(m_hwnd, m_pDirectVobSubXy, &m_defStyle);
+                        EditStyle(m_hwnd, m_pDirectVobSubXy, &m_defStyle, &m_defsytle_relative_height);
                         return(true);
                     }
                 }
@@ -526,6 +531,8 @@ void CDVSMainPPage::UpdateObjectData(bool fSave)
         CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSub->put_TextSettings(&m_defStyle);
         CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_DEFAULT_SYTLE_RELATIVE_HEIGHT, m_defsytle_relative_height);
+        CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSub->put_AspectRatioSettings(&m_ePARCompensationType);
         CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_HIDE_TRAY_ICON, m_fHideTrayIcon);
@@ -550,6 +557,8 @@ void CDVSMainPPage::UpdateObjectData(bool fSave)
         hr = m_pDirectVobSub->get_VobSubSettings(NULL, &m_fOnlyShowForcedVobSubs, NULL);
         CHECK_N_LOG(hr, "Failed to get option");
         hr = m_pDirectVobSub->get_TextSettings(&m_defStyle);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_DEFAULT_SYTLE_RELATIVE_HEIGHT, &m_defsytle_relative_height);
         CHECK_N_LOG(hr, "Failed to get option");
         hr = m_pDirectVobSub->get_AspectRatioSettings(&m_ePARCompensationType);
         CHECK_N_LOG(hr, "Failed to get option");
@@ -1765,7 +1774,7 @@ bool CXySubFilterMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                     else if(LOWORD(wParam) == IDC_STYLES)
                     {
                         AFX_MANAGE_STATE(AfxGetStaticModuleState());
-                        EditStyle(m_hwnd, m_pDirectVobSubXy, &m_defStyle);
+                        EditStyle(m_hwnd, m_pDirectVobSubXy, &m_defStyle, &m_defsytle_relative_height);
                         return(true);
                     }
                 }
@@ -1819,6 +1828,8 @@ void CXySubFilterMainPPage::UpdateObjectData(bool fSave)
         CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSub->put_TextSettings(&m_defStyle);
         CHECK_N_LOG(hr, "Failed to set option");
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_DEFAULT_SYTLE_RELATIVE_HEIGHT, m_defsytle_relative_height);
+        CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSub->put_AspectRatioSettings(&m_ePARCompensationType);
         CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_HIDE_TRAY_ICON, m_fHideTrayIcon);
@@ -1847,6 +1858,8 @@ void CXySubFilterMainPPage::UpdateObjectData(bool fSave)
         hr = m_pDirectVobSub->get_VobSubSettings(NULL, &m_fOnlyShowForcedVobSubs, NULL);
         CHECK_N_LOG(hr, "Failed to get option");
         hr = m_pDirectVobSub->get_TextSettings(&m_defStyle);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_DEFAULT_SYTLE_RELATIVE_HEIGHT, &m_defsytle_relative_height);
         CHECK_N_LOG(hr, "Failed to get option");
         hr = m_pDirectVobSub->get_AspectRatioSettings(&m_ePARCompensationType);
         CHECK_N_LOG(hr, "Failed to get option");

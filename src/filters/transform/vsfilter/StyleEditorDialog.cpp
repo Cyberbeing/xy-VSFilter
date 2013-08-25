@@ -50,6 +50,8 @@ CStyleEditorPPage::CStyleEditorPPage()
     , m_screenalignment(0)
     , m_margin(0,0,0,0)
     , m_linkalphasliders(FALSE)
+    , m_relative_output_height(0)
+    , m_i_relative_output_height(0)
 {
 
 }
@@ -78,10 +80,13 @@ CStyleEditorPPage::~CStyleEditorPPage()
 {
 }
 
-void CStyleEditorPPage::init( CString title, const STSStyle* pstss )
+void CStyleEditorPPage::init( CString title, const STSStyle* pstss, 
+    bool allow_change_relative_height/*=false*/, int relative_height/*=0*/ )
 {
     m_title = title;
     m_stss = *pstss;
+    m_relative_output_height = relative_height;
+    m_allow_change_relative_height = allow_change_relative_height;
     m_pPSP->pszTitle = m_title;
     m_psp.dwFlags |= PSP_USETITLE;
 }
@@ -125,6 +130,8 @@ void CStyleEditorPPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SLIDER5, m_alphasliders[2]);
 	DDX_Control(pDX, IDC_SLIDER6, m_alphasliders[3]);
 	DDX_Check(pDX, IDC_CHECK1, m_linkalphasliders);
+    DDX_CBIndex(pDX, IDC_COMBO_OUTPUT_HEIGHT, m_i_relative_output_height);
+    DDX_Control(pDX, IDC_COMBO_OUTPUT_HEIGHT, m_combo_relative_output_height);
 }
 
 void CStyleEditorPPage::UpdateControlData(bool fSave)
@@ -153,6 +160,9 @@ void CStyleEditorPPage::UpdateControlData(bool fSave)
 		m_stss.marginRect = m_margin;
 
 		for(int i = 0; i < 4; i++) m_stss.alpha[i] = 255-m_alpha[i];
+
+        if (m_allow_change_relative_height)
+            m_relative_output_height = m_combo_relative_output_height.GetItemData(m_i_relative_output_height);
 	}
 	else
 	{
@@ -179,9 +189,9 @@ void CStyleEditorPPage::UpdateControlData(bool fSave)
 
 		m_borderstyle = m_stss.borderStyle;
 		m_borderwidth = min(m_stss.outlineWidthX, m_stss.outlineWidthY);
-        m_borderwidth_str.Format(_T("%0.4f"),m_borderwidth);
+        m_borderwidth_str.Format(_T("%0.3f"),m_borderwidth);
 		m_shadowdepth = min(m_stss.shadowDepthX, m_stss.shadowDepthY);
-        m_shadowdepth_str.Format(_T("%0.4f"),m_shadowdepth);
+        m_shadowdepth_str.Format(_T("%0.3f"),m_shadowdepth);
 
 		m_screenalignment = m_stss.scrAlignment-1;
 		m_margin = m_stss.marginRect.get();
@@ -199,6 +209,19 @@ void CStyleEditorPPage::UpdateControlData(bool fSave)
 		
 		m_linkalphasliders = FALSE;
 
+        m_combo_relative_output_height.AddString(_T("1080"));
+        m_combo_relative_output_height.AddString(_T("720"));
+        m_combo_relative_output_height.AddString(_T("480"));
+        m_combo_relative_output_height.AddString(_T("Original video"));
+        m_combo_relative_output_height.SetItemData(0, 1080);
+        m_combo_relative_output_height.SetItemData(1, 720);
+        m_combo_relative_output_height.SetItemData(2, 480);
+        m_combo_relative_output_height.SetItemData(3, 0);
+        m_i_relative_output_height = m_relative_output_height==1080 ? 0 :
+                                     m_relative_output_height==720  ? 1 :
+                                     m_relative_output_height==480  ? 2 :
+                                   /*m_relative_output_height==0*/    3;
+        m_combo_relative_output_height.EnableWindow(m_allow_change_relative_height);
 		UpdateData(FALSE);
 	}
 }
