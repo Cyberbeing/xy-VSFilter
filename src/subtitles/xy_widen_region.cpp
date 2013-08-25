@@ -103,7 +103,8 @@ public:
 
     void xy_overlap_region(SpanBuffer* dst, const SpanBuffer& src, int rx, int ry);
 private:
-    int cross_left(const LinkArc& arc, XY_POINT center);//return <0 if arc(o)<inner_pl, MAX if arc(0)>inner_pl, else return cross_line
+    //return <ry if arc(o)<inner_pl, >ry if arc(0)>inner_pl, else cross_line exists
+    int cross_left(const LinkArc& arc, XY_POINT center);
 
     void add_left(LinkArc* arc, XY_POINT center);
     void add_right(LinkArc* arc, XY_POINT center);
@@ -210,12 +211,12 @@ void WidenRegionCreaterImpl::xy_overlap_region(SpanBuffer* dst, const SpanBuffer
             LinkSpan &spans = link_span_list.GetAt(pos);
             LinkArc &arc = spans.left;
             int y = cross_left(arc, left);
-            if (y>ry)//fix me
+            if (y>ry)
             {
                 link_span_list.GetNext(pos);
                 continue;
             }
-            else if ( y>=-ry )//fix me
+            else if ( y>=-ry )
             {
                 add_span(&spans, *it_src);
                 link_span_list.GetNext(pos);
@@ -389,11 +390,20 @@ void WidenRegionCreaterImpl::add_line( SpanBuffer* dst, LinkSpanList& spans, int
             XY_POINT_SET(left, x, cur_dst_line);
             x = m_ellipse->get_right_arc_x(right_top.arc_center, cur_dst_line);
             XY_POINT_SET(right, x, cur_dst_line);
-            ASSERT(SPAN_LEFT(dst_span)<=left);
+            //ASSERT(SPAN_LEFT(dst_span)<=left);
+            //  This assertion may fail because we're using a curve generated using Bresenham type algorithm
+            //  and we're calculate the cross line using the exactly ellipse formula.
+            //  It is hard to use the Bresenham ellipse curve to calculate the cross line because Bresenham
+            //  ellipse curve c does NOT satisfy this necessary condition: 
+            //    if c(y0) == c(y0+x)+dx and y1>y0 then 
+            //       c(y1) >= c(y1+x)+dx
             if ( SPAN_RIGHT(dst_span) >= left )
             {
-                if ( SPAN_RIGHT(dst_span)<right )
+                if (SPAN_RIGHT(dst_span) < right )
                     SPAN_RIGHT(dst_span) = right;
+                //if (SPAN_LEFT (dst_span) < left)
+                //    SPAN_LEFT (dst_span) = left;
+                // It may happen but I don't know if it is necessary to do this. Would it look any better?
             }
             else if ( SPAN_RIGHT(dst_span)>SPAN_LEFT(dst_span) )
             {
@@ -490,7 +500,7 @@ int gen_left_arc(int left_arc[], int rx, int ry)
         }
     }
     __int64 last_y_stop = y;
-
+    ASSERT(y>=-ry && y<=ry);
     x = 0;
     y = b;
     dx = b*b;
@@ -518,6 +528,7 @@ int gen_left_arc(int left_arc[], int rx, int ry)
             left_arc2[-y] = -x;
         }
     }
+    ASSERT(y>=-ry && y<=ry);
     while(y>last_y_stop)
     {
         y--;
