@@ -629,7 +629,7 @@ STDMETHODIMP DirectVobSubImpl::put_LoadSettings(int level, bool fExternalLoad, b
     HRESULT hr4 = XySetBool(DirectVobSubXyOptions::BOOL_LOAD_SETTINGS_EMBEDDED, fEmbeddedLoad);
     if (FAILED(hr4))
     {
-        XY_LOG_ERROR("Failed to set option BOOL_MEDIA_FPS_ENABLED."<<XY_LOG_VAR_2_STR(fEmbeddedLoad));
+        XY_LOG_ERROR("Failed to set option BOOL_LOAD_SETTINGS_EMBEDDED."<<XY_LOG_VAR_2_STR(fEmbeddedLoad));
         return hr4;
     }
     return (hr1==hr2&&hr2==hr3&&hr3==hr4&&hr4==S_FALSE)? S_FALSE : S_OK;
