@@ -1969,6 +1969,8 @@ CXySubFilterMorePPage::CXySubFilterMorePPage(LPUNKNOWN pUnk, HRESULT* phr)
     BindControl(IDC_COMBO_RGB_LEVEL, m_combo_rgb_level);
 
     BindControl(IDC_CHECKBOX_RENDER_TO_ORIGINAL_VIDEO_SIZE, m_checkbox_render_to_original_video_size);
+
+    BindControl(IDC_EDIT_CACHE_SIZE, m_edit_cache_size);
 }
 
 bool CXySubFilterMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -2042,6 +2044,29 @@ bool CXySubFilterMorePPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                     }
                 }
                 break;
+            case EN_SETFOCUS:
+                if(LOWORD(wParam) == IDC_EDIT_CACHE_SIZE)
+                {
+                    CString cache_size_str;
+                    int cache_size;
+                    m_edit_cache_size.GetWindowText(cache_size_str);
+                    if(_stscanf_s(cache_size_str, _T("%d"), &cache_size) != 1)
+                    {
+                        cache_size_str.Format(_T("%d"), m_cache_size);
+                        m_edit_cache_size.SetWindowText(cache_size_str);
+                    }
+                    return true;
+                }
+                break;
+            case EN_CHANGE:
+                if(LOWORD(wParam) == IDC_EDIT_CACHE_SIZE)
+                {
+                    CString cache_size_str;
+                    m_edit_cache_size.GetWindowText(cache_size_str);
+                    m_edit_cache_size.SetSel(cache_size_str.GetLength(),cache_size_str.GetLength()+1);
+                    return true;
+                }
+                break;
             }
         }
         break;
@@ -2082,6 +2107,9 @@ void CXySubFilterMorePPage::UpdateObjectData(bool fSave)
 
         hr = m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_RENDER_TO_ORIGINAL_VIDEO_SIZE, m_render_to_original_video_size);
         CHECK_N_LOG(hr, "Failed to set option");
+
+        hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_MAX_CACHE_SIZE_MB, m_cache_size);
+        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
@@ -2113,6 +2141,16 @@ void CXySubFilterMorePPage::UpdateObjectData(bool fSave)
         CHECK_N_LOG(hr, "Failed to get option");
 
         hr = m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_RENDER_TO_ORIGINAL_VIDEO_SIZE, &m_render_to_original_video_size);
+        CHECK_N_LOG(hr, "Failed to get option");
+
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_MAX_CACHE_SIZE_MB, &m_cache_size);
+        CHECK_N_LOG(hr, "Failed to get option");
+        if (m_cache_size<0)
+        {
+            m_cache_size = -1;
+        }
+
+        hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_AUTO_MAX_CACHE_SIZE_MB, &m_auto_cache_size);
         CHECK_N_LOG(hr, "Failed to get option");
     }
 }
@@ -2176,6 +2214,17 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         }
 
         m_render_to_original_video_size = !!m_checkbox_render_to_original_video_size.GetCheck();
+
+        CString cache_size_str;
+        m_edit_cache_size.GetWindowText(cache_size_str);
+        int cache_size;
+        if(_stscanf_s(cache_size_str, _T("%d"), &cache_size) == 1) {
+            m_cache_size = cache_size;
+            if (m_cache_size<0)
+            {
+                m_cache_size = -1;
+            }
+        }
     }
     else
     {
@@ -2284,5 +2333,17 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         m_combo_rgb_level.SetCurSel( m_rgb_level );
 
         m_checkbox_render_to_original_video_size.SetCheck(m_render_to_original_video_size);
+
+        CString cache_size_str;
+        m_edit_cache_size.GetWindowText(cache_size_str);
+        if (m_cache_size<0 && cache_size_str.IsEmpty())
+        {
+            cache_size_str.Format(_T("(auto)%d"), m_auto_cache_size);
+        }
+        else
+        {
+            cache_size_str.Format(_T("%d"), m_cache_size);
+        }
+        m_edit_cache_size.SetWindowText(cache_size_str);
     }
 }

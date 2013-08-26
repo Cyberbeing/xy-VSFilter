@@ -299,6 +299,8 @@ class CXySubFilterMorePPage : public CDVSBasePPage
     bool m_fHideSubtitles, m_fReloaderDisabled;
     bool m_render_to_original_video_size;
 
+    int  m_cache_size, m_auto_cache_size;
+
     CButton m_hidesub, m_autoreload, m_instupd;
 
     CSpinButtonCtrl m_path_cache, m_scanline_cache, m_overlay_no_blur_cache, m_overlay_cache;
@@ -308,6 +310,7 @@ class CXySubFilterMorePPage : public CDVSBasePPage
     CButton m_checkbox_render_to_original_video_size;
 
     CComboBox m_combo_yuv_matrix, m_combo_yuv_range, m_combo_rgb_level;
+    CEdit m_edit_cache_size;
 protected:
     virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
     virtual void UpdateControlData(bool fSave);

@@ -206,7 +206,7 @@
 #define IDC_CACHES_INFO_BTN             327
 #define IDC_COMBO_LAYOUT_SIZE_OPT       328
 #define IDC_CHECK_FOLLOW_UPSTREAM       329
-#define IDC_COMBO_COLOR_SPACE          330
+#define IDC_COMBO_COLOR_SPACE           330
 #define IDC_VERSION                     331
 #define IDC_COMBO_YUV_RANGE             332
 #define IDC_EDIT_LAYOUT_SIZE_X          333
@@ -216,9 +216,11 @@
 #define IDC_COMBO_RGB_LEVEL             337
 #define IDS_RP_MAX_CACHE_SIZE_MB        338
 #define IDC_CHECKBOX_RENDER_TO_ORIGINAL_VIDEO_SIZE 341
+#define IDC_EDIT_CACHE_SIZE             342
 #define IDC_CACHE_OPTIONS               401
 #define IDC_LABLE_PATH_CACHE            402
 #define IDC_LABLE_OVERLAY_CACHE         403
+#define IDC_LABLE_CACHE_SIZE            404
 #define IDC_SLIDER2                     1020
 #define IDC_SLIDER3                     1021
 #define IDC_RADIO1                      1022
@@ -250,7 +252,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        338
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         342
+#define _APS_NEXT_CONTROL_VALUE         343
 #define _APS_NEXT_SYMED_VALUE           210
 #endif
 #endif
