@@ -101,10 +101,8 @@ void CStyleEditorPPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT6, m_scaley);
 	DDX_Control(pDX, IDC_SPIN5, m_scaleyspin);
 	DDX_Radio(pDX, IDC_RADIO1, m_borderstyle);
-	DDX_Text(pDX, IDC_EDIT1, m_borderwidth);
-	DDX_Control(pDX, IDC_SPIN1, m_borderwidthspin);
-	DDX_Text(pDX, IDC_EDIT2, m_shadowdepth);
-	DDX_Control(pDX, IDC_SPIN2, m_shadowdepthspin);
+	DDX_Text(pDX, IDC_EDIT1, m_borderwidth_str);
+	DDX_Text(pDX, IDC_EDIT2, m_shadowdepth_str);
 	DDX_Radio(pDX, IDC_RADIO3, m_screenalignment);
 	DDX_Text(pDX, IDC_EDIT7, m_margin.left);
 	DDX_Control(pDX, IDC_SPIN6, m_marginleftspin);
@@ -142,8 +140,14 @@ void CStyleEditorPPage::UpdateControlData(bool fSave)
 		m_stss.fontScaleY = m_scaley;
 
 		m_stss.borderStyle = m_borderstyle;
-		m_stss.outlineWidthX = m_stss.outlineWidthY = m_borderwidth;
-		m_stss.shadowDepthX = m_stss.shadowDepthY = m_shadowdepth;
+        if (_stscanf_s(m_borderwidth_str, _T("%lf"), &m_borderwidth) == 1)
+        {
+            m_stss.outlineWidthX = m_stss.outlineWidthY = m_borderwidth;
+        }
+        if (_stscanf_s(m_shadowdepth_str, _T("%lf"), &m_shadowdepth) == 1)
+        {
+            m_stss.shadowDepthX = m_stss.shadowDepthY = m_shadowdepth;
+        }
 
 		m_stss.scrAlignment = m_screenalignment+1;
 		m_stss.marginRect = m_margin;
@@ -175,9 +179,9 @@ void CStyleEditorPPage::UpdateControlData(bool fSave)
 
 		m_borderstyle = m_stss.borderStyle;
 		m_borderwidth = min(m_stss.outlineWidthX, m_stss.outlineWidthY);
- 		m_borderwidthspin.SetRange32(0, 10000);
+        m_borderwidth_str.Format(_T("%0.4f"),m_borderwidth);
 		m_shadowdepth = min(m_stss.shadowDepthX, m_stss.shadowDepthY);
-		m_shadowdepthspin.SetRange32(0, 10000);
+        m_shadowdepth_str.Format(_T("%0.4f"),m_shadowdepth);
 
 		m_screenalignment = m_stss.scrAlignment-1;
 		m_margin = m_stss.marginRect.get();

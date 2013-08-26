@@ -93,10 +93,10 @@ public:
 	int m_scaley;
 	CSpinButtonCtrl m_scaleyspin;
 	int m_borderstyle;
-	int m_borderwidth;
-	CSpinButtonCtrl m_borderwidthspin;
-	int m_shadowdepth;
-	CSpinButtonCtrl m_shadowdepthspin;
+    CString m_borderwidth_str;
+	double m_borderwidth;
+    CString m_shadowdepth_str;
+	double m_shadowdepth;
 	int m_screenalignment;
 	CRect m_margin;
 	CSpinButtonCtrl m_marginleftspin;
