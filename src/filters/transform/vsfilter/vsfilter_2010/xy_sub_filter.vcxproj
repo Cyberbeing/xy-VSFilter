@@ -203,6 +203,7 @@
     <ClInclude Include="..\xy_sub_filter.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\res\Icon_147.ico" />
     <None Include="..\res\Icon_xy_sub_fillter.ico" />
     <None Include="..\xy_sub_filter.def" />
   </ItemGroup>

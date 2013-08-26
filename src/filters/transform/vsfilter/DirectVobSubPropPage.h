@@ -144,12 +144,9 @@ class CDVSTimingPPage : public CDVSBasePPage
 	bool m_fMediaFPSEnabled;
 	double m_MediaFPS;
 
-	CButton m_modfps;
-	CEdit m_fps;
 	CSpinButtonCtrl m_subdelay, m_subspeedmul, m_subspeeddiv;    
 
 protected:
-    virtual bool OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual void UpdateControlData(bool fSave);
 	virtual void UpdateObjectData(bool fSave);
 

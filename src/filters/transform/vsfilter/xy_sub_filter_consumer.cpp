@@ -591,9 +591,6 @@ HRESULT XySubFilterConsumer::StartStreaming()
 
     InitConsumerFields();
 
-    hr = put_MediaFPS(m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED], m_xy_double_opt[DOUBLE_MEDIA_FPS]);
-    CHECK_N_LOG(hr, "Failed to set option");
-
     return __super::StartStreaming();
 }
 

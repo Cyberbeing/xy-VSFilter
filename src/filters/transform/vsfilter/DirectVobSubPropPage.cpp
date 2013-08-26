@@ -923,37 +923,9 @@ CDVSTimingPPage::CDVSTimingPPage( LPUNKNOWN lpunk, HRESULT* phr
     , TCHAR *pName /*= NAME("DirectVobSub Timing Property Page")*/ )
     : CDVSBasePPage(pName, lpunk, IDD_DVSTIMINGPAGE, IDD_DVSTIMINGPAGE)
 {
-    BindControl(IDC_MODFPS, m_modfps);
-    BindControl(IDC_FPS, m_fps);
     BindControl(IDC_SPIN5, m_subdelay);
     BindControl(IDC_SPIN6, m_subspeedmul);
     BindControl(IDC_SPIN9, m_subspeeddiv);
-}
-
-bool CDVSTimingPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch(uMsg)
-    {
-        case WM_COMMAND:
-        {
-            switch(HIWORD(wParam))
-            {
-            case BN_CLICKED:
-                {
-                    if(LOWORD(wParam) == IDC_MODFPS)
-                    {
-                        AFX_MANAGE_STATE(AfxGetStaticModuleState());
-                        m_fps.EnableWindow(!!m_modfps.GetCheck());
-                        return(true);
-                    }
-                }
-                break;
-            }
-        }
-        break;
-    }
-
-    return(false);
 }
 
 void CDVSTimingPPage::UpdateObjectData(bool fSave)
@@ -963,14 +935,10 @@ void CDVSTimingPPage::UpdateObjectData(bool fSave)
     {
         hr = m_pDirectVobSub->put_SubtitleTiming(m_SubtitleDelay, m_SubtitleSpeedMul, m_SubtitleSpeedDiv);
         CHECK_N_LOG(hr, "Failed to set option");
-        hr = m_pDirectVobSub->put_MediaFPS(m_fMediaFPSEnabled, m_MediaFPS);
-        CHECK_N_LOG(hr, "Failed to set option");
     }
     else
     {
         hr = m_pDirectVobSub->get_SubtitleTiming(&m_SubtitleDelay, &m_SubtitleSpeedMul, &m_SubtitleSpeedDiv);
-        CHECK_N_LOG(hr, "Failed to get option");
-        hr = m_pDirectVobSub->get_MediaFPS(&m_fMediaFPSEnabled, &m_MediaFPS);
         CHECK_N_LOG(hr, "Failed to get option");
     }
 }
@@ -979,11 +947,6 @@ void CDVSTimingPPage::UpdateControlData(bool fSave)
 {
     if(fSave)
     {
-        m_fMediaFPSEnabled = !!m_modfps.GetCheck();
-        CString fpsstr;
-        m_fps.GetWindowText(fpsstr);
-        float fps;
-        if(_stscanf_s(fpsstr, _T("%f"), &fps) == 1) m_MediaFPS = fps;
 #if _MFC_VER >= 0x0700
         m_SubtitleDelay = m_subdelay.GetPos32();
         m_SubtitleSpeedMul = m_subspeedmul.GetPos32();
@@ -996,11 +959,6 @@ void CDVSTimingPPage::UpdateControlData(bool fSave)
     }
     else
     {
-        m_modfps.SetCheck(m_fMediaFPSEnabled);
-        CString fpsstr;
-        fpsstr.Format(_T("%.4f"), m_MediaFPS);
-        m_fps.SetWindowText(fpsstr);
-        m_fps.EnableWindow(m_fMediaFPSEnabled);
         m_subdelay.SetRange32(-180*60*1000, 180*60*1000);
         m_subspeedmul.SetRange32(0, 1000000);
         m_subspeeddiv.SetRange32(1, 1000000);

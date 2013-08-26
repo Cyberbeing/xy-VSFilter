@@ -25,7 +25,6 @@
 #define IDS_RG_RESX2                    120
 #define IDS_RG_RESX2MINW                121
 #define IDS_RG_RESX2MINH                122
-#define IDS_RTM_MEDIAFPS                123
 #define IDS_RT_SHADOW                   124
 #define IDS_RT_OUTLINE                  125
 #define IDS_RT_LOGFONT                  126
@@ -60,7 +59,6 @@
 #define IDS_RG_FORCERGB                 154
 #define IDS_RG_ENABLEZPICON             155
 #define IDS_RG_FLIPSUBTITLES            156
-#define IDS_RTM_MEDIAFPSENABLED         157
 #define IDS_RG_DISABLERELOADER          158
 #define IDS_EXTTO43                     159
 #define IDS_CROPTO169                   160
@@ -144,7 +142,6 @@
 #define IDC_SPIN1                       231
 #define IDC_SPIN2                       232
 #define IDC_SPIN7                       233
-#define IDC_MODFPS                      233
 #define IDC_EDIT8                       234
 #define IDC_ADVANCEDRENDERER            234
 #define IDC_SPIN8                       235
@@ -180,7 +177,6 @@
 #define IDC_RESX2COMBO                  290
 #define IDC_VEREXTCOMBO                 298
 #define IDC_LOADCOMBO                   299
-#define IDC_FPS                         300
 #define IDC_SAVEFULLPATH                303
 #define IDC_INSTANTUPDATE               305
 #define IDC_PATHLIST                    307

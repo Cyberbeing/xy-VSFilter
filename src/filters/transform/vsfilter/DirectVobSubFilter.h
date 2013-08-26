@@ -110,8 +110,6 @@ public:
     STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
     STDMETHODIMP get_XyFlyWeightInfo(XyFlyWeightInfo* xy_fw_info);
 
-    STDMETHODIMP get_MediaFPS(bool* fEnabled, double* fps);
-    STDMETHODIMP put_MediaFPS(bool fEnabled, double fps);
 	STDMETHODIMP HasConfigDialog(int iSelected);
 	STDMETHODIMP ShowConfigDialog(int iSelected, HWND hWndParent);
 
