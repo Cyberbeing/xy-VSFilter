@@ -752,45 +752,6 @@ STDMETHODIMP XySubFilter::get_XyFlyWeightInfo( XyFlyWeightInfo* xy_fw_info )
     return S_OK;
 }
 
-STDMETHODIMP XySubFilter::get_MediaFPS(bool* fEnabled, double* fps)
-{
-    CAutoLock cAutolock(&m_csFilter);
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
-    HRESULT hr = DirectVobSubImpl::get_MediaFPS(fEnabled, fps);
-
-    CComQIPtr<IMediaSeeking> pMS = m_pGraph;
-    double rate;
-    if(pMS && SUCCEEDED(pMS->GetRate(&rate)))
-    {
-        m_xy_double_opt[DOUBLE_MEDIA_FPS] = rate * m_xy_double_opt[DOUBLE_FPS];
-        if(fps) *fps = m_xy_double_opt[DOUBLE_MEDIA_FPS];
-    }
-
-    return hr;
-}
-
-STDMETHODIMP XySubFilter::put_MediaFPS(bool fEnabled, double fps)
-{
-    CAutoLock cAutolock(&m_csFilter);
-    XY_LOG_INFO(XY_LOG_VAR_2_STR(fEnabled)<<XY_LOG_VAR_2_STR(fps));
-    HRESULT hr = DirectVobSubImpl::put_MediaFPS(fEnabled, fps);
-
-    CComQIPtr<IMediaSeeking> pMS = m_pGraph;
-    if (pMS)
-    {
-        if (hr == NOERROR)
-        {
-            hr = pMS->SetRate(m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED] ? m_xy_double_opt[DOUBLE_MEDIA_FPS] / m_xy_double_opt[DOUBLE_FPS] : 1.0);
-        }
-
-        double dRate;
-        if (SUCCEEDED(pMS->GetRate(&dRate)))
-            m_xy_double_opt[DOUBLE_MEDIA_FPS] = dRate * m_xy_double_opt[DOUBLE_FPS];
-    }
-
-    return hr;
-}
-
 //
 // IDirectVobSub2
 //
@@ -2413,9 +2374,6 @@ HRESULT XySubFilter::StartStreaming()
     m_fLoading = false;
 
     m_tbid.fRunOnce = true;
-
-    HRESULT hr = put_MediaFPS(m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED], m_xy_double_opt[DOUBLE_MEDIA_FPS]);
-    CHECK_N_LOG(hr, "Failed to set option");
 
     return S_OK;
 }

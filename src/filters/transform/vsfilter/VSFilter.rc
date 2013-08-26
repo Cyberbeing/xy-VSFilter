@@ -258,10 +258,6 @@ BEGIN
     EDITTEXT        IDC_EDIT9,72,82,39,12,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "",IDC_SPIN9,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,102,85,11,14
     LTEXT           "(subtitles : video)",IDC_STATIC,120,83,56,8
-    GROUPBOX        "Playback rate (experimental)",IDC_STATIC,7,108,233,34
-    CONTROL         "Force fps:",IDC_MODFPS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,121,47,12
-    EDITTEXT        IDC_FPS,72,121,36,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "- operability depends on other filters\n- may cause a/v desync",IDC_STATIC,114,118,120,18
 END
 
 IDD_DVSZOOMPAGE DIALOGEX 0, 0, 247, 188
@@ -759,8 +755,6 @@ BEGIN
     IDS_RTM_SUBTITLEDELAY   "subtitle_delay"
     IDS_RTM_SUBTITLESPEEDMUL "subtitle_speed_mul"
     IDS_RTM_SUBTITLESPEEDDIV "subtitle_Speed_div"
-    IDS_RTM_MEDIAFPSENABLED "media_fps_enabled"
-    IDS_RTM_MEDIAFPS        "media_fps"
     IDS_RG_HIDE_TRAY_ICON   "hide_tray_icon"
     IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM    "bitmap_mru_cache_item_num"
     IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM   "clipper_mru_cache_item_num"
@@ -803,8 +797,6 @@ BEGIN
     IDS_RTM_SUBTITLEDELAY   "Subtitle Delay"
     IDS_RTM_SUBTITLESPEEDMUL "Subtitle Speedmul"
     IDS_RTM_SUBTITLESPEEDDIV "Subtitle Speeddiv"
-    IDS_RTM_MEDIAFPSENABLED "MediaFPSEnabled"
-    IDS_RTM_MEDIAFPS        "MediaFPS"
     IDS_RT_AUTOPARCOMPENSATION "AutomaticPARCompensation"
     IDS_RG_HIDE_TRAY_ICON   "hide tray icon"
     IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM    "BITMAP_MRU_CACHE_ITEM_NUM"

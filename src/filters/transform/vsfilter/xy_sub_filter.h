@@ -63,9 +63,6 @@ public:
     STDMETHODIMP get_CachesInfo(CachesInfo* caches_info);
     STDMETHODIMP get_XyFlyWeightInfo(XyFlyWeightInfo* xy_fw_info);
 
-    STDMETHODIMP get_MediaFPS(bool* fEnabled, double* fps);
-    STDMETHODIMP put_MediaFPS(bool fEnabled, double fps);
-
     // IDirectVobSub2
     STDMETHODIMP put_TextSettings(STSStyle* pDefStyle);
     STDMETHODIMP put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType);

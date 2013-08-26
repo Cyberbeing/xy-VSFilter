@@ -369,37 +369,12 @@ STDMETHODIMP DirectVobSubImpl::put_SubtitleTiming(int delay, int speedmul, int s
 
 STDMETHODIMP DirectVobSubImpl::get_MediaFPS(bool* fEnabled, double* fps)
 {
-    if (!TestOption(DirectVobSubXyOptions::BOOL_MEDIA_FPS_ENABLED) || 
-        !TestOption(DirectVobSubXyOptions::DOUBLE_MEDIA_FPS))
-    {
-        return E_NOTIMPL;
-    }
-    CAutoLock cAutoLock(m_propsLock);
-
-    if(fEnabled) *fEnabled = m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED];
-    if(fps) *fps = m_xy_double_opt[DOUBLE_MEDIA_FPS];
-
-	return S_OK;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP DirectVobSubImpl::put_MediaFPS(bool fEnabled, double fps)
 {
-    if (!TestOption(DirectVobSubXyOptions::BOOL_MEDIA_FPS_ENABLED) || 
-        !TestOption(DirectVobSubXyOptions::DOUBLE_MEDIA_FPS))
-    {
-        return E_NOTIMPL;
-    }
-    CAutoLock cAutoLock(m_propsLock);
-
-    if(m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED] == fEnabled && m_xy_double_opt[DOUBLE_MEDIA_FPS] == fps) return S_FALSE;
-
-    m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED] = fEnabled;
-    if(fps > 0) m_xy_double_opt[DOUBLE_MEDIA_FPS] = fps;
-
-    HRESULT hr = OnOptionChanged(BOOL_MEDIA_FPS_ENABLED);
-    if (FAILED(hr))
-        return hr;
-    return OnOptionChanged(DOUBLE_MEDIA_FPS);
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP DirectVobSubImpl::get_ZoomRect(NORMALIZEDRECT* rect)
@@ -1116,7 +1091,6 @@ CDirectVobSub::CDirectVobSub( const Option *options, CCritSec * pLock )
     m_SubtitleDelay = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), 0);
     m_SubtitleSpeedMul = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), 1000);
     m_SubtitleSpeedDiv = theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), 1000);
-    m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED] = !!theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), 0);
     m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS] = static_cast<CSimpleTextSubtitle::EPARCompensationType>(theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), 0));
     m_xy_bool_opt[BOOL_HIDE_TRAY_ICON] =  !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), 0);
 
@@ -1244,24 +1218,8 @@ CDirectVobSub::CDirectVobSub( const Option *options, CCritSec * pLock )
     }
 
     //
-    if(pData)
-    {
-        delete [] pData;
-        pData = NULL;
-    }
-    if(theApp.GetProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), &pData, &nSize) && pData)
-    {
-        if(nSize != sizeof(m_xy_double_opt[DOUBLE_MEDIA_FPS])) m_xy_double_opt[DOUBLE_MEDIA_FPS] = 25.0;
-        else memcpy(&m_xy_double_opt[DOUBLE_MEDIA_FPS], pData, sizeof(m_xy_double_opt[DOUBLE_MEDIA_FPS]));
-    }
     m_ZoomRect.left = m_ZoomRect.top = 0;
     m_ZoomRect.right = m_ZoomRect.bottom = 1;
-
-    if(pData)
-    {
-        delete [] pData;
-        pData = NULL;
-    }
 
     //fix me: CStringw = CString
     m_xy_str_opt[STRING_LOAD_EXT_LIST] = 
@@ -1325,6 +1283,13 @@ CDirectVobSub::CDirectVobSub( const Option *options, CCritSec * pLock )
     m_xy_bool_opt[BOOL_ENABLE_ZP_ICON] = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0);
 
     LoadKnownSourceFilters(&m_known_source_filters_guid, &m_known_source_filters_name);
+
+    if(pData)
+    {
+        delete [] pData;
+        pData = NULL;
+    }
+
 }
 
 STDMETHODIMP CDirectVobSub::UpdateRegistry()
@@ -1357,8 +1322,6 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), m_SubtitleDelay);
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), m_SubtitleSpeedMul);
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), m_SubtitleSpeedDiv);
-    theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED]);
-    theApp.WriteProfileBinary(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), (BYTE*)&m_xy_double_opt[DOUBLE_MEDIA_FPS], sizeof(m_xy_double_opt[DOUBLE_MEDIA_FPS]));
 
     theApp.WriteProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS]);
 
@@ -1525,7 +1488,6 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
     m_SubtitleDelay                         =   theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), 0);
     m_SubtitleSpeedMul                      =   theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), 1000);
     m_SubtitleSpeedDiv                      =   theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), 1000);
-    m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED]   = !!theApp.GetProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), 0);
 
     m_xy_bool_opt[BOOL_HIDE_TRAY_ICON]      = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), 0);
 
@@ -1608,14 +1570,6 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
     {
         m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cx = 1280;
         m_xy_size_opt[SIZE_USER_SPECIFIED_LAYOUT_SIZE].cy = 720;
-    }
-
-    //
-    CString media_fps = theApp.GetProfileString(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), _T("25.0"));
-    m_xy_double_opt[DOUBLE_MEDIA_FPS] = _tcstod(media_fps, NULL);
-    if (m_xy_double_opt[DOUBLE_MEDIA_FPS]<=0.000001)
-    {
-        m_xy_double_opt[DOUBLE_MEDIA_FPS] = 25.0;
     }
 
     m_ZoomRect.left = m_ZoomRect.top = 0;
@@ -1761,11 +1715,6 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLEDELAY), m_SubtitleDelay);
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDMUL), m_SubtitleSpeedMul);
     theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_SUBTITLESPEEDDIV), m_SubtitleSpeedDiv);
-    theApp.WriteProfileInt(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPSENABLED), m_xy_bool_opt[BOOL_MEDIA_FPS_ENABLED]);
-
-    CString media_fps;
-    media_fps.Format(_T("%4.6f"), m_xy_double_opt[DOUBLE_MEDIA_FPS]);
-    theApp.WriteProfileString(ResStr(IDS_R_TIMING), ResStr(IDS_RTM_MEDIAFPS), media_fps);
 
     theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), m_xy_bool_opt[BOOL_HIDE_TRAY_ICON]);
 
