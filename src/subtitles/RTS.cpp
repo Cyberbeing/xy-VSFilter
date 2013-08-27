@@ -1998,6 +1998,7 @@ void CRenderedTextSubtitle::InitCmdMap()
         m_cmdMap.SetAt(L"ybord",     CMD_ybord);
         m_cmdMap.SetAt(L"yshad",     CMD_yshad);
     }
+    m_cmd_pos_level.SetCount(CMD_COUNT);
     m_cmd_pos_level[CMD_1c   ] = POS_LVL_NONE;
     m_cmd_pos_level[CMD_2c   ] = POS_LVL_NONE;
     m_cmd_pos_level[CMD_3c   ] = POS_LVL_NONE;
