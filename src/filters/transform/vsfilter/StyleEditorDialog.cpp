@@ -167,15 +167,20 @@ void CStyleEditorPPage::UpdateControlData(bool fSave)
 	else
 	{
 		m_font.SetWindowText(m_stss.fontName);
-		m_iCharset = -1;
-		for(int i = 0; i < CharSetLen; i++)
-		{
-			CString str;
-			str.Format(_T("%s (%d)"), CharSetNames[i], CharSetList[i]);
-			m_charset.AddString(str);
-			m_charset.SetItemData(i, CharSetList[i]);
-			if(m_stss.charSet == CharSetList[i]) m_iCharset = i;
-		}
+
+        if (m_charset.GetCount()==0)
+        {
+            m_iCharset = -1;
+            for(int i = 0; i < CharSetLen; i++)
+            {
+                CString str;
+                str.Format(_T("%s (%d)"), CharSetNames[i], CharSetList[i]);
+                m_charset.AddString(str);
+                m_charset.SetItemData(i, CharSetList[i]);
+                if(m_stss.charSet == CharSetList[i]) m_iCharset = i;
+            }
+        }
+
 		// TODO: allow floats in these edit boxes
 		m_spacing = m_stss.fontSpacing;
 		m_spacingspin.SetRange32(-10000, 10000);
@@ -209,19 +214,23 @@ void CStyleEditorPPage::UpdateControlData(bool fSave)
 		
 		m_linkalphasliders = FALSE;
 
-        m_combo_relative_output_height.AddString(_T("1080"));
-        m_combo_relative_output_height.AddString(_T("720"));
-        m_combo_relative_output_height.AddString(_T("480"));
-        m_combo_relative_output_height.AddString(_T("Original video"));
-        m_combo_relative_output_height.SetItemData(0, 1080);
-        m_combo_relative_output_height.SetItemData(1, 720);
-        m_combo_relative_output_height.SetItemData(2, 480);
-        m_combo_relative_output_height.SetItemData(3, 0);
-        m_i_relative_output_height = m_relative_output_height==1080 ? 0 :
-                                     m_relative_output_height==720  ? 1 :
-                                     m_relative_output_height==480  ? 2 :
-                                   /*m_relative_output_height==0*/    3;
-        m_combo_relative_output_height.EnableWindow(m_allow_change_relative_height);
+        if (m_combo_relative_output_height.GetCount()==0)
+        {
+            m_combo_relative_output_height.AddString(_T("1080"));
+            m_combo_relative_output_height.AddString(_T("720"));
+            m_combo_relative_output_height.AddString(_T("480"));
+            m_combo_relative_output_height.AddString(_T("Original video"));
+            m_combo_relative_output_height.SetItemData(0, 1080);
+            m_combo_relative_output_height.SetItemData(1, 720);
+            m_combo_relative_output_height.SetItemData(2, 480);
+            m_combo_relative_output_height.SetItemData(3, 0);
+            m_i_relative_output_height = m_relative_output_height==1080 ? 0 :
+                m_relative_output_height==720  ? 1 :
+                m_relative_output_height==480  ? 2 :
+                /*m_relative_output_height==0*/    3;
+            m_combo_relative_output_height.EnableWindow(m_allow_change_relative_height);
+        }
+
 		UpdateData(FALSE);
 	}
 }
