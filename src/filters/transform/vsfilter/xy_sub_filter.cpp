@@ -771,17 +771,7 @@ STDMETHODIMP XySubFilter::put_TextSettings(STSStyle* pDefStyle)
 
 STDMETHODIMP XySubFilter::put_AspectRatioSettings(CSimpleTextSubtitle::EPARCompensationType* ePARCompensationType)
 {
-    XY_LOG_INFO(ePARCompensationType);
-    HRESULT hr = DirectVobSubImpl::put_AspectRatioSettings(ePARCompensationType);
-
-    if(hr == NOERROR)
-    {
-        //DbgLog((LOG_TRACE, 3, "%d %s:UpdateSubtitle(true)", __LINE__, __FUNCTION__));
-        //UpdateSubtitle(true);
-        UpdateSubtitle(false);
-    }
-
-    return hr;
+    return E_NOTIMPL;
 }
 
 //
