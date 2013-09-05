@@ -2189,7 +2189,7 @@ void CSimpleTextSubtitle::ChangeUnknownStylesToDefault()
             {
                 if(!unknown.Lookup(stse.style, val))
                 {
-                    if(fReport)
+                    if(fReport && stse.style!=g_default_style)
                     {
                         CString msg;
                         msg.Format(_T("Unknown style found: \"%s\", changed to \"Default\"!\n\nPress Cancel to ignore further warnings."), stse.style);
