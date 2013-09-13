@@ -1998,7 +1998,7 @@ void CRenderedTextSubtitle::InitCmdMap()
         m_cmdMap.SetAt(L"ybord",     CMD_ybord);
         m_cmdMap.SetAt(L"yshad",     CMD_yshad);
     }
-    m_cmd_pos_level.SetCount(CMD_COUNT);
+    m_cmd_pos_level.SetCount(CMD_COUNT+1);
     m_cmd_pos_level[CMD_1c   ] = POS_LVL_NONE;
     m_cmd_pos_level[CMD_2c   ] = POS_LVL_NONE;
     m_cmd_pos_level[CMD_3c   ] = POS_LVL_NONE;
@@ -2062,6 +2062,8 @@ void CRenderedTextSubtitle::InitCmdMap()
     m_cmd_pos_level[CMD_xshad] = POS_LVL_NONE;
     m_cmd_pos_level[CMD_ybord] = POS_LVL_NONE;
     m_cmd_pos_level[CMD_yshad] = POS_LVL_NONE;
+
+    m_cmd_pos_level[CMD_COUNT] = POS_LVL_NONE;
 }
 
 void CRenderedTextSubtitle::Copy(CSimpleTextSubtitle& sts)
