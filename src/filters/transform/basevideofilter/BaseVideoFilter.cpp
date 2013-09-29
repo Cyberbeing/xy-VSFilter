@@ -160,6 +160,7 @@ CBaseVideoFilter::CBaseVideoFilter(TCHAR* pName, LPUNKNOWN lpunk, HRESULT* phr, 
 	m_hout = m_hin = m_h = 0;
 	m_arxout = m_arxin = m_arx = 0;
 	m_aryout = m_aryin = m_ary = 0;
+	m_cfout = m_cfin = m_cf = 0;
 }
 
 CBaseVideoFilter::~CBaseVideoFilter()
@@ -241,6 +242,31 @@ HRESULT CBaseVideoFilter::GetDeliveryBuffer(int w, int h, IMediaSample** ppOut)
 	return S_OK;
 }
 
+// Checks if the filter connected to the output pin possibly works with
+// extended format control flags. Returns true if it is the case,
+// false otherwise.
+bool CBaseVideoFilter::ConnectionWhitelistedForExtendedFormat()
+{
+	CLSID clsid = GetCLSID(m_pOutput->GetConnected());
+	bool ret = false;
+
+	// The white list
+	static const CLSID whitelist[] = {
+		CLSID_VideoMixingRenderer,
+		CLSID_VideoMixingRenderer9,
+		CLSID_EnhancedVideoRenderer,
+		CLSID_madVR
+	};
+
+	// Check if the CLSID matches to anything on the white list
+	for (int i = 0; i < countof(whitelist); ++i) {
+		if (clsid == whitelist[i])
+			ret = true;
+	}
+
+	return ret;
+}
+
 HRESULT CBaseVideoFilter::ReconnectOutput(int w, int h)
 {
 	CMediaType& mt = m_pOutput->CurrentMediaType();
@@ -257,8 +283,9 @@ HRESULT CBaseVideoFilter::ReconnectOutput(int w, int h)
 	}
 
 	HRESULT hr = S_OK;
+	bool extformat = ConnectionWhitelistedForExtendedFormat();
 
-	if(fForceReconnection || m_w != m_wout || m_h != m_hout || m_arx != m_arxout || m_ary != m_aryout)
+	if(fForceReconnection || m_w != m_wout || m_h != m_hout || m_arx != m_arxout || m_ary != m_aryout || (extformat && m_cf != m_cfout))
 	{
 		if(GetCLSID(m_pOutput->GetConnected()) == CLSID_VideoRenderer)
 		{
@@ -285,6 +312,7 @@ HRESULT CBaseVideoFilter::ReconnectOutput(int w, int h)
 			bmi = &vih->bmiHeader;
 			vih->dwPictAspectRatioX = m_arx;
 			vih->dwPictAspectRatioY = m_ary;
+			if (extformat) vih->dwControlFlags = m_cf;
 		}
 
 		bmi->biWidth = m_w;
@@ -322,6 +350,7 @@ HRESULT hr1 = 0, hr2 = 0;
 		m_hout = m_h;
 		m_arxout = m_arx;
 		m_aryout = m_ary;
+		m_cfout = m_cf;
 
 		// some renderers don't send this
 		NotifyEvent(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_w, m_h), 0);
@@ -737,6 +766,15 @@ HRESULT CBaseVideoFilter::SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt)
 		m_arxin = m_arx;
 		m_aryin = m_ary;
 		GetOutputSize(m_w, m_h, m_arx, m_ary);
+
+		m_cf = 0;
+		if (pmt->formattype == FORMAT_VideoInfo2)
+		{
+			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pmt->Format();
+			if (vih->dwControlFlags & (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT))
+				m_cf = vih->dwControlFlags & (0xFFFFFF00 | AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT);
+		}
+		m_cfin = m_cf;
 
 		DWORD a = m_arx, b = m_ary;
 		while(a) {int tmp = a; a = b % tmp; b = tmp;}

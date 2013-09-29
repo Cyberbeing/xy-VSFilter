@@ -46,8 +46,8 @@ private:
 	HRESULT ReconnectOutput(int w, int h);
 
 	// these are private for a reason, don't bother them
-	DWORD m_win, m_hin, m_arxin, m_aryin;
-	DWORD m_wout, m_hout, m_arxout, m_aryout;
+	DWORD m_win, m_hin, m_arxin, m_aryin, m_cfin;
+	DWORD m_wout, m_hout, m_arxout, m_aryout, m_cfout;
 
 	long m_cBuffers;
 
@@ -56,6 +56,7 @@ protected:
     bool m_donot_follow_upstream_preferred_order;
 
 	int m_w, m_h, m_arx, m_ary;
+	DWORD m_cf;
 
     static const int MAX_COLOR_SPACE_NUM = 256;
     const GUID* m_inputFmt[MAX_COLOR_SPACE_NUM];
@@ -79,6 +80,7 @@ protected:
     HRESULT CombineOutputPriority( ColorSpaceId *preferredOrder, UINT *count );
     int GetInputSubtypePosition(const GUID& subtype);
     int GetOutputSubtypePosition( const GUID& subtype, int startPos =0 );    
+    bool ConnectionWhitelistedForExtendedFormat();
 public:
 	CBaseVideoFilter(TCHAR* pName, LPUNKNOWN lpunk, HRESULT* phr, REFCLSID clsid, long cBuffers = 1);
 	virtual ~CBaseVideoFilter();
