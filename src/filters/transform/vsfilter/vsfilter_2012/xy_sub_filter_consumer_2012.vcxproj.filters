@@ -20,34 +20,13 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Copy.cpp">
-      <Filter>Precompiled Header Support</Filter>
-    </ClCompile>
-    <ClCompile Include="..\csriapi.cpp">
-      <Filter>Precompiled Header Support</Filter>
-    </ClCompile>
     <ClCompile Include="..\DirectVobSub.cpp">
-      <Filter>Precompiled Header Support</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DirectVobSubFilter.cpp">
-      <Filter>Precompiled Header Support</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DirectVobSubPropPage.cpp">
-      <Filter>Precompiled Header Support</Filter>
-    </ClCompile>
-    <ClCompile Include="..\plugins.cpp">
       <Filter>Precompiled Header Support</Filter>
     </ClCompile>
     <ClCompile Include="..\StdAfx.cpp">
       <Filter>Precompiled Header Support</Filter>
     </ClCompile>
     <ClCompile Include="..\StyleEditorDialog.cpp">
-      <Filter>Precompiled Header Support</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Systray.cpp">
-      <Filter>Precompiled Header Support</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TextInputPin.cpp">
       <Filter>Precompiled Header Support</Filter>
     </ClCompile>
     <ClCompile Include="..\vfr.cpp">
@@ -71,24 +50,24 @@
     <ClCompile Include="..\..\..\..\thirdparty\mfc\winmdi.cpp">
       <Filter>Precompiled Header Support</Filter>
     </ClCompile>
-    <ClCompile Include="..\DirectVobSubFilterDll.cpp">
-      <Filter>Precompiled Header Support</Filter>
-    </ClCompile>
     <ClCompile Include="..\SubRenderOptionsImpl.cpp">
       <Filter>Precompiled Header Support</Filter>
     </ClCompile>
     <ClCompile Include="..\XyOptionsImpl.cpp">
       <Filter>Precompiled Header Support</Filter>
     </ClCompile>
+    <ClCompile Include="..\xy_sub_filter_consumer.cpp">
+      <Filter>Precompiled Header Support</Filter>
+    </ClCompile>
+    <ClCompile Include="..\xy_sub_filter_consumer_dll.cpp">
+      <Filter>Precompiled Header Support</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DirectVobSubPropPage.cpp">
+      <Filter>Precompiled Header Support</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\csri.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\DirectVobSub.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DirectVobSubFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\DirectVobSubPropPage.h">
@@ -104,12 +83,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\StyleEditorDialog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Systray.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TextInputPin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\vfr.h">
@@ -136,18 +109,21 @@
     <ClInclude Include="..\version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\XySubRenderIntf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\SubRenderOptionsImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\XyOptionsImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\XySubRenderIntf.h">
+    <ClInclude Include="..\xy_sub_filter_consumer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\VSFilter.def">
+    <None Include="..\xy_sub_filter_consumer.def">
       <Filter>Precompiled Header Support</Filter>
     </None>
     <None Include="..\res\Icon_147.ico">

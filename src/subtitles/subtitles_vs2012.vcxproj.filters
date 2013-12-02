@@ -99,6 +99,9 @@
     <ClCompile Include="TextFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hdmv_subtitle_provider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCDecoder.h">
@@ -195,6 +198,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="xy_widen_regoin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hdmv_subtitle_provider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

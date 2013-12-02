@@ -82,7 +82,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <IncludePath>$(SolutionDir);$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)..\..\..\..\include\;$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(IncludePath)</IncludePath>
     <TargetName Condition="'$(Configuration)'=='Release log'">$(ProjectName)RL</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -186,6 +186,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="alpha_blender.cpp" />
     <ClCompile Include="color_conv_table.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -210,8 +211,11 @@
     <ClCompile Include="SubPicProviderExWrapper.cpp" />
     <ClCompile Include="SubPicProviderImpl.cpp" />
     <ClCompile Include="SubPicQueueImpl.cpp" />
+    <ClCompile Include="XySubRenderFrameWrapper.cpp" />
+    <ClCompile Include="XySubRenderProviderWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="alpha_blender.h" />
     <ClInclude Include="color_conv_table.h" />
     <ClInclude Include="CoordGeom.h" />
     <ClInclude Include="CRect2.h" />
@@ -231,6 +235,8 @@
     <ClInclude Include="SubPicProviderExWrapper.h" />
     <ClInclude Include="SubPicProviderImpl.h" />
     <ClInclude Include="SubPicQueueImpl.h" />
+    <ClInclude Include="XySubRenderFrameWrapper.h" />
+    <ClInclude Include="XySubRenderProviderWrapper.h" />
     <ClInclude Include="xy_intrinsics.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

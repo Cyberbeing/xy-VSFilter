@@ -212,6 +212,7 @@
     <ClCompile Include="DVBSub.cpp" />
     <ClCompile Include="GFN.cpp" />
     <ClCompile Include="HdmvSub.cpp" />
+    <ClCompile Include="hdmv_subtitle_provider.cpp" />
     <ClCompile Include="Rasterizer.cpp">
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
@@ -257,6 +258,7 @@
     <ClInclude Include="flyweight_base_types.h" />
     <ClInclude Include="GFN.h" />
     <ClInclude Include="HdmvSub.h" />
+    <ClInclude Include="hdmv_subtitle_provider.h" />
     <ClInclude Include="mru_cache.h" />
     <ClInclude Include="Rasterizer.h" />
     <ClInclude Include="RealTextParser.h" />
