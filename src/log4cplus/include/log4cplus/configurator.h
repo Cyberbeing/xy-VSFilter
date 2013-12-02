@@ -31,7 +31,6 @@
 #include <log4cplus/helpers/pointer.h>
 #include <log4cplus/helpers/property.h>
 
-#include <functional>
 #include <map>
 
 
