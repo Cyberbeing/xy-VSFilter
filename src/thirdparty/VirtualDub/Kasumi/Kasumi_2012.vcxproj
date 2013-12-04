@@ -255,7 +255,7 @@
     <None Include="source\a_triblt.inc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\system\system.vcxproj">
+    <ProjectReference Include="..\system\system_2012.vcxproj">
       <Project>{c2082189-3ecb-4079-91fa-89d3c8a305c0}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
