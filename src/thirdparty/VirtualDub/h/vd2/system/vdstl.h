@@ -54,8 +54,17 @@ struct vdreverse_iterator {
 
 ///////////////////////////////////////////////////////////////////////////
 
+struct vdfalse_type { };
+struct vdtrue_type  { };
+
+struct vdfalse_result { typedef vdfalse_type result; };
+struct vdtrue_result { typedef vdtrue_type result; };
+
+template<class T> void vdmove(T& dst, T& src);
+template<class T> struct vdmove_capable : public vdfalse_result {};
+
 template<class T>
-T *vdmove_forward(T *src1, T *src2, T *dst) {
+T *vdmove_forward_impl(T *src1, T *src2, T *dst, vdfalse_type) {
 	T *p = src1;
 	while(p != src2) {
 		*dst = *p;
@@ -67,7 +76,7 @@ T *vdmove_forward(T *src1, T *src2, T *dst) {
 }
 
 template<class T>
-T *vdmove_backward(T *src1, T *src2, T *dst) {
+T *vdmove_backward_impl(T *src1, T *src2, T *dst, vdfalse_type) {
 	T *p = src2;
 	while(p != src1) {
 		--dst;
@@ -78,10 +87,55 @@ T *vdmove_backward(T *src1, T *src2, T *dst) {
 	return dst;
 }
 
+template<class T>
+T *vdmove_forward_impl(T *src1, T *src2, T *dst, vdtrue_type) {
+	T *p = src1;
+	while(p != src2) {
+		vdmove(*dst, *p);
+		++dst;
+		++p;
+	}
+
+	return dst;
+}
+
+template<class T>
+T *vdmove_backward_impl(T *src1, T *src2, T *dst, vdtrue_type) {
+	T *p = src2;
+	while(p != src1) {
+		--dst;
+		--p;
+		vdmove(*dst, *p);
+	}
+
+	return dst;
+}
+
+template<class T>
+T *vdmove_forward(T *src1, T *src2, T *dst) {
+	return vdmove_forward_impl(src1, src2, dst, vdmove_capable<T>::result());
+}
+
+template<class T>
+T *vdmove_backward(T *src1, T *src2, T *dst) {
+	return vdmove_backward_impl(src1, src2, dst, vdmove_capable<T>::result());
+}
+
+#define VDMOVE_CAPABLE(type) \
+	template<> struct vdmove_capable<type> : public vdtrue_result {}; \
+	template<> void vdmove<type>(type& dst, type& src)
+
 ///////////////////////////////////////////////////////////////////////////
+
+template<class T, size_t N> char (&VDCountOfHelper(const T(&)[N]))[N];
+
+#define vdcountof(array) (sizeof(VDCountOfHelper(array)))
+
+///////////////////////////////////////////////////////////////////////////
+
 class vdallocator_base {
 protected:
-	void VDNORETURN throw_oom();
+	void VDNORETURN throw_oom(size_t n, size_t elsize);
 };
 
 template<class T>
@@ -101,10 +155,13 @@ public:
 	const_pointer	address(const_reference x) const	{ return &x; }
 
 	pointer allocate(size_type n, void *p_close = 0) {
+		if (n > ((~(size_type)0) >> 1) / sizeof(T))
+			throw_oom(n, sizeof(T));
+		
 		pointer p = (pointer)malloc(n*sizeof(T));
 
 		if (!p)
-			throw_oom();
+			throw_oom(n, sizeof(T));
 
 		return p;
 	}
@@ -285,10 +342,11 @@ public:
 			if (mpBlock) {
 				A::deallocate(mpBlock, mSize);
 				mpBlock = NULL;
+				mSize = 0;
 			}
-			mSize = s;
 			if (s)
-				mpBlock = A::allocate(mSize, 0);
+				mpBlock = A::allocate(s, 0);
+			mSize = s;
 		}
 	}
 
@@ -297,12 +355,13 @@ public:
 			if (mpBlock) {
 				A::deallocate(mpBlock, mSize);
 				mpBlock = NULL;
+				mSize = 0;
 			}
-			mSize = s;
 			if (s) {
-				mpBlock = A::allocate(mSize, 0);
+				mpBlock = A::allocate(s, 0);
 				std::fill(mpBlock, mpBlock+s, value);
 			}
+			mSize = s;
 		}
 	}
 
