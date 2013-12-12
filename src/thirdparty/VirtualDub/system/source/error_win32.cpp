@@ -177,7 +177,7 @@ MyWin32Error::MyWin32Error(const char *format, uint32 err, ...)
 
 	*t = 0;
 
-	if (!FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+	if (!FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 			0,
 			err,
 			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),

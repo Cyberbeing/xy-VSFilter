@@ -91,10 +91,10 @@ void *VDRegistryProviderW32::CreateKey(void *key, const char *path, bool write) 
 	HKEY newKey;
 
 	if (write) {
-		if (RegCreateKeyEx((HKEY)key, path, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &newKey, NULL))
+		if (RegCreateKeyExA((HKEY)key, path, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &newKey, NULL))
 			return NULL;
 	} else {
-		if (RegOpenKeyEx((HKEY)key, path, 0, KEY_READ, &newKey))
+		if (RegOpenKeyExA((HKEY)key, path, 0, KEY_READ, &newKey))
 			return NULL;
 	}
 
@@ -108,24 +108,24 @@ void VDRegistryProviderW32::CloseKey(void *key) {
 bool VDRegistryProviderW32::SetBool(void *key, const char *pszName, bool val) {
 	DWORD dw = val;
 	
-	return !RegSetValueEx((HKEY)key, pszName, 0, REG_DWORD, (const BYTE *)&dw, sizeof dw);
+	return !RegSetValueExA((HKEY)key, pszName, 0, REG_DWORD, (const BYTE *)&dw, sizeof dw);
 }
 
 bool VDRegistryProviderW32::SetInt(void *key, const char *pszName, int val) {
 	DWORD dw = val;
 
-	return !RegSetValueEx((HKEY)key, pszName, 0, REG_DWORD, (const BYTE *)&dw, sizeof dw);
+	return !RegSetValueExA((HKEY)key, pszName, 0, REG_DWORD, (const BYTE *)&dw, sizeof dw);
 }
 
 bool VDRegistryProviderW32::SetString(void *key, const char *pszName, const char *pszString) {
-	return !RegSetValueEx((HKEY)key, pszName, 0, REG_SZ, (const BYTE *)pszString, strlen(pszString));
+	return !RegSetValueExA((HKEY)key, pszName, 0, REG_SZ, (const BYTE *)pszString, strlen(pszString));
 }
 
 bool VDRegistryProviderW32::SetString(void *key, const char *pszName, const wchar_t *pszString) {
 	if (!VDIsWindowsNT()) {
 		VDStringA s(VDTextWToA(pszString));
 
-		if (RegSetValueEx((HKEY)key, pszName, 0, REG_SZ, (const BYTE *)s.data(), s.size()))
+		if (RegSetValueExA((HKEY)key, pszName, 0, REG_SZ, (const BYTE *)s.data(), s.size()))
 			return false;
 	} else {
 		if (RegSetValueExW((HKEY)key, VDTextAToW(pszName).c_str(), 0, REG_SZ, (const BYTE *)pszString, sizeof(wchar_t) * wcslen(pszString)))
@@ -136,13 +136,13 @@ bool VDRegistryProviderW32::SetString(void *key, const char *pszName, const wcha
 }
 
 bool VDRegistryProviderW32::SetBinary(void *key, const char *pszName, const char *data, int len) {
-	return !RegSetValueEx((HKEY)key, pszName, 0, REG_BINARY, (const BYTE *)data, len);
+	return !RegSetValueExA((HKEY)key, pszName, 0, REG_BINARY, (const BYTE *)data, len);
 }
 
 IVDRegistryProvider::Type VDRegistryProviderW32::GetType(void *key, const char *name) {
 	DWORD type;
 
-	if (RegQueryValueEx((HKEY)key, name, 0, &type, NULL, NULL))
+	if (RegQueryValueExA((HKEY)key, name, 0, &type, NULL, NULL))
 		return kTypeUnknown;
 
 	switch(type) {
@@ -165,7 +165,7 @@ bool VDRegistryProviderW32::GetBool(void *key, const char *pszName, bool& val) {
 	DWORD v;
 	DWORD len = sizeof(DWORD);
 
-	if (RegQueryValueEx((HKEY)key, pszName, 0, &type, (BYTE *)&v, &len) || type != REG_DWORD)
+	if (RegQueryValueExA((HKEY)key, pszName, 0, &type, (BYTE *)&v, &len) || type != REG_DWORD)
 		return false;
 
 	val = (v != 0);
@@ -177,7 +177,7 @@ bool VDRegistryProviderW32::GetInt(void *key, const char *pszName, int& val) {
 	DWORD v;
 	DWORD len = sizeof(DWORD);
 
-	if (RegQueryValueEx((HKEY)key, pszName, 0, &type, (BYTE *)&v, &len) || type != REG_DWORD)
+	if (RegQueryValueExA((HKEY)key, pszName, 0, &type, (BYTE *)&v, &len) || type != REG_DWORD)
 		return false;
 
 	val = v;
@@ -188,11 +188,11 @@ bool VDRegistryProviderW32::GetString(void *key, const char *pszName, VDStringA&
 	DWORD type;
 	DWORD s = sizeof(DWORD);
 
-	if (RegQueryValueEx((HKEY)key, pszName, 0, &type, NULL, &s) || type != REG_SZ)
+	if (RegQueryValueExA((HKEY)key, pszName, 0, &type, NULL, &s) || type != REG_SZ)
 		return false;
 
 	str.resize(s);
-	if (RegQueryValueEx((HKEY)key, pszName, 0, NULL, (BYTE *)str.data(), &s))
+	if (RegQueryValueExA((HKEY)key, pszName, 0, NULL, (BYTE *)str.data(), &s))
 		return false;
 
 	if (!s)
@@ -237,7 +237,7 @@ int VDRegistryProviderW32::GetBinaryLength(void *key, const char *pszName) {
 	DWORD type;
 	DWORD s = sizeof(DWORD);
 
-	if (RegQueryValueEx((HKEY)key, pszName, 0, &type, NULL, &s) || type != REG_BINARY)
+	if (RegQueryValueExA((HKEY)key, pszName, 0, &type, NULL, &s) || type != REG_BINARY)
 		return -1;
 
 	return s;
@@ -247,18 +247,18 @@ bool VDRegistryProviderW32::GetBinary(void *key, const char *pszName, char *buf,
 	DWORD type;
 	DWORD s = maxlen;
 
-	if (RegQueryValueEx((HKEY)key, pszName, 0, &type, (BYTE *)buf, &s) || maxlen < (int)s || type != REG_BINARY)
+	if (RegQueryValueExA((HKEY)key, pszName, 0, &type, (BYTE *)buf, &s) || maxlen < (int)s || type != REG_BINARY)
 		return false;
 
 	return true;
 }
 
 bool VDRegistryProviderW32::RemoveValue(void *key, const char *name) {
-	return 0 != RegDeleteValue((HKEY)key, name);
+	return 0 != RegDeleteValueA((HKEY)key, name);
 }
 
 bool VDRegistryProviderW32::RemoveKey(void *key, const char *name) {
-	return 0 != RegDeleteKey((HKEY)key, name);
+	return 0 != RegDeleteKeyA((HKEY)key, name);
 }
 
 void *VDRegistryProviderW32::EnumKeysBegin(void *key) {

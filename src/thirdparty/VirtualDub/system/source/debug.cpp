@@ -139,7 +139,7 @@ void VDDebugPrint(const char *format, ...) {
 	_vsnprintf(buf, sizeof buf, format, val);
 	va_end(val);
 	Sleep(0);
-	OutputDebugString(buf);
+	OutputDebugStringA(buf);
 }
 
 ///////////////////////////////////////////////////////////////////////////
