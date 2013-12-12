@@ -502,7 +502,7 @@ sint64 VDGetDiskFreeSpace(const wchar_t *path) {
 	static tpGetDiskFreeSpaceExW spGetDiskFreeSpaceExW;
 
 	if (!sbChecked) {
-		HMODULE hmodKernel = GetModuleHandle("kernel32.dll");
+		HMODULE hmodKernel = GetModuleHandle(L"kernel32.dll");
 		spGetDiskFreeSpaceExA = (tpGetDiskFreeSpaceExA)GetProcAddress(hmodKernel, "GetDiskFreeSpaceExA");
 		spGetDiskFreeSpaceExW = (tpGetDiskFreeSpaceExW)GetProcAddress(hmodKernel, "GetDiskFreeSpaceExW");
 
@@ -623,7 +623,7 @@ bool VDDeleteFileNT(const wchar_t *path) {
 
 bool VDDeletePathAutodetect(const wchar_t *path) {
 	if (VDIsWindowsNT()) {
-		spDeleteFileW = (tpDeleteFileW)GetProcAddress(GetModuleHandle("kernel32"), "DeleteFileW");
+		spDeleteFileW = (tpDeleteFileW)GetProcAddress(GetModuleHandle(L"kernel32"), "DeleteFileW");
 		VDRemoveFile = VDDeleteFileNT;
 	} else
 		VDRemoveFile = VDDeleteFile9x;
@@ -675,8 +675,8 @@ uint64 VDFileGetLastWriteTime(const wchar_t *path) {
 }
 
 VDStringW VDFileGetRootPath(const wchar_t *path) {
-	static tpGetVolumePathNameW spGetVolumePathNameW = (tpGetVolumePathNameW)GetProcAddress(GetModuleHandle("kernel32.dll"), "GetVolumePathNameW");
-	static tpGetFullPathNameW spGetFullPathNameW = (tpGetFullPathNameW)GetProcAddress(GetModuleHandle("kernel32.dll"), "GetFullPathNameW");
+	static tpGetVolumePathNameW spGetVolumePathNameW = (tpGetVolumePathNameW)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetVolumePathNameW");
+	static tpGetFullPathNameW spGetFullPathNameW = (tpGetFullPathNameW)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetFullPathNameW");
 
 	VDStringW fullPath(VDGetFullPath(path));
 
@@ -696,7 +696,7 @@ VDStringW VDFileGetRootPath(const wchar_t *path) {
 }
 
 VDStringW VDGetFullPath(const wchar_t *partialPath) {
-	static tpGetFullPathNameW spGetFullPathNameW = (tpGetFullPathNameW)GetProcAddress(GetModuleHandle("kernel32.dll"), "GetFullPathNameW");
+	static tpGetFullPathNameW spGetFullPathNameW = (tpGetFullPathNameW)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetFullPathNameW");
 
 	union {
 		char		a[MAX_PATH];
