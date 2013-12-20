@@ -152,66 +152,66 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\VSFilter.rc">
+    <ResourceCompile Include="VSFilter.rc">
       <PreprocessorDefinitions Condition="'$(Configuration)'=='Debug'">XY_SUB_FILTER_DLL;_DEBUG;AFX_RESOURCE_DLL;AFX_TARG_ENU;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)'=='Release'">XY_SUB_FILTER_DLL;AFX_RESOURCE_DLL;AFX_TARG_ENU;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\thirdparty\mfc\afxctrlcontainer.cpp">
+    <ClCompile Include="..\..\..\thirdparty\mfc\afxctrlcontainer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)'=='Debug'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\thirdparty\mfc\afxglobals.cpp">
+    <ClCompile Include="..\..\..\thirdparty\mfc\afxglobals.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)'=='Debug'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\thirdparty\mfc\winmdi.cpp">
+    <ClCompile Include="..\..\..\thirdparty\mfc\winmdi.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\auto_load_helper.cpp" />
-    <ClCompile Include="..\DirectVobSub.cpp" />
-    <ClCompile Include="..\DirectVobSubPropPage.cpp" />
-    <ClCompile Include="..\once_logger.cpp">
+    <ClCompile Include="auto_load_helper.cpp" />
+    <ClCompile Include="DirectVobSub.cpp" />
+    <ClCompile Include="DirectVobSubPropPage.cpp" />
+    <ClCompile Include="once_logger.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\StdAfx.cpp">
+    <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\StyleEditorDialog.cpp" />
-    <ClCompile Include="..\SubRenderOptionsImpl.cpp" />
-    <ClCompile Include="..\SubtitleInputPin2.cpp" />
-    <ClCompile Include="..\Systray.cpp" />
-    <ClCompile Include="..\VSFilter.cpp" />
-    <ClCompile Include="..\XyOptionsImpl.cpp" />
-    <ClCompile Include="..\xy_logger.cpp" />
-    <ClCompile Include="..\xy_sub_filter.cpp" />
-    <ClCompile Include="..\xy_sub_filter_dll.cpp" />
+    <ClCompile Include="StyleEditorDialog.cpp" />
+    <ClCompile Include="SubRenderOptionsImpl.cpp" />
+    <ClCompile Include="SubtitleInputPin2.cpp" />
+    <ClCompile Include="Systray.cpp" />
+    <ClCompile Include="VSFilter.cpp" />
+    <ClCompile Include="XyOptionsImpl.cpp" />
+    <ClCompile Include="xy_logger.cpp" />
+    <ClCompile Include="xy_sub_filter.cpp" />
+    <ClCompile Include="xy_sub_filter_dll.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\auto_load_helper.h" />
-    <ClInclude Include="..\CAutoTiming.h" />
-    <ClInclude Include="..\DirectVobSub.h" />
-    <ClInclude Include="..\DirectVobSubPropPage.h" />
-    <ClInclude Include="..\IDirectVobSub.h" />
-    <ClInclude Include="..\IDirectVobSubXy.h" />
-    <ClInclude Include="..\once_logger.h" />
-    <ClInclude Include="..\resource.h" />
-    <ClInclude Include="..\StdAfx.h" />
-    <ClInclude Include="..\StyleEditorDialog.h" />
-    <ClInclude Include="..\SubRenderOptionsImpl.h" />
-    <ClInclude Include="..\SubtitleInputPin2.h" />
-    <ClInclude Include="..\Systray.h" />
-    <ClInclude Include="..\Timing_Logger.h" />
-    <ClInclude Include="..\version.h" />
-    <ClInclude Include="..\VSFilter.h" />
-    <ClInclude Include="..\XyOptionsImpl.h" />
-    <ClInclude Include="..\XySubRenderIntf.h" />
-    <ClInclude Include="..\xy_logger.h" />
-    <ClInclude Include="..\xy_sub_filter.h" />
+    <ClInclude Include="auto_load_helper.h" />
+    <ClInclude Include="CAutoTiming.h" />
+    <ClInclude Include="DirectVobSub.h" />
+    <ClInclude Include="DirectVobSubPropPage.h" />
+    <ClInclude Include="IDirectVobSub.h" />
+    <ClInclude Include="IDirectVobSubXy.h" />
+    <ClInclude Include="once_logger.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="StyleEditorDialog.h" />
+    <ClInclude Include="SubRenderOptionsImpl.h" />
+    <ClInclude Include="SubtitleInputPin2.h" />
+    <ClInclude Include="Systray.h" />
+    <ClInclude Include="Timing_Logger.h" />
+    <ClInclude Include="version.h" />
+    <ClInclude Include="VSFilter.h" />
+    <ClInclude Include="XyOptionsImpl.h" />
+    <ClInclude Include="XySubRenderIntf.h" />
+    <ClInclude Include="xy_logger.h" />
+    <ClInclude Include="xy_sub_filter.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\res\Icon_147.ico" />
-    <None Include="..\res\Icon_xy_sub_fillter.ico" />
-    <None Include="..\xy_sub_filter.def" />
+    <None Include="res\Icon_147.ico" />
+    <None Include="res\Icon_xy_sub_fillter.ico" />
+    <None Include="xy_sub_filter.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
