@@ -3,13 +3,20 @@
 function Usage()
 {
   echo "Usage:"
-  echo -e "\t$1 [-conf "'"Release"|"Debug"'"]  [-plat platform "'"Win32"|"x64"'"] [-action build|clean|rebuild] [-proj projects] [-voff|--versioning-off] [-solution sln_file]"
-  echo "Default:"
+  echo -e "\t$1 [-conf "'"Release"|"Debug"'"]  [-plat platform "'"Win32"|"x64"'"] [-action build|clean|rebuild] [-proj projects] [-voff|--versioning-off] [-solution sln_file] [-compiler VS2010|VS2012|VS2013]"
+  echo -e "\nDefault:"
   echo -e '-conf\t\t"Release"'
   echo -e '-plat\t\t"Win32"'
   echo -e '-action\t\tbuild'
-  echo -e '-projects\tvsfilter_2010 xy_sub_filter'
+  echo -e '-proj\t\t"vsfilter xy_sub_filter"'
   echo -e '-solution\tsrc/filters/transform/vsfilter/VSFilter_vs2010.sln'
+  echo -e '-compiler\tVS2010'
+  echo -e "\nVisual Studio 2012:"
+  echo -e '-solution\tsrc/filters/transform/vsfilter/VSFilter_vs2012.sln'
+  echo -e '-compiler\tVS2012'
+  echo -e "\nVisual Studio 2013:"
+  echo -e '-solution\tsrc/filters/transform/vsfilter/VSFilter_vs2013.sln'
+  echo -e '-compiler\tVS2013'
 }
 
 script_dir=`dirname $0`
@@ -19,7 +26,9 @@ solution="src/filters/transform/vsfilter/VSFilter_vs2010.sln"
 action="build"
 configuration="Release"
 platform="Win32"
-projects="vsfilter_2010 xy_sub_filter"
+projects="vsfilter xy_sub_filter"
+compiler="VS2010"
+common_tools="%VS100COMNTOOLS%"
 update_version=1
 
 while [ "$1"x != ""x ]
@@ -31,10 +40,12 @@ do
       flag="platform"
     elif [ "$1"x == "-action"x ]; then
       flag="action"
-    elif [ "$1"x == "-proj"x ]; then
+    elif [ "$1"x == "-projects"x ] || [ "$1"x == "-proj"x ]; then
       flag="projects"
     elif [ "$1"x == "-solution"x ]; then
       flag="solution"
+    elif [ "$1"x == "-compiler"x ]; then
+      flag="compiler"
     elif [ "$1"x == "--versioning-off"x ] || [ "$1"x == "-voff"x ]; then
       update_version=0
       flag=""
@@ -87,14 +98,32 @@ if [ "$platform"x = "x64"x ]; then
   platform_type="x86_amd64"
 fi
 
-configuration=$configuration"|"$platform
+if [ "$compiler"x = "VS2010"x ]; then
+  configuration=$configuration"|"$platform
+elif [ "$compiler"x = "VS2012"x ]; then
+  common_tools="%VS110COMNTOOLS%"
+else
+  common_tools="%VS120COMNTOOLS%"
+fi
 
 #build
 for project in $projects
 do
+
+if [ "$compiler"x = "VS2010"x ]; then
 echo '
-CALL "%VS100COMNTOOLS%../../VC/vcvarsall.bat" '$platform_type'
+CALL "'$common_tools'../../VC/vcvarsall.bat" '$platform_type'
 devenv "'$solution'" /'$action' "'$configuration'" /project "'$project'"
 exit
 ' | cmd
+
+else
+
+echo '
+CALL "'$common_tools'../../VC/vcvarsall.bat" '$platform_type'
+msbuild /m /t:'$project';'$action' /p:Configuration='$configuration' /p:Platform='$platform' "'$solution'"
+exit
+' | cmd
+
+fi
 done
