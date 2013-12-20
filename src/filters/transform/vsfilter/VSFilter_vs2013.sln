@@ -1,5 +1,5 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+Microsoft Visual Studio Solution File, Format Version 13.00
+# Visual Studio 2013
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subtitles", "..\..\..\subtitles\subtitles_vs2010.vcxproj", "{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basevideofilter", "..\basevideofilter\basevideofilter_vs2010.vcxproj", "{54DDA60F-E528-4D07-A152-960A1E818680}"
