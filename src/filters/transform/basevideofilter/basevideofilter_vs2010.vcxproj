@@ -37,7 +37,7 @@
   <PropertyGroup Label="Globals">
     <ProjectName>basevideofilter</ProjectName>
     <ProjectGuid>{54DDA60F-E528-4D07-A152-960A1E818680}</ProjectGuid>
-    <RootNamespace>basevideofilter</RootNamespace>
+    <RootNamespace>${ProjectName}</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -67,16 +67,21 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <IncludePath>$(SolutionDir)\..\..\BaseClasses;$(IncludePath)</IncludePath>
     <TargetName Condition="'$(Configuration)'=='Release log'">$(ProjectName)RL</TargetName>
+    <PlatformToolset Condition="'$(VisualStudioVersion)'=='11.0'">v110</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)'=='12.0'">v120</PlatformToolset>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
@@ -86,8 +91,6 @@
     <ClCompile>
       <PreprocessorDefinitions>_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Lib>
@@ -99,11 +102,7 @@
     <ClCompile>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
@@ -113,11 +112,7 @@
     <ClCompile>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <PreprocessorDefinitions>_WIN64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>

@@ -15,7 +15,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dsutil", "..\..\..\dsutil\d
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subpic", "..\..\..\subpic\subpic_vs2010.vcxproj", "{D514EA4D-EAFB-47A9-A437-A582CA571251}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsfilter_2010", "vsfilter_2010\vsfilter_2010.vcxproj", "{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsfilter", "vsfilter_2010\vsfilter_2010.vcxproj", "{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}"
 	ProjectSection(ProjectDependencies) = postProject
 		{54DDA60F-E528-4D07-A152-960A1E818680} = {54DDA60F-E528-4D07-A152-960A1E818680}
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5} = {BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}
@@ -28,7 +28,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsfilter_2010", "vsfilter_2
 		{F558E2B6-62CF-4D1D-A6EA-448D159E5675} = {F558E2B6-62CF-4D1D-A6EA-448D159E5675}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseClasses_2010", "..\..\BaseClasses\BaseClasses_2010\BaseClasses_2010.vcxproj", "{F558E2B6-62CF-4D1D-A6EA-448D159E5675}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseClasses", "..\..\BaseClasses\BaseClasses_2010\BaseClasses_2010.vcxproj", "{F558E2B6-62CF-4D1D-A6EA-448D159E5675}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "log4cplus_static", "..\..\..\log4cplus\msvc10\log4cplus_static.vcxproj", "{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}"
 EndProject
@@ -140,12 +140,10 @@ Global
 		{F558E2B6-62CF-4D1D-A6EA-448D159E5675}.Release|x64.Build.0 = Release|x64
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Debug|Win32.ActiveCfg = Debug_Unicode|Win32
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Debug|x64.ActiveCfg = Debug_Unicode|x64
-		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release log|Win32.ActiveCfg = Release_Unicode|Win32
-		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release log|Win32.Build.0 = Release_Unicode|Win32
-		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release log|x64.ActiveCfg = Release_Unicode|x64
-		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release log|x64.Build.0 = Release_Unicode|x64
+		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Debug|x64.Build.0 = Debug_Unicode|x64
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release|Win32.ActiveCfg = Release_Unicode|Win32
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release|x64.ActiveCfg = Release_Unicode|x64
+		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}.Release|x64.Build.0 = Release_Unicode|x64
 		{61CB0A9F-6347-423B-9296-6F35DD4745F5}.Debug|Win32.ActiveCfg = Debug|Win32
 		{61CB0A9F-6347-423B-9296-6F35DD4745F5}.Debug|Win32.Build.0 = Debug|Win32
 		{61CB0A9F-6347-423B-9296-6F35DD4745F5}.Debug|x64.ActiveCfg = Debug|x64

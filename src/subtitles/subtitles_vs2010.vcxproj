@@ -29,14 +29,16 @@
   <PropertyGroup Label="Globals">
     <ProjectName>subtitles</ProjectName>
     <ProjectGuid>{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}</ProjectGuid>
-    <RootNamespace>subtitles</RootNamespace>
+    <RootNamespace>${ProjectName}</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+  <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>Static</UseOfMfc>
     <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release log'" Label="Configuration">
@@ -46,9 +48,7 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseOfMfc>Static</UseOfMfc>
-    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -59,31 +59,31 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <IncludePath>$(WindowsSdkDir)include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(FrameworkSDKDir)\include;$(VCInstallDir)PlatformSDK\include;$(SolutionDir);$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\BaseClasses;$(SolutionDir)\..\..\..\thirdparty\boost_1_55_0\;$(SolutionDir)..\..\..\..\include\</IncludePath>
     <TargetName Condition="'$(Configuration)'=='Release log'">$(ProjectName)RL</TargetName>
+	<IncludePath Condition="'$(VisualStudioVersion)'=='11.0'">$(WindowsSdkDir)include\shared;$(WindowsSdkDir)include\um;$(IncludePath)</IncludePath>
+	<IncludePath Condition="'$(VisualStudioVersion)'=='12.0'">$(WindowsSdkDir)include\shared;$(WindowsSdkDir)include\um;$(IncludePath)</IncludePath>
+    <PlatformToolset Condition="'$(VisualStudioVersion)'=='11.0'">v110</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)'=='12.0'">v120</PlatformToolset>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
     </ClCompile>
-    <Lib>
-      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PreprocessorDefinitions>_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Lib>
-      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <TargetMachine>MachineX64</TargetMachine>
     </Lib>
   </ItemDefinitionGroup>
@@ -92,8 +92,6 @@
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <OpenMPSupport>false</OpenMPSupport>
@@ -101,16 +99,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <FloatingPointExceptions>
-      </FloatingPointExceptions>
     </ClCompile>
-    <Lib>
-      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalDependencies>
-      </AdditionalDependencies>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release log|Win32'">
     <ClCompile>
@@ -142,22 +131,13 @@
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <PreprocessorDefinitions>_WIN64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
       <OpenMPSupport>false</OpenMPSupport>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <FloatingPointExceptions>
-      </FloatingPointExceptions>
     </ClCompile>
     <Lib>
-      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalDependencies>
-      </AdditionalDependencies>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
       <TargetMachine>MachineX64</TargetMachine>
     </Lib>
   </ItemDefinitionGroup>
