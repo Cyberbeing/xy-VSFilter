@@ -9,20 +9,18 @@ function Usage()
   echo -e '-plat\t\t"Win32"'
   echo -e '-action\t\tbuild'
   echo -e '-proj\t\t"vsfilter xy_sub_filter"'
-  echo -e '-solution\tsrc/filters/transform/vsfilter/VSFilter_vs2010.sln'
+  echo -e '-solution\tsrc/filters/transform/vsfilter/VSFilter.sln'
   echo -e '-compiler\tVS2010'
   echo -e "\nVisual Studio 2012:"
-  echo -e '-solution\tsrc/filters/transform/vsfilter/VSFilter_vs2012.sln'
   echo -e '-compiler\tVS2012'
   echo -e "\nVisual Studio 2013:"
-  echo -e '-solution\tsrc/filters/transform/vsfilter/VSFilter_vs2013.sln'
   echo -e '-compiler\tVS2013'
 }
 
 script_dir=`dirname $0`
 cd $script_dir
 
-solution="src/filters/transform/vsfilter/VSFilter_vs2010.sln"
+solution="src/filters/transform/vsfilter/VSFilter.sln"
 action="build"
 configuration="Release"
 platform="Win32"
