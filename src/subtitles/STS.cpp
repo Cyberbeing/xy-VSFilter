@@ -1887,15 +1887,15 @@ static bool OpenRealText(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
 
     CRealTextParser::Subtitles crRealText = RealTextParser.GetParsedSubtitles();
 
-    for (map<pair<int, int>, wstring>::const_iterator i = crRealText.m_mapLines.begin();
-        i != crRealText.m_mapLines.end();
-        ++i)
+    for (auto line = crRealText.m_mapLines.begin();
+        line != crRealText.m_mapLines.end();
+        ++line)
     {
         ret.Add(
-            SubRipper2SSA(i->second.c_str(), CharSet),
+            SubRipper2SSA(line->second.c_str(), CharSet),
             file->IsUnicode(),
-            i->first.first,
-            i->first.second);
+            line->first.first,
+            line->first.second);
     }
 
     //  std::wofstream wofsOut(L"c:/zzz.srt");
