@@ -816,13 +816,13 @@ void CWord::Transform_SSE2(PathData* path_data, const CPointCoor2 &org )
 bool CWord::CreateOpaqueBox()
 {
     if(m_pOpaqueBox) return(true);
-    STSStyle style = m_style.get();
-    style.borderStyle = 0;
+    STSStyle style      = m_style.get();
+    style.borderStyle   = 0;
     style.outlineWidthX = style.outlineWidthY = 0;
-    style.colors[0] = m_style.get().colors[2];
-    style.alpha[0] = m_style.get().alpha[2];
-    int w = (int)(m_style.get().outlineWidthX + 0.5);
-    int h = (int)(m_style.get().outlineWidthY + 0.5);
+    style.colors[0]     = m_style.get().colors[2];
+    style.alpha[0]      = m_style.get().alpha[2];
+    int w               = (int)(m_style.get().outlineWidthX + 0.5);
+    int h               = (int)(m_style.get().outlineWidthY + 0.5);
     CStringW str;
     str.Format(L"m %d %d l %d %d %d %d %d %d",
                -w,                   -h,
