@@ -159,10 +159,10 @@ STDMETHODIMP CSubPicImplHelper::SetSize(SIZE size, RECT vidrect)
 	}
 
 	if(m_size.cx != size.cx || m_size.cy != size.cy) {
-		m_vidrect.top = MulDiv(m_vidrect.top, m_size.cx, size.cx);
-		m_vidrect.bottom = MulDiv(m_vidrect.bottom, m_size.cx, size.cx);
-		m_vidrect.left = MulDiv(m_vidrect.left, m_size.cy, size.cy);
-		m_vidrect.right = MulDiv(m_vidrect.right, m_size.cy, size.cy);
+        m_vidrect.top    = MulDiv(m_vidrect.top, m_size.cx, size.cx);
+        m_vidrect.bottom = MulDiv(m_vidrect.bottom, m_size.cx, size.cx);
+        m_vidrect.left   = MulDiv(m_vidrect.left, m_size.cy, size.cy);
+        m_vidrect.right  = MulDiv(m_vidrect.right, m_size.cy, size.cy);
 	}
 	m_VirtualTextureSize = m_size;
 
