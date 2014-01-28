@@ -48,7 +48,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)\..\..\..\..\test\gtest-1.6.0\include;$(SolutionDir)\..\..\..\..\src\subtitles;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(SolutionDir)\..\..\..\..\src\subpic\;$(SolutionDir)\..\..\..\..\src\filters\transform\vsfilter\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\..\..\..\test\gtest-1.6.0\include;$(SolutionDir)\..\..\..\..\src\subtitles;$(SolutionDir)\..\..\..\thirdparty\boost_1_55_0\;$(SolutionDir)\..\..\..\..\src\subpic\;$(SolutionDir)\..\..\..\..\src\filters\transform\vsfilter\;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)..\..\..\..\bin\lib\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\..\..\bin\obj\$(Configuration)_$(Platform)\</IntDir>
   </PropertyGroup>
