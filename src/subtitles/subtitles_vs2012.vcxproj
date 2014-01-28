@@ -78,7 +78,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <IncludePath>$(WindowsSdkDir)include;$(WindowsSdkDir)include\shared;$(WindowsSdkDir)include\um;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(FrameworkSDKDir)\include;$(VCInstallDir)PlatformSDK\include;$(SolutionDir);$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\BaseClasses;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(SolutionDir)..\..\..\..\include\</IncludePath>
+    <IncludePath>$(WindowsSdkDir)include;$(WindowsSdkDir)include\shared;$(WindowsSdkDir)include\um;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(FrameworkSDKDir)\include;$(VCInstallDir)PlatformSDK\include;$(SolutionDir);$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\BaseClasses;$(SolutionDir)\..\..\..\thirdparty\boost_1_55_0\;$(SolutionDir)..\..\..\..\include\</IncludePath>
     <TargetName Condition="'$(Configuration)'=='Release log'">$(ProjectName)RL</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

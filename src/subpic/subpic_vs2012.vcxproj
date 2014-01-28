@@ -82,7 +82,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <IncludePath>$(SolutionDir);$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\..\thirdparty\boost_1_47_0\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\..\thirdparty\boost_1_55_0\;$(IncludePath)</IncludePath>
     <TargetName Condition="'$(Configuration)'=='Release log'">$(ProjectName)RL</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
