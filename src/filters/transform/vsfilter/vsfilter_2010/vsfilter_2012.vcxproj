@@ -144,7 +144,7 @@
       <ModuleDefinitionFile>$(SolutionDir)VSFilter.def</ModuleDefinitionFile>
       <RegisterOutput>false</RegisterOutput>
       <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutil_2012D.lib;subtitles_2012D.lib;subpic_2012D.lib;basevideofilter_2012D.lib;libssf_2012D.lib;Kasumi_2012D.lib;system_2012D.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutil_2012R.lib;subtitles_2012R.lib;subpic_2012R.lib;basevideofilter_2012R.lib;libssf_2012R.lib;Kasumi_2012R.lib;system_2012R.lib;winmm.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutil_2012R.lib;subtitles_2012R.lib;subpic_2012R.lib;basevideofilter_2012R.lib;libssf_2012R.lib;Kasumi_2012R.lib;system_2012R.lib;winmm.lib;dwmapi.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
