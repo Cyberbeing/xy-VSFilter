@@ -211,8 +211,6 @@ private:
         };
     };
 public:
-    static const float GAUSSIAN_BLUR_THREHOLD;
-public:
 
     static bool Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay);
 
