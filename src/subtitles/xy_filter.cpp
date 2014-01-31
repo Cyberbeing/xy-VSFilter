@@ -854,7 +854,7 @@ void xy_float_2_byte_transpose_sse(UINT8 *dst, int dst_width, int dst_stride,
             i3 = _mm_packs_epi32(i3,i4);
             i1 = _mm_packus_epi16(i1,i3);
 
-            _mm_store_si128((__m128i*)dst2, i1);
+            _mm_storeu_si128((__m128i*)dst2, i1);
         }
         for (;src2<src2_end;src2+=src_stride,dst2++)
         {
