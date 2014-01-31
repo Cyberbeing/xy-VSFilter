@@ -555,7 +555,7 @@ static void ass_gauss_blur(unsigned char *buffer, unsigned *tmp2,
     }
 }
 
-void xy_gaussian_blur(PUINT8 dst, int dst_stride,
+void xy_gaussian_blur(PUINT8 dst, int dst_width, int dst_stride,
     PCUINT8 src, int width, int height, int stride, 
     const float *gt_x, int r_x, int gt_ex_width_x, 
     const float *gt_y, int r_y, int gt_ex_width_y);
@@ -1142,7 +1142,7 @@ bool Rasterizer::GaussianBlur( const Overlay& input_overlay, double gaussian_blu
 
     const BYTE* plan_input = input_overlay.mfWideOutlineEmpty ? input_overlay.mBody.get() : input_overlay.mBorder.get();    
     ASSERT(output_overlay->mOverlayWidth>=filter_x.g_w && output_overlay->mOverlayHeight>=filter_y.g_w);
-    xy_gaussian_blur(blur_plan, output_overlay->mOverlayPitch, 
+    xy_gaussian_blur(blur_plan, output_overlay->mOverlayPitch, output_overlay->mOverlayPitch, 
         plan_input, input_overlay.mOverlayWidth, input_overlay.mOverlayHeight, input_overlay.mOverlayPitch, 
         filter_x.g_f, filter_x.g_r, filter_x.g_w_ex, 
         filter_y.g_f, filter_y.g_r, filter_y.g_w_ex);

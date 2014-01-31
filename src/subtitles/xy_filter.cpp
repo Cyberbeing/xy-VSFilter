@@ -871,12 +871,12 @@ void xy_float_2_byte_transpose_sse(UINT8 *dst, int dst_width, int dst_stride,
 /****
  * To Do: decent CPU capability check
  **/
-void xy_gaussian_blur(PUINT8 dst, int dst_stride,
+void xy_gaussian_blur(PUINT8 dst, int dst_width, int dst_stride,
     PCUINT8 src, int width, int height, int stride, 
     const float *gt_x, int r_x, int gt_ex_width_x, 
     const float *gt_y, int r_y, int gt_ex_width_y)
 {
-    ASSERT(width<=stride && width+2*r_x<=dst_stride);
+    ASSERT(width<=stride && width+2*r_x<=dst_width);
     int ex_mask_width_x = ((r_x*2+1)+3)&~3;
     ASSERT(ex_mask_width_x<=gt_ex_width_x);
     if (ex_mask_width_x>gt_ex_width_x)
@@ -926,7 +926,7 @@ void xy_gaussian_blur(PUINT8 dst, int dst_stride,
     
     // transpose
     int true_height = height + 2*r_y;
-    xy_float_2_byte_transpose_sse(dst, true_width, dst_stride, ver_buff-r_y*2, true_height, true_width, fstride_ver);
+    xy_float_2_byte_transpose_sse(dst, dst_width, dst_stride, ver_buff-r_y*2, true_height, true_width, fstride_ver);
     
     xy_free(buff_base);
 #ifndef _WIN64
