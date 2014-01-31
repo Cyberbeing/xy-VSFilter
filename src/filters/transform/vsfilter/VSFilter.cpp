@@ -27,6 +27,7 @@
 
 #include <initguid.h>
 #include "..\..\..\..\include\moreuuids.h"
+#include "xy_logger.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CVSFilterApp 
@@ -36,6 +37,13 @@ END_MESSAGE_MAP()
 
 CVSFilterApp::CVSFilterApp()
 {
+#ifdef __DO_LOG
+    LPTSTR  strDLLPath = new TCHAR[_MAX_PATH];
+    ::GetModuleFileName( reinterpret_cast<HINSTANCE>(&__ImageBase), strDLLPath, _MAX_PATH);
+    CString dllPath = strDLLPath;
+    dllPath += ".properties";
+    xy_logger::doConfigure( dllPath.GetString() );
+#endif
 }
 
 extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
