@@ -43,6 +43,9 @@
 #  define TRACE_RENDERER_REQUEST_TIMING(msg)
 #endif
 
+const int MAX_SUB_PIXEL = 8;
+const double MAX_SUB_PIXEL_F = 8.0;
+
 // WARNING: this isn't very thread safe, use only one RTS a time.
 static HDC g_hDC;
 static int g_hDC_refcnt = 0;
@@ -251,7 +254,7 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
     SharedPtrConstPathData shared_ptr_path_data2(path_data2);
     bool need_transform = NeedTransform();
     if(need_transform)
-        Transform(path_data2, CPoint(trans_org.x*8, trans_org.y*8));
+        Transform(path_data2, CPoint(trans_org.x*MAX_SUB_PIXEL, trans_org.y*MAX_SUB_PIXEL));
 
     CPoint left_top;
     CSize  size;
@@ -829,7 +832,7 @@ bool CWord::CreateOpaqueBox()
         m_width+w,                   -h,
         m_width+w, m_ascent+m_descent+h,
                -w, m_ascent+m_descent+h);
-    m_pOpaqueBox.reset( DEBUG_NEW CPolygon(FwSTSStyle(style), str, 0, 0, 0, 1.0/8, 1.0/8, 0, m_target_scale_x, m_target_scale_y) );
+    m_pOpaqueBox.reset( DEBUG_NEW CPolygon(FwSTSStyle(style), str, 0, 0, 0, 1.0/MAX_SUB_PIXEL, 1.0/MAX_SUB_PIXEL, 0, m_target_scale_x, m_target_scale_y) );
     return(!!m_pOpaqueBox);
 }
 
@@ -2104,10 +2107,13 @@ bool CRenderedTextSubtitle::Init( const CRectCoor2& video_rect, const CRectCoor2
 {
     XY_LOG_INFO(_T(""));
     Deinit();
-    m_video_rect = CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8);
-    m_subtitle_target_rect = CRect(subtitle_target_rect.left*8, subtitle_target_rect.top*8, 
-        subtitle_target_rect.right*8, subtitle_target_rect.bottom*8);
-    m_size = CSize(original_video_size.cx*8, original_video_size.cy*8);
+    m_video_rect = CRect(video_rect.left*MAX_SUB_PIXEL, 
+                         video_rect.top*MAX_SUB_PIXEL, 
+                         video_rect.right*MAX_SUB_PIXEL, 
+                         video_rect.bottom*MAX_SUB_PIXEL);
+    m_subtitle_target_rect = CRect(subtitle_target_rect.left*MAX_SUB_PIXEL, subtitle_target_rect.top*MAX_SUB_PIXEL, 
+        subtitle_target_rect.right*MAX_SUB_PIXEL, subtitle_target_rect.bottom*MAX_SUB_PIXEL);
+    m_size = CSize(original_video_size.cx*MAX_SUB_PIXEL, original_video_size.cy*MAX_SUB_PIXEL);
 
     ASSERT(original_video_size.cx!=0 && original_video_size.cy!=0);
 
@@ -2195,8 +2201,8 @@ void CRenderedTextSubtitle::ParseEffect(CSubtitle* sub, const CStringW& str)
         Effect* e = DEBUG_NEW Effect;
         if(!e) return;
         sub->m_effects[e->type = EF_SCROLL] = e;
-        e->param[0] = (int)(sub->m_scaley*top*8);
-        e->param[1] = (int)(sub->m_scaley*bottom*8);
+        e->param[0] = (int)(sub->m_scaley*top*MAX_SUB_PIXEL);
+        e->param[1] = (int)(sub->m_scaley*bottom*MAX_SUB_PIXEL);
         e->param[2] = (int)(max(1.0*delay/sub->m_scaley, 1));
         e->param[3] = (effect.GetLength() == 12);
         e->param[4] = (int)(sub->m_scaley*fadeawayheight);
@@ -2794,10 +2800,10 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 {
                     if(Effect* e = DEBUG_NEW Effect)
                     {
-                        e->param[0] = (int)(sub->m_scalex*wcstod(params[0], NULL)*8);
-                        e->param[1] = (int)(sub->m_scaley*wcstod(params[1], NULL)*8);
-                        e->param[2] = (int)(sub->m_scalex*wcstod(params[2], NULL)*8);
-                        e->param[3] = (int)(sub->m_scaley*wcstod(params[3], NULL)*8);
+                        e->param[0] = (int)(sub->m_scalex*wcstod(params[0], NULL)*MAX_SUB_PIXEL);
+                        e->param[1] = (int)(sub->m_scaley*wcstod(params[1], NULL)*MAX_SUB_PIXEL);
+                        e->param[2] = (int)(sub->m_scalex*wcstod(params[2], NULL)*MAX_SUB_PIXEL);
+                        e->param[3] = (int)(sub->m_scaley*wcstod(params[3], NULL)*MAX_SUB_PIXEL);
                         e->t[0] = e->t[1] = -1;
                         if(params.GetCount() == 6)
                         {
@@ -2816,8 +2822,8 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 {
                     if(Effect* e = DEBUG_NEW Effect)
                     {
-                        e->param[0] = (int)(sub->m_scalex*wcstod(params[0], NULL)*8);
-                        e->param[1] = (int)(sub->m_scaley*wcstod(params[1], NULL)*8);
+                        e->param[0] = (int)(sub->m_scalex*wcstod(params[0], NULL)*MAX_SUB_PIXEL);
+                        e->param[1] = (int)(sub->m_scaley*wcstod(params[1], NULL)*MAX_SUB_PIXEL);
                         sub->m_effects[EF_ORG] = e;
                     }
                 }
@@ -2834,8 +2840,8 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
                 {
                     if(Effect* e = DEBUG_NEW Effect)
                     {
-                        e->param[0] = e->param[2] = (int)(sub->m_scalex*wcstod(params[0], NULL)*8);
-                        e->param[1] = e->param[3] = (int)(sub->m_scaley*wcstod(params[1], NULL)*8);
+                        e->param[0] = e->param[2] = (int)(sub->m_scalex*wcstod(params[0], NULL)*MAX_SUB_PIXEL);
+                        e->param[1] = e->param[3] = (int)(sub->m_scaley*wcstod(params[1], NULL)*MAX_SUB_PIXEL);
                         e->t[0] = e->t[1] = 0;
                         sub->m_effects[EF_MOVE] = e;
                     }
@@ -3148,8 +3154,8 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
     sub->m_wrapStyle    = m_defaultWrapStyle;
     sub->m_fAnimated    = false;
     sub->m_relativeTo   = stss.relativeTo;
-    sub->m_scalex       = m_dstScreenSize.cx > 0 ? 1.0 * m_size.cx / (m_dstScreenSize.cx*8) : 1.0;
-    sub->m_scaley       = m_dstScreenSize.cy > 0 ? 1.0 * m_size.cy / (m_dstScreenSize.cy*8) : 1.0;
+    sub->m_scalex       = m_dstScreenSize.cx > 0 ? 1.0 * m_size.cx / (m_dstScreenSize.cx*MAX_SUB_PIXEL) : 1.0;
+    sub->m_scaley       = m_dstScreenSize.cy > 0 ? 1.0 * m_size.cy / (m_dstScreenSize.cy*MAX_SUB_PIXEL) : 1.0;
 
     sub->m_target_scale_x = m_target_scale_x;
     sub->m_target_scale_y = m_target_scale_y;
@@ -3194,10 +3200,10 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
         STSStyle tmp       = stss;
         tmp.fontSpacing   *=                 sub->m_scalex * 64;
         tmp.fontSize      *=                 sub->m_scaley * 64;
-        tmp.outlineWidthX *= (m_fScaledBAS ? sub->m_scalex : 1) * 8;
-        tmp.outlineWidthY *= (m_fScaledBAS ? sub->m_scaley : 1) * 8;
-        tmp.shadowDepthX  *= (m_fScaledBAS ? sub->m_scalex : 1) * 8;
-        tmp.shadowDepthY  *= (m_fScaledBAS ? sub->m_scaley : 1) * 8;
+        tmp.outlineWidthX *= (m_fScaledBAS ? sub->m_scalex : 1) * MAX_SUB_PIXEL;
+        tmp.outlineWidthY *= (m_fScaledBAS ? sub->m_scaley : 1) * MAX_SUB_PIXEL;
+        tmp.shadowDepthX  *= (m_fScaledBAS ? sub->m_scalex : 1) * MAX_SUB_PIXEL;
+        tmp.shadowDepthY  *= (m_fScaledBAS ? sub->m_scaley : 1) * MAX_SUB_PIXEL;
         FwSTSStyle fw_tmp(tmp);
         if(m_nPolygon)
         {
@@ -3221,10 +3227,10 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
     if(marginRect.top    == 0) marginRect.top    = orgstss.marginRect.get().top;
     if(marginRect.right  == 0) marginRect.right  = orgstss.marginRect.get().right;
     if(marginRect.bottom == 0) marginRect.bottom = orgstss.marginRect.get().bottom;
-    marginRect.left   = (int)(sub->m_scalex*marginRect.left  *8);
-    marginRect.top    = (int)(sub->m_scaley*marginRect.top   *8);
-    marginRect.right  = (int)(sub->m_scalex*marginRect.right *8);
-    marginRect.bottom = (int)(sub->m_scaley*marginRect.bottom*8);
+    marginRect.left   = (int)(sub->m_scalex*marginRect.left  *MAX_SUB_PIXEL);
+    marginRect.top    = (int)(sub->m_scaley*marginRect.top   *MAX_SUB_PIXEL);
+    marginRect.right  = (int)(sub->m_scalex*marginRect.right *MAX_SUB_PIXEL);
+    marginRect.bottom = (int)(sub->m_scaley*marginRect.bottom*MAX_SUB_PIXEL);
 
     sub->CreateClippers(m_size, m_video_rect.Size());
     sub->MakeLines(m_size, marginRect);
@@ -3474,8 +3480,8 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
                     int left = 0,
                         right = m_size.cx;
                     r.left = !!s->m_effects[k]->param[1] 
-                        ? (left  /*marginRect.left*/ - spaceNeeded.cx) + (int)(m_time*8.0/s->m_effects[k]->param[0])
-                        : (right /*marginRect.right*/)                 - (int)(m_time*8.0/s->m_effects[k]->param[0]);
+                        ? (left  /*marginRect.left*/ - spaceNeeded.cx) + (int)(m_time*MAX_SUB_PIXEL_F/s->m_effects[k]->param[0])
+                        : (right /*marginRect.right*/)                 - (int)(m_time*MAX_SUB_PIXEL_F/s->m_effects[k]->param[0]);
                     r.right = r.left + spaceNeeded.cx;
                     clipRect &= CRect(left>>3, clipRect.top, right>>3, clipRect.bottom);
                     fPosOverride = true;
@@ -3484,8 +3490,8 @@ HRESULT CRenderedTextSubtitle::ParseScript(REFERENCE_TIME rt, double fps, CSubti
             case EF_SCROLL: // Scroll up/down(toptobottom=param[3]);top=param[0];bottom=param[1];delay=param[2][;fadeawayheight=param[4]]
                 {
                     r.top = !!s->m_effects[k]->param[3]
-                        ? s->m_effects[k]->param[0] + (int)(m_time*8.0/s->m_effects[k]->param[2]) - spaceNeeded.cy
-                        : s->m_effects[k]->param[1] - (int)(m_time*8.0/s->m_effects[k]->param[2]);
+                        ? s->m_effects[k]->param[0] + (int)(m_time*MAX_SUB_PIXEL_F/s->m_effects[k]->param[2]) - spaceNeeded.cy
+                        : s->m_effects[k]->param[1] - (int)(m_time*MAX_SUB_PIXEL_F/s->m_effects[k]->param[2]);
                     r.bottom = r.top + spaceNeeded.cy;
                     CRect cr(0, (s->m_effects[k]->param[0] + 4) >> 3, (m_size.cx>>3), (s->m_effects[k]->param[1] + 4) >> 3);
                     clipRect &= cr;
@@ -3626,10 +3632,15 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     XySubRenderFrameCreater *render_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
     render_frame_creater->SetColorSpace(color_space);
 
-    if( m_video_rect != CRect(cvideo_rect.left*8,cvideo_rect.top*8,cvideo_rect.right*8,cvideo_rect.bottom*8)
-        || m_subtitle_target_rect != CRect(subtitle_target_rect.left*8, subtitle_target_rect.top*8
-        , subtitle_target_rect.right*8, subtitle_target_rect.bottom*8)
-        || m_size != CSize(original_video_size.cx*8, original_video_size.cy*8) )
+    if( m_video_rect != CRect(cvideo_rect.left*MAX_SUB_PIXEL,
+                              cvideo_rect.top*MAX_SUB_PIXEL,
+                              cvideo_rect.right*MAX_SUB_PIXEL,
+                              cvideo_rect.bottom*MAX_SUB_PIXEL)
+        || m_subtitle_target_rect != CRect(subtitle_target_rect.left*MAX_SUB_PIXEL,
+                                           subtitle_target_rect.top*MAX_SUB_PIXEL,
+                                           subtitle_target_rect.right*MAX_SUB_PIXEL,
+                                           subtitle_target_rect.bottom*MAX_SUB_PIXEL)
+        || m_size != CSize(original_video_size.cx*MAX_SUB_PIXEL, original_video_size.cy*MAX_SUB_PIXEL) )
     {
         if (!Init(cvideo_rect, subtitle_target_rect, original_video_size))
         {
@@ -3721,7 +3732,7 @@ void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size,
         case 1: margin.y = video_org.y;                      break; //do not move so that it aligns with the middle of the video
         case 2: margin.y = video_org.y + margin_rect.bottom; break;//move to bottom
         }
-        ASSERT(clipRect.Width()*8==output_size.cx && clipRect.Height()*8==output_size.cy);
+        ASSERT(clipRect.Width()*MAX_SUB_PIXEL==output_size.cx && clipRect.Height()*MAX_SUB_PIXEL==output_size.cy);
         clipRect.SetRect(0,0, 
             (output_size.cx + video_org.x+margin_rect.left+margin_rect.right)>>3,
             (output_size.cy + video_org.y+margin_rect.top +margin_rect.bottom)>>3);
