@@ -3651,12 +3651,12 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
 
     TRACE_RENDERER_REQUEST("Begin build draw item tree");
     CRectCoor2 margin_rect(
-        cvideo_rect.left - subtitle_target_rect.left,
-        cvideo_rect.top  - subtitle_target_rect.top,
-        subtitle_target_rect.right - cvideo_rect.right,
-        subtitle_target_rect.bottom - cvideo_rect.bottom);
+        m_video_rect.left - m_subtitle_target_rect.left,
+        m_video_rect.top  - m_subtitle_target_rect.top,
+        m_subtitle_target_rect.right - m_video_rect.right,
+        m_subtitle_target_rect.bottom - m_video_rect.bottom);
     CompositeDrawItemListList compDrawItemListList;
-    DoRender(cvideo_rect.Size(), cvideo_rect.TopLeft(), margin_rect, sub2List, &compDrawItemListList);
+    DoRender(m_video_rect.Size(), m_video_rect.TopLeft(), margin_rect, sub2List, &compDrawItemListList);
     ClearUnCachedSubtitle(sub2List);
 
     TRACE_RENDERER_REQUEST("Begin Draw");
@@ -3721,21 +3721,19 @@ void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size,
         case 1: margin.y = video_org.y;                      break; //do not move so that it aligns with the middle of the video
         case 2: margin.y = video_org.y + margin_rect.bottom; break;//move to bottom
         }
-        ASSERT(clipRect.Width()==output_size.cx && clipRect.Height()==output_size.cy);
+        ASSERT(clipRect.Width()*8==output_size.cx && clipRect.Height()*8==output_size.cy);
         clipRect.SetRect(0,0, 
-            output_size.cx + video_org.x+margin_rect.left+margin_rect.right,
-            output_size.cy + video_org.y+margin_rect.top +margin_rect.bottom);
+            (output_size.cx + video_org.x+margin_rect.left+margin_rect.right)>>3,
+            (output_size.cy + video_org.y+margin_rect.top +margin_rect.bottom)>>3);
     }
-    margin.x *= 8;
-    margin.y *= 8;
 
     SharedPtrCClipperPaintMachine clipper( DEBUG_NEW CClipperPaintMachine(s->m_pClipper) );
 
     CRect iclipRect[4];
-    iclipRect[0] = CRect(0             , 0              , output_size.cx, clipRect.top   );
-    iclipRect[1] = CRect(0             , clipRect.top   , clipRect.left , clipRect.bottom);
-    iclipRect[2] = CRect(clipRect.right, clipRect.top   , output_size.cx, clipRect.bottom);
-    iclipRect[3] = CRect(0             , clipRect.bottom, output_size.cx, output_size.cy );
+    iclipRect[0] = CRect(0             , 0              , output_size.cx>>3, clipRect.top     );
+    iclipRect[1] = CRect(0             , clipRect.top   , clipRect.left    , clipRect.bottom  );
+    iclipRect[2] = CRect(clipRect.right, clipRect.top   , output_size.cx>>3, clipRect.bottom  );
+    iclipRect[3] = CRect(0             , clipRect.bottom, output_size.cx>>3, output_size.cy>>3);
     CRect bbox2(0,0,0,0);
     POSITION pos = s->GetHeadLinePosition();
     CPoint p = p2;
