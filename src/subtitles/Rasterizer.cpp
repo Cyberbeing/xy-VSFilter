@@ -3303,39 +3303,21 @@ void ScanLineData::_EvaluateLine(int x0, int y0, int x1, int y1)
     if(!fFirstSet) {firstp.x = x0; firstp.y = y0; fFirstSet = true;}
     lastp.x = x1;
     lastp.y = y1;
+
+    int is_down_flag = 0;
     if(y1 > y0)	// down
     {
-        __int64 xacc = (__int64)x0 << 13;
-        // prestep y0 down
-        int dy = y1 - y0;
-        int y = ((y0 + 3)&~7) + 4;
-        int iy = y >> 3;
-        y1 = (y1 - 5) >> 3;
-        if(iy <= y1)
-        {
-            __int64 invslope = (__int64(x1 - x0) << 16) / dy;
-            if (mEdgeNext + y1 + 1 - iy > mEdgeHeapSize) {
-                int new_edge_heap_size = 2*mEdgeHeapSize;
-                while(mEdgeNext + y1 + 1 - iy > new_edge_heap_size)
-                    new_edge_heap_size *= 2;
-                _ReallocEdgeBuffer(new_edge_heap_size);
-            }
-            xacc += (invslope * (y - y0)) >> 3;
-            while(iy <= y1)
-            {
-                int ix = (int)((xacc + 32768) >> 16);
-                mpEdgeBuffer[mEdgeNext].next = mpScanBuffer[iy];
-                mpEdgeBuffer[mEdgeNext].posandflag = ix*2 + 1;
-                mpScanBuffer[iy] = mEdgeNext++;
-                ++iy;
-                xacc += invslope;
-            }
-        }
+        x0 ^= x1;
+        x1 ^= x0;
+        x0 ^= x1;
+        y0 ^= y1;
+        y1 ^= y0;
+        y0 ^= y1;
+        is_down_flag = 1;
     }
-    else if(y1 < y0) // up
+    if(y1 < y0)
     {
         __int64 xacc = (__int64)x1 << 13;
-        // prestep y1 down
         int dy = y0 - y1;
         int y = ((y1 + 3)&~7) + 4;
         int iy = y >> 3;
@@ -3354,7 +3336,7 @@ void ScanLineData::_EvaluateLine(int x0, int y0, int x1, int y1)
             {
                 int ix = (int)((xacc + 32768) >> 16);
                 mpEdgeBuffer[mEdgeNext].next = mpScanBuffer[iy];
-                mpEdgeBuffer[mEdgeNext].posandflag = ix*2;
+                mpEdgeBuffer[mEdgeNext].posandflag = ix*2 + is_down_flag;
                 mpScanBuffer[iy] = mEdgeNext++;
                 ++iy;
                 xacc += invslope;
