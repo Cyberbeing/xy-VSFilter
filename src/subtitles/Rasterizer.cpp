@@ -3338,8 +3338,12 @@ void ScanLineData::_EvaluateLine(int x0, int y0, int x1, int y1)
         if(iy <= y1)
         {
             __int64 invslope = (__int64(x1 - x0) << 16) / dy;
-            while(mEdgeNext + y1 + 1 - iy > mEdgeHeapSize)
-                _ReallocEdgeBuffer(mEdgeHeapSize*2);
+            if (mEdgeNext + y1 + 1 - iy > mEdgeHeapSize) {
+                int new_edge_heap_size = 2*mEdgeHeapSize;
+                while(mEdgeNext + y1 + 1 - iy > new_edge_heap_size)
+                    new_edge_heap_size *= 2;
+                _ReallocEdgeBuffer(new_edge_heap_size);
+            }
             xacc += (invslope * (y - y0)) >> 3;
             while(iy <= y1)
             {
@@ -3363,8 +3367,12 @@ void ScanLineData::_EvaluateLine(int x0, int y0, int x1, int y1)
         if(iy <= y0)
         {
             __int64 invslope = (__int64(x0 - x1) << 16) / dy;
-            while(mEdgeNext + y0 + 1 - iy > mEdgeHeapSize)
-                _ReallocEdgeBuffer(mEdgeHeapSize*2);
+            if (mEdgeNext + y0 + 1 - iy > mEdgeHeapSize){
+                int new_edge_heap_size = 2*mEdgeHeapSize;
+                while(mEdgeNext + y0 + 1 - iy > new_edge_heap_size)
+                    new_edge_heap_size *= 2;
+                _ReallocEdgeBuffer(new_edge_heap_size);
+            }
             xacc += (invslope * (y - y1)) >> 3;
             while(iy <= y0)
             {
