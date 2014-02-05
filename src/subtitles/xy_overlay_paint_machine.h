@@ -27,6 +27,7 @@ public:
     static void CreatePaintMachines(const SharedPtrCWord& word
         , const CPointCoor2& shadow_pos, const CPointCoor2& outline_pos, const CPointCoor2& body_pos
         , const CPointCoor2& org
+        , const CRectCoor2& video_rect
         , SharedPtrOverlayPaintMachine *shadow, SharedPtrOverlayPaintMachine *outline, SharedPtrOverlayPaintMachine *body);
 
     static void PaintBody(const SharedPtrCWord& word, const CPointCoor2& p, const CPointCoor2& org, SharedPtrOverlay* overlay);
@@ -47,6 +48,8 @@ private:
     SharedPtrCWord m_word;
     CPointCoor2 m_shadow_pos, m_outline_pos, m_body_pos;
     CPointCoor2 m_trans_org;
+
+    CRectCoor2 m_video_rect;
 
     SharedPtrOverlayKey m_shadow_key, m_border_key, m_body_key;
 };

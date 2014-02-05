@@ -129,7 +129,7 @@ public:
     bool CreateWidenedRegion(int borderX, int borderY);
 private:
     SharedPtrConstScanLineData m_scan_line_data;
-    int mPathOffsetX, mPathOffsetY;	
+    int mPathOffsetX, mPathOffsetY;
     tSpanBuffer mWideOutline;
     int mWideBorder;
 
@@ -214,7 +214,8 @@ public:
     static const float GAUSSIAN_BLUR_THREHOLD;
 public:
 
-    static bool Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay);
+    static bool Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, const CRect& mem_clip_rect,
+        SharedPtrOverlay overlay);
 
     static bool IsItReallyBlur(float be_strength, double gaussian_blur_strength);
     static bool OldFixedPointBlur(const Overlay& input_overlay, float be_strength, double gaussian_blur_strength, 

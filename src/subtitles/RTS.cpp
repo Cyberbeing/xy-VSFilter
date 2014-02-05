@@ -236,7 +236,7 @@ void CWord::PaintFromNoneBluredOverlay(SharedPtrOverlay raterize_result, const O
 bool CWord::PaintFromScanLineData2(const CPointCoor2& psub, const ScanLineData2& scan_line_data2, const OverlayKey& key, SharedPtrOverlay* overlay)
 {
     SharedPtrOverlay raterize_result(DEBUG_NEW Overlay());
-    if(!Rasterizer::Rasterize(scan_line_data2, psub.x, psub.y, raterize_result)) 
+    if(!Rasterizer::Rasterize(scan_line_data2, psub.x, psub.y, key.m_mem_clip_rect, raterize_result)) 
     {     
         return false;
     }
@@ -259,6 +259,7 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
     CPoint left_top;
     CSize  size;
     path_data2->AlignLeftTop(&left_top, &size);
+    XY_LOG_DEBUG("left_top:"<<left_top<<" size:"<<size);
 
     int border_x = static_cast<int>(m_style.get().outlineWidthX*m_target_scale_x+0.5);//fix me: rounding err
     int border_y = static_cast<int>(m_style.get().outlineWidthY*m_target_scale_y+0.5);//fix me: rounding err
@@ -269,7 +270,11 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
     }
 
     OverlayNoOffsetMruCache* overlay_key_cache = CacheManager::GetOverlayNoOffsetMruCache();
-    OverlayNoOffsetKey overlay_no_offset_key(shared_ptr_path_data2, psub.x, psub.y, border_x, border_y);
+    CRectCoor2 mem_clip_rect(key.m_mem_clip_rect.left  -left_top.x,
+                             key.m_mem_clip_rect.top   -left_top.y,
+                             key.m_mem_clip_rect.right -left_top.x,
+                             key.m_mem_clip_rect.bottom-left_top.y);
+    OverlayNoOffsetKey overlay_no_offset_key(shared_ptr_path_data2, psub.x, psub.y, border_x, border_y, mem_clip_rect);
     overlay_no_offset_key.UpdateHashValue();
     POSITION pos_key = overlay_key_cache->Lookup(overlay_no_offset_key);
     POSITION pos = NULL;
@@ -279,18 +284,18 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
     {
         OverlayNoBlurKey overlay_key = overlay_key_cache->GetAt(pos_key);
         pos = overlay_cache->Lookup(overlay_key);
+        if (pos)
+        {
+            SharedPtrOverlay raterize_result( DEBUG_NEW Overlay() );
+            *raterize_result = *overlay_cache->GetAt(pos);
+            raterize_result->mOffsetX += key.m_mem_clip_rect.left - overlay_key.m_mem_clip_rect.left;
+            raterize_result->mOffsetY += key.m_mem_clip_rect.top - overlay_key.m_mem_clip_rect.top;
+            PaintFromNoneBluredOverlay(raterize_result, key, overlay);
+            result = true;
+            overlay_cache->UpdateCache(key, raterize_result);
+        }
     }
-    if (pos)
-    {
-        SharedPtrOverlay raterize_result( DEBUG_NEW Overlay() );
-        *raterize_result = *overlay_cache->GetAt(pos);
-        raterize_result->mOffsetX = left_top.x - psub.x - ((wide_border+7)&~7);
-        raterize_result->mOffsetY = left_top.y - psub.y - ((wide_border+7)&~7);
-        PaintFromNoneBluredOverlay(raterize_result, key, overlay);
-        result = true;
-        overlay_cache->UpdateCache(key, raterize_result);
-    }
-    else
+    if (!result)
     {
         ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
         pos = scan_line_data_cache->Lookup(overlay_no_offset_key);
@@ -1462,11 +1467,14 @@ void CLine::Compact()
     }
 }
 
-CRectCoor2 CLine::PaintAll( CompositeDrawItemList* output, const CRectCoor2& clipRect, 
+CRectCoor2 CLine::PaintAll( CompositeDrawItemList* output, 
+    const SIZECoor2& output_size, const POINTCoor2& video_org,
+    const CRectCoor2& clipRect, 
     const CPointCoor2& margin,
     const SharedPtrCClipperPaintMachine &clipper, CPoint p, const CPoint& org, const int time, const int alpha )
 {
     CRectCoor2 bbox(0, 0, 0, 0);
+    CRectCoor2 video_rect(video_org, output_size);
     POSITION pos = GetHeadPosition();
     POSITION outputPos = output->GetHeadPosition();
     while(pos)
@@ -1498,6 +1506,7 @@ CRectCoor2 CLine::PaintAll( CompositeDrawItemList* output, const CRectCoor2& cli
 
         SharedPtrOverlayPaintMachine shadow_pm, outline_pm, body_pm;
         CWordPaintMachine::CreatePaintMachines(w, shadowPos, outlinePos, bodyPos, org_coor2,
+            video_rect,
             hasShadow  ? &shadow_pm  : NULL, 
             hasOutline ? &outline_pm : NULL, 
             hasBody    ? &body_pm    : NULL);
@@ -3730,7 +3739,7 @@ void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size,
         {
         case 0: margin.y = video_org.y - margin_rect.top;    break; //move to top
         case 1: margin.y = video_org.y;                      break; //do not move so that it aligns with the middle of the video
-        case 2: margin.y = video_org.y + margin_rect.bottom; break;//move to bottom
+        case 2: margin.y = video_org.y + margin_rect.bottom; break; //move to bottom
         }
         ASSERT(clipRect.Width()*MAX_SUB_PIXEL==output_size.cx && clipRect.Height()*MAX_SUB_PIXEL==output_size.cy);
         clipRect.SetRect(0,0, 
@@ -3766,10 +3775,10 @@ void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size,
                 tmp3.AddTail();
                 tmp4.AddTail();
             }
-            bbox2 |= l->PaintAll(&tmp1, iclipRect[0], margin, clipper, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmp2, iclipRect[1], margin, clipper, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmp3, iclipRect[2], margin, clipper, p, org2, time, alpha);
-            bbox2 |= l->PaintAll(&tmp4, iclipRect[3], margin, clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp1, output_size, video_org, iclipRect[0], margin, clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp2, output_size, video_org, iclipRect[1], margin, clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp3, output_size, video_org, iclipRect[2], margin, clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmp4, output_size, video_org, iclipRect[3], margin, clipper, p, org2, time, alpha);
             tmpCompDrawItemList.AddTailList(&tmp1);
             tmpCompDrawItemList.AddTailList(&tmp2);
             tmpCompDrawItemList.AddTailList(&tmp3);
@@ -3781,7 +3790,7 @@ void CRenderedTextSubtitle::RenderOneSubtitle( const SIZECoor2& output_size,
             {
                 tmpCompDrawItemList.AddTail();
             }
-            bbox2 |= l->PaintAll(&tmpCompDrawItemList, clipRect, margin, clipper, p, org2, time, alpha);
+            bbox2 |= l->PaintAll(&tmpCompDrawItemList, output_size, video_org, clipRect, margin, clipper, p, org2, time, alpha);
         }
         compDrawItemList->AddTailList(&tmpCompDrawItemList);
         p.y += l->m_ascent + l->m_descent;

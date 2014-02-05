@@ -206,7 +206,8 @@ bool OverlayNoBlurKey::operator==( const OverlayNoBlurKey& key ) const
     //static_cast will call copy constructer to construct a tmp obj
     //return (static_cast<ScanLineDataCacheKey>(*this)==static_cast<ScanLineDataCacheKey>(key)) 
     //    && (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y); 
-    return (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) && ScanLineData2CacheKey::operator==(key);
+    return (m_p.x==key.m_p.x) && (m_p.y==key.m_p.y) && ScanLineData2CacheKey::operator==(key)
+        && (m_mem_clip_rect==key.m_mem_clip_rect);
 }
 
 ULONG OverlayNoBlurKey::UpdateHashValue()
@@ -216,6 +217,8 @@ ULONG OverlayNoBlurKey::UpdateHashValue()
     m_hash_value += m_p.x;
     m_hash_value += (m_hash_value<<5);
     m_hash_value += m_p.y;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += hash_value(m_mem_clip_rect);
     return  m_hash_value;
 }
 
@@ -270,6 +273,7 @@ bool OverlayNoOffsetKey::operator==( const OverlayNoOffsetKey& key ) const
 {
     AddFuncCalls(OverlayNoOffsetKey_EQUAL);
     return (this==&key) || ( this->m_border == key.m_border && this->m_rasterize_sub == key.m_rasterize_sub &&
+        this->m_mem_clip_rect == key.m_mem_clip_rect &&
         ScanLineDataCacheKey::operator==(key) );
 }
 
@@ -280,6 +284,8 @@ ULONG OverlayNoOffsetKey::UpdateHashValue()
     m_hash_value += m_border;
     m_hash_value += (m_hash_value<<5);
     m_hash_value += m_rasterize_sub;
+    m_hash_value += (m_hash_value<<5);
+    m_hash_value += hash_value(m_mem_clip_rect);
     return m_hash_value;
 }
 

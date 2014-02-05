@@ -117,8 +117,10 @@ public:
 class OverlayNoBlurKey: public ScanLineData2CacheKey
 {
 public:
-    OverlayNoBlurKey(const CWord& word, const POINT& p, const POINT& org):ScanLineData2CacheKey(word,org),m_p(p) {}
-    OverlayNoBlurKey(const OverlayNoBlurKey& key):ScanLineData2CacheKey(key),m_p(key.m_p),m_hash_value(key.m_hash_value) {}
+    OverlayNoBlurKey(const CWord& word, const POINT& p, const POINT& org, const RECT& mem_clip_rect)
+        :ScanLineData2CacheKey(word,org),m_p(p),m_mem_clip_rect(mem_clip_rect) {}
+    OverlayNoBlurKey(const OverlayNoBlurKey& key)
+        :ScanLineData2CacheKey(key),m_p(key.m_p),m_hash_value(key.m_hash_value),m_mem_clip_rect(key.m_mem_clip_rect) {}
 
     bool operator==(const OverlayNoBlurKey& key)const;
 
@@ -129,13 +131,15 @@ public:
     }
 public:
     ULONG m_hash_value;
+    CRect m_mem_clip_rect;
     POINT m_p;    
 };
 
 class OverlayKey: public OverlayNoBlurKey
 {
 public:
-    OverlayKey(const CWord& word, const POINT& p, const POINT& org):OverlayNoBlurKey(word, p, org) {}
+    OverlayKey(const CWord& word, const POINT& p, const POINT& org, const RECT& mem_clip_rect)
+        :OverlayNoBlurKey(word, p, org, mem_clip_rect) {}
     OverlayKey(const OverlayKey& key):OverlayNoBlurKey(key), m_hash_value(key.m_hash_value) {}
 
     bool operator==(const OverlayKey& key)const;
@@ -168,10 +172,12 @@ public:
 class OverlayNoOffsetKey:public ScanLineDataCacheKey
 {
 public:
-    OverlayNoOffsetKey(const SharedPtrConstPathData& path_data, int xsub, int ysub, int border_x, int border_y)
+    OverlayNoOffsetKey(const SharedPtrConstPathData& path_data, int xsub, int ysub, int border_x, int border_y,
+        const RECT& mem_clip_rect)
         : ScanLineDataCacheKey(path_data)
         , m_border( border_x+(border_y<<16) )
-        , m_rasterize_sub( xsub+(ysub<<16) ){}
+        , m_rasterize_sub( xsub+(ysub<<16) )
+        , m_mem_clip_rect( mem_clip_rect ){}
     bool operator==(const OverlayNoOffsetKey& key)const;
 
     ULONG UpdateHashValue();
@@ -184,6 +190,7 @@ public:
 
     int m_border;
     int m_rasterize_sub;
+    CRect m_mem_clip_rect;
 };
 
 class ClipperAlphaMaskCacheKey

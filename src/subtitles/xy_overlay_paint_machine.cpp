@@ -56,6 +56,24 @@ void CWordPaintMachine::Paint( LAYER layer, SharedPtrOverlay* overlay )
     }
 }
 
+inline int div_floor(int x, int d)
+{
+    return x>=0 ? x/d : (x-d+1)/d;
+}
+
+inline CRectCoor2 GetMemClipRect(const CPointCoor2& p, const CRectCoor2& video_rect )
+{
+    const int BLUR_ADJUST = 30 * 8;
+    int vw = video_rect.Width();
+    int sw = (vw/6&~7);
+    int vh = video_rect.Height();
+    int sh = (vh/6&~7);
+    return CRect(
+        CPoint(div_floor(-p.x,2*sw)*2*sw - BLUR_ADJUST,
+               div_floor(-p.y,2*sh)*2*sh - BLUR_ADJUST),
+        CSize(vw+2*sw+2*BLUR_ADJUST,vh+2*sh+2*BLUR_ADJUST));
+}
+
 void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPointCoor2& p, SharedPtrOverlay* overlay )
 {
     if(!word->m_str.Get() || overlay==NULL) return;
@@ -71,7 +89,9 @@ void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPointCoor2
         }
 
         CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
-        OverlayKey sub_key(*word, psub_true, trans_org2);
+        CRect mem_clip_rect = GetMemClipRect(p, m_video_rect);
+
+        OverlayKey sub_key(*word, psub_true, trans_org2, mem_clip_rect);
         sub_key.UpdateHashValue();
         if( SubpixelPositionControler::GetGlobalControler().UseBilinearShift() )
         {
@@ -87,7 +107,7 @@ void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPointCoor2
         if( !overlay->get() )
         {
             CPoint psub = SubpixelPositionControler::GetGlobalControler().GetSubpixel(p);
-            OverlayKey overlay_key(*word, psub, trans_org2);
+            OverlayKey overlay_key(*word, psub, trans_org2, mem_clip_rect);
             overlay_key.UpdateHashValue();
             OverlayMruCache* overlay_cache = CacheManager::GetOverlayMruCache();
             POSITION pos = overlay_cache->Lookup(overlay_key);
@@ -97,7 +117,7 @@ void CWordPaintMachine::PaintBody( const SharedPtrCWord& word, const CPointCoor2
                 {
                     error = true;
                     break;
-                }                
+                }
             }
             else
             {
@@ -136,6 +156,7 @@ void CWordPaintMachine::PaintShadow( const SharedPtrCWord& word, const CPointCoo
 void CWordPaintMachine::CreatePaintMachines( const SharedPtrCWord& word
     , const CPointCoor2& shadow_pos, const CPointCoor2& outline_pos, const CPointCoor2& body_pos
     , const CPointCoor2& org
+    , const CRectCoor2& video_rect
     , SharedPtrOverlayPaintMachine *shadow, SharedPtrOverlayPaintMachine *outline, SharedPtrOverlayPaintMachine *body)
 {
     SharedCWordPaintMachine machine(DEBUG_NEW CWordPaintMachine());
@@ -152,6 +173,8 @@ void CWordPaintMachine::CreatePaintMachines( const SharedPtrCWord& word
     {
         machine->m_trans_org = org - body_pos;
     }
+    machine->m_video_rect = video_rect;
+
     machine->m_shadow_pos = shadow_pos;
     machine->m_outline_pos = outline_pos;
     machine->m_body_pos = body_pos;
@@ -213,7 +236,9 @@ OverlayKey* CWordPaintMachine::CreateBodyOverlayHashKey( const SharedPtrCWord& w
         trans_org2.y=0;
     }
     CPoint psub_true( (p.x&SubpixelPositionControler::EIGHT_X_EIGHT_MASK), (p.y&SubpixelPositionControler::EIGHT_X_EIGHT_MASK) );
-    OverlayKey *body_overlay_key=DEBUG_NEW OverlayKey(*word, psub_true, trans_org2);
+    CRect mem_clip_rect = GetMemClipRect(p, m_video_rect);
+
+    OverlayKey *body_overlay_key=DEBUG_NEW OverlayKey(*word, psub_true, trans_org2, mem_clip_rect);
     body_overlay_key->UpdateHashValue();
     return body_overlay_key;
 }

@@ -784,7 +784,8 @@ static void Bilinear(unsigned char *buf, int w, int h, int stride, int x_factor,
     xy_free(col_pix_buf_base);
 }
 
-bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, SharedPtrOverlay overlay)
+bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int ysub, const CRect& mem_clip_rect,
+    SharedPtrOverlay overlay)
 {
     using namespace ::boost::flyweights;
 
@@ -808,13 +809,30 @@ bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int y
     {
         int wide_border = (scan_line_data2.mWideBorder+7)&~7;
 
-        width += 2*wide_border ;
-        height += 2*wide_border ;
-        xsub += wide_border ;
-        ysub += wide_border ;
+        width += 2*wide_border;
+        height += 2*wide_border;
+        xsub += wide_border;
+        ysub += wide_border;
     }
     overlay->mOffsetX = scan_line_data2.mPathOffsetX - xsub;
     overlay->mOffsetY = scan_line_data2.mPathOffsetY - ysub;
+    if (overlay->mOffsetX < mem_clip_rect.left) {
+        width -= mem_clip_rect.left - overlay->mOffsetX;
+        xsub -= mem_clip_rect.left - overlay->mOffsetX;
+        overlay->mOffsetX = mem_clip_rect.left;
+    }
+    if (overlay->mOffsetX+width > mem_clip_rect.right) {
+        width -= overlay->mOffsetX+width - mem_clip_rect.right;
+    }
+
+    if (overlay->mOffsetY < mem_clip_rect.top) {
+        height -= mem_clip_rect.top - overlay->mOffsetY;
+        ysub -= mem_clip_rect.top - overlay->mOffsetY;
+        overlay->mOffsetY = mem_clip_rect.top;
+    }
+    if (overlay->mOffsetY+height > mem_clip_rect.bottom) {
+        height -= overlay->mOffsetY+height - mem_clip_rect.bottom;
+    }
 
     overlay->mWidth = width;
     overlay->mHeight = height;
@@ -852,8 +870,14 @@ bool Rasterizer::Rasterize(const ScanLineData2& scan_line_data2, int xsub, int y
         for(; it!=itEnd; ++it)
         {
             int y = (int)(((*it).first >> 32) - 0x40000000 + ysub);
+            if (y < 0)
+                continue;
+            if (y > height)
+                break;
             int x1 = (int)(((*it).first & 0xffffffff) - 0x40000000 + xsub);
+            if (x1 < 0) x1 = 0;
             int x2 = (int)(((*it).second & 0xffffffff) - 0x40000000 + xsub);
+            if (x2 > width) x2 = width;
             if(x2 > x1)
             {
                 int first = x1>>3;

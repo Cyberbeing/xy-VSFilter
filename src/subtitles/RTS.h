@@ -245,7 +245,9 @@ public:
     void AddWord2Tail(SharedPtrCWord words);
     bool IsEmpty();
 
-    CRectCoor2 PaintAll(CompositeDrawItemList* output, const CRectCoor2& clipRect, 
+    CRectCoor2 PaintAll(CompositeDrawItemList* output,
+        const SIZECoor2& output_size, const POINTCoor2& video_org,
+        const CRectCoor2& clipRect, 
         const CPointCoor2& margin,
         const SharedPtrCClipperPaintMachine &clipper, 
         CPoint p, const CPoint& org, const int time, const int alpha);
