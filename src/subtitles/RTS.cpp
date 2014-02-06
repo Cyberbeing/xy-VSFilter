@@ -43,6 +43,12 @@
 #  define TRACE_RENDERER_REQUEST_TIMING(msg)
 #endif
 
+#if ENABLE_XY_LOG_PAINT
+#  define TRACE_PAINT(msg) XY_LOG_TRACE(msg)
+#else
+#  define TRACE_PAINT(msg)
+#endif
+
 const int MAX_SUB_PIXEL = 8;
 const double MAX_SUB_PIXEL_F = 8.0;
 
@@ -358,12 +364,13 @@ bool CWord::PaintFromRawData( const CPointCoor2& psub, const CPointCoor2& trans_
 
 bool CWord::DoPaint(const CPointCoor2& psub, const CPointCoor2& trans_org, SharedPtrOverlay* overlay, const OverlayKey& key)
 {
+    TRACE_PAINT("Begin");
     bool result = true;
     OverlayNoBlurMruCache* overlay_no_blur_cache = CacheManager::GetOverlayNoBlurMruCache();
     POSITION pos = overlay_no_blur_cache->Lookup(key);
-
     if(pos!=NULL)
     {
+        TRACE_PAINT("Use non-blured cache");
         SharedPtrOverlay raterize_result = overlay_no_blur_cache->GetAt(pos);
         overlay_no_blur_cache->UpdateCache( pos );
         PaintFromNoneBluredOverlay(raterize_result, key, overlay);
@@ -374,6 +381,7 @@ bool CWord::DoPaint(const CPointCoor2& psub, const CPointCoor2& trans_org, Share
         pos = scan_line_data_cache->Lookup(key);
         if(pos!=NULL)
         {
+            TRACE_PAINT("Use scan line data cache");
             SharedPtrConstScanLineData2 scan_line_data = scan_line_data_cache->GetAt(pos);
             scan_line_data_cache->UpdateCache( pos );
             result = PaintFromScanLineData2(psub, *scan_line_data, key, overlay);
@@ -382,14 +390,16 @@ bool CWord::DoPaint(const CPointCoor2& psub, const CPointCoor2& trans_org, Share
         {     
             PathDataMruCache* path_data_cache = CacheManager::GetPathDataMruCache();
             POSITION pos_path = path_data_cache->Lookup(key);
-            if(pos_path!=NULL)    
+            if(pos_path!=NULL)
             {
+                TRACE_PAINT("Use path data cache");
                 SharedPtrConstPathData path_data = path_data_cache->GetAt(pos_path); //important! copy not ref
                 path_data_cache->UpdateCache( pos_path );
                 result = PaintFromPathData(psub, trans_org, *path_data, key, overlay);
             }
             else
             {
+                TRACE_PAINT("Paint from raw data");
                 result = PaintFromRawData(psub, trans_org, key, overlay);
             }
         }
