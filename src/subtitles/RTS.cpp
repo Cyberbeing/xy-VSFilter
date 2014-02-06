@@ -265,7 +265,6 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
     CPoint left_top;
     CSize  size;
     path_data2->AlignLeftTop(&left_top, &size);
-    XY_LOG_DEBUG("left_top:"<<left_top<<" size:"<<size);
 
     int border_x = static_cast<int>(m_style.get().outlineWidthX*m_target_scale_x+0.5);//fix me: rounding err
     int border_y = static_cast<int>(m_style.get().outlineWidthY*m_target_scale_y+0.5);//fix me: rounding err
@@ -306,6 +305,8 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
         ScanLineDataMruCache* scan_line_data_cache = CacheManager::GetScanLineDataMruCache();
         pos = scan_line_data_cache->Lookup(overlay_no_offset_key);
         SharedPtrConstScanLineData scan_line_data;
+        int y0  = max(0,mem_clip_rect.top);
+        int y1  = min(size.cy,mem_clip_rect.bottom);
         if( pos != NULL )
         {
             scan_line_data = scan_line_data_cache->GetAt(pos);
@@ -315,12 +316,13 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
         {
             ScanLineData *tmp = DEBUG_NEW ScanLineData();
             scan_line_data.reset(tmp);
-            if(!tmp->ScanConvert(*path_data2, size))
+            if(!tmp->ScanConvert(*path_data2, size.cx, y0, y1))
             {
                 return false;
             }
             scan_line_data_cache->UpdateCache(overlay_no_offset_key, scan_line_data);
         }
+        left_top.y += y0;
         ScanLineData2 *tmp = DEBUG_NEW ScanLineData2(left_top, scan_line_data);
         SharedPtrScanLineData2 scan_line_data2( tmp );
         if(m_style.get().borderStyle == 0 && (m_style.get().outlineWidthX+m_style.get().outlineWidthY > 0))

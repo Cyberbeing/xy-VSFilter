@@ -74,6 +74,7 @@ class ScanLineData
 {
     bool fFirstSet;
     CPoint firstp, lastp;
+    int mClipX, mClipY;
 
 private:
     int mWidth, mHeight;
@@ -101,7 +102,9 @@ public:
     ScanLineData();
     virtual ~ScanLineData();
 
-    bool ScanConvert(const PathData& path_data, const CSize& size);
+    //Vertical partial scan-convert is support
+    //Horizontal partial scan-convert is NOT support
+    bool ScanConvert(const PathData& path_data, int width, int y0, int y1);
     void DeleteOutlines();
 
     friend class Rasterizer;

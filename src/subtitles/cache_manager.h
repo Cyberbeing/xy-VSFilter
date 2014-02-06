@@ -96,10 +96,14 @@ protected:
 class ScanLineData2CacheKey: public PathDataCacheKey
 {
 public:
-    ScanLineData2CacheKey(const CWord& word, const POINT& org):PathDataCacheKey(word),m_org(org) { }
+    ScanLineData2CacheKey(const CWord& word, const POINT& org, int y0, int y1)
+        :PathDataCacheKey(word),m_org(org)
+        ,m_y0(y0),m_y1(y1) { }
     ScanLineData2CacheKey(const ScanLineData2CacheKey& key)
         :PathDataCacheKey(key)
         ,m_org(key.m_org)
+        ,m_y0(key.m_y0)
+        ,m_y1(key.m_y1)
         ,m_hash_value(key.m_hash_value) { }
 
     bool operator==(const ScanLineData2CacheKey& key)const;
@@ -110,6 +114,7 @@ public:
         return m_hash_value;
     }
 public:
+    int m_y0, m_y1;
     ULONG m_hash_value;
     POINT m_org;
 };
@@ -118,7 +123,8 @@ class OverlayNoBlurKey: public ScanLineData2CacheKey
 {
 public:
     OverlayNoBlurKey(const CWord& word, const POINT& p, const POINT& org, const RECT& mem_clip_rect)
-        :ScanLineData2CacheKey(word,org),m_p(p),m_mem_clip_rect(mem_clip_rect) {}
+        :ScanLineData2CacheKey(word,org,mem_clip_rect.top,mem_clip_rect.bottom)
+        ,m_p(p),m_mem_clip_rect(mem_clip_rect) {}
     OverlayNoBlurKey(const OverlayNoBlurKey& key)
         :ScanLineData2CacheKey(key),m_p(key.m_p),m_hash_value(key.m_hash_value),m_mem_clip_rect(key.m_mem_clip_rect) {}
 
@@ -156,7 +162,8 @@ public:
 class ScanLineDataCacheKey
 {
 public:
-    ScanLineDataCacheKey(const SharedPtrConstPathData& path_data):m_path_data(path_data){}
+    ScanLineDataCacheKey(const SharedPtrConstPathData& path_data, int y0, int y1)
+        :m_path_data(path_data),m_y0(y0),m_y1(y1){}
     bool operator==(const ScanLineDataCacheKey& key)const;
 
     ULONG UpdateHashValue();
@@ -167,6 +174,7 @@ public:
 public:
     ULONG m_hash_value;
     SharedPtrConstPathData m_path_data;
+    int m_y0, m_y1;
 };
 
 class OverlayNoOffsetKey:public ScanLineDataCacheKey
@@ -174,7 +182,7 @@ class OverlayNoOffsetKey:public ScanLineDataCacheKey
 public:
     OverlayNoOffsetKey(const SharedPtrConstPathData& path_data, int xsub, int ysub, int border_x, int border_y,
         const RECT& mem_clip_rect)
-        : ScanLineDataCacheKey(path_data)
+        : ScanLineDataCacheKey(path_data, mem_clip_rect.top, mem_clip_rect.bottom)
         , m_border( border_x+(border_y<<16) )
         , m_rasterize_sub( xsub+(ysub<<16) )
         , m_mem_clip_rect( mem_clip_rect ){}

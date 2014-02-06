@@ -3356,33 +3356,41 @@ void ScanLineData::_EvaluateLine(int x0, int y0, int x1, int y1)
                 _ReallocEdgeBuffer(new_edge_heap_size);
             }
             xacc += (invslope * (y - y1)) >> 3;
-            while(iy <= y0)
+            int i = 0;
+            if (iy < mClipY) {
+                xacc += invslope * (mClipY - iy);
+            }
+            else {
+                i = iy - mClipY;
+            }
+            for (int r=min(mHeight,y0-mClipY+1);i<r;i++)
             {
                 int ix = (int)((xacc + 32768) >> 16);
-                mpEdgeBuffer[mEdgeNext].next = mpScanBuffer[iy];
+                mpEdgeBuffer[mEdgeNext].next = mpScanBuffer[i];
                 mpEdgeBuffer[mEdgeNext].posandflag = ix*2 + is_down_flag;
-                mpScanBuffer[iy] = mEdgeNext++;
-                ++iy;
+                mpScanBuffer[i] = mEdgeNext++;
                 xacc += invslope;
             }
         }
     }
 }
 
-bool ScanLineData::ScanConvert(const PathData& path_data, const CSize& size)
+bool ScanLineData::ScanConvert(const PathData& path_data, int width, int y0, int y1)
 {
     int lastmoveto = -1;
     int i;
     // Drop any outlines we may have.
     mOutline.clear();
     // Determine bounding box
-    if(!path_data.mPathPoints)
+    if(!path_data.mPathPoints || y1<=y0 || width==0)
     {
         mWidth = mHeight = 0;
         return false;
     }
-    mWidth = size.cx;
-    mHeight = size.cy;
+    mClipX  = 0;
+    mClipY  = y0;
+    mWidth  = width;
+    mHeight = y1 - y0;
     // Initialize edge buffer.  We use edge 0 as a sentinel.
     mEdgeNext = 1;
     mEdgeHeapSize = 2048;
