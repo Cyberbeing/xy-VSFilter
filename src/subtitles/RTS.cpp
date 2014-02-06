@@ -938,7 +938,12 @@ bool CText::CreatePath(PathData* path_data)
         for(LPCWSTR s = str; *s; s++)
         {
             CSize extent;
-            if(!GetTextExtentPoint32W(g_hDC, s, 1, &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);}
+            if(!GetTextExtentPoint32W(g_hDC, s, 1, &extent)) {
+                XY_LOG_ERROR("GetTextExtentPoint32W failed! s:"<<(int)*s);
+                SelectFont(g_hDC, hOldFont);
+                ASSERT(0);
+                return(false);
+            }
             path_data->PartialBeginPath(g_hDC, bFirstPath);
             bFirstPath = false;
             TextOutW(g_hDC, 0, 0, s, 1);
@@ -952,21 +957,25 @@ bool CText::CreatePath(PathData* path_data)
         succeeded = !!GetTextExtentPoint32W(g_hDC, str, str.GetLength(), &extent);
         if(!succeeded)
         {
+            XY_LOG_ERROR("GetTextExtentPoint32W failed! str:"<<str);
             SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);
         }
         succeeded = path_data->BeginPath(g_hDC);
         if(!succeeded)
         {
+            XY_LOG_ERROR("BeginPath failed! str"<<str);
             SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);
         }
         succeeded = !!TextOutW(g_hDC, 0, 0, str, str.GetLength());
         if(!succeeded)
         {
+            XY_LOG_ERROR("BeginPath failed! str"<<str);
             SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);
         }
         succeeded = path_data->EndPath(g_hDC);
         if(!succeeded)
         {
+            XY_LOG_ERROR("BeginPath failed! str"<<str);
             SelectFont(g_hDC, hOldFont); ASSERT(0); return(false);
         }
     }
