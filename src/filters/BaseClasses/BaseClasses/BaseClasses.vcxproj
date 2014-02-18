@@ -58,7 +58,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions Condition="'$(VisualStudioVersion)'=='10.0'">WINVER=0x400;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(VisualStudioVersion)'=='11.0'">WINVER=0x600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(VisualStudioVersion)'=='12.0'">WINVER=0x610;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(VisualStudioVersion)'=='12.0'">WINVER=0x601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
