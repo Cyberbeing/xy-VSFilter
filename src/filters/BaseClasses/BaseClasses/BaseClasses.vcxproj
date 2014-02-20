@@ -45,7 +45,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)\..\..\BaseClasses;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)src\filters\BaseClasses;$(IncludePath)</IncludePath>
     <TargetName Condition="'$(Configuration)'=='Release'">strmbaseR</TargetName>
     <TargetName Condition="'$(Configuration)'=='Debug'">strmbaseD</TargetName>
   </PropertyGroup>
