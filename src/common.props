@@ -1,8 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <IntDir>$(SolutionDir)..\..\..\..\bin\obj\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)..\..\..\..\bin\lib\$(PlatformName)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\..\..\bin\lib10\$(PlatformName)\</OutDir>
+    <OutDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)..\..\..\..\bin\lib11\$(PlatformName)\</OutDir>
+    <OutDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)..\..\..\..\bin\lib12\$(PlatformName)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\..\..\bin\obj10\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)..\..\..\..\bin\obj11\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)..\..\..\..\bin\obj12\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
     <TargetName Condition="'$(Configuration)'=='Release'">$(ProjectName)R</TargetName>
     <TargetName Condition="'$(Configuration)'=='Debug'">$(ProjectName)D</TargetName>
     <LinkIncremental Condition="'$(Configuration)'=='Debug' Or '$(Configuration)'=='Debug Filter' Or '$(Configuration)'=='Debug Lite'">true</LinkIncremental>
