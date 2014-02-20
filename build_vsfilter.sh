@@ -96,12 +96,20 @@ if [ "$platform"x = "x64"x ]; then
   platform_type="x86_amd64"
 fi
 
-if [ "$compiler"x = "VS2010"x ]; then
+if [ "$compiler"x == "VS2010"x ]; then
   configuration=$configuration"|"$platform
-elif [ "$compiler"x = "VS2012"x ]; then
+elif [ "$compiler"x == "VS2012"x ]; then
   common_tools="%VS110COMNTOOLS%"
 else
   common_tools="%VS120COMNTOOLS%"
+fi
+
+if [ "$compiler"x != "VS2010"x ]; then
+  if [ "$action"x == "build"x ]; then
+    action=""
+  else
+    action=":"$action
+  fi
 fi
 
 #build
@@ -119,7 +127,7 @@ else
 
 echo '
 CALL "'$common_tools'../../VC/vcvarsall.bat" '$platform_type'
-msbuild /m /t:'$project';'$action' /p:Configuration='$configuration' /p:Platform='$platform' "'$solution'"
+msbuild /m /t:'$project''$action' /p:Configuration='$configuration' /p:Platform='$platform' /p:BuildProjectReferences=false "'$solution'"
 exit
 ' | cmd
 
