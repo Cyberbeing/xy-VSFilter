@@ -37,7 +37,7 @@
   <PropertyGroup Label="Globals">
     <ProjectName>basevideofilter</ProjectName>
     <ProjectGuid>{54DDA60F-E528-4D07-A152-960A1E818680}</ProjectGuid>
-    <RootNamespace>${ProjectName}</RootNamespace>
+    <RootNamespace>$(ProjectName)</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

@@ -29,7 +29,7 @@
   <PropertyGroup Label="Globals">
     <ProjectName>subtitles</ProjectName>
     <ProjectGuid>{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}</ProjectGuid>
-    <RootNamespace>${ProjectName}</RootNamespace>
+    <RootNamespace>$(ProjectName)</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
