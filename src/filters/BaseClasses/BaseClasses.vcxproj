@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectName>BaseClasses</ProjectName>
     <ProjectGuid>{F558E2B6-62CF-4D1D-A6EA-448D159E5675}</ProjectGuid>
-    <RootNamespace>${ProjectName}</RootNamespace>
+    <RootNamespace>$(ProjectName)</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="..\..\platform.props" />

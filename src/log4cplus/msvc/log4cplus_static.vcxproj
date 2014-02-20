@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectName>log4cplus_static</ProjectName>
     <ProjectGuid>{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}</ProjectGuid>
-    <RootNamespace>${ProjectName}</RootNamespace>
+    <RootNamespace>$(ProjectName)</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="..\..\platform.props" />
