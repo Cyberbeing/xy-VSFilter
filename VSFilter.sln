@@ -1,16 +1,16 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subtitles", "..\..\..\subtitles\subtitles.vcxproj", "{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subtitles", "src\subtitles\subtitles.vcxproj", "{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basevideofilter", "..\basevideofilter\basevideofilter.vcxproj", "{54DDA60F-E528-4D07-A152-960A1E818680}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basevideofilter", "src\filters\transform\basevideofilter\basevideofilter.vcxproj", "{54DDA60F-E528-4D07-A152-960A1E818680}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libssf", "..\..\..\subtitles\libssf\libssf.vcxproj", "{DD9D2D92-2241-408A-859E-B85D444B7E3C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libssf", "src\subtitles\libssf\libssf.vcxproj", "{DD9D2D92-2241-408A-859E-B85D444B7E3C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dsutil", "..\..\..\dsutil\dsutil.vcxproj", "{FC70988B-1AE5-4381-866D-4F405E28AC42}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dsutil", "src\dsutil\dsutil.vcxproj", "{FC70988B-1AE5-4381-866D-4F405E28AC42}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subpic", "..\..\..\subpic\subpic.vcxproj", "{D514EA4D-EAFB-47A9-A437-A582CA571251}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subpic", "src\subpic\subpic.vcxproj", "{D514EA4D-EAFB-47A9-A437-A582CA571251}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsfilter", "vsfilter.vcxproj", "{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsfilter", "src\filters\transform\vsfilter\vsfilter.vcxproj", "{530890F8-CBCB-4DAB-BEDF-9FB667D0AFEE}"
 	ProjectSection(ProjectDependencies) = postProject
 		{54DDA60F-E528-4D07-A152-960A1E818680} = {54DDA60F-E528-4D07-A152-960A1E818680}
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5} = {BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}
@@ -23,23 +23,23 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsfilter", "vsfilter.vcxpro
 		{F558E2B6-62CF-4D1D-A6EA-448D159E5675} = {F558E2B6-62CF-4D1D-A6EA-448D159E5675}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseClasses", "..\..\BaseClasses\BaseClasses.vcxproj", "{F558E2B6-62CF-4D1D-A6EA-448D159E5675}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseClasses", "src\filters\BaseClasses\BaseClasses.vcxproj", "{F558E2B6-62CF-4D1D-A6EA-448D159E5675}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "log4cplus_static", "..\..\..\log4cplus\msvc\log4cplus_static.vcxproj", "{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "log4cplus_static", "src\log4cplus\msvc\log4cplus_static.vcxproj", "{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit_test", "..\..\..\..\test\unit_test\unit_test.vcxproj", "{61CB0A9F-6347-423B-9296-6F35DD4745F5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit_test", "test\unit_test\unit_test.vcxproj", "{61CB0A9F-6347-423B-9296-6F35DD4745F5}"
 	ProjectSection(ProjectDependencies) = postProject
 		{D514EA4D-EAFB-47A9-A437-A582CA571251} = {D514EA4D-EAFB-47A9-A437-A582CA571251}
 		{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4} = {5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtest", "..\..\..\..\test\gtest-1.6.0\msvc\gtest.vcxproj", "{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtest", "test\gtest-1.6.0\msvc\gtest.vcxproj", "{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Kasumi", "..\..\..\thirdparty\VirtualDub\Kasumi\Kasumi.vcxproj", "{0D252872-7542-4232-8D02-53F9182AEE15}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Kasumi", "src\thirdparty\VirtualDub\Kasumi\Kasumi.vcxproj", "{0D252872-7542-4232-8D02-53F9182AEE15}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "system", "..\..\..\thirdparty\VirtualDub\system\system.vcxproj", "{C2082189-3ECB-4079-91FA-89D3C8A305C0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "system", "src\thirdparty\VirtualDub\system\system.vcxproj", "{C2082189-3ECB-4079-91FA-89D3C8A305C0}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xy_sub_filter", "xy_sub_filter.vcxproj", "{9ED0FE7D-079D-4777-A40F-EF9189BDDD61}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xy_sub_filter", "src\filters\transform\vsfilter\xy_sub_filter.vcxproj", "{9ED0FE7D-079D-4777-A40F-EF9189BDDD61}"
 	ProjectSection(ProjectDependencies) = postProject
 		{54DDA60F-E528-4D07-A152-960A1E818680} = {54DDA60F-E528-4D07-A152-960A1E818680}
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5} = {BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}
@@ -52,7 +52,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xy_sub_filter", "xy_sub_fil
 		{F558E2B6-62CF-4D1D-A6EA-448D159E5675} = {F558E2B6-62CF-4D1D-A6EA-448D159E5675}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xy_sub_filter_consumer", "xy_sub_filter_consumer.vcxproj", "{FF52CEE2-6935-4AE7-BC82-E363FC4A0029}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xy_sub_filter_consumer", "src\filters\transform\vsfilter\xy_sub_filter_consumer.vcxproj", "{FF52CEE2-6935-4AE7-BC82-E363FC4A0029}"
 	ProjectSection(ProjectDependencies) = postProject
 		{54DDA60F-E528-4D07-A152-960A1E818680} = {54DDA60F-E528-4D07-A152-960A1E818680}
 		{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5} = {BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}

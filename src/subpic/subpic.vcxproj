@@ -43,7 +43,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir);$(SolutionDir)..\..\..\..\include\;$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\..\thirdparty\boost_1_55_0\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)src\filters\transform\vsfilter\;$(SolutionDir)include\;$(SolutionDir)src\log4cplus\include\;$(SolutionDir)src\thirdparty\boost_1_55_0\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
