@@ -50,8 +50,12 @@
     <TargetExt>.dll</TargetExt>
     <TargetName>XySubFilter</TargetName>
     <IncludePath>$(SolutionDir)..\..\BaseClasses;$(SolutionDir)..\..\..\thirdparty\boost_1_55_0\;$(SolutionDir)\..\..\..\log4cplus\include\;$(SolutionDir)\..\..\..\thirdparty\VirtualDub\h\;$(SolutionDir)..\..\..\..\include\;$(IncludePath)</IncludePath>
-    <IntDir>$(SolutionDir)..\..\..\..\bin\obj\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)..\..\..\..\bin\lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\..\..\bin\lib10\$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)..\..\..\..\bin\lib11\$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)..\..\..\..\bin\lib12\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\..\..\bin\obj10\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)..\..\..\..\bin\obj11\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)..\..\..\..\bin\obj12\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -133,7 +137,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\..\lib;$(SolutionDir)..\..\..\..\bin\lib\$(PlatformName)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\..\lib;$(SolutionDir)..\..\..\..\bin\lib10\$(PlatformName)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)..\..\..\..\lib;$(SolutionDir)..\..\..\..\bin\lib11\$(PlatformName)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)..\..\..\..\lib;$(SolutionDir)..\..\..\..\bin\lib12\$(PlatformName)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>$(SolutionDir)xy_sub_filter.def</ModuleDefinitionFile>
       <RegisterOutput>false</RegisterOutput>
       <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;log4cplus_staticD.lib;KasumiD.lib;systemD.lib</AdditionalDependencies>
