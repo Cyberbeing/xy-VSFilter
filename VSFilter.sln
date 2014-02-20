@@ -25,7 +25,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsfilter", "src\filters\tra
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseClasses", "src\filters\BaseClasses\BaseClasses.vcxproj", "{F558E2B6-62CF-4D1D-A6EA-448D159E5675}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "log4cplus_static", "src\log4cplus\msvc\log4cplus_static.vcxproj", "{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "log4cplus_static", "src\thirdparty\log4cplus\msvc\log4cplus_static.vcxproj", "{BEC0CD2F-60CD-40E2-A89B-AB10E902F1D5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit_test", "test\unit_test\unit_test.vcxproj", "{61CB0A9F-6347-423B-9296-6F35DD4745F5}"
 	ProjectSection(ProjectDependencies) = postProject
