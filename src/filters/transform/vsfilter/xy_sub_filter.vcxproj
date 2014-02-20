@@ -44,7 +44,7 @@
   <PropertyGroup>
     <TargetExt>.dll</TargetExt>
     <TargetName>XySubFilter</TargetName>
-    <IncludePath>$(SolutionDir)src\filters\BaseClasses;$(SolutionDir)src\thirdparty\boost_1_55_0\;$(SolutionDir)src\log4cplus\include\;$(SolutionDir)src\thirdparty\VirtualDub\h\;$(SolutionDir)include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)src\filters\BaseClasses;$(SolutionDir)src\thirdparty\boost_1_55_0\;$(SolutionDir)src\thirdparty\log4cplus\include\;$(SolutionDir)src\thirdparty\VirtualDub\h\;$(SolutionDir)include\;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\lib10\$(PlatformName)\$(Configuration)\</OutDir>
     <OutDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)bin\lib11\$(PlatformName)\$(Configuration)\</OutDir>
     <OutDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)bin\lib12\$(PlatformName)\$(Configuration)\</OutDir>
