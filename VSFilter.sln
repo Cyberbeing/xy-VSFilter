@@ -1,6 +1,9 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subtitles", "src\subtitles\subtitles.vcxproj", "{5E56335F-0FB1-4EEA-B240-D8DC5E0608E4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DA8461C4-7683-4360-9372-2A9E0F1795C2} = {DA8461C4-7683-4360-9372-2A9E0F1795C2}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basevideofilter", "src\filters\transform\basevideofilter\basevideofilter.vcxproj", "{54DDA60F-E528-4D07-A152-960A1E818680}"
 EndProject
@@ -38,6 +41,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Kasumi", "src\thirdparty\VirtualDub\Kasumi\Kasumi.vcxproj", "{0D252872-7542-4232-8D02-53F9182AEE15}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "system", "src\thirdparty\VirtualDub\system\system.vcxproj", "{C2082189-3ECB-4079-91FA-89D3C8A305C0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unrar", "src\thirdparty\unrar\unrar.vcxproj", "{DA8461C4-7683-4360-9372-2A9E0F1795C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -183,7 +188,14 @@ Global
 		{C2082189-3ECB-4079-91FA-89D3C8A305C0}.Release|Win32.Build.0 = Release|Win32
 		{C2082189-3ECB-4079-91FA-89D3C8A305C0}.Release|x64.ActiveCfg = Release|x64
 		{C2082189-3ECB-4079-91FA-89D3C8A305C0}.Release|x64.Build.0 = Release|x64
-
+		{DA8461C4-7683-4360-9372-2A9E0F1795C2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DA8461C4-7683-4360-9372-2A9E0F1795C2}.Debug|Win32.Build.0 = Debug|Win32
+		{DA8461C4-7683-4360-9372-2A9E0F1795C2}.Debug|x64.ActiveCfg = Debug|x64
+		{DA8461C4-7683-4360-9372-2A9E0F1795C2}.Debug|x64.Build.0 = Debug|x64
+		{DA8461C4-7683-4360-9372-2A9E0F1795C2}.Release|Win32.ActiveCfg = Release|Win32
+		{DA8461C4-7683-4360-9372-2A9E0F1795C2}.Release|Win32.Build.0 = Release|Win32
+		{DA8461C4-7683-4360-9372-2A9E0F1795C2}.Release|x64.ActiveCfg = Release|x64
+		{DA8461C4-7683-4360-9372-2A9E0F1795C2}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
