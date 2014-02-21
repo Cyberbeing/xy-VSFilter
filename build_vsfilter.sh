@@ -96,15 +96,19 @@ if [ "$platform"x = "x64"x ]; then
   platform_type="x86_amd64"
 fi
 
-if [ "$compiler"x == "VS2010"x ]; then
+if [ "$compiler"x == "VS2010"x ] || [ "$compiler"x == "vs2010"x ]; then
   configuration=$configuration"|"$platform
-elif [ "$compiler"x == "VS2012"x ]; then
+elif [ "$compiler"x == "VS2012"x ] || [ "$compiler"x == "vs2012"x ]; then
   common_tools="%VS110COMNTOOLS%"
-else
+elif [ "$compiler"x == "VS2013"x ] || [ "$compiler"x == "vs2013"x ]; then
   common_tools="%VS120COMNTOOLS%"
+else
+  echo "Invalid compiler argument: $compiler"
+  Usage $0
+  exit -1
 fi
 
-if [ "$compiler"x != "VS2010"x ]; then
+if [ "$compiler"x != "VS2010"x ] && [ "$compiler"x != "vs2010"x ]; then
   if [ "$action"x == "build"x ]; then
     action=""
   else
@@ -116,7 +120,7 @@ fi
 for project in $projects
 do
 
-if [ "$compiler"x = "VS2010"x ]; then
+if [ "$compiler"x = "VS2010"x ] || [ "$compiler"x = "vs2010"x ]; then
 echo '
 CALL "'$common_tools'../../VC/vcvarsall.bat" '$platform_type'
 devenv "'$solution'" /'$action' "'$configuration'" /project "'$project'"
