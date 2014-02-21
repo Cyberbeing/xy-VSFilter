@@ -137,10 +137,10 @@
       <AdditionalLibraryDirectories Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)lib;$(SolutionDir)bin\lib11\$(PlatformName)</AdditionalLibraryDirectories>
       <AdditionalLibraryDirectories Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)lib;$(SolutionDir)bin\lib12\$(PlatformName)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>$(SolutionDir)src\filters\transform\vsfilter\xy_sub_filter_consumer.def</ModuleDefinitionFile>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;log4cplus_staticD.lib;KasumiD.lib;systemD.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(VisualStudioVersion)'=='Debug|11.0' Or '$(Configuration)|$(VisualStudioVersion)'=='Debug|12.0'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;log4cplus_staticD.lib;KasumiD.lib;systemD.lib;dwmapi.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;log4cplus_staticR.lib;KasumiR.lib;systemR.lib;winmm.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(VisualStudioVersion)'=='Release|11.0' Or '$(Configuration)|$(VisualStudioVersion)'=='Release|12.0'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;log4cplus_staticR.lib;KasumiR.lib;systemR.lib;winmm.lib;dwmapi.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;log4cplus_staticD.lib;KasumiD.lib;systemD.lib;unrarD.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(VisualStudioVersion)'=='Debug|11.0' Or '$(Configuration)|$(VisualStudioVersion)'=='Debug|12.0'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;log4cplus_staticD.lib;KasumiD.lib;systemD.lib;unrarD.lib;dwmapi.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;log4cplus_staticR.lib;KasumiR.lib;systemR.lib;unrarR.lib;winmm.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(VisualStudioVersion)'=='Release|11.0' Or '$(Configuration)|$(VisualStudioVersion)'=='Release|12.0'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;log4cplus_staticR.lib;KasumiR.lib;systemR.lib;unrarR.lib;winmm.lib;dwmapi.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
