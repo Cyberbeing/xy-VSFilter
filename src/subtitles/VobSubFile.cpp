@@ -22,8 +22,16 @@
 #include "stdafx.h"
 #include <winioctl.h>
 #include "TextFile.h"
-#include "..\..\include\unrar\unrar.h"
 #include "VobSubFile.h"
+#ifndef USE_UNRAR_STATIC
+#define USE_UNRAR_STATIC
+#endif
+#ifndef USE_UNRAR_STATIC
+#include "unrar.h"
+#else
+#include "unrar/dll.hpp"
+#endif
+
 
 //
 
@@ -680,85 +688,100 @@ bool CVobSubFile::ReadSub(CString fn)
 static unsigned char* RARbuff = NULL;
 static unsigned int RARpos = 0;
 
-static int PASCAL MyProcessDataProc(unsigned char* Addr, int Size)
+static int CALLBACK MyCallbackProc(UINT msg, LPARAM UserData, LPARAM P1, LPARAM P2)
 {
-    ASSERT(RARbuff);
+    if(msg == UCM_PROCESSDATA)
+    {
+        ASSERT(RARbuff);
 
-    memcpy(&RARbuff[RARpos], Addr, Size);
-    RARpos += Size;
+        memcpy(&RARbuff[RARpos], (char*)P1, (size_t)P2);
+        RARpos += (unsigned int)P2;
+    }
 
     return(1);
 }
 
 bool CVobSubFile::ReadRar(CString fn)
 {
+#ifndef USE_UNRAR_STATIC
+#ifdef _WIN64
+    HMODULE h = LoadLibrary(_T("unrar64.dll"));
+#else
     HMODULE h = LoadLibrary(_T("unrar.dll"));
+#endif
     if(!h) return(false);
 
     RAROpenArchiveEx OpenArchiveEx = (RAROpenArchiveEx)GetProcAddress(h, "RAROpenArchiveEx");
-    RARCloseArchive CloseArchive = (RARCloseArchive)GetProcAddress(h, "RARCloseArchive");
-    RARReadHeaderEx ReadHeaderEx = (RARReadHeaderEx)GetProcAddress(h, "RARReadHeaderEx");
-    RARProcessFile ProcessFile = (RARProcessFile)GetProcAddress(h, "RARProcessFile");
-    RARSetChangeVolProc SetChangeVolProc = (RARSetChangeVolProc)GetProcAddress(h, "RARSetChangeVolProc");
-    RARSetProcessDataProc SetProcessDataProc = (RARSetProcessDataProc)GetProcAddress(h, "RARSetProcessDataProc");
-    RARSetPassword SetPassword = (RARSetPassword)GetProcAddress(h, "RARSetPassword");
+    RARCloseArchive  CloseArchive  = (RARCloseArchive)GetProcAddress(h, "RARCloseArchive");
+    RARReadHeaderEx  ReadHeaderEx  = (RARReadHeaderEx)GetProcAddress(h, "RARReadHeaderEx");
+    RARProcessFile   ProcessFile   = (RARProcessFile)GetProcAddress(h, "RARProcessFile");
+    RARSetCallback   SetCallback   = (RARSetCallback)GetProcAddress(h, "RARSetCallback");
 
-    if(!(OpenArchiveEx && CloseArchive && ReadHeaderEx && ProcessFile 
-        && SetChangeVolProc && SetProcessDataProc && SetPassword))
+    if(!(OpenArchiveEx && CloseArchive && ReadHeaderEx && ProcessFile && SetCallback))
     {
         FreeLibrary(h);
         return(false);
     }
 
-    struct RAROpenArchiveDataEx ArchiveDataEx;
-    memset(&ArchiveDataEx, 0, sizeof(ArchiveDataEx));
-#ifdef UNICODE
-    ArchiveDataEx.ArcNameW = (LPTSTR)(LPCTSTR)fn;
-    char fnA[MAX_PATH];
-    if(wcstombs(fnA, fn, fn.GetLength()+1) == -1) fnA[0] = 0;
-    ArchiveDataEx.ArcName = fnA;
 #else
-    ArchiveDataEx.ArcName = (LPTSTR)(LPCTSTR)fn;
-#endif
-    ArchiveDataEx.OpenMode = RAR_OM_EXTRACT;
-    ArchiveDataEx.CmtBuf = 0;
-    HANDLE hrar = OpenArchiveEx(&ArchiveDataEx);
-    if(!hrar) 
+
+#define OpenArchiveEx      RAROpenArchiveEx
+#define CloseArchive       RARCloseArchive
+#define ReadHeaderEx       RARReadHeaderEx
+#define ProcessFile        RARProcessFile
+#define SetCallback        RARSetCallback
+#endif /* USE_UNRAR_STATIC */
+
+    RAROpenArchiveDataEx OpenArchiveData;
+    ZeroMemory(&OpenArchiveData, sizeof(OpenArchiveData));
+
+    OpenArchiveData.ArcNameW = (LPTSTR)(LPCTSTR)fn;
+    char fnA[MAX_PATH];
+    size_t size;
+    if(wcstombs_s(&size, fnA, fn, fn.GetLength()))
+        fnA[0] = 0;
+
+    OpenArchiveData.ArcName = fnA;
+    OpenArchiveData.OpenMode = RAR_OM_EXTRACT;
+    OpenArchiveData.CmtBuf = 0;
+    OpenArchiveData.Callback = MyCallbackProc;
+    HANDLE hArcData = OpenArchiveEx(&OpenArchiveData);
+    if(!hArcData)
     {
+#ifndef USE_UNRAR_STATIC
         FreeLibrary(h);
+#endif
         return(false);
     }
 
-    SetProcessDataProc(hrar, MyProcessDataProc);
-
-    struct RARHeaderDataEx HeaderDataEx;
+    RARHeaderDataEx HeaderDataEx;
     HeaderDataEx.CmtBuf = NULL;
 
-    while(ReadHeaderEx(hrar, &HeaderDataEx) == 0)
+    while(ReadHeaderEx(hArcData, &HeaderDataEx) == 0)
     {
-#ifdef UNICODE
         CString subfn(HeaderDataEx.FileNameW);
-#else
-        CString subfn(HeaderDataEx.FileName);
-#endif
 
         if(!subfn.Right(4).CompareNoCase(_T(".sub")))
         {
             CAutoVectorPtr<BYTE> buff;
             if(!buff.Allocate(HeaderDataEx.UnpSize))
             {
-                CloseArchive(hrar);
+                CloseArchive(hArcData);
+#ifndef USE_UNRAR_STATIC
                 FreeLibrary(h);
+#endif
                 return(false);
             }
 
             RARbuff = buff;
             RARpos = 0;
 
-            if(ProcessFile(hrar, RAR_TEST, NULL, NULL))
+            if(ProcessFile(hArcData, RAR_TEST, NULL, NULL))
             {
-                CloseArchive(hrar);
+                CloseArchive(hArcData);
+#ifndef USE_UNRAR_STATIC
                 FreeLibrary(h);
+#endif
 
                 return(false);
             }
@@ -774,11 +797,13 @@ bool CVobSubFile::ReadRar(CString fn)
             break;
         }
 
-        ProcessFile(hrar, RAR_SKIP, NULL, NULL);
+        ProcessFile(hArcData, RAR_SKIP, NULL, NULL);
     }
 
-    CloseArchive(hrar);
+    CloseArchive(hArcData);
+#ifndef USE_UNRAR_STATIC
     FreeLibrary(h);
+#endif
 
     return(true);
 }
@@ -1404,8 +1429,8 @@ void CVobSubSettings::InitSettings()
     m_fOnlyShowForcedSubs = false;
     m_fCustomPal = false;
     m_tridx = 0;
-    memset(m_orgpal, 0, sizeof(m_orgpal));
-    memset(m_cuspal, 0, sizeof(m_cuspal));
+    ZeroMemory(m_orgpal, sizeof(m_orgpal));
+    ZeroMemory(m_cuspal, sizeof(m_cuspal));
 }
 
 bool CVobSubSettings::GetCustomPal(RGBQUAD* cuspal, int& tridx)
