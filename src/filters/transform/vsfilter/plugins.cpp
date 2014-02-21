@@ -659,7 +659,7 @@ public:
                 dst.h = fa->src.h;
                 dst.bpp = 32;
                 dst.pitch = fa->src.pitch;
-                dst.bits = (LPVOID)fa->src.data;
+                dst.bits = (BYTE*)fa->src.data;
 
                 Render(dst, 10000i64 * fa->pfsi->lSourceFrameMS, (float)1000 / fa->pfsi->lMicrosecsPerFrame);
 
