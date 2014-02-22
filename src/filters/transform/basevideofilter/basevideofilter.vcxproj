@@ -56,7 +56,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)src\filters\BaseClasses;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include\;$(SolutionDir)src\filters\BaseClasses;$(IncludePath)</IncludePath>
     <TargetName Condition="'$(Configuration)'=='Release log'">$(ProjectName)RL</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
