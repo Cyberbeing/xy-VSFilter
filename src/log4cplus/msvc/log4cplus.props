@@ -8,8 +8,8 @@
     <IntDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)bin\obj11\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
     <IntDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)bin\obj12\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
     <TargetName Condition="'$(Configuration)'=='Release'">$(ProjectName)R</TargetName>
-    <TargetName Condition="'$(Configuration)'=='Debug_Unicode'">$(ProjectName)D</TargetName>
-    <TargetName Condition="'$(Configuration)'=='Release_Unicode'">$(ProjectName)R</TargetName>
+    <TargetName Condition="'$(Configuration)'=='Debug Unicode'">$(ProjectName)D</TargetName>
+    <TargetName Condition="'$(Configuration)'=='Release Unicode'">$(ProjectName)R</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -47,7 +47,7 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Lib>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug_Unicode'">
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug Unicode'">
     <ClCompile>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <BrowseInformation>true</BrowseInformation>
@@ -60,7 +60,7 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release_Unicode'">
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release Unicode'">
     <ClCompile>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <Optimization>MaxSpeed</Optimization>
@@ -68,7 +68,14 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
+    <Lib>
+      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
+    </Lib>
+    <Link>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
