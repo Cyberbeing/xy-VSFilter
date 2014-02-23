@@ -46,9 +46,7 @@
     <ClCompile>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions Condition="'$(VisualStudioVersion)'=='10.0'">WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(VisualStudioVersion)'=='11.0'">WINVER=0x0600;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(VisualStudioVersion)'=='12.0'">WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=NTDDI_WIN7;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(VisualStudioVersion)'=='12.0'">NTDDI_VERSION=NTDDI_WIN7;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
