@@ -32,9 +32,9 @@ update_version=1
 while [ "$1"x != ""x ]
 do
   if [ "$flag"x == ""x ]; then
-    if [ "$1"x == "-conf"x ]; then
+    if [ "$1"x == "-configuration"x ] || [ "$1"x == "-conf"x ]; then
       flag="configuration"
-    elif [ "$1"x == "-plat"x ]; then
+    elif [ "$1"x == "-platform"x ] || [ "$1"x == "-plat"x ]; then
       flag="platform"
     elif [ "$1"x == "-action"x ]; then
       flag="action"
@@ -91,16 +91,21 @@ echo "#define XY_VSFILTER_VERSION_MAJOR $ver_major
 #define XY_VSFILTER_VERSION_COMMIT_SHA1 \"$rev_sha1\"" > src/filters/transform/vsfilter/version_in.h
 fi
 
+# normalize some arguments
+action=`echo $action | awk '{ print tolower($0) }'`
+compiler=`echo $compiler | awk '{ print tolower($0) }'`
+platform=`echo $platform | awk '{ print tolower($0) }'`
+
 platform_type="x86"
-if [ "$platform"x = "x64"x ]; then
+if [ "$platform"x == "x64"x ]; then
   platform_type="x86_amd64"
 fi
 
-if [ "$compiler"x == "VS2010"x ] || [ "$compiler"x == "vs2010"x ]; then
+if [ "$compiler"x == "vs2010"x ]; then
   configuration=$configuration"|"$platform
-elif [ "$compiler"x == "VS2012"x ] || [ "$compiler"x == "vs2012"x ]; then
+elif [ "$compiler"x == "vs2012"x ]; then
   common_tools="%VS110COMNTOOLS%"
-elif [ "$compiler"x == "VS2013"x ] || [ "$compiler"x == "vs2013"x ]; then
+elif [ "$compiler"x == "vs2013"x ]; then
   common_tools="%VS120COMNTOOLS%"
 else
   echo "Invalid compiler argument: $compiler"
@@ -108,7 +113,7 @@ else
   exit -1
 fi
 
-if [ "$compiler"x != "VS2010"x ] && [ "$compiler"x != "vs2010"x ]; then
+if [ "$compiler"x != "vs2010"x ]; then
   if [ "$action"x == "build"x ]; then
     action=""
   else
@@ -120,7 +125,7 @@ fi
 for project in $projects
 do
 
-if [ "$compiler"x = "VS2010"x ] || [ "$compiler"x = "vs2010"x ]; then
+if [ "$compiler"x == "vs2010"x ]; then
 echo '
 CALL "'$common_tools'../../VC/vcvarsall.bat" '$platform_type'
 devenv "'$solution'" /'$action' "'$configuration'" /project "'$project'"
