@@ -8,7 +8,7 @@ function Usage()
   echo -e '-conf\t\t"Release"'
   echo -e '-plat\t\t"Win32"'
   echo -e '-action\t\tbuild'
-  echo -e '-proj\t\t"vsfilter xy_sub_filter"'
+  echo -e '-proj\t\t"vsfilter"'
   echo -e '-solution\tVSFilter.sln'
   echo -e '-compiler\tVS2010'
   echo -e "\nVisual Studio 2012:"
@@ -24,7 +24,7 @@ solution="VSFilter.sln"
 action="build"
 configuration="Release"
 platform="Win32"
-projects="vsfilter xy_sub_filter"
+projects="vsfilter"
 compiler="VS2010"
 common_tools="%VS100COMNTOOLS%"
 update_version=1
