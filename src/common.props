@@ -1,24 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <IntDir>$(SolutionDir)..\..\..\..\bin\obj\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)..\..\..\..\bin\lib\$(PlatformName)\</OutDir>
+    <OutDir>$(SolutionDir)bin\lib10\$(PlatformName)\</OutDir>
+    <OutDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)bin\lib11\$(PlatformName)\</OutDir>
+    <OutDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)bin\lib12\$(PlatformName)\</OutDir>
+    <IntDir>$(SolutionDir)bin\obj10\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)bin\obj11\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)bin\obj12\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
     <TargetName Condition="'$(Configuration)'=='Release'">$(ProjectName)R</TargetName>
     <TargetName Condition="'$(Configuration)'=='Debug'">$(ProjectName)D</TargetName>
-    <LinkIncremental Condition="'$(Configuration)'=='Debug' Or '$(Configuration)'=='Debug Filter' Or '$(Configuration)'=='Debug Lite'">true</LinkIncremental>
-    <LinkIncremental Condition="'$(Configuration)'=='Release' Or '$(Configuration)'=='Release Filter' Or '$(Configuration)'=='Release Lite'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)'=='Debug'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)'=='Release'">false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalOptions>/w34706 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(ANALYZE)'=='true'">/wd4244 /wd4996 /wd6031 /wd6309 /wd6387 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(VisualStudioVersion)'=='Release|12.0'">/Gw %(AdditionalOptions)</AdditionalOptions>
       <EnablePREfast Condition="'$(Platform)'=='Win32' And '$(ANALYZE)'=='true'">true</EnablePREfast>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>WINVER=0x0601;PSAPI_VERSION=1;_WINDOWS;WINDOWS;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WINVER=0x0601;_WIN32_WINNT=0x0601;PSAPI_VERSION=1;_WINDOWS;WINDOWS;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_WIN64;WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
@@ -41,7 +45,7 @@
       <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug' Or '$(Configuration)'=='Debug Filter' Or '$(Configuration)'=='Debug Lite'">
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug' Or '$(Configuration)'=='Debug Unicode'">
     <ClCompile>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat Condition="'$(Platform)'=='Win32'">EditAndContinue</DebugInformationFormat>
@@ -54,10 +58,10 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' Or '$(Configuration)'=='Release Filter' Or '$(Configuration)'=='Release Lite' Or '$(Configuration)'=='Release log' ">
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' Or '$(Configuration)'=='Release Unicode' Or '$(Configuration)'=='Release log'">
     <ClCompile>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -67,15 +71,10 @@
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <StringPooling>true</StringPooling>
-      <WholeProgramOptimization Condition="'$(UseLTCG)'=='true'">true</WholeProgramOptimization>
     </ClCompile>
-    <Lib>
-      <LinkTimeCodeGeneration Condition="'$(UseLTCG)'=='true'">true</LinkTimeCodeGeneration>
-    </Lib>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <LargeAddressAware Condition="'$(Platform)'=='Win32'">true</LargeAddressAware>
-      <LinkTimeCodeGeneration Condition="'$(UseLTCG)'=='true'">UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <MergeSections>.rdata=.text</MergeSections>
       <OptimizeReferences>true</OptimizeReferences>
       <SetChecksum>true</SetChecksum>

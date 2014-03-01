@@ -502,7 +502,7 @@ sint64 VDGetDiskFreeSpace(const wchar_t *path) {
 	static tpGetDiskFreeSpaceExW spGetDiskFreeSpaceExW;
 
 	if (!sbChecked) {
-		HMODULE hmodKernel = GetModuleHandle("kernel32.dll");
+		HMODULE hmodKernel = GetModuleHandle(L"kernel32.dll");
 		spGetDiskFreeSpaceExA = (tpGetDiskFreeSpaceExA)GetProcAddress(hmodKernel, "GetDiskFreeSpaceExA");
 		spGetDiskFreeSpaceExW = (tpGetDiskFreeSpaceExW)GetProcAddress(hmodKernel, "GetDiskFreeSpaceExW");
 
@@ -623,7 +623,7 @@ bool VDDeleteFileNT(const wchar_t *path) {
 
 bool VDDeletePathAutodetect(const wchar_t *path) {
 	if (VDIsWindowsNT()) {
-		spDeleteFileW = (tpDeleteFileW)GetProcAddress(GetModuleHandle("kernel32"), "DeleteFileW");
+		spDeleteFileW = (tpDeleteFileW)GetProcAddress(GetModuleHandle(L"kernel32"), "DeleteFileW");
 		VDRemoveFile = VDDeleteFileNT;
 	} else
 		VDRemoveFile = VDDeleteFile9x;
@@ -675,8 +675,8 @@ uint64 VDFileGetLastWriteTime(const wchar_t *path) {
 }
 
 VDStringW VDFileGetRootPath(const wchar_t *path) {
-	static tpGetVolumePathNameW spGetVolumePathNameW = (tpGetVolumePathNameW)GetProcAddress(GetModuleHandle("kernel32.dll"), "GetVolumePathNameW");
-	static tpGetFullPathNameW spGetFullPathNameW = (tpGetFullPathNameW)GetProcAddress(GetModuleHandle("kernel32.dll"), "GetFullPathNameW");
+	static tpGetVolumePathNameW spGetVolumePathNameW = (tpGetVolumePathNameW)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetVolumePathNameW");
+	static tpGetFullPathNameW spGetFullPathNameW = (tpGetFullPathNameW)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetFullPathNameW");
 
 	VDStringW fullPath(VDGetFullPath(path));
 
@@ -696,7 +696,7 @@ VDStringW VDFileGetRootPath(const wchar_t *path) {
 }
 
 VDStringW VDGetFullPath(const wchar_t *partialPath) {
-	static tpGetFullPathNameW spGetFullPathNameW = (tpGetFullPathNameW)GetProcAddress(GetModuleHandle("kernel32.dll"), "GetFullPathNameW");
+	static tpGetFullPathNameW spGetFullPathNameW = (tpGetFullPathNameW)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetFullPathNameW");
 
 	union {
 		char		a[MAX_PATH];
@@ -738,6 +738,67 @@ VDStringW VDGetFullPath(const wchar_t *partialPath) {
 		return VDStringW(partialPath);
 	}
 }
+
+VDStringW VDGetLongPathA(const wchar_t *s) {
+	const VDStringA& pathA = VDTextWToA(s);
+	CHAR buf[MAX_PATH];
+
+	DWORD len = GetLongPathNameA(pathA.c_str(), buf, MAX_PATH);
+	VDStringW longPath;
+
+	if (!len)
+		longPath = s;
+	else if (len <= MAX_PATH)
+		longPath = VDTextAToW(buf);
+	else if (len > MAX_PATH) {
+		vdfastvector<CHAR> extbuf(len, 0);
+
+		DWORD len2 = GetLongPathNameA(pathA.c_str(), extbuf.data(), len);
+
+		if (len2 && len2 <= len)
+			longPath = VDTextAToW(extbuf.data());
+		else
+			longPath = s;
+	}
+
+	return longPath;
+}
+
+VDStringW VDGetLongPathW(const wchar_t *s) {
+	WCHAR buf[MAX_PATH];
+
+	DWORD len = GetLongPathNameW(s, buf, MAX_PATH);
+	VDStringW longPath;
+
+	if (!len)
+		longPath = s;
+	else if (len <= MAX_PATH)
+		longPath = buf;
+	else if (len > MAX_PATH) {
+		vdfastvector<WCHAR> extbuf(len, 0);
+
+		DWORD len2 = GetLongPathNameW(s, extbuf.data(), len);
+
+		if (len2 && len2 <= len)
+			longPath = extbuf.data();
+		else
+			longPath = s;
+	}
+
+	return longPath;
+}
+
+#if VD_CPU_X86
+	VDStringW VDGetLongPathAutodetect(const wchar_t *s) {
+		VDGetLongPath = VDIsWindowsNT() ? VDGetLongPathW : VDGetLongPathA;
+
+		return VDGetLongPath(s);
+	}
+
+	extern VDStringW (*VDGetLongPath)(const wchar_t *path) = VDGetLongPathAutodetect;
+#else
+	extern VDStringW (*VDGetLongPath)(const wchar_t *path) = VDGetLongPathW;
+#endif
 
 VDStringW VDMakePath(const wchar_t *base, const wchar_t *file) {
 	if (!*base)
@@ -888,6 +949,86 @@ VDStringW VDGetSystemPath() {
 		return VDGetSystemPathNT();
 
 	return VDGetSystemPath9x();
+}
+
+void VDGetRootPaths(vdvector<VDStringW>& paths) {
+	union {
+		WCHAR w[512];
+		CHAR a[1024];
+	} buf;
+
+	if (VDIsWindowsNT()) {
+		vdfastvector<WCHAR> heapbufw;
+		WCHAR *pw = buf.w;
+		DWORD wlen = vdcountof(buf.w);
+
+		for(;;) {
+			*pw = 0;
+
+			DWORD r = GetLogicalDriveStringsW(wlen, pw);
+
+			if (!r)
+				return;
+
+			if (r <= wlen)
+				break;
+
+			heapbufw.resize(r);
+			wlen = r;
+			pw = heapbufw.data();
+		}
+
+		while(*pw) {
+			paths.push_back() = pw;
+			pw += wcslen(pw) + 1;
+		}
+	} else {
+		vdfastvector<CHAR> heapbufa;
+		CHAR *pa = buf.a;
+		DWORD alen = vdcountof(buf.a);
+
+		for(;;) {
+			*pa = 0;
+
+			DWORD r = GetLogicalDriveStringsA(alen, pa);
+
+			if (!r)
+				return;
+
+			if (r <= alen)
+				break;
+
+			heapbufa.resize(r);
+			alen = r;
+			pa = heapbufa.data();
+		}
+
+		while(*pa) {
+			paths.push_back() = VDTextAToW(pa);
+			pa += strlen(pa) + 1;
+		}
+	}
+}
+
+VDStringW VDGetRootVolumeLabel(const wchar_t *rootPath) {
+	union {
+		char a[MAX_PATH * 2];
+		wchar_t w[MAX_PATH];
+	} buf;
+
+	DWORD maxComponentLength;
+	DWORD fsFlags;
+	VDStringW name;
+
+	if (VDIsWindowsNT()) {
+		if (GetVolumeInformationW(rootPath, buf.w, vdcountof(buf.w), NULL, &maxComponentLength, &fsFlags, NULL, 0))
+			name = buf.w;
+	} else {
+		if (GetVolumeInformationA(VDTextWToA(rootPath).c_str(), buf.a, vdcountof(buf.a), NULL, &maxComponentLength, &fsFlags, NULL, 0))
+			name = VDTextAToW(buf.a);
+	}
+
+	return name;
 }
 
 uint32 VDFileGetAttributesFromNativeW32(uint32 nativeAttrs) {

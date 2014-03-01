@@ -23,6 +23,8 @@
 
 #define _ATL_APARTMENT_THREADED
 
+#include "vsfilter_config.h"
+
 #include "../../../DSUtil/SharedInclude.h"
 #include "../../../../include/stdafx_common.h"
 #include "../../../../include/stdafx_common_afx2.h"

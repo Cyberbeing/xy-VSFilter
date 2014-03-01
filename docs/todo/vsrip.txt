@@ -1,2 +1,0 @@
-- detect menu vob or make it selectable
-+ ALLVOBIDS

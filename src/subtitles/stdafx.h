@@ -39,6 +39,8 @@
 
 // TODO: reference additional headers your program requires here
 
+#include "vsfilter_config.h"
+
 #include <streams.h>
 #include "../DSUtil/DSUtil.h"
 #include "../DSUtil/SharedInclude.h"
