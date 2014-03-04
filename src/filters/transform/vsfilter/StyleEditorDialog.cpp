@@ -157,15 +157,20 @@ void CStyleEditorPPage::UpdateControlData(bool fSave)
 	else
 	{
 		m_font.SetWindowText(m_stss.fontName);
-		m_iCharset = -1;
-		for(int i = 0; i < CharSetLen; i++)
-		{
-			CString str;
-			str.Format(_T("%s (%d)"), CharSetNames[i], CharSetList[i]);
-			m_charset.AddString(str);
-			m_charset.SetItemData(i, CharSetList[i]);
-			if(m_stss.charSet == CharSetList[i]) m_iCharset = i;
-		}
+
+        if (m_charset.GetCount()==0)
+        {
+            m_iCharset = -1;
+            for(int i = 0; i < CharSetLen; i++)
+            {
+                CString str;
+                str.Format(_T("%s (%d)"), CharSetNames[i], CharSetList[i]);
+                m_charset.AddString(str);
+                m_charset.SetItemData(i, CharSetList[i]);
+                if(m_stss.charSet == CharSetList[i]) m_iCharset = i;
+            }
+        }
+
 		// TODO: allow floats in these edit boxes
 		m_spacing = m_stss.fontSpacing;
 		m_spacingspin.SetRange32(-10000, 10000);
