@@ -1,12 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <OutDir>$(SolutionDir)bin\lib10\$(PlatformName)\</OutDir>
-    <OutDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)bin\lib11\$(PlatformName)\</OutDir>
-    <OutDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)bin\lib12\$(PlatformName)\</OutDir>
-    <IntDir>$(SolutionDir)bin\obj10\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
-    <IntDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)bin\obj11\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
-    <IntDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)bin\obj12\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)bin\lib_$(VisualStudioVersion)\$(PlatformName)\</OutDir>
+    <IntDir>$(SolutionDir)bin\obj_$(VisualStudioVersion)\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
     <TargetName Condition="'$(Configuration)'=='Release'">$(ProjectName)R</TargetName>
     <TargetName Condition="'$(Configuration)'=='Debug'">$(ProjectName)D</TargetName>
     <TargetName Condition="'$(Configuration)'=='Release Unicode'">$(ProjectName)RU</TargetName>
@@ -70,7 +66,6 @@
       <OmitFramePointers Condition="'$(Platform)'=='Win32'">true</OmitFramePointers>
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <StringPooling>true</StringPooling>
     </ClCompile>
