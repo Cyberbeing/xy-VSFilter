@@ -155,7 +155,7 @@ void GetSubFileNames(CString fn, CAtlArray<CString>& paths, CString load_ext_lis
             {
                 const CString& fn = sl.GetNext(pos);
                 int l = fn.ReverseFind('.');
-                CString ext = fn.Mid(l+1);
+                CString ext = fn.Mid(l+1).MakeLower();
                 int ext_order = ext_support.ext_support_order(ext);
                 if (ext_order>-1)
                 {
