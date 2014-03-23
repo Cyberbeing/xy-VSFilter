@@ -65,9 +65,9 @@ inline CRectCoor2 GetMemClipRect(const CPointCoor2& p, const CRectCoor2& video_r
 {
     const int BLUR_ADJUST = 30 * 8;
     int vw = video_rect.Width();
-    int sw = (vw/6&~7);
+    int sw = (vw/6&~7)+8;//add 8 to aviod divided by 0
     int vh = video_rect.Height();
-    int sh = (vh/6&~7);
+    int sh = (vh/6&~7)+8;//add 8 to aviod divided by 0
     return CRect(
         CPoint(div_floor(-p.x,2*sw)*2*sw - BLUR_ADJUST,
                div_floor(-p.y,2*sh)*2*sh - BLUR_ADJUST),
