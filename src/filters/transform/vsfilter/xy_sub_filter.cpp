@@ -2385,10 +2385,10 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
         {
             if(pBF != (IBaseFilter*)this)
             {
-				CLSID filterID;
-				hr = pBF->GetClassID(&filterID);
 				CComQIPtr<ISubRenderConsumer> new_consumer(pBF);
-                
+                CLSID filterID;
+				hr = pBF->GetClassID(&filterID);
+				
 				if(!new_consumer && filterID == CLSID_EnhancedVideoRenderer)
 				{
 					//EVR wouldn't implement ISubRenderConsumer itself, but a custom presenter might.
