@@ -1368,7 +1368,16 @@ static bool LoadUUEFont(CTextFile* file)
     while(file->ReadString(s))
     {
         s.Trim();
-        if(s.IsEmpty() || s[0] == '[') break;
+        if(s.IsEmpty()) break;
+        if(s[0] == '[') // check for standard section headers
+        {
+        	if(s.Find(_T("[Script Info]")) == 0) break;
+        	if(s.Find(_T("[V4+ Styles]")) == 0) break;
+        	if(s.Find(_T("[V4 Styles]")) == 0) break;
+        	if(s.Find(_T("[Events]")) == 0) break;
+        	if(s.Find(_T("[Fonts]")) == 0) break;
+        	if(s.Find(_T("[Graphics]")) == 0) break;
+        }
         if(s.Find(_T("fontname:")) == 0) {LoadFont(font); font.Empty(); continue;}
 
         font += s;
