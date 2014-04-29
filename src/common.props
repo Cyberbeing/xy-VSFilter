@@ -15,6 +15,8 @@
       <AdditionalOptions>/w34706 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(ANALYZE)'=='true'">/wd4244 /wd4996 /wd6031 /wd6309 /wd6387 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(VisualStudioVersion)'=='Release|12.0'">/Gw %(AdditionalOptions)</AdditionalOptions>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32' And '$(VisualStudioVersion)'&gt;'10.0'">NoExtensions</EnableEnhancedInstructionSet>
       <EnablePREfast Condition="'$(Platform)'=='Win32' And '$(ANALYZE)'=='true'">true</EnablePREfast>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -59,7 +61,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' Or '$(Configuration)'=='Release Unicode' Or '$(Configuration)'=='Release log'">
     <ClCompile>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
