@@ -1290,16 +1290,12 @@ inline CStringW::PCXSTR TryNextStr(CStringW::PXSTR * buff, WCHAR sep = WCHAR(','
 
 inline int NextInt(CStringW::PXSTR * buff, WCHAR sep = WCHAR(',')) //throw(...)
 {
-    CStringW str = TryNextStr(buff, sep);
+    CStringW::PCXSTR str = TryNextStr(buff, sep);
 
     const wchar_t *fmtstr = L"%d";
-    if (str.GetLength() > 2) {
-        CStringW left = str.Left(2);
-        left.MakeLower();
-        if (left == L"&h" || left == L"0x") {
-            str.Delete(0, 2);
-            fmtstr = L"%x";
-        }
+    if (str[0] == '&' && (str[1] == 'h' || str[1] == 'H') || str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
+        fmtstr = L"%x";
+        str += 2;
     }
 
     int ret;
