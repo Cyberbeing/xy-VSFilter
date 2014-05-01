@@ -2140,7 +2140,15 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end,
 
 void CSimpleTextSubtitle::AddSTSEntryOnly( CStringW str, bool fUnicode, int start, int end, CString style /*= _T("Default")*/, const CString& actor /*= _T("")*/, const CString& effect /*= _T("")*/, const CRect& marginRect /*= CRect(0,0,0,0)*/, int layer /*= 0*/, int readorder /*= -1*/ )
 {
-    if(str.Trim().IsEmpty() || start > end) return;
+	if (start > end) return;
+	bool all_whitespace = true;
+	for (int i = 0; i < str.GetLength(); i++) {
+		if (!CStringW::StrTraits::IsSpace(str[i])) {
+			all_whitespace = false;
+			break;
+		}
+	}
+	if (all_whitespace) return;
 
     str.Remove('\r');
     str.Replace(L"\n", L"\\N");
