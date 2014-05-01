@@ -659,6 +659,8 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 	bihOut.biCompression = m_outputFmt[iPosition/2]->biCompression;
 	bihOut.biSizeImage = w*h*bihOut.biBitCount>>3;
 
+    const CMediaType& mt = m_pInput->CurrentMediaType();
+
 	if(iPosition&1)
 	{
 		pmt->formattype = FORMAT_VideoInfo;
@@ -676,10 +678,8 @@ HRESULT CBaseVideoFilter::GetMediaType(int iPosition, CMediaType* pmt)
 		vih->bmiHeader = bihOut;
 		vih->dwPictAspectRatioX = arx;
 		vih->dwPictAspectRatioY = ary;
-		if(IsVideoInterlaced()) vih->dwInterlaceFlags = AMINTERLACE_IsInterlaced;
+		vih->dwInterlaceFlags = ((VIDEOINFOHEADER2*)mt.Format())->dwInterlaceFlags;
 	}
-
-	CMediaType& mt = m_pInput->CurrentMediaType();
 
 	// these fields have the same field offset in all four structs
 	((VIDEOINFOHEADER*)pmt->Format())->AvgTimePerFrame = ((VIDEOINFOHEADER*)mt.Format())->AvgTimePerFrame;

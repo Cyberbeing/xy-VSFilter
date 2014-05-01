@@ -276,9 +276,9 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 
 	SubPicDesc spd = m_spd;
 
-	CComPtr<IMediaSample> pOut;
+	CComPtr<IMediaSample2> pOut;
 	BYTE* pDataOut = NULL;
-	if(FAILED(hr = GetDeliveryBuffer(spd.w, spd.h, &pOut))
+	if (FAILED(hr = GetDeliveryBuffer(spd.w, spd.h, (IMediaSample**)&pOut))
 	|| FAILED(hr = pOut->GetPointer(&pDataOut)))
 		return hr;
 	pOut->SetTime(&rtStart, &rtStop);
@@ -286,6 +286,23 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	pOut->SetDiscontinuity(pIn->IsDiscontinuity() == S_OK);
 	pOut->SetSyncPoint(pIn->IsSyncPoint() == S_OK);
 	pOut->SetPreroll(pIn->IsPreroll() == S_OK);
+
+    AM_SAMPLE2_PROPERTIES inputProps;
+
+    if (SUCCEEDED(((IMediaSample2*)pIn)->GetProperties(sizeof(inputProps), (BYTE*)&inputProps))) {
+
+        AM_SAMPLE2_PROPERTIES outProps;
+
+        if (SUCCEEDED(pOut->GetProperties(sizeof(outProps), (BYTE*)&outProps))) {
+
+            outProps.dwTypeSpecificFlags = inputProps.dwTypeSpecificFlags;
+
+            pOut->SetProperties(sizeof(outProps), (BYTE*)&outProps);
+
+        }
+
+    }
+
 	//
 
 	BITMAPINFOHEADER bihOut;
