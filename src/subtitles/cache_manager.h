@@ -302,12 +302,12 @@ public:
 
     static const int TEXT_INFO_CACHE_ITEM_NUM = 2048;
     static const int ASS_TAG_LIST_CACHE_ITEM_NUM = 2048;
-    static const int SUBPIXEL_VARIANCE_CACHE_ITEM_NUM = 256;
-    static const int OVERLAY_CACHE_ITEM_NUM = 256;
+    static const int SUBPIXEL_VARIANCE_CACHE_ITEM_NUM = 2048;
+    static const int OVERLAY_CACHE_ITEM_NUM = 2048;
 
     static const int OVERLAY_NO_BLUR_CACHE_ITEM_NUM = 256;
     static const int SCAN_LINE_DATA_CACHE_ITEM_NUM = 512;
-    static const int PATH_CACHE_ITEM_NUM = 512;
+    static const int PATH_CACHE_ITEM_NUM = 768;
     static const int WORD_CACHE_ITEM_NUM = 512;
 
     static BitmapMruCache* GetBitmapMruCache();
