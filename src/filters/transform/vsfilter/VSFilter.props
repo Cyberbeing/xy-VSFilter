@@ -27,14 +27,11 @@
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <PreprocessorDefinitions>_USRDLL;ISOLATION_AWARE_ENABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' Or '$(Configuration)'=='Release log'">
     <ClCompile>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <OpenMPSupport>false</OpenMPSupport>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
