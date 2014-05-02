@@ -107,10 +107,9 @@ CSRIAPI void csri_close(csri_inst *inst)
 
 CSRIAPI int csri_request_fmt(csri_inst *inst, const struct csri_fmt *fmt)
 {
-	if (!inst) return -1;
-
-	if (!fmt->width || !fmt->height)
+	if (!inst || !fmt->width || !fmt->height) {
 		return -1;
+	}
 
 	// Check if pixel format is supported
 	switch (fmt->pixfmt) {
@@ -159,51 +158,22 @@ CSRIAPI void csri_render(csri_inst *inst, struct csri_frame *frame, double time)
 
 
 // No extensions supported
-CSRIAPI void *csri_query_ext(csri_rend *rend, csri_ext_id extname)
-{
-	return 0;
-}
+CSRIAPI void *csri_query_ext(csri_rend *rend, csri_ext_id extname) { return 0; }
 
 // Get info for renderer
 static struct csri_info csri_vsfilter_info = {
 #ifdef _DEBUG
-	"vsfilter_textsub_debug", // name
-	"2.39", // version (assumed version number, svn revision, patchlevel)
+	"xy-vsfilter_textsub_debug", // name
 #else
-	"vsfilter_textsub", // name
-	"2.39", // version (assumed version number, svn revision, patchlevel)
+	"xy-vsfilter_textsub", // name
 #endif
-	// 2.38-0611 is base svn 611
-	// 2.38-0611-1 is with clipfix and fax/fay patch
-	// 2.38-0611-2 adds CSRI
-	// 2.38-0611-3 fixes a bug in CSRI and adds fontcrash-fix and float-pos
-	// 2.38-0611-4 fixes be1-dots and ugly-fade bugs and adds xbord/ybord/xshad/yshad/blur tags and extends be
-	// 2.39 merges with guliverkli2 fork
-	"VSFilter/TextSub (guliverkli2)", // longname
+	"3.0", // version
+	"xy-VSFilter/TextSub", // longname
 	"Gabest", // author
-	"Copyright (c) 2003-2008 by Gabest and others" // copyright
+	"Copyright (c) 2003-2014 by Gabest et al." // copyright
 };
-CSRIAPI struct csri_info *csri_renderer_info(csri_rend *rend)
-{
-	return &csri_vsfilter_info;
-}
-// Only one supported, obviously
-CSRIAPI csri_rend *csri_renderer_byname(const char *name, const char *specific)
-{
-	if (strcmp(name, csri_vsfilter_info.name))
-		return 0;
-	if (specific && strcmp(specific, csri_vsfilter_info.specific))
-		return 0;
-	return &csri_vsfilter;
-}
-// Still just one
-CSRIAPI csri_rend *csri_renderer_default()
-{
-	return &csri_vsfilter;
-}
-// And no further
-CSRIAPI csri_rend *csri_renderer_next(csri_rend *prev)
-{
-	return 0;
-}
 
+CSRIAPI struct csri_info *csri_renderer_info(csri_rend *rend) { return &csri_vsfilter_info; }
+CSRIAPI csri_rend *csri_renderer_byname(const char *name, const char *specific) { return &csri_vsfilter; }
+CSRIAPI csri_rend *csri_renderer_default() { return &csri_vsfilter; }
+CSRIAPI csri_rend *csri_renderer_next(csri_rend *prev) { return 0; }
