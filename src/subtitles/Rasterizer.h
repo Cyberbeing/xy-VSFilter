@@ -238,7 +238,7 @@ public:
     static SharedPtrByte CompositeAlphaMask(const SharedPtrOverlay& overlay, const CRect& clipRect, 
         const GrayImage2* alpha_mask, 
         int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
-        CRect *outputDirtyRect);
+        CRect *outputDirtyRect, unsigned int* ret_val);
 
     static void Draw(XyBitmap* bitmap, 
         SharedPtrOverlay overlay, 

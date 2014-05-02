@@ -20,6 +20,9 @@ void *xy_malloc( int i_size, int align_shift )
     align_shift &= MASK;
     buf = (uint8_t *) malloc( i_size + MASK + sizeof( void ** ) +
               sizeof( int ) );
+    if(!buf)
+        return nullptr;
+
     align_buf = buf + MASK + sizeof( void ** ) + sizeof( int );
     align_buf -= (ALIGNMENT + ((intptr_t) align_buf & MASK) - align_shift) & MASK;
     *( (void **) ( align_buf - sizeof( void ** ) ) ) = buf;
@@ -51,6 +54,9 @@ void *xy_realloc( void *p, int i_size, int align_shift )
                          sizeof( int ) ) );
     }
     p_new = (uint8_t*)xy_malloc( i_size, align_shift );
+    if(!p_new)
+        return nullptr;
+
     if( i_old_size > 0 && i_size > 0 )
     {
         memcpy( p_new, p, ( i_old_size < i_size ) ? i_old_size : i_size );

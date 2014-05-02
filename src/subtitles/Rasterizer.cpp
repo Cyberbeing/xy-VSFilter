@@ -1386,7 +1386,10 @@ void AlphaBlt(byte* pY,
     const byte* pAlphaMask, 
     const byte Y, 
     int h, int w, int src_stride, int dst_stride)
-{   
+{
+    if(!pY || !pAlphaMask)
+        return;
+
     __m128i zero = _mm_setzero_si128();
     __m128i s = _mm_set1_epi16(Y);               //s = c  0  c  0  c  0  c  0  c  0  c  0  c  0  c  0    
 
@@ -1658,7 +1661,7 @@ void OverlapRegion(tSpanBuffer& dst, const tSpanBuffer& src, int dx, int dy)
 SharedPtrByte Rasterizer::CompositeAlphaMask(const SharedPtrOverlay& overlay, const CRect& clipRect, 
     const GrayImage2* alpha_mask, 
     int xsub, int ysub, const DWORD* switchpts, bool fBody, bool fBorder, 
-    CRect *outputDirtyRect)
+    CRect *outputDirtyRect, unsigned int* ret_val)
 {
     //fix me: check and log error
     SharedPtrByte result;
@@ -1695,6 +1698,12 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(const SharedPtrOverlay& overlay, co
     // Grab the first colour
     DWORD color = switchpts[0];
     byte* s_base = (byte*)xy_malloc(overlay->mOverlayPitch * overlay->mOverlayHeight);
+    if(!s_base)
+    {
+        *ret_val = 1;
+        return result;
+    }
+
     const byte* alpha_mask_data = alpha_mask != NULL ? alpha_mask->data.get() : NULL;
     const int alpha_mask_pitch = alpha_mask != NULL ? alpha_mask->pitch : 0;
     if(alpha_mask_data!=NULL )
@@ -2921,7 +2930,12 @@ bool ScanLineData::ScanConvert(const PathData& path_data, const CSize& size)
     mEdgeHeapSize = 2048;
     mpEdgeBuffer = (Edge*)malloc(sizeof(Edge)*mEdgeHeapSize);
     // Initialize scanline list.
-    mpScanBuffer = new unsigned int[mHeight];
+    mpScanBuffer = new (std::nothrow) unsigned int[mHeight];
+    if (!mpScanBuffer) {
+        TRACE(_T("Error in ScanLineData::ScanConvert: mpScanBuffer is NULL"));
+        return false;
+    }
+
     memset(mpScanBuffer, 0, mHeight*sizeof(unsigned int));
     // Scan convert the outline.  Yuck, Bezier curves....
     // Unfortunately, Windows 95/98 GDI has a bad habit of giving us text
