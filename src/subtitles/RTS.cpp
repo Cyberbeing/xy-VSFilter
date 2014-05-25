@@ -2356,12 +2356,14 @@ bool CRenderedTextSubtitle::ParseSSATag( AssTagList *assTags, const CStringW& st
 
                 CStringW::PCXSTR newstart = FindChar(param_start, param_end, L',');
                 CStringW::PCXSTR newend = FindChar(param_start, param_end, L'\\');
-                if(newstart > param_start && newstart < newend)
+                if(newstart < newend)
                 {
-                    newstart = FastSkipWhiteSpaceRight(param_start, newstart);
-                    CStringW s(param_start, newstart - param_start);
-
-                    if(!s.IsEmpty()) params.Add(s);
+                    if(newstart > param_start)
+                    {
+                        newend = FastSkipWhiteSpaceRight(param_start, newstart);
+                        CStringW s(param_start, newend - param_start);
+                        if(!s.IsEmpty()) params.Add(s);
+                    }
                     param_start = newstart + 1;
                 }
                 else if(param_start<param_end)
