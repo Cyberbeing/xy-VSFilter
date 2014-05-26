@@ -1558,6 +1558,7 @@ bool CDirectVobSubFilter2::IsAppBlackListed()
 		_T("subtitleworkshop."), // Subtitle Workshop
 		_T("subtitleworkshop4."),
 		_T("darksouls."), // Dark Souls (Game)
+		_T("data."), // Dark Souls (Game - Steam Release)
 		_T("rometw."), // Rome Total War (Game)
 		_T("everquest2."), // EverQuest II (Game)
 		_T("yso_win."), // Ys Origin (Game)
