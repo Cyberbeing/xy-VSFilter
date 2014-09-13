@@ -643,7 +643,7 @@ wchar* VolNameToFirstName(const wchar *VolName,wchar *FirstName,size_t MaxSize,b
 
 
 #ifndef SFX_MODULE
-static void GenArcName(wchar *ArcName,wchar *GenerateMask,uint ArcNumber,bool &ArcNumPresent)
+static void GenArcName(wchar *ArcName,const wchar *GenerateMask,uint ArcNumber,bool &ArcNumPresent)
 {
   bool Prefix=false;
   if (*GenerateMask=='+')
@@ -766,7 +766,15 @@ static void GenArcName(wchar *ArcName,wchar *GenerateMask,uint ArcNumber,bool &A
     }
     const wchar *ChPtr=wcschr(MaskChars,toupperw(Mask[I]));
     if (ChPtr==NULL || QuoteMode)
+    {
       DateText[J]=Mask[I];
+#ifdef _WIN_ALL
+      // We do not allow ':' in Windows because of NTFS streams.
+      // Users had problems after specifying hh:mm mask.
+      if (DateText[J]==':')
+        DateText[J]='_';
+#endif
+    }
     else
     {
       size_t FieldPos=ChPtr-MaskChars;
@@ -801,7 +809,7 @@ static void GenArcName(wchar *ArcName,wchar *GenerateMask,uint ArcNumber,bool &A
 }
 
 
-void GenerateArchiveName(wchar *ArcName,size_t MaxSize,wchar *GenerateMask,bool Archiving)
+void GenerateArchiveName(wchar *ArcName,size_t MaxSize,const wchar *GenerateMask,bool Archiving)
 {
   // Must be enough space for archive name plus all stuff in mask plus
   // extra overhead produced by mask 'N' (archive number) characters.
