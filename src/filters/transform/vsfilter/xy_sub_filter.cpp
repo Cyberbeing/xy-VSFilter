@@ -14,6 +14,8 @@
 #include "xy_logger.h"
 
 #include "moreuuids.h"
+#include <Mfidl.h>
+#include <evr.h>
 
 #if ENABLE_XY_LOG_RENDERER_REQUEST
 #  define TRACE_RENDERER_REQUEST(msg) XY_LOG_TRACE(msg)
@@ -2384,6 +2386,26 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
             if(pBF != (IBaseFilter*)this)
             {
                 CComQIPtr<ISubRenderConsumer> new_consumer(pBF);
+                CLSID filterID;
+				hr = pBF->GetClassID(&filterID);
+				
+				if(!new_consumer && filterID == CLSID_EnhancedVideoRenderer)
+				{
+					//EVR wouldn't implement ISubRenderConsumer itself, but a custom presenter might.
+					CComQIPtr<IMFGetService> evrservices(pBF);
+					if(evrservices)
+					{
+						ISubRenderConsumer * tmpCI = NULL;
+						HRESULT hrevr = evrservices->GetService(MR_VIDEO_RENDER_SERVICE, __uuidof(ISubRenderConsumer), (LPVOID*)&tmpCI);
+						if(tmpCI)
+						{
+							CComQIPtr<ISubRenderConsumer> tmpconsumer(tmpCI);
+							new_consumer = tmpconsumer;
+							SAFE_RELEASE(tmpCI);
+						}
+					}
+				}
+
                 if (new_consumer)
                 {
                     ULONG new_meric = 0;
@@ -2405,6 +2427,8 @@ HRESULT XySubFilter::FindAndConnectConsumer(IFilterGraph* pGraph)
                             consumer = new_consumer;
                         }
                     }
+					m_consumer = consumer;
+					hr = UpdateParamFromConsumer(true);
                 }
             }
         }
