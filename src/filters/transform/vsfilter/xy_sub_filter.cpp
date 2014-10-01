@@ -163,6 +163,7 @@ STDMETHODIMP XySubFilter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
         QI(ISpecifyPropertyPages)
         QI(IAMStreamSelect)
         QI(ISubRenderProvider)
+        QI(ISubRenderFrame)
         QI(IXySubFilterGraphMutex)
         (riid==__uuidof(ISubRenderOptions)) ? GetInterface((ISubRenderProvider*)this, ppv) :
         __super::NonDelegatingQueryInterface(riid, ppv);
