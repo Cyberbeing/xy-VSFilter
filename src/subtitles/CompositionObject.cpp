@@ -30,7 +30,7 @@ CompositionObject::CompositionObject()
     m_nRLEDataSize  = 0;
     m_nRLEPos       = 0;
 	
-    memsetd(m_Colors, 0xFF000000, sizeof(m_Colors));
+    memsetd(m_Colors, 0x00000000, sizeof(m_Colors));
 }
 
 CompositionObject::~CompositionObject()
