@@ -74,7 +74,7 @@ XySubFilterAutoLoader::XySubFilterAutoLoader( LPUNKNOWN punk, HRESULT* phr
     m_load_web      = !!theApp.GetProfileInt(   ResStr(IDS_R_GENERAL), ResStr(IDS_RG_WEBLOAD      ), 0);
     m_load_embedded = !!theApp.GetProfileInt(   ResStr(IDS_R_GENERAL), ResStr(IDS_RG_EMBEDDEDLOAD ), 1);
     m_load_exts  =   theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST),
-        _T("ass;ssa;srt;sub;idx;sup;txt;usf;xss;ssf;smi;psb;rt"));
+        _T("ass;ssa;srt;idx;sup;txt;usf;xss;ssf;smi;psb;rt;sub"));
 
     m_loaded = false;
 
