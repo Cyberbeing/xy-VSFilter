@@ -54,7 +54,7 @@ public:
         LOADLEVEL_COUNT
     };
 
-    static const int REQUIRED_CONFIG_VERSION = 209;
+    static const int REQUIRED_CONFIG_VERSION = 706;
     static const int CUR_SUPPORTED_FILTER_VERSION = 39;
 
     typedef DirectVobSubXyOptions::CachesInfo CachesInfo;
@@ -71,6 +71,7 @@ protected:
 
     bool is_compatible();
     UINT GetCompatibleProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault);
+    CString GetCompatibleProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault);
 
     virtual HRESULT GetCurStyles(SubStyle sub_style[], int count) { return E_NOTIMPL; }
     virtual HRESULT SetCurStyles(const SubStyle sub_style[], int count) { return E_NOTIMPL; }

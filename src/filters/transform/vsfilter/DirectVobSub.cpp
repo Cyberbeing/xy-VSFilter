@@ -715,6 +715,16 @@ UINT DirectVobSubImpl::GetCompatibleProfileInt( LPCTSTR lpszSection, LPCTSTR lps
     return result;
 }
 
+CString DirectVobSubImpl::GetCompatibleProfileString( LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault )
+{
+    CString result = lpszDefault;
+    if (is_compatible())
+    {
+    	result = theApp.GetProfileString(lpszSection, lpszEntry, lpszDefault);
+    }
+    return result;
+}
+
 void DirectVobSubImpl::LoadKnownSourceFilters( CAtlArray<CStringW> *filter_guid,
     CAtlArray<CStringW> *filter_name )
 {
@@ -1094,31 +1104,31 @@ CDirectVobSub::CDirectVobSub( const Option *options, CCritSec * pLock )
     m_xy_int_opt[INT_ASPECT_RATIO_SETTINGS] = static_cast<CSimpleTextSubtitle::EPARCompensationType>(theApp.GetProfileInt(ResStr(IDS_R_TEXT), ResStr(IDS_RT_AUTOPARCOMPENSATION), 0));
     m_xy_bool_opt[BOOL_HIDE_TRAY_ICON] =  !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), 0);
 
-    m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM)
         , CacheManager::OVERLAY_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM)
         , CacheManager::OVERLAY_NO_BLUR_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM)
         , CacheManager::SCAN_LINE_DATA_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM)
         , CacheManager::PATH_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM)
+    m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM)
         , CacheManager::BITMAP_MRU_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM]<0) m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM)
+    m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM)
         , CacheManager::CLIPPER_MRU_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM]<0) m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_TEXT_INFO_CACHE_ITEM_NUM)
+    m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_TEXT_INFO_CACHE_ITEM_NUM)
         , CacheManager::TEXT_INFO_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM]<0) m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM] = 0;
 
@@ -1223,7 +1233,7 @@ CDirectVobSub::CDirectVobSub( const Option *options, CCritSec * pLock )
 
     //fix me: CStringw = CString
     m_xy_str_opt[STRING_LOAD_EXT_LIST] = 
-        theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), _T("ass;ssa;srt;idx;sup;txt;usf;xss;ssf;smi;psb;rt;sub"));
+        GetCompatibleProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), _T("ass;ssa;srt;idx;sup;txt;usf;xss;ssf;smi;psb;rt;sub"));
 
     CString str_pgs_yuv_setting = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_PGS_COLOR_TYPE), _T("GUESS.GUESS"));
     if (str_pgs_yuv_setting.Left(2).CompareNoCase(_T("TV"))==0)
@@ -1491,31 +1501,31 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
 
     m_xy_bool_opt[BOOL_HIDE_TRAY_ICON]      = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_HIDE_TRAY_ICON), 0);
 
-    m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_CACHE_MAX_ITEM_NUM)
         , CacheManager::OVERLAY_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_OVERLAY_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM)
         , CacheManager::OVERLAY_NO_BLUR_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_OVERLAY_NO_BLUR_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM)
         , CacheManager::SCAN_LINE_DATA_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_SCAN_LINE_DATA_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM)
+    m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_PATH_DATA_CACHE_MAX_ITEM_NUM)
         , CacheManager::PATH_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM]<0) m_xy_int_opt[INT_PATH_DATA_CACHE_MAX_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM)
+    m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_BITMAP_MRU_CACHE_ITEM_NUM)
         , CacheManager::BITMAP_MRU_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM]<0) m_xy_int_opt[INT_BITMAP_MRU_CACHE_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM)
+    m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_CLIPPER_MRU_CACHE_ITEM_NUM)
         , CacheManager::CLIPPER_MRU_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM]<0) m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM] = 0;
 
-    m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM] = theApp.GetProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_TEXT_INFO_CACHE_ITEM_NUM)
+    m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM] = GetCompatibleProfileInt(ResStr(IDS_R_PERFORMANCE), ResStr(IDS_RP_TEXT_INFO_CACHE_ITEM_NUM)
         , CacheManager::TEXT_INFO_CACHE_ITEM_NUM);
     if(m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM]<0) m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM] = 0;
 
@@ -1577,7 +1587,7 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
 
     //fix me: CStringw = CString
     m_xy_str_opt[STRING_LOAD_EXT_LIST] = 
-        theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), _T("ass;ssa;srt;idx;sup;txt;usf;xss;ssf;smi;psb;rt;sub"));
+        GetCompatibleProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_LOAD_EXT_LIST), _T("ass;ssa;srt;idx;sup;txt;usf;xss;ssf;smi;psb;rt;sub"));
 
     CString str_pgs_yuv_setting = theApp.GetProfileString(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_PGS_COLOR_TYPE), _T("GUESS.GUESS"));
     if (str_pgs_yuv_setting.Left(2).CompareNoCase(_T("TV"))==0)
