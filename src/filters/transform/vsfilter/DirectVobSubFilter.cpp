@@ -85,9 +85,9 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
     tmp.Format(ResStr(IDS_RP_PATH), 0);
     theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T("."));
     tmp.Format(ResStr(IDS_RP_PATH), 1);
-    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T("c:\\subtitles"));
-    tmp.Format(ResStr(IDS_RP_PATH), 2);
     theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T(".\\subtitles"));
+    tmp.Format(ResStr(IDS_RP_PATH), 2);
+    theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, _T(".\\subs"));
 
     m_fLoading = true;
 
