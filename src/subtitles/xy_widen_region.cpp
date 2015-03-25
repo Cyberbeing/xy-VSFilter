@@ -81,7 +81,7 @@ public:
 
     int m_rx, m_ry;
     float m_f_rx, m_f_ry;
-    float m_f_half_inv_rx, m_f_half_inv_ry;
+    double m_f_half_inv_rx, m_f_half_inv_ry;
 
     int *m_left_arc;
     int *m_left_arc_base;
@@ -632,7 +632,7 @@ int XyEllipse::init_cross_point()
 
 
     ASSERT(m_f_ry>0);
-    float rx_devide_ry = m_f_rx/m_f_ry;
+    float rx_divide_ry = m_f_rx/m_f_ry;
     float ry_2 = m_ry * m_ry;
 
     std::vector<int> cross_x_base(2*m_ry+1+1);
@@ -644,13 +644,13 @@ int XyEllipse::init_cross_point()
         int y=-m_ry;
         for ( ;y-dy<=m_ry;y++)
         {
-            //f_cross_x = rx_devide_ry * ( sqrt(ry_2-(y-dy)*(y-dy))-sqrt(ry_2-y*y) )
+            //f_cross_x = rx_divide_ry * ( sqrt(ry_2-(y-dy)*(y-dy))-sqrt(ry_2-y*y) )
             // But we have to do it this way because ry_2 may < y*y due to float rounding error
             float fxo_2 = ry_2 - float(y-dy)*float(y-dy);
             if (fxo_2<0) fxo_2 = 0;
             float fx_2 = ry_2 - float(y)*float(y);
             if (fx_2<0) fx_2 = 0;
-            float f_cross_x = rx_devide_ry * ( sqrt(fxo_2)-sqrt(fx_2) );
+            float f_cross_x = rx_divide_ry * ( sqrt(fxo_2)-sqrt(fx_2) );
             cross_x[y] = ceil(f_cross_x);
             //This assertion may fail, e.g. when (m_rx,m_ry)=(15,19) and dy=y=-19, because of rounding of float
             // ASSERT(cross_x[y]<=cross_x[y-1] && abs(cross_x[y])<=m_rx);
