@@ -236,6 +236,7 @@ bool CTextFile::ReadLine() {
 			else {
 				// Switch to ascii and read the line again
 				m_encoding = ASCII;
+				m_convertedBuffer.clear();
 				Seek(startPos, begin);
 				continue;
 			}
