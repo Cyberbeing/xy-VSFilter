@@ -29,7 +29,7 @@
 #include "xy_logger.h"
 #include <boost/flyweight/key_value.hpp>
 #include "xy_bitmap.h"
-#include "xy_widen_regoin.h"
+#include "xy_widen_region.h"
 
 #ifndef _MAX	/* avoid collision with common (nonconforming) macros */
 #define _MAX	(std::max)

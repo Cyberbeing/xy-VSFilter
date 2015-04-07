@@ -326,7 +326,7 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
     };
 
     std::vector<int> vertical_breakpoints(2*input_count);
-    std::vector<BreakPoint> herizon_breakpoints(input_count);
+    std::vector<BreakPoint> horizon_breakpoints(input_count);
 
     POSITION pos = input.GetHeadPosition();
     for(int i=0; i<input_count; i++)
@@ -335,12 +335,12 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
         vertical_breakpoints[2*i]=rect.top;
         vertical_breakpoints[2*i+1]=rect.bottom;
 
-        herizon_breakpoints[i].x = rect.left;
-        herizon_breakpoints[i].rect = &rect;
+        horizon_breakpoints[i].x = rect.left;
+        horizon_breakpoints[i].rect = &rect;
     }
 
     std::sort(vertical_breakpoints.begin(), vertical_breakpoints.end());
-    std::sort(herizon_breakpoints.begin(), herizon_breakpoints.end());
+    std::sort(horizon_breakpoints.begin(), horizon_breakpoints.end());
 
     CAtlArray<Segment> tempSegments;
     tempSegments.SetCount(vertical_breakpoints.size()-1);
@@ -361,7 +361,7 @@ void MergeRects(const XyRectExList& input, XyRectExList* output)
 
     for(int i=0; i<input_count; i++)
     {
-        const XyRectEx& rect = *herizon_breakpoints[i].rect;
+        const XyRectEx& rect = *horizon_breakpoints[i].rect;
 
         int start = 0, mid, end = count;
 

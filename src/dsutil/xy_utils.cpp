@@ -37,7 +37,7 @@ void MergeRects(const CAtlList<CRect>& input, CAtlList<CRect>* output)
 
     int input_count = input.GetCount();
     std::vector<int> vertical_breakpoints(2*input_count);
-    std::vector<BreakPoint> herizon_breakpoints(input_count + 1);
+    std::vector<BreakPoint> horizon_breakpoints(input_count + 1);
 
     POSITION pos = input.GetHeadPosition();
     for(int i=0; i<input_count; i++)
@@ -46,15 +46,15 @@ void MergeRects(const CAtlList<CRect>& input, CAtlList<CRect>* output)
         vertical_breakpoints[2*i]=rect.top;
         vertical_breakpoints[2*i+1]=rect.bottom;
 
-        herizon_breakpoints[i].x = rect.left;
-        herizon_breakpoints[i].rect = &rect;
+        horizon_breakpoints[i].x = rect.left;
+        horizon_breakpoints[i].rect = &rect;
     }
     CRect sentinel_rect(INT_MAX, 0, INT_MAX, INT_MAX);
-    herizon_breakpoints[input_count].x = INT_MAX;//sentinel
-    herizon_breakpoints[input_count].rect = &sentinel_rect;
+    horizon_breakpoints[input_count].x = INT_MAX;//sentinel
+    horizon_breakpoints[input_count].rect = &sentinel_rect;
 
     std::sort(vertical_breakpoints.begin(), vertical_breakpoints.end());
-    std::sort(herizon_breakpoints.begin(), herizon_breakpoints.end());
+    std::sort(horizon_breakpoints.begin(), horizon_breakpoints.end());
 
     std::vector<Segment> tempSegments(vertical_breakpoints.size()-1);
     int ptr = 1, prev = vertical_breakpoints[0], count = 0;
@@ -75,7 +75,7 @@ void MergeRects(const CAtlList<CRect>& input, CAtlList<CRect>* output)
 
     for(int i=0; i<=input_count; i++)
     {
-        const CRect& rect = *herizon_breakpoints[i].rect;
+        const CRect& rect = *horizon_breakpoints[i].rect;
 
         int start = 0, mid, end = count;
 

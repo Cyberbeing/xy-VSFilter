@@ -45,7 +45,7 @@
 
 // gathered from http://www.netwave.or.jp/~shikai/shikai/shcolor.htm
 
-static struct htmlcolor {TCHAR* name; DWORD color;} hmtlcolors[] =
+static struct htmlcolor {TCHAR* name; DWORD color;} htmlcolors[] =
 {
     {_T("white"), 0xffffff},
     {_T("whitesmoke"), 0xf5f5f5},
@@ -195,8 +195,8 @@ static struct htmlcolor {TCHAR* name; DWORD color;} hmtlcolors[] =
 
 CHtmlColorMap::CHtmlColorMap()
 {
-    for(int i = 0; i < countof(hmtlcolors); i++)
-        SetAt(hmtlcolors[i].name, hmtlcolors[i].color);
+    for(int i = 0; i < countof(htmlcolors); i++)
+        SetAt(htmlcolors[i].name, htmlcolors[i].color);
 }
 
 CHtmlColorMap g_colors;
