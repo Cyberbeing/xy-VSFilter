@@ -2088,29 +2088,39 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end,
                 m_segments.InsertAt(i, stss);
                 continue;
             }
-            if(start <= s.start && s.end <= end)
-            {
-                for(int j = 0, k = s.subs.GetCount(); j <= k; j++)
-                {
-                    if(j == k || sub.readorder < m_entries.GetAt(s.subs[j]).readorder)
-                    {
-                        s.subs.InsertAt(j, n);
-                        break;
+            if (start <= s.start && s.end <= end) {
+                size_t count = s.subs.GetCount();
+                // Take a shortcut when possible
+                if (!count || sub.readorder >= m_entries.GetAt(s.subs[count - 1]).readorder) {
+                    s.subs.Add(n);
+                } else {
+                    for (size_t j = 0; j < count; j++) {
+                        if (sub.readorder < m_entries.GetAt(s.subs[j]).readorder) {
+                            s.subs.InsertAt(j, n);
+                            break;
+                        }
                     }
                 }
             }
-            else if(s.start < end && end < s.end)
-            {
+
+            if (s.start < end && end < s.end) {
                 STSSegment stss(s.start, end);
                 stss.subs.Copy(s.subs);
-                for(int j = 0, k = s.subs.GetCount(); j <= k; j++)
-                {
-                    if(j == k || sub.readorder < m_entries.GetAt(stss.subs[j]).readorder)
-                    {
-                        stss.subs.InsertAt(j, n);
-                        break;
+
+                size_t count = stss.subs.GetCount();
+
+                // Take a shortcut when possible
+                if (!count || sub.readorder >= m_entries.GetAt(stss.subs[count - 1]).readorder) {
+                    stss.subs.Add(n);
+                } else {
+                    for (size_t j = 0; j < count; j++) {
+                        if (sub.readorder < m_entries.GetAt(stss.subs[j]).readorder) {
+                            stss.subs.InsertAt(j, n);
+                            break;
+                        }
                     }
                 }
+
                 s.start = end;
                 m_segments.InsertAt(i, stss);
             }
