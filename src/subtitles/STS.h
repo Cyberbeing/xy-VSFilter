@@ -82,8 +82,11 @@ public:
 
     void SetDefault();
 
-    bool operator == (const STSStyle& s)const;
-    bool IsFontStyleEqual(const STSStyle& s) const;
+	bool operator == (const STSStyle& s)const;
+    bool operator != (const STSStyle& s) const {
+        return !(*this == s);
+    };
+	bool IsFontStyleEqual(const STSStyle& s) const;
 
     void operator = (const LOGFONT& lf);
 
