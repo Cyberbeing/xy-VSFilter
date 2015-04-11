@@ -1240,54 +1240,67 @@ GrayImage2* CClipper::PaintBaseClipper()
 {
     GrayImage2* result = NULL;
     //m_pAlphaMask = NULL;
-    if(m_size.cx < 0 || m_size.cy < 0)
+    if (m_size.cx <= 0 || m_size.cy <= 0) {
         return result;
+    }
+
+    const size_t alphaMaskSize = size_t(m_size.cx) * m_size.cy;
 
     SharedPtrOverlay overlay;
+
     CWordPaintMachine::PaintBody( m_polygon, CPoint(0, 0), CPoint(0, 0), &overlay );
     int w =  overlay->mOverlayWidth,
         h =  overlay->mOverlayHeight;
     int x = (overlay->mOffsetX+4)>>3,
         y = (overlay->mOffsetY+4)>>3;
     int xo = 0, yo = 0;
+
     if(x < 0) {xo = -x; w -= -x; x = 0;}
     if(y < 0) {yo = -y; h -= -y; y = 0;}
     if(x+w > m_size.cx) w = m_size.cx-x;
     if(y+h > m_size.cy) h = m_size.cy-y;
+
     if(w <= 0 || h <= 0) return result;
 
     result = DEBUG_NEW GrayImage2();
-    if( !result )
+
+    if( !result ) {
         return result;
-    result->data.reset( reinterpret_cast<BYTE*>(xy_malloc(m_size.cx*m_size.cy)), xy_free );
+    }
+
+    result->data.reset( reinterpret_cast<BYTE*>(xy_malloc(alphaMaskSize)), xy_free );
     result->pitch = m_size.cx;
     result->size  = m_size;
     result->left_top.SetPoint(0, 0);
 
     BYTE * result_data = result->data.get();
+
     if(!result_data)
     {
         delete result;
         return NULL;
     }
 
-    memset( result_data, 0, m_size.cx*m_size.cy );
+    memset(result_data, (m_inverse ? 0x40 : 0), alphaMaskSize);
 
     const BYTE* src = overlay->mBody.get() + (overlay->mOverlayPitch * yo + xo);
     BYTE* dst = result_data + m_size.cx * y + x;
-    while(h--)
-    {
-        //for(int wt=0; wt<w; ++wt)
-        //  dst[wt] = src[wt];
-        memcpy(dst, src, w);
-        src += overlay->mOverlayPitch;
-        dst += m_size.cx;
-    }
-    if(m_inverse)
-    {
-        BYTE* dst = result_data;
-        for(int i = m_size.cx*m_size.cy; i>0; --i, ++dst)
-            *dst = 0x40 - *dst; // mask is 6 bit
+
+    if (m_inverse) {
+          for (ptrdiff_t i = 0; i < h; ++i) {
+            for (ptrdiff_t wt = 0; wt < w; ++wt) {
+                dst[wt] = 0x40 - src[wt];
+            }
+
+            src += overlay->mOverlayPitch;
+            dst += m_size.cx;
+          }
+    } else {
+       for (ptrdiff_t i = 0; i < h; ++i) {
+            memcpy(dst, src, w * sizeof(BYTE));
+            src += overlay->mOverlayPitch;
+            dst += m_size.cx;
+       }
     }
     return result;
 }
