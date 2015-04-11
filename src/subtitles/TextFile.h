@@ -22,15 +22,26 @@
 #pragma once
 
 #include <afx.h>
+#include <vector>
 
 class CTextFile : protected CStdioFile
 {
 public:
-	typedef enum {ASCII, UTF8, LE16, BE16, ANSI} enc;
+	enum enc {ASCII, UTF8, LE16, BE16};
 
 private:
 	enc m_encoding, m_defaultencoding;
 	int m_offset;
+
+	unsigned char m_readbuffer[4096];
+	size_t m_bufferPos;
+	size_t m_bufferCount;
+	std::vector<wchar_t> m_convertedBuffer;
+
+	enum charerror {CHARERR_NEED_MORE=-1, CHARERR_REOPEN=-2};
+
+	int NextChar();
+	bool ReadLine();
 
 public:
 	CTextFile(enc e = ASCII);
@@ -43,7 +54,6 @@ public:
 	bool IsUnicode();
 
 	// CFile
-	virtual UINT Read(void* lpBuf, UINT nCount);
 	CString GetFilePath() const;
 
 	// CStdioFile
@@ -52,13 +62,8 @@ public:
 	ULONGLONG GetLength() const;
 	ULONGLONG Seek(LONGLONG lOff, UINT nFrom);
 
-	void WriteString(LPCSTR lpsz/*CStringA str*/);
 	void WriteString(LPCWSTR lpsz/*CStringW str*/);
-	BOOL ReadString(CStringA& str);
 	BOOL ReadString(CStringW& str);
-
-protected:
-    virtual bool ReopenAsText();
 };
 
 class CWebTextFile : public CTextFile
@@ -73,10 +78,3 @@ public:
 	bool Save(LPCTSTR lpszFileName, enc e /*= ASCII*/);
 	void Close();
 };
-
-CStringW AToW(const CStringA& str);
-CStringA WToA(const CStringW& str);
-CString  AToT(const CStringA& str);
-CString  WToT(const CStringW& str);
-CStringA TToA(const CString&  str);
-CStringW TToW(const CString&  str);

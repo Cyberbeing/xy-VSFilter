@@ -125,11 +125,6 @@ static inline std::size_t hash_value(const CStringW& s)
     return CStringElementTraits<CStringW>::Hash(s);
 }
 
-static inline std::size_t hash_value(const CStringA& s)
-{
-    return CStringElementTraits<CStringA>::Hash(s);
-}
-
 static inline std::size_t hash_value(const CRect& s)
 {
     std::size_t hash = 515;

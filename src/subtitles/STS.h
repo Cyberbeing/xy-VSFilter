@@ -276,17 +276,11 @@ public:
     bool      IsEntryUnicode(int i);
     void      ConvertUnicode(int i, bool fUnicode);
 
-    CStringA GetStrA (int i, bool fSSA = false);
     CStringW GetStrW (int i, bool fSSA = false);
     CStringW GetStrWA(int i, bool fSSA = false);
 
-#ifdef UNICODE
 #  define GetStr GetStrW
-#else
-#  define GetStr GetStrA
-#endif
 
-    void SetStr(int i, CStringA str, bool fUnicode /* ignored */);
     void SetStr(int i, CStringW str, bool fUnicode);
 
     friend bool OpenMicroDVD(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet);
