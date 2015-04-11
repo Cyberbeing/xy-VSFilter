@@ -1,96 +1,96 @@
-vsfilter±Ê¼Ç
-1.CSimpleTextSubtitle¶ÁÈ¡ÎÄ±¾ÎÄ¼ş²¢¶ÔÆä×ö¼òµ¥·ÖÎö¡£¶ÁÈ¡ssa/assÊ±£¬¶Ô³ıĞ´ÔÚtextÖĞµÄÌØĞ§Ö®ÍâµÄtag½øĞĞ·ÖÎö£¬»á´¦ÀíÄÚÇ¶×ÖÌå£¬²»´¦ÀíÄÚÇ¶Í¼Æ¬¡£
-¶ÁÈ¡·ÖÎöÎÄ±¾ÎÄ¼şµÄµ÷ÓÃË³Ğò
+ï»¿vsfilterç¬”è®°
+1.CSimpleTextSubtitleè¯»å–æ–‡æœ¬æ–‡ä»¶å¹¶å¯¹å…¶åšç®€å•åˆ†æã€‚è¯»å–ssa/assæ—¶ï¼Œå¯¹é™¤å†™åœ¨textä¸­çš„ç‰¹æ•ˆä¹‹å¤–çš„tagè¿›è¡Œåˆ†æï¼Œä¼šå¤„ç†å†…åµŒå­—ä½“ï¼Œä¸å¤„ç†å†…åµŒå›¾ç‰‡ã€‚
+è¯»å–åˆ†ææ–‡æœ¬æ–‡ä»¶çš„è°ƒç”¨é¡ºåº
 	CSimpleTextSubtitle.open
-	Í¨¹ıº¯ÊıÖ¸ÕëÊı×éOpenFunctsµ÷ÓÃº¯ÊıOpenSubStationAlpha
-	OpenSubStationAlpha¶Ôssa/ass½øĞĞ·ÖÎö
+	é€šè¿‡å‡½æ•°æŒ‡é’ˆæ•°ç»„OpenFunctsè°ƒç”¨å‡½æ•°OpenSubStationAlpha
+	OpenSubStationAlphaå¯¹ssa/assè¿›è¡Œåˆ†æ
 
-2.CRenderedTextSubtitle¼Ì³ĞCSimpleTextSubtitle£¬CRenderedTextSubtitle.ParseSSATag¶ÔassÌØĞ§½øĞĞ·ÖÎö
-3.·ÖÎöassÌØĞ§µÄµ÷ÓÃË³Ğò
-	CRenderedTextSubtitle::Renderµ÷ÓÃ
-	CRenderedTextSubtitle::GetSubtitleµ÷ÓÃ
+2.CRenderedTextSubtitleç»§æ‰¿CSimpleTextSubtitleï¼ŒCRenderedTextSubtitle.ParseSSATagå¯¹assç‰¹æ•ˆè¿›è¡Œåˆ†æ
+3.åˆ†æassç‰¹æ•ˆçš„è°ƒç”¨é¡ºåº
+	CRenderedTextSubtitle::Renderè°ƒç”¨
+	CRenderedTextSubtitle::GetSubtitleè°ƒç”¨
 	CRenderedTextSubtitle.ParseSSATag
-CRenderedTextSubtitle::ParseSSATag½ö±»Æä×ÔÉí¼°º¯ÊıCRenderedTextSubtitle::GetSubtitleµ÷ÓÃ
-CRenderedTextSubtitle::GetSubtitle½ö±»CRenderedTextSubtitle::Renderµ÷ÓÃ
-4.äÖÈ¾×ÖÄ»µÄµ÷ÓÃË³Ğò
-	CRenderedTextSubtitle::Renderµ÷ÓÃ
-	CRect CLine::PaintBody¡¢CRect CLine::PaintOutline¡¢CLine::PaintShadowµ÷ÓÃ
-	CWord::Draw»òCWord.m_pOpaqueBox::Draw
-5.ass×ÖÄ»ÌØĞ§Ö®ÍâµÄ·ÖÎöÔÚopenÊ±Ò»´Î×öÍê£¬Ğ§ÂÊ²»ÖØÒª¡£ÌØĞ§·ÖÎöÃ¿Ò»´ÎÒ»ĞĞ(?)£¬·ÖÎö´úÂë¸´ÔÓ£¬¿ÉÄÜÊÇĞ§ÂÊµÄÆ¿¾±¡£
-6.ÎŞÍ·ÆïÊ¿opÌØĞ§ÎªÀı£¬Á½ĞĞ×ÖÄ»£¬Ò»ĞĞÔÚ×óÉÏ£¬Ò»ĞĞÔÚÓÒÏÂ£¬Í¬Ê±ÏÔÊ¾£¨Èô²»»º³å×ÖÄ»Í¼Ïñ£©£¬vsfilter´¦ÀíĞ§ÂÊºÜµÍ£¨±ÈÆğ½«Á½ĞĞºÍÎªÒ»ĞĞ£©£¬¿ÉÄÜÊÇ·Ö³ÉÁ½´ÎäÖÈ¾£¬´Ë´¦¿Ï¶¨ÓĞµÃ¸Ä½ø¡£
-7.CTextFileÓÃÓÚ´¦ÀíÎÄ±¾ÎÄ¼ş£¬CWebTextFileÔÚCTextFile»ù´¡ÉÏÔö¼ÓÁË´¦ÀíWebÎÄ±¾µÄ¹¦ÄÜ
-8.CVobSubFile´¦Àí.idx¡¢.ifo¡¢.subÎÄ¼ş£¬openµÄÊ±ºòÒ»´Î½«ËùÓĞÄÚÈİ¶ÁÈëÄÚ´æ¡£CVobSubFile.Renderµ÷ÓÃStretchBlt½«m_imgÖĞµÄÍ¼ÏñÊä³ö£¬StretchBlt±êÊ¶·ûÒâÒå¡°copies a bitmap from a source rectangle into a destination rectangle¡±¡£
+CRenderedTextSubtitle::ParseSSATagä»…è¢«å…¶è‡ªèº«åŠå‡½æ•°CRenderedTextSubtitle::GetSubtitleè°ƒç”¨
+CRenderedTextSubtitle::GetSubtitleä»…è¢«CRenderedTextSubtitle::Renderè°ƒç”¨
+4.æ¸²æŸ“å­—å¹•çš„è°ƒç”¨é¡ºåº
+	CRenderedTextSubtitle::Renderè°ƒç”¨
+	CRect CLine::PaintBodyã€CRect CLine::PaintOutlineã€CLine::PaintShadowè°ƒç”¨
+	CWord::Drawæˆ–CWord.m_pOpaqueBox::Draw
+5.asså­—å¹•ç‰¹æ•ˆä¹‹å¤–çš„åˆ†æåœ¨openæ—¶ä¸€æ¬¡åšå®Œï¼Œæ•ˆç‡ä¸é‡è¦ã€‚ç‰¹æ•ˆåˆ†ææ¯ä¸€æ¬¡ä¸€è¡Œ(?)ï¼Œåˆ†æä»£ç å¤æ‚ï¼Œå¯èƒ½æ˜¯æ•ˆç‡çš„ç“¶é¢ˆã€‚
+6.æ— å¤´éª‘å£«opç‰¹æ•ˆä¸ºä¾‹ï¼Œä¸¤è¡Œå­—å¹•ï¼Œä¸€è¡Œåœ¨å·¦ä¸Šï¼Œä¸€è¡Œåœ¨å³ä¸‹ï¼ŒåŒæ—¶æ˜¾ç¤ºï¼ˆè‹¥ä¸ç¼“å†²å­—å¹•å›¾åƒï¼‰ï¼Œvsfilterå¤„ç†æ•ˆç‡å¾ˆä½ï¼ˆæ¯”èµ·å°†ä¸¤è¡Œå’Œä¸ºä¸€è¡Œï¼‰ï¼Œå¯èƒ½æ˜¯åˆ†æˆä¸¤æ¬¡æ¸²æŸ“ï¼Œæ­¤å¤„è‚¯å®šæœ‰å¾—æ”¹è¿›ã€‚
+7.CTextFileç”¨äºå¤„ç†æ–‡æœ¬æ–‡ä»¶ï¼ŒCWebTextFileåœ¨CTextFileåŸºç¡€ä¸Šå¢åŠ äº†å¤„ç†Webæ–‡æœ¬çš„åŠŸèƒ½
+8.CVobSubFileå¤„ç†.idxã€.ifoã€.subæ–‡ä»¶ï¼Œopençš„æ—¶å€™ä¸€æ¬¡å°†æ‰€æœ‰å†…å®¹è¯»å…¥å†…å­˜ã€‚CVobSubFile.Renderè°ƒç”¨StretchBltå°†m_imgä¸­çš„å›¾åƒè¾“å‡ºï¼ŒStretchBltæ ‡è¯†ç¬¦æ„ä¹‰â€œcopies a bitmap from a source rectangle into a destination rectangleâ€ã€‚
 ------------------------------------
-CHtmlColorMap Ö» ÊÇ ¼Ì³ĞCAtlMap<CString, DWORD, CStringElementTraits<CString>>²¢Ìá¹©¹¹Ôìº¯Êı
-STSStyle±£´æ×ÖÌåstyle£¬²¢Ìá¹©½«STSStyle×ª»¯ÎªLOGFONT(A/W)µÄ²Ù×÷·ûº¯Êı<<=
+CHtmlColorMap åª æ˜¯ ç»§æ‰¿CAtlMap<CString, DWORD, CStringElementTraits<CString>>å¹¶æä¾›æ„é€ å‡½æ•°
+STSStyleä¿å­˜å­—ä½“styleï¼Œå¹¶æä¾›å°†STSStyleè½¬åŒ–ä¸ºLOGFONT(A/W)çš„æ“ä½œç¬¦å‡½æ•°<<=
 
-LOGFONTA¡¢LOGFONTW£¨=LOGFONT£©:LOGical FONT, defined in wingdi.h. The two is differed for one use a ansi facename(fontname) string while the other use a widechar version.
+LOGFONTAã€LOGFONTWï¼ˆ=LOGFONTï¼‰:LOGical FONT, defined in wingdi.h. The two is differed for one use a ansi facename(fontname) string while the other use a widechar version.
 in wingdi.h, LOGFONTW=LOGFONT. Similarly TEXTMETRIC=TEXTMETRICW.
 
 ----------------------
 CMyFont inherits from CFont and privids a constructor which has a parameter of type STSStyle&.
 	ascent: units above the baseline
 	descent: units below the baseline
-	µ±Ó¦ÓÃ³ÌĞòÒªÇó½«×Ö·û·ÅÖÃÔÚ (x, y) Î»ÖÃÊ±£¬·ÅÖÃ×Ö·ûµÄ·½Ê½ÊÇÊ¹ÆäÒıÓÃµã£¨¸½Í¼ÖĞÏÔÊ¾µÄµã£©·ÅÖÃÔÚ¸ÃÎ»ÖÃ¡£ÒıÓÃµãÖ¸¶¨Ò»ÌõË®Æ½Ïß£¬³ÆÎª×Ö·ûµÄ»ùÏß (baseline)¡£ÔÚÕı³£µÄ´òÓ¡ÖĞ£¬×Ö·ûµÄ»ùÏßÓ¦¸Ã¶ÔÆë¡£
+	å½“åº”ç”¨ç¨‹åºè¦æ±‚å°†å­—ç¬¦æ”¾ç½®åœ¨ (x, y) ä½ç½®æ—¶ï¼Œæ”¾ç½®å­—ç¬¦çš„æ–¹å¼æ˜¯ä½¿å…¶å¼•ç”¨ç‚¹ï¼ˆé™„å›¾ä¸­æ˜¾ç¤ºçš„ç‚¹ï¼‰æ”¾ç½®åœ¨è¯¥ä½ç½®ã€‚å¼•ç”¨ç‚¹æŒ‡å®šä¸€æ¡æ°´å¹³çº¿ï¼Œç§°ä¸ºå­—ç¬¦çš„åŸºçº¿ (baseline)ã€‚åœ¨æ­£å¸¸çš„æ‰“å°ä¸­ï¼Œå­—ç¬¦çš„åŸºçº¿åº”è¯¥å¯¹é½ã€‚
 
-´ËÍâ£¬×ÖÌåÖĞµÄÃ¿¸ö×Ö·û¶¼¾ßÓĞ ascent¡¢descent ºÍ advance width ÊôĞÔ¡£ascent ÊÇ×Ö·û³¬³ö»ùÏßÖ®ÉÏµÄ¾àÀë¡£descent ÊÇ×Ö·û³¬³ö»ùÏßÒÔÏÂµÄ¾àÀë¡£advance width Ö¸Ê¾ AWT Ó¦¸Ã·ÅÖÃÏÂÒ»¸ö×Ö·ûµÄÎ»ÖÃ¡£
+æ­¤å¤–ï¼Œå­—ä½“ä¸­çš„æ¯ä¸ªå­—ç¬¦éƒ½å…·æœ‰ ascentã€descent å’Œ advance width å±æ€§ã€‚ascent æ˜¯å­—ç¬¦è¶…å‡ºåŸºçº¿ä¹‹ä¸Šçš„è·ç¦»ã€‚descent æ˜¯å­—ç¬¦è¶…å‡ºåŸºçº¿ä»¥ä¸‹çš„è·ç¦»ã€‚advance width æŒ‡ç¤º AWT åº”è¯¥æ”¾ç½®ä¸‹ä¸€ä¸ªå­—ç¬¦çš„ä½ç½®ã€‚
 
-×Ö·ûÊı×é»ò×Ö·û´®Ò²¿ÉÒÔ¾ßÓĞ ascent¡¢descent ºÍ advance width ÊôĞÔ¡£Êı×éµÄ ascent ÊÇÊı×éÖĞËùÓĞ×Ö·ûµÄ×î´ó ascent¡£descent ÊÇÊı×éÖĞËùÓĞ×Ö·ûµÄ×î´ó descent¡£advance width ÊÇ×Ö·ûÊı×éÖĞÃ¿¸ö×Ö·ûµÄ advance width Ö®ºÍ¡£String µÄ advance ÊÇ String ÑØ»ùÏßµÄ¾àÀë¡£´Ë¾àÀëÊÇ String ¾ÓÖĞ»òÓÒ¶ÔÆëÓ¦¸ÃÊ¹ÓÃµÄ width¡£ 
+å­—ç¬¦æ•°ç»„æˆ–å­—ç¬¦ä¸²ä¹Ÿå¯ä»¥å…·æœ‰ ascentã€descent å’Œ advance width å±æ€§ã€‚æ•°ç»„çš„ ascent æ˜¯æ•°ç»„ä¸­æ‰€æœ‰å­—ç¬¦çš„æœ€å¤§ ascentã€‚descent æ˜¯æ•°ç»„ä¸­æ‰€æœ‰å­—ç¬¦çš„æœ€å¤§ descentã€‚advance width æ˜¯å­—ç¬¦æ•°ç»„ä¸­æ¯ä¸ªå­—ç¬¦çš„ advance width ä¹‹å’Œã€‚String çš„ advance æ˜¯ String æ²¿åŸºçº¿çš„è·ç¦»ã€‚æ­¤è·ç¦»æ˜¯ String å±…ä¸­æˆ–å³å¯¹é½åº”è¯¥ä½¿ç”¨çš„ widthã€‚ 
 ----------------------
-enum eftype: effect type, ¶¨ÒåÁË¼¸ÖÖÌØĞ§£¬¶ÔÓ¦ass×ÖÄ»ÌØĞ§ÓòµÄ¼¸¸öÑ¡Ïî¡£
+enum eftype: effect type, å®šä¹‰äº†å‡ ç§ç‰¹æ•ˆï¼Œå¯¹åº”asså­—å¹•ç‰¹æ•ˆåŸŸçš„å‡ ä¸ªé€‰é¡¹ã€‚
 CWord inherits Rasterizer
 CLine inherits CAtlList<CWord*>
 CSubtitile inherits CAtlList<CLine*>
-Õâ¼¸ÀàÓ¦¸ÃÊÇÓÃäÖÈ¾ÓÃµÄ
+è¿™å‡ ç±»åº”è¯¥æ˜¯ç”¨æ¸²æŸ“ç”¨çš„
 ----------------------
-STSStyleÑùÊ½
-CSTStypleMap ÑùÊ½±í
-STSEntry ¶ÔÓ¦ass×ÖÄ»ÀïµÄÒ»ĞĞ×ÖÄ»
-STSSegment Ö¸¶¨Ò»¸ö(Ê±)¶Î[start,end],STSSegment´æ´¢ÁËËùÓĞ¿ªÊ¼µ½½áÊø°üº¬ÁË[start,end](Ê±)¶ÎµÄ×ÖÄ»
-CSimpleTextSubtitle ¶ÔÓ¦Ò»¸öÎÄ±¾×ÖÄ»
-CSimpleTextSubtitle¼Ì³ĞCAtlArray<STSEntry>
-CSimpleTextSubtitle.CreateSegments()¸ù¾İËùÓĞSTSEntry´´½¨STSegment£¬¸ù¾İSTSEntry½«Ê±¼ä·Ö¶Î£¬Ã¿¶ÎĞèÒªÏÔÊ¾µÄSTSEntryÓÃÒ»¸öSTSSegment´æ´¢£¨ÊÂÊµÉÏ´Ëº¯ÊıÊµÏÖµÄ¹¦ÄÜÓëËùÓĞSTSEntryµÄË³ĞòÎŞ¹Ø£©
-CSimpleTextSubtitle.Sort(bool)¶ÔËùÓĞSTSEntryÅÅĞò£¬¸ù¾İ²ÎÊıÑ¡ÔñÅÅĞò·½Ê½£¬Ä¬ÈÏ²ÎÊıfalse:ÒÀSTSEntryµÄ(start,layer,reorder)ÉıĞòÅÅĞò;²ÎÊıtrue:ÒÀreorderÅÅĞò¡£ÅÅĞòºóµ÷ÓÃCreateSegmentsº¯Êı¸üĞÂm_segments£¨ÆäÊµ²¢ÎŞ±ØÒª£¬Òò²»ĞŞ¸ÄSTSEntry£¬Ö»¸Ä±äÆäË³ĞòµÄ»°£¬¶ÔÓ¦µÄSTSSegment²¢ÎŞĞë¸üĞÂ£©
-void CSimpleTextSubtitle::Append(CSimpleTextSubtitle& sts, int timeoff) É¾È¥ËùÓĞµÄSTSEntryÖĞstart´óÓÚtimeoffµÄ£¬½«stsÖĞËùÓĞµÄSTSEntryÆ½ÒÆtimeoff¸öµ¥Î»ºó¿½±´¡£timeoffĞ¡ÓÚ0£¬½«ÉèÎªËùÓĞSTSEntryµÄ½áÊøÊ±¼ä¡£
-void CSimpleTextSubtitle::TranslateStart(i,fps) ½«µÚi¸öSTSEntryµÄstart»»Ëã£¨Èç¹ûĞèÒªµÄ»°£©³ÉÊ±¼äÊä³ö
-void CSimpleTextSubtitle::TranslateEnd(i,fps)   Í¬ÉÏ
-void CSimpleTextSubtitle::TranslateSegmentStart(i,fps) Í¬ÉÏ
-void CSimpleTextSubtitle::TranslateSegmentStart(i,fps) Í¬ÉÏ
+STSStyleæ ·å¼
+CSTStypleMap æ ·å¼è¡¨
+STSEntry å¯¹åº”asså­—å¹•é‡Œçš„ä¸€è¡Œå­—å¹•
+STSSegment æŒ‡å®šä¸€ä¸ª(æ—¶)æ®µ[start,end],STSSegmentå­˜å‚¨äº†æ‰€æœ‰å¼€å§‹åˆ°ç»“æŸåŒ…å«äº†[start,end](æ—¶)æ®µçš„å­—å¹•
+CSimpleTextSubtitle å¯¹åº”ä¸€ä¸ªæ–‡æœ¬å­—å¹•
+CSimpleTextSubtitleç»§æ‰¿CAtlArray<STSEntry>
+CSimpleTextSubtitle.CreateSegments()æ ¹æ®æ‰€æœ‰STSEntryåˆ›å»ºSTSegmentï¼Œæ ¹æ®STSEntryå°†æ—¶é—´åˆ†æ®µï¼Œæ¯æ®µéœ€è¦æ˜¾ç¤ºçš„STSEntryç”¨ä¸€ä¸ªSTSSegmentå­˜å‚¨ï¼ˆäº‹å®ä¸Šæ­¤å‡½æ•°å®ç°çš„åŠŸèƒ½ä¸æ‰€æœ‰STSEntryçš„é¡ºåºæ— å…³ï¼‰
+CSimpleTextSubtitle.Sort(bool)å¯¹æ‰€æœ‰STSEntryæ’åºï¼Œæ ¹æ®å‚æ•°é€‰æ‹©æ’åºæ–¹å¼ï¼Œé»˜è®¤å‚æ•°false:ä¾STSEntryçš„(start,layer,reorder)å‡åºæ’åº;å‚æ•°true:ä¾reorderæ’åºã€‚æ’åºåè°ƒç”¨CreateSegmentså‡½æ•°æ›´æ–°m_segmentsï¼ˆå…¶å®å¹¶æ— å¿…è¦ï¼Œå› ä¸ä¿®æ”¹STSEntryï¼Œåªæ”¹å˜å…¶é¡ºåºçš„è¯ï¼Œå¯¹åº”çš„STSSegmentå¹¶æ— é¡»æ›´æ–°ï¼‰
+void CSimpleTextSubtitle::Append(CSimpleTextSubtitle& sts, int timeoff) åˆ å»æ‰€æœ‰çš„STSEntryä¸­startå¤§äºtimeoffçš„ï¼Œå°†stsä¸­æ‰€æœ‰çš„STSEntryå¹³ç§»timeoffä¸ªå•ä½åæ‹·è´ã€‚timeoffå°äº0ï¼Œå°†è®¾ä¸ºæ‰€æœ‰STSEntryçš„ç»“æŸæ—¶é—´ã€‚
+void CSimpleTextSubtitle::TranslateStart(i,fps) å°†ç¬¬iä¸ªSTSEntryçš„startæ¢ç®—ï¼ˆå¦‚æœéœ€è¦çš„è¯ï¼‰æˆæ—¶é—´è¾“å‡º
+void CSimpleTextSubtitle::TranslateEnd(i,fps)   åŒä¸Š
+void CSimpleTextSubtitle::TranslateSegmentStart(i,fps) åŒä¸Š
+void CSimpleTextSubtitle::TranslateSegmentStart(i,fps) åŒä¸Š
 
 int CSimpleTextSubtitle::SearchSub(int t, double fps) 
-    Èôt´óÓÚ»òµÈÓÚËùÓĞSTSEntryµÄstart£¬·µ»Ø×îºóÒ»¸öSTSEntry
-    ·ñÔò¶ş·Ö¶¨Î»µ½µÚÒ»¸östart==tµÄSTSEntry
-    ÈôÎ´ÕÒµ½start==tµÄSTSEntry£¬·µ»Ø-1
+    è‹¥tå¤§äºæˆ–ç­‰äºæ‰€æœ‰STSEntryçš„startï¼Œè¿”å›æœ€åä¸€ä¸ªSTSEntry
+    å¦åˆ™äºŒåˆ†å®šä½åˆ°ç¬¬ä¸€ä¸ªstart==tçš„STSEntry
+    è‹¥æœªæ‰¾åˆ°start==tçš„STSEntryï¼Œè¿”å›-1
 const STSSegment* CSimpleTextSubtitle::SearchSubs(int t, double fps, /*[out]*/ int* iSegment, int* nSegments)
-    ËÑË÷Ê¹t´¦ÓÚstartºÍendÖ®¼äµÄSTSSegment£¬±£´æÓÚiSegment·µ»Ø£¬nSegments±£´æËùÓĞSegments¸öÊı£¬·µ»ØÖµÎªSTSSegmentÊı×é
+    æœç´¢ä½¿tå¤„äºstartå’Œendä¹‹é—´çš„STSSegmentï¼Œä¿å­˜äºiSegmentè¿”å›ï¼ŒnSegmentsä¿å­˜æ‰€æœ‰Segmentsä¸ªæ•°ï¼Œè¿”å›å€¼ä¸ºSTSSegmentæ•°ç»„
 
-È«ÆÁ±äÁ¿Êı×éCharSetList¡¢CharSetNames¡¢CharSetLen: ×Ö·û¼¯
+å…¨å±å˜é‡æ•°ç»„CharSetListã€CharSetNamesã€CharSetLen: å­—ç¬¦é›†
 
-ÎÊÌâ£º
-1.CSimpleTextSubtitle¼Ì³ĞCAtlArray<STSEntry>£¬ÆäÊµ²»Í×£¬ÌØ±ğÊÇµ±Ò»¸ö×ÖÄ»±»µ±×÷Ò»¸öCAltArray¶ÔÏó´¦ÀíÊ±£¬¿ÉÄÜµ¼ÖÂºÜ¶àÎÊÌâ¡£
-2.sortÖĞ²»±Øµ÷ÓÃcreateSegment
-3.openÖĞ±éÀú¼¸ÖÖopenUSFµÈ¼¸ÖÖº¯ÊıµÄ×ö·¨ÓĞ´ıÉÌÈ¶£¬¸ù¾İÎÄ¼şºó×ºÖ±½ÓÑ¡ÏàÓ¦µÄº¯ÊıÈçºÎ£¿
-4.appendĞ¡ÓĞĞ§ÂÊÎÊÌâ
-5.SearchSub¶ş·Ö¶¨Î»ÊµÏÖµÃºÜÀÃ...ÇÒ·µ»ØÖµÒâÒå²»Ò»ÖÂ£¬bug£¿
-6.CharSetList¡¢CharSetNames¡¢CharSetLenÄÜ¸Ä³É³£Á¿(?)
+é—®é¢˜ï¼š
+1.CSimpleTextSubtitleç»§æ‰¿CAtlArray<STSEntry>ï¼Œå…¶å®ä¸å¦¥ï¼Œç‰¹åˆ«æ˜¯å½“ä¸€ä¸ªå­—å¹•è¢«å½“ä½œä¸€ä¸ªCAltArrayå¯¹è±¡å¤„ç†æ—¶ï¼Œå¯èƒ½å¯¼è‡´å¾ˆå¤šé—®é¢˜ã€‚
+2.sortä¸­ä¸å¿…è°ƒç”¨createSegment
+3.openä¸­éå†å‡ ç§openUSFç­‰å‡ ç§å‡½æ•°çš„åšæ³•æœ‰å¾…å•†æ¦·ï¼Œæ ¹æ®æ–‡ä»¶åç¼€ç›´æ¥é€‰ç›¸åº”çš„å‡½æ•°å¦‚ä½•ï¼Ÿ
+4.appendå°æœ‰æ•ˆç‡é—®é¢˜
+5.SearchSubäºŒåˆ†å®šä½å®ç°å¾—å¾ˆçƒ‚...ä¸”è¿”å›å€¼æ„ä¹‰ä¸ä¸€è‡´ï¼Œbugï¼Ÿ
+6.CharSetListã€CharSetNamesã€CharSetLenèƒ½æ”¹æˆå¸¸é‡(?)
 
 -----------------------------------
 This is indeed the problem. The DirectX Include directory contains an early version of BaseTsd.h which does not include the definition for POINTER_64. You should instead use the version of BaseTsd.h in the Platform SDK, either the one that ships with Visual Studio 2005 (C:\Program Files\Microsoft Visual Studio 8\VC\PlatformSDK\Include\BaseTsd.h) or in an updated Microsoft SDK installation. In order to get the compiler to use the right file, just remove BaseTsd.h from the DirectX Include directory.
 
 Simple enough?
 -----------------------------------
-CDirectVobSubFilter->CBaseVideoFilter->CTransformFilter£¬CTransformFilter "uses separate allocators for the input pin and the output pin. To create a filter that processes data in place, use the CTransInPlaceFilter class". ÕâÊÇvsfilterĞ§ÂÊµÍµÄÔ­Òò(?)
+CDirectVobSubFilter->CBaseVideoFilter->CTransformFilterï¼ŒCTransformFilter "uses separate allocators for the input pin and the output pin. To create a filter that processes data in place, use the CTransInPlaceFilter class". è¿™æ˜¯vsfilteræ•ˆç‡ä½çš„åŸå› (?)
 -----------------------------------
-DirectShow baseclassÖĞCTransformInputPin.Receiveµ÷ÓÃCTransformFiler.Receiveµ÷ÓÃCTransformFile.Transform(pIn,pOut)Íê³É×ª»»Êı¾İÈÎÎñ
-vsfilterÖĞCBaseVideoFilterÖØĞ´ÁËreceive£¬ÔÚreceiveÖĞµ÷ÓÃÁËÁíÒ»¸öTransform(pIn)£¬CDirectVobSubFilterÖØĞ´ÁËTransform(pIn)£¬×ÖÄ»Ğ´Èëµ½ÊÓÆµµÄ²½ÖèÓÉISubPic.AlphaBltº¯ÊıÍê³É(BltÒâÎªbit-block transform£¬²Î¼ûwikiµÄbit blit´ÊÌõ)
-CAMThread£º The CAMThread class is an abstract class for managing worker threads.
+DirectShow baseclassä¸­CTransformInputPin.Receiveè°ƒç”¨CTransformFiler.Receiveè°ƒç”¨CTransformFile.Transform(pIn,pOut)å®Œæˆè½¬æ¢æ•°æ®ä»»åŠ¡
+vsfilterä¸­CBaseVideoFilteré‡å†™äº†receiveï¼Œåœ¨receiveä¸­è°ƒç”¨äº†å¦ä¸€ä¸ªTransform(pIn)ï¼ŒCDirectVobSubFilteré‡å†™äº†Transform(pIn)ï¼Œå­—å¹•å†™å…¥åˆ°è§†é¢‘çš„æ­¥éª¤ç”±ISubPic.AlphaBltå‡½æ•°å®Œæˆ(Bltæ„ä¸ºbit-block transformï¼Œå‚è§wikiçš„bit blitè¯æ¡)
+CAMThreadï¼š The CAMThread class is an abstract class for managing worker threads.
 ------------------------------------
-CBasePin::CurrentRate()·µ»ØÖµµÄÒâÒå£¿
+CBasePin::CurrentRate()è¿”å›å€¼çš„æ„ä¹‰ï¼Ÿ
 ------------------------------------
 CheckInputType
-CDirectVobSubFilterÎ´ÖØĞ´CheckInputType
-CDirectVobSubFilter2ÖØĞ´CheckInputType£¬µ«Ö»Ôö¼ÓÁËauto loadingµÄ²âÊÔ
-CDirectVobSubFilter¡¢CDirectVobSubFilter2µÄ»ùÀàCBaseVideoFilterÖØĞ´CheckInputTypeÎª
+CDirectVobSubFilteræœªé‡å†™CheckInputType
+CDirectVobSubFilter2é‡å†™CheckInputTypeï¼Œä½†åªå¢åŠ äº†auto loadingçš„æµ‹è¯•
+CDirectVobSubFilterã€CDirectVobSubFilter2çš„åŸºç±»CBaseVideoFilteré‡å†™CheckInputTypeä¸º
 
 HRESULT CBaseVideoFilter::CheckInputType(const CMediaType* mtIn)
 {
@@ -115,10 +115,10 @@ HRESULT CBaseVideoFilter::CheckInputType(const CMediaType* mtIn)
 
 ------------------------------------
 InitSubPicQueue
-¶Ô×ÖÄ»Í¼Æ¬¶ÓÁĞ½øĞĞ³õÊ¼»¯£¬Áîm_spd.bits = (void*)m_pTempPicBuff
-Îªm_pSubPicQueueÉèÖÃÁËÒ»¸öCMemSubPicAllocator
+å¯¹å­—å¹•å›¾ç‰‡é˜Ÿåˆ—è¿›è¡Œåˆå§‹åŒ–ï¼Œä»¤m_spd.bits = (void*)m_pTempPicBuff
+ä¸ºm_pSubPicQueueè®¾ç½®äº†ä¸€ä¸ªCMemSubPicAllocator
 ------------------------------------
-CComPtrµÄ¸³Öµ²Ù×÷·ûµ÷ÓÃÁËAddRef£¬Attach²»µ÷ÓÃAddRef
+CComPtrçš„èµ‹å€¼æ“ä½œç¬¦è°ƒç”¨äº†AddRefï¼ŒAttachä¸è°ƒç”¨AddRef
 ---------------
 ATLINLINE ATLAPI_(IUnknown*) AtlComPtrAssign(IUnknown** pp, IUnknown* lp)
 {
@@ -149,42 +149,42 @@ void Attach(T* p2)
         }
 ------------------------------------
 bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, int& arx, int& ary)
-input pmt£ºmedia type;
+input pmtï¼šmedia type;
 output:
-	w£ºthe width of the video, in pixels;
+	wï¼šthe width of the video, in pixels;
 	h: the height of the video, in pixels;
 	arx, ary: the aspect ratio of the video.
 	@return: true if succeed.
-ÆäÖĞ´úÂëÆ¬¶Î£º
-¡­¡­
+å…¶ä¸­ä»£ç ç‰‡æ®µï¼š
+â€¦â€¦
     DWORD a = arx, b = ary;
     while(a) {int tmp = a; a = b % tmp; b = tmp;}
-¡­¡­
-ÎªÕ·×ªÏà³ı·¨Çó×î´ó¹«Ô¼Êı
+â€¦â€¦
+ä¸ºè¾—è½¬ç›¸é™¤æ³•æ±‚æœ€å¤§å…¬çº¦æ•°
 ------------------------------------
 class CBaseVideoFilter : public CTransformFilter
 {
-¡­¡­
+â€¦â€¦
 protected:
 int m_w, 		//the width of the video, in pixels;
     m_h, 		//the height of the video, in pixels;
     m_arx, m_ary;	//the aspect ratio of the video.
-¡­¡­
+â€¦â€¦
 }
 ------------------------------------
-CSubPicQueue²»ÄÜ±íÏÖ¶¯»­ÌØĞ§µÄÔ­Òò£º
-»º´æµÄ×ÖÄ»Í¼Æ¬Ê±¼äÎª¶ÔÓ¦µÄSTSEntryµÄ¿ªÊ¼¡¢½áÊøÊ±¼ä¡£¶ÔÓĞ¶¯»­ÌØĞ§µÄSTSEntry£¬µÚÒ»´ÎÉú³É´ËSTSEntry¶ÔÓ¦µÄ×ÖÄ»Í¼Æ¬´æÈë¶ÓÁĞºó£¬Ã¿´ÎÔÙÉú³É×ÖÄ»Í¼Æ¬£¬¶¼»áÌø¹ı´ËSTSEntry¶ÔÓ¦µÄÊ±¼ä¶Î£¬Ö±½ÓÉú³ÉºóÃæµÄÊ±¼ä¶ÔÓ¦µÄ×ÖÄ»Í¼Æ¬£¬´Ó¶øÒ»¸öSTSEntryÖ»»á¶ÔÓ¦Ò»¸ö×ÖÄ»Í¼Æ¬£¬Ò²¾Í²»»áÓĞ¶¯»­ÌØĞ§¡£
+CSubPicQueueä¸èƒ½è¡¨ç°åŠ¨ç”»ç‰¹æ•ˆçš„åŸå› ï¼š
+ç¼“å­˜çš„å­—å¹•å›¾ç‰‡æ—¶é—´ä¸ºå¯¹åº”çš„STSEntryçš„å¼€å§‹ã€ç»“æŸæ—¶é—´ã€‚å¯¹æœ‰åŠ¨ç”»ç‰¹æ•ˆçš„STSEntryï¼Œç¬¬ä¸€æ¬¡ç”Ÿæˆæ­¤STSEntryå¯¹åº”çš„å­—å¹•å›¾ç‰‡å­˜å…¥é˜Ÿåˆ—åï¼Œæ¯æ¬¡å†ç”Ÿæˆå­—å¹•å›¾ç‰‡ï¼Œéƒ½ä¼šè·³è¿‡æ­¤STSEntryå¯¹åº”çš„æ—¶é—´æ®µï¼Œç›´æ¥ç”Ÿæˆåé¢çš„æ—¶é—´å¯¹åº”çš„å­—å¹•å›¾ç‰‡ï¼Œä»è€Œä¸€ä¸ªSTSEntryåªä¼šå¯¹åº”ä¸€ä¸ªå­—å¹•å›¾ç‰‡ï¼Œä¹Ÿå°±ä¸ä¼šæœ‰åŠ¨ç”»ç‰¹æ•ˆã€‚
 ------------------------------------
-Ïß³Ì£º
-Ö÷ÒªµÄÏß³Ì°üÀ¨ÁË£º
-Ö÷Ïß³Ì£º		¸ºÔğÊÓÆµµÄ²¥·Å£»
-Éú³É×ÖÄ»Í¼Æ¬µÄÏß³Ì£º	Éú³É×ÖÄ»Í¼Æ¬¼ÓÈë¶ÓÁĞ£»
-½çÃæÏìÓ¦µÄÏß³Ì£º	´´½¨´°¿Ú£¬ÏìÓ¦½çÃæÊÂ¼ş¡£
-CDirectVobSubFilterÖØĞ´ÁËCTransformFilter::CompleteConnect·½·¨£¬ÔÚ´Ë·½·¨ÖĞ´´½¨½çÃæÏìÓ¦µÄÏß³Ì£¬Ïß³ÌÖ´ĞĞ´úÂëÎªSystrayThreadProc£¬´ËÏß³ÌÖĞ´´½¨ÁËvsfilterµÄsystray´°¿Ú(´´½¨ÁËÒ»¸öCSystrayWindowµÄ¶ÔÏó)£¬²¢¿ªÊ¼ÁËÖ÷ÏûÏ¢Ñ­»·¡£½çÃæÏìÓ¦µÄÏß³ÌµÄÏú»ÙÓÉCDirectVobSubFilter::JoinFilterGraphº¯Êı´¥·¢£¬µ±filterÀë¿ªgraphÊ±£¬CDirectVobSubFilter::JoinFilterGraphÏò½çÃæÏìÓ¦µÄÏß³ÌµÄ´°¿Ú·¢ËÍWM_CLOSEÏûÏ¢£¬Ê¹µÃ½çÃæÏìÓ¦µÄÏß³ÌÍË³ö¡£
+çº¿ç¨‹ï¼š
+ä¸»è¦çš„çº¿ç¨‹åŒ…æ‹¬äº†ï¼š
+ä¸»çº¿ç¨‹ï¼š		è´Ÿè´£è§†é¢‘çš„æ’­æ”¾ï¼›
+ç”Ÿæˆå­—å¹•å›¾ç‰‡çš„çº¿ç¨‹ï¼š	ç”Ÿæˆå­—å¹•å›¾ç‰‡åŠ å…¥é˜Ÿåˆ—ï¼›
+ç•Œé¢å“åº”çš„çº¿ç¨‹ï¼š	åˆ›å»ºçª—å£ï¼Œå“åº”ç•Œé¢äº‹ä»¶ã€‚
+CDirectVobSubFilteré‡å†™äº†CTransformFilter::CompleteConnectæ–¹æ³•ï¼Œåœ¨æ­¤æ–¹æ³•ä¸­åˆ›å»ºç•Œé¢å“åº”çš„çº¿ç¨‹ï¼Œçº¿ç¨‹æ‰§è¡Œä»£ç ä¸ºSystrayThreadProcï¼Œæ­¤çº¿ç¨‹ä¸­åˆ›å»ºäº†vsfilterçš„systrayçª—å£(åˆ›å»ºäº†ä¸€ä¸ªCSystrayWindowçš„å¯¹è±¡)ï¼Œå¹¶å¼€å§‹äº†ä¸»æ¶ˆæ¯å¾ªç¯ã€‚ç•Œé¢å“åº”çš„çº¿ç¨‹çš„é”€æ¯ç”±CDirectVobSubFilter::JoinFilterGraphå‡½æ•°è§¦å‘ï¼Œå½“filterç¦»å¼€graphæ—¶ï¼ŒCDirectVobSubFilter::JoinFilterGraphå‘ç•Œé¢å“åº”çš„çº¿ç¨‹çš„çª—å£å‘é€WM_CLOSEæ¶ˆæ¯ï¼Œä½¿å¾—ç•Œé¢å“åº”çš„çº¿ç¨‹é€€å‡ºã€‚
 ------------------------------------
-Ä¬ÈÏÑùÊ½
-CDirectVobSubFilterµÄº¯Êı
+é»˜è®¤æ ·å¼
+CDirectVobSubFilterçš„å‡½æ•°
 	put_AspectRatioSettings
 	put_TextSettings
 	put_Placement
-ÔÚ³É¹¦¶Ô²ÎÊı×öÁËĞŞ¸Äºó£¬»á½«×ÖÄ»ÎÄ¼şÀïµÄdefaultÑùÊ½¸ÄÎªvsfilterÉè¶¨µÄÄ¬ÈÏÑùÊ½¡£ÆäÖĞput_TextSettingsput_Placement¶¼ÓĞÇ¡µ±µÄÅĞ¶Ï±£Ö¤µ±²ÎÊıÃ»ÓĞ·¢Éú±ä»¯Ê±·µ»ØÒ»¸öS_FALSEÖµ£»µ«put_AspectRatioSettingsÃ¿´Î¶¼·µ»ØS_OK£¬¼´Ê¹²ÎÊıÎ´·¢Éú±ä»¯£¬´Ó¶øµ¼ÖÂ´ò¿ªvsfilterµÄproperty pageÉèÖÃ²ÎÊıºó£¬×ÖÄ»ÎÄ¼şÖ¸¶¨µÄdefaultÑùÊ½±Ø¶¨»á±»vsfilterµÄÄ¬ÈÏÑùÊ½Ìæ´ú¡£
+åœ¨æˆåŠŸå¯¹å‚æ•°åšäº†ä¿®æ”¹åï¼Œä¼šå°†å­—å¹•æ–‡ä»¶é‡Œçš„defaultæ ·å¼æ”¹ä¸ºvsfilterè®¾å®šçš„é»˜è®¤æ ·å¼ã€‚å…¶ä¸­put_TextSettingsput_Placementéƒ½æœ‰æ°å½“çš„åˆ¤æ–­ä¿è¯å½“å‚æ•°æ²¡æœ‰å‘ç”Ÿå˜åŒ–æ—¶è¿”å›ä¸€ä¸ªS_FALSEå€¼ï¼›ä½†put_AspectRatioSettingsæ¯æ¬¡éƒ½è¿”å›S_OKï¼Œå³ä½¿å‚æ•°æœªå‘ç”Ÿå˜åŒ–ï¼Œä»è€Œå¯¼è‡´æ‰“å¼€vsfilterçš„property pageè®¾ç½®å‚æ•°åï¼Œå­—å¹•æ–‡ä»¶æŒ‡å®šçš„defaultæ ·å¼å¿…å®šä¼šè¢«vsfilterçš„é»˜è®¤æ ·å¼æ›¿ä»£ã€‚

@@ -1,4 +1,4 @@
-Because Visual Studio becomes a turtle when there are many little projects, I didn't set up dependencies between them and didn't put them all into one workspace per application. These are more or less the base of everything, build them in this order first:
+﻿Because Visual Studio becomes a turtle when there are many little projects, I didn't set up dependencies between them and didn't put them all into one workspace per application. These are more or less the base of everything, build them in this order first:
 1. deccs
 2. dsutil
 3. ui
