@@ -24,10 +24,17 @@
 #include <afx.h>
 #include <vector>
 
-class CTextFile : protected CStdioFile
+#include "StdioFile64.h"
+
+class CTextFile : protected CStdioFile64
 {
 public:
-	enum enc {DEFAULT_ENCODING, UTF8, LE16, BE16};
+    enum enc {
+        DEFAULT_ENCODING,
+        UTF8,
+        LE16,
+        BE16
+    };
 
 private:
 	enc m_encoding, m_defaultencoding;

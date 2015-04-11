@@ -73,15 +73,13 @@
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="STS.cpp">
-    </ClCompile>
-    <ClCompile Include="subpixel_position_controler.cpp">
-    </ClCompile>
+    <ClCompile Include="StdioFile64.cpp" />
+    <ClCompile Include="STS.cpp" />
+    <ClCompile Include="subpixel_position_controler.cpp" />
     <ClCompile Include="SubtitleInputPin.cpp" />
     <ClCompile Include="TextFile.cpp" />
     <ClCompile Include="USFSubtitles.cpp" />
-    <ClCompile Include="VobSubFile.cpp">
-    </ClCompile>
+    <ClCompile Include="VobSubFile.cpp" />
     <ClCompile Include="VobSubFileRipper.cpp" />
     <ClCompile Include="VobSubImage.cpp" />
     <ClCompile Include="xy_clipper_paint_machine.cpp" />
@@ -112,6 +110,7 @@
     <ClInclude Include="SeparableFilter.h" />
     <ClInclude Include="SSF.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="StdioFile64.h" />
     <ClInclude Include="STS.h" />
     <ClInclude Include="subpixel_position_controler.h" />
     <ClInclude Include="SubtitleInputPin.h" />
