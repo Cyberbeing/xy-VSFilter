@@ -73,8 +73,8 @@ class CWord
 {
     bool NeedTransform  ();
     void Transform      (PathData* path_data, const CPointCoor2& org);
-    void Transform_C    (PathData* path_data, const CPointCoor2 &org );
-    void Transform_SSE2 (PathData* path_data, const CPointCoor2 &org );
+//  void Transform_C    (PathData* path_data, const CPointCoor2 &org );
+//  void Transform_SSE2 (PathData* path_data, const CPointCoor2 &org );
     bool CreateOpaqueBox();
 
 protected:

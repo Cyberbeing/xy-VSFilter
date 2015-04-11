@@ -115,7 +115,7 @@ inline CStringW::PCXSTR FindChar(CStringW::PCXSTR start, CStringW::PCXSTR end, W
 CMyFont::CMyFont(const STSStyleBase& style)
 {
     LOGFONT lf;
-    memset(&lf, 0, sizeof(lf));
+    ZeroMemory(&lf, sizeof(lf));
     lf <<= style;
     lf.lfHeight         = (LONG)(style.fontSize+0.5);
     lf.lfOutPrecision   = OUT_TT_PRECIS;
@@ -125,7 +125,7 @@ CMyFont::CMyFont(const STSStyleBase& style)
     if(!CreateFontIndirect(&lf))
     {
         _tcscpy(lf.lfFaceName, _T("Arial"));
-        CreateFontIndirect(&lf);
+        VERIFY(CreateFontIndirect(&lf));
     }
     HFONT hOldFont = SelectFont(g_hDC, *this);
     TEXTMETRIC tm;
@@ -405,31 +405,31 @@ bool CWord::NeedTransform()
            (fabs(m_target_scale_y-1.0) > 0.000001);
 }
 
-void CWord::Transform(PathData* path_data, const CPointCoor2& org)
-{
-    //// CPUID from VDub
-    //bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
+//void CWord::Transform(PathData* path_data, const CPointCoor2& org)
+//{
+//    //// CPUID from VDub
+//    //bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
+//
+//    //if(fSSE2) {	// SSE code
+//    //	Transform_SSE2(path_data, org);
+//    //} else		// C-code
+//          Transform_C(path_data, org);
+//}
 
-    //if(fSSE2) {	// SSE code
-    //	Transform_SSE2(path_data, org);
-    //} else		// C-code
-          Transform_C(path_data, org);
-}
-
-void CWord::Transform_C(PathData* path_data, const CPointCoor2 &org )
+void CWord::Transform(PathData* path_data, const CPointCoor2 &org )
 {
     ASSERT(path_data);
     const STSStyle& style = m_style.get();
 
-    double scalex = style.fontScaleX/100;
-    double scaley = style.fontScaleY/100;
+    const double scalex = style.fontScaleX/100.0;
+    const double scaley = style.fontScaleY/100.0;
 
-    double caz = cos((3.1415/180)*style.fontAngleZ);
-    double saz = sin((3.1415/180)*style.fontAngleZ);
-    double cax = cos((3.1415/180)*style.fontAngleX);
-    double sax = sin((3.1415/180)*style.fontAngleX);
-    double cay = cos((3.1415/180)*style.fontAngleY);
-    double say = sin((3.1415/180)*style.fontAngleY);
+    const double caz = cos((M_PI/180.0)*style.fontAngleZ);
+    const double saz = sin((M_PI/180.0)*style.fontAngleZ);
+    const double cax = cos((M_PI/180.0)*style.fontAngleX);
+    const double sax = sin((M_PI/180.0)*style.fontAngleX);
+    const double cay = cos((M_PI/180.0)*style.fontAngleY);
+    const double say = sin((M_PI/180.0)*style.fontAngleY);
 
     double xxx[3][3];
     /******************
@@ -510,24 +510,24 @@ void CWord::Transform_C(PathData* path_data, const CPointCoor2 &org )
 
     //S0*A0*A1*A2*A3*A4
 
-    tmp1 = 20000*m_target_scale_x;
+    tmp1 = 20000.0*m_target_scale_x;
     xxx[0][0] *= tmp1;
     xxx[0][1] *= tmp1;
     xxx[0][2] *= tmp1;
 
-    tmp1 = 20000*m_target_scale_y;
+    tmp1 = 20000.0*m_target_scale_y;
     xxx[1][0] *= tmp1;
     xxx[1][1] *= tmp1;
     xxx[1][2] *= tmp1;
 
     //A0*A1*A2*A3*A4+B0
 
-    xxx[2][2] += 20000;
+    xxx[2][2] += 20000.0;
 
     double scaled_org_x = org.x+0.5;
     double scaled_org_y = org.y+0.5;
 
-    for (int i = 0; i < path_data->mPathPoints; i++) {
+    for (ptrdiff_t i = 0; i < path_data->mPathPoints; i++) {
         double x, y, z, xx;
 
         xx = path_data->mpPathPoints[i].x;
@@ -537,7 +537,7 @@ void CWord::Transform_C(PathData* path_data, const CPointCoor2 &org )
         x = xxx[0][0] * xx + xxx[0][1] * y + xxx[0][2];
         y = xxx[1][0] * xx + xxx[1][1] * y + xxx[1][2];
 
-        z = z > 1000 ? z : 1000;
+        z = z > 1000.0 ? z : 1000.0;
 
         x = x / z;
         y = y / z;
@@ -550,270 +550,6 @@ void CWord::Transform_C(PathData* path_data, const CPointCoor2 &org )
             path_data->mpPathPoints[i].y = (path_data->mpPathPoints[i].y + 32)&~63;//fix me: readability
         }
     }
-}
-
-void CWord::Transform_SSE2(PathData* path_data, const CPointCoor2 &org )
-{
-	// __m128 union data type currently not supported with Intel C++ Compiler, so just call C version
-#ifdef __ICL
-	Transform_C(org);
-#else
-	// SSE code
-	// speed up ~1.5-1.7x
-	double scalex = m_style.get().fontScaleX/100;
-	double scaley = m_style.get().fontScaleY/100;
-
-	double caz = cos((3.1415/180)*m_style.get().fontAngleZ);
-	double saz = sin((3.1415/180)*m_style.get().fontAngleZ);
-	double cax = cos((3.1415/180)*m_style.get().fontAngleX);
-	double sax = sin((3.1415/180)*m_style.get().fontAngleX);
-	double cay = cos((3.1415/180)*m_style.get().fontAngleY);
-	double say = sin((3.1415/180)*m_style.get().fontAngleY);
-
-	__m128 __xshift = _mm_set_ps1(m_style.get().fontShiftX);
-	__m128 __yshift = _mm_set_ps1(m_style.get().fontShiftY);
-
-	__m128 __xorg = _mm_set_ps1(org.x);
-	__m128 __yorg = _mm_set_ps1(org.y);
-
-	__m128 __xscale = _mm_set_ps1(scalex);
-	__m128 __yscale = _mm_set_ps1(scaley);
-
-#ifdef _VSMOD
-	// patch m003. random text points
-	double xrnd = m_style.get().mod_rand.X*100;
-	double yrnd = m_style.get().mod_rand.Y*100;
-	double zrnd = m_style.get().mod_rand.Z*100;
-
-	srand(m_style.get().mod_rand.Seed);
-
-	__m128 __xsz = _mm_setzero_ps();
-	__m128 __ysz = _mm_setzero_ps();
-
-	__m128 __dst1x, __dst1y, __dst213x, __dst213y, __dst3x, __dst3y;
-
-	__m128 __miny;
-	__m128 __minx = _mm_set_ps(INT_MAX, INT_MAX, 0, 0);
-	__m128 __max = _mm_set_ps(-INT_MAX, -INT_MAX, 1, 1);
-
-	bool is_dist = m_style.get().mod_distort.enabled;
-	if(is_dist) {
-		for(int i = 0; i < path_data->mPathPoints; i++) {
-			__m128 __point = _mm_set_ps(path_data->mpPathPoints[i].x, path_data->mpPathPoints[i].y, 0, 0);
-			__minx = _mm_min_ps(__minx, __point);
-			__max = _mm_max_ps(__max, __point);
-		}
-
-		__m128 __zero = _mm_setzero_ps();
-		__max = _mm_sub_ps(__max, __minx); // xsz, ysz, 1, 1
-		__max = _mm_max_ps(__max, __zero);
-
-		__xsz = _mm_shuffle_ps(__max, __max, _MM_SHUFFLE(3,3,3,3));
-		__ysz = _mm_shuffle_ps(__max, __max, _MM_SHUFFLE(2,2,2,2));
-
-		__miny = _mm_shuffle_ps(__minx, __minx, _MM_SHUFFLE(2,2,2,2));
-		__minx = _mm_shuffle_ps(__minx, __minx, _MM_SHUFFLE(3,3,3,3));
-
-		__dst1x = _mm_set_ps1(m_style.get().mod_distort.pointsx[0]);
-		__dst1y = _mm_set_ps1(m_style.get().mod_distort.pointsy[0]);
-		__dst3x = _mm_set_ps1(m_style.get().mod_distort.pointsx[2]);
-		__dst3y = _mm_set_ps1(m_style.get().mod_distort.pointsy[2]);
-		__dst213x = _mm_set_ps1(m_style.get().mod_distort.pointsx[1]); // 2 - 1 - 3
-		__dst213x = _mm_sub_ps(__dst213x, __dst1x);
-		__dst213x = _mm_sub_ps(__dst213x, __dst3x);
-
-		__dst213y = _mm_set_ps1(m_style.get().mod_distort.pointsy[1]);
-		__dst213x = _mm_sub_ps(__dst213y, __dst1y);
-		__dst213x = _mm_sub_ps(__dst213y, __dst3y);
-	}
-#endif
-
-	__m128 __caz = _mm_set_ps1(caz);
-	__m128 __saz = _mm_set_ps1(saz);
-	__m128 __cax = _mm_set_ps1(cax);
-	__m128 __sax = _mm_set_ps1(sax);
-	__m128 __cay = _mm_set_ps1(cay);
-	__m128 __say = _mm_set_ps1(say);
-
-	// this can be paralleled for openmp
-	int mPathPointsD4 = path_data->mPathPoints / 4;
-	int mPathPointsM4 = path_data->mPathPoints % 4;
-        
-	for(ptrdiff_t i = 0; i < mPathPointsD4 + 1; i++) {
-        POINT* const temp_points = path_data->mpPathPoints + 4 * i;
-
-		__m128 __pointx, __pointy;
-		// we can't use load .-.
-		if(i != mPathPointsD4) {
-			__pointx = _mm_set_ps(temp_points[0].x, temp_points[1].x, temp_points[2].x, temp_points[3].x);
-			__pointy = _mm_set_ps(temp_points[0].y, temp_points[1].y, temp_points[2].y, temp_points[3].y);
-		} else { // last cycle
-			switch(mPathPointsM4) {
-				default:
-				case 0:
-					continue;
-				case 1:
-					__pointx = _mm_set_ps(temp_points[0].x, 0, 0, 0);
-					__pointy = _mm_set_ps(temp_points[0].y, 0, 0, 0);
-					break;
-				case 2:
-					__pointx = _mm_set_ps(temp_points[0].x, temp_points[1].x, 0, 0);
-					__pointy = _mm_set_ps(temp_points[0].y, temp_points[1].y, 0, 0);
-					break;
-				case 3:
-					__pointx = _mm_set_ps(temp_points[0].x, temp_points[1].x, temp_points[2].x, 0);
-					__pointy = _mm_set_ps(temp_points[0].y, temp_points[1].y, temp_points[2].y, 0);
-					break;
-			}
-		}
-
-#ifdef _VSMOD
-		__m128 __pointz = _mm_set_ps1(m_style.get().mod_z);
-
-		// distort
-		if(is_dist) {
-			//P = P0 + (P1 - P0)u + (P3 - P0)v + (P0 + P2 - P1 - P3)uv
-			__m128 __u = _mm_sub_ps(__pointx, __minx);
-			__m128 __v = _mm_sub_ps(__pointy, __miny);
-			__m128 __1_xsz = _mm_rcp_ps(__xsz);
-			__m128 __1_ysz = _mm_rcp_ps(__ysz);
-			__u = _mm_mul_ps(__u, __1_xsz);
-			__v = _mm_mul_ps(__v, __1_ysz);
-
-			// x
-			__pointx = _mm_mul_ps(__dst213x, __u);
-			__pointx = _mm_mul_ps(__pointx, __v);
-
-			__m128 __tmpx = _mm_mul_ps(__dst3x, __v);
-			__pointx = _mm_add_ps(__pointx, __tmpx);
-			__tmpx = _mm_mul_ps(__dst1x, __u);
-			__pointx = _mm_add_ps(__pointx, __tmpx);
-
-			__pointx = _mm_mul_ps(__pointx, __xsz);
-			__pointx = _mm_add_ps(__pointx, __minx);
-
-			// y
-			__pointy = _mm_mul_ps(__dst213y, __u);
-			__pointy = _mm_mul_ps(__pointy, __v);
-
-			__m128 __tmpy = _mm_mul_ps(__dst3y, __v);
-			__pointy = _mm_add_ps(__pointy, __tmpy);
-			__tmpy = _mm_mul_ps(__dst1y, __u);
-			__pointy = _mm_add_ps(__pointy, __tmpy);
-
-			__pointy = _mm_mul_ps(__pointy, __ysz);
-			__pointy = _mm_add_ps(__pointy, __miny);
-		}
-
-		// randomize
-		if(xrnd!=0 || yrnd!=0 || zrnd!=0) {
-			__declspec(align(16)) float rx[4], ry[4], rz[4];
-			for(int k=0; k<4; k++) {
-				rx[k] = xrnd > 0 ? (xrnd - rand() % (int)(xrnd * 2 + 1)) : 0;
-				ry[k] = yrnd > 0 ? (yrnd - rand() % (int)(yrnd * 2 + 1)) : 0;
-				rz[k] = zrnd > 0 ? (zrnd - rand() % (int)(zrnd * 2 + 1)) : 0;
-			}
-			__m128 __001 = _mm_set_ps1(0.01f);
-
-			if(xrnd!=0) {
-				__m128 __rx = _mm_load_ps(rx);
-				__rx = _mm_mul_ps(__rx, __001);
-				__pointx = _mm_add_ps(__pointx, __rx);
-			}
-
-			if(yrnd!=0) {
-				__m128 __ry = _mm_load_ps(ry);
-				__ry = _mm_mul_ps(__ry, __001);
-				__pointy = _mm_add_ps(__pointy, __ry);
-			}
-
-			if(zrnd!=0) {
-				__m128 __rz = _mm_load_ps(rz);
-				__rz = _mm_mul_ps(__rz, __001);
-				__pointz = _mm_add_ps(__pointz, __rz);
-			}
-		}
-#else
-		__m128 __pointz = _mm_set_ps1(0);
-#endif
-
-		// scale and shift
-		__m128 __tmpx;
-		if(m_style.get().fontShiftX!=0) {
-			__tmpx = _mm_mul_ps(__xshift, __pointy);
-			__tmpx = _mm_add_ps(__tmpx, __pointx);
-		} else {
-			__tmpx = __pointx;
-		}
-		__tmpx = _mm_mul_ps(__tmpx, __xscale);
-		__tmpx = _mm_sub_ps(__tmpx, __xorg);
-
-		__m128 __tmpy;
-		if(m_style.get().fontShiftY!=0) {
-			__tmpy = _mm_mul_ps(__yshift, __pointx);
-			__tmpy = _mm_add_ps(__tmpy, __pointy);
-		} else {
-			__tmpy = __pointy;
-		}
-		__tmpy = _mm_mul_ps(__tmpy, __yscale);
-		__tmpy = _mm_sub_ps(__tmpy, __yorg);
-
-		// rotate
-		__m128 __xx = _mm_mul_ps(__tmpx, __caz);
-		__m128 __yy = _mm_mul_ps(__tmpy, __saz);
-		__pointx = _mm_add_ps(__xx, __yy);
-		__xx = _mm_mul_ps(__tmpx, __saz);
-		__yy = _mm_mul_ps(__tmpy, __caz);
-		__pointy = _mm_sub_ps(__yy, __xx);
-
-		__m128 __zz = _mm_mul_ps(__pointz, __sax);
-		__yy = _mm_mul_ps(__pointy, __cax);
-		__pointy = _mm_add_ps(__yy, __zz);
-		__zz = _mm_mul_ps(__pointz, __cax);
-		__yy = _mm_mul_ps(__pointy, __sax);
-		__pointz = _mm_sub_ps(__zz, __yy);
-
-		__xx = _mm_mul_ps(__pointx, __cay);
-		__zz = _mm_mul_ps(__pointz, __say);
-		__pointx = _mm_add_ps(__xx, __zz);
-		__xx = _mm_mul_ps(__pointx, __say);
-		__zz = _mm_mul_ps(__pointz, __cay);
-		__pointz = _mm_sub_ps(__xx, __zz);
-
-		__zz = _mm_set_ps1(-19000);
-		__pointz = _mm_max_ps(__pointz, __zz);
-
-		__m128 __20000 = _mm_set_ps1(20000);
-		__zz = _mm_add_ps(__pointz, __20000);
-		__zz = _mm_rcp_ps(__zz);
-
-		__pointx = _mm_mul_ps(__pointx, __20000);
-		__pointx = _mm_mul_ps(__pointx, __zz);
-
-		__pointy = _mm_mul_ps(__pointy, __20000);
-		__pointy = _mm_mul_ps(__pointy, __zz);
-
-		__pointx = _mm_add_ps(__pointx, __xorg);
-		__pointy = _mm_add_ps(__pointy, __yorg);
-
-		__m128 __05 = _mm_set_ps1(0.5);
-
-		__pointx = _mm_add_ps(__pointx, __05);
-		__pointy = _mm_add_ps(__pointy, __05);
-
-		if(i == mPathPointsD4) { // last cycle
-			for(int k=0; k<mPathPointsM4; k++) {
-				temp_points[k].x = static_cast<LONG>(__pointx.m128_f32[3-k]);
-				temp_points[k].y = static_cast<LONG>(__pointy.m128_f32[3-k]);
-			}
-		} else {
-			for(int k=0; k<4; k++) {
-				temp_points[k].x = static_cast<LONG>(__pointx.m128_f32[3-k]);
-				temp_points[k].y = static_cast<LONG>(__pointy.m128_f32[3-k]);
-			}
-		}
-	}
-#endif // __ICL
 }
 
 bool CWord::CreateOpaqueBox()
