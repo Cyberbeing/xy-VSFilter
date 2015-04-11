@@ -4,7 +4,7 @@
 //
 //  enable_shared_from_raw.hpp
 //
-//  Copyright 2002, 2009 Peter Dimov
+//  Copyright 2002, 2009, 2014 Peter Dimov
 //  Copyright 2008-2009 Frank Mori Hess
 //
 //  Distributed under the Boost Software License, Version 1.0.
@@ -72,16 +72,15 @@ private:
     template< class X, class Y > friend inline void detail::sp_enable_shared_from_this( boost::shared_ptr<X> * ppx, Y const * py, boost::enable_shared_from_raw const * pe );
 #endif
 
-    shared_ptr<void> shared_from_this()
+    shared_ptr<void const volatile> shared_from_this() const
     {
         init_weak_once();
-        return shared_ptr<void>( weak_this_ );
+        return shared_ptr<void const volatile>( weak_this_ );
     }
 
-    shared_ptr<const void> shared_from_this() const
+    shared_ptr<void const volatile> shared_from_this() const volatile
     {
-        init_weak_once();
-        return shared_ptr<const void>( weak_this_ );
+        return const_cast< enable_shared_from_raw const * >( this )->shared_from_this();
     }
 
     // Note: invoked automatically by shared_ptr; do not call
@@ -107,9 +106,11 @@ private:
         }
     }
 
-    mutable weak_ptr<void> weak_this_;
+    mutable weak_ptr<void const volatile> weak_this_;
+
 private:
-    mutable shared_ptr<void> shared_this_;
+
+    mutable shared_ptr<void const volatile> shared_this_;
 };
 
 template<typename T>
