@@ -2005,6 +2005,11 @@ void CSimpleTextSubtitle::Empty()
     m_entries.RemoveAll();
 }
 
+static bool SegmentCompStart(const STSSegment& segment, int start)
+{
+    return (segment.start < start);
+}
+
 void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end, 
     CString style, const CString& actor, const CString& effect, const CRect& marginRect, int layer, int readorder)
 {
@@ -2035,101 +2040,77 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end,
     sub.layer      = layer;
     sub.start      = start;
     sub.end        = end;
-    sub.readorder  = readorder < 0 ? m_entries.GetCount() : readorder;
-    int n = m_entries.Add(sub);
+    sub.readorder  = readorder < 0 ? (int)m_entries.GetCount() : readorder;
+    int n = (int)m_entries.Add(sub);
 
-    int len = m_segments.GetCount();
+    if (start == end) return;
 
-    if(len == 0)
-    {
+    size_t segmentsCount = m_segments.GetCount();
+
+    if (segmentsCount == 0) { // First segment
         STSSegment stss(start, end);
         stss.subs.Add(n);
         m_segments.Add(stss);
-    }
-    else if(end <= m_segments[0].start)
-    {
-        STSSegment stss(start, end);
-        stss.subs.Add(n);
-        m_segments.InsertAt(0, stss);
-    }
-    else if(start >= m_segments[len-1].end)
-    {
-        STSSegment stss(start, end);
-        stss.subs.Add(n);
-        m_segments.Add(stss);
-    }
-    else
-    {
-        if(start < m_segments[0].start)
-        {
-            STSSegment stss(start, m_segments[0].start);
+    } else {
+        STSSegment* segmentsStart = m_segments.GetData();
+        STSSegment* segmentsEnd   = segmentsStart + segmentsCount;
+        STSSegment* segment = std::lower_bound(segmentsStart, segmentsEnd, start, SegmentCompStart);
+
+        size_t i = segment - segmentsStart;
+        if (i > 0 && m_segments[i - 1].end > start) {
+            i--;
+        } else if (i < segmentsCount && start < m_segments[i].start) {
+            // The new entry doesn't start in an existing segment.
+            // It might even not overlap with any segment at all
+            STSSegment stss(start, min(end, m_segments[i].start));
             stss.subs.Add(n);
-            start = m_segments[0].start;
-            m_segments.InsertAt(0, stss);
+            m_segments.InsertAt(i, stss);
+            i++;
         }
-
-        size_t i;
-        for(i = 0; i < m_segments.GetCount(); i++)
-        {
+        for (; i < m_segments.GetCount() && m_segments[i].start < end; i++) {
             STSSegment& s = m_segments[i];
 
-            if(start >= s.end)
-            {
-                continue;
-            }
-            else if(end <= s.start)
-            {
-                break;
-            }
-            else if(s.start < start && start < s.end)
-            {
+            if (s.start < start) {
+                // The beginning of current segment isn't modified
+                // by the new entry so separate it in two segments
                 STSSegment stss(s.start, start);
                 stss.subs.Copy(s.subs);
                 s.start = start;
                 m_segments.InsertAt(i, stss);
-                continue;
-            }
-            if (start <= s.start && s.end <= end) {
-                size_t count = s.subs.GetCount();
+            } else {
+                if (end < s.end) {
+                    // The end of current segment isn't modified
+                    // by the new entry so separate it in two segments
+                    STSSegment stss(end, s.end);
+                    stss.subs.Copy(s.subs);
+                    s.end = end; // s might not point on the right segment after inserting so do the modification now
+                    m_segments.InsertAt(i + 1, stss);
+                }
+
+                // The array might have been reallocated so create a new reference
+                STSSegment& sAdd = m_segments[i];
+
+                // Add the entry to the current segment now that we are you it belongs to it
+                size_t entriesCount = sAdd.subs.GetCount();
                 // Take a shortcut when possible
-                if (!count || sub.readorder >= m_entries.GetAt(s.subs[count - 1]).readorder) {
-                    s.subs.Add(n);
+                if (!entriesCount || sub.readorder >= m_entries.GetAt(sAdd.subs[entriesCount - 1]).readorder) {
+                    sAdd.subs.Add(n);
                 } else {
-                    for (size_t j = 0; j < count; j++) {
-                        if (sub.readorder < m_entries.GetAt(s.subs[j]).readorder) {
-                            s.subs.InsertAt(j, n);
+                    for (size_t j = 0; j < entriesCount; j++) {
+                        if (sub.readorder < m_entries.GetAt(sAdd.subs[j]).readorder) {
+                            sAdd.subs.InsertAt(j, n);
                             break;
                         }
                     }
                 }
-            }
-
-            if (s.start < end && end < s.end) {
-                STSSegment stss(s.start, end);
-                stss.subs.Copy(s.subs);
-
-                size_t count = stss.subs.GetCount();
-
-                // Take a shortcut when possible
-                if (!count || sub.readorder >= m_entries.GetAt(stss.subs[count - 1]).readorder) {
-                    stss.subs.Add(n);
-                } else {
-                    for (size_t j = 0; j < count; j++) {
-                        if (sub.readorder < m_entries.GetAt(stss.subs[j]).readorder) {
-                            stss.subs.InsertAt(j, n);
-                            break;
-                        }
-                    }
-                }
-
-                s.start = end;
-                m_segments.InsertAt(i, stss);
             }
         }
 
-        if(end > m_segments[i - 1].end)
-        {
-            STSSegment stss(m_segments[i - 1].end, end);
+        if (end > m_segments[i - 1].end) {
+            // The new entry ends after the last segment.
+            // It might even not overlap with it at all
+            ASSERT(i == m_segments.GetCount());
+            STSSegment stss(max(start, m_segments[i - 1].end), end);
             stss.subs.Add(n);
             m_segments.InsertAt(i, stss);
         }
