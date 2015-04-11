@@ -85,7 +85,7 @@ bool CTextFile::Open(LPCTSTR lpszFileName)
 
 bool CTextFile::Save(LPCTSTR lpszFileName, enc e)
 {
-	if(!__super::Open(lpszFileName, modeCreate|modeWrite|shareDenyWrite|(e==ASCII?typeText:typeBinary)))
+	if(!__super::Open(lpszFileName, modeCreate|modeWrite|shareDenyWrite|(e==DEFAULT_ENCODING?typeText:typeBinary)))
 		return(false);
 
 	if(e == UTF8)
@@ -121,7 +121,7 @@ CTextFile::enc CTextFile::GetEncoding()
 
 bool CTextFile::IsUnicode()
 {
-	return m_encoding != ASCII;
+	return m_encoding != DEFAULT_ENCODING;
 }
 
 // CFile
@@ -169,7 +169,7 @@ void CTextFile::WriteString(LPCWSTR lpsz/*CStringW str*/)
 {
 	CStringW str(lpsz);
 
-	if(m_encoding == ASCII)
+	if(m_encoding == DEFAULT_ENCODING)
 	{
 		__super::WriteString(str);
 	}
@@ -230,12 +230,12 @@ bool CTextFile::ReadLine() {
 
 		if (c == CHARERR_REOPEN) {
 			if (m_offset) {
-				// File had a BOM, so don't try to reopen as ASCII
+				// File had a BOM, so don't try to reopen as DEFAULT_ENCODING
 				c = '?';
 			}
 			else {
-				// Switch to ascii and read the line again
-				m_encoding = ASCII;
+				// Switch to DEFAULT_ENCODING and read the line again
+				m_encoding = DEFAULT_ENCODING;
 				m_convertedBuffer.clear();
 				Seek(startPos, begin);
 				continue;
@@ -272,7 +272,7 @@ int CTextFile::NextChar() {
 		}
 	}
 
-	if (m_encoding == ASCII) {
+	if (m_encoding == DEFAULT_ENCODING) {
 		return m_readbuffer[m_bufferPos++];
 	}
 

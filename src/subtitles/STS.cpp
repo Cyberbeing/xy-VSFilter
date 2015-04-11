@@ -1935,7 +1935,7 @@ CSimpleTextSubtitle::CSimpleTextSubtitle()
     m_defaultWrapStyle     = 0;
     m_collisions           = 0;
     m_fScaledBAS           = false;
-    m_encoding             = CTextFile::ASCII;
+    m_encoding             = CTextFile::DEFAULT_ENCODING;
     m_ePARCompensationType = EPCTDisabled;
     m_dPARCompensation     = 1.0;
     m_eYCbCrMatrix         = YCbCrMatrix_AUTO;
