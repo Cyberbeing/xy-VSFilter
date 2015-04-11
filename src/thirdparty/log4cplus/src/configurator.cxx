@@ -18,6 +18,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <functional>
 #include <log4cplus/configurator.h>
 #include <log4cplus/hierarchylocker.h>
 #include <log4cplus/helpers/loglog.h>
