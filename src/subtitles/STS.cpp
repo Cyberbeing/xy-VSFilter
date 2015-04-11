@@ -523,27 +523,24 @@ static CStringW SubRipper2SSA(CStringW str, int CharSet)
 
 static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
 {
-    int num = 0;
-
     CStringW buff;
-    while(file->ReadString(buff))
-    {
+    while (file->ReadString(buff)) {
         buff.Trim();
-        if(buff.IsEmpty()) continue;
+        if (buff.IsEmpty()) {
+            continue;
+        }
 
         WCHAR sep;
+        int num = 0; // This one isn't really used just assigned a new value
         int hh1, mm1, ss1, ms1, hh2, mm2, ss2, ms2;
         WCHAR msStr1[5] = {0}, msStr2[5] = {0};
         int c = swscanf_s(buff, L"%d%c%d%c%d%4[^-] --> %d%c%d%c%d%4s\n",
-            &hh1, &sep, 1, &mm1, &sep, 1, &ss1, msStr1, _countof(msStr1),
-            &hh2, &sep, 1, &mm2, &sep, 1, &ss2, msStr2, _countof(msStr2));
+                          &hh1, &sep, 1, &mm1, &sep, 1, &ss1, msStr1, _countof(msStr1),
+                          &hh2, &sep, 1, &mm2, &sep, 1, &ss2, msStr2, _countof(msStr2));
 
-        if(c == 1) // numbering
-        {
+        if (c == 1) { // numbering
             num = hh1;
-        }
-        else if (c >= 11) // time info
-        {
+        } else if (c >= 11) { // time info
             // Parse ms if present
             if (2 != swscanf_s(msStr1, L"%c%d", &sep, 1, &ms1)) {
                 ms1 = 0;
@@ -556,10 +553,11 @@ static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
 
             bool fFoundEmpty = false;
 
-            while(file->ReadString(tmp))
-            {
+            while (file->ReadString(tmp)) {
                 tmp.Trim();
-                if(tmp.IsEmpty()) fFoundEmpty = true;
+                if (tmp.IsEmpty()) {
+                    fFoundEmpty = true;
+                }
 
                 int num2;
                 WCHAR wc;
@@ -574,12 +572,10 @@ static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
             ret.Add(
                 SubRipper2SSA(str, CharSet),
                 file->IsUnicode(),
-                (((hh1*60 + mm1)*60) + ss1)*1000 + ms1,
-                (((hh2*60 + mm2)*60) + ss2)*1000 + ms2);
-        }
-        else if(c != EOF) // might be another format
-        {
-            return(false);
+                (((hh1 * 60 + mm1) * 60) + ss1) * 1000 + ms1,
+                (((hh2 * 60 + mm2) * 60) + ss2) * 1000 + ms2);
+        } else if (c != EOF) { // might be another format
+            return false;
         }
     }
 
@@ -1831,7 +1827,7 @@ static bool OpenUSF(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
     return(false);
 }
 
-static CStringW MPL22SSA(CStringW str, bool fUnicode, int CharSet) 
+static CStringW MPL22SSA(CStringW str, bool fUnicode, int CharSet)
 {
     // Convert MPL2 italic tags to MicroDVD italic tags
     if (str[0] == L'/') {
@@ -1844,25 +1840,23 @@ static CStringW MPL22SSA(CStringW str, bool fUnicode, int CharSet)
 
 static bool OpenMPL2(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
 {
-    CStringW buff;;
-    while(file->ReadString(buff))
-    {
+    CStringW buff;
+    while (file->ReadString(buff)) {
         buff.Trim();
-        if(buff.IsEmpty()) continue;
+        if (buff.IsEmpty()) {
+            continue;
+        }
 
         int start, end;
-        int c = swscanf(buff, L"[%d][%d]", &start, &end);
+        int c = swscanf_s(buff, L"[%d][%d]", &start, &end);
 
-        if(c == 2)
-        {
+        if (c == 2) {
             ret.Add(
-                MPL22SSA(buff.Mid(buff.Find(']', buff.Find(']') + 1) + 1), file->IsUnicode(), CharSet), 
+                MPL22SSA(buff.Mid(buff.Find(']', buff.Find(']') + 1) + 1), file->IsUnicode(), CharSet),
                 file->IsUnicode(),
-                start*100, end*100);
-        }
-        else if(c != EOF) // might be another format
-        {
-            return(false);
+                start * 100, end * 100);
+        } else if (c != EOF) { // might be another format
+            return false;
         }
     }
 
