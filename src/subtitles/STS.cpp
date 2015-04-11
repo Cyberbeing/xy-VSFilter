@@ -525,7 +525,7 @@ static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
 {
     CStringW buff;
     while (file->ReadString(buff)) {
-        buff.Trim();
+        FastTrim(buff);
         if (buff.IsEmpty()) {
             continue;
         }
@@ -554,7 +554,7 @@ static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
             bool fFoundEmpty = false;
 
             while (file->ReadString(tmp)) {
-                tmp.Trim();
+                FastTrim(tmp);
                 if (tmp.IsEmpty()) {
                     fFoundEmpty = true;
                 }
@@ -587,7 +587,7 @@ static bool OpenOldSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int Char
     CStringW buff;
     while(file->ReadString(buff))
     {
-        buff.Trim();
+        FastTrim(buff);
         if(buff.IsEmpty()) continue;
 
         for(int i = 0; i < buff.GetLength(); i++)
@@ -625,7 +625,7 @@ static bool OpenSubViewer(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
     CStringW buff;
     while(file->ReadString(buff))
     {
-        buff.Trim();
+        FastTrim(buff);
         if(buff.IsEmpty()) continue;
 
         if(buff[0] == '[')
@@ -636,7 +636,7 @@ static bool OpenSubViewer(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
                 if(j < i) break;
 
                 CStringW tag = buff.Mid(i,j-i);
-                tag.Trim();
+                FastTrim(tag);
                 tag.MakeLower();
 
                 i += j-i;
@@ -901,7 +901,7 @@ static bool OpenMicroDVD(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
     CStringW buff;;
     while(file->ReadString(buff))
     {
-        buff.Trim();
+        FastTrim(buff);
         if(buff.IsEmpty()) continue;
 
         int start, end;
@@ -1123,7 +1123,7 @@ static bool OpenSami(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
 
     while(file->ReadString(buff))
     {
-        buff.Trim();
+        FastTrim(buff);
         if(buff.IsEmpty()) continue;
 
         CStringW ubuff = buff;
@@ -1182,7 +1182,7 @@ static bool OpenVPlayer(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
     CStringW buff;
     while(file->ReadString(buff))
     {
-        buff.Trim();
+        FastTrim(buff);
         if(buff.IsEmpty()) continue;
 
         for(int i = 0; i < buff.GetLength(); i++)
@@ -1385,7 +1385,7 @@ static bool LoadUUEFont(CTextFile* file)
     CString s, font;
     while(file->ReadString(s))
     {
-        s.Trim();
+        FastTrim(s);
         if(s.IsEmpty()) break;
         if(s[0] == '[') // check for standard section headers
         {
@@ -1419,7 +1419,7 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
     CStringW buff;
     while(file->ReadString(buff))
     {
-        buff.Trim();
+        FastTrim(buff);
         if(buff.IsEmpty() || buff.GetAt(0) == ';') continue;
 
         CStringW entry = GetStr(buff, ':');
@@ -1658,7 +1658,7 @@ static bool OpenXombieSub(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
     CStringW buff;
     while(file->ReadString(buff))
     {
-        buff.Trim();
+        FastTrim(buff);
         if(buff.IsEmpty() || buff.GetAt(0) == ';') continue;
 
         CStringW entry = GetStr(buff, L'=');
@@ -1836,7 +1836,7 @@ static bool OpenMPL2(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
 {
     CStringW buff;
     while (file->ReadString(buff)) {
-        buff.Trim();
+        FastTrim(buff);
         if (buff.IsEmpty()) {
             continue;
         }
@@ -1864,7 +1864,7 @@ static bool OpenRealText(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
     CStringW buff;
     while(file->ReadString(buff))
     {
-        buff.Trim();
+        FastTrim(buff);
         if(buff.IsEmpty()) continue;
 
         szFile += CStringW(_T("\n")) + buff.GetBuffer();
@@ -2014,7 +2014,8 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end,
         <<" layer:"<<layer<<" readorder:"<<readorder
         <<" entries:"<<m_entries.GetCount()<<" seg:"<<m_segments.GetCount());
 
-    if (str.Trim().IsEmpty() || start > end) return;
+    FastTrim(str);
+    if (str.IsEmpty() || start > end) return;
 
     str.Remove('\r');
     str.Replace(L"\n", L"\\N");
@@ -2121,15 +2122,8 @@ void CSimpleTextSubtitle::Add(CStringW str, bool fUnicode, int start, int end,
 
 void CSimpleTextSubtitle::AddSTSEntryOnly( CStringW str, bool fUnicode, int start, int end, CString style /*= _T("Default")*/, const CString& actor /*= _T("")*/, const CString& effect /*= _T("")*/, const CRect& marginRect /*= CRect(0,0,0,0)*/, int layer /*= 0*/, int readorder /*= -1*/ )
 {
-	if (start > end) return;
-	bool all_whitespace = true;
-	for (int i = 0; i < str.GetLength(); i++) {
-		if (!CStringW::StrTraits::IsSpace(str[i])) {
-			all_whitespace = false;
-			break;
-		}
-	}
-	if (all_whitespace) return;
+    FastTrim(str);
+    if (str.IsEmpty() || start > end) return;
 
     str.Remove('\r');
     str.Replace(L"\n", L"\\N");
