@@ -37,15 +37,21 @@ bool ReadTextFile(
     SrcFile.SetHandleType(FILE_HANDLESTD);
 
   unsigned int DataSize=0,ReadSize;
-  const int ReadBlock=1024;
-  Array<char> Data(ReadBlock+5);
+  const int ReadBlock=4096;
+
+  // Our algorithm below needs at least two trailing zeroes after data.
+  // So for Unicode we provide 2 Unicode zeroes and one more byte
+  // in case read Unicode data contains uneven number of bytes.
+  const size_t ZeroPadding=5;
+
+  Array<char> Data(ReadBlock+ZeroPadding);
   while ((ReadSize=SrcFile.Read(&Data[DataSize],ReadBlock))!=0)
   {
     DataSize+=ReadSize;
-    Data.Add(ReadSize);
+    Data.Add(ReadSize); // Always have ReadBlock available for next data.
   }
-
-  memset(&Data[DataSize],0,5);
+  
+  memset(&Data[DataSize],0,ZeroPadding); // Provide at least 2 Unicode zero bytes.
 
   Array<wchar> WideStr;
 
@@ -136,7 +142,7 @@ bool ReadTextFile(
           break;
         *SpacePtr=0;
       }
-      if (*CurStr)
+      if (*CurStr!=0)
       {
         if (Unquote && *CurStr=='\"')
         {

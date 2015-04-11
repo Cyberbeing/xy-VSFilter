@@ -19,7 +19,7 @@ void IntToExt(const char *Src,char *Dest,size_t DestSize)
   Dest[DestSize-1]=0;
 #elif defined(_ANDROID)
   wchar DestW[NM];
-  UnkToWide(Src,DestW,ASIZE(DestW));
+  JniCharToWide(Src,DestW,ASIZE(DestW),true);
   WideToChar(DestW,Dest,DestSize);
 #else
   if (Dest!=Src)
@@ -265,8 +265,9 @@ wchar* wcsncpyz(wchar *dest, const wchar *src, size_t maxlen)
 char* strncatz(char* dest, const char* src, size_t maxlen)
 {
   size_t Length = strlen(dest);
-  if (Length + 1 < maxlen)
-    strncat(dest, src, maxlen - Length - 1);
+  int avail=int(maxlen - Length - 1);
+  if (avail > 0)
+    strncat(dest, src, avail);
   return dest;
 }
 
@@ -277,8 +278,9 @@ char* strncatz(char* dest, const char* src, size_t maxlen)
 wchar* wcsncatz(wchar* dest, const wchar* src, size_t maxlen)
 {
   size_t Length = wcslen(dest);
-  if (Length + 1 < maxlen)
-    wcsncat(dest, src, maxlen - Length - 1);
+  int avail=int(maxlen - Length - 1);
+  if (avail > 0)
+    wcsncat(dest, src, avail);
   return dest;
 }
 
