@@ -64,6 +64,9 @@
 /* Define if you have POSIX threads libraries and header files. */
 #undef HAVE_PTHREAD
 
+/* Have PTHREAD_PRIO_INHERIT. */
+#undef HAVE_PTHREAD_PRIO_INHERIT
+
 /* Define to 1 if you have the `stat' function. */
 #undef HAVE_STAT
 
@@ -92,14 +95,22 @@
 #undef LOG4CPLUS_DEBUGGING
 
 /* Defined if the compiler understands __declspec(dllimport) or
-   __attribute__((visibility("default"))) construct. */
+   __attribute__((visibility("default"))) or __global construct. */
 #undef LOG4CPLUS_DECLSPEC_EXPORT
 
-/* Defined if the compiler understands __declspec(dllexport) or construct. */
+/* Defined if the compiler understands __declspec(dllimport) or
+   __attribute__((visibility("default"))) or __global construct. */
 #undef LOG4CPLUS_DECLSPEC_IMPORT
+
+/* Defined if the compiler understands __attribute__((visibility("hidden")))
+   or __hidden construct. */
+#undef LOG4CPLUS_DECLSPEC_PRIVATE
 
 /* */
 #undef LOG4CPLUS_HAVE_CLOCK_GETTIME
+
+/* */
+#undef LOG4CPLUS_HAVE_CTYPE_H
 
 /* */
 #undef LOG4CPLUS_HAVE_ENAMETOOLONG
@@ -185,6 +196,9 @@
 /* */
 #undef LOG4CPLUS_HAVE_WCHAR_H
 
+/* */
+#undef LOG4CPLUS_HAVE_WCTYPE_H
+
 /* Define if this is a single-threaded library. */
 #undef LOG4CPLUS_SINGLE_THREADED
 
@@ -224,7 +238,7 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Define to int if undefined. */
+/* Substitute for socklen_t */
 #undef socklen_t
 
 #endif // LOG4CPLUS_CONFIG_H

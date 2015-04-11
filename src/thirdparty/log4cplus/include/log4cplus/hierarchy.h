@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // Module:  Log4CPLUS
 // File:    hierarchy.h
 // Created: 6/2001
@@ -184,7 +185,7 @@ namespace log4cplus {
         /** 
          * Is the LogLevel specified by <code>level</code> enabled? 
          */
-        virtual bool isDisabled(int level);
+        virtual bool isDisabled(LogLevel level);
 
         /**
          * Get the root of this hierarchy.

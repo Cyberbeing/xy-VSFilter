@@ -1,14 +1,15 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl This version of log4cplus requires the follwing autotools versions:
-dnl autoconf-2.67
-dnl automake-1.11.1
-dnl libtool-2.2.10
+dnl autoconf-2.69
+dnl automake-1.12
+dnl libtool-2.4.2
 
-AC_INIT([log4cplus],[1.0.4])
+AC_INIT([log4cplus],[1.0.4.3])
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([src/logger.cxx])
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([1.11.1 no-define nostdinc gnu -Wall])
+AM_INIT_AUTOMAKE([1.12 no-define nostdinc gnu -Wall])
+AM_PROG_AR
 
 #
 # +1 : ? : +1  == new interface that does not break old one
@@ -79,25 +80,36 @@ AS_CASE(["$target_os"],
 
 AM_CONDITIONAL([WINSOCK_SOCKETS], [test "x$use_winsock_sockets" = "xyes"])
 
-dnl Libtool setup.
-
-LT_PREREQ([2.2.6])
-LT_INIT([win32-dll])
-
 dnl Check for compiler specifics.
 
-AC_CXX_COMPILER_VENDOR([ac_cxx_compiler_vendor])
+AX_COMPILER_VENDOR
 
-AS_CASE([$ac_cxx_compiler_vendor],
-  [gnu],
+AS_IF([test "x$enable_warnings" = "xyes"],
+  [AS_CASE([$ax_cv_cxx_compiler_vendor],
+    dnl Skip all warnings detection for Solaris Studio compilers. It
+    dnl adds the -v option and that breaks PIC support detection.
+    [sun], [],
+    [AX_CXXFLAGS_WARN_ALL])])
+
+AS_CASE([$ax_cv_cxx_compiler_vendor],
+  [gnu|clang],
   [AS_IF([test "x$enable_warnings" = "xyes"],
-     [AX_CXXFLAGS_GCC_OPTION([-Wall])
-      AX_CXXFLAGS_GCC_OPTION([-Wextra])
+     [AX_CXXFLAGS_GCC_OPTION([-Wextra])
       dnl The -ansi flag removes declarations of some useful functions
       dnl from headers.
       dnl AX_CXXFLAGS_GCC_OPTION([-ansi])
       AX_CXXFLAGS_GCC_OPTION([-pedantic])
-      AX_CXXFLAGS_GCC_OPTION([-Wshadow])])
+      AX_CXXFLAGS_GCC_OPTION([-Wstrict-aliasing])
+      AX_CXXFLAGS_GCC_OPTION([-Wstrict-overflow])
+      dnl AX_CXXFLAGS_GCC_OPTION([-Weffc++])
+      AX_CXXFLAGS_GCC_OPTION([-Woverloaded-virtual])
+      AX_CXXFLAGS_GCC_OPTION([-Wold-style-cast])
+      dnl AX_CXXFLAGS_GCC_OPTION([-Wabi])
+      AX_CXXFLAGS_GCC_OPTION([-Wc++0x-compat])
+      dnl AX_CXXFLAGS_GCC_OPTION([-Wconversion])
+      AX_CXXFLAGS_GCC_OPTION([-Wundef])
+      AX_CXXFLAGS_GCC_OPTION([-Wshadow])
+      AX_CXXFLAGS_GCC_OPTION([-Wno-variadic-macros])])
 
    AS_IF([test "x$enable_debugging" = "xyes"],
      [AX_CXXFLAGS_GCC_OPTION([-g3])
@@ -114,23 +126,48 @@ AS_CASE([$ac_cxx_compiler_vendor],
 
   [sun],
   [AS_IF([test "x$enable_warnings" = "xyes"],
-     [AX_CXXFLAGS_SUN_OPTION([+w])])
-   AX_CXXFLAGS_SUN_OPTION([-library=stlport4])
+     [dnl This test is disabled. See comment before
+      dnl AX_CXXFLAGS_WARN_ALL invocation.
+      dnl AX_CXXFLAGS_SUN_OPTION([-v])
+      AX_CXXFLAGS_SUN_OPTION([+w])]
+   )
+   dnl This is here for compilation with _GNU_SOURCE=1 on Linux. Their
+   dnl headers then use zero length arrays which are not supported by
+   dnl C++ itself.
+   AX_CXXFLAGS_SUN_OPTION([-features=zla])
+
+   dnl log4cplus does not work with the default C++ library
+   dnl implementation from Sun everywhere. E.g., on Linux it seems to
+   dnl be missing std::FILE, etc., in the std:: namespace but on
+   dnl Solaris it works. Thus we use the available STLport that they
+   dnl also ship unless the user specifies own
+   dnl -library=(stlport4|stdcxx4|Cstd) switch.
+
+   AC_REQUIRE([AC_PROG_GREP])
+   AS_IF([AS_ECHO_N(["$CXXFLAGS"]) dnl
+          | $GREP -e '-library=\(stlport4\|stdcxx4\|Cstd\)' >/dev/null],
+     [],
+     [AX_CXXFLAGS_SUN_OPTION([-library=stlport4])])
+
    AX_CXXFLAGS_SUN_OPTION([-library=Crun])])
 
 AX_DECLSPEC([LOG4CPLUS_DECLSPEC])
-AS_IF([test "x$ac_cv_declspec" = "xyes" || test "x$ac_cv__attribute__visibility" = "xyes"],
-  [AS_CASE([$ac_cxx_compiler_vendor],
-    [gnu],
-    [AS_IF([test "x$ac_cv_declspec" = "xyes" || test "x$ac_cv__attribute__visibility" = "xyes"],
-       [AX_CXXFLAGS_GCC_OPTION([-fvisibility=hidden])])])])
+AS_IF([test "x$ac_cv_declspec" = "xyes" dnl
+  || test "x$ac_cv__attribute__visibility" = "xyes" dnl
+  || test "x$ac_cv__global" = "xyes"],
+  [AS_CASE([$ax_cv_cxx_compiler_vendor],
+    [gnu|clang],
+    [AX_CXXFLAGS_GCC_OPTION([-fvisibility=hidden])],
+    
+    [sun],
+    [AX_CXXFLAGS_SUN_OPTION([-xldscope=hidden])])])
 
 dnl Checks for libraries.
 
 AC_SEARCH_LIBS([strerror], [cposix])
-AC_SEARCH_LIBS([clock_gettime], [posix4])
 AC_SEARCH_LIBS([nanosleep], [rt])
-AC_SEARCH_LIBS([gethostent], [nsl])
+AC_SEARCH_LIBS([clock_gettime], [rt posix4])
+AC_SEARCH_LIBS([gethostbyname], [nsl])
 AC_SEARCH_LIBS([setsockopt], [socket])
 
 dnl Windows/MinGW specific.
@@ -156,6 +193,8 @@ LOG4CPLUS_CHECK_HEADER([netdb.h], [LOG4CPLUS_HAVE_NETDB_H])
 LOG4CPLUS_CHECK_HEADER([unistd.h], [LOG4CPLUS_HAVE_UNISTD_H])
 LOG4CPLUS_CHECK_HEADER([stdio.h], [LOG4CPLUS_HAVE_STDIO_H])
 LOG4CPLUS_CHECK_HEADER([wchar.h], [LOG4CPLUS_HAVE_WCHAR_H])
+LOG4CPLUS_CHECK_HEADER([ctype.h], [LOG4CPLUS_HAVE_CTYPE_H])
+LOG4CPLUS_CHECK_HEADER([wctype.h], [LOG4CPLUS_HAVE_WCTYPE_H])
 LOG4CPLUS_CHECK_HEADER([stdarg.h], [LOG4CPLUS_HAVE_STDARG_H])
 LOG4CPLUS_CHECK_HEADER([time.h], [LOG4CPLUS_HAVE_TIME_H])
 LOG4CPLUS_CHECK_HEADER([errno.h], [LOG4CPLUS_HAVE_ERRNO_H])
@@ -195,7 +234,7 @@ AS_IF([test "x$ax_cv_have_gethostbyname_r" = "xyes"],
   [AC_DEFINE([LOG4CPLUS_HAVE_GETHOSTBYNAME_R])])
 
 dnl Check for the existance of type socklen_t.
-TYPE_SOCKLEN_T
+AX_TYPE_SOCKLEN_T
 
 
 dnl Check for single-threaded compilation
@@ -218,11 +257,10 @@ AS_IF([test x$enable_threads = xyes],
 
    AS_CASE(["$target_os"],
      [mingw*], [],
-     [ACX_PTHREAD([],
+     [AX_PTHREAD_CXX([],
        [AC_MSG_ERROR([Requested threads support but no threads were found.])])])
 
-   CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-   CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+   CXXFLAGS="$CXXFLAGS $PTHREAD_CXXFLAGS"
    LIBS="$PTHREAD_LIBS $LIBS"],
 
   [AC_MSG_NOTICE([Creating a single-threaded library])
@@ -230,6 +268,13 @@ AS_IF([test x$enable_threads = xyes],
      [Define if this is a single-threaded library.])])
 
 AM_CONDITIONAL([MULTI_THREADED], [test x$enable_threads = xyes])
+
+dnl Libtool setup.
+dnl Must be latest to catch rpath compiled in by changes made during
+dnl checks before.
+
+LT_PREREQ([2.4.2])
+LT_INIT([win32-dll])
 
 AH_TOP([#ifndef LOG4CPLUS_CONFIG_H])
 AH_TOP([#define LOG4CPLUS_CONFIG_H])

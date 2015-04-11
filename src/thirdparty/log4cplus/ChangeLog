@@ -1,3 +1,50 @@
+Version 1.0.4.3
+
+  - Fixed bug #125 - Build failure with Solaris Studio on Solaris,
+    threading detection problem.
+  - Fixed bug #161 - Compilation problem due to missing towupper() and
+    towlower() in global namespace.
+
+Version 1.0.4.2
+
+  - Update with Automake 1.12.6.
+  - Fixed DllMain() issue with MinGW.
+
+Version 1.0.4.2-RC1
+
+  - Fixed log4cplus.spec for Fedora builds.
+  - Add compatibility typedef for return type of LogLog::getLogLog()
+    to hide differences between 1.0.4.x and 1.1.x releases.
+  - Improved compatibility with Solaris Studio builds without
+    '-library=stlport4' option. The '-library=stlport4' option is now
+    added only if CXXFLAGS is missing any of
+    '-library=(stlport4|stdcxx4|Cstd)' options.
+
+Version 1.0.4.1
+
+  - There are no significant changes compared to 1.0.4.1-RC2.
+
+Version 1.0.4.1-RC2
+
+  - Fixed bug #3520891 - FileAppender buffer size override does not
+    work.
+  - Update to Autoconf 2.69, Automake 1.12 and Libtool 2.4.2.
+  - Improved Solaris Studio support.
+  - Fixed detection of clock_gettime() on Linux.
+
+Version 1.0.4.1-RC1
+
+  - Fixed use of uninitialized member in ConfigurationWatchDogThread.
+  - Updated libtool to 2.4; updated configure macros.
+  - Improved resource and error handling in NTEventLogAppender and
+    Win32 sockets code.
+  - Limit the logged text size to 31839 for NTEventLogAppender as per
+    MSDN recommendation.
+  - Use range checks instead of equality checks when converting
+    LogLevel value to NT EventLog category and event type to allow
+    user defined log levels to work.
+  - Fixed issue with function-try-catch blocks in dtors.
+
 Version 1.0.4
 
   - Fixed bug #3101459 - TTCCLayout time is not in milliseconds since
@@ -415,7 +462,7 @@ Version 0.9.3 (Apr-19-2003)
 
 Version 0.9.2 (Apr-5-2003)
   Major API change:  Changed the name of the Category class to Logger and
-	     replaced the Priority class with LogLevel.
+             replaced the Priority class with LogLevel.
   Added PropertyConfigurator class.
   Added BasicConfigurator class.
 

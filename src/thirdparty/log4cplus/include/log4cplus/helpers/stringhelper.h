@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // Module:  Log4CPLUS
 // File:    stringhelper.h
 // Created: 3/2003
@@ -117,6 +118,13 @@ namespace log4cplus {
                 else
                     value = -value;
             }
+
+            static inline
+            bool
+            is_negative (intType val)
+            {
+                return val < 0;
+            }
         };
 
 
@@ -128,6 +136,13 @@ namespace log4cplus {
             step1 (tchar * &, intType &)
             {
                 // This will never be called for unsigned types.
+            }
+
+            static inline
+            bool
+            is_negative (intType)
+            {
+                return false;
             }
         };
 
@@ -153,7 +168,7 @@ namespace log4cplus {
                 *it = LOG4CPLUS_TEXT('0');
             }
 
-            bool const negative = value < 0;
+            bool const negative = HelperType::is_negative (value);
             if (negative)
                 HelperType::step1 (it, value);
 
