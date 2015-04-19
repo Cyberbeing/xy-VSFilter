@@ -80,6 +80,11 @@ private:
 
     tSpanBuffer mOutline;
 
+    enum {
+        LINE_DOWN,
+        LINE_UP
+    };
+
     struct Edge {
         int next;
         int posandflag;
@@ -92,10 +97,12 @@ private:
     typedef unsigned char byte;
 
 private:
-    void _ReallocEdgeBuffer(int edges);
+    void _ReallocEdgeBuffer(unsigned edges);
     void _EvaluateBezier(const PathData& path_data, int ptbase, bool fBSpline);
     void _EvaluateLine(const PathData& path_data, int pt1idx, int pt2idx);
     void _EvaluateLine(int x0, int y0, int x1, int y1);	
+    // The following function is templated and forcingly inlined for performance sake
+    template<int flag> __forceinline void _EvaluateLine(int x0, int y0, int x1, int y1);
 
 public:
     ScanLineData();
