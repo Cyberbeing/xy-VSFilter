@@ -1369,13 +1369,14 @@ void XySubFilter::SetYuvMatrix()
         }
 
         ColorConvTable::SetDefaultConvType(yuv_matrix, yuv_range);
+        XySubRenderFrameCreater * sub_frame_creater = XySubRenderFrameCreater::GetDefaultCreater();
 
         if ( m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION]==RGB_CORRECTION_ALWAYS ||
             (m_xy_int_opt[INT_VSFILTER_COMPACT_RGB_CORRECTION]==RGB_CORRECTION_AUTO &&
             m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].CompareNoCase(L"TV.709")==0 &&
             yuv_matrix==ColorConvTable::BT601 && yuv_range==ColorConvTable::RANGE_TV ))
         {
-            XySubRenderFrameCreater::GetDefaultCreater()->SetVsfilterCompactRgbCorrection(true);
+            sub_frame_creater->SetVsfilterCompactRgbCorrection(true);
             m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
             return;
         }
@@ -1407,6 +1408,7 @@ void XySubFilter::SetYuvMatrix()
             m_xy_str_opt[STRING_YUV_MATRIX] = L"None";
             return;
         }
+        sub_frame_creater->SetVsfilterCompactRgbCorrection(false);
     }
     else if (dynamic_cast<HdmvSubtitleProvider*>(m_curSubStream)!=NULL
         || dynamic_cast<SupFileSubtitleProvider*>(m_curSubStream)!=NULL)
@@ -1669,6 +1671,7 @@ void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)
     SetSubtitle(pSubStream, fApplyDefStyle);
     XY_LOG_INFO("SelectedSubtitle:"<<m_xy_int_opt[INT_SELECTED_LANGUAGE]
     <<" YuvMatrix:"<<m_xy_str_opt[STRING_YUV_MATRIX].GetString()
+    <<" outputLevels:"<<m_xy_str_opt[STRING_OUTPUT_LEVELS].GetString()
     <<" TextSubRendererVSFilterCompactRGBCorrection:"<<XySubRenderFrameCreater::GetDefaultCreater()->GetVsfilterCompactRgbCorrection());
 }
 
@@ -1882,6 +1885,7 @@ void XySubFilter::InvalidateSubtitle( REFERENCE_TIME rtInvalidate /*= -1*/, DWOR
                 XY_LOG_ERROR("New subtitle samples received after a request.");
             }
             m_sub_provider->Invalidate(rtInvalidate);
+            XY_LOG_INFO("Subtitles cleared in provider and consumer");
         }
     }
 }
@@ -1981,6 +1985,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
     //fix me: use REFERENCE_TIME instead?
     double fps = 10000000.0/rt_fps;
     bool update_subtitle = false;
+    //bool clear_consumer = false;
 
     if (m_xy_size_opt[SIZE_ORIGINAL_VIDEO]!=originalVideoSize)
     {
@@ -2023,6 +2028,7 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
         <<L" to "<<consumer_yuv_matrix.GetString());
         m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX] = consumer_yuv_matrix;
         update_subtitle = true;
+        //clear_consumer = true;
     }
     if (m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS]!=consumer_supported_levels)
     {
@@ -2030,11 +2036,16 @@ HRESULT XySubFilter::UpdateParamFromConsumer( bool getNameAndVersion/*=false*/ )
             <<" to "<<consumer_supported_levels);
         m_xy_int_opt[INT_CONSUMER_SUPPORTED_LEVELS] = consumer_supported_levels;
         update_subtitle = true;
+        //clear_consumer = true;
     }
 
     if (update_subtitle)
     {
         UpdateSubtitle(false);
+        //if (clear_consumer)
+        //{
+    	//    m_consumer->Clear();
+        //}
     }
     return hr;
 }
