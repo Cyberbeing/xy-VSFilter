@@ -1280,25 +1280,32 @@ static inline CStringW::PCXSTR TryNextStr(CStringW::PXSTR * buff, WCHAR sep = L'
 static inline int NextInt(CStringW::PXSTR * buff, WCHAR sep = L',') //throw(...)
 {
     CStringW::PCXSTR str = TryNextStr(buff, sep);
-
-    const wchar_t *fmtstr = L"%d";
-    if (str[0] == '&' && (str[1] == 'h' || str[1] == 'H') || str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
-        fmtstr = L"%x";
-        str += 2;
-    }
+    CStringW::PXSTR strEnd;
 
     int ret;
-    if(swscanf(str, fmtstr, &ret) != 1) throw 1;
+    if (str[0] == '&' && (str[1] == 'h' || str[1] == 'H') || str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
+        str += 2;
+        ret = (int)wcstoul(str, &strEnd, 16);
+    } else {
+        ret = wcstol(str, &strEnd, 10);
+    }
+
+    if (str == strEnd) { // Ensure something was parsed
+        throw 1;
+    }
 
     return(ret);
 }
 
 static inline double NextFloat(CStringW::PXSTR * buff, WCHAR sep = L',') //throw(...)
 {
-    CStringW str;
 
-    str = TryNextStr(buff, sep);
-    str.MakeLower();
+    if (sep == L'.') { // Parsing a float with '.' as separator doesn't make much sense...
+        ASSERT(FALSE);
+        return NextInt(buff, sep);
+    }
+
+    CStringW::PCXSTR str = TryNextStr(buff, sep);
 
     float ret;
     if(swscanf(str, L"%f", &ret) != 1) throw 1;
