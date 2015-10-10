@@ -425,6 +425,7 @@ private:
     double                   m_fps;
     int                      m_period;//1000/m_fps
     double                   m_target_scale_x, m_target_scale_y;
+    bool                     m_movable;
 
     static void InitCmdMap();
 
@@ -491,6 +492,7 @@ public:
         const CSubtitle2& sub2, 
         CompositeDrawItemList* compDrawItemList /*output*/);
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
+    STDMETHODIMP_(bool) IsMovable();
 
     // IPersist
     STDMETHODIMP GetClassID(CLSID* pClassID);

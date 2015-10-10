@@ -40,7 +40,9 @@ const SubRenderOptionsImpl::OptionMap options[] =
     {"yuvMatrix",      SubRenderOptionsImpl::OPTION_TYPE_STRING, STRING_YUV_MATRIX           },
     {"combineBitmaps", SubRenderOptionsImpl::OPTION_TYPE_BOOL,   BOOL_COMBINE_BITMAPS        },
     {"useDestAlpha",   SubRenderOptionsImpl::OPTION_TYPE_BOOL,   BOOL_SUB_FRAME_USE_DST_ALPHA},
-    {"outputLevels",   SubRenderOptionsImpl::OPTION_TYPE_STRING,   STRING_OUTPUT_LEVELS},
+    {"outputLevels",   SubRenderOptionsImpl::OPTION_TYPE_STRING, STRING_OUTPUT_LEVELS        },
+    {"isMovable",      SubRenderOptionsImpl::OPTION_TYPE_BOOL,   BOOL_IS_MOVABLE             },
+    {"isBitmap",       SubRenderOptionsImpl::OPTION_TYPE_BOOL,   BOOL_IS_BITMAP              },
     {0}
 };
 
@@ -475,6 +477,8 @@ HRESULT XySubFilter::DoGetField( unsigned field, void *value )
     case STRING_YUV_MATRIX:
     case STRING_OUTPUT_LEVELS:
     case BOOL_COMBINE_BITMAPS:
+    case BOOL_IS_MOVABLE:
+    case BOOL_IS_BITMAP:
     case BOOL_SUB_FRAME_USE_DST_ALPHA:
         {
             CAutoLock cAutolock(&m_csProviderFields);//do NOT hold m_csSubLock so that it is faster
@@ -1230,6 +1234,12 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
                 //fix me:
                 ASSERT(0);
             }
+            if (m_xy_bool_opt[BOOL_IS_MOVABLE])
+            {
+              CRenderedTextSubtitle * rts = dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream);
+              if ((rts) && (!rts->IsMovable()))
+                m_xy_bool_opt[BOOL_IS_MOVABLE] = false;
+            }
         }
     }
     CAutoLock cAutoLock(&m_csConsumer);
@@ -1682,6 +1692,8 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
 
             pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
             pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
+            m_xy_bool_opt[BOOL_IS_BITMAP] = true;
+            m_xy_bool_opt[BOOL_IS_MOVABLE] = true;
         }
         else if(clsid == __uuidof(CVobSubStream))
         {
@@ -1689,6 +1701,8 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
 
             pVSS->SetAlignment(m_xy_bool_opt[BOOL_OVERRIDE_PLACEMENT], m_xy_size_opt[SIZE_PLACEMENT_PERC].cx, m_xy_size_opt[SIZE_PLACEMENT_PERC].cy, 1, 1);
             pVSS->m_fOnlyShowForcedSubs = m_xy_bool_opt[BOOL_VOBSUBSETTINGS_ONLY_SHOW_FORCED_SUBS];
+            m_xy_bool_opt[BOOL_IS_BITMAP] = true;
+            m_xy_bool_opt[BOOL_IS_MOVABLE] = true;
         }
         else if(clsid == __uuidof(CRenderedTextSubtitle))
         {
@@ -1732,6 +1746,8 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             }
             pRTS->Deinit();
             playres = pRTS->m_dstScreenSize;
+            m_xy_bool_opt[BOOL_IS_BITMAP] = false;
+            m_xy_bool_opt[BOOL_IS_MOVABLE] = pRTS->IsMovable();
         }
         else if(clsid == __uuidof(HdmvSubtitleProvider) || clsid == __uuidof(SupFileSubtitleProvider))
         {
@@ -1795,6 +1811,8 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
                 SupFileSubtitleProvider *sub = dynamic_cast<SupFileSubtitleProvider*>(pSubStream);
                 sub->SetYuvType(color_type, range_type);
             }
+            m_xy_bool_opt[BOOL_IS_BITMAP] = true;
+            m_xy_bool_opt[BOOL_IS_MOVABLE] = true;
         }
     }
 

@@ -1933,6 +1933,7 @@ CRenderedTextSubtitle::CRenderedTextSubtitle(CCritSec* pLock)
         SetMapMode(g_hDC, MM_TEXT);
     }
     g_hDC_refcnt++;
+    m_movable = true;
 }
 
 CRenderedTextSubtitle::~CRenderedTextSubtitle()
@@ -3662,6 +3663,20 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         return hr;
     }
 
+    if (m_movable)
+    {
+        POSITION pos=sub2List.GetHeadPosition();
+        while ( pos!=NULL )
+        {
+            const CSubtitle2& sub2 = sub2List.GetNext(pos);
+            if (sub2.s->m_hard_position_level > POS_LVL_NONE)
+            {
+              m_movable = false;
+              break;
+            }
+        }
+    }
+
     TRACE_RENDERER_REQUEST("Begin build draw item tree");
     CRectCoor2 margin_rect(
         m_video_rect.left - m_subtitle_target_rect.left,
@@ -3858,6 +3873,11 @@ STDMETHODIMP_(bool) CRenderedTextSubtitle::IsColorTypeSupported( int type )
            type==MSP_AYUV ||
            type==MSP_XY_AUYV ||
            type==MSP_RGBA;
+}
+
+STDMETHODIMP_(bool) CRenderedTextSubtitle::IsMovable()
+{
+    return m_movable;
 }
 
 STDMETHODIMP CRenderedTextSubtitle::Lock()

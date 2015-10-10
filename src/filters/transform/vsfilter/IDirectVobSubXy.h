@@ -40,6 +40,9 @@ namespace DirectVobSubXyOptions
         BOOL_COMBINE_BITMAPS,
         INT_MAX_BITMAP_COUNT2,
 
+        BOOL_IS_MOVABLE,
+        BOOL_IS_BITMAP,
+
         SIZE_ORIGINAL_VIDEO,
         SIZE_ASS_PLAY_RESOLUTION,
         SIZE_USER_SPECIFIED_LAYOUT_SIZE,
@@ -332,6 +335,9 @@ namespace DirectVobSubXyOptions
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_MAX_BITMAP_COUNT},
         {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_RW, BOOL_COMBINE_BITMAPS},
         {XyOptionsImpl::OPTION_TYPE_INT   , XyOptionsImpl::OPTION_MODE_RW, INT_MAX_BITMAP_COUNT2},
+
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_READ, BOOL_IS_MOVABLE},
+        {XyOptionsImpl::OPTION_TYPE_BOOL  , XyOptionsImpl::OPTION_MODE_READ, BOOL_IS_BITMAP},
 
         {XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_READ, SIZE_ORIGINAL_VIDEO},
         {XyOptionsImpl::OPTION_TYPE_SIZE  , XyOptionsImpl::OPTION_MODE_READ, SIZE_ASS_PLAY_RESOLUTION},

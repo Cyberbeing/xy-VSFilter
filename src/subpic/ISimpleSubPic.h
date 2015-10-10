@@ -57,5 +57,7 @@ public IUnknown {
         REFERENCE_TIME rt, double fps) PURE;
 
     STDMETHOD_(bool, IsColorTypeSupported) (int type) PURE;
+
+    STDMETHOD_(bool, IsMovable) () PURE;
 };
 

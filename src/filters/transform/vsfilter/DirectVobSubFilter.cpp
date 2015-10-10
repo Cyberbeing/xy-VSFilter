@@ -2368,6 +2368,8 @@ STDMETHODIMP CDirectVobSubFilter::XySetBool( unsigned field, bool value )
         m_donot_follow_upstream_preferred_order = !m_xy_bool_opt[BOOL_FOLLOW_UPSTREAM_PREFERRED_ORDER];
         break;
     case DirectVobSubXyOptions::BOOL_COMBINE_BITMAPS:
+    case DirectVobSubXyOptions::BOOL_IS_MOVABLE:
+    case DirectVobSubXyOptions::BOOL_IS_BITMAP:
         hr = E_NOTIMPL;
         break;
     case DirectVobSubXyOptions::BOOL_HIDE_SUBTITLES:
