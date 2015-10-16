@@ -2625,7 +2625,7 @@ bool CRenderedTextSubtitle::CreateSubFromSSATag(CSubtitle* sub, const AssTagList
             break;
             case CMD_r: {
                 STSStyle* val;
-                style = (tag.params[0].IsEmpty() && m_styles.Lookup(tag.params[0], val) && val) ? *val : org;
+                style = (!tag.params[0].IsEmpty() && m_styles.Lookup(tag.params[0], val) && val) ? *val : org;
                 break;
                 }
             case CMD_shad:
