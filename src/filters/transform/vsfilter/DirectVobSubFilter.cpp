@@ -358,7 +358,7 @@ CBasePin* CDirectVobSubFilter::GetPin(int n)
 
 	n -= __super::GetPinCount();
 
-	if(n >= 0 && n < m_pTextInput.GetCount())
+	if(n >= 0 && (unsigned int)n < m_pTextInput.GetCount())
 		return m_pTextInput[n];
 
 	n -= m_pTextInput.GetCount();
