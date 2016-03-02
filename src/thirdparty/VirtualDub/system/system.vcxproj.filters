@@ -60,9 +60,6 @@
     <ClCompile Include="source\fileasync.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClInclude Include="source\filestream.cpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClCompile Include="source\filesys.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -169,6 +166,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\vdstl_hashtable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\filestream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
