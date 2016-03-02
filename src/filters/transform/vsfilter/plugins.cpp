@@ -1308,12 +1308,12 @@ public:
 
 				REFERENCE_TIME timestamp;
 //				TODO add vfr support
-//				if (!d->vfr.empty()) {
+				if (!d->vfr) {
 					timestamp = (REFERENCE_TIME)(10000000i64 * n / d->fps);
-//				}
-//				else {
-//					timestamp = (REFERENCE_TIME)(10000000 * d->vfr_translator->TimeStampFromFrameNumber(n));
-//				}
+				}
+				else {
+					timestamp = (REFERENCE_TIME)(10000000 * d->vfr_translator->TimeStampFromFrameNumber(n));
+				}
 
 				if (d->vobsub)
 					d->vobsub->Render(dst, timestamp, d->fps);
