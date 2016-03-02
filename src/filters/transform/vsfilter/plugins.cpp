@@ -1181,7 +1181,273 @@ public:
             return NULL;
         }
     }
+	namespace VapourSynth {
+#include "vapoursynth/VapourSynth.h"
 
+		class CVapourSynthVobSubFilter : public CVobSubFilter {
+		public:
+			using CVobSubFilter::CVobSubFilter;
+
+			bool OpenedOkay() {
+				return m_pSubPicProvider != 0;
+			}
+		};
+
+		class CVapourSynthTextSubFilter : public CTextSubFilter {
+		public:
+			using CTextSubFilter::CTextSubFilter;
+
+			bool OpenedOkay() {
+				return m_pSubPicProvider != 0;
+			}
+		};
+
+		struct FilterData {
+			VSNodeRef *node;
+			const VSVideoInfo *vi;
+
+			VFRTranslator *vfr_translator;
+			CVapourSynthVobSubFilter *vobsub;
+			CVapourSynthTextSubFilter *textsub;
+
+			std::string file;
+			int charset;
+			float fps;
+			std::string vfr;
+			bool swapuv;
+		};
+
+
+		void VS_CC vsfInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi) {
+			(void)in;
+			(void)out;
+			(void)core;
+
+			const FilterData *d = (const FilterData *)*instanceData;
+
+			vsapi->setVideoInfo(d->vi, 1, node);
+		}
+
+
+		void VS_CC vsfFree(void *instanceData, VSCore *core, const VSAPI *vsapi) {
+			(void)core;
+
+			FilterData *d = (FilterData *)instanceData;
+
+			vsapi->freeNode(d->node);
+
+			if (d->vobsub)
+				delete d->vobsub;
+			if (d->textsub)
+				delete d->textsub;
+
+			delete d;
+		}
+
+
+		const VSFrameRef *VS_CC vsfGetFrame(int n, int activationReason, void **instanceData, void **frameData, VSFrameContext *frameCtx, VSCore *core, const VSAPI *vsapi) {
+			(void)frameData;
+
+			FilterData *d = (FilterData *)*instanceData;
+
+			if (activationReason == arInitial) {
+				vsapi->requestFrameFilter(n, d->node, frameCtx);
+			}
+			else if (activationReason == arAllFramesReady) {
+				const VSFrameRef *src_frame = vsapi->getFrameFilter(n, d->node, frameCtx);
+
+				VSFrameRef *dst_frame = vsapi->copyFrame(src_frame, core);
+				vsapi->freeFrame(src_frame);
+
+				VSFrameRef *temp = NULL;
+
+				SubPicDesc dst;
+				dst.w = d->vi->width;
+				dst.h = d->vi->height;
+
+				if (d->vi->format->colorFamily == cmYUV) {
+					dst.pitch = vsapi->getStride(dst_frame, 0);
+					dst.pitchUV = vsapi->getStride(dst_frame, 1);
+					dst.bits = vsapi->getWritePtr(dst_frame, 0);
+					dst.bitsU = vsapi->getWritePtr(dst_frame, 1);
+					dst.bitsV = vsapi->getWritePtr(dst_frame, 2);
+					dst.bpp = 8;
+					dst.type = d->swapuv ? MSP_IYUV : MSP_YV12;
+				}
+				else if (d->vi->format->colorFamily == cmRGB) {
+					temp = vsapi->newVideoFrame(vsapi->getFormatPreset(pfCompatBGR32, core), d->vi->width, d->vi->height, NULL, core);
+
+					const BYTE *r = vsapi->getReadPtr(dst_frame, 0);
+					const BYTE *g = vsapi->getReadPtr(dst_frame, 1);
+					const BYTE *b = vsapi->getReadPtr(dst_frame, 2);
+					BYTE *t = vsapi->getWritePtr(temp, 0);
+
+					int dst_stride = vsapi->getStride(dst_frame, 0);
+					int temp_stride = vsapi->getStride(temp, 0);
+
+					for (int y = 0; y < d->vi->height; y++) {
+						for (int x = 0; x < d->vi->width; x++) {
+							t[x * 4 + 0] = b[x];
+							t[x * 4 + 1] = g[x];
+							t[x * 4 + 2] = r[x];
+							t[x * 4 + 3] = 0;
+						}
+
+						b += dst_stride;
+						g += dst_stride;
+						r += dst_stride;
+						t += temp_stride;
+					}
+
+					dst.pitch = vsapi->getStride(temp, 0);
+					dst.bits = vsapi->getWritePtr(temp, 0);
+					dst.bpp = 32;
+					dst.type = MSP_RGB32;
+				}
+
+				REFERENCE_TIME timestamp;
+//				TODO add vfr support
+//				if (!d->vfr) {
+					timestamp = (REFERENCE_TIME)(10000000i64 * n / d->fps);
+//				}
+//				else {
+//					timestamp = (REFERENCE_TIME)(10000000 * d->vfr->TimeStampFromFrameNumber(n));
+//				}
+
+				if (d->vobsub)
+					d->vobsub->Render(dst, timestamp, d->fps);
+				else if (d->textsub)
+					d->textsub->Render(dst, timestamp, d->fps);
+
+				if (d->vi->format->colorFamily == cmRGB) {
+					BYTE *r = vsapi->getWritePtr(dst_frame, 0);
+					BYTE *g = vsapi->getWritePtr(dst_frame, 1);
+					BYTE *b = vsapi->getWritePtr(dst_frame, 2);
+					const BYTE *t = vsapi->getReadPtr(temp, 0);
+
+					int dst_stride = vsapi->getStride(dst_frame, 0);
+					int temp_stride = vsapi->getStride(temp, 0);
+
+					for (int y = 0; y < d->vi->height; y++) {
+						for (int x = 0; x < d->vi->width; x++) {
+							b[x] = t[x * 4 + 0];
+							g[x] = t[x * 4 + 1];
+							r[x] = t[x * 4 + 2];
+						}
+
+						b += dst_stride;
+						g += dst_stride;
+						r += dst_stride;
+						t += temp_stride;
+					}
+
+					vsapi->freeFrame(temp);
+				}
+
+				return dst_frame;
+			}
+
+			return NULL;
+		}
+
+
+		void VS_CC vsfCreate(const VSMap *in, VSMap *out, void *userData, VSCore *core, const VSAPI *vsapi) {
+			FilterData d;
+			memset(&d, 0, sizeof(FilterData));
+
+			int err;
+
+			std::string filter_name((const char *)userData);
+
+
+			d.file = vsapi->propGetData(in, "file", 0, NULL);
+
+			d.charset = (int)vsapi->propGetInt(in, "charset", 0, &err);
+			if (err)
+				d.charset = DEFAULT_CHARSET;
+
+			d.fps = (float)vsapi->propGetFloat(in, "fps", 0, &err);
+			if (err)
+				d.fps = -1;
+
+//			d.vfr = vsapi->proGetData(in, "vfr", 0, &err);
+			if (!err)
+				d.vfr_translator = GetVFRTranslator(d.vfr.c_str());
+
+			d.swapuv = !!vsapi->propGetInt(in, "swapuv", 0, &err);
+
+			d.node = vsapi->propGetNode(in, "clip", 0, NULL);
+			d.vi = vsapi->getVideoInfo(d.node);
+
+			if (!d.vi->format || (d.vi->format->id != pfRGB24 && d.vi->format->id != pfYUV420P8)) {
+				vsapi->setError(out, (filter_name + ": only constant format RGB24 and YUV420P8 input supported.").c_str());
+				vsapi->freeNode(d.node);
+				return;
+			}
+
+			if (!d.vi->width || !d.vi->height) {
+				vsapi->setError(out, (filter_name + ": only clips with constant dimensions supported.").c_str());
+				vsapi->freeNode(d.node);
+				return;
+			}
+
+
+			if (d.fps <= 0) {
+				if (!d.vi->fpsNum || !d.vi->fpsDen) {
+					vsapi->setError(out, (filter_name + ": the input clip has unknown frame rate. You must pass the 'fps' parameter.").c_str());
+					vsapi->freeNode(d.node);
+					return;
+				}
+
+				d.fps = (float)d.vi->fpsNum / d.vi->fpsDen;
+			}
+
+			bool opened_okay = false;
+			if (filter_name == "VobSub") {
+				d.vobsub = DEBUG_NEW CVapourSynthVobSubFilter(CString(d.file.c_str()));
+				opened_okay = d.vobsub->OpenedOkay();
+			}
+			else if (filter_name == "TextSub") {
+				d.textsub = DEBUG_NEW CVapourSynthTextSubFilter(CString(d.file.c_str()), d.charset, d.fps);
+				opened_okay = d.textsub->OpenedOkay();
+			}
+
+			if (!opened_okay) {
+				vsapi->setError(out, (filter_name + ": failed to open '" + d.file + "'.").c_str());
+				vsapi->freeNode(d.node);
+				if (d.vobsub)
+					delete d.vobsub;
+				if (d.textsub)
+					delete d.textsub;
+				return;
+			}
+
+
+			FilterData *data = new FilterData(d);
+
+			vsapi->createFilter(in, out, filter_name.c_str(), vsfInit, vsfGetFrame, vsfFree, fmUnordered, 0, data, core);
+		}
+
+
+		VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin *plugin) {
+			configFunc("com.xy.vsfilter", "xyvsf", "xy-VSFilter", VAPOURSYNTH_API_VERSION, 1, plugin);
+
+			registerFunc("VobSub",
+				"clip:clip;"
+				"file:data;"
+				"swapuv:int:opt;"
+				, vsfCreate, (void *)"VobSub", plugin);
+
+			registerFunc("TextSub",
+				"clip:clip;"
+				"file:data;"
+				"charset:int:opt;"
+				"fps:float:opt;"
+				"vfr:data:opt;"
+				"swapuv:int:opt;"
+				, vsfCreate, (void *)"TextSub", plugin);
+		}
+	}
 }
 
 UINT_PTR CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
