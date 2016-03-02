@@ -1181,6 +1181,7 @@ public:
             return NULL;
         }
     }
+
 	namespace VapourSynth {
 #include "vapoursynth/VapourSynth.h"
 
@@ -1213,7 +1214,7 @@ public:
 			std::string file;
 			int charset;
 			float fps;
-			std::string vfr;
+			const char *vfr;
 			bool swapuv;
 		};
 
@@ -1307,11 +1308,11 @@ public:
 
 				REFERENCE_TIME timestamp;
 //				TODO add vfr support
-//				if (!d->vfr) {
+//				if (!d->vfr.empty()) {
 					timestamp = (REFERENCE_TIME)(10000000i64 * n / d->fps);
 //				}
 //				else {
-//					timestamp = (REFERENCE_TIME)(10000000 * d->vfr->TimeStampFromFrameNumber(n));
+//					timestamp = (REFERENCE_TIME)(10000000 * d->vfr_translator->TimeStampFromFrameNumber(n));
 //				}
 
 				if (d->vobsub)
@@ -1370,13 +1371,16 @@ public:
 			if (err)
 				d.fps = -1;
 
-//			d.vfr = vsapi->proGetData(in, "vfr", 0, &err);
-			if (!err)
-				d.vfr_translator = GetVFRTranslator(d.vfr.c_str());
+
+			d.vfr = vsapi->propGetData(in, "vfr", 0, &err);
+			if (err)
+				d.vfr = nullptr;
+			else
+				d.vfr_translator = GetVFRTranslator(d.vfr);
 
 			d.swapuv = !!vsapi->propGetInt(in, "swapuv", 0, &err);
 
-			d.node = vsapi->propGetNode(in, "clip", 0, NULL);
+			d.node = vsapi->propGetNode(in, "clip", 0, 0);
 			d.vi = vsapi->getVideoInfo(d.node);
 
 			if (!d.vi->format || (d.vi->format->id != pfRGB24 && d.vi->format->id != pfYUV420P8)) {
