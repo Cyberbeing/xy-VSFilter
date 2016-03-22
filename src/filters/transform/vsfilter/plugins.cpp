@@ -1374,7 +1374,7 @@ public:
 
 			d.vfr = vsapi->propGetData(in, "vfr", 0, &err);
 			if (err)
-				d.vfr = nullptr;
+				d.vfr = NULL;
 			else
 				d.vfr_translator = GetVFRTranslator(d.vfr);
 
