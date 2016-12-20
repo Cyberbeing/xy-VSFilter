@@ -123,12 +123,12 @@ void VDFileAsync9x::Open(const wchar_t *pszFilename, uint32 count, uint32 buffer
 
 		const DWORD slowFlags = mbWriteThrough ? FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH : FILE_ATTRIBUTE_NORMAL;
 
-		mhFileSlow = CreateFile(mFilename.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, slowFlags, NULL);
+		mhFileSlow = CreateFileA(mFilename.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, slowFlags, NULL);
 		if (mhFileSlow == INVALID_HANDLE_VALUE)
 			throw MyWin32Error("Unable to open file \"%s\" for write: %%s", GetLastError(), mFilename.c_str());
 
 		if (mbUseFastMode)
-			mhFileFast = CreateFile(mFilename.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL);
+			mhFileFast = CreateFileA(mFilename.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL);
 
 		mSectorSize = 4096;		// guess for now... proper way would be GetVolumeMountPoint() followed by GetDiskFreeSpace().
 
@@ -764,7 +764,7 @@ void VDFileAsyncNT::ThreadRun() {
 
 			if (state == kStateAbort) {
 				typedef BOOL (WINAPI *tpCancelIo)(HANDLE);
-				static const tpCancelIo pCancelIo = (tpCancelIo)GetProcAddress(GetModuleHandle("kernel32"), "CancelIo");
+				static const tpCancelIo pCancelIo = (tpCancelIo)GetProcAddress(GetModuleHandle(L"kernel32"), "CancelIo");
 				pCancelIo(mhFileFast);
 
 				// Wait for any pending blocks to complete.

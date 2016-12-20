@@ -1,0 +1,12 @@
+*.aps
+*.db
+*.old
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.vspx
+/.git-rewrite
+/bin
+ipch
+/src/filters/BaseClasses/*.asm

@@ -23,60 +23,58 @@
     <RootNamespace>unit_test</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+  <Import Project="..\..\src\configuration.props" />
+  <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-    <UseOfMfc>Static</UseOfMfc>
     <UseOfAtl>Static</UseOfAtl>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)\..\..\..\..\test\gtest-1.6.0\include;$(SolutionDir)\..\..\..\..\src\subtitles;$(SolutionDir)\..\..\..\thirdparty\boost_1_55_0\;$(SolutionDir)\..\..\..\..\src\subpic\;$(SolutionDir)\..\..\..\..\src\filters\transform\vsfilter\;$(IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)..\..\..\..\bin\lib\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)..\..\..\..\bin\obj\$(Configuration)_$(Platform)\</IntDir>
+    <IncludePath>$(SolutionDir)test\gtest-1.6.0\include;$(SolutionDir)src\subtitles;$(SolutionDir)src\thirdparty\boost_1_55_0\;$(SolutionDir)src\subpic\;$(SolutionDir)src\filters\transform\vsfilter\;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)bin\lib10\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)bin\lib11\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)bin\lib12\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\obj10\$(Configuration)_$(Platform)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)bin\obj11\$(Configuration)_$(Platform)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)bin\obj12\$(Configuration)_$(Platform)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories Condition="'$(Configuration)'=='Debug'">$(SolutionDir)..\..\..\..\bin\lib\$(Platform)\;$(SolutionDir)..\..\..\..\bin\lib\$(Platform)\Debug
-      </AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)bin\lib10\$(Platform)\;$(SolutionDir)bin\lib10\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)bin\lib11\$(Platform)\;$(SolutionDir)bin\lib11\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)bin\lib12\$(Platform)\;$(SolutionDir)bin\lib12\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">gtestDU.lib;subtitlesD.lib;subpicD.lib;strmbaseD.lib;delayimp.lib;VSFilter.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories Condition="'$(Configuration)'=='Release'">$(SolutionDir)..\..\..\..\bin\lib\$(Platform)\;$(SolutionDir)..\..\..\..\bin\lib\$(Platform)\Release
-      </AdditionalLibraryDirectories>
       <AdditionalDependencies Condition="'$(Configuration)'=='Release'">gtestRU.lib;subtitlesR.lib;subpicR.lib;strmbaseR.lib;delayimp.lib;VSFilter.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
     <ClCompile>
-      <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MultiThreadedDebug</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions Condition="'$(VisualStudioVersion)'&gt;'10.0'">_VARIADIC_MAX=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>

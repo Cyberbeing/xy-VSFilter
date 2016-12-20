@@ -50,7 +50,7 @@ public:
 
 protected:
 	void ThreadRun() {
-		mdwResult = MessageBox(mhwndParent, mpszText, mpszCaption, mdwFlags);
+		mdwResult = MessageBoxA(mhwndParent, mpszText, mpszCaption, mdwFlags);
 	}
 
 	HWND mhwndParent;
@@ -74,7 +74,7 @@ VDAssertResult VDAssert(const char *exp, const char *file, int line) {
 
 	VDDEBUG("%s(%d): Assert failed: %s\n", file, line, exp);
 
-	wsprintf(szText,
+	wsprintfA(szText,
 		"Assert failed in module %s, line %d:\n"
 		"\n"
 		"\t%s\n"
@@ -104,7 +104,7 @@ VDAssertResult VDAssertPtr(const char *exp, const char *file, int line) {
 
 	VDDEBUG("%s(%d): Assert failed: %s is not a valid pointer\n", file, line, exp);
 
-	wsprintf(szText,
+	wsprintfA(szText,
 		"Assert failed in module %s, line %d:\n"
 		"\n"
 		"\t(%s) not a valid pointer\n"
@@ -139,7 +139,7 @@ void VDDebugPrint(const char *format, ...) {
 	_vsnprintf(buf, sizeof buf, format, val);
 	va_end(val);
 	Sleep(0);
-	OutputDebugString(buf);
+	OutputDebugStringA(buf);
 }
 
 ///////////////////////////////////////////////////////////////////////////
