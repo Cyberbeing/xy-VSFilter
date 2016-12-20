@@ -1,0 +1,217 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>xy_sub_filter</ProjectName>
+    <ProjectGuid>{9ED0FE7D-079D-4777-A40F-EF9189BDDD61}</ProjectGuid>
+    <RootNamespace>$(ProjectName)</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="..\..\..\configuration.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <TargetExt>.dll</TargetExt>
+    <TargetName>XySubFilter</TargetName>
+    <IncludePath>$(SolutionDir)src\filters\BaseClasses;$(SolutionDir)src\thirdparty\boost_lib\;$(SolutionDir)src\thirdparty\log4cplus\include\;$(SolutionDir)src\thirdparty\VirtualDub\h\;$(SolutionDir)include\;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)bin\lib10\$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)bin\lib11\$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)bin\lib12\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\obj10\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)bin\obj11\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)bin\obj12\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>XY_SUB_FILTER_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(VisualStudioVersion)'&gt;'10.0'">WINVER=0x0601;_WIN32_WINNT=0x0601;PSAPI_VERSION=1;_AFX_NO_MFC_CONTROLS_IN_DIALOGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Configuration)|$(VisualStudioVersion)'=='Release|12.0'">/Gw %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;ISOLATION_AWARE_ENABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OpenMPSupport>false</OpenMPSupport>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <DelayLoadDLLs>oleacc.dll</DelayLoadDLLs>
+      <Profile>false</Profile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_WIN64;_WINDOWS;_DEBUG;_USRDLL;ISOLATION_AWARE_ENABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <PreprocessorDefinitions>_WIN64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OpenMPSupport>false</OpenMPSupport>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+      <DelayLoadDLLs>oleacc.dll</DelayLoadDLLs>
+      <Profile>false</Profile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib;$(SolutionDir)bin\lib10\$(PlatformName)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories Condition="'$(VisualStudioVersion)'=='11.0'">$(SolutionDir)lib;$(SolutionDir)bin\lib11\$(PlatformName)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories Condition="'$(VisualStudioVersion)'=='12.0'">$(SolutionDir)lib;$(SolutionDir)bin\lib12\$(PlatformName)</AdditionalLibraryDirectories>
+      <ModuleDefinitionFile>$(SolutionDir)src\filters\transform\vsfilter\xy_sub_filter.def</ModuleDefinitionFile>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;log4cplus_staticD.lib;KasumiD.lib;systemD.lib;unrarD.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(VisualStudioVersion)'=='Debug|11.0' Or '$(Configuration)|$(VisualStudioVersion)'=='Debug|12.0'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;log4cplus_staticD.lib;KasumiD.lib;systemD.lib;unrarD.lib;dwmapi.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;log4cplus_staticR.lib;KasumiR.lib;systemR.lib;unrarR.lib;winmm.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(VisualStudioVersion)'=='Release|11.0' Or '$(Configuration)|$(VisualStudioVersion)'=='Release|12.0'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;log4cplus_staticR.lib;KasumiR.lib;systemR.lib;unrarR.lib;winmm.lib;dwmapi.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <RegisterOutput>false</RegisterOutput>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ResourceCompile Include="VSFilter.rc">
+      <PreprocessorDefinitions Condition="'$(Configuration)'=='Debug'">XY_SUB_FILTER_DLL;_DEBUG;AFX_RESOURCE_DLL;AFX_TARG_ENU;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)'=='Release'">XY_SUB_FILTER_DLL;AFX_RESOURCE_DLL;AFX_TARG_ENU;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\thirdparty\mfc\afxctrlcontainer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'=='Debug' Or '$(VisualStudioVersion)'&gt;'10.0'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\thirdparty\mfc\afxglobals.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)'=='Debug' Or '$(VisualStudioVersion)'&gt;'10.0'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\thirdparty\mfc\winmdi.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="auto_load_helper.cpp" />
+    <ClCompile Include="DirectVobSub.cpp" />
+    <ClCompile Include="DirectVobSubPropPage.cpp" />
+    <ClCompile Include="once_logger.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="StdAfx.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="StyleEditorDialog.cpp" />
+    <ClCompile Include="SubRenderOptionsImpl.cpp" />
+    <ClCompile Include="SubtitleInputPin2.cpp" />
+    <ClCompile Include="Systray.cpp" />
+    <ClCompile Include="VSFilter.cpp" />
+    <ClCompile Include="XyOptionsImpl.cpp" />
+    <ClCompile Include="xy_logger.cpp" />
+    <ClCompile Include="xy_sub_filter.cpp" />
+    <ClCompile Include="xy_sub_filter_dll.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="auto_load_helper.h" />
+    <ClInclude Include="CAutoTiming.h" />
+    <ClInclude Include="DirectVobSub.h" />
+    <ClInclude Include="DirectVobSubPropPage.h" />
+    <ClInclude Include="IDirectVobSub.h" />
+    <ClInclude Include="IDirectVobSubXy.h" />
+    <ClInclude Include="once_logger.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="StyleEditorDialog.h" />
+    <ClInclude Include="SubRenderOptionsImpl.h" />
+    <ClInclude Include="SubtitleInputPin2.h" />
+    <ClInclude Include="Systray.h" />
+    <ClInclude Include="Timing_Logger.h" />
+    <ClInclude Include="version.h" />
+    <ClInclude Include="VSFilter.h" />
+    <ClInclude Include="XyOptionsImpl.h" />
+    <ClInclude Include="XySubRenderIntf.h" />
+    <ClInclude Include="xy_logger.h" />
+    <ClInclude Include="xy_sub_filter.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\Icon_147.ico" />
+    <None Include="res\Icon_xy_sub_fillter.ico" />
+    <None Include="xy_sub_filter.def" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

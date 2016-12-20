@@ -103,7 +103,7 @@ void MyError::post(HWND hWndParent, const char *title) const {
 	VDDEBUG("*** %s: %s\n", title, buf);
 	VDLog(kVDLogError, VDswprintf(L"Error: %hs", 1, &buf));
 
-	MessageBox(hWndParent, buf, title, MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
+	MessageBoxA(hWndParent, buf, title, MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
 }
 
 void MyError::discard() {
