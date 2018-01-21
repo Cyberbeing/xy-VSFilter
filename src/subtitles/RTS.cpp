@@ -3381,7 +3381,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         while ( pos!=NULL )
         {
             const CSubtitle2& sub2 = sub2List.GetNext(pos);
-            if (sub2.s->m_hard_position_level >= POS_LVL_NONE)
+            if (sub2.s->m_hard_position_level >= POS_LVL_NONE || sub2.s->m_hard_position_level == -1)
             {
               m_movable = false;
               break;
