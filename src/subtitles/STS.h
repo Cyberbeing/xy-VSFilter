@@ -168,6 +168,7 @@ protected:
     virtual void OnChanged() {}
 
 public:
+    bool           m_simple;
     CString        m_name;
     LCID           m_lcid;
     tmode          m_mode;

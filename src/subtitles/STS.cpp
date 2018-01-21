@@ -2746,6 +2746,7 @@ bool CSimpleTextSubtitle::Open(CTextFile* f, int CharSet, CString name)
         m_mode = OpenFuncts[i].mode;
         m_encoding = f->GetEncoding();
         m_path = f->GetFilePath();
+        m_simple = i > 0;
 
         CWebTextFile f2(CTextFile::UTF8);
         if(f2.Open(f->GetFilePath() + _T(".style")))

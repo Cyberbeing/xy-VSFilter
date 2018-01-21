@@ -3375,7 +3375,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         return hr;
     }
 
-    if (m_movable)
+    if ((m_movable) && (!m_simple))
     {
         POSITION pos=sub2List.GetHeadPosition();
         while ( pos!=NULL )
