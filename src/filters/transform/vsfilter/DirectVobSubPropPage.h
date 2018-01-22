@@ -291,12 +291,12 @@ class CXySubFilterMorePPage : public CDVSBasePPage
     int m_yuv_matrix, m_yuv_range, m_rgb_level;
     SIZE m_layout_size;
 
-    bool m_fHideSubtitles, m_fReloaderDisabled;
+    bool m_fHideSubtitles, m_fAllowMoving, m_fReloaderDisabled;
     bool m_render_to_original_video_size;
 
     int  m_cache_size, m_auto_cache_size;
 
-    CButton m_hidesub, m_autoreload, m_instupd;
+    CButton m_hidesub, m_allowmoving, m_autoreload, m_instupd;
 
     CSpinButtonCtrl m_path_cache, m_scanline_cache, m_overlay_no_blur_cache, m_overlay_cache;
 

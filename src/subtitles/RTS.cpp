@@ -3381,7 +3381,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         while ( pos!=NULL )
         {
             const CSubtitle2& sub2 = sub2List.GetNext(pos);
-            if (sub2.s->m_hard_position_level >= POS_LVL_NONE || sub2.s->m_hard_position_level == -1)
+            if (sub2.s->m_hard_position_level > POS_LVL_NONE)
             {
               m_movable = false;
               break;
@@ -3590,6 +3590,11 @@ STDMETHODIMP_(bool) CRenderedTextSubtitle::IsColorTypeSupported( int type )
 STDMETHODIMP_(bool) CRenderedTextSubtitle::IsMovable()
 {
     return m_movable;
+}
+
+STDMETHODIMP_(bool) CRenderedTextSubtitle::IsSimple()
+{
+    return m_simple;
 }
 
 STDMETHODIMP CRenderedTextSubtitle::Lock()

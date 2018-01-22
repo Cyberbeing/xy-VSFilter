@@ -571,6 +571,14 @@ STDMETHODIMP XySubFilter::XySetBool(unsigned field, bool      value)
             return XyOptionsImpl::XySetBool(field, value);
         }
         break;
+    case BOOL_ALLOW_MOVING:
+        {
+            CAutoLock cAutolock1(&m_csFilter);
+            CRenderedTextSubtitle * rts = dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream);
+            if (rts)
+                m_xy_bool_opt[BOOL_IS_MOVABLE] = ((rts->IsMovable()) && ((rts->IsSimple()) || (value)));
+        }
+        break;
     }
     return DirectVobSubImpl::XySetBool(field, value);
 }
@@ -1237,7 +1245,7 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
             if (m_xy_bool_opt[BOOL_IS_MOVABLE])
             {
               CRenderedTextSubtitle * rts = dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream);
-              if ((rts) && (!rts->IsMovable()))
+              if ((rts) && ((!rts->IsMovable()) || ((!rts->IsSimple()) && (!m_xy_bool_opt[BOOL_ALLOW_MOVING]))))
                 m_xy_bool_opt[BOOL_IS_MOVABLE] = false;
             }
         }
@@ -1750,7 +1758,7 @@ void XySubFilter::SetSubtitle( ISubStream* pSubStream, bool fApplyDefStyle /*= t
             pRTS->Deinit();
             playres = pRTS->m_dstScreenSize;
             m_xy_bool_opt[BOOL_IS_BITMAP] = false;
-            m_xy_bool_opt[BOOL_IS_MOVABLE] = pRTS->IsMovable();
+            m_xy_bool_opt[BOOL_IS_MOVABLE] = ((pRTS->IsMovable()) && ((pRTS->IsSimple()) || (m_xy_bool_opt[BOOL_ALLOW_MOVING])));
         }
         else if(clsid == __uuidof(HdmvSubtitleProvider) || clsid == __uuidof(SupFileSubtitleProvider))
         {

@@ -415,7 +415,7 @@ BEGIN
     CONTROL         "Force Default",IDC_CHECKBOX_FORCE_DEFAULT_STYLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,107,55,12
 END
 
-IDD_XY_SUB_FILTER_MOREPAGE DIALOGEX 0, 0, 247, 282
+IDD_XY_SUB_FILTER_MOREPAGE DIALOGEX 0, 0, 247, 297
 STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
 FONT 8, "MS Sans Serif", 400, 0, 0x1
 BEGIN
@@ -454,6 +454,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,212,224,10
     LTEXT           " (reloading is disabled while showing the property pages)",IDC_STATIC,25,222,182,8
     CONTROL         "Appl&y changes immediately",IDC_INSTANTUPDATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,236,104,10
+    CONTROL         "Allow video renderer to &reposition simple SSA/ASS subtitles",IDC_CHECKBOX_ALLOW_MOVING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,251,224,10
     CONTROL         "Render To Original Video Size",IDC_CHECKBOX_RENDER_TO_ORIGINAL_VIDEO_SIZE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,127,132,10
     EDITTEXT        IDC_EDIT_CACHE_SIZE,22,72,40,14,ES_AUTOHSCROLL,WS_EX_RIGHT
@@ -742,6 +743,7 @@ BEGIN
     IDS_RG_EMBEDDEDLOAD     "emb_load"
     IDS_RG_DISABLERELOADER  "disable_reloader"
     IDS_RG_HIDE             "hide"
+    IDS_RG_ALLOWMOVING      "allow_moving"
     IDS_RG_COLOR_SPACE      "color_space"
     IDS_RG_BT601_WIDTH      "bt_601_width_for_guess"
     IDS_RG_BT601_HEIGHT     "bt_601_height_for_guess"

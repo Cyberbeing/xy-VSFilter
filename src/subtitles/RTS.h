@@ -519,6 +519,7 @@ public:
         CompositeDrawItemList* compDrawItemList /*output*/);
     STDMETHODIMP_(bool) IsColorTypeSupported(int type);
     STDMETHODIMP_(bool) IsMovable();
+    STDMETHODIMP_(bool) IsSimple();
 
     // IPersist
     STDMETHODIMP GetClassID(CLSID* pClassID);

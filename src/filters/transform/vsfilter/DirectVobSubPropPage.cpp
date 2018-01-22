@@ -1893,6 +1893,7 @@ CXySubFilterMorePPage::CXySubFilterMorePPage(LPUNKNOWN pUnk, HRESULT* phr)
     BindControl(IDC_SPIN_LAYOUT_SIZE_X, m_layout_size_x);
     BindControl(IDC_SPIN_LAYOUT_SIZE_Y, m_layout_size_y);
 
+    BindControl(IDC_CHECKBOX_ALLOW_MOVING, m_allowmoving);
     BindControl(IDC_HIDE, m_hidesub);
     BindControl(IDC_AUTORELOAD, m_autoreload);
     BindControl(IDC_INSTANTUPDATE, m_instupd);
@@ -2028,6 +2029,8 @@ void CXySubFilterMorePPage::UpdateObjectData(bool fSave)
         CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSub->put_HideSubtitles(m_fHideSubtitles);
         CHECK_N_LOG(hr, "Failed to set option");
+		hr = m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_ALLOW_MOVING, m_fAllowMoving);
+        CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
         CHECK_N_LOG(hr, "Failed to set option");
 
@@ -2062,6 +2065,8 @@ void CXySubFilterMorePPage::UpdateObjectData(bool fSave)
         hr = m_pDirectVobSubXy->XyGetSize(DirectVobSubXyOptions::SIZE_USER_SPECIFIED_LAYOUT_SIZE, &m_layout_size);
         CHECK_N_LOG(hr, "Failed to get option");
         hr = m_pDirectVobSub->get_HideSubtitles(&m_fHideSubtitles);
+        CHECK_N_LOG(hr, "Failed to get option");
+        hr = m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_ALLOW_MOVING, &m_fAllowMoving);
         CHECK_N_LOG(hr, "Failed to get option");
         hr = m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
         CHECK_N_LOG(hr, "Failed to get option");
@@ -2118,6 +2123,7 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         m_layout_size.cy = m_layout_size_y.GetPos32();
 
         m_fHideSubtitles = !!m_hidesub.GetCheck();
+        m_fAllowMoving = !!m_allowmoving.GetCheck();
         m_fReloaderDisabled = !m_autoreload.GetCheck();
 
 
@@ -2215,6 +2221,7 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         m_layout_size_y.SetPos32(m_layout_size.cy);
 
         m_hidesub.SetCheck(m_fHideSubtitles);
+        m_allowmoving.SetCheck(m_fAllowMoving);
         m_autoreload.SetCheck(!m_fReloaderDisabled);
         m_instupd.SetCheck(!!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), 1));
 

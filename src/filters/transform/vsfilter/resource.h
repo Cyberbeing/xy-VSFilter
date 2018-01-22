@@ -241,6 +241,8 @@
 #define IDC_COLORSEC                    1064
 #define IDC_COLOROUTL                   1065
 #define IDC_COLORSHAD                   1066
+#define IDS_RG_ALLOWMOVING              1070
+#define IDC_CHECKBOX_ALLOW_MOVING       1071
 
 // Next default values for new objects
 // 
