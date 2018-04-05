@@ -22,7 +22,7 @@
 #include "stdafx.h"
 #include "Subtitle.h"
 #include "Split.h"
-#include <math.h>
+#include <cmath>
 
 namespace ssf
 {
