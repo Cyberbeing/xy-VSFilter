@@ -288,7 +288,8 @@ static void LogStyles(const CSTSStyleMap& styles)
 static DWORD CharSetToCodePage(DWORD dwCharSet)
 {
     CHARSETINFO cs={0};
-    ::TranslateCharsetInfo((DWORD *)dwCharSet, &cs, TCI_SRCCHARSET);
+    DWORD_PTR dwcp = intptr_t(dwCharSet);
+    ::TranslateCharsetInfo((DWORD *)dwcp, &cs, TCI_SRCCHARSET);
     return cs.ciACP;
 }
 
@@ -535,8 +536,8 @@ static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
         int hh1, mm1, ss1, ms1, hh2, mm2, ss2, ms2;
         WCHAR msStr1[5] = {0}, msStr2[5] = {0};
         int c = swscanf_s(buff, L"%d%c%d%c%d%4[^-] --> %d%c%d%c%d%4s\n",
-                          &hh1, &sep, 1, &mm1, &sep, 1, &ss1, msStr1, _countof(msStr1),
-                          &hh2, &sep, 1, &mm2, &sep, 1, &ss2, msStr2, _countof(msStr2));
+                          &hh1, &sep, 1, &mm1, &sep, 1, &ss1, msStr1, (unsigned int)_countof(msStr1),
+                          &hh2, &sep, 1, &mm2, &sep, 1, &ss2, msStr2, (unsigned int)_countof(msStr2));
 
         if (c == 1) { // numbering
             num = hh1;
