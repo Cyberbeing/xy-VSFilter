@@ -293,7 +293,7 @@ __forceinline void xy_filter_one_line_sse_v6(float *dst, int width, const float 
 void xy_filter_sse_v6(float *dst, int width, int height, int stride, const float *filter, int filter_width)
 {
     ASSERT( stride>=4*(width+filter_width) );
-    ASSERT( ((stride|(4*width)|(4*filter_width)|reinterpret_cast<int>(dst)|reinterpret_cast<int>(filter))&15)==0 );
+    ASSERT( ((stride|(4*width)|(4*filter_width)|reinterpret_cast<intptr_t>(dst)|reinterpret_cast<intptr_t>(filter))&15)==0 );
 
     BYTE* dst_byte = reinterpret_cast<BYTE*>(dst);
     BYTE* end = dst_byte + height*stride;
@@ -489,7 +489,7 @@ template<int FILTER_LENGTH>
 void xy_filter_sse_template(float *dst, int width, int height, int stride, const float *filter)
 {
     ASSERT( stride>=4*(width+FILTER_LENGTH) );
-    ASSERT( ((stride|(4*width)|reinterpret_cast<int>(dst)|reinterpret_cast<int>(filter))&15)==0 );
+    ASSERT( ((stride|(4*width)|reinterpret_cast<intptr_t>(dst)|reinterpret_cast<intptr_t>(filter))&15)==0 );
 
     M128s<FILTER_LENGTH> filter128s;
     filter128s.Load(filter);
@@ -547,7 +547,7 @@ void xy_3_tag_symmetric_filter_sse(float *dst, int width, int height, int stride
 {
     const int filter_width = 4;
     ASSERT( stride>=4*(width+filter_width) );
-    ASSERT( ((stride|(4*width)|(4*filter_width)|reinterpret_cast<int>(dst)|reinterpret_cast<int>(filter))&15)==0 );
+    ASSERT( ((stride|(4*width)|(4*filter_width)|reinterpret_cast<intptr_t>(dst)|reinterpret_cast<intptr_t>(filter))&15)==0 );
 
     ASSERT(filter_width==4 && filter[3]==0 && filter[2]==filter[0]);
     
@@ -664,7 +664,7 @@ void xy_byte_2_float_sse(float *dst, int dst_width, int dst_stride,
     PCUINT8 src, int width, int height, int stride)
 {
     ASSERT( dst_width>=width );
-    ASSERT( ((reinterpret_cast<int>(dst)|dst_stride)&15)==0 );
+    ASSERT( ((reinterpret_cast<intptr_t>(dst)|dst_stride)&15)==0 );
     PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
 
     PCUINT8 src_end = src + height*stride;
@@ -744,7 +744,7 @@ void xy_float_2_float_transpose_sse(float *dst, int dst_width, int dst_stride,
     typedef float DstT;
     typedef const float SrcT;
 
-    ASSERT( (((int)dst|dst_stride)&15)==0 );
+    ASSERT( (((intptr_t)dst|dst_stride)&15)==0 );
     ASSERT(dst_width >= height);
     PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
     SrcT* src_end = src + width;
@@ -812,7 +812,7 @@ void xy_float_2_byte_transpose_sse(UINT8 *dst, int dst_width, int dst_stride,
     typedef const float SrcT;
 
     ASSERT(dst_width >= height);
-    ASSERT((((int)dst|dst_stride)&15)==0);
+    ASSERT((((intptr_t)dst|dst_stride)&15)==0);
     PUINT8 dst_byte = reinterpret_cast<PUINT8>(dst);
     SrcT* src_end = src + width;
     PCUINT8 src2_end00 = reinterpret_cast<PCUINT8>(src) + (height&~15)*src_stride;
