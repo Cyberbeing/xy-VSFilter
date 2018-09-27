@@ -11,6 +11,7 @@ struct VDPixmapGenYCbCrBasis {
 
 extern const VDPixmapGenYCbCrBasis g_VDPixmapGenYCbCrBasis_601;
 extern const VDPixmapGenYCbCrBasis g_VDPixmapGenYCbCrBasis_709;
+extern const VDPixmapGenYCbCrBasis g_VDPixmapGenYCbCrBasis_2020;
 
 ////////////////////////////////////////////////////////////////////////////
 

@@ -38,6 +38,7 @@ public:
         YuvMatrix_AUTO = 0
         ,BT_601
         ,BT_709
+        ,BT_2020
         ,GUESS
     };
     enum YuvRange

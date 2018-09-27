@@ -904,6 +904,9 @@ void XySubFilterConsumer::SetYuvMatrix()
         case CDirectVobSub::BT_709:
             yuv_matrix = ColorConvTable::BT709;
             break;
+        case CDirectVobSub::BT_2020:
+            yuv_matrix = ColorConvTable::BT2020;
+            break;
         case CDirectVobSub::GUESS:
         default:        
             yuv_matrix = (m_w > m_bt601Width || m_h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
@@ -1270,7 +1273,7 @@ void XySubFilterConsumer::PrintMessages(BYTE* pOut)
         //color space
         tmp.Format( _T("Colorspace: %ls %ls (%ls)\n"), 
             ColorConvTable::GetDefaultRangeType()==ColorConvTable::RANGE_PC ? _T("PC"):_T("TV"),
-            ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT601 ? _T("BT.601"):_T("BT.709"),
+            ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT601 ? _T("BT.601"):(ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT2020 ? _T("BT.2020"):_T("BT.709")),
             m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::YuvMatrix_AUTO ? _T("Auto") :
             m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::GUESS ? _T("Guessed") : _T("Forced") );
         msg += tmp;

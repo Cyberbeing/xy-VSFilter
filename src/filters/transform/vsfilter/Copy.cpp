@@ -255,7 +255,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
         //color space
         tmp.Format( _T("Colorspace: %ls %ls (%ls)\n"), 
             ColorConvTable::GetDefaultRangeType()==ColorConvTable::RANGE_PC ? _T("PC"):_T("TV"),
-            ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT601 ? _T("BT.601"):_T("BT.709"),
+            ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT601 ? _T("BT.601"): (ColorConvTable::GetDefaultYUVType()==ColorConvTable::BT709 ? _T("BT.709"):_T("BT.2020")),
             m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::YuvMatrix_AUTO ? _T("Auto") :
             m_xy_int_opt[INT_COLOR_SPACE]==CDirectVobSub::GUESS ? _T("Guessed") : _T("Forced") );
         msg += tmp;

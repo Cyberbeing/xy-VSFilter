@@ -200,6 +200,7 @@ public:
     {
         YCbCrMatrix_BT601,
         YCbCrMatrix_BT709,
+        YCbCrMatrix_BT2020,
         YCbCrMatrix_AUTO
     };
     enum YCbCrRange

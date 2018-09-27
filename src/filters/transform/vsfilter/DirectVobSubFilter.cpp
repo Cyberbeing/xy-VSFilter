@@ -1713,6 +1713,9 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
             case CSimpleTextSubtitle::YCbCrMatrix_BT709:
                 m_video_yuv_matrix_decided_by_sub = ColorConvTable::BT709;
                 break;
+            case CSimpleTextSubtitle::YCbCrMatrix_BT2020:
+                m_video_yuv_matrix_decided_by_sub = ColorConvTable::BT2020;
+                break;
             default:
                 m_video_yuv_matrix_decided_by_sub = ColorConvTable::NONE;
                 break;
@@ -1752,6 +1755,10 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
             else if ( m_xy_str_opt[STRING_PGS_YUV_MATRIX].CompareNoCase(_T("BT709"))==0 )
             {
                 color_type = CompositionObject::YUV_Rec709;
+            }
+            else if ( m_xy_str_opt[STRING_PGS_YUV_MATRIX].CompareNoCase(_T("BT2020"))==0 )
+            {
+                color_type = CompositionObject::YUV_Rec2020;
             }
 
             m_video_yuv_matrix_decided_by_sub = (m_w > m_bt601Width || m_h > m_bt601Height) ? ColorConvTable::BT709 : 
@@ -2132,6 +2139,10 @@ void CDirectVobSubFilter::SetYuvMatrix()
             {
                 yuv_matrix = ColorConvTable::BT709;
             }
+            else if (m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].Right(4).CompareNoCase(L"2020")==0)
+            {
+                yuv_matrix = ColorConvTable::BT2020;
+            }
             else
             {
                 XY_LOG_WARN(L"Can NOT get useful YUV range from consumer:"<<m_xy_str_opt[STRING_CONSUMER_YUV_MATRIX].GetString());
@@ -2149,6 +2160,9 @@ void CDirectVobSubFilter::SetYuvMatrix()
             break;
         case CDirectVobSub::BT_709:
             yuv_matrix = ColorConvTable::BT709;
+            break;
+        case CDirectVobSub::BT_2020:
+            yuv_matrix = ColorConvTable::BT2020;
             break;
         case CDirectVobSub::GUESS:
         default:        

@@ -354,7 +354,7 @@ void CDVBSub::Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox)
                         CompositionObject::ColorType color_type = m_colorTypeSetting;
                         if (color_type==CompositionObject::NONE)
                         {
-                            color_type = m_Display.width > 720 ? CompositionObject::YUV_Rec709 : CompositionObject::YUV_Rec601;
+                            color_type = m_Display.width >= 720 ? CompositionObject::YUV_Rec709 : CompositionObject::YUV_Rec601;
                         }
                         pObject->SetPalette(pCLUT->size, pCLUT->palette, color_type, 
                             m_yuvRangeSetting==CompositionObject::RANGE_NONE ? CompositionObject::RANGE_TV : m_yuvRangeSetting);

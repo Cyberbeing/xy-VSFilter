@@ -73,6 +73,10 @@ void CompositionObject::InitColor(const SubPicDesc& spd)
         {
             cur_type = ColorConvTable::BT709;
         }
+        else if (m_OriginalColorType==YUV_Rec2020)
+        {
+            cur_type = ColorConvTable::BT2020;
+        }
         else
         {
             XY_LOG_ERROR("Not supported. "<<XY_LOG_VAR_2_STR(m_OriginalColorType));

@@ -38,6 +38,15 @@ extern const VDPixmapGenYCbCrBasis g_VDPixmapGenYCbCrBasis_709 = {
 	}
 };
 
+extern const VDPixmapGenYCbCrBasis g_VDPixmapGenYCbCrBasis_2020 = {
+	0.2627f,
+	0.0593f,
+	{
+		0.0f,     -0.164553f,     1.8814f,
+		1.4746f,  -0.571353f,     0.0f,
+	}
+};
+
 ////////////////////////////////////////////////////////////////////////////
 
 VDPixmapGenYCbCrToRGB32Generic::VDPixmapGenYCbCrToRGB32Generic(const VDPixmapGenYCbCrBasis& basis, bool studioRGB) {

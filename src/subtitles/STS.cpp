@@ -1640,6 +1640,11 @@ if(sver <= 4)   style->scrAlignment = (style->scrAlignment&4) ? ((style->scrAlig
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT709;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_TV;
             }
+            else if (buff.Left(7)==L"tv.2020")
+            {
+                ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT2020;
+                ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_TV;
+            }
             else if (buff.Left(6)==L"pc.601")
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT601;
@@ -1648,6 +1653,11 @@ if(sver <= 4)   style->scrAlignment = (style->scrAlignment&4) ? ((style->scrAlig
             else if (buff.Left(6)==L"pc.709")
             {
                 ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT709;
+                ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_PC;
+            }
+            else if (buff.Left(7)==L"pc.2020")
+            {
+                ret.m_eYCbCrMatrix = CSimpleTextSubtitle::YCbCrMatrix_BT2020;
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_PC;
             }
         }

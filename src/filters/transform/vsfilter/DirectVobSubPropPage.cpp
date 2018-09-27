@@ -872,6 +872,7 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
         if( m_colorSpace != CDirectVobSub::YuvMatrix_AUTO && 
             m_colorSpace != CDirectVobSub::BT_601 && 
             m_colorSpace != CDirectVobSub::BT_709 &&
+            m_colorSpace != CDirectVobSub::BT_2020 &&
             m_colorSpace != CDirectVobSub::GUESS )
         {
             m_colorSpace = CDirectVobSub::YuvMatrix_AUTO;
@@ -883,6 +884,8 @@ void CDVSMiscPPage::UpdateControlData(bool fSave)
         m_colorSpaceDropList.SetItemData( CDirectVobSub::BT_601, CDirectVobSub::BT_601 );
         m_colorSpaceDropList.AddString( CString(_T("BT.709")) ); 
         m_colorSpaceDropList.SetItemData( CDirectVobSub::BT_709, CDirectVobSub::BT_709);
+        m_colorSpaceDropList.AddString( CString(_T("BT.2020")) ); 
+        m_colorSpaceDropList.SetItemData( CDirectVobSub::BT_2020, CDirectVobSub::BT_2020);
         m_colorSpaceDropList.AddString( CString(_T("Guess")) );
         m_colorSpaceDropList.SetItemData( CDirectVobSub::GUESS, CDirectVobSub::GUESS );
         m_colorSpaceDropList.SetCurSel( m_colorSpace ); 
@@ -2243,6 +2246,7 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         if( m_yuv_matrix != CDirectVobSub::YuvMatrix_AUTO && 
             m_yuv_matrix != CDirectVobSub::BT_601 && 
             m_yuv_matrix != CDirectVobSub::BT_709 &&
+            m_yuv_matrix != CDirectVobSub::BT_2020 &&
             m_yuv_matrix != CDirectVobSub::GUESS )
         {
             m_yuv_matrix = CDirectVobSub::YuvMatrix_AUTO;
@@ -2254,6 +2258,8 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         m_combo_yuv_matrix.SetItemData( CDirectVobSub::BT_601, CDirectVobSub::BT_601 );
         m_combo_yuv_matrix.AddString( CString(_T("BT.709")) ); 
         m_combo_yuv_matrix.SetItemData( CDirectVobSub::BT_709, CDirectVobSub::BT_709);
+        m_combo_yuv_matrix.AddString( CString(_T("BT.2020")) ); 
+        m_combo_yuv_matrix.SetItemData( CDirectVobSub::BT_2020, CDirectVobSub::BT_2020);
         m_combo_yuv_matrix.AddString( CString(_T("Guess")) );
         m_combo_yuv_matrix.SetItemData( CDirectVobSub::GUESS, CDirectVobSub::GUESS );
         m_combo_yuv_matrix.SetCurSel( m_yuv_matrix );

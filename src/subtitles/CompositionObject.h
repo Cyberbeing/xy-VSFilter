@@ -41,6 +41,7 @@ public:
         NONE,
         YUV_Rec601,
         YUV_Rec709,
+        YUV_Rec2020,
         RGB
     };
     enum YuvRangeType 

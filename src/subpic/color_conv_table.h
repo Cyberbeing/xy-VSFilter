@@ -2,7 +2,7 @@
 /* author:      xy                                                      */
 /* date:        20110914                                                */
 /* description: color table for yuv rgb convertion,                     */
-/*              support both bt.601 and bt.709                          */
+/*              support bt.601, bt.709 and bt.2020                      */
 /************************************************************************/
 #ifndef __COLOR_CONV_TABLE_H_53D078BB_BBA1_441B_9728_67E29A1CB521__
 #define __COLOR_CONV_TABLE_H_53D078BB_BBA1_441B_9728_67E29A1CB521__
@@ -16,6 +16,7 @@ struct ColorConvTable
         NONE
         , BT601
         , BT709
+        , BT2020
     };
 
     enum YuvRangeType 
@@ -44,6 +45,9 @@ struct ColorConvTable
     static DWORD Ayuv2Argb_TV_BT709(DWORD ayuv);
     static DWORD A8Y8U8V8_To_ARGB_TV_BT709( int a8, int y8, int u8, int v8 );
     static DWORD A8Y8U8V8_To_ARGB_PC_BT709( int a8, int y8, int u8, int v8 );
+    static DWORD Ayuv2Argb_TV_BT2020(DWORD ayuv);
+    static DWORD A8Y8U8V8_To_ARGB_TV_BT2020( int a8, int y8, int u8, int v8 );
+    static DWORD A8Y8U8V8_To_ARGB_PC_BT2020( int a8, int y8, int u8, int v8 );
 
     static DWORD A8Y8U8V8_PC_To_TV( int a8, int y8, int u8, int v8 );
     static DWORD A8Y8U8V8_TV_To_PC( int a8, int y8, int u8, int v8 );

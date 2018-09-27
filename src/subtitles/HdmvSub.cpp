@@ -365,7 +365,7 @@ void CHdmvSub::Render(SubPicDesc& spd, REFERENCE_TIME rt, RECT& bbox)
                 CompositionObject::ColorType color_type = m_colorTypeSetting;
                 if (color_type==CompositionObject::NONE)
                 {
-                    color_type = pPresentationSegment->video_descriptor.nVideoWidth > 720 ? 
+                    color_type = pPresentationSegment->video_descriptor.nVideoWidth >= 720 ? 
                         CompositionObject::YUV_Rec709 : CompositionObject::YUV_Rec601;
                 }
                 pObject->SetPalette(pPresentationSegment->CLUT.size, pPresentationSegment->CLUT.palette, color_type, 

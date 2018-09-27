@@ -125,6 +125,9 @@ public:
             case CSimpleTextSubtitle::YCbCrMatrix_BT709:
                 yuv_matrix = ColorConvTable::BT709;
                 break;
+            case CSimpleTextSubtitle::YCbCrMatrix_BT2020:
+                yuv_matrix = ColorConvTable::BT2020;
+                break;
             case CSimpleTextSubtitle::YCbCrMatrix_AUTO:
             default:
                 yuv_matrix = ColorConvTable::BT601;                
@@ -140,6 +143,9 @@ public:
                 break;
             case CDirectVobSub::BT_709:
                 yuv_matrix = ColorConvTable::BT709;
+                break;
+            case CDirectVobSub::BT_2020:
+                yuv_matrix = ColorConvTable::BT2020;
                 break;
             case CDirectVobSub::GUESS:
                 yuv_matrix = (dst.w > m_bt601Width || dst.h > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;

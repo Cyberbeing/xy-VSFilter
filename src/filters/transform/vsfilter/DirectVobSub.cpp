@@ -1072,6 +1072,7 @@ CDirectVobSub::CDirectVobSub( const Option *options, CCritSec * pLock )
     if( m_xy_int_opt[INT_COLOR_SPACE]!=YuvMatrix_AUTO && 
         m_xy_int_opt[INT_COLOR_SPACE]!=BT_601 && 
         m_xy_int_opt[INT_COLOR_SPACE]!=BT_709 &&
+        m_xy_int_opt[INT_COLOR_SPACE]!=BT_2020 &&
         m_xy_int_opt[INT_COLOR_SPACE]!=GUESS)
     {
         m_xy_int_opt[INT_COLOR_SPACE] = YuvMatrix_AUTO;
@@ -1257,6 +1258,10 @@ CDirectVobSub::CDirectVobSub( const Option *options, CCritSec * pLock )
     else if (str_pgs_yuv_setting.Right(3).CompareNoCase(_T("709"))==0)
     {
         m_xy_str_opt[STRING_PGS_YUV_MATRIX] = _T("BT709");
+    }
+    else if (str_pgs_yuv_setting.Right(4).CompareNoCase(_T("2020"))==0)
+    {
+        m_xy_str_opt[STRING_PGS_YUV_MATRIX] = _T("BT2020");
     }
     else
     {
@@ -1477,6 +1482,10 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
     {
         m_xy_int_opt[INT_COLOR_SPACE] = DirectVobSubImpl::BT_709;
     }
+    else if (str_color_space.Right(4).CompareNoCase(_T("2020"))==0)
+    {
+        m_xy_int_opt[INT_COLOR_SPACE] = DirectVobSubImpl::BT_2020;
+    }
     else if (str_color_space.Right(5).CompareNoCase(_T("GUESS"))==0)
     {
         m_xy_int_opt[INT_COLOR_SPACE] = DirectVobSubImpl::GUESS;
@@ -1614,6 +1623,10 @@ CDVS4XySubFilter::CDVS4XySubFilter( const Option *options, CCritSec * pLock )
     {
         m_xy_str_opt[STRING_PGS_YUV_MATRIX] = _T("BT709");
     }
+    else if (str_pgs_yuv_setting.Right(4).CompareNoCase(_T("2020"))==0)
+    {
+        m_xy_str_opt[STRING_PGS_YUV_MATRIX] = _T("BT2020");
+    }
     else
     {
         m_xy_str_opt[STRING_PGS_YUV_MATRIX] = _T("GUESS");
@@ -1705,6 +1718,9 @@ STDMETHODIMP CDVS4XySubFilter::UpdateRegistry()
         break;
     case DirectVobSubImpl::BT_709:
         str_color_space += _T(".BT709");
+        break;
+    case DirectVobSubImpl::BT_2020:
+        str_color_space += _T(".BT2020");
         break;
     case DirectVobSubImpl::GUESS:
         str_color_space += _T(".GUESS");
