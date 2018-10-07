@@ -3375,18 +3375,20 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         return hr;
     }
 
-    if ((m_movable) && (!m_simple))
+    if (!m_simple)
     {
+        bool newMovable = true;
         POSITION pos=sub2List.GetHeadPosition();
         while ( pos!=NULL )
         {
             const CSubtitle2& sub2 = sub2List.GetNext(pos);
             if (sub2.s->m_hard_position_level > POS_LVL_NONE)
             {
-              m_movable = false;
+              newMovable = false;
               break;
             }
         }
+        m_movable = newMovable;
     }
 
     TRACE_RENDERER_REQUEST("Begin build draw item tree");
