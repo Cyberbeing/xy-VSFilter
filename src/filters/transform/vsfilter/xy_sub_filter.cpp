@@ -1242,12 +1242,10 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
                 //fix me:
                 ASSERT(0);
             }
-            if (m_xy_bool_opt[BOOL_IS_MOVABLE])
-            {
-              CRenderedTextSubtitle * rts = dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream);
-              if ((rts) && ((!rts->IsMovable()) || ((!rts->IsSimple()) && (!m_xy_bool_opt[BOOL_ALLOW_MOVING]))))
-                m_xy_bool_opt[BOOL_IS_MOVABLE] = false;
-            }
+
+            CRenderedTextSubtitle * rts = dynamic_cast<CRenderedTextSubtitle*>(m_curSubStream);
+            m_xy_bool_opt[BOOL_IS_MOVABLE] = (!rts) || ((rts->IsMovable()) && ((rts->IsSimple()) || (m_xy_bool_opt[BOOL_ALLOW_MOVING])));
+
         }
     }
     CAutoLock cAutoLock(&m_csConsumer);
