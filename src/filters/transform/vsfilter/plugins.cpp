@@ -296,6 +296,7 @@ public:
 						fn = fn2;
 						handles.SetCount(1);
 						handles.Add(h);
+						CFileGetStatus(fn, fs);
 					}
 				}
 			}
