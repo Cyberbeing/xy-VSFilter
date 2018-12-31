@@ -123,7 +123,7 @@ XySubFilter::XySubFilter( LPUNKNOWN punk,
 
     CacheManager::GetClipperAlphaMaskMruCache()->SetMaxItemNum(m_xy_int_opt[INT_CLIPPER_MRU_CACHE_ITEM_NUM]);
     CacheManager::GetTextInfoCache()->SetMaxItemNum(m_xy_int_opt[INT_TEXT_INFO_CACHE_ITEM_NUM]);
-    //CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM]);
+    CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[INT_ASS_TAG_LIST_CACHE_ITEM_NUM]);
 
     std::size_t max_size = m_xy_int_opt[INT_MAX_CACHE_SIZE_MB] >= 0 ?
         m_xy_int_opt[INT_MAX_CACHE_SIZE_MB] : m_xy_int_opt[INT_AUTO_MAX_CACHE_SIZE_MB];
@@ -429,9 +429,9 @@ HRESULT XySubFilter::OnOptionChanged( unsigned field )
     case INT_TEXT_INFO_CACHE_ITEM_NUM:
         CacheManager::GetTextInfoCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
-    //case INT_ASS_TAG_LIST_CACHE_ITEM_NUM:
-    //    CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
-    //    break;
+    case INT_ASS_TAG_LIST_CACHE_ITEM_NUM:
+        CacheManager::GetAssTagListMruCache()->SetMaxItemNum(m_xy_int_opt[field]);
+        break;
     case INT_SUBPIXEL_VARIANCE_CACHE_ITEM_NUM:
         CacheManager::GetSubpixelVarianceCache()->SetMaxItemNum(m_xy_int_opt[field]);
         break;
@@ -731,9 +731,9 @@ STDMETHODIMP XySubFilter::get_CachesInfo(CachesInfo* caches_info)
     caches_info->text_info_cache_hit_count      = CacheManager::GetTextInfoCache()->GetCacheHitCount();
     caches_info->text_info_cache_query_count    = CacheManager::GetTextInfoCache()->GetQueryCount();
 
-    //caches_info->word_info_cache_cur_item_num   = CacheManager::GetAssTagListMruCache()->GetCurItemNum();
-    //caches_info->word_info_cache_hit_count      = CacheManager::GetAssTagListMruCache()->GetCacheHitCount();
-    //caches_info->word_info_cache_query_count    = CacheManager::GetAssTagListMruCache()->GetQueryCount();    
+    caches_info->word_info_cache_cur_item_num   = CacheManager::GetAssTagListMruCache()->GetCurItemNum();
+    caches_info->word_info_cache_hit_count      = CacheManager::GetAssTagListMruCache()->GetCacheHitCount();
+    caches_info->word_info_cache_query_count    = CacheManager::GetAssTagListMruCache()->GetQueryCount();    
 
     caches_info->scanline_cache_cur_item_num = CacheManager::GetScanLineDataMruCache()->GetCurItemNum();
     caches_info->scanline_cache_hit_count    = CacheManager::GetScanLineDataMruCache()->GetCacheHitCount();

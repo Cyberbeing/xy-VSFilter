@@ -431,7 +431,7 @@ public:
         s_overlay_no_offset_mru_cache = NULL;
 		
         s_subpixel_variance_cache = NULL;
-        //s_ass_tag_list_cache = NULL;
+        s_ass_tag_list_cache = NULL;
     }
     ~Caches()
     {
@@ -448,14 +448,14 @@ public:
         delete s_overlay_no_offset_mru_cache;
 
         delete s_subpixel_variance_cache;
-        //delete s_ass_tag_list_cache;
+        delete s_ass_tag_list_cache;
     }
 public:
     BitmapMruCache* s_bitmap_cache;
     ClipperAlphaMaskMruCache* s_clipper_alpha_mask_cache;
 
     TextInfoMruCache* s_text_info_cache;
-    //AssTagListMruCache* s_ass_tag_list_cache;
+    AssTagListMruCache* s_ass_tag_list_cache;
 
     ScanLineDataMruCache* s_scan_line_data_mru_cache;
     OverlayNoOffsetMruCache* s_overlay_no_offset_mru_cache;
@@ -532,14 +532,14 @@ OverlayNoOffsetMruCache* CacheManager::GetOverlayNoOffsetMruCache()
     return s_caches.s_overlay_no_offset_mru_cache;    
 }
 
-//AssTagListMruCache* CacheManager::GetAssTagListMruCache()
-//{
-//    if(s_caches.s_ass_tag_list_cache==NULL)
-//    {
-//        s_caches.s_ass_tag_list_cache = DEBUG_NEW AssTagListMruCache(ASS_TAG_LIST_CACHE_ITEM_NUM);
-//    }
-//    return s_caches.s_ass_tag_list_cache;  
-//}
+AssTagListMruCache* CacheManager::GetAssTagListMruCache()
+{
+    if(s_caches.s_ass_tag_list_cache==NULL)
+    {
+        s_caches.s_ass_tag_list_cache = DEBUG_NEW AssTagListMruCache(ASS_TAG_LIST_CACHE_ITEM_NUM);
+    }
+    return s_caches.s_ass_tag_list_cache;  
+}
 
 TextInfoMruCache* CacheManager::GetTextInfoCache()
 {

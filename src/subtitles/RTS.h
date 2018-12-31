@@ -31,18 +31,6 @@
 #include "mru_cache.h"
 #include "xy_int_map.h"
 
-struct AssTag;
-typedef ::boost::shared_ptr<CAtlList<AssTag>> AssTagList;
-
-typedef CTagCache<CStringW, AssTagList, CStringElementTraits<CStringW>> CAssTagsCache;
-
-struct TagCache {
-    CAssTagsCache AssTagsCache;
-
-    TagCache()
-        : AssTagsCache(2048) {}
-};
-
 //how hard positioned is the ass cmd 
 enum AssCmdPosLevel
 {
@@ -184,95 +172,13 @@ public:
     friend class PathDataCacheKey;
 };
 
-enum AssCmdType {
-    // /!\ Keep those four grouped together in that order
-    CMD_1c,
-    CMD_2c,
-    CMD_3c,
-    CMD_4c,
-    // /!\ Keep those four grouped together in that order
-    CMD_1a,
-    CMD_2a,
-    CMD_3a,
-    CMD_4a,
-    CMD_alpha,
-    CMD_an,
-    CMD_a,
-    CMD_blur,
-    CMD_bord,
-    CMD_be,
-    CMD_b,
-    CMD_clip,
-    CMD_c,
-    CMD_fade,
-    CMD_fe,
-    CMD_fn,
-    CMD_frx,
-    CMD_fry,
-    CMD_frz,
-    CMD_fax,
-    CMD_fay,
-    CMD_fr,
-    CMD_fscx,
-    CMD_fscy,
-    CMD_fsc,
-    CMD_fsp,
-    CMD_fs,
-    CMD_iclip,
-    CMD_i,
-    CMD_kt,
-    CMD_kf,
-    CMD_ko,
-    CMD_k,
-    CMD_K,
-    CMD_move,
-    CMD_org,
-    CMD_pbo,
-    CMD_pos,
-    CMD_p,
-    CMD_q,
-    CMD_r,
-    CMD_shad,
-    CMD_s,
-    CMD_t,
-    CMD_u,
-    CMD_xbord,
-    CMD_xshad,
-    CMD_ybord,
-    CMD_yshad,
-    CMD_COUNT
-};
-
-#define CMD_MIN_LENGTH 1
-#define CMD_MAX_LENGTH 5
-
-struct AssTag {
-    AssCmdType cmdType;
-    CAtlArray<CStringW, CStringElementTraits<CStringW>> params;
-    CAtlArray<int> paramsInt;
-    CAtlArray<double> paramsReal;
-    AssTagList embeded;
-
-    AssTag() : cmdType(CMD_COUNT) {};
-
-    AssTag(const AssTag& tag)
-        : cmdType(tag.cmdType)
-        , params()
-        , paramsInt()
-        , paramsReal()
-        , embeded(tag.embeded) {
-        params.Copy(tag.params);
-        paramsInt.Copy(tag.paramsInt);
-        paramsReal.Copy(tag.paramsReal);
-    }
-};
-
-enum eftype {
+enum eftype
+{
     EF_MOVE = 0,    // {\move(x1=param[0], y1=param[1], x2=param[2], y2=param[3], t1=t[0], t2=t[1])} or {\pos(x=param[0], y=param[1])}
     EF_ORG,         // {\org(x=param[0], y=param[1])}
     EF_FADE,        // {\fade(a1=param[0], a2=param[1], a3=param[2], t1=t[0], t2=t[1], t3=t[2], t4=t[3])} or {\fad(t1=t[1], t2=t[2])
     EF_BANNER,      // Banner;delay=param[0][;lefttoright=param[1];fadeawaywidth=param[2]]
-    EF_SCROLL       // Scroll up/down=param[3];top=param[0];bottom=param[1];delay=param[2][;fadeawayheight=param[4]]
+    EF_SCROLL,      // Scroll up/down=param[3];top=param[0];bottom=param[1];delay=param[2][;fadeawayheight=param[4]]
 };
 
 #define EF_NUMBEROFEFFECTS 5
@@ -396,7 +302,7 @@ struct CSubtitle2
     const CPoint     org;
     const CPoint     org2;
     const CPoint     p;
-    int              alpha; 
+    int              alpha;
     int              time;
 };
 
@@ -422,15 +328,82 @@ public:
 [uuid("537DCACA-2812-4a4f-B2C6-1A34C17ADEB0")]
 class CRenderedTextSubtitle : public CSubPicProviderImpl, public ISubStream, public ISubPicProviderEx2, public CSimpleTextSubtitle
 {
+public:
+    enum AssCmdType
+    {
+        CMD_1c = 0,
+        CMD_2c,
+        CMD_3c,
+        CMD_4c,
+        CMD_1a,
+        CMD_2a,
+        CMD_3a,
+        CMD_4a,
+        CMD_alpha,
+        CMD_an,
+        CMD_a,
+        CMD_blur,
+        CMD_bord,
+        CMD_be,
+        CMD_b,
+        CMD_clip,
+        CMD_iclip,
+        CMD_c,
+        CMD_fade,
+        CMD_fad,
+        CMD_fax,
+        CMD_fay,
+        CMD_fe,
+        CMD_fn,
+        CMD_frx,
+        CMD_fry,
+        CMD_frz,
+        CMD_fr,
+        CMD_fscx,
+        CMD_fscy,
+        CMD_fsc,
+        CMD_fsp,
+        CMD_fs,
+        CMD_i,
+        CMD_kt,
+        CMD_kf,
+        CMD_K,
+        CMD_ko,
+        CMD_k,
+        CMD_move,
+        CMD_org,
+        CMD_pbo,
+        CMD_pos,
+        CMD_p,
+        CMD_q,
+        CMD_r,
+        CMD_shad,
+        CMD_s,
+        CMD_t,
+        CMD_u,
+        CMD_xbord,
+        CMD_xshad,
+        CMD_ybord,
+        CMD_yshad,
+        CMD_COUNT
+    };
+    static const int MIN_CMD_LENGTH = 1;//c etc
+    static const int MAX_CMD_LENGTH = 5;//alpha, iclip, xbord, xshad, ybord, yshad
+    static CAtlMap<CStringW, AssCmdType, CStringElementTraits<CStringW>> m_cmdMap;
 
     static CAtlArray<AssCmdPosLevel> m_cmd_pos_level;
 
-    static CAtlMap<CStringW, AssCmdType, CStringElementTraits<CStringW>> m_cmdMap;
-
-    TagCache m_tagCache;
+    struct AssTag;
+    typedef CAtlList<AssTag> AssTagList;
+    typedef ::boost::shared_ptr<const AssTagList> SharedPtrConstAssTagList;
+    struct AssTag
+    {
+        AssCmdType cmdType;
+        CAtlArray<CStringW> strParams;
+        AssTagList embeded;
+    };
 public:
     static std::size_t SetMaxCacheSize(std::size_t max_cache_size);
-
 private:
     XyIntMap<CSubtitle*>     m_subtitleCache;
     CAtlList<int>            m_subtitleCacheEntry;
@@ -460,8 +433,9 @@ private:
     void ParseString (CSubtitle* sub, CStringW str, const FwSTSStyle& style);
     void ParsePolygon(CSubtitle* sub, const CStringW& str, const FwSTSStyle& style);
 
-    bool ParseSSATag(AssTagList& assTags, const CStringW& str);
-    bool CreateSubFromSSATag(CSubtitle* sub, const AssTagList& assTags, STSStyle& style, STSStyle& org, bool fAnimate = false);
+    static bool ParseSSATag(AssTagList *assTags, const CStringW& str);
+    bool ParseSSATag(CSubtitle* sub, const AssTagList& assTags, STSStyle& style, const STSStyle& org, bool fAnimate = false);
+    bool ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate = false);
 
     bool ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle& style, STSStyle& org);
 

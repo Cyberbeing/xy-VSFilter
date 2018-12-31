@@ -9,17 +9,17 @@
 #include "mru_cache.h"
 #include "flyweight_base_types.h"
 
-template<class CacheKey>
-class XyCacheKeyTraits:public CElementTraits<CacheKey>
+template<class CahcheKey>
+class XyCacheKeyTraits:public CElementTraits<CahcheKey>
 {    
 public:
-    static inline ULONG Hash(const CacheKey& key)
+    static inline ULONG Hash(const CahcheKey& key)
     {
         return key.GetHashValue();
     }
     static inline bool CompareElements(
-        const CacheKey& element1,
-        const CacheKey& element2)
+        const CahcheKey& element1,
+        const CahcheKey& element2)
     {
         return ( (element1==element2)!=0 );
     }
@@ -270,11 +270,11 @@ typedef EnhancedXyMru<
     XyCacheKeyTraits<TextInfoCacheKey>
 > TextInfoMruCache;
 
-//typedef EnhancedXyMru<
-//    CStringW, 
-//    CRenderedTextSubtitle::SharedPtrConstAssTagList, 
-//    CStringElementTraits<CStringW>
-//> AssTagListMruCache;
+typedef EnhancedXyMru<
+    CStringW, 
+    CRenderedTextSubtitle::SharedPtrConstAssTagList, 
+    CStringElementTraits<CStringW>
+> AssTagListMruCache;
 
 typedef EnhancedXyMru<PathDataCacheKey, SharedPtrConstPathData, XyCacheKeyTraits<PathDataCacheKey>> PathDataMruCache;
 
@@ -301,7 +301,7 @@ public:
     static const int CLIPPER_MRU_CACHE_ITEM_NUM = 48;
 
     static const int TEXT_INFO_CACHE_ITEM_NUM = 2048;
-    //static const int ASS_TAG_LIST_CACHE_ITEM_NUM = 2048;
+    static const int ASS_TAG_LIST_CACHE_ITEM_NUM = 2048;
     static const int SUBPIXEL_VARIANCE_CACHE_ITEM_NUM = 2048;
     static const int OVERLAY_CACHE_ITEM_NUM = 2048;
 
@@ -314,7 +314,7 @@ public:
 
     static ClipperAlphaMaskMruCache* GetClipperAlphaMaskMruCache();
     static TextInfoMruCache* GetTextInfoCache();
-    //static AssTagListMruCache* GetAssTagListMruCache();
+    static AssTagListMruCache* GetAssTagListMruCache();
 
     static ScanLineDataMruCache* GetScanLineDataMruCache();
     static OverlayNoOffsetMruCache* GetOverlayNoOffsetMruCache();

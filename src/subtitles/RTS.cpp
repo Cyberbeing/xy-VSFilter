@@ -714,7 +714,7 @@ void CText::GetTextInfo(TextInfo *output, const FwSTSStyle& style, const CString
     else
     {
         CSize extent;
-        if(!GetTextExtentPoint32W(g_hDC, str, str.GetLength(), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return;}
+        if(!GetTextExtentPoint32W(g_hDC, str, wcslen(str), &extent)) {SelectFont(g_hDC, hOldFont); ASSERT(0); return;}
         output->m_width += extent.cx;
     }
     output->m_width = (int)(style.get().fontScaleX/100*output->m_width + 4) >> 3;
@@ -1652,7 +1652,7 @@ CRect CScreenLayoutAllocator::AllocRect(CSubtitle* s, int segment, int entry, in
 
 // CRenderedTextSubtitle
 
-CAtlMap<CStringW, AssCmdType, CStringElementTraits<CStringW>> CRenderedTextSubtitle::m_cmdMap;
+CAtlMap<CStringW, CRenderedTextSubtitle::AssCmdType, CStringElementTraits<CStringW>> CRenderedTextSubtitle::m_cmdMap;
 
 std::size_t CRenderedTextSubtitle::s_max_cache_size = SIZE_MAX;
 
@@ -1694,61 +1694,62 @@ CRenderedTextSubtitle::~CRenderedTextSubtitle()
 
 void CRenderedTextSubtitle::InitCmdMap()
 {
-    if (m_cmdMap.IsEmpty()) {
-        m_cmdMap[L"1c"]    = CMD_1c;
-        m_cmdMap[L"2c"]    = CMD_2c;
-        m_cmdMap[L"3c"]    = CMD_3c;
-        m_cmdMap[L"4c"]    = CMD_4c;
-        m_cmdMap[L"1a"]    = CMD_1a;
-        m_cmdMap[L"2a"]    = CMD_2a;
-        m_cmdMap[L"3a"]    = CMD_3a;
-        m_cmdMap[L"4a"]    = CMD_4a;
-        m_cmdMap[L"alpha"] = CMD_alpha;
-        m_cmdMap[L"an"]    = CMD_an;
-        m_cmdMap[L"a"]     = CMD_a;
-        m_cmdMap[L"blur"]  = CMD_blur;
-        m_cmdMap[L"bord"]  = CMD_bord;
-        m_cmdMap[L"be"]    = CMD_be;
-        m_cmdMap[L"b"]     = CMD_b;
-        m_cmdMap[L"clip"]  = CMD_clip;
-        m_cmdMap[L"iclip"] = CMD_iclip;
-        m_cmdMap[L"c"]     = CMD_c;
-        m_cmdMap[L"fade"]  = CMD_fade;
-        m_cmdMap[L"fad"]   = CMD_fade;
-        m_cmdMap[L"fax"]   = CMD_fax;
-        m_cmdMap[L"fay"]   = CMD_fay;
-        m_cmdMap[L"fe"]    = CMD_fe;
-        m_cmdMap[L"fn"]    = CMD_fn;
-        m_cmdMap[L"frx"]   = CMD_frx;
-        m_cmdMap[L"fry"]   = CMD_fry;
-        m_cmdMap[L"frz"]   = CMD_frz;
-        m_cmdMap[L"fr"]    = CMD_fr;
-        m_cmdMap[L"fscx"]  = CMD_fscx;
-        m_cmdMap[L"fscy"]  = CMD_fscy;
-        m_cmdMap[L"fsc"]   = CMD_fsc;
-        m_cmdMap[L"fsp"]   = CMD_fsp;
-        m_cmdMap[L"fs"]    = CMD_fs;
-        m_cmdMap[L"i"]     = CMD_i;
-        m_cmdMap[L"kt"]    = CMD_kt;
-        m_cmdMap[L"kf"]    = CMD_kf;
-        m_cmdMap[L"K"]     = CMD_K;
-        m_cmdMap[L"ko"]    = CMD_ko;
-        m_cmdMap[L"k"]     = CMD_k;
-        m_cmdMap[L"move"]  = CMD_move;
-        m_cmdMap[L"org"]   = CMD_org;
-        m_cmdMap[L"pbo"]   = CMD_pbo;
-        m_cmdMap[L"pos"]   = CMD_pos;
-        m_cmdMap[L"p"]     = CMD_p;
-        m_cmdMap[L"q"]     = CMD_q;
-        m_cmdMap[L"r"]     = CMD_r;
-        m_cmdMap[L"shad"]  = CMD_shad;
-        m_cmdMap[L"s"]     = CMD_s;
-        m_cmdMap[L"t"]     = CMD_t;
-        m_cmdMap[L"u"]     = CMD_u;
-        m_cmdMap[L"xbord"] = CMD_xbord;
-        m_cmdMap[L"xshad"] = CMD_xshad;
-        m_cmdMap[L"ybord"] = CMD_ybord;
-        m_cmdMap[L"yshad"] = CMD_yshad;
+    if( m_cmdMap.IsEmpty() )
+    {
+        m_cmdMap.SetAt(L"1c",        CMD_1c   );
+        m_cmdMap.SetAt(L"2c",        CMD_2c   );
+        m_cmdMap.SetAt(L"3c",        CMD_3c   );
+        m_cmdMap.SetAt(L"4c",        CMD_4c   );
+        m_cmdMap.SetAt(L"1a",        CMD_1a   );
+        m_cmdMap.SetAt(L"2a",        CMD_2a   );
+        m_cmdMap.SetAt(L"3a",        CMD_3a   );
+        m_cmdMap.SetAt(L"4a",        CMD_4a   );
+        m_cmdMap.SetAt(L"alpha",     CMD_alpha);
+        m_cmdMap.SetAt(L"an",        CMD_an   );
+        m_cmdMap.SetAt(L"a",         CMD_a    );
+        m_cmdMap.SetAt(L"blur",      CMD_blur );
+        m_cmdMap.SetAt(L"bord",      CMD_bord );
+        m_cmdMap.SetAt(L"be",        CMD_be   );
+        m_cmdMap.SetAt(L"b",         CMD_b    );
+        m_cmdMap.SetAt(L"clip",      CMD_clip );
+        m_cmdMap.SetAt(L"iclip",     CMD_iclip);
+        m_cmdMap.SetAt(L"c",         CMD_c    );
+        m_cmdMap.SetAt(L"fade",      CMD_fade );
+        m_cmdMap.SetAt(L"fad",       CMD_fad  );
+        m_cmdMap.SetAt(L"fax",       CMD_fax  );
+        m_cmdMap.SetAt(L"fay",       CMD_fay  );
+        m_cmdMap.SetAt(L"fe",        CMD_fe   );
+        m_cmdMap.SetAt(L"fn",        CMD_fn   );
+        m_cmdMap.SetAt(L"frx",       CMD_frx  );
+        m_cmdMap.SetAt(L"fry",       CMD_fry  );
+        m_cmdMap.SetAt(L"frz",       CMD_frz  );
+        m_cmdMap.SetAt(L"fr",        CMD_fr   );
+        m_cmdMap.SetAt(L"fscx",      CMD_fscx );
+        m_cmdMap.SetAt(L"fscy",      CMD_fscy );
+        m_cmdMap.SetAt(L"fsc",       CMD_fsc  );
+        m_cmdMap.SetAt(L"fsp",       CMD_fsp  );
+        m_cmdMap.SetAt(L"fs",        CMD_fs   );
+        m_cmdMap.SetAt(L"i",         CMD_i    );
+        m_cmdMap.SetAt(L"kt",        CMD_kt   );
+        m_cmdMap.SetAt(L"kf",        CMD_kf   );
+        m_cmdMap.SetAt(L"K",         CMD_K    );
+        m_cmdMap.SetAt(L"ko",        CMD_ko   );
+        m_cmdMap.SetAt(L"k",         CMD_k    );
+        m_cmdMap.SetAt(L"move",      CMD_move );
+        m_cmdMap.SetAt(L"org",       CMD_org  );
+        m_cmdMap.SetAt(L"pbo",       CMD_pbo  );
+        m_cmdMap.SetAt(L"pos",       CMD_pos  );
+        m_cmdMap.SetAt(L"p",         CMD_p    );
+        m_cmdMap.SetAt(L"q",         CMD_q    );
+        m_cmdMap.SetAt(L"r",         CMD_r    );
+        m_cmdMap.SetAt(L"shad",      CMD_shad );
+        m_cmdMap.SetAt(L"s",         CMD_s    );
+        m_cmdMap.SetAt(L"t",         CMD_t    );
+        m_cmdMap.SetAt(L"u",         CMD_u    );
+        m_cmdMap.SetAt(L"xbord",     CMD_xbord);
+        m_cmdMap.SetAt(L"xshad",     CMD_xshad);
+        m_cmdMap.SetAt(L"ybord",     CMD_ybord);
+        m_cmdMap.SetAt(L"yshad",     CMD_yshad);
     }
     m_cmd_pos_level.SetCount(CMD_COUNT+1);
     m_cmd_pos_level[CMD_1c   ] = POS_LVL_NONE;
@@ -1772,6 +1773,7 @@ void CRenderedTextSubtitle::InitCmdMap()
 
     m_cmd_pos_level[CMD_c    ] = POS_LVL_NONE;
     m_cmd_pos_level[CMD_fade ] = POS_LVL_NONE;
+    m_cmd_pos_level[CMD_fad  ] = POS_LVL_NONE;
 
     m_cmd_pos_level[CMD_fax  ] = POS_LVL_SOFT;
     m_cmd_pos_level[CMD_fay  ] = POS_LVL_SOFT;
@@ -1893,7 +1895,7 @@ void CRenderedTextSubtitle::Deinit()
 
     CacheManager::GetClipperAlphaMaskMruCache()->RemoveAll();
     CacheManager::GetTextInfoCache           ()->RemoveAll();
-    //CacheManager::GetAssTagListMruCache      ()->RemoveAll();
+    CacheManager::GetAssTagListMruCache      ()->RemoveAll();
 
     CacheManager::GetScanLineDataMruCache   ()->RemoveAll();
     CacheManager::GetOverlayNoOffsetMruCache()->RemoveAll();
@@ -2040,668 +2042,708 @@ void CRenderedTextSubtitle::ParsePolygon(CSubtitle* sub, const CStringW& str, co
     }
 }
 
-bool CRenderedTextSubtitle::ParseSSATag(AssTagList& assTags, const CStringW& str)
+bool CRenderedTextSubtitle::ParseSSATag( AssTagList *assTags, const CStringW& str )
 {
-    if (m_tagCache.AssTagsCache.Lookup(str, assTags)) {
-        return true;
-    }
-
+    if (!assTags) return(false);
     int nTags = 0, nUnrecognizedTags = 0;
-    assTags.reset(DEBUG_NEW CAtlList<AssTag>());
+    for(int i = 0, j; (j = str.Find(L'\\', i)) >= 0; i = j)
+    {
+        POSITION pos   = assTags->AddTail();
+        AssTag& assTag = assTags->GetAt(pos);
+        assTag.cmdType = CMD_COUNT;
 
-    for (int i = 0, j; (j = str.Find(L'\\', i)) >= 0; i = j) {
-        int jOld;
-        // find the end of the current tag or the start of its parameters
-        for (jOld = ++j; str[j] && str[j] != L'(' && str[j] != L'\\'; ++j) {
-            ;
+        j++;
+        CStringW::PCXSTR str_start = str.GetString() + j;
+        CStringW::PCXSTR pc = str_start;
+        while( iswspace(*pc) ) 
+        {
+            pc++;
         }
-        CStringW cmdType = str.Mid(jOld, j - jOld);
-        cmdType.Trim();
-        if (cmdType.IsEmpty()) {
-            continue;
+        j += pc-str_start;
+        str_start = pc;
+        while( *pc && *pc != L'(' && *pc != L'\\' )
+        {
+            pc++;
+        }
+        j += pc-str_start;
+        if( pc-str_start>0 )
+        {
+            while( iswspace(*--pc) );
+            pc++;
         }
 
-        nTags++;
+        const CStringW cmd(str_start, pc-str_start);
+        if(cmd.IsEmpty()) continue;
 
-        AssTag tag;
-        tag.cmdType = CMD_COUNT;
-        for (int cmdLength = min(CMD_MAX_LENGTH, cmdType.GetLength()), cmdLengthMin = CMD_MIN_LENGTH; cmdLength >= cmdLengthMin; cmdLength--) {
-            if (m_cmdMap.Lookup(cmdType.Left(cmdLength), tag.cmdType)) {
-                break;
+        CAtlArray<CStringW>& params = assTag.strParams;
+        if(str[j] == L'(')
+        {
+            j++;
+            CStringW::PCXSTR str_start = str.GetString() + j;
+            CStringW::PCXSTR pc = str_start;
+            while( iswspace(*pc) ) 
+            {
+                pc++;
+            }
+            j += pc-str_start;
+            str_start = pc;
+            while( *pc && *pc != L')' )
+            {
+                pc++;
+            }
+            j += pc-str_start;
+            if (pc-str_start>0)
+            {
+                while( iswspace(*--pc) );
+                pc++;
+            }
+
+            CStringW::PCXSTR param_start = str_start;
+            CStringW::PCXSTR param_end = pc;
+            while( param_start<param_end )
+            {
+                param_start = SkipWhiteSpaceLeft(param_start, param_end);
+
+                CStringW::PCXSTR newstart = FindChar(param_start, param_end, L',');
+                CStringW::PCXSTR newend = FindChar(param_start, param_end, L'\\');
+                if(newstart < newend)
+                {
+                    if(newstart > param_start)
+                    {
+                        newend = FastSkipWhiteSpaceRight(param_start, newstart);
+                        CStringW s(param_start, newend - param_start);
+                        if(!s.IsEmpty()) params.Add(s);
+                    }
+                    param_start = newstart + 1;
+                }
+                else if(param_start<param_end)
+                {
+                    CStringW s(param_start, param_end - param_start);
+
+                    params.Add(s);
+                    param_start = param_end;
+                }
             }
         }
-        if (tag.cmdType == CMD_COUNT) {
+
+        AssCmdType cmd_type = CMD_COUNT;
+        int cmd_length = min(MAX_CMD_LENGTH, cmd.GetLength());
+        for( ;cmd_length>=MIN_CMD_LENGTH;cmd_length-- )
+        {
+            if( m_cmdMap.Lookup(cmd.Left(cmd_length), cmd_type) )
+                break;
+        }
+        if(cmd_length<MIN_CMD_LENGTH)
+            cmd_type = CMD_COUNT;
+        switch( cmd_type )
+        {
+        case CMD_fax  :
+        case CMD_fay  :
+        case CMD_fe   :
+        case CMD_fn   :
+        case CMD_frx  :
+        case CMD_fry  :
+        case CMD_frz  :
+        case CMD_fr   :
+        case CMD_fscx :
+        case CMD_fscy :
+        case CMD_fsc  :
+        case CMD_fsp  :
+        case CMD_fs   :
+        case CMD_i    :
+        case CMD_kt   :
+        case CMD_kf   :
+        case CMD_K    :
+        case CMD_ko   :
+        case CMD_k    :
+        case CMD_pbo  :
+        case CMD_p    :
+        case CMD_q    :
+        case CMD_r    :
+        case CMD_shad :
+        case CMD_s    :
+        case CMD_an   :
+        case CMD_a    :
+        case CMD_blur :
+        case CMD_bord :
+        case CMD_be   :
+        case CMD_b    :
+        case CMD_u    :
+        case CMD_xbord:
+        case CMD_xshad:
+        case CMD_ybord:
+        case CMD_yshad:
+            //        default:
+            params.Add(cmd.Mid(cmd_length));
+            break;
+        case CMD_c    :
+        case CMD_1c   :
+        case CMD_2c   :
+        case CMD_3c   :
+        case CMD_4c   :
+        case CMD_1a   :
+        case CMD_2a   :
+        case CMD_3a   :
+        case CMD_4a   :
+        case CMD_alpha:
+            params.Add(cmd.Mid(cmd_length).Trim(L"&H"));
+            break;
+        case CMD_clip :
+        case CMD_iclip:
+        case CMD_fade :
+        case CMD_fad  :
+        case CMD_move :
+        case CMD_org  :
+        case CMD_pos  :
+            break;
+        case CMD_t:
+            if (!params.IsEmpty() && params.GetCount()<=4)
+                ParseSSATag(&assTag.embeded, params[params.GetCount()-1]);
+            break;
+        case CMD_COUNT:
             nUnrecognizedTags++;
-            continue;
+            break;
         }
 
-        if (str[j] == L'(') {
-            // complex tags search
-            int br = 1; // 1 bracket
-            // find the end of the parameters
-            for (jOld = ++j; str[j] && br > 0; ++j) {
-                if (str[j] == L'(') {
-                    br++;
-                } else if (str[j] == L')') {
-                    br--;
-                }
-                if (br == 0) {
-                    break;
-                }
-            }
-            CStringW param = str.Mid(jOld, j - jOld);
-            param.Trim();
-
-            while (!param.IsEmpty()) {
-                int k = param.Find(L','), l = param.Find(L'\\');
-
-                if (k >= 0 && (l < 0 || k < l)) {
-                    CStringW s = param.Left(k).Trim();
-                    if (!s.IsEmpty()) {
-                        tag.params.Add(s);
-                    }
-                    param = k + 1 < param.GetLength() ? param.Mid(k + 1) : L"";
-                } else {
-                    param.Trim();
-                    if (!param.IsEmpty()) {
-                        tag.params.Add(param);
-                    }
-                    param.Empty();
-                }
-            }
-        }
-
-        switch (tag.cmdType) {
-            case CMD_1c:
-            case CMD_2c:
-            case CMD_3c:
-            case CMD_4c:
-            case CMD_1a:
-            case CMD_2a:
-            case CMD_3a:
-            case CMD_4a:
-                if (cmdType.GetLength() > 2) {
-                    tag.paramsInt.Add(wcstol(cmdType.Mid(2).Trim(L"&H"), nullptr, 16));
-                }
-                break;
-            case CMD_alpha:
-                if (cmdType.GetLength() > 5) {
-                    tag.paramsInt.Add(wcstol(cmdType.Mid(5).Trim(L"&H"), nullptr, 16));
-                }
-                break;
-            case CMD_an:
-            case CMD_fe:
-            case CMD_kt:
-            case CMD_kf:
-            case CMD_ko:
-                if (cmdType.GetLength() > 2) {
-                    tag.paramsInt.Add(wcstol(cmdType.Mid(2), nullptr, 10));
-                }
-                break;
-            case CMD_fn:
-                tag.params.Add(cmdType.Mid(2));
-                break;
-            case CMD_be:
-            case CMD_fr:
-                if (cmdType.GetLength() > 2) {
-                    tag.paramsReal.Add(wcstod(cmdType.Mid(2), nullptr));
-                }
-                break;
-            case CMD_fs:
-                if (cmdType.GetLength() > 2) {
-                    int s = 2;
-                    if (cmdType[s] == L'+' || cmdType[s] == L'-') {
-                        tag.params.Add(cmdType.Mid(s, 1));
-                    }
-                    tag.paramsReal.Add(wcstod(cmdType.Mid(s), nullptr));
-                }
-                break;
-            case CMD_a:
-            case CMD_b:
-            case CMD_i:
-            case CMD_k:
-            case CMD_K:
-            case CMD_p:
-            case CMD_q:
-            case CMD_s:
-            case CMD_u:
-                if (cmdType.GetLength() > 1) {
-                    tag.paramsInt.Add(wcstol(cmdType.Mid(1), nullptr, 10));
-                }
-                break;
-            case CMD_r:
-                tag.params.Add(cmdType.Mid(1));
-                break;
-            case CMD_blur:
-            case CMD_bord:
-            case CMD_fscx:
-            case CMD_fscy:
-            case CMD_shad:
-                if (cmdType.GetLength() > 4) {
-                    tag.paramsReal.Add(wcstod(cmdType.Mid(4), nullptr));
-                }
-                break;
-            case CMD_clip:
-            case CMD_iclip: {
-                size_t nParams = tag.params.GetCount();
-                if (nParams == 2) {
-                    tag.paramsInt.Add(wcstol(tag.params[0], nullptr, 10));
-                    tag.params.RemoveAt(0);
-                } else if (nParams == 4) {
-                    for (size_t n = 0; n < nParams; n++) {
-                        tag.paramsReal.Add(wcstod(tag.params[n], nullptr));
-                    }
-                    tag.params.RemoveAll();
-                }
-            }
-            break;
-            case CMD_fade: {
-                size_t nParams = tag.params.GetCount();
-                if (nParams == 7 || nParams == 2) {
-                    for (size_t n = 0; n < nParams; n++) {
-                        tag.paramsInt.Add(wcstol(tag.params[n], nullptr, 10));
-                    }
-                    tag.params.RemoveAll();
-                }
-            }
-            break;
-            case CMD_move: {
-                size_t nParams = tag.params.GetCount();
-                if (nParams == 4 || nParams == 6) {
-                    for (size_t n = 0; n < 4; n++) {
-                        tag.paramsReal.Add(wcstod(tag.params[n], nullptr));
-                    }
-                    for (size_t n = 4; n < nParams; n++) {
-                        tag.paramsInt.Add(wcstol(tag.params[n], nullptr, 10));
-                    }
-                    tag.params.RemoveAll();
-                }
-            }
-            break;
-            case CMD_org:
-            case CMD_pos: {
-                size_t nParams = tag.params.GetCount();
-                if (nParams == 2) {
-                    for (size_t n = 0; n < nParams; n++) {
-                        tag.paramsReal.Add(wcstod(tag.params[n], nullptr));
-                    }
-                    tag.params.RemoveAll();
-                }
-            }
-            break;
-            case CMD_c:
-                if (cmdType.GetLength() > 1) {
-                    tag.paramsInt.Add(wcstol(cmdType.Mid(1).Trim(L"&H"), nullptr, 16));
-                }
-                break;
-            case CMD_frx:
-            case CMD_fry:
-            case CMD_frz:
-            case CMD_fax:
-            case CMD_fay:
-            case CMD_fsc:
-            case CMD_fsp:
-                if (cmdType.GetLength() > 3) {
-                    tag.paramsReal.Add(wcstod(cmdType.Mid(3), nullptr));
-                }
-                break;
-            case CMD_pbo:
-                if (cmdType.GetLength() > 3) {
-                    tag.paramsInt.Add(wcstol(cmdType.Mid(3), nullptr, 10));
-                }
-                break;
-            case CMD_t: {
-                size_t nParams = tag.params.GetCount();
-                if (nParams >= 1 && nParams <= 4) {
-                    if (nParams == 2) {
-                        tag.paramsReal.Add(wcstod(tag.params[0], nullptr));
-                    } else if (nParams == 3) {
-                        tag.paramsReal.Add(wcstod(tag.params[0], nullptr));
-                        tag.paramsReal.Add(wcstod(tag.params[1], nullptr));
-                    } else if (nParams == 4) {
-                        tag.paramsInt.Add(wcstol(tag.params[0], nullptr, 10));
-                        tag.paramsInt.Add(wcstol(tag.params[1], nullptr, 10));
-                        tag.paramsReal.Add(wcstod(tag.params[2], nullptr));
-                    }
-
-                    ParseSSATag(tag.embeded, tag.params[nParams - 1]);
-                }
-                tag.params.RemoveAll();
-            }
-            break;
-            case CMD_xbord:
-            case CMD_xshad:
-            case CMD_ybord:
-            case CMD_yshad:
-                if (cmdType.GetLength() > 5) {
-                    tag.paramsReal.Add(wcstod(cmdType.Mid(5), nullptr));
-                }
-                break;
-        }
-
-        assTags->AddTail(tag);
+        assTag.cmdType = cmd_type;
+        
+        nTags++;
     }
-
-    m_tagCache.AssTagsCache.SetAt(str, assTags);
-
-    //return (nUnrecognizedTags < nTags);
-    return true; // there are people keeping comments inside {}, lets make them happy now
+    return(true);
 }
 
-bool CRenderedTextSubtitle::CreateSubFromSSATag(CSubtitle* sub, const AssTagList& assTags,
-                                                STSStyle& style, STSStyle& org, bool fAnimate /*= false*/)
+bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTags, STSStyle& style, const STSStyle& org, bool fAnimate /*= false*/ )
 {
-    if (!sub || !assTags) {
-        return false;
-    }
+    if(!sub) return(false);
+    
+    POSITION pos = assTags.GetHeadPosition();
+    while(pos)
+    {
+        const AssTag& assTag = assTags.GetNext(pos);
+        AssCmdType cmd_type = assTag.cmdType;
+        const CAtlArray<CStringW>& params = assTag.strParams;
 
-    POSITION pos = assTags->GetHeadPosition();
-    while (pos) {
-        const AssTag& tag = assTags->GetNext(pos);
-
-        sub->m_hard_position_level = sub->m_hard_position_level > m_cmd_pos_level[tag.cmdType] ?
-                                     sub->m_hard_position_level : m_cmd_pos_level[tag.cmdType];
-        // TODO: call ParseStyleModifier(cmdType, params, ..) and move the rest there
-
-        switch (tag.cmdType) {
-            case CMD_1c:
-            case CMD_2c:
-            case CMD_3c:
-            case CMD_4c: {
-                int k = tag.cmdType - CMD_1c;
-
-                if (!tag.paramsInt.IsEmpty()) {
-                    DWORD c = tag.paramsInt[0];
-                    style.colors[k] = (((int)CalcAnimation(c & 0xff, style.colors[k] & 0xff, fAnimate)) & 0xff
-                                       | ((int)CalcAnimation(c & 0xff00, style.colors[k] & 0xff00, fAnimate)) & 0xff00
-                                       | ((int)CalcAnimation(c & 0xff0000, style.colors[k] & 0xff0000, fAnimate)) & 0xff0000);
-                } else {
-                    style.colors[k] = org.colors[k];
-                }
+        sub->m_hard_position_level = sub->m_hard_position_level > m_cmd_pos_level[cmd_type] ?
+                                     sub->m_hard_position_level : m_cmd_pos_level[cmd_type];
+        // TODO: call ParseStyleModifier(cmd, params, ..) and move the rest there
+        const CStringW& p = params.GetCount() > 0 ? params[0] : CStringW("");
+        switch ( cmd_type )
+        {
+        case CMD_1c:
+        case CMD_2c:
+        case CMD_3c:
+        case CMD_4c:
+            {
+                const int i = 
+                      cmd_type==CMD_1c ? 0 :
+                      cmd_type==CMD_2c ? 1 :
+                      cmd_type==CMD_3c ? 2 :
+                    /*cmd_type==CMD_4c ?*/ 3;
+                DWORD c = wcstol(p, NULL, 16);
+                style.colors[i] = !p.IsEmpty()
+                    ? (((int)CalcAnimation(c&0x0000ff, style.colors[i]&0x0000ff, fAnimate))&0x0000ff
+                      |((int)CalcAnimation(c&0x00ff00, style.colors[i]&0x00ff00, fAnimate))&0x00ff00
+                      |((int)CalcAnimation(c&0xff0000, style.colors[i]&0xff0000, fAnimate))&0xff0000)
+                    : org.colors[i];
+                break;
             }
-            break;
-            case CMD_1a:
-            case CMD_2a:
-            case CMD_3a:
-            case CMD_4a: {
-                int k = tag.cmdType - CMD_1a;
-
-                style.alpha[k] = !tag.paramsInt.IsEmpty()
-                                 ? (BYTE)CalcAnimation(tag.paramsInt[0] & 0xff, style.alpha[k], fAnimate)
-                                 : org.alpha[k];
+        case CMD_1a :
+        case CMD_2a :
+        case CMD_3a :
+        case CMD_4a :
+            {
+                const int i = 
+                      cmd_type==CMD_1a ? 0 : 
+                      cmd_type==CMD_2a ? 1 :
+                      cmd_type==CMD_3a ? 2 :
+                    /*cmd_type==CMD_4a ?*/ 3;
+                style.alpha[i] = !p.IsEmpty()
+                    ? (BYTE)CalcAnimation(wcstol(p, NULL, 16), style.alpha[i], fAnimate)
+                    : org.alpha[i];
+                break;
             }
-            break;
-            case CMD_alpha:
-                for (ptrdiff_t k = 0; k < 4; k++) {
-                    style.alpha[k] = !tag.paramsInt.IsEmpty()
-                                     ? (BYTE)CalcAnimation(tag.paramsInt[0] & 0xff, style.alpha[k], fAnimate)
-                                     : org.alpha[k];
+        case CMD_alpha:
+            {
+                for(int i = 0; i < 4; i++)
+                {
+                    style.alpha[i] = !p.IsEmpty()
+                                     ? (BYTE)CalcAnimation(wcstol(p, NULL, 16), style.alpha[i], fAnimate)
+                                     : org.alpha[i];
                 }
                 break;
-            case CMD_an: {
-                int n = !tag.paramsInt.IsEmpty() ? tag.paramsInt[0] : 0;
-                if (sub->m_scrAlignment < 0) {
+            }
+        case CMD_an:
+            {
+                int n = wcstol(p, NULL, 10);
+                if (sub->m_scrAlignment < 0)
                     sub->m_scrAlignment = (n > 0 && n < 10) ? n : org.scrAlignment;
-                }
-            }
-            break;
-            case CMD_a: {
-                int n = !tag.paramsInt.IsEmpty() ? tag.paramsInt[0] : 0;
-                if (sub->m_scrAlignment < 0) {
-                    sub->m_scrAlignment = (n > 0 && n < 12) ? ((((n - 1) & 3) + 1) + ((n & 4) ? 6 : 0) + ((n & 8) ? 3 : 0)) : org.scrAlignment;
-                }
-            }
-            break;
-            case CMD_blur:
-                if (!tag.paramsReal.IsEmpty()) {
-                    double n = CalcAnimation(tag.paramsReal[0], style.fGaussianBlur, fAnimate);
-                    style.fGaussianBlur = (n < 0 ? 0 : n);
-                } else {
-                    style.fGaussianBlur = org.fGaussianBlur;
-                }
                 break;
-            case CMD_bord:
-                if (!tag.paramsReal.IsEmpty()) {
-                    double nx = CalcAnimation(tag.paramsReal[0], style.outlineWidthX, fAnimate);
-                    style.outlineWidthX = (nx < 0 ? 0 : nx);
-                    double ny = CalcAnimation(tag.paramsReal[0], style.outlineWidthY, fAnimate);
-                    style.outlineWidthY = (ny < 0 ? 0 : ny);
-                } else {
-                    style.outlineWidthX = org.outlineWidthX;
-                    style.outlineWidthY = org.outlineWidthY;
-                }
+            }
+        case CMD_a:
+            {
+                int n = wcstol(p, NULL, 10);
+                if (sub->m_scrAlignment < 0)
+                    sub->m_scrAlignment = (n > 0 && n < 12) ? ((((n-1)&3)+1)+((n&4)?6:0)+((n&8)?3:0)) : org.scrAlignment;
                 break;
-            case CMD_be:
-                style.fBlur = !tag.paramsReal.IsEmpty()
-                              ? (double)(CalcAnimation(tag.paramsReal[0], style.fBlur, fAnimate))
+            }
+        case CMD_blur:
+            {
+                double n = CalcAnimation(wcstod(p, NULL), style.fGaussianBlur, fAnimate);
+                style.fGaussianBlur = !p.IsEmpty()
+                                      ? (n < 0 ? 0 : n)
+                                          : org.fGaussianBlur;
+                break;
+            }
+        case CMD_bord:
+            {
+                double dst = wcstod(p, NULL);
+                double nx = CalcAnimation(dst, style.outlineWidthX, fAnimate);
+                style.outlineWidthX = !p.IsEmpty()
+                                      ? (nx < 0 ? 0 : nx)
+                                          : org.outlineWidthX;
+                double ny = CalcAnimation(dst, style.outlineWidthY, fAnimate);
+                style.outlineWidthY = !p.IsEmpty()
+                                      ? (ny < 0 ? 0 : ny)
+                                          : org.outlineWidthY;
+                break;
+            }
+        case CMD_be:
+            {
+                double d = CalcAnimation(wcstod(p, NULL), style.fBlur, fAnimate);
+                style.fBlur = !p.IsEmpty()
+                              ? d
                               : org.fBlur;
                 break;
-            case CMD_b: {
-                int n = !tag.paramsInt.IsEmpty() ? tag.paramsInt[0] : -1;
-                style.fontWeight = (n == 0 ? FW_NORMAL : n == 1 ? FW_BOLD : n >= 100 ? n : org.fontWeight);
             }
-            break;
-            case CMD_clip:
-            case CMD_iclip: {
-                bool invert = (tag.cmdType == CMD_iclip);
-                size_t nParams = tag.params.GetCount();
-                size_t nParamsInt = tag.paramsInt.GetCount();
-                size_t nParamsReal = tag.paramsReal.GetCount();
-
-                if (nParams == 1 && nParamsInt == 0 && !sub->m_pClipper) {
-                    sub->m_pClipper.reset ( DEBUG_NEW CClipper(tag.params[0], CSize(m_video_rect.Width()>>3, m_video_rect.Height()>>3), sub->m_scalex, sub->m_scaley, invert, m_target_scale_x, m_target_scale_y) );
-                } else if (nParams == 1 && nParamsInt == 1 && !sub->m_pClipper) {
-                    long scale = tag.paramsInt[0];
-                    if (scale < 1) {
-                        scale = 1;
-                    }
-                    sub->m_pClipper.reset ( DEBUG_NEW CClipper(tag.params[0], CSize(m_video_rect.Width()>>3, m_video_rect.Height()>>3),
-                                                         sub->m_scalex / (1 << (scale - 1)), sub->m_scaley / (1 << (scale - 1)), invert, m_target_scale_x, m_target_scale_y) );
-                } else if (nParamsReal == 4) {
+        case CMD_b:
+            {
+                int n = wcstol(p, NULL, 10);
+                style.fontWeight = !p.IsEmpty()
+                                   ? (n == 0 ? FW_NORMAL : n == 1 ? FW_BOLD : n >= 100 ? n : org.fontWeight)
+                                       : org.fontWeight;
+                break;
+            }
+        case CMD_clip:
+        case CMD_iclip:
+            {
+                bool invert = (cmd_type == CMD_iclip);
+                if(params.GetCount() == 1 && !sub->m_pClipper)
+                {
+                    sub->m_pClipper.reset( DEBUG_NEW CClipper(params[0],
+                        CSize(m_video_rect.Width()>>3, m_video_rect.Height()>>3),
+                        sub->m_scalex, sub->m_scaley, invert, m_target_scale_x, m_target_scale_y) );
+                }
+                else if(params.GetCount() == 2 && !sub->m_pClipper)
+                {
+                    int scale = max(wcstol(p, NULL, 10), 1);
+                    sub->m_pClipper.reset( DEBUG_NEW CClipper(params[1],
+                        CSize(m_video_rect.Width()>>3, m_video_rect.Height()>>3),
+                        sub->m_scalex/(1<<(scale-1)), sub->m_scaley/(1<<(scale-1)), invert, m_target_scale_x, m_target_scale_y) );
+                }
+                else if(params.GetCount() == 4)
+                {
                     CRect r;
                     sub->m_clipInverse = invert;
                     r.SetRect(
-                        tag.paramsReal[0]+0.5,
-                        tag.paramsReal[1]+0.5,
-                        tag.paramsReal[2]+0.5,
-                        tag.paramsReal[3]+0.5);
+                        wcstod(params[0], NULL)+0.5,
+                        wcstod(params[1], NULL)+0.5,
+                        wcstod(params[2], NULL)+0.5,
+                        wcstod(params[3], NULL)+0.5);
                     sub->m_clip.SetRect(
-                        static_cast<int>(CalcAnimation(sub->m_scalex*r.left  , sub->m_clip.left  , fAnimate)),
-                        static_cast<int>(CalcAnimation(sub->m_scaley*r.top   , sub->m_clip.top   , fAnimate)),
-                        static_cast<int>(CalcAnimation(sub->m_scalex*r.right , sub->m_clip.right , fAnimate)),
-                        static_cast<int>(CalcAnimation(sub->m_scaley*r.bottom, sub->m_clip.bottom, fAnimate)));
-                }
-            }
-            break;
-            case CMD_c:
-                if (!tag.paramsInt.IsEmpty()) {
-                    DWORD c = tag.paramsInt[0];
-                    style.colors[0] = (((int)CalcAnimation(c & 0xff, style.colors[0] & 0xff, fAnimate)) & 0xff
-                                       | ((int)CalcAnimation(c & 0xff00, style.colors[0] & 0xff00, fAnimate)) & 0xff00
-                                       | ((int)CalcAnimation(c & 0xff0000, style.colors[0] & 0xff0000, fAnimate)) & 0xff0000);
-                } else {
-                    style.colors[0] = org.colors[0];
+                        (int)CalcAnimation(sub->m_scalex*r.left  , sub->m_clip.left  , fAnimate),
+                        (int)CalcAnimation(sub->m_scaley*r.top   , sub->m_clip.top   , fAnimate),
+                        (int)CalcAnimation(sub->m_scalex*r.right , sub->m_clip.right , fAnimate),
+                        (int)CalcAnimation(sub->m_scaley*r.bottom, sub->m_clip.bottom, fAnimate));
                 }
                 break;
-            case CMD_fade: {
+            }
+        case CMD_c:
+            {
+                DWORD c = wcstol(p, NULL, 16);
+                style.colors[0] = !p.IsEmpty()
+                                  ? (((int)CalcAnimation(c&0x0000ff, style.colors[0]&0x0000ff, fAnimate))&0x0000ff
+                                    |((int)CalcAnimation(c&0x00ff00, style.colors[0]&0x00ff00, fAnimate))&0x00ff00
+                                    |((int)CalcAnimation(c&0xff0000, style.colors[0]&0xff0000, fAnimate))&0xff0000)
+                                  : org.colors[0];
+                break;
+            }
+        case CMD_fade:
+        case CMD_fad:
+            {
                 sub->m_fAnimated2 = true;
-
-                if (tag.paramsInt.GetCount() == 7 && !sub->m_effects[EF_FADE]) { // {\fade(a1=param[0], a2=param[1], a3=param[2], t1=t[0], t2=t[1], t3=t[2], t4=t[3])
-                    if (Effect* e = DEBUG_NEW Effect) {
-                        for (size_t k = 0; k < 3; k++) {
-                            e->param[k] = tag.paramsInt[k];
-                        }
-                        for (size_t k = 0; k < 4; k++) {
-                            e->t[k] = tag.paramsInt[3 + k];
-                        }
-
+                if(params.GetCount() == 7 && !sub->m_effects[EF_FADE])// {\fade(a1=param[0], a2=param[1], a3=param[2], t1=t[0], t2=t[1], t3=t[2], t4=t[3])
+                {
+                    if(Effect* e = DEBUG_NEW Effect)
+                    {
+                        for(int i = 0; i < 3; i++)
+                            e->param[i] = wcstol(params[i], NULL, 10);
+                        for(int i = 0; i < 4; i++)
+                            e->t[i] = wcstol(params[3+i], NULL, 10);
                         sub->m_effects[EF_FADE] = e;
                     }
-                } else if (tag.paramsInt.GetCount() == 2 && !sub->m_effects[EF_FADE]) { // {\fad(t1=t[1], t2=t[2])
-                    if (Effect* e = DEBUG_NEW Effect) {
+                }
+                else if(params.GetCount() == 2 && !sub->m_effects[EF_FADE]) // {\fad(t1=t[1], t2=t[2])
+                {
+                    if(Effect* e = DEBUG_NEW Effect)
+                    {
                         e->param[0] = e->param[2] = 0xff;
                         e->param[1] = 0x00;
-                        for (size_t k = 1; k < 3; k++) {
-                            e->t[k] = tag.paramsInt[k - 1];
-                        }
+                        for(int i = 1; i < 3; i++)
+                            e->t[i] = wcstol(params[i-1], NULL, 10);
                         e->t[0] = e->t[3] = -1; // will be substituted with "start" and "end"
-
                         sub->m_effects[EF_FADE] = e;
                     }
                 }
+                break;
             }
-            break;
-            case CMD_fax:
-                style.fontShiftX = !tag.paramsReal.IsEmpty()
-                                   ? CalcAnimation(tag.paramsReal[0], style.fontShiftX, fAnimate)
+        case CMD_fax:
+            {
+                style.fontShiftX = !p.IsEmpty()
+                                   ? CalcAnimation(wcstod(p, NULL), style.fontShiftX, fAnimate)
                                    : org.fontShiftX;
                 break;
-            case CMD_fay:
-                style.fontShiftY = !tag.paramsReal.IsEmpty()
-                                   ? CalcAnimation(tag.paramsReal[0], style.fontShiftY, fAnimate)
+            }
+        case CMD_fay:
+            {
+                style.fontShiftY = !p.IsEmpty()
+                                   ? CalcAnimation(wcstod(p, NULL), style.fontShiftY, fAnimate)
                                    : org.fontShiftY;
                 break;
-            case CMD_fe:
-                style.charSet = !tag.paramsInt.IsEmpty()
-                                ? tag.paramsInt[0]
+            }
+        case CMD_fe:
+            {
+                int n = wcstol(p, NULL, 10);
+                style.charSet = !p.IsEmpty()
+                                ? n
                                 : org.charSet;
                 break;
-            case CMD_fn:
-                style.fontName = (!tag.params.IsEmpty() && !tag.params[0].IsEmpty() && tag.params[0] != L"0")
-                                 ? CString(tag.params[0]).Trim()
-                                 : org.fontName;
+            }
+        case CMD_fn:
+            {
+                if(!p.IsEmpty() && p != L'0')
+                    style.fontName = CString(p).Trim();
+                else
+                    style.fontName = org.fontName;
                 break;
-            case CMD_frx:
-                style.fontAngleX = !tag.paramsReal.IsEmpty()
-                                   ? CalcAnimation(tag.paramsReal[0], style.fontAngleX, fAnimate)
+            }
+        case CMD_frx:
+            {
+                style.fontAngleX = !p.IsEmpty()
+                                   ? CalcAnimation(wcstod(p, NULL), style.fontAngleX, fAnimate)
                                    : org.fontAngleX;
                 break;
-            case CMD_fry:
-                style.fontAngleY = !tag.paramsReal.IsEmpty()
-                                   ? CalcAnimation(tag.paramsReal[0], style.fontAngleY, fAnimate)
+            }
+        case CMD_fry:
+            {
+                style.fontAngleY = !p.IsEmpty()
+                                   ? CalcAnimation(wcstod(p, NULL), style.fontAngleY, fAnimate)
                                    : org.fontAngleY;
                 break;
-            case CMD_frz:
-            case CMD_fr:
-                style.fontAngleZ = !tag.paramsReal.IsEmpty()
-                                   ? CalcAnimation(tag.paramsReal[0], style.fontAngleZ, fAnimate)
+            }
+        case CMD_frz:
+        case CMD_fr:
+            {
+                style.fontAngleZ = !p.IsEmpty()
+                                   ? CalcAnimation(wcstod(p, NULL), style.fontAngleZ, fAnimate)
                                    : org.fontAngleZ;
                 break;
-            case CMD_fscx:
-                if (!tag.paramsReal.IsEmpty()) {
-                    double n = CalcAnimation(tag.paramsReal[0], style.fontScaleX, fAnimate);
-                    style.fontScaleX = (n < 0 ? 0 : n);
-                } else {
-                    style.fontScaleX = org.fontScaleX;
-                }
+            }
+        case CMD_fscx:
+            {
+                double n = CalcAnimation(wcstod(p, NULL), style.fontScaleX, fAnimate);
+                style.fontScaleX = !p.IsEmpty()
+                                   ? ((n < 0) ? 0 : n)
+                                       : org.fontScaleX;
                 break;
-            case CMD_fscy:
-                if (!tag.paramsReal.IsEmpty()) {
-                    double n = CalcAnimation(tag.paramsReal[0], style.fontScaleY, fAnimate);
-                    style.fontScaleY = (n < 0 ? 0 : n);
-                } else {
-                    style.fontScaleY = org.fontScaleY;
-                }
+            }
+        case CMD_fscy:
+            {
+                double n = CalcAnimation(wcstod(p, NULL), style.fontScaleY, fAnimate);
+                style.fontScaleY = !p.IsEmpty()
+                                   ? ((n < 0) ? 0 : n)
+                                       : org.fontScaleY;
                 break;
-            case CMD_fsc:
+            }
+        case CMD_fsc:
+            {
                 style.fontScaleX = org.fontScaleX;
                 style.fontScaleY = org.fontScaleY;
                 break;
-            case CMD_fsp:
-                style.fontSpacing = !tag.paramsReal.IsEmpty()
-                                    ? CalcAnimation(tag.paramsReal[0], style.fontSpacing, fAnimate)
+            }
+        case CMD_fsp:
+            {
+                style.fontSpacing = !p.IsEmpty()
+                                    ? CalcAnimation(wcstod(p, NULL), style.fontSpacing, fAnimate)
                                     : org.fontSpacing;
                 break;
-            case CMD_fs:
-                if (!tag.paramsReal.IsEmpty()) {
-                    if (!tag.params.IsEmpty() && (tag.params[0][0] == L'-' || tag.params[0][0] == L'+')) {
-                        double n = CalcAnimation(style.fontSize + style.fontSize * tag.paramsReal[0] / 10, style.fontSize, fAnimate);
-                        style.fontSize = (n > 0) ? n : org.fontSize;
-                    } else {
-                        double n = CalcAnimation(tag.paramsReal[0], style.fontSize, fAnimate);
+            }
+        case CMD_fs:
+            {
+                if(!p.IsEmpty())
+                {
+                    if(p[0] == L'-' || p[0] == L'+')
+                    {
+                        double n = CalcAnimation(style.fontSize + style.fontSize*wcstod(p, NULL)/10, style.fontSize, fAnimate);
                         style.fontSize = (n > 0) ? n : org.fontSize;
                     }
-                } else {
+                    else
+                    {
+                        double n = CalcAnimation(wcstod(p, NULL), style.fontSize, fAnimate);
+                        style.fontSize = (n > 0) ? n : org.fontSize;
+                    }
+                }
+                else
+                {
                     style.fontSize = org.fontSize;
                 }
                 break;
-            case CMD_i: {
-                int n = !tag.paramsInt.IsEmpty() ? tag.paramsInt[0] : -1;
-                style.fItalic = (n == 0 ? false : n == 1 ? true : org.fItalic);
             }
-            break;
-            case CMD_kt:
-                sub->m_fAnimated2 = true;
-
-                m_kstart = !tag.paramsInt.IsEmpty()
-                           ? tag.paramsInt[0] * 10
+        case CMD_i:
+            {
+                int n = wcstol(p, NULL, 10);
+                style.fItalic = !p.IsEmpty()
+                                ? (n == 0 ? false : n == 1 ? true : org.fItalic)
+                                    : org.fItalic;
+                break;
+            }
+        case CMD_kt:
+            {
+                m_kstart = !p.IsEmpty()
+                           ? wcstod(p, NULL)*10
                            : 0;
                 m_kend = m_kstart;
+                sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
-            case CMD_kf:
-            case CMD_K:
-                sub->m_fAnimated2 = true;
-
+            }
+        case CMD_kf:
+        case CMD_K:
+            {
                 m_ktype = 1;
                 m_kstart = m_kend;
-                m_kend += !tag.paramsInt.IsEmpty()
-                          ? tag.paramsInt[0] * 10
+                m_kend += !p.IsEmpty()
+                          ? wcstod(p, NULL)*10
                           : 1000;
+                sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
-            case CMD_ko:
-                sub->m_fAnimated2 = true;
-
+            }
+        case CMD_ko:
+            {
                 m_ktype = 2;
                 m_kstart = m_kend;
-                m_kend += !tag.paramsInt.IsEmpty()
-                          ? tag.paramsInt[0] * 10
+                m_kend += !p.IsEmpty()
+                          ? wcstod(p, NULL)*10
                           : 1000;
+                sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
-            case CMD_k:
-                sub->m_fAnimated2 = true;
-
+            }
+        case CMD_k:
+            {
                 m_ktype = 0;
                 m_kstart = m_kend;
-                m_kend += !tag.paramsInt.IsEmpty()
-                          ? tag.paramsInt[0] * 10
+                m_kend += !p.IsEmpty()
+                          ? wcstod(p, NULL)*10
                           : 1000;
+                sub->m_fAnimated2 = true;//fix me: define m_fAnimated m_fAnimated2 strictly
                 break;
-            case CMD_move: // {\move(x1=param[0], y1=param[1], x2=param[2], y2=param[3][, t1=t[0], t2=t[1]])}
-                sub->m_fAnimated2 = true;
-
-                if (tag.paramsReal.GetCount() == 4 && !sub->m_effects[EF_MOVE]) {
-                    if (Effect* e = DEBUG_NEW Effect) {
-                        e->param[0] = (int)(sub->m_scalex * tag.paramsReal[0] * MAX_SUB_PIXEL);
-                        e->param[1] = (int)(sub->m_scaley * tag.paramsReal[1] * MAX_SUB_PIXEL);
-                        e->param[2] = (int)(sub->m_scalex * tag.paramsReal[2] * MAX_SUB_PIXEL);
-                        e->param[3] = (int)(sub->m_scaley * tag.paramsReal[3] * MAX_SUB_PIXEL);
+            }
+        case CMD_move: // {\move(x1=param[0], y1=param[1], x2=param[2], y2=param[3][, t1=t[0], t2=t[1]])}
+            {
+                if((params.GetCount() == 4 || params.GetCount() == 6) && !sub->m_effects[EF_MOVE])
+                {
+                    if(Effect* e = DEBUG_NEW Effect)
+                    {
+                        e->param[0] = (int)(sub->m_scalex*wcstod(params[0], NULL)*MAX_SUB_PIXEL);
+                        e->param[1] = (int)(sub->m_scaley*wcstod(params[1], NULL)*MAX_SUB_PIXEL);
+                        e->param[2] = (int)(sub->m_scalex*wcstod(params[2], NULL)*MAX_SUB_PIXEL);
+                        e->param[3] = (int)(sub->m_scaley*wcstod(params[3], NULL)*MAX_SUB_PIXEL);
                         e->t[0] = e->t[1] = -1;
-
-                        if (tag.paramsInt.GetCount() == 2) {
-                            for (size_t k = 0; k < 2; k++) {
-                                e->t[k] = tag.paramsInt[k];
-                            }
+                        if(params.GetCount() == 6)
+                        {
+                            for(int i = 0; i < 2; i++)
+                                e->t[i] = wcstol(params[4+i], NULL, 10);
                         }
-
                         sub->m_effects[EF_MOVE] = e;
+                        sub->m_fAnimated2 = true;
                     }
                 }
                 break;
-            case CMD_org: // {\org(x=param[0], y=param[1])}
-                if (tag.paramsReal.GetCount() == 2 && !sub->m_effects[EF_ORG]) {
-                    if (Effect* e = DEBUG_NEW Effect) {
-                        e->param[0] = (int)(sub->m_scalex * tag.paramsReal[0] * MAX_SUB_PIXEL);
-                        e->param[1] = (int)(sub->m_scaley * tag.paramsReal[1] * MAX_SUB_PIXEL);
-
+            }
+        case CMD_org: // {\org(x=param[0], y=param[1])}
+            {
+                if(params.GetCount() == 2 && !sub->m_effects[EF_ORG])
+                {
+                    if(Effect* e = DEBUG_NEW Effect)
+                    {
+                        e->param[0] = (int)(sub->m_scalex*wcstod(params[0], NULL)*MAX_SUB_PIXEL);
+                        e->param[1] = (int)(sub->m_scaley*wcstod(params[1], NULL)*MAX_SUB_PIXEL);
                         sub->m_effects[EF_ORG] = e;
                     }
                 }
                 break;
-            case CMD_pbo:
-                m_polygonBaselineOffset = !tag.paramsInt.IsEmpty() ? tag.paramsInt[0] : 0;
+            }
+        case CMD_pbo:
+            {
+                m_polygonBaselineOffset = wcstol(p, NULL, 10);
                 break;
-            case CMD_pos:
-                if (tag.paramsReal.GetCount() == 2 && !sub->m_effects[EF_MOVE]) {
-                    if (Effect* e = DEBUG_NEW Effect) {
-                        e->param[0] = e->param[2] = (int)(sub->m_scalex * tag.paramsReal[0] * MAX_SUB_PIXEL);
-                        e->param[1] = e->param[3] = (int)(sub->m_scaley * tag.paramsReal[1] * MAX_SUB_PIXEL);
+            }
+        case CMD_pos:
+            {
+                if(params.GetCount() == 2 && !sub->m_effects[EF_MOVE])
+                {
+                    if(Effect* e = DEBUG_NEW Effect)
+                    {
+                        e->param[0] = e->param[2] = (int)(sub->m_scalex*wcstod(params[0], NULL)*MAX_SUB_PIXEL);
+                        e->param[1] = e->param[3] = (int)(sub->m_scaley*wcstod(params[1], NULL)*MAX_SUB_PIXEL);
                         e->t[0] = e->t[1] = 0;
-
                         sub->m_effects[EF_MOVE] = e;
                     }
                 }
                 break;
-            case CMD_p: {
-                int n = !tag.paramsInt.IsEmpty() ? tag.paramsInt[0] : 0;
-                m_nPolygon = (n <= 0 ? 0 : n);
             }
-            break;
-            case CMD_q: {
-                int n = !tag.paramsInt.IsEmpty() ? tag.paramsInt[0] : -1;
-                sub->m_wrapStyle = (0 <= n && n <= 3)
+        case CMD_p:
+            {
+                int n = wcstol(p, NULL, 10);
+                m_nPolygon = (n <= 0 ? 0 : n);
+                break;
+            }
+        case CMD_q:
+            {
+                int n = wcstol(p, NULL, 10);
+                sub->m_wrapStyle = !p.IsEmpty() && (0 <= n && n <= 3)
                                    ? n
                                    : m_defaultWrapStyle;
+                break;
             }
-            break;
-            case CMD_r: {
+        case CMD_r:
+            {
                 STSStyle* val;
-                style = (!tag.params[0].IsEmpty() && m_styles.Lookup(tag.params[0], val) && val) ? *val : org;
+                style = (!p.IsEmpty() && m_styles.Lookup(p, val) && val) ? *val : org;
                 break;
-                }
-            case CMD_shad:
-                if (!tag.paramsReal.IsEmpty()) {
-                    double nx = CalcAnimation(tag.paramsReal[0], style.shadowDepthX, fAnimate);
-                    style.shadowDepthX = (nx < 0 ? 0 : nx);
-                    double ny = CalcAnimation(tag.paramsReal[0], style.shadowDepthY, fAnimate);
-                    style.shadowDepthY = (ny < 0 ? 0 : ny);
-                } else {
-                    style.shadowDepthX = org.shadowDepthX;
-                    style.shadowDepthY = org.shadowDepthY;
-                }
-                break;
-            case CMD_s: {
-                int n = !tag.paramsInt.IsEmpty() ? tag.paramsInt[0] : -1;
-                style.fStrikeOut = (n == 0 ? false : n == 1 ? true : org.fStrikeOut);
             }
-            break;
-            case CMD_t: // \t([<t1>,<t2>,][<accel>,]<style modifiers>)
-                if (tag.embeded) {
-                    sub->m_fAnimated2 = true;
-                    m_animStart = m_animEnd = 0;
-                    m_animAccel = 1;
-
-                    size_t nParams = tag.paramsInt.GetCount() + tag.paramsReal.GetCount();
-                    if (nParams == 1) {
-                        m_animAccel = tag.paramsReal[0];
-                    } else if (nParams == 2) {
-                        m_animStart = (int)tag.paramsReal[0];
-                        m_animEnd = (int)tag.paramsReal[1];
-                    } else if (nParams == 3) {
-                        m_animStart = tag.paramsInt[0];
-                        m_animEnd = tag.paramsInt[1];
-                        m_animAccel = tag.paramsReal[0];
-                    }
-
-                    CreateSubFromSSATag(sub, tag.embeded, style, org, true);
-
-                    sub->m_fAnimated = true;
-                }
+        case CMD_shad:
+            {
+                double dst = wcstod(p, NULL);
+                double nx = CalcAnimation(dst, style.shadowDepthX, fAnimate);
+                style.shadowDepthX = !p.IsEmpty()
+                                     ? (nx < 0 ? 0 : nx)
+                                         : org.shadowDepthX;
+                double ny = CalcAnimation(dst, style.shadowDepthY, fAnimate);
+                style.shadowDepthY = !p.IsEmpty()
+                                     ? (ny < 0 ? 0 : ny)
+                                         : org.shadowDepthY;
                 break;
-            case CMD_u: {
-                int n = !tag.paramsInt.IsEmpty() ? tag.paramsInt[0] : -1;
-                style.fUnderline = (n == 0 ? false : n == 1 ? true : org.fUnderline);
             }
-            break;
-            case CMD_xbord:
-                if (!tag.paramsReal.IsEmpty()) {
-                    double nx = CalcAnimation(tag.paramsReal[0], style.outlineWidthX, fAnimate);
-                    style.outlineWidthX = (nx < 0 ? 0 : nx);
-                } else {
-                    style.outlineWidthX = org.outlineWidthX;
-                }
+        case CMD_s:
+            {
+                int n = wcstol(p, NULL, 10);
+                style.fStrikeOut = !p.IsEmpty()
+                                   ? (n == 0 ? false : n == 1 ? true : org.fStrikeOut)
+                                       : org.fStrikeOut;
                 break;
-            case CMD_xshad:
-                style.shadowDepthX = !tag.paramsReal.IsEmpty()
-                                     ? CalcAnimation(tag.paramsReal[0], style.shadowDepthX, fAnimate)
+            }
+        case CMD_t: // \t([<t1>,<t2>,][<accel>,]<style modifiers>)
+            {
+                CStringW param;
+                m_animStart = m_animEnd = 0;
+                m_animAccel = 1;
+                if(params.GetCount() == 1)
+                {
+                    param = params[0];
+                }
+                else if(params.GetCount() == 2)
+                {
+                    m_animAccel = wcstod(params[0], NULL);
+                    param = params[1];
+                }
+                else if(params.GetCount() == 3)
+                {
+                    m_animStart = (int)wcstod(params[0], NULL);
+                    m_animEnd = (int)wcstod(params[1], NULL);
+                    param = params[2];
+                }
+                else if(params.GetCount() == 4)
+                {
+                    m_animStart = wcstol(params[0], NULL, 10);
+                    m_animEnd = wcstol(params[1], NULL, 10);
+                    m_animAccel = wcstod(params[2], NULL);
+                    param = params[3];
+                }
+                ParseSSATag(sub, assTag.embeded, style, org, true);
+                sub->m_fAnimated = true;
+                sub->m_fAnimated2 = true;
+                break;
+            }
+        case CMD_u:
+            {
+                int n = wcstol(p, NULL, 10);
+                style.fUnderline = !p.IsEmpty()
+                                   ? (n == 0 ? false : n == 1 ? true : org.fUnderline)
+                                       : org.fUnderline;
+                break;
+            }
+        case CMD_xbord:
+            {
+                double dst = wcstod(p, NULL);
+                double nx = CalcAnimation(dst, style.outlineWidthX, fAnimate);
+                style.outlineWidthX = !p.IsEmpty()
+                                      ? (nx < 0 ? 0 : nx)
+                                          : org.outlineWidthX;
+                break;
+            }
+        case CMD_xshad:
+            {
+                double dst = wcstod(p, NULL);
+                double nx = CalcAnimation(dst, style.shadowDepthX, fAnimate);
+                style.shadowDepthX = !p.IsEmpty()
+                                     ? nx
                                      : org.shadowDepthX;
                 break;
-            case CMD_ybord:
-                if (!tag.paramsReal.IsEmpty()) {
-                    double ny = CalcAnimation(tag.paramsReal[0], style.outlineWidthY, fAnimate);
-                    style.outlineWidthY = (ny < 0 ? 0 : ny);
-                } else {
-                    style.outlineWidthY = org.outlineWidthY;
-                }
+            }
+        case CMD_ybord:
+            {
+                double dst = wcstod(p, NULL);
+                double ny = CalcAnimation(dst, style.outlineWidthY, fAnimate);
+                style.outlineWidthY = !p.IsEmpty()
+                                      ? (ny < 0 ? 0 : ny)
+                                          : org.outlineWidthY;
                 break;
-            case CMD_yshad:
-                style.shadowDepthY = !tag.paramsReal.IsEmpty()
-                                     ? CalcAnimation(tag.paramsReal[0], style.shadowDepthY, fAnimate)
+            }
+        case CMD_yshad:
+            {
+                double dst = wcstod(p, NULL);
+                double ny = CalcAnimation(dst, style.shadowDepthY, fAnimate);
+                style.shadowDepthY = !p.IsEmpty()
+                                     ? ny
                                      : org.shadowDepthY;
                 break;
+            }
+        default:
+            break;
         }
     }
+    return(true);
+}
 
-    return true;
+bool CRenderedTextSubtitle::ParseSSATag(CSubtitle* sub, const CStringW& str, STSStyle& style, const STSStyle& org, bool fAnimate)
+{
+    if(!sub) return(false);   
+
+    SharedPtrConstAssTagList assTags;
+    AssTagListMruCache *ass_tag_cache = CacheManager::GetAssTagListMruCache();
+    POSITION pos = ass_tag_cache->Lookup(str);
+    if (pos==NULL)
+    {
+        AssTagList *tmp = DEBUG_NEW AssTagList();
+        ParseSSATag(tmp, str);
+        assTags.reset(tmp);
+        ass_tag_cache->UpdateCache(str, assTags);
+    }
+    else
+    {
+        assTags = ass_tag_cache->GetAt(pos);
+        ass_tag_cache->UpdateCache( pos );
+    }
+    return ParseSSATag(sub, *assTags, style, org, fAnimate);
 }
 
 bool CRenderedTextSubtitle::ParseHtmlTag(CSubtitle* sub, CStringW str, STSStyle& style, STSStyle& org)
@@ -2879,39 +2921,34 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
     m_nPolygon              = 0;
     m_polygonBaselineOffset = 0;
     ParseEffect(sub, m_entries.GetAt(entry).effect);
-
-    for (int iStart = 0, iEnd; iStart < str.GetLength(); iStart = iEnd) {
-        bool bParsed = false;
-
-        if (str[iStart] == L'{' && (iEnd = str.Find(L'}', iStart)) > 0) {
-            AssTagList assTags;
-            bParsed = ParseSSATag(assTags, str.Mid(iStart + 1, iEnd - iStart - 1));
-            if (bParsed) {
-                CreateSubFromSSATag(sub, assTags, stss, orgstss);
-                iStart = iEnd + 1;
-            }
-        } else if (str[iStart] == L'<' && (iEnd = str.Find(L'>', iStart)) > 0) {
-            bParsed = ParseHtmlTag(sub, str.Mid(iStart + 1, iEnd - iStart - 1), stss, orgstss);
-            if (bParsed) {
-                iStart = iEnd + 1;
-            }
+    while(!str.IsEmpty())
+    {
+        bool fParsed = false;
+        int i;
+        if(str[0] == L'{' && (i = str.Find(L'}')) > 0)
+        {
+            fParsed = ParseSSATag(sub, str.Mid(1, i-1), stss, orgstss);
+            if(fParsed)
+                str = str.Mid(i+1);
         }
-
-        if (bParsed) {
-            iEnd = FindOneOf(str, L"{<", iStart);
-            if (iEnd < 0) {
-                iEnd = str.GetLength();
-            }
-            if (iEnd == iStart) {
-                continue;
-            }
-        } else {
-            iEnd = FindOneOf(str, L"{<", iStart + 1);
-            if (iEnd < 0) {
-                iEnd = str.GetLength();
-            }
+        else if(str[0] == L'<' && (i = str.Find(L'>')) > 0)
+        {
+            fParsed = ParseHtmlTag(sub, str.Mid(1, i-1), stss, orgstss);
+            if(fParsed)
+                str = str.Mid(i+1);
         }
-
+        if(fParsed)
+        {
+            i = str.FindOneOf(L"{<");
+            if(i < 0) i = str.GetLength();
+            if(i == 0) continue;
+        }
+        else
+        {
+            i = str.Mid(1).FindOneOf(L"{<");
+            if(i < 0) i = str.GetLength()-1;
+            i++;
+        }
         STSStyle tmp       = stss;
         tmp.fontSpacing   *=                 sub->m_scalex * 64;
         tmp.fontSize      *=                 sub->m_scaley * 64;
@@ -2922,14 +2959,14 @@ CSubtitle* CRenderedTextSubtitle::GetSubtitle(int entry)
         FwSTSStyle fw_tmp(tmp);
         if(m_nPolygon)
         {
-            ParsePolygon(sub, str.Mid(iStart, iEnd - iStart), fw_tmp);
+            ParsePolygon(sub, str.Left(i), fw_tmp);
         }
         else
         {
-            ParseString(sub, str.Mid(iStart, iEnd - iStart), fw_tmp);
+            ParseString(sub, str.Left(i), fw_tmp);
         }
+        str = str.Mid(i);
     }
-
     if( sub->m_effects[EF_BANNER] || sub->m_effects[EF_SCROLL] )
         sub->m_fAnimated2 = true;
     // just a "work-around" solution... in most cases nobody will want to use \org together with moving but without rotating the subs
