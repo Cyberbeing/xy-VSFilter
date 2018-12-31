@@ -524,7 +524,7 @@ static CStringW SubRipper2SSA(CStringW str, int CharSet)
 static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
 {
     CStringW buff;
-    while (file->ReadString(buff)) {
+    while(file->ReadString(buff)) {
         FastTrim(buff);
         if (buff.IsEmpty()) {
             continue;
@@ -553,7 +553,10 @@ static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
 
             bool fFoundEmpty = false;
 
-            while (file->ReadString(tmp)) {
+            while(true) {
+                bool fEOF = !file->ReadString(tmp);
+                if (fEOF && tmp.IsEmpty()) break;
+
                 FastTrim(tmp);
                 if (tmp.IsEmpty()) {
                     fFoundEmpty = true;
@@ -567,6 +570,8 @@ static bool OpenSubRipper(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet
                 }
 
                 str += tmp + '\n';
+
+                if(fEOF) break;
             }
 
             ret.Add(
@@ -1424,8 +1429,11 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
     ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_TV;
 
     CStringW buff;
-    while(file->ReadString(buff))
+    while(true)
     {
+    	bool fEOF = !file->ReadString(buff);
+    	if(fEOF && buff.IsEmpty()) break;
+
         FastTrim(buff);
         if(buff.IsEmpty() || buff.GetAt(0) == ';') continue;
 
@@ -1661,6 +1669,7 @@ if(sver <= 4)   style->scrAlignment = (style->scrAlignment&4) ? ((style->scrAlig
                 ret.m_eYCbCrRange = CSimpleTextSubtitle::YCbCrRange_PC;
             }
         }
+        if(fEOF) break;
     }
 //    ret.Sort();
     return(fRet);
@@ -1852,7 +1861,7 @@ static CStringW MPL22SSA(CStringW str, bool fUnicode, int CharSet)
 static bool OpenMPL2(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
 {
     CStringW buff;
-    while (file->ReadString(buff)) {
+    while(file->ReadString(buff)) {
         FastTrim(buff);
         if (buff.IsEmpty()) {
             continue;
@@ -1879,7 +1888,7 @@ static bool OpenRealText(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
     std::wstring szFile;
     CStringW buff;
 
-    while (file->ReadString(buff)) {
+    while(file->ReadString(buff)) {
         FastTrim(buff);
         if (buff.IsEmpty()) {
             continue;
