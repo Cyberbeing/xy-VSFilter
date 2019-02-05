@@ -208,20 +208,9 @@ void XyBitmap::FlipAlphaValue( LPVOID pixels, int w, int h, int pitch )
     BYTE* top = static_cast<BYTE*>(pixels);
     BYTE* bottom = top + pitch*h;
 
-    bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
-    if ( fSSE2 )
+    for(; top < bottom ; top += pitch)
     {
-        for(; top < bottom ; top += pitch)
-        {
             FlipAlphaValueSSE(top, w);
-        }
-    }
-    else
-    {
-        for(; top < bottom ; top += pitch)
-        {
-            FlipAlphaValueC(top, w);
-        }
     }
 
     return;

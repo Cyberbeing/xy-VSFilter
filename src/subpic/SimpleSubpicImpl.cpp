@@ -337,7 +337,7 @@ HRESULT SimpleSubpic::AlphaBlt( SubPicDesc* target, const Bitmap& src )
         break;
     }
 
-    //emmsÒª40¸öcpuÖÜÆÚ
+    //emmsÒª40ï¿½ï¿½cpuï¿½ï¿½ï¿½ï¿½
     //__asm emms;
     return S_OK;
 }
@@ -489,7 +489,7 @@ void SimpleSubpic::SubsampleAndInterlace( int index, Bitmap*bitmap, bool u_first
 
     //Todo: fix me. 
     //Walkarround for alignment
-    if ( ((bitmap->pitch | (intptr_t)u_start | (intptr_t)v_start)&15) == 0 && (g_cpuid.m_flags & CCpuID::sse2) )
+    if ( ((bitmap->pitch | (intptr_t)u_start | (intptr_t)v_start)&15) == 0 )
     {
         for (int i=0;i<h;i+=2)
         {

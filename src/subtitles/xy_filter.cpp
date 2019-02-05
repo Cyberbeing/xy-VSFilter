@@ -1344,8 +1344,8 @@ void xy_be_blur(PUINT8 src, int width, int height, int stride, float pass_x, flo
     typedef void (*XyBeFilter)(PUINT8 src, int width, int height, int stride);
     typedef void (*XyFilter2)(PUINT8 src, int width, int height, int stride, PCUINT filter);
 
-    XyBeFilter filter = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter_sse<ROUND_HALF_TO_EVEN> : xy_be_filter_c<ROUND_HALF_TO_EVEN>;
-    XyFilter2 filter2 = (g_cpuid.m_flags & CCpuID::sse2) ? xy_be_filter2_sse<ROUND_HALF_TO_EVEN> : xy_be_filter2_c<ROUND_HALF_TO_EVEN>;
+    XyBeFilter filter = xy_be_filter_sse<ROUND_HALF_TO_EVEN>;
+    XyFilter2 filter2 = xy_be_filter2_sse<ROUND_HALF_TO_EVEN>;
 
     int stride_ver = height;
     PUINT8 tmp = reinterpret_cast<PUINT8>(xy_malloc(width*height));

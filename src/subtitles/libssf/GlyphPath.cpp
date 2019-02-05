@@ -53,7 +53,7 @@ namespace ssf
 
 		unsigned int i = 0;
 
-		if(!!(g_cpuid.m_flags & CCpuID::sse2) && !((DWORD_PTR)p & 7))
+		if(!((DWORD_PTR)p & 7))
 		{
 			for( ; i < n && ((DWORD_PTR)&p[i] & 15); i++)
 			{
