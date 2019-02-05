@@ -1026,14 +1026,7 @@ bool Rasterizer::OldFixedPointBlur(const Overlay& input_overlay, float be_streng
     {
         if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
         {
-            if (g_cpuid.m_flags & CCpuID::sse2)
-            {
-                be_blur(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
-            }
-            else
-            {
-                be_blur_c(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
-            }
+            be_blur(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
         }
     }
     if (scaled_be_strength>pass_num)
@@ -1062,14 +1055,6 @@ bool Rasterizer::Blur(const Overlay& input_overlay, float be_strength,
     {
         return true;
     }
-
-    if (!(g_cpuid.m_flags & CCpuID::sse2))
-    {
-        // C code path of floating point version is extremely slow,
-        // so we fall back to fixed point version instead
-        return Rasterizer::OldFixedPointBlur(input_overlay, be_strength, 
-            gaussian_blur_strength, target_scale_x, target_scale_y, output_overlay);//fix me: important!
-    }    
 
     if (gaussian_blur_strength>0)
     {
@@ -1249,14 +1234,7 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
     {
         if(output_overlay->mOverlayWidth >= 3 && output_overlay->mOverlayHeight >= 3)
         {
-            if (g_cpuid.m_flags & CCpuID::sse2)
-            {
-                be_blur(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
-            }
-            else
-            {
-                be_blur_c(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
-            }
+            be_blur(blur_plan, tmp_buf.get(), output_overlay->mOverlayWidth, output_overlay->mOverlayHeight, pitch);
         }
     }
     if (scaled_be_strength>pass_num)
@@ -1270,7 +1248,6 @@ bool Rasterizer::BeBlur( const Overlay& input_overlay, float be_strength,
 
 ///////////////////////////////////////////////////////////////////////////
 
-typedef              void (*PixMixFunc)(DWORD *dst, DWORD color, DWORD alpha);
 static __forceinline void   pixmix_c   (DWORD *dst, DWORD color, DWORD alpha);
 static __forceinline void   pixmix_sse2(DWORD *dst, DWORD color, DWORD alpha);
 
@@ -1333,7 +1310,6 @@ static __forceinline void pixmix2_sse2(DWORD* dst, DWORD color, DWORD shapealpha
 }
 ///////////////////////////////////////////////////////////////////////////
 
-typedef              void (*PixLineMixFunc   )(BYTE* dst, const BYTE* alpha, int w, DWORD color);
 static __forceinline void  packed_pix_mix_c   (BYTE* dst, const BYTE* alpha, int w, DWORD color);
 static __forceinline void  packed_pix_mix_sse2(BYTE* dst, const BYTE* alpha, int w, DWORD color);
 
@@ -1439,7 +1415,6 @@ static __forceinline void packed_pix_mix_sse2(BYTE* dst, const BYTE* alpha, int 
     }
 }
 
-typedef              void (*PixLineMixSingleAlphaFunc   )(BYTE* dst, BYTE alpha, int w, DWORD color);
 static __forceinline void  packed_pix_mix_c              (BYTE* dst, BYTE alpha, int w, DWORD color);
 static __forceinline void  packed_pix_mix_sse2           (BYTE* dst, BYTE alpha, int w, DWORD color);
 
@@ -1986,14 +1961,6 @@ SharedPtrByte Rasterizer::CompositeAlphaMask(const SharedPtrOverlay& overlay, co
 
 ///////////////////////////////////////////////////////////////////////////
 
-typedef void (*DrawSingleColorPackPixFunc)(      DWORD *dst,
-                                           const BYTE  *src, 
-                                           DWORD        color, 
-                                           int          w, 
-                                           int          h,
-                                           int          src_pitch,
-                                           int          dst_pitch);
-template<PixLineMixFunc pixmix_line>
 void DrawSingleColorPackPix(      DWORD *dst,
                             const BYTE  *src, 
                             DWORD        color, 
@@ -2004,7 +1971,7 @@ void DrawSingleColorPackPix(      DWORD *dst,
 {
     while(h--)
     {
-        pixmix_line((BYTE*)dst, src, w, color);
+        packed_pix_mix_sse2((BYTE*)dst, src, w, color);
         src += src_pitch;
         dst = (unsigned long *)((char *)dst + dst_pitch);
     }
@@ -2013,15 +1980,6 @@ void DrawSingleColorPackPix(      DWORD *dst,
 
 ///////////////////////////////////////////////////////////////////////////
 
-typedef void (*DrawMultiColorPackPixFunc)(     DWORD *dst,
-                                         const BYTE  *src, 
-                                         const DWORD *switchpts, 
-                                         int          xo,
-                                         int          w, 
-                                         int          h,
-                                         int          src_pitch,
-                                         int          dst_pitch);
-template<PixMixFunc pixmix>
 void DrawMultiColorPackPix(     DWORD *dst,
                           const BYTE  *src, 
                           const DWORD *switchpts, 
@@ -2038,7 +1996,7 @@ void DrawMultiColorPackPix(     DWORD *dst,
         for(int wt=0; wt<w; ++wt)
         {
             if(wt+xo >= sw[1]) {while(wt+xo >= sw[1]) sw += 2; color = sw[-2];}
-            pixmix(&dst[wt], color, src[wt]);
+            pixmix_sse2(&dst[wt], color, src[wt]);
         }
         src += src_pitch;
         dst = (DWORD *)((BYTE *)dst + dst_pitch);
@@ -2078,8 +2036,6 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     // must have enough space to draw into
     ASSERT(x >= bitmap->x && y >= bitmap->y && x+w <= bitmap->x + bitmap->w && y+h <= bitmap->y + bitmap->h );
 
-    // CPUID from VDub
-    bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
     bool fSingleColor = (switchpts[1]==0xffffffff);
     bool PLANAR = (bitmap->type==XyBitmap::PLANNA);
     int draw_method = 0;
@@ -2087,19 +2043,6 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
         draw_method |= DM::SINGLE_COLOR;
     if(PLANAR)
         draw_method |= DM::AYUV_PLANAR;
-
-    const DrawMultiColorPackPixFunc draw_multi_color_pack_pix[] = {
-        DrawMultiColorPackPix<pixmix_c>,
-        DrawMultiColorPackPix<pixmix_sse2>
-    };
-    const DrawSingleColorPackPixFunc draw_single_color_pack_pix[] = {
-        DrawSingleColorPackPix<packed_pix_mix_c>,
-        DrawSingleColorPackPix<packed_pix_mix_sse2>
-    };
-    const AlphaBlt8bppFunc alphablt_8bpp[] = {
-        AlphaBlt8bppC,
-        AlphaBlt8bppSse2
-    };
 
     // draw
     // Grab the first colour
@@ -2118,12 +2061,12 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
     {
     case   DM::SINGLE_COLOR | 0*DM::AYUV_PLANAR :
     {
-        draw_single_color_pack_pix[fSSE2](dst, s, color, w, h, overlayPitch, bitmap->pitch);
+        DrawSingleColorPackPix(dst, s, color, w, h, overlayPitch, bitmap->pitch);
     }
     break;
     case 0*DM::SINGLE_COLOR | 0*DM::AYUV_PLANAR :
     {
-        draw_multi_color_pack_pix[fSSE2](dst, s, switchpts, xo, w, h, overlayPitch, bitmap->pitch);
+        DrawMultiColorPackPix(dst, s, switchpts, xo, w, h, overlayPitch, bitmap->pitch);
     }
     break;
     case   DM::SINGLE_COLOR |   DM::AYUV_PLANAR :
@@ -2133,10 +2076,10 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
         unsigned char* dst_U = bitmap->plans[2] + dst_offset;
         unsigned char* dst_V = bitmap->plans[3] + dst_offset;
 
-        alphablt_8bpp[fSSE2](dst_Y, s, ((color)>>16)&0xff, h, w, overlayPitch, bitmap->pitch);
-        alphablt_8bpp[fSSE2](dst_U, s, ((color)>>8 )&0xff, h, w, overlayPitch, bitmap->pitch);
-        alphablt_8bpp[fSSE2](dst_V, s, ((color)    )&0xff, h, w, overlayPitch, bitmap->pitch);
-        alphablt_8bpp[fSSE2](dst_A, s,                  0, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt8bppSse2(dst_Y, s, ((color)>>16)&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt8bppSse2(dst_U, s, ((color)>>8 )&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt8bppSse2(dst_V, s, ((color)    )&0xff, h, w, overlayPitch, bitmap->pitch);
+        AlphaBlt8bppSse2(dst_A, s,                  0, h, w, overlayPitch, bitmap->pitch);
     }
     break;
     case 0*DM::SINGLE_COLOR |   DM::AYUV_PLANAR :
@@ -2156,10 +2099,10 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
             sw += 2;
             if( new_x < last_x )
                 continue;
-            alphablt_8bpp[fSSE2](dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            alphablt_8bpp[fSSE2](dst_U, s + last_x - xo, (color>>8 )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            alphablt_8bpp[fSSE2](dst_V, s + last_x - xo, (color    )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
-            alphablt_8bpp[fSSE2](dst_A, s + last_x - xo,                0, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppSse2(dst_Y, s + last_x - xo, (color>>16)&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppSse2(dst_U, s + last_x - xo, (color>>8 )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppSse2(dst_V, s + last_x - xo, (color    )&0xff, h, new_x-last_x, overlayPitch, bitmap->pitch);
+            AlphaBlt8bppSse2(dst_A, s + last_x - xo,                0, h, new_x-last_x, overlayPitch, bitmap->pitch);
 
             dst_A += new_x - last_x;
             dst_Y += new_x - last_x;
@@ -2175,17 +2118,6 @@ void Rasterizer::Draw(XyBitmap* bitmap, SharedPtrOverlay overlay, const CRect& c
 
 void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nHeight, DWORD argb)
 {
-    const AlphaBlt8bppSingleAlphaFunc alphablt_8bpp[] = {
-        AlphaBlt8bppSingleAlphaC,
-        AlphaBlt8bppSingleAlphaSse2
-    };
-
-    const PixLineMixSingleAlphaFunc pix_line_mix[] = {
-        packed_pix_mix_c,
-        packed_pix_mix_sse2
-    };
-
-    bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
     bool AYUV_PLANAR = (spd.type==MSP_AYUV_PLANAR);
     int draw_method = 0;
     if(AYUV_PLANAR)
@@ -2197,7 +2129,7 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
     {
         BYTE *dst = ((BYTE*)spd.bits + spd.pitch * y) + x*4;
         for (int wy=y; wy<y+nHeight; wy++) {
-            pix_line_mix[fSSE2](dst, argb>>24, nWidth, argb);
+            packed_pix_mix_sse2(dst, argb>>24, nWidth, argb);
             dst += spd.pitch;
         }
     }
@@ -2209,10 +2141,10 @@ void Rasterizer::FillSolidRect(SubPicDesc& spd, int x, int y, int nWidth, int nH
         BYTE* dst_Y = dst_A + spd.pitch*spd.h;
         BYTE* dst_U = dst_Y + spd.pitch*spd.h;
         BYTE* dst_V = dst_U + spd.pitch*spd.h;
-        alphablt_8bpp[fSSE2](dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
-        alphablt_8bpp[fSSE2](dst_U, argb>>24, ((argb)>>8)&0xff , nHeight, nWidth, spd.pitch);
-        alphablt_8bpp[fSSE2](dst_V, argb>>24, ((argb))&0xff    , nHeight, nWidth, spd.pitch);
-        alphablt_8bpp[fSSE2](dst_A, argb>>24,                 0, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppSingleAlphaSse2(dst_Y, argb>>24, ((argb)>>16)&0xff, nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppSingleAlphaSse2(dst_U, argb>>24, ((argb)>>8)&0xff , nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppSingleAlphaSse2(dst_V, argb>>24, ((argb))&0xff    , nHeight, nWidth, spd.pitch);
+        AlphaBlt8bppSingleAlphaSse2(dst_A, argb>>24,                 0, nHeight, nWidth, spd.pitch);
     }
     break;
     }
@@ -2231,18 +2163,16 @@ typedef void (*DoAdditionDrawMultiColorFunc)(      BYTE  *dst,
                                              int          src_pitch,
                                              int          dst_pitch);
 
-template<MixLineFunc mix_line_func>
 void DoAdditionDraw(BYTE* dst, const BYTE* src, DWORD color, int w, int h, int src_pitch, int dst_pitch)
 {
     while(h--)
     {
-        mix_line_func( dst, src, w, color );
+        packed_pix_add_sse2( dst, src, w, color );
         src += src_pitch;
         dst += dst_pitch;
     }
 }
 
-template<MixLineFunc mix_line_func>
 void DoAdditionDrawMultiColor(      BYTE  *dst, 
                               const BYTE  *src, 
                               const DWORD *switchpts, 
@@ -2265,7 +2195,7 @@ void DoAdditionDrawMultiColor(      BYTE  *dst,
             sw += 2;
             if( new_x < last_x )
                 continue;
-            mix_line_func((BYTE*)dst1, src1, new_x-last_x, color);
+            packed_pix_add_sse2((BYTE*)dst1, src1, new_x-last_x, color);
             dst1 += new_x - last_x;
             src1 += new_x - last_x;
             last_x = new_x;
@@ -2319,17 +2249,6 @@ void Rasterizer::AdditionDraw(XyBitmap         *bitmap   ,
         ASSERT(0);
     }
 
-    const DoAdditionDrawFunc do_draw_single_color[] = {
-        DoAdditionDraw<packed_pix_add_c   >,
-        DoAdditionDraw<packed_pix_add_sse2>
-    };
-    const DoAdditionDrawMultiColorFunc do_draw_multi_color[] = {
-        DoAdditionDrawMultiColor<packed_pix_add_c   >,
-        DoAdditionDrawMultiColor<packed_pix_add_sse2>
-    };
-
-    // CPUID from VDub
-    bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
     bool fSingleColor = (switchpts[1]==0xffffffff);
     bool PLANAR = (bitmap->type==XyBitmap::PLANNA);
 
@@ -2353,7 +2272,7 @@ void Rasterizer::AdditionDraw(XyBitmap         *bitmap   ,
     }
     if (fSingleColor)
     {
-        do_draw_single_color[fSSE2](dst, s, color, w, h, overlayPitch, bitmap->pitch);
+        DoAdditionDraw(dst, s, color, w, h, overlayPitch, bitmap->pitch);
     }
     else
     {
@@ -2376,7 +2295,7 @@ void Rasterizer::AdditionDraw(XyBitmap         *bitmap   ,
         {
             XY_LOG_WARN("Unexpected!");
         }
-        do_draw_multi_color[fSSE2](dst, s, new_switchpts, w, h, overlayPitch, bitmap->pitch);
+        DoAdditionDrawMultiColor(dst, s, new_switchpts, w, h, overlayPitch, bitmap->pitch);
     }
     return;
 }
@@ -2854,71 +2773,35 @@ void Overlay::FillAlphaMash( byte* outputAlphaMask, bool fBody, bool fBorder, in
     border = border!=NULL ? border + y*mOverlayPitch + x: NULL;
     byte* dst = outputAlphaMask + y*mOverlayPitch + x;
 
-    if (g_cpuid.m_flags & CCpuID::sse2)
+    if(!fBorder && fBody && pAlphaMask==NULL)
     {
-        if(!fBorder && fBody && pAlphaMask==NULL)
-        {
-            FillAlphaMashBody_sse2(dst, body, color_alpha, w, h, mOverlayPitch);
-        }
-        else if(fBorder && fBody && pAlphaMask==NULL)
-        {
-            FillAlphaMashBody_sse2(dst, border, color_alpha, w, h, mOverlayPitch);
-        }
-        else if(fBorder && !fBody && pAlphaMask==NULL)
-        {
-            FillAlphaMashBorder_sse2(dst, border, body, color_alpha, w, h, mOverlayPitch);
-        }
-        else if(!fBorder && fBody && pAlphaMask!=NULL)
-        {
-            FillAlphaMashBodyMasked_sse2(dst, body, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
-        }
-        else if(fBorder && fBody && pAlphaMask!=NULL)
-        {
-            FillAlphaMashBodyMasked_sse2(dst, border, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
-        }
-        else if(fBorder && !fBody && pAlphaMask!=NULL)
-        {
-            FillAlphaMashBorderMasked_sse2(dst, border, body, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
-        }
-        else
-        {
-            //should NOT happen
-            ASSERT(0);
-            XY_LOG_FATAL("Unexpected!");
-        }
+        FillAlphaMashBody_sse2(dst, body, color_alpha, w, h, mOverlayPitch);
+    }
+    else if(fBorder && fBody && pAlphaMask==NULL)
+    {
+        FillAlphaMashBody_sse2(dst, border, color_alpha, w, h, mOverlayPitch);
+    }
+    else if(fBorder && !fBody && pAlphaMask==NULL)
+    {
+        FillAlphaMashBorder_sse2(dst, border, body, color_alpha, w, h, mOverlayPitch);
+    }
+    else if(!fBorder && fBody && pAlphaMask!=NULL)
+    {
+        FillAlphaMashBodyMasked_sse2(dst, body, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
+    }
+    else if(fBorder && fBody && pAlphaMask!=NULL)
+    {
+        FillAlphaMashBodyMasked_sse2(dst, border, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
+    }
+    else if(fBorder && !fBody && pAlphaMask!=NULL)
+    {
+        FillAlphaMashBorderMasked_sse2(dst, border, body, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
     }
     else
     {
-        if(!fBorder && fBody && pAlphaMask==NULL)
-        {
-            FillAlphaMashBody_c(dst, body, color_alpha, w, h, mOverlayPitch);
-        }
-        else if(fBorder && fBody && pAlphaMask==NULL)
-        {
-            FillAlphaMashBody_c(dst, border, color_alpha, w, h, mOverlayPitch);
-        }
-        else if(fBorder && !fBody && pAlphaMask==NULL)
-        {
-            FillAlphaMashBorder_c(dst, border, body, color_alpha, w, h, mOverlayPitch);
-        }
-        else if(!fBorder && fBody && pAlphaMask!=NULL)
-        {
-            FillAlphaMashBodyMasked_c(dst, body, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
-        }
-        else if(fBorder && fBody && pAlphaMask!=NULL)
-        {
-            FillAlphaMashBodyMasked_c(dst, border, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
-        }
-        else if(fBorder && !fBody && pAlphaMask!=NULL)
-        {
-            FillAlphaMashBorderMasked_c(dst, border, body, color_alpha, w, h, mOverlayPitch, pAlphaMask, pitch);
-        }
-        else
-        {
-            //should NOT happen
-            ASSERT(0);
-            XY_LOG_FATAL("Unexpected!");
-        }
+        //should NOT happen
+        ASSERT(0);
+        XY_LOG_FATAL("Unexpected!");
     }
 }
 

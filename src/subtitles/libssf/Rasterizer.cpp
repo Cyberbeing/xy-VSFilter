@@ -672,30 +672,21 @@ namespace ssf
 
 		DWORD color = switchpts[0];
 
-		bool fSSE2 = !!(g_cpuid.m_flags & CCpuID::sse2);
-
 		while(h--)
 		{
 			if(switchpts[1] == 0xffffffff)
 			{
-				if(fSSE2) for(int wt=0; wt<w; ++wt) pixmix_sse2(&dst[wt], color, src[wt*4]);
-				else for(int wt=0; wt<w; ++wt) pixmix_c(&dst[wt], color, src[wt*4]);
+				for (int wt = 0; wt < w; ++wt)
+					pixmix_sse2(&dst[wt], color, src[wt * 4]);
 			}
 			else
 			{
 				const DWORD* sw = switchpts;
 
-				if(fSSE2) 
 				for(int wt=0; wt<w; ++wt)
 				{
 					if(wt+xo >= sw[1]) {while(wt+xo >= sw[1]) sw += 2; color = sw[-2];}
 					pixmix_sse2(&dst[wt], color, src[wt*4]);
-				}
-				else
-				for(int wt=0; wt<w; ++wt)
-				{
-					if(wt+xo >= sw[1]) {while(wt+xo >= sw[1]) sw += 2; color = sw[-2];}
-					pixmix_c(&dst[wt], color, src[wt*4]);
 				}
 			}
 
