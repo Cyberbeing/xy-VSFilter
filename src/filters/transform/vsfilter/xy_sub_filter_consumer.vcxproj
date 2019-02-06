@@ -23,6 +23,8 @@
     <ProjectGuid>{FF52CEE2-6935-4AE7-BC82-E363FC4A0029}</ProjectGuid>
     <RootNamespace>$(ProjectName)</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <VcpkgTriplet Condition="'$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="..\..\..\configuration.props" />

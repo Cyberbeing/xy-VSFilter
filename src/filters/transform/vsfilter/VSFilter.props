@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)src\filters\BaseClasses;$(SolutionDir)src\thirdparty\boost_lib\;$(SolutionDir)src\thirdparty\log4cplus\include\;$(SolutionDir)src\thirdparty\VirtualDub\h\;$(SolutionDir)include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)src\filters\BaseClasses;$(SolutionDir)src\thirdparty\VirtualDub\h\;$(SolutionDir)include\;$(IncludePath)</IncludePath>
     <OutDir>$(OutDir)$(Configuration)\</OutDir>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
@@ -12,10 +12,10 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)lib;$(OutDir)..</AdditionalLibraryDirectories>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;log4cplus_staticDU.lib;KasumiD.lib;systemD.lib;unrarD.lib;Mfuuid.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Debug' And '$(VisualStudioVersion)'&gt;'11.0'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;log4cplus_staticDU.lib;KasumiD.lib;systemD.lib;unrarD.lib;dwmapi.lib;Mfuuid.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;log4cplus_staticRU.lib;KasumiR.lib;systemR.lib;unrarR.lib;winmm.lib;Mfuuid.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Release' And '$(VisualStudioVersion)'&gt;'11.0'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;log4cplus_staticRU.lib;KasumiR.lib;systemR.lib;unrarR.lib;winmm.lib;dwmapi.lib;Mfuuid.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;KasumiD.lib;systemD.lib;Mfuuid.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Debug' And '$(VisualStudioVersion)'&gt;'11.0'">strmbaseD.lib;dsutilD.lib;subtitlesD.lib;subpicD.lib;basevideofilterD.lib;libssfD.lib;KasumiD.lib;systemD.lib;dwmapi.lib;Mfuuid.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;KasumiR.lib;systemR.lib;winmm.lib;Mfuuid.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Release' And '$(VisualStudioVersion)'&gt;'11.0'">delayimp.lib;strmbaseR.lib;dsutilR.lib;subtitlesR.lib;subpicR.lib;basevideofilterR.lib;libssfR.lib;KasumiR.lib;systemR.lib;winmm.lib;dwmapi.lib;Mfuuid.lib</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
     <ResourceCompile>

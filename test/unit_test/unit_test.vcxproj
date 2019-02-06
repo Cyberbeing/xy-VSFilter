@@ -22,6 +22,8 @@
     <ProjectGuid>{61CB0A9F-6347-423B-9296-6F35DD4745F5}</ProjectGuid>
     <RootNamespace>unit_test</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <VcpkgTriplet Condition="'$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="..\..\src\configuration.props" />
@@ -60,13 +62,13 @@
   <PropertyGroup>
     <OutDir>$(OutDir)$(Configuration)\</OutDir>
     <TargetName>$(ProjectName)</TargetName>
-    <IncludePath>$(SolutionDir)src\thirdparty\gtest\include;$(SolutionDir)src\subtitles;$(SolutionDir)src\thirdparty\boost_lib\;$(SolutionDir)src\subpic\;$(SolutionDir)src\filters\transform\vsfilter\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)src\subtitles;$(SolutionDir)src\thirdparty\boost_lib\;$(SolutionDir)src\subpic\;$(SolutionDir)src\filters\transform\vsfilter\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
       <AdditionalLibraryDirectories>$(OutDir);$(OutDir)..</AdditionalLibraryDirectories>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">gtestDU.lib;subtitlesD.lib;subpicD.lib;strmbaseD.lib;delayimp.lib;VSFilter.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">gtestRU.lib;subtitlesR.lib;subpicR.lib;strmbaseR.lib;delayimp.lib;VSFilter.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Debug'">subtitlesD.lib;subpicD.lib;strmbaseD.lib;delayimp.lib;VSFilter.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)'=='Release'">subtitlesR.lib;subpicR.lib;strmbaseR.lib;delayimp.lib;VSFilter.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
     <ClCompile>

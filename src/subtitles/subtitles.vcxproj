@@ -24,6 +24,8 @@
     <RootNamespace>$(ProjectName)</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <VcpkgTriplet Condition="'$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="..\configuration.props" />
@@ -53,7 +55,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(KIT_SHARED_IncludePath);$(UM_IncludePath);$(VC_IncludePath);$(UniversalCRT_IncludePath);$(SolutionDir)src\filters\transform\vsfilter;$(SolutionDir)src\thirdparty\log4cplus\include\;$(SolutionDir)src\filters\BaseClasses;$(SolutionDir)src\thirdparty\boost_lib\;$(SolutionDir)include\;$(SolutionDir)include\unrar\;$(SolutionDir)src\thirdparty\</IncludePath>
+    <IncludePath>$(KIT_SHARED_IncludePath);$(UM_IncludePath);$(VC_IncludePath);$(UniversalCRT_IncludePath);$(SolutionDir)src\filters\transform\vsfilter;$(SolutionDir)src\filters\BaseClasses;$(SolutionDir)include\;$(SolutionDir)src\thirdparty\</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
