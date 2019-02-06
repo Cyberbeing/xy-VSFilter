@@ -3291,7 +3291,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
             }
             else
             {
-                XyBitmap::AlphaBltPack(spd, pos, size, pixels, pitch);
+                // XyBitmap::AlphaBltPack(spd, pos, size, pixels, pitch);
             }
         }
     }
