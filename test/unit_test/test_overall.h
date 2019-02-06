@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 
 void OpenTestScript( const char *filename );
-void OverallTest(float fps = 25, int width=1280, int height=720,
+void OverallTest(float fps = 25, int width=3840, int height=2160,
     double start=0, double end=60);
 
 TEST(OverallTest, xxx)
