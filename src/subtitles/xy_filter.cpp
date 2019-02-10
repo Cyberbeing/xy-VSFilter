@@ -296,7 +296,7 @@ void xy_filter_sse_v6(float *dst, int width, int height, int stride, const float
     ASSERT( ((stride|(4*width)|(4*filter_width)|reinterpret_cast<intptr_t>(dst)|reinterpret_cast<intptr_t>(filter))&15)==0 );
 
     BYTE* dst_byte = reinterpret_cast<BYTE*>(dst);
-#pragma omp parallel for num_threads(4)
+#pragma omp parallel for num_threads(3)
     for (int i = 0; i < height; i++)
     {
         xy_filter_one_line_sse_v6(reinterpret_cast<float*>(dst_byte + i * stride), width, filter, filter_width);
@@ -497,7 +497,7 @@ void xy_filter_sse_template(float *dst, int width, int height, int stride, const
     const float *filter_start = filter;
     BYTE* dst_byte = reinterpret_cast<BYTE*>(dst);
     BYTE* end = dst_byte + height*stride;
-#pragma omp parallel for num_threads(3)
+#pragma omp parallel for num_threads(2)
     for (int i = 0; i < height; i++)
     {
         float* dst2 = reinterpret_cast<float*>(dst_byte + i * stride);
