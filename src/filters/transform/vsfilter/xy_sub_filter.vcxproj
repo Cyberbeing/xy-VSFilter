@@ -80,6 +80,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="StyleEditorDialog.cpp" />
+    <ClCompile Include="SubFrame.cpp" />
     <ClCompile Include="SubRenderOptionsImpl.cpp" />
     <ClCompile Include="SubtitleInputPin2.cpp" />
     <ClCompile Include="Systray.cpp" />
@@ -100,6 +101,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="StyleEditorDialog.h" />
+    <ClInclude Include="SubFrame.h" />
     <ClInclude Include="SubRenderOptionsImpl.h" />
     <ClInclude Include="SubtitleInputPin2.h" />
     <ClInclude Include="Systray.h" />

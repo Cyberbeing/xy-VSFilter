@@ -277,6 +277,10 @@ STDMETHODIMP CTextSubtitleInputPinHepler::Receive( IMediaSample* pSample )
                     m_pRTS->Add(stse.str, true, (int)(tStart / 10000), (int)(tStop / 10000), 
                         stse.style, stse.actor, stse.effect, stse.marginRect, stse.layer, stse.readorder);
                 }
+
+                if (m_pRTS->m_assloaded) {
+                    ass_process_chunk(m_pRTS->m_track.get(), (char*)pData, pSample->GetSize(), tStart / 10000, (tStop - tStart) / 10000);
+                }
             }
             else
             {
@@ -522,6 +526,9 @@ STDMETHODIMP_(CSubtitleInputPinHelper*) CSubtitleInputPin::CreateHelper( const C
 
                 pRTS->Open(mt1.pbFormat + dwOffset, mt1.cbFormat - dwOffset, DEFAULT_CHARSET, pRTS->m_name);
             }
+
+            pRTS->m_pPin = pReceivePin;
+            pRTS->LoadASSTrack((char*)mt.Format() + psi->dwOffset, mt.FormatLength() - psi->dwOffset);
             ret = DEBUG_NEW CTextSubtitleInputPinHepler(pRTS, m_mt);
         }
         else if(mt.subtype == MEDIASUBTYPE_SSF)

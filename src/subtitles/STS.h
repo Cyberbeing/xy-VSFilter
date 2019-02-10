@@ -25,6 +25,7 @@
 #include <wxutil.h>
 #include "TextFile.h"
 #include "GFN.h"
+#include <ass.hpp>
 
 typedef enum {TIME, FRAME} tmode; // the meaning of STSEntry::start/end
 
@@ -291,6 +292,17 @@ public:
     friend bool OpenMicroDVD(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet);
 private:
     bool CopyStyles(const CSTSStyleMap& styles, bool fAppend = false);
+
+public:
+    IPin* m_pPin;
+    bool LoadASSFile();
+    bool LoadASSTrack(char* data, int size);
+    void UnloadASS();
+    bool m_assloaded;
+    bool m_assfontloaded;
+    std::unique_ptr<ASS_Library, ASS_LibraryDeleter> m_ass;
+    std::unique_ptr<ASS_Renderer, ASS_RendererDeleter> m_renderer;
+    std::unique_ptr<ASS_Track, ASS_TrackDeleter> m_track;
 };
 
 extern BYTE   CharSetList[];

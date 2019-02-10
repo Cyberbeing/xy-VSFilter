@@ -1901,6 +1901,8 @@ CXySubFilterMorePPage::CXySubFilterMorePPage(LPUNKNOWN pUnk, HRESULT* phr)
     BindControl(IDC_AUTORELOAD, m_autoreload);
     BindControl(IDC_INSTANTUPDATE, m_instupd);
 
+    BindControl(IDC_CHECKBOX_VS_ASS_RENDERING, m_vsassrendering);
+
     BindControl(IDC_COMBO_COLOR_SPACE, m_combo_yuv_matrix);
     BindControl(IDC_COMBO_YUV_RANGE, m_combo_yuv_range);
     BindControl(IDC_COMBO_RGB_LEVEL, m_combo_rgb_level);
@@ -2037,6 +2039,9 @@ void CXySubFilterMorePPage::UpdateObjectData(bool fSave)
         hr = m_pDirectVobSub->put_SubtitleReloader(m_fReloaderDisabled);
         CHECK_N_LOG(hr, "Failed to set option");
 
+        hr = m_pDirectVobSubXy->XySetBool(DirectVobSubXyOptions::BOOL_VS_ASS_RENDERING, m_fVSAssRendering);
+        CHECK_N_LOG(hr, "Failed to set option");
+
         hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_YUV_RANGE, m_yuv_range);
         CHECK_N_LOG(hr, "Failed to set option");
         hr = m_pDirectVobSubXy->XySetInt(DirectVobSubXyOptions::INT_COLOR_SPACE, m_yuv_matrix);
@@ -2072,6 +2077,9 @@ void CXySubFilterMorePPage::UpdateObjectData(bool fSave)
         hr = m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_ALLOW_MOVING, &m_fAllowMoving);
         CHECK_N_LOG(hr, "Failed to get option");
         hr = m_pDirectVobSub->get_SubtitleReloader(&m_fReloaderDisabled);
+        CHECK_N_LOG(hr, "Failed to get option");
+
+        hr = m_pDirectVobSubXy->XyGetBool(DirectVobSubXyOptions::BOOL_VS_ASS_RENDERING, &m_fVSAssRendering);
         CHECK_N_LOG(hr, "Failed to get option");
 
         hr = m_pDirectVobSubXy->XyGetInt(DirectVobSubXyOptions::INT_YUV_RANGE, &m_yuv_range);
@@ -2129,6 +2137,7 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         m_fAllowMoving = !!m_allowmoving.GetCheck();
         m_fReloaderDisabled = !m_autoreload.GetCheck();
 
+        m_fVSAssRendering = !!m_vsassrendering.GetCheck();
 
         if (m_combo_yuv_range.GetCurSel() != CB_ERR)
         {
@@ -2227,6 +2236,8 @@ void CXySubFilterMorePPage::UpdateControlData(bool fSave)
         m_allowmoving.SetCheck(m_fAllowMoving);
         m_autoreload.SetCheck(!m_fReloaderDisabled);
         m_instupd.SetCheck(!!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), 1));
+
+        m_vsassrendering.SetCheck(m_fVSAssRendering);
 
         if( m_yuv_range != CDirectVobSub::YuvRange_Auto &&
             m_yuv_range != CDirectVobSub::YuvRange_PC &&

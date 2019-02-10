@@ -2701,6 +2701,11 @@ bool CSimpleTextSubtitle::Open(CString fn, int CharSet, CString name)
         name = name.Mid(name.ReverseFind('.')+1);
     }
 
+    if (lstrcmpi(PathFindExtensionW(fn), L".ass") == 0) {
+        m_path = f.GetFilePath();
+        LoadASSFile();
+    }
+
     return(Open(&f, CharSet, name));
 }
 
@@ -3059,6 +3064,53 @@ bool CSimpleTextSubtitle::IsEmpty()
 void CSimpleTextSubtitle::RemoveAllEntries()
 {
     m_entries.RemoveAll();
+}
+
+bool CSimpleTextSubtitle::LoadASSFile()
+{
+    UnloadASS();
+    m_assfontloaded = false;
+
+    if (m_path.IsEmpty()) return false;
+
+    m_ass = decltype(m_ass)(ass_library_init());
+    m_renderer = decltype(m_renderer)(ass_renderer_init(m_ass.get()));
+    m_track = decltype(m_track)(ass_read_file(m_ass.get(), const_cast<char*>((const char*)(CStringA)m_path), "UTF-8"));
+
+    if (!m_track) return false;
+
+    ass_set_fonts(m_renderer.get(), NULL, NULL, ASS_FONTPROVIDER_DIRECTWRITE, NULL, NULL);
+
+    m_assloaded = true;
+    m_assfontloaded = true;
+    return true;
+}
+
+bool CSimpleTextSubtitle::LoadASSTrack(char *data, int size)
+{
+    UnloadASS();
+    m_assfontloaded = false;
+
+    m_ass = decltype(m_ass)(ass_library_init());
+    m_renderer = decltype(m_renderer)(ass_renderer_init(m_ass.get()));
+    m_track = decltype(m_track)(ass_new_track(m_ass.get()));
+
+    if (!m_track) return false;
+
+    ass_process_codec_private(m_track.get(), data, size);
+
+    ass_set_fonts(m_renderer.get(), NULL, NULL, ASS_FONTPROVIDER_DIRECTWRITE, NULL, NULL);
+
+    m_assloaded = true;
+    return true;
+}
+
+void CSimpleTextSubtitle::UnloadASS()
+{
+    m_assloaded = false;
+    if (m_track) m_track.reset();
+    if (m_renderer) m_renderer.reset();
+    if (m_ass) m_ass.reset();
 }
 
 ////////////////////////////////////////////////////////////////////

@@ -243,14 +243,16 @@
 #define IDC_COLORSHAD                   1066
 #define IDS_RG_ALLOWMOVING              1070
 #define IDC_CHECKBOX_ALLOW_MOVING       1071
+#define IDS_RG_VSASSRENDERING           1072
+#define IDC_CHECKBOX_VS_ASS_RENDERING   1073
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        338
+#define _APS_NEXT_RESOURCE_VALUE        339
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         343
+#define _APS_NEXT_CONTROL_VALUE         344
 #define _APS_NEXT_SYMED_VALUE           210
 #endif
 #endif

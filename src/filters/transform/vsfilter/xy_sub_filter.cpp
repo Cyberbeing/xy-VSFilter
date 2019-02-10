@@ -17,6 +17,10 @@
 #include <Mfidl.h>
 #include <evr.h>
 
+#include "SubFrame.h"
+#include <DSMPropertyBag.h>
+#include <comdef.h>
+
 #if ENABLE_XY_LOG_RENDERER_REQUEST
 #  define TRACE_RENDERER_REQUEST(msg) XY_LOG_TRACE(msg)
 #  define TRACE_RENDERER_REQUEST_TIMING(msg) XY_AUTO_TIMING(msg)
@@ -1185,6 +1189,32 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
         <<" stop:"<<stop<<"("<<ReftimeToCString(stop)<<XY_LOG_VAR_2_STR((int)context));
 
     HRESULT hr;
+
+    CSimpleTextSubtitle* sts = dynamic_cast<CSimpleTextSubtitle*>(m_curSubStream);
+    if (sts && !m_xy_bool_opt[BOOL_VS_ASS_RENDERING] && sts->m_assloaded) {
+        CComPtr<ISubRenderFrame> sub_render_frame;
+        {
+            CAutoLock cAutoLock(&m_csFilter);
+
+            hr = UpdateParamFromConsumer();
+            if (FAILED(hr)) return hr;
+
+            ASSERT(m_consumer);
+
+            if (!sts->m_assfontloaded) {
+                LoadASSFont(sts->m_pPin, sts->m_ass.get(), sts->m_renderer.get());
+                sts->m_assfontloaded = true;
+            }
+
+            ass_set_frame_size(sts->m_renderer.get(), m_xy_rect_opt[RECT_SUBTITLE_TARGET].right, m_xy_rect_opt[RECT_SUBTITLE_TARGET].bottom);
+            sub_render_frame = new SubFrame(m_xy_rect_opt[RECT_SUBTITLE_TARGET], m_consumerLastId, ass_render_frame(sts->m_renderer.get(), sts->m_track.get(), start / 10000, 0));
+            m_consumerLastId++;
+        }
+        CAutoLock cAutoLock(&m_csConsumer);
+        hr = m_consumer->DeliverFrame(start, stop, context, sub_render_frame);
+        return hr;
+    }
+
     CComPtr<IXySubRenderFrame> sub_render_frame;
     {
         CAutoLock cAutoLock(&m_csFilter);
@@ -1661,6 +1691,34 @@ bool XySubFilter::Open()
     m_frd.RefreshEvent.Set();
 
     return (m_pSubStreams.GetCount() > 0);
+}
+
+void XySubFilter::LoadASSFont(IPin* pPin, ASS_Library* ass, ASS_Renderer* renderer)
+{
+    // Try to load fonts in the container
+    CComPtr<IAMGraphStreams> graphStreams;
+    CComPtr<IDSMResourceBag> bag;
+    if (SUCCEEDED(GetFilterGraph()->QueryInterface(IID_PPV_ARGS(&graphStreams))) &&
+        SUCCEEDED(graphStreams->FindUpstreamInterface(pPin, IID_PPV_ARGS(&bag), AM_INTF_SEARCH_FILTER)))
+    {
+        for (DWORD i = 0; i < bag->ResGetCount(); ++i)
+        {
+            _bstr_t name, desc, mime;
+            BYTE* pData = nullptr;
+            DWORD len = 0;
+            if (SUCCEEDED(bag->ResGet(i, &name.GetBSTR(), &desc.GetBSTR(), &mime.GetBSTR(), &pData, &len, nullptr)))
+            {
+                if (wcscmp(mime.GetBSTR(), L"application/x-truetype-font") == 0 ||
+                    wcscmp(mime.GetBSTR(), L"application/vnd.ms-opentype") == 0) // TODO: more mimes?
+                {
+                    ass_add_font(ass, "", (char*)pData, len);
+                    // TODO: clear these fonts somewhere?
+                }
+                CoTaskMemFree(pData);
+            }
+        }
+    }
+    ass_set_fonts(renderer, NULL, NULL, ASS_FONTPROVIDER_DIRECTWRITE, NULL, NULL);
 }
 
 void XySubFilter::UpdateSubtitle(bool fApplyDefStyle/*= true*/)

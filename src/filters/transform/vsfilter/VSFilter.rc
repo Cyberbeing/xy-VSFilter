@@ -459,6 +459,8 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,127,132,10
     EDITTEXT        IDC_EDIT_CACHE_SIZE,22,72,40,14,ES_AUTOHSCROLL,WS_EX_RIGHT
     RTEXT           "Cache Size(MB)",IDC_LABLE_CACHE_SIZE,14,60,57,8
+    CONTROL         "Use VSFilter (legacy) ASS implementation",IDC_CHECKBOX_VS_ASS_RENDERING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,266,224,10
 END
 
 
