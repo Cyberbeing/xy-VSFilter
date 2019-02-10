@@ -296,10 +296,10 @@ void xy_filter_sse_v6(float *dst, int width, int height, int stride, const float
     ASSERT( ((stride|(4*width)|(4*filter_width)|reinterpret_cast<intptr_t>(dst)|reinterpret_cast<intptr_t>(filter))&15)==0 );
 
     BYTE* dst_byte = reinterpret_cast<BYTE*>(dst);
-    BYTE* end = dst_byte + height*stride;
-    for( ; dst_byte<end; dst_byte+=stride )
+#pragma omp parallel for num_threads(4)
+    for (int i = 0; i < height; i++)
     {
-        xy_filter_one_line_sse_v6(reinterpret_cast<float*>(dst_byte), width, filter, filter_width);
+        xy_filter_one_line_sse_v6(reinterpret_cast<float*>(dst_byte + i * stride), width, filter, filter_width);
     }
 }
 
@@ -497,27 +497,28 @@ void xy_filter_sse_template(float *dst, int width, int height, int stride, const
     const float *filter_start = filter;
     BYTE* dst_byte = reinterpret_cast<BYTE*>(dst);
     BYTE* end = dst_byte + height*stride;
-    for( ; dst_byte<end; dst_byte+=stride )
+#pragma omp parallel for num_threads(3)
+    for (int i = 0; i < height; i++)
     {
-        float *dst2 = reinterpret_cast<float*>(dst_byte);
+        float* dst2 = reinterpret_cast<float*>(dst_byte + i * stride);
 
         //left margin
-        FilterAllLeftMargin<FILTER_LENGTH,((FILTER_LENGTH+3)&~3)>::cal(dst2, filter128s);
-        float *dst_end1 = dst2 + width;
-        float *dst_end0 = dst_end1 - ((FILTER_LENGTH+3)&~3);
-        for (;dst2<dst_end0;dst2+=4)
+        FilterAllLeftMargin<FILTER_LENGTH, ((FILTER_LENGTH + 3) & ~3)>::cal(dst2, filter128s);
+        float* dst_end1 = dst2 + width;
+        float* dst_end0 = dst_end1 - ((FILTER_LENGTH + 3) & ~3);
+        for (; dst2 < dst_end0; dst2 += 4)
         {
-            const float *src = dst2;
+            const float* src = dst2;
 
             //filter 4
             __m128 src0 = _mm_load_ps(src);/*1 2 3 4*/
             src += 4;
             __m128 sum = _mm_setzero_ps();
-            Filter4<FILTER_LENGTH,0,FILTER_LENGTH>::do_cal(src0, src, filter128s, sum);
+            Filter4<FILTER_LENGTH, 0, FILTER_LENGTH>::do_cal(src0, src, filter128s, sum);
             //store result
             _mm_store_ps(dst2, sum);
         }
-        FilterAllRightMargin<FILTER_LENGTH,((FILTER_LENGTH+3)&~3)>::cal(dst2, filter128s);
+        FilterAllRightMargin<FILTER_LENGTH, ((FILTER_LENGTH + 3) & ~3)>::cal(dst2, filter128s);
     }
 }
 
