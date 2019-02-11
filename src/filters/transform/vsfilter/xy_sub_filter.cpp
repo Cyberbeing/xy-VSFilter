@@ -1207,8 +1207,18 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
             }
 
             ass_set_frame_size(sts->m_renderer.get(), m_xy_rect_opt[RECT_SUBTITLE_TARGET].right, m_xy_rect_opt[RECT_SUBTITLE_TARGET].bottom);
-            sub_render_frame = new SubFrame(m_xy_rect_opt[RECT_SUBTITLE_TARGET], m_consumerLastId, ass_render_frame(sts->m_renderer.get(), sts->m_track.get(), start / 10000, 0));
-            m_consumerLastId++;
+
+            int changed = 1;
+            ASS_Image *image = ass_render_frame(sts->m_renderer.get(), sts->m_track.get(), start / 10000, &changed);
+            if (!changed && m_last_frame) {
+                sub_render_frame = m_last_frame;
+            }
+            else 
+            {
+                m_consumerLastId++;
+                sub_render_frame = new SubFrame(m_xy_rect_opt[RECT_SUBTITLE_TARGET], m_consumerLastId, image);
+                m_last_frame = sub_render_frame;
+            }
         }
         CAutoLock cAutoLock(&m_csConsumer);
         hr = m_consumer->DeliverFrame(start, stop, context, sub_render_frame);
