@@ -1971,7 +1971,7 @@ void DrawSingleColorPackPix(      DWORD *dst,
                             int          src_pitch,
                             int          dst_pitch)
 {
-#pragma omp parallel for num_threads(4)
+#pragma omp parallel for
     for (int i = 0; i < h; i++)
     {
         packed_pix_mix_sse2(

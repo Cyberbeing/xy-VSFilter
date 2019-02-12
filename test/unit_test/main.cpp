@@ -1,6 +1,7 @@
 #include <afx.h>
 #include <gtest/gtest.h>
 #include <iostream>
+#include <omp.h>
 
 #define XY_UNIT_TEST
 //#include "test_interlaced_uv_alphablend.h"
@@ -25,6 +26,8 @@ int wmain(int argc, wchar_t ** argv)
     OpenTestScript(namebuf);
 
     testing::InitGoogleTest(&argc, argv);
+
+    omp_set_num_threads(min(omp_get_num_procs() / 2, 4));
 
     return RUN_ALL_TESTS();
 }
