@@ -9,6 +9,7 @@
     <ClCompile>
       <PreprocessorDefinitions Condition="'$(VisualStudioVersion)'&gt;'10.0'">_AFX_NO_MFC_CONTROLS_IN_DIALOGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions Condition="'$(Configuration)|$(VisualStudioVersion)'=='Release|12.0'">/Gw %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(VisualStudioVersion)'=='Release|16.0'">/Gw /Qfast_transcendentals %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)lib;$(OutDir)..</AdditionalLibraryDirectories>

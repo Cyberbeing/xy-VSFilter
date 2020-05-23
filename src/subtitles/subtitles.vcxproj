@@ -40,7 +40,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(WindowsSdkDir)include;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(FrameworkSDKDir)\include;$(VCInstallDir)PlatformSDK\include;$(SolutionDir)src\filters\transform\vsfilter;$(SolutionDir)src\thirdparty\log4cplus\include\;$(SolutionDir)src\filters\BaseClasses;$(SolutionDir)src\thirdparty\boost_lib\;$(SolutionDir)include\;$(SolutionDir)include\unrar\;$(SolutionDir)src\thirdparty\</IncludePath>
+    <IncludePath>$(KIT_SHARED_IncludePath);$(UM_IncludePath);$(VC_IncludePath);$(UniversalCRT_IncludePath);$(SolutionDir)src\filters\transform\vsfilter;$(SolutionDir)src\thirdparty\log4cplus\include\;$(SolutionDir)src\filters\BaseClasses;$(SolutionDir)src\thirdparty\boost_lib\;$(SolutionDir)include\;$(SolutionDir)include\unrar\;$(SolutionDir)src\thirdparty\;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(VisualStudioVersion)'&gt;'10.0'">$(WindowsSdkDir)include\shared;$(WindowsSdkDir)include\um;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -55,7 +55,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Lib>
       <AdditionalDependencies>$(SolutionDir)lib\libacof32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Lib> 
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Lib>

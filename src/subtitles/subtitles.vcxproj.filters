@@ -102,9 +102,6 @@
     <ClCompile Include="hdmv_subtitle_provider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="xy_pool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="StdioFile64.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -204,9 +201,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hdmv_subtitle_provider.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="xy_pool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="xy_int_map.h">

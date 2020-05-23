@@ -6,7 +6,7 @@
 #define __ONCE_LOGGER_H_1E73E3E0_8213_4960_8692_6895F0674ACA__
 
 #include "log4cplus/logger.h"
-#include <WinBase.h>
+#include <Windows.h>
 #include <sstream>
 #include <map>
 

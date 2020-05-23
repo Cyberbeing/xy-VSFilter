@@ -6,7 +6,7 @@
 #define __TIMING_LOGGER_H_D6F8D390_64A9_43E7_978F_9A55358FA0B1__
 
 #include "log4cplus/logger.h"
-#include <WinBase.h>
+#include <Windows.h>
 #include <sstream>
 
 class TimingLogger
