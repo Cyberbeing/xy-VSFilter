@@ -57,6 +57,24 @@
       <AssemblerOutput>NoListing</AssemblerOutput>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
     </ClCompile>
+    <Lib>
+      <AdditionalDependencies>$(SolutionDir)lib\libacof32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Lib>
+      <AdditionalDependencies>$(SolutionDir)lib\libacof32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib> 
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Lib>
+      <AdditionalDependencies>$(SolutionDir)lib\libacof64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Lib>
+      <AdditionalDependencies>$(SolutionDir)lib\libacof64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BaseSub.cpp" />
