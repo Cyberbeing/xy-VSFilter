@@ -6,7 +6,7 @@
 #define __CAUTOTIMING_H_AF782E62_DC39_4D7F_9FD6_4119DB3BBE2F__
 
 #include <wxdebug.h>
-#include <WinBase.h>
+#include <Windows.h>
 
 class CAutoTiming
 {
