@@ -257,7 +257,7 @@ bool CWord::PaintFromPathData(const CPointCoor2& psub, const CPointCoor2& trans_
         OverlayNoBlurKey overlay_key = overlay_key_cache->GetAt(pos_key);
         pos = overlay_cache->Lookup(overlay_key);        
     }
-    if (pos)
+    if (pos && !CreateOpaqueBox())
     {
         SharedPtrOverlay raterize_result( new Overlay() );
         *raterize_result = *overlay_cache->GetAt(pos);
