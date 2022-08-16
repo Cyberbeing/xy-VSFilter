@@ -1,0 +1,88 @@
+name: Build VSFilter
+
+on:
+  push:
+    branches: [ci, xy_sub_filter_rc*, vsfilter_rc*, master]
+
+jobs:
+  build:
+    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - msarch: x64
+            vsfplat: x64
+            namesuf: x86-64
+          - arch: x86
+            vsfplat: Win32
+            namesuf: x86-32
+    defaults:
+      run:
+        shell: 'bash'
+
+    steps:
+      - name: Determine configuration
+        id: config
+        run: |
+          # base name of GHA artifact
+          name="VSFilter+SubFilter"
+          # space delimited list of filename stems to delete from artifact
+          delete=""
+
+          # If it runs for one of the main XySubFilter or xy-VSFilter dev branches,
+          # only publish compatible binaries. If it's some other branch, it's probably
+          # a transient testing build, so keep everything.
+          # ref.: https://github.com/Cyberbeing/xy-VSFilter/pull/18#issuecomment-1302638201
+          REF="${{ github.ref }}"
+          REF="${REF#refs/heads/}"
+          if [ "$REF" = "master" ] || [ "$REF" = "vsfilter_rc" ] ; then
+              name="VSFilter"
+              delete="XySubFilter"
+          elif echo "$REF" | grep -qE '^xy_sub_filter_rc' ; then
+              name="SubFilter"
+              delete="VSFilter"
+          fi
+
+          echo "name=$name" >> $GITHUB_OUTPUT
+          echo "delete=$delete" >> $GITHUB_OUTPUT
+
+      - name: checkout code
+        uses: actions/checkout@v3
+        with:
+          # We need full history to allow finding the tag in build prep
+          fetch-depth: 0
+
+      - name: install yasm
+        shell: cmd
+        run: |
+          git clone --depth=1 https://github.com/ShiftMediaProject/VSYASM.git
+          .\VSYASM\install_script.bat
+
+      # VS2019 is 16.x;  VS2022 17.x
+      - name: Setup VS2019
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          msbuild-architecture: matrix.msarch
+      #    vs-version: '[16.01,16.11]'
+
+      - name: Build xy-VSFilter and/or XySubFilter
+        run: |
+          export VS160COMNTOOLS="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools/"
+          bash ./build_vsfilter.sh -platform "${{ matrix.vsfplat }}" -compiler VS2019
+
+      - name: Prune incompatible files
+        if: steps.config.outputs.delete != ''
+        run: |
+          for dir in bin/lib*/*/Release ; do
+              for bn in ${{ steps.config.outputs.delete }} ; do
+                  rm -f "$dir"/"$bn".*
+              done
+          done
+
+      - name: Publish output
+        uses: actions/upload-artifact@v3
+        with:
+          name: xy-${{ steps.config.outputs.name }}_nightly_${{ matrix.namesuf }}
+          path: |
+            bin/lib*/*/Release
