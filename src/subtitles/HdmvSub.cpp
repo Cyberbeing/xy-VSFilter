@@ -208,6 +208,10 @@ HRESULT CHdmvSub::ParseSample(BYTE* pData, int lSampleLen, REFERENCE_TIME rtStar
 
 int CHdmvSub::ParsePresentationSegment(REFERENCE_TIME rt, CGolombBuffer* pGBuffer)
 {
+    if (pGBuffer->RemainingSize() < 11) {
+        return 0;
+    }
+
     m_pCurrentPresentationSegment = DEBUG_NEW HDMV_PRESENTATION_SEGMENT();
 
     m_pCurrentPresentationSegment->rtStart = rt;
@@ -221,6 +225,10 @@ int CHdmvSub::ParsePresentationSegment(REFERENCE_TIME rt, CGolombBuffer* pGBuffe
 
     TRACE_HDMVSUB( (_T("CHdmvSub::ParsePresentationSegment Size = %d, state = %#x, nObjectNumber = %d\n"), pGBuffer->GetSize(),
                   m_pCurrentPresentationSegment->composition_descriptor.bState, m_pCurrentPresentationSegment->objectCount) );
+
+    if (pGBuffer->RemainingSize() < (m_pCurrentPresentationSegment->objectCount * 8)) {
+        return 0;
+    }
 
     for (int i = 0; i < m_pCurrentPresentationSegment->objectCount; i++) {
         CompositionObject* pCompositionObject = DEBUG_NEW CompositionObject();
@@ -287,7 +295,11 @@ void CHdmvSub::ParsePalette(CGolombBuffer* pGBuffer, unsigned short nSize)  // #
 void CHdmvSub::ParseObject(CGolombBuffer* pGBuffer, unsigned short nUnitSize)   // #498
 {
     short object_id = pGBuffer->ReadShort();
-    ASSERT(object_id < _countof(m_compositionObjects));
+
+    if (object_id >= _countof(m_compositionObjects)) {
+        TRACE_HDMVSUB((_T("CHdmvSub::ParseObject() : FAILED, object_id - %d"), object_id));
+        return;
+    }
 
     CompositionObject& pObject = m_compositionObjects[object_id];
 
