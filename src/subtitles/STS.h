@@ -179,6 +179,7 @@ public:
     int            m_defaultWrapStyle;
     int            m_collisions;
     bool           m_fScaledBAS;
+    CSize          m_layout_size;
 
     CSTSStyleMap   m_styles;
 

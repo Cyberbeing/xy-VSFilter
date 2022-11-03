@@ -459,6 +459,8 @@ public:
 
 private:
     /*
+     * Expects the original_video_size parameter to already be
+     * overridden by LayoutRes headers when applicable.
      * Will call Deinit()
      */
     bool Init(const CRectCoor2& video_rect, const CRectCoor2& subtitle_target_rect,
