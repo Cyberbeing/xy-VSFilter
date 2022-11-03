@@ -459,12 +459,13 @@ public:
 
 private:
     /*
-     * Expects the original_video_size parameter to already be
-     * overridden by LayoutRes headers when applicable.
+     * The layout_size parameter is either derived from
+     * valid LayoutRes{X,Y} script headers (both must be valid!)
+     * or if those do not exist, equal to the video's storage resolution.
      * Will call Deinit()
      */
     bool Init(const CRectCoor2& video_rect, const CRectCoor2& subtitle_target_rect,
-        const SIZE& original_video_size);
+        const SIZE& layout_size);
 public:
     void Deinit();
 

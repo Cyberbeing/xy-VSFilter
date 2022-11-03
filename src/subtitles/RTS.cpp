@@ -1853,14 +1853,10 @@ void CRenderedTextSubtitle::OnChanged()
 
 
 bool CRenderedTextSubtitle::Init( const CRectCoor2& video_rect, const CRectCoor2& subtitle_target_rect,
-    const SIZE& original_video_size )
+    const SIZE& layout_size )
 {
     XY_LOG_INFO(_T(""));
     Deinit();
-
-    // Since this is only called from RenderEx(..), which already overrides
-    // original_video_size with m_layout_size when appropiate, we do not
-    // need to override it again and can just use original_size here
 
     m_video_rect = CRect(video_rect.left*MAX_SUB_PIXEL, 
                          video_rect.top*MAX_SUB_PIXEL, 
@@ -1868,12 +1864,12 @@ bool CRenderedTextSubtitle::Init( const CRectCoor2& video_rect, const CRectCoor2
                          video_rect.bottom*MAX_SUB_PIXEL);
     m_subtitle_target_rect = CRect(subtitle_target_rect.left*MAX_SUB_PIXEL, subtitle_target_rect.top*MAX_SUB_PIXEL, 
         subtitle_target_rect.right*MAX_SUB_PIXEL, subtitle_target_rect.bottom*MAX_SUB_PIXEL);
-    m_size = CSize(original_video_size.cx*MAX_SUB_PIXEL, original_video_size.cy*MAX_SUB_PIXEL);
+    m_size = CSize(layout_size.cx*MAX_SUB_PIXEL, layout_size.cy*MAX_SUB_PIXEL);
 
-    ASSERT(original_video_size.cx!=0 && original_video_size.cy!=0);
+    ASSERT(layout_size.cx!=0 && layout_size.cy!=0);
 
-    m_target_scale_x = video_rect.Width()  * 1.0 / original_video_size.cx;
-    m_target_scale_y = video_rect.Height() * 1.0 / original_video_size.cy;
+    m_target_scale_x = video_rect.Width()  * 1.0 / layout_size.cx;
+    m_target_scale_y = video_rect.Height() * 1.0 / layout_size.cy;
 
     return(true);
 }
@@ -3342,7 +3338,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
 
 STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame, int spd_type,
     const RECT& video_rect, const RECT& subtitle_target_rect,
-    const SIZE& actual_original_video_size,
+    const SIZE& original_video_size,
     REFERENCE_TIME rt, double fps )
 {
     TRACE_RENDERER_REQUEST("Begin RenderEx rt"<<rt);
@@ -3366,10 +3362,10 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
         cvideo_rect.MoveToXY(0,0);
     }
 
-    SIZE original_video_size = actual_original_video_size;
+    SIZE layout_size = original_video_size;
     if (m_layout_size.cx > 0 && m_layout_size.cy > 0) {
-        original_video_size.cx = m_layout_size.cx;
-        original_video_size.cy = m_layout_size.cy;
+        layout_size.cx = m_layout_size.cx;
+        layout_size.cy = m_layout_size.cy;
     }
 
     XyColorSpace color_space = XY_CS_ARGB;
@@ -3403,9 +3399,9 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
                                            subtitle_target_rect.top*MAX_SUB_PIXEL,
                                            subtitle_target_rect.right*MAX_SUB_PIXEL,
                                            subtitle_target_rect.bottom*MAX_SUB_PIXEL)
-        || m_size != CSize(original_video_size.cx*MAX_SUB_PIXEL, original_video_size.cy*MAX_SUB_PIXEL) )
+        || m_size != CSize(layout_size.cx*MAX_SUB_PIXEL, layout_size.cy*MAX_SUB_PIXEL) )
     {
-        if (!Init(cvideo_rect, subtitle_target_rect, original_video_size))
+        if (!Init(cvideo_rect, subtitle_target_rect, layout_size))
         {
             XY_LOG_FATAL("Failed to Init.");
             return E_FAIL;
