@@ -454,8 +454,12 @@ public:
     virtual void Copy(CSimpleTextSubtitle& sts);
     virtual void Empty();
 
+private:
+    /*
+     * Will call Deinit()
+     */
+    bool Init(const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect);
 public:
-    bool Init(const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect); // will call Deinit()
     void Deinit();
 
     DECLARE_IUNKNOWN
