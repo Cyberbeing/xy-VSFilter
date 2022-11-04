@@ -1975,17 +1975,17 @@ void CRenderedTextSubtitle::OnChanged()
 }
 
 
-bool CRenderedTextSubtitle::Init( const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect )
+bool CRenderedTextSubtitle::Init( const SIZECoor2& size_scale_to, const SIZE& layout_size, const CRect& video_rect )
 {
     Deinit();
     m_size_scale_to = CSize(size_scale_to.cx*8, size_scale_to.cy*8);//fix me?
-    m_size = CSize(size1.cx*8, size1.cy*8);
+    m_size = CSize(layout_size.cx*8, layout_size.cy*8);
     m_vidrect = CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8);
     
-    ASSERT(size1.cx!=0 && size1.cy!=0);
+    ASSERT(layout_size.cx!=0 && layout_size.cy!=0);
 
-    m_target_scale_x = size_scale_to.cx * 1.0 / size1.cx;
-    m_target_scale_y = size_scale_to.cy * 1.0 / size1.cy;
+    m_target_scale_x = size_scale_to.cx * 1.0 / layout_size.cx;
+    m_target_scale_y = size_scale_to.cy * 1.0 / layout_size.cy;
 
     return(true);
 }
@@ -3500,7 +3500,7 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
 }
 
 STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame, int spd_type, 
-    const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect, 
+    const SIZECoor2& size_scale_to, const SIZE& layout_size, const CRect& video_rect, 
     REFERENCE_TIME rt, double fps )
 {
     if (!subRenderFrame)
@@ -3529,10 +3529,10 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame,
     render_frame_creater->SetColorSpace(color_space);
 
     if( m_size_scale_to != CSize(size_scale_to.cx*8, size_scale_to.cy*8) 
-        || m_size != CSize(size1.cx*8, size1.cy*8) 
+        || m_size != CSize(layout_size.cx*8, layout_size.cy*8) 
         || m_vidrect != CRect(video_rect.left*8, video_rect.top*8, video_rect.right*8, video_rect.bottom*8))
     {
-        Init(size_scale_to, size1, video_rect);
+        Init(size_scale_to, layout_size, video_rect);
         render_frame_creater->SetOutputRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
         render_frame_creater->SetClipRect(CRect(0, 0, size_scale_to.cx, size_scale_to.cy));
     }

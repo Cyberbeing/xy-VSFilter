@@ -458,7 +458,7 @@ private:
     /*
      * Will call Deinit()
      */
-    bool Init(const SIZECoor2& size_scale_to, const SIZE& size1, const CRect& video_rect);
+    bool Init(const SIZECoor2& size_scale_to, const SIZE& layout_size, const CRect& video_rect);
 public:
     void Deinit();
 
@@ -470,7 +470,7 @@ public:
     STDMETHODIMP Unlock();
     STDMETHODIMP RenderEx(IXySubRenderFrame**subRenderFrame, int spd_type, 
         const SIZECoor2& size_scale_to,
-        const SIZE& size1, const CRect& video_rect, 
+        const SIZE& layout_size, const CRect& video_rect, 
         REFERENCE_TIME rt, double fps);
 
     // ISubPicProviderEx && ISubPicProviderEx2
