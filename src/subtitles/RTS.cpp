@@ -1977,6 +1977,10 @@ void CRenderedTextSubtitle::OnChanged()
 
 bool CRenderedTextSubtitle::Init( const SIZECoor2& size_scale_to, const SIZE& layout_size, const CRect& video_rect )
 {
+    // Since this is only called from RenderEx(..), which already overrides
+    // layout_size with m_layout_size when appropiate, we do not
+    // need to override it again and can just use the parameter as is here.
+
     Deinit();
     m_size_scale_to = CSize(size_scale_to.cx*8, size_scale_to.cy*8);//fix me?
     m_size = CSize(layout_size.cx*8, layout_size.cy*8);
@@ -3500,14 +3504,20 @@ STDMETHODIMP CRenderedTextSubtitle::RenderEx(SubPicDesc& spd, REFERENCE_TIME rt,
 }
 
 STDMETHODIMP CRenderedTextSubtitle::RenderEx( IXySubRenderFrame**subRenderFrame, int spd_type, 
-    const SIZECoor2& size_scale_to, const SIZE& layout_size, const CRect& video_rect, 
+    const SIZECoor2& size_scale_to, const SIZE& original_layout_size, const CRect& video_rect, 
     REFERENCE_TIME rt, double fps )
 {
     if (!subRenderFrame)
     {
         return S_FALSE;
     }
-    
+
+    SIZE layout_size = original_layout_size;
+    if (m_layout_size.cx > 0 && m_layout_size.cy > 0) {
+        layout_size.cx = m_layout_size.cx;
+        layout_size.cy = m_layout_size.cy;
+    }
+
     XyColorSpace color_space = XY_CS_ARGB;
     switch(spd_type)
     {

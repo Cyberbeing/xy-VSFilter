@@ -1497,6 +1497,16 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
                     : ret.m_dstScreenSize.cy * 4 / 3;
             }
         }
+        else if(entry == L"layoutresx")
+        {
+            try {ret.m_layout_size.cx = GetInt(buff);}
+            catch(...) {ret.m_layout_size = CSize(0, 0); return(false);}
+        }
+        else if(entry == L"layoutresy")
+        {
+            try {ret.m_layout_size.cy = GetInt(buff);}
+            catch(...) {ret.m_layout_size = CSize(0, 0); return(false);}
+        }
         else if(entry == L"wrapstyle")
         {
             try {ret.m_defaultWrapStyle = GetInt(buff);}

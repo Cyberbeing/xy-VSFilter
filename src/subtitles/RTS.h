@@ -456,6 +456,8 @@ public:
 
 private:
     /*
+     * Expects the layout_size parameter to already be
+     * overridden by LayoutRes headers when applicable.
      * Will call Deinit()
      */
     bool Init(const SIZECoor2& size_scale_to, const SIZE& layout_size, const CRect& video_rect);
