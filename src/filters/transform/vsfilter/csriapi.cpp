@@ -114,12 +114,12 @@ CSRIAPI int csri_request_fmt(csri_inst *inst, const struct csri_fmt *fmt)
 	// Check if pixel format is supported
 	switch (fmt->pixfmt) {
 		case CSRI_F_BGR_:
-		case CSRI_F_BGR:
-		case CSRI_F_YUY2:
-		case CSRI_F_YV12:
 			inst->pixfmt = fmt->pixfmt;
 			break;
 
+		case CSRI_F_BGR:  // guliverkli2-VSFilter and old xy-VSFilter used to
+		case CSRI_F_YUY2: // support those formats, but they were dropped in
+		case CSRI_F_YV12: // 50d3b3b7ab712ee2419f48de14db1b01a8406e43
 		default:
 			return -1;
 	}
@@ -144,11 +144,10 @@ CSRIAPI void csri_render(csri_inst *inst, struct csri_frame *frame, double time)
 			break;
 
 		default:
-            ASSERT(0);
-            CString msg;
-            msg.Format(_T("Anything other then RGB32 is NOT supported!"));
-            MessageBox(NULL, msg, _T("Warning"), MB_OKCANCEL|MB_ICONWARNING);
-            int o = 0; o=o/o;
+			ASSERT(0);
+			CString msg;
+			msg.Format(_T("Anything other then RGB32 is NOT supported!"));
+			MessageBox(NULL, msg, _T("Warning"), MB_OKCANCEL|MB_ICONWARNING);
 			return;
 	}
 	spd.vidrect = inst->video_rect;
