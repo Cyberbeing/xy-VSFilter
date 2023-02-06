@@ -472,22 +472,25 @@ DWORD SupFileSubtitleProvider::ThreadProc()
     while ((len = f.Read(buff, sizeof(buff))) > 0) {
         sub.Write(buff, len);
     }
+    f.Close();
     sub.SeekToBegin();
 
     WORD sync              = 0;
     USHORT size            = 0;
     REFERENCE_TIME rtStart = 0;
+    REFERENCE_TIME rtStop  = 0;
 
     CAutoLock cAutoLock(&m_csCritSec);
     while (sub.GetPosition() < (sub.GetLength() - 10)) {
         sync = (WORD)ReadByte(&sub, 2);
         if (sync == 'PG') {
-            rtStart = UINT64(ReadByte(&sub, 4) * (1000 / 9));
-            sub.Seek(4 + 1, CFile::current); // rtStop + Segment type
+            rtStart = UINT64(ReadByte(&sub, 4) * 1000 / 9);
+            rtStop = UINT64(ReadByte(&sub, 4) * 1000 / 9);
+            sub.Seek(1, CFile::current); // Segment type
             size = ReadByte(&sub, 2) + 3;    // Segment size
             sub.Seek(-3, CFile::current);
             sub.Read(buff, size);
-            m_pSub->ParseSample(buff, size, rtStart, 0);
+            m_pSub->ParseSample(buff, size, rtStart, rtStop);
         } else {
             break;
         }
