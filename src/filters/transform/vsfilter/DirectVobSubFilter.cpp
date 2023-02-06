@@ -236,7 +236,7 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	{
 		double dRate = m_pInput->CurrentRate();
 
-		m_tPrev = m_pInput->CurrentStartTime() + dRate*rtStart;
+        m_tPrev = m_pInput->CurrentStartTime() + rtStart * (m_bExternalSubtitle ? dRate : 1);
 
 		REFERENCE_TIME rtAvgTimePerFrame = rtStop - rtStart;
 		if(CComQIPtr<ISubClock2> pSC2 = m_pSubClock)
@@ -1704,6 +1704,9 @@ bool CDirectVobSubFilter::Open()
 
 	m_frd.files.RemoveAll();
 
+    m_bExternalSubtitle = false;
+    m_ExternalSubstreams.clear();
+
 	CAtlArray<CString> paths;
 
 	for(int i = 0; i < 10; i++)
@@ -1762,6 +1765,8 @@ bool CDirectVobSubFilter::Open()
 			m_pSubStreams.AddTail(pSubStream);
             m_fIsSubStreamEmbeded.AddTail(false);
 			m_frd.files.AddTail(ret[i].full_file_name);
+
+            m_ExternalSubstreams.push_back(pSubStream);
 		}
 	}
 
@@ -1965,8 +1970,10 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
     SetYuvMatrix();
 
     XySetSize(SIZE_ASS_PLAY_RESOLUTION, playres);
-    if(m_simple_provider)
+    if (m_simple_provider) {
+        m_bExternalSubtitle = (std::find(m_ExternalSubstreams.cbegin(), m_ExternalSubstreams.cend(), pSubStream) != m_ExternalSubstreams.cend());
         m_simple_provider->SetSubPicProvider(CComQIPtr<ISubPicProviderEx>(pSubStream));
+    }
 }
 
 void CDirectVobSubFilter::InvalidateSubtitle(REFERENCE_TIME rtInvalidate, DWORD_PTR nSubtitleId)

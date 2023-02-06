@@ -208,6 +208,9 @@ private:
 
 	//xy TIMING
 	long m_time_rasterization, m_time_alphablt;
+	
+	bool m_bExternalSubtitle = false;
+	std::vector<ISubStream*> m_ExternalSubstreams;
 };
 
 /* The "auto-loading" version */
