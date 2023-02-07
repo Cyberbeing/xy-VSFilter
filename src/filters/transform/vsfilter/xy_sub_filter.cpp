@@ -1197,9 +1197,9 @@ STDMETHODIMP XySubFilter::RequestFrame( REFERENCE_TIME start, REFERENCE_TIME sto
         }
 
         //
-        start = (start - 10000i64*m_SubtitleDelay) * m_SubtitleSpeedMul / m_SubtitleSpeedDiv; // no, it won't overflow if we use normal parameters (__int64 is enough for about 2000 hours if we multiply it by the max: 65536 as m_SubtitleSpeedMul)
-        stop = (stop - 10000i64*m_SubtitleDelay) * m_SubtitleSpeedMul / m_SubtitleSpeedDiv;
-        REFERENCE_TIME now = start; //NOTE: It seems that the physically right way is (start + stop) / 2, but...
+        REFERENCE_TIME adjustedStart = (start - 10000i64*m_SubtitleDelay) * m_SubtitleSpeedMul / m_SubtitleSpeedDiv; // no, it won't overflow if we use normal parameters (__int64 is enough for about 2000 hours if we multiply it by the max: 65536 as m_SubtitleSpeedMul)
+        REFERENCE_TIME adjustedStop = (stop - 10000i64*m_SubtitleDelay) * m_SubtitleSpeedMul / m_SubtitleSpeedDiv;
+        REFERENCE_TIME now = adjustedStart; //NOTE: It seems that the physically right way is (start + stop) / 2, but...
         m_last_requested = now;
 
         if(m_sub_provider)
