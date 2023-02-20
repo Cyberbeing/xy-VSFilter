@@ -2287,10 +2287,22 @@ void CDirectVobSubFilter::SetYuvMatrix()
         }
         else
         {
-            yuv_matrix = (extformat.VideoTransferMatrix == DXVA2_VideoTransferMatrix_BT709 ||
-                          extformat.VideoTransferMatrix == DXVA2_VideoTransferMatrix_SMPTE240M ||
-                          m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cx > m_bt601Width ||
-                          m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cy > m_bt601Height) ? ColorConvTable::BT709 : ColorConvTable::BT601;
+            switch (extformat.VideoTransferMatrix)
+            {
+            // FIXME: ColorConvTable doesn't support SMPTE240M.
+            // Since it's more similar to BT709 than BT601, prefer the former.
+            case DXVA2_VideoTransferMatrix_SMPTE240M: // -fallthrough
+            case DXVA2_VideoTransferMatrix_BT709:
+                yuv_matrix = ColorConvTable::BT709;
+                break;
+            case DXVA2_VideoTransferMatrix_BT601:
+                yuv_matrix = ColorConvTable::BT601;
+                break;
+            default:
+                yuv_matrix = (m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cx > m_bt601Width ||
+                             m_xy_size_opt[SIZE_ORIGINAL_VIDEO].cy > m_bt601Height) ?
+                             ColorConvTable::BT709 : ColorConvTable::BT601;
+            }
         }
     }
     else
