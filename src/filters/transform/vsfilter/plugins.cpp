@@ -1212,7 +1212,8 @@ public:
             VFRTranslator *vfr;
             std::unique_ptr<CTextSubVapourSynthFilter> textsub;
             std::unique_ptr<CVobSubVapourSynthFilter> vobsub;
-            std::unique_ptr<uint16_t[]> buffer;
+            std::unique_ptr<uint16_t[]> buffer16;
+            std::unique_ptr<uint8_t[]> buffer8;
         };
 
         static void VS_CC vsfilterInit(VSMap *in, VSMap *out, void **instanceData, VSNode *node, VSCore *core, const VSAPI *vsapi) {
@@ -1250,7 +1251,7 @@ public:
                     const uint16_t *srcpY = reinterpret_cast<const uint16_t *>(vsapi->getReadPtr(src, 0));
                     const uint16_t *srcpU = reinterpret_cast<const uint16_t *>(vsapi->getReadPtr(src, 1));
                     const uint16_t *srcpV = reinterpret_cast<const uint16_t *>(vsapi->getReadPtr(src, 2));
-                    uint16_t *VS_RESTRICT buffer = d->buffer.get();
+                    uint16_t *VS_RESTRICT buffer = d->buffer16.get();
 
                     vs_bitblt(buffer, d->vi->width * sizeof(uint16_t), srcpY, vsapi->getStride(src, 0), d->vi->width * sizeof(uint16_t), d->vi->height);
                     buffer += bufStride * d->vi->height;
@@ -1267,19 +1268,17 @@ public:
                     }
 
                     subpic.pitch = d->vi->width * sizeof(uint16_t);
-                    subpic.bits = reinterpret_cast<BYTE *>(d->buffer.get());
+                    subpic.bits = reinterpret_cast<BYTE *>(d->buffer16.get());
                     subpic.bpp = 16;
                     subpic.type = MSP_P016;
                 }
                 else {
-                    bgr = vsapi->newVideoFrame(vsapi->getFormatPreset(pfCompatBGR32, core), d->vi->width, d->vi->height, nullptr, core);
-
                     const int srcStride = vsapi->getStride(src, 0);
-                    const int bgrStride = vsapi->getStride(bgr, 0);
+                    const int bgrStride = d->vi->width * 4;
                     const uint8_t *srcpR = vsapi->getReadPtr(src, 0);
                     const uint8_t *srcpG = vsapi->getReadPtr(src, 1);
                     const uint8_t *srcpB = vsapi->getReadPtr(src, 2);
-                    uint8_t *VS_RESTRICT bgrp = vsapi->getWritePtr(bgr, 0);
+                    uint8_t *VS_RESTRICT bgrp = d->buffer8.get();
 
                     bgrp += bgrStride * (d->vi->height - 1);
 
@@ -1298,7 +1297,7 @@ public:
                     }
 
                     subpic.pitch = bgrStride;
-                    subpic.bits = vsapi->getWritePtr(bgr, 0);
+                    subpic.bits = d->buffer8.get();
                     subpic.bpp = 32;
                     subpic.type = MSP_RGB32;
                 }
@@ -1317,7 +1316,7 @@ public:
                 if (d->vi->format->id == pfYUV420P16) {
                     const int bufStride = d->vi->width;
                     const int uvStride = vsapi->getStride(dst, 1) / sizeof(uint16_t);
-                    const uint16_t *buffer = d->buffer.get();
+                    const uint16_t *buffer = d->buffer16.get();
                     uint16_t *VS_RESTRICT dstpY = reinterpret_cast<uint16_t *>(vsapi->getWritePtr(dst, 0));
                     uint16_t *VS_RESTRICT dstpU = reinterpret_cast<uint16_t *>(vsapi->getWritePtr(dst, 1));
                     uint16_t *VS_RESTRICT dstpV = reinterpret_cast<uint16_t *>(vsapi->getWritePtr(dst, 2));
@@ -1337,9 +1336,9 @@ public:
                     }
                 }
                 else if (d->vi->format->id == pfRGB24) {
-                    const int bgrStride = vsapi->getStride(bgr, 0);
+                    const int bgrStride = d->vi->width * 4;
                     const int dstStride = vsapi->getStride(dst, 0);
-                    const uint8_t *bgrp = vsapi->getReadPtr(bgr, 0);
+                    const uint8_t *bgrp = d->buffer8.get();
                     uint8_t *VS_RESTRICT dstpR = vsapi->getWritePtr(dst, 0);
                     uint8_t *VS_RESTRICT dstpG = vsapi->getWritePtr(dst, 1);
                     uint8_t *VS_RESTRICT dstpB = vsapi->getWritePtr(dst, 2);
@@ -1416,7 +1415,9 @@ public:
                     throw std::string{ "can't open " } + _file;
 
                 if (d->vi->format->id == pfYUV420P16)
-                    d->buffer = std::make_unique<uint16_t[]>(d->vi->width * (d->vi->height + d->vi->height / 2));
+                    d->buffer16 = std::make_unique<uint16_t[]>(d->vi->width * (d->vi->height + d->vi->height / 2));
+                else if (d->vi->format->id == pfRGB24)
+                    d->buffer8 = std::make_unique<uint8_t[]>(d->vi->width * d->vi->height * 4);
             }
             catch (const std::string &error) {
                 vsapi->setError(out, (filterName + ": " + error).c_str());
