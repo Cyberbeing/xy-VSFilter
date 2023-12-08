@@ -1502,6 +1502,7 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
             {
                 CString StyleName;
                 int alpha;
+                int encoding;
                 CRect tmp_rect;
 
                 StyleName = GetStr(buff);
@@ -1526,9 +1527,11 @@ if(sver >= 4)   style->borderStyle = GetInt(buff);
 if(sver >= 6)   tmp_rect.bottom = GetInt(buff);
                 style->marginRect = tmp_rect;
 if(sver <= 4)   alpha = GetInt(buff);
-                style->charSet = GetInt(buff);
+                encoding = GetInt(buff);
 if(sver >= 6)   style->relativeTo = GetInt(buff);
 
+                // Map unsupported extension to the most permissive charSet
+                style->charSet = encoding < 0 ? DEFAULT_CHARSET : encoding;
 if(sver <= 4)   style->colors[2] = style->colors[3]; // style->colors[2] is used for drawing the outline
 if(sver <= 4)   alpha = max(min(alpha, 0xff), 0);
 if(sver <= 4)   {for(size_t i = 0; i < 3; i++) style->alpha[i] = alpha; style->alpha[3] = 0x80;}
