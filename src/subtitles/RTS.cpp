@@ -2414,6 +2414,7 @@ bool CRenderedTextSubtitle::ParseSSATag( CSubtitle* sub, const AssTagList& assTa
         case CMD_fe:
             {
                 int n = wcstol(p, NULL, 10);
+                if (n < 0) n = DEFAULT_CHARSET;
                 style.charSet = !p.IsEmpty()
                                 ? n
                                 : org.charSet;
